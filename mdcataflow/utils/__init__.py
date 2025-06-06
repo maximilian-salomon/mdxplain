@@ -4,7 +4,6 @@
 # Contains core calculation and conversion utilities.
 #
 # Author: Maximilian Salomon
-# Version: 0.1.0
 # Created with assistance from Claude-4-Sonnet and Cursor AI.
 #
 # Copyright (C) 2025 Maximilian Salomon
