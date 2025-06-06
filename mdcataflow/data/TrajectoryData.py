@@ -7,9 +7,10 @@ Created with assistance from Claude-4-Sonnet and Cursor AI.
 """
 
 import os
-from .TrajectoryData import TrajectoryLoader
+from .TrajectoryLoader import TrajectoryLoader
 from ..utils.DistanceCalculator import DistanceCalculator
 from ..utils.ContactCalculator import ContactCalculator
+from ..utils.DataUtils import DataUtils
 
 
 class TrajectoryData:
@@ -18,23 +19,17 @@ class TrajectoryData:
     Uses a pluggable Loader class for flexible loading strategies.
     """
     
-    def __init__(self, data_input, use_memmap=False, cache_dir=None):
+    def __init__(self, use_memmap=False, cache_dir=None):
         """
         Initialize trajectory data container.
         
         Parameters:
         -----------
-        data_input : list or str
-            List of trajectory objects or path to directory
         use_memmap : bool, default=False
             Whether to use memory mapping for large datasets
         cache_dir : str, optional
             Directory for cache files when using memory mapping
-        concat : bool, default=False
-            Whether to concatenate trajectories per system
-
         """
-        self.data_input = data_input
         self.use_memmap = use_memmap
         
         if use_memmap:
@@ -49,18 +44,20 @@ class TrajectoryData:
         self.contacts = None
         self.res_list = None
 
-    def load_trajectories(self, concat=False, stride=1):
+    def load_trajectories(self, data_input, concat=False, stride=1):
         """
         Load trajectories using the TrajectoryLoader class.
 
         Parameters:
         -----------
+        data_input : list or str
+            List of trajectory objects or path to directory
         concat : bool, default=False
             Whether to concatenate trajectories per system
         stride : int, default=1
             Load every stride-th frame from trajectories
         """
-        self.trajectories = TrajectoryLoader.load_trajectories(self.data_input, concat, stride)
+        self.trajectories = TrajectoryLoader.load_trajectories(data_input, concat, stride)
 
     def compute_distances(self, ref, batch_size=2500):
         """
@@ -99,3 +96,25 @@ class TrajectoryData:
             use_memmap=self.use_memmap,
             contacts_path=getattr(self, 'contacts_path', None)
         )
+
+    def save(self, save_path):
+        """
+        Save the TrajectoryData object using DataUtils.
+        
+        Parameters:
+        -----------
+        save_path : str
+            Path where to save the object (should end with .npy)
+        """
+        DataUtils.save_trajectory_data(self, save_path)
+
+    def load(self, load_path):
+        """
+        Load data into this TrajectoryData object using DataUtils.
+        
+        Parameters:
+        -----------
+        load_path : str
+            Path to the saved TrajectoryData .npy file
+        """
+        DataUtils.load_trajectory_data(self, load_path)
