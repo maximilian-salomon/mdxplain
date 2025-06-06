@@ -1,9 +1,29 @@
-# MD Analysis Pipeline
+# MDCatAFlow (MD Catalytic Analysis Flow)
 
-A Python-based pipeline for analyzing Molecular Dynamics (MD) structures.
+A high-performance Python toolkit that accelerates molecular dynamics trajectory analysis through automated workflows and memory-efficient processing.
+
+**Author:** Maximilian Salomon  
+**Version:** 0.1.0
+
+## Name Explanation
+
+**MDCatAFlow** stands for **MD Catalytic Analysis Flow** and describes the core functionality of the tool:
+
+- **MD** - Molecular Dynamics
+- **Cat** - Catalyst - the tool accelerates and automates MD analyses
+- **A** - Analysis - comprehensive statistical and dynamic analyses
+- **Flow** - Workflow/Pipeline - automated analysis process
+
+The tool acts as a **catalyst** for MD analyses by automating and accelerating complex calculations.
 
 ## Features (v0.1)
 
+- Memory-mapped processing for large datasets
+- Statistical analyses (mean, variance, CV, transitions)
+- Dynamic analyses (stability, variability, transitions)
+- Automatic unit detection (nm/Angstrom)
+- Chunked processing for memory efficiency
+- Flexible data formats (Square/Condensed)
 - Dimensionality reduction of MD data
 - Structure clustering
 - Feature selection using Decision Trees
@@ -34,7 +54,10 @@ The pipeline can be executed via Jupyter Notebooks or as Python scripts. Example
 
 ```
 md_analysis_pipeline/
-├── code/               # Python modules
+├── mdcataflow/         # Main Python package
+│   ├── data/          # Data loading utilities
+│   ├── utils/         # Core calculation modules
+│   └── __init__.py    # Package initialization
 ├── notebooks/          # Jupyter Notebooks
 ├── data/              # Example data
 ├── tests/             # Test cases
@@ -44,4 +67,8 @@ md_analysis_pipeline/
 
 ## License
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details. 
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+
+## Acknowledgments
+
+This project was developed with assistance from Claude-4-Sonnet and Cursor AI. 
