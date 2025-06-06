@@ -1,3 +1,11 @@
+"""
+ContactCalculator - MD Trajectory Contact Analysis
+
+Author: Maximilian Salomon
+Version: 0.1.0
+Created with assistance from Claude-4-Sonnet and Cursor AI.
+"""
+
 import numpy as np
 import warnings
 from .ArrayConverter import ArrayHandler
