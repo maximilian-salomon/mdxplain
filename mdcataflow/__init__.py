@@ -12,7 +12,7 @@ __author__ = "Maximilian Salomon"
 from .data.TrajectoryLoader import TrajectoryLoader
 from .utils.DistanceCalculator import DistanceCalculator
 from .utils.ContactCalculator import ContactCalculator
-from .utils.ArrayConverter import ArrayHandler
+from .utils.ArrayHandler import ArrayHandler
 
 __all__ = [
     'TrajectoryLoader',
