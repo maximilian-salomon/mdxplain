@@ -102,53 +102,53 @@ class TestDataUtilsRegularArrays:
     def test_save_creates_main_file(self, mock_trajectory, temp_dir):
         """Test that saving regular arrays creates the main .npy file."""
         save_path = os.path.join(temp_dir, "test_regular.npy")
-        DataUtils.save_trajectory_data(mock_trajectory, save_path)
+        DataUtils.save_object(mock_trajectory, save_path)
         assert os.path.exists(save_path)
     
     def test_save_does_not_create_data_directory(self, mock_trajectory, temp_dir):
         """Test that saving regular arrays does not create data directory."""
         save_path = os.path.join(temp_dir, "test_regular.npy")
-        DataUtils.save_trajectory_data(mock_trajectory, save_path)
+        DataUtils.save_object(mock_trajectory, save_path)
         data_dir = os.path.splitext(save_path)[0] + "_data"
         assert not os.path.exists(data_dir)
     
     def test_load_preserves_trajectories(self, mock_trajectory, temp_dir):
         """Test that loading preserves trajectories list."""
         save_path = os.path.join(temp_dir, "test_regular.npy")
-        DataUtils.save_trajectory_data(mock_trajectory, save_path)
+        DataUtils.save_object(mock_trajectory, save_path)
         
         loaded_traj = SimpleMockTrajectory()
-        DataUtils.load_trajectory_data(loaded_traj, save_path)
+        DataUtils.load_object(loaded_traj, save_path)
         
         assert loaded_traj.trajectories == mock_trajectory.trajectories
     
     def test_load_preserves_res_list(self, mock_trajectory, temp_dir):
         """Test that loading preserves res_list."""
         save_path = os.path.join(temp_dir, "test_regular.npy")
-        DataUtils.save_trajectory_data(mock_trajectory, save_path)
+        DataUtils.save_object(mock_trajectory, save_path)
         
         loaded_traj = SimpleMockTrajectory()
-        DataUtils.load_trajectory_data(loaded_traj, save_path)
+        DataUtils.load_object(loaded_traj, save_path)
         
         assert loaded_traj.res_list == mock_trajectory.res_list
     
     def test_load_preserves_distances_data(self, mock_trajectory, temp_dir):
         """Test that loading preserves distances array data."""
         save_path = os.path.join(temp_dir, "test_regular.npy")
-        DataUtils.save_trajectory_data(mock_trajectory, save_path)
+        DataUtils.save_object(mock_trajectory, save_path)
         
         loaded_traj = SimpleMockTrajectory()
-        DataUtils.load_trajectory_data(loaded_traj, save_path)
+        DataUtils.load_object(loaded_traj, save_path)
         
         assert np.allclose(loaded_traj.distances, mock_trajectory.distances)
     
     def test_load_preserves_contacts_data(self, mock_trajectory, temp_dir):
         """Test that loading preserves contacts array data."""
         save_path = os.path.join(temp_dir, "test_regular.npy")
-        DataUtils.save_trajectory_data(mock_trajectory, save_path)
+        DataUtils.save_object(mock_trajectory, save_path)
         
         loaded_traj = SimpleMockTrajectory()
-        DataUtils.load_trajectory_data(loaded_traj, save_path)
+        DataUtils.load_object(loaded_traj, save_path)
         
         assert np.allclose(loaded_traj.contacts, mock_trajectory.contacts)
     
@@ -158,7 +158,7 @@ class TestDataUtilsRegularArrays:
         nonexistent_path = os.path.join(temp_dir, "nonexistent.npy")
         
         with pytest.raises(FileNotFoundError):
-            DataUtils.load_trajectory_data(traj, nonexistent_path)
+            DataUtils.load_object(traj, nonexistent_path)
 
 
 class TestDataUtilsMemmaps:
@@ -167,13 +167,13 @@ class TestDataUtilsMemmaps:
     def test_save_creates_main_file(self, mock_memmap_trajectory, temp_dir):
         """Test that saving memmaps creates main .npy file."""
         save_path = os.path.join(temp_dir, "test_memmap.npy")
-        DataUtils.save_trajectory_data(mock_memmap_trajectory, save_path)
+        DataUtils.save_object(mock_memmap_trajectory, save_path)
         assert os.path.exists(save_path)
     
     def test_save_does_not_create_data_directory(self, mock_memmap_trajectory, temp_dir):
         """Test that saving memmaps does NOT create data directory (new behavior)."""
         save_path = os.path.join(temp_dir, "test_memmap.npy")
-        DataUtils.save_trajectory_data(mock_memmap_trajectory, save_path)
+        DataUtils.save_object(mock_memmap_trajectory, save_path)
         data_dir = os.path.splitext(save_path)[0] + "_data"
         assert not os.path.exists(data_dir)
     
@@ -183,7 +183,7 @@ class TestDataUtilsMemmaps:
         original_distances_path = mock_memmap_trajectory.distances.filename
         original_contacts_path = mock_memmap_trajectory.contacts.filename
         
-        DataUtils.save_trajectory_data(mock_memmap_trajectory, save_path)
+        DataUtils.save_object(mock_memmap_trajectory, save_path)
         
         # Original files should still exist
         assert os.path.exists(original_distances_path)
@@ -192,20 +192,20 @@ class TestDataUtilsMemmaps:
     def test_load_preserves_distances_memmap_type(self, mock_memmap_trajectory, temp_dir):
         """Test that loading preserves distances as memmap type."""
         save_path = os.path.join(temp_dir, "test_memmap.npy")
-        DataUtils.save_trajectory_data(mock_memmap_trajectory, save_path)
+        DataUtils.save_object(mock_memmap_trajectory, save_path)
         
         loaded_traj = SimpleMockTrajectory(use_memmap=True)
-        DataUtils.load_trajectory_data(loaded_traj, save_path)
+        DataUtils.load_object(loaded_traj, save_path)
         
         assert isinstance(loaded_traj.distances, np.memmap)
     
     def test_load_preserves_contacts_memmap_type(self, mock_memmap_trajectory, temp_dir):
         """Test that loading preserves contacts as memmap type."""
         save_path = os.path.join(temp_dir, "test_memmap.npy")
-        DataUtils.save_trajectory_data(mock_memmap_trajectory, save_path)
+        DataUtils.save_object(mock_memmap_trajectory, save_path)
         
         loaded_traj = SimpleMockTrajectory(use_memmap=True)
-        DataUtils.load_trajectory_data(loaded_traj, save_path)
+        DataUtils.load_object(loaded_traj, save_path)
         
         assert isinstance(loaded_traj.contacts, np.memmap)
     
@@ -214,10 +214,10 @@ class TestDataUtilsMemmaps:
         save_path = os.path.join(temp_dir, "test_memmap.npy")
         original_distances = np.array(mock_memmap_trajectory.distances)
         
-        DataUtils.save_trajectory_data(mock_memmap_trajectory, save_path)
+        DataUtils.save_object(mock_memmap_trajectory, save_path)
         
         loaded_traj = SimpleMockTrajectory(use_memmap=True)
-        DataUtils.load_trajectory_data(loaded_traj, save_path)
+        DataUtils.load_object(loaded_traj, save_path)
         
         assert np.allclose(loaded_traj.distances, original_distances)
     
@@ -226,10 +226,10 @@ class TestDataUtilsMemmaps:
         save_path = os.path.join(temp_dir, "test_memmap.npy")
         original_contacts = np.array(mock_memmap_trajectory.contacts)
         
-        DataUtils.save_trajectory_data(mock_memmap_trajectory, save_path)
+        DataUtils.save_object(mock_memmap_trajectory, save_path)
         
         loaded_traj = SimpleMockTrajectory(use_memmap=True)
-        DataUtils.load_trajectory_data(loaded_traj, save_path)
+        DataUtils.load_object(loaded_traj, save_path)
         
         assert np.allclose(loaded_traj.contacts, original_contacts)
     
@@ -238,10 +238,10 @@ class TestDataUtilsMemmaps:
         save_path = os.path.join(temp_dir, "test_memmap.npy")
         original_shape = mock_memmap_trajectory.distances.shape
         
-        DataUtils.save_trajectory_data(mock_memmap_trajectory, save_path)
+        DataUtils.save_object(mock_memmap_trajectory, save_path)
         
         loaded_traj = SimpleMockTrajectory(use_memmap=True)
-        DataUtils.load_trajectory_data(loaded_traj, save_path)
+        DataUtils.load_object(loaded_traj, save_path)
         
         assert loaded_traj.distances.shape == original_shape
     
@@ -250,10 +250,10 @@ class TestDataUtilsMemmaps:
         save_path = os.path.join(temp_dir, "test_memmap.npy")
         original_shape = mock_memmap_trajectory.contacts.shape
         
-        DataUtils.save_trajectory_data(mock_memmap_trajectory, save_path)
+        DataUtils.save_object(mock_memmap_trajectory, save_path)
         
         loaded_traj = SimpleMockTrajectory(use_memmap=True)
-        DataUtils.load_trajectory_data(loaded_traj, save_path)
+        DataUtils.load_object(loaded_traj, save_path)
         
         assert loaded_traj.contacts.shape == original_shape
     
@@ -262,10 +262,10 @@ class TestDataUtilsMemmaps:
         save_path = os.path.join(temp_dir, "test_memmap.npy")
         original_distances_path = mock_memmap_trajectory.distances.filename
         
-        DataUtils.save_trajectory_data(mock_memmap_trajectory, save_path)
+        DataUtils.save_object(mock_memmap_trajectory, save_path)
         
         loaded_traj = SimpleMockTrajectory(use_memmap=True)
-        DataUtils.load_trajectory_data(loaded_traj, save_path)
+        DataUtils.load_object(loaded_traj, save_path)
         
         assert loaded_traj.distances.filename == original_distances_path
 
@@ -278,10 +278,10 @@ class TestDataUtilsMixedAttributes:
         traj = SimpleMockTrajectory(string_attr="test_string")
         save_path = os.path.join(temp_dir, "test_string.npy")
         
-        DataUtils.save_trajectory_data(traj, save_path)
+        DataUtils.save_object(traj, save_path)
         
         loaded_traj = SimpleMockTrajectory()
-        DataUtils.load_trajectory_data(loaded_traj, save_path)
+        DataUtils.load_object(loaded_traj, save_path)
         
         assert loaded_traj.string_attr == "test_string"
     
@@ -290,10 +290,10 @@ class TestDataUtilsMixedAttributes:
         traj = SimpleMockTrajectory(int_attr=42)
         save_path = os.path.join(temp_dir, "test_int.npy")
         
-        DataUtils.save_trajectory_data(traj, save_path)
+        DataUtils.save_object(traj, save_path)
         
         loaded_traj = SimpleMockTrajectory()
-        DataUtils.load_trajectory_data(loaded_traj, save_path)
+        DataUtils.load_object(loaded_traj, save_path)
         
         assert loaded_traj.int_attr == 42
     
@@ -302,10 +302,10 @@ class TestDataUtilsMixedAttributes:
         traj = SimpleMockTrajectory(list_attr=[1, 2, 3])
         save_path = os.path.join(temp_dir, "test_list.npy")
         
-        DataUtils.save_trajectory_data(traj, save_path)
+        DataUtils.save_object(traj, save_path)
         
         loaded_traj = SimpleMockTrajectory()
-        DataUtils.load_trajectory_data(loaded_traj, save_path)
+        DataUtils.load_object(loaded_traj, save_path)
         
         assert loaded_traj.list_attr == [1, 2, 3]
     
@@ -314,10 +314,10 @@ class TestDataUtilsMixedAttributes:
         traj = SimpleMockTrajectory(dict_attr={"key": "value"})
         save_path = os.path.join(temp_dir, "test_dict.npy")
         
-        DataUtils.save_trajectory_data(traj, save_path)
+        DataUtils.save_object(traj, save_path)
         
         loaded_traj = SimpleMockTrajectory()
-        DataUtils.load_trajectory_data(loaded_traj, save_path)
+        DataUtils.load_object(loaded_traj, save_path)
         
         assert loaded_traj.dict_attr == {"key": "value"}
     
@@ -326,10 +326,10 @@ class TestDataUtilsMixedAttributes:
         traj = SimpleMockTrajectory(array_attr=np.array([1, 2, 3, 4, 5]))
         save_path = os.path.join(temp_dir, "test_array.npy")
         
-        DataUtils.save_trajectory_data(traj, save_path)
+        DataUtils.save_object(traj, save_path)
         
         loaded_traj = SimpleMockTrajectory()
-        DataUtils.load_trajectory_data(loaded_traj, save_path)
+        DataUtils.load_object(loaded_traj, save_path)
         
         assert np.array_equal(loaded_traj.array_attr, np.array([1, 2, 3, 4, 5]))
     
@@ -338,10 +338,10 @@ class TestDataUtilsMixedAttributes:
         traj = SimpleMockTrajectory(none_attr=None)
         save_path = os.path.join(temp_dir, "test_none.npy")
         
-        DataUtils.save_trajectory_data(traj, save_path)
+        DataUtils.save_object(traj, save_path)
         
         loaded_traj = SimpleMockTrajectory()
-        DataUtils.load_trajectory_data(loaded_traj, save_path)
+        DataUtils.load_object(loaded_traj, save_path)
         
         assert loaded_traj.none_attr is None
 
@@ -356,13 +356,13 @@ class TestDataUtilsEdgeCases:
         save_path = os.path.join(temp_dir, "test_fail.npy")
         
         with pytest.raises(IOError):
-            DataUtils.save_trajectory_data(mock_trajectory, save_path)
+            DataUtils.save_object(mock_trajectory, save_path)
     
     @patch('mdcataflow.utils.DataUtils.np.save')
     def test_save_is_called_once(self, mock_save, mock_trajectory, temp_dir):
         """Test that np.save is called exactly once."""
         save_path = os.path.join(temp_dir, "test_call.npy")
-        DataUtils.save_trajectory_data(mock_trajectory, save_path)
+        DataUtils.save_object(mock_trajectory, save_path)
         mock_save.assert_called_once()
     
     def test_memmap_without_filename_raises_error(self, temp_dir):
@@ -377,14 +377,14 @@ class TestDataUtilsEdgeCases:
         save_path = os.path.join(temp_dir, "test_bad_memmap.npy")
         
         with pytest.raises(ValueError, match="has no filename"):
-            DataUtils.save_trajectory_data(traj, save_path)
+            DataUtils.save_object(traj, save_path)
     
     def test_empty_trajectory_saves_successfully(self, temp_dir):
         """Test that empty trajectory objects can be saved."""
         traj = SimpleMockTrajectory()
         save_path = os.path.join(temp_dir, "test_empty.npy")
         
-        DataUtils.save_trajectory_data(traj, save_path)
+        DataUtils.save_object(traj, save_path)
         assert os.path.exists(save_path)
     
     def test_empty_trajectory_loads_successfully(self, temp_dir):
@@ -392,10 +392,10 @@ class TestDataUtilsEdgeCases:
         traj = SimpleMockTrajectory()
         save_path = os.path.join(temp_dir, "test_empty.npy")
         
-        DataUtils.save_trajectory_data(traj, save_path)
+        DataUtils.save_object(traj, save_path)
         
         loaded_traj = SimpleMockTrajectory()
-        DataUtils.load_trajectory_data(loaded_traj, save_path)
+        DataUtils.load_object(loaded_traj, save_path)
         
         # Should complete without error
         assert True
@@ -418,7 +418,7 @@ class TestDataUtilsEdgeCases:
         np.save(save_path, fake_memmap_info, allow_pickle=True)
         
         loaded_traj = SimpleMockTrajectory(use_memmap=True)
-        DataUtils.load_trajectory_data(loaded_traj, save_path)
+        DataUtils.load_object(loaded_traj, save_path)
         
         # Should return None for missing file
         assert loaded_traj.distances is None 
