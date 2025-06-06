@@ -97,7 +97,7 @@ class DistanceCalculator:
         """Process a single trajectory in batches."""
         for k in range(0, traj.n_frames, batch_size):
             frames_to_process = min(batch_size, traj.n_frames - k)
-            dist, res_list = md.compute_contacts(traj[k:k + frames_to_process])
+            dist, res_list = md.compute_contacts(traj[k:k + frames_to_process], scheme="closest-heavy")
             
             batch_dists = DistanceCalculator._build_distance_matrix(
                 dist, res_list, frames_to_process, n_residues
@@ -913,11 +913,11 @@ class DistanceCalculator:
     def _compute_reference_distances(traj, input_shape):
         """Compute reference distances in same format as input."""
         if len(input_shape) == 2:  # Square format
-            ref_distances, pairs = md.compute_contacts(traj[0])
+            ref_distances, pairs = md.compute_contacts(traj[0], scheme="closest-heavy")
             ref_square = md.geometry.squareform(ref_distances, pairs)
             return ref_square
         else:  # Condensed format
-            calc_distances, _ = md.compute_contacts(traj[0:1])
+            calc_distances, _ = md.compute_contacts(traj[0], scheme="closest-heavy")
             return calc_distances
     
     @staticmethod

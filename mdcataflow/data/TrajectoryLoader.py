@@ -1,5 +1,5 @@
 """
-TrajectoryLoader - MD Trajectory Loading and Processing
+Loader - MD Trajectory Loading Strategies
 
 Author: Maximilian Salomon
 Version: 0.1.0
@@ -7,84 +7,122 @@ Created with assistance from Claude-4-Sonnet and Cursor AI.
 """
 
 import mdtraj as md
-import numpy as np
 import os
 import warnings
 from tqdm import tqdm
-from ..utils.DistanceCalculator import DistanceCalculator
-from ..utils.ContactCalculator import ContactCalculator
+
 
 class TrajectoryLoader:
-    def __init__(self, data_input, use_memmap=False, cache_dir=None, concat=False):
-        self.data_input = data_input
-        self.use_memmap = use_memmap
-        self.concat = concat
+    """
+    Handles the loading methodology for MD trajectories.
+    This class can be easily replaced or extended for different loading strategies.
+    """
+    
+    @staticmethod
+    def load_trajectories(data_input, concat=False, stride=1):
+        """
+        Load trajectories from various input types.
         
-        if use_memmap:
-            if cache_dir is None:
-                cache_dir = "./cache"
-            os.makedirs(cache_dir, exist_ok=True)
-            self.distances_path = os.path.join(cache_dir, "distances.dat")
-            self.contacts_path = os.path.join(cache_dir, "contacts.dat")
+        Parameters:
+        -----------
+        data_input : list or str
+            List of trajectory objects or path to directory
+        concat : bool, default=False
+            Whether to concatenate trajectories per system
+        stride : int, default=1
+            Load every stride-th frame from trajectories
+            
+        Returns:
+        --------
+        list
+            List of loaded trajectories
+        """
+        if isinstance(data_input, list):
+            return TrajectoryLoader._load_from_list(data_input, concat, stride)
         
-        self.trajectories = self.load_trajectories()
-        self.distances = None
-        self.contacts = None
-        self.res_list = None
-
-    def load_trajectories(self):
-        if isinstance(self.data_input, list):
-            if self.concat and len(self.data_input) > 1:
-                print(f"Concatenating {len(self.data_input)} provided trajectories...")
-                concatenated = self.data_input[0]
-                for traj in tqdm(self.data_input[1:], desc="Concatenating"):
-                    concatenated = concatenated.join(traj)
-                print(f"Result: 1 concatenated trajectory with {concatenated.n_frames} frames")
-                return [concatenated]
-            return self.data_input
+        if isinstance(data_input, str) and os.path.exists(data_input):
+            return TrajectoryLoader._load_from_directory(data_input, concat, stride)
         
-        if isinstance(self.data_input, str) and os.path.exists(self.data_input):
-            trajectories, system_summary = self._load_from_directory()
-            if self.concat:
-                print(f"\nLoaded {len(system_summary)} systems with {len(trajectories)} concatenated trajectories:")
-            else:
-                print(f"\nLoaded {len(system_summary)} systems with {len(trajectories)} total trajectories:")
-            for system, count in system_summary:
-                if self.concat and count > 1:
-                    print(f"  {system}: 1 concatenated trajectory ({count} files)")
-                else:
-                    print(f"  {system}: {count} trajectories")
-            return trajectories
-        
-        warnings.warn(f"Invalid data input: {self.data_input}. Expected list of trajectories or valid path.")
+        warnings.warn(f"Invalid data input: {data_input}. Expected list of trajectories or valid path.")
         return []
     
-    def _load_from_directory(self):
+    @staticmethod
+    def _load_from_list(trajectory_list, concat):
+        """Load from provided trajectory list."""
+        if concat and len(trajectory_list) > 1:
+            print(f"Concatenating {len(trajectory_list)} provided trajectories...")
+            concatenated = trajectory_list[0]
+            for traj in tqdm(trajectory_list[1:], desc="Concatenating"):
+                concatenated = concatenated.join(traj)
+            print(f"Result: 1 concatenated trajectory with {concatenated.n_frames} frames")
+            return [concatenated]
+        return trajectory_list
+    
+    @staticmethod
+    def _load_from_directory(directory_path, concat, stride):
         """Load trajectories from directory structure."""
+        # Determine directory structure and collect trajectories
+        if TrajectoryLoader._has_subdirectories(directory_path):
+            return TrajectoryLoader._load_nested_structure(directory_path, concat, stride)
+        else:
+            return TrajectoryLoader._load_flat_structure(directory_path, concat, stride)
+    
+    @staticmethod
+    def _has_subdirectories(directory_path):
+        """Check if directory contains subdirectories."""
+        subdirs = [d for d in os.listdir(directory_path) if os.path.isdir(os.path.join(directory_path, d))]
+        return len(subdirs) > 0
+    
+    @staticmethod
+    def _load_nested_structure(directory_path, concat, stride):
+        """Load trajectories from nested directory structure."""
         trajectories = []
         system_summary = []
-        subdirs = [d for d in os.listdir(self.data_input) if os.path.isdir(os.path.join(self.data_input, d))]
+        subdirs = [d for d in os.listdir(directory_path) if os.path.isdir(os.path.join(directory_path, d))]
         
-        # Check if we have subdirectories or direct files
-        if subdirs:
-            # Nested structure: process subdirectories
-            for subdir in tqdm(subdirs, desc="Loading systems"):
-                subdir_path = os.path.join(self.data_input, subdir)
-                system_trajs = self._load_system_trajectories(subdir_path, subdir)
-                
-                if system_trajs:
-                    trajectories.extend(system_trajs)
-                    system_summary.append((subdir, len(system_trajs)))
-        else:
-            # Direct structure: process files in given directory
-            system_trajs = self._load_system_trajectories(self.data_input, os.path.basename(self.data_input))
+        for subdir in tqdm(subdirs, desc="Loading systems"):
+            subdir_path = os.path.join(directory_path, subdir)
+            system_trajs = TrajectoryLoader._load_system_trajectories(subdir_path, subdir, concat, stride)
+            
             if system_trajs:
                 trajectories.extend(system_trajs)
-                system_summary.append((os.path.basename(self.data_input), len(system_trajs)))
+                system_summary.append((subdir, len(system_trajs)))
         
-        return trajectories, system_summary
+        TrajectoryLoader._print_loading_summary(system_summary, concat)
+        return trajectories
     
-    def _load_system_trajectories(self, subdir_path, subdir_name):
+    @staticmethod
+    def _load_flat_structure(directory_path, concat, stride):
+        """Load trajectories from flat directory structure."""
+        trajectories = []
+        system_name = os.path.basename(directory_path)
+        system_trajs = TrajectoryLoader._load_system_trajectories(directory_path, system_name, concat, stride)
+        
+        if system_trajs:
+            trajectories.extend(system_trajs)
+            system_summary = [(system_name, len(system_trajs))]
+            TrajectoryLoader._print_loading_summary(system_summary, concat)
+        
+        return trajectories
+    
+    @staticmethod
+    def _print_loading_summary(system_summary, concat):
+        """Print summary of loaded trajectories."""
+        total_trajectories = sum(count for _, count in system_summary)
+        
+        if concat:
+            print(f"\nLoaded {len(system_summary)} systems with {total_trajectories} concatenated trajectories:")
+        else:
+            print(f"\nLoaded {len(system_summary)} systems with {total_trajectories} total trajectories:")
+        
+        for system, count in system_summary:
+            if concat and count > 1:
+                print(f"  {system}: 1 concatenated trajectory ({count} files)")
+            else:
+                print(f"  {system}: {count} trajectories")
+
+    @staticmethod
+    def _load_system_trajectories(subdir_path, subdir_name, concat, stride):
         """Load all trajectories for a single system."""
         pdb_files = [f for f in os.listdir(subdir_path) if f.endswith('.pdb')]
         xtc_files = [f for f in os.listdir(subdir_path) if f.endswith('.xtc')]
@@ -99,52 +137,16 @@ class TrajectoryLoader:
         system_trajs = []
         
         for xtc in tqdm(xtc_files, desc=f"Loading {subdir_name}", leave=False):
-            system_trajs.append(md.load(os.path.join(subdir_path, xtc), top=pdb_path))
+            xtc_path = os.path.join(subdir_path, xtc)
+            traj = md.load(xtc_path, top=pdb_path, stride=stride)
+            system_trajs.append(traj)
         
         # Concatenate trajectories within this system if concat=True
-        if self.concat and len(system_trajs) > 1:
+        if concat and len(system_trajs) > 1:
             print(f"  Concatenating {len(system_trajs)} trajectories for {subdir_name}...")
             concatenated = system_trajs[0]
             for traj in system_trajs[1:]:
                 concatenated = concatenated.join(traj)
             return [concatenated]  # Return as list with single concatenated trajectory
         
-        return system_trajs
-
-    def compute_distances(self, ref, batch_size=2500):
-        """
-        Compute pairwise distances using the DistanceCalculator utility class.
-        
-        Parameters:
-        -----------
-        ref : mdtraj.Trajectory
-            Reference trajectory for residue information
-        batch_size : int, default=2500
-            Number of frames to process at once
-        """
-        self.distances, self.res_list = DistanceCalculator.compute_distances(
-            trajectories=self.trajectories,
-            ref=ref,
-            batch_size=batch_size,
-            use_memmap=self.use_memmap,
-            distances_path=getattr(self, 'distances_path', None)
-        )
-
-    def compute_contacts(self, cutoff=4.5):
-        """
-        Compute contact maps using the ContactCalculator utility class.
-        
-        Parameters:
-        -----------
-        cutoff : float, default=4.5
-            Distance cutoff for contacts (in Angstrom)
-        """
-        if self.distances is None:
-            raise ValueError("Distances must be computed first. Call compute_distances() before compute_contacts().")
-        
-        self.contacts = ContactCalculator.compute_contacts(
-            distances=self.distances,
-            cutoff=cutoff,
-            use_memmap=self.use_memmap,
-            contacts_path=getattr(self, 'contacts_path', None)
-        )
+        return system_trajs 
