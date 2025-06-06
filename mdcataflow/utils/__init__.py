@@ -6,7 +6,7 @@ Contains core calculation and conversion utilities.
 
 from .DistanceCalculator import DistanceCalculator
 from .ContactCalculator import ContactCalculator
-from .ArrayConverter import ArrayHandler
+from .ArrayHandler import ArrayHandler
 
 __all__ = [
     'DistanceCalculator',
