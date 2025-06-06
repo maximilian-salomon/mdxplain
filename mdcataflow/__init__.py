@@ -9,7 +9,7 @@ __version__ = "0.1.0"
 __author__ = "Maximilian Salomon"
 
 # Import main components
-from .data.TrajectoryLoader import TrajectoryLoader
+from .data.TrajectoryData import TrajectoryLoader
 from .utils.DistanceCalculator import DistanceCalculator
 from .utils.ContactCalculator import ContactCalculator
 from .utils.ArrayHandler import ArrayHandler
