@@ -17,10 +17,10 @@ git clone https://github.com/yourusername/md_analysis_pipeline.git
 cd md_analysis_pipeline
 
 # Create and activate virtual environment
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
+python -m venv mdap
+source mdap/bin/activate  # Linux/Mac
 # or
-.\venv\Scripts\activate  # Windows
+.\mdap\Scripts\activate  # Windows
 
 # Install dependencies
 pip install -r requirements.txt
