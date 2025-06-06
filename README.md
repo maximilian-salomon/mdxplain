@@ -67,7 +67,7 @@ md_analysis_pipeline/
 
 ## License
 
-This project is licensed under the Apache2 License. See [LICENSE](LICENSE) for details.
+This project is licensed under the Apache License 2. See [LICENSE](LICENSE) for details.
 
 ## Acknowledgments
 
