@@ -1,3 +1,11 @@
+"""
+TrajectoryLoader - MD Trajectory Loading and Processing
+
+Author: Maximilian Salomon
+Version: 0.1.0
+Created with assistance from Claude-4-Sonnet and Cursor AI.
+"""
+
 import mdtraj as md
 import numpy as np
 import os

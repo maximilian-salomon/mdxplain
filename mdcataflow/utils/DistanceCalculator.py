@@ -1,3 +1,11 @@
+"""
+DistanceCalculator - MD Trajectory Distance Analysis
+
+Author: Maximilian Salomon
+Version: 0.1.0
+Created with assistance from Claude-4-Sonnet and Cursor AI.
+"""
+
 import numpy as np
 import mdtraj as md
 from tqdm import tqdm
