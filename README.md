@@ -65,10 +65,14 @@ md_analysis_pipeline/
 └── LICENSE            # License information
 ```
 
+## AI-Assisted Development
+
+Development was conducted using the Cursor IDE, an AI-first programming environment with access to multiple large language models (LLMs). The primary models used were Claude Sonnet 3.7 and 4.0 (Anthropic), Gemini 2.5 (Google), and ChatGPT 4 and 4.1 (OpenAI).
+
+The LLMs assisted with code generation, refactoring, optimization and documentation generation, and also served as a sounding board for brainstorming and exploring alternative implementation strategies.
+
+All architectural design, scientific analysis, algorithm development, prompting, and methodological decision-making, along with comprehensive code review and testing, were conducted by the developers. Responsibility for scientific accuracy and methodological responsibility rests entirely with the human contributors.
+
 ## License
 
-This project is licensed under the Apache License 2. See [LICENSE](LICENSE) for details.
-
-## Acknowledgments
-
-This project was developed with assistance from Claude-4-Sonnet and Cursor AI. 
+This project is licensed under the GNU Lesser General Public License v3.0 (LGPL v3.0). See [LICENSE](LICENSE) for details.
