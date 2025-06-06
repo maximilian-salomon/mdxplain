@@ -8,7 +8,7 @@ Created with assistance from Claude-4-Sonnet and Cursor AI.
 
 import numpy as np
 import warnings
-from .ArrayConverter import ArrayHandler
+from .ArrayHandler import ArrayHandler
 
 class ContactCalculator:
     """
