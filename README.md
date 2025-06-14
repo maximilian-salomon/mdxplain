@@ -1,20 +1,9 @@
-# MDCatAFlow (MD Catalytic Analysis Flow)
+# mdxplain
 
 A Python toolkit for scalable molecular dynamics trajectory analysis, combining modular workflows, memory-efficient processing and interpretable machine learning via decision trees to identify key conformational features and streamline complex pipelines.
 
 **Author:** Maximilian Salomon  
 **Version:** 0.1.0
-
-## Name Explanation
-
-**MDCatAFlow** stands for **MD Catalytic Analysis Flow** and describes the core functionality of the tool:
-
-- **MD** - Molecular Dynamics
-- **Cat** - Catalyst - the tool accelerates and automates MD analyses
-- **A** - Analysis - comprehensive statistical and dynamic analyses
-- **Flow** - Workflow/Pipeline - automated analysis process
-
-The tool acts as a **catalyst** for MD analyses by automating and accelerating complex calculations.
 
 ## Features (v0.1)
 
