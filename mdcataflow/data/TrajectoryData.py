@@ -24,8 +24,7 @@
 
 import os
 from .TrajectoryLoader import TrajectoryLoader
-from ..utils.DistanceCalculator import DistanceCalculator
-from ..utils.ContactCalculator import ContactCalculator
+from .FeatureData import FeatureData
 from ..utils.DataUtils import DataUtils
 
 
@@ -47,18 +46,63 @@ class TrajectoryData:
             Directory for cache files when using memory mapping
         """
         self.use_memmap = use_memmap
+        self.cache_dir = cache_dir
         
-        if use_memmap:
-            if cache_dir is None:
-                cache_dir = "./cache"
-            os.makedirs(cache_dir, exist_ok=True)
-            self.distances_path = os.path.join(cache_dir, "distances.dat")
-            self.contacts_path = os.path.join(cache_dir, "contacts.dat")
+        if use_memmap and cache_dir is None:
+            self.cache_dir = "./cache"
         
         self.trajectories = None
-        self.distances = None
-        self.contacts = None
-        self.res_list = None
+        self.features = {}  # Dictionary to store FeatureData instances by feature type
+
+    def add_feature(self, feature_type, cache_path=None,
+                    chunk_size=None, squareform=True, k=0, **kwargs):
+        """
+        Add a FeatureData instance for the specified feature type.
+        
+        Parameters:
+        -----------
+        feature_type : str
+            Type of feature ('distances', 'contacts', 'cci')
+        cache_path : str, optional
+            Specific cache path for this feature
+        """
+        if feature_type == 'distances' and self.features['distances'].data is not None:
+            raise ValueError("Distances FeatureData already exists.")
+        
+        if feature_type == 'contacts' or feature_type == 'cci':
+            if self.features['distances'].data is None:
+                raise ValueError("First add a distances FeatureData before adding contacts or cci.")
+            else:
+                kwargs['distances'] = self.features['distances']
+
+        feature_data = FeatureData(
+            feature_type=feature_type,
+            use_memmap=self.use_memmap,
+            cache_path=cache_path,
+            chunk_size=chunk_size,
+            squareform=squareform,
+            k=k
+        )
+
+        feature_data.compute(**kwargs)
+
+        self.features[feature_type] = feature_data
+
+    def get_feature(self, feature_type):
+        """
+        Get FeatureData instance for the specified feature type.
+        
+        Parameters:
+        -----------
+        feature_type : str
+            Type of feature ('distances', 'contacts', 'cci')
+            
+        Returns:
+        --------
+        FeatureData or None
+            The FeatureData instance if it exists, None otherwise
+        """
+        return self.features.get(feature_type)
 
     def load_trajectories(self, data_input, concat=False, stride=1):
         """
@@ -74,44 +118,6 @@ class TrajectoryData:
             Load every stride-th frame from trajectories
         """
         self.trajectories = TrajectoryLoader.load_trajectories(data_input, concat, stride)
-
-    def compute_distances(self, ref, batch_size=2500):
-        """
-        Compute pairwise distances using the DistanceCalculator utility class.
-        
-        Parameters:
-        -----------
-        ref : mdtraj.Trajectory
-            Reference trajectory for residue information
-        batch_size : int, default=2500
-            Number of frames to process at once
-        """
-        self.distances, self.res_list = DistanceCalculator.compute_distances(
-            trajectories=self.trajectories,
-            ref=ref,
-            batch_size=batch_size,
-            use_memmap=self.use_memmap,
-            distances_path=getattr(self, 'distances_path', None)
-        )
-
-    def compute_contacts(self, cutoff=4.5):
-        """
-        Compute contact maps using the ContactCalculator utility class.
-        
-        Parameters:
-        -----------
-        cutoff : float, default=4.5
-            Distance cutoff for contacts (in Angstrom)
-        """
-        if self.distances is None:
-            raise ValueError("Distances must be computed first. Call compute_distances() before compute_contacts().")
-        
-        self.contacts = ContactCalculator.compute_contacts(
-            distances=self.distances,
-            cutoff=cutoff,
-            use_memmap=self.use_memmap,
-            contacts_path=getattr(self, 'contacts_path', None)
-        )
 
     def save(self, save_path):
         """

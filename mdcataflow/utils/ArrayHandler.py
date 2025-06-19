@@ -23,6 +23,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import numpy as np
+import mdtraj as md
 
 class ArrayHandler:
     """
@@ -63,53 +64,35 @@ class ArrayHandler:
             return square_array[i_indices, j_indices]
 
     @staticmethod
-    def _apply_symmetry_to_chunk(square_array, start_idx, end_idx, k):
-        """Apply symmetry to a chunk of square arrays."""
-        chunk = square_array[start_idx:end_idx]
-        if k == 0:
-            chunk_T = np.transpose(chunk, (0, 2, 1))
-            diag_mask = np.eye(chunk.shape[1], dtype=bool)
-            square_array[start_idx:end_idx] = chunk + chunk_T - chunk[:, diag_mask, :][:, :, np.newaxis] * diag_mask
-        else:
-            square_array[start_idx:end_idx] = chunk + np.transpose(chunk, (0, 2, 1))
-
-    @staticmethod
-    def _process_condensed_chunk(condensed_array, square_array, start_idx, end_idx, n_residues, k):
-        """Process a chunk of condensed array to square format."""
-        i_indices, j_indices = np.triu_indices(n_residues, k=k)
-        chunk = condensed_array[start_idx:end_idx]
-        square_array[start_idx:end_idx, i_indices, j_indices] = chunk
-        ArrayHandler._apply_symmetry_to_chunk(square_array, start_idx, end_idx, k)
-
-    @staticmethod
-    def condensed_to_squareform(condensed_array, n_residues, k=0, chunk_size=None, output_path=None):
-        """Convert condensed format (NxP) to square format (NxMxM)."""
+    def condensed_to_squareform(condensed_array, residue_pairs, n_residues, chunk_size=None, output_path=None):
+        """Convert condensed format (NxP) to square format (NxMxM) using MDTraj's squareform."""
         if len(condensed_array.shape) == 2:
             n_frames = condensed_array.shape[0]
             
-            if output_path is not None:
-                square_array = np.memmap(output_path, dtype=condensed_array.dtype, mode='w+',
-                                       shape=(n_frames, n_residues, n_residues))
-            else:
-                square_array = np.zeros((n_frames, n_residues, n_residues), dtype=condensed_array.dtype)
-            
+            # For 2D arrays, we need to process chunk by chunk if using memmap
             if ArrayHandler.is_memmap(condensed_array) and chunk_size is not None:
+              
+                if output_path is not None:
+                    square_array = np.memmap(output_path, dtype=condensed_array.dtype, mode='w+',
+                                           shape=(n_frames, n_residues, n_residues))
+                else:
+                    square_array = np.zeros((n_frames, n_residues, n_residues), dtype=condensed_array.dtype)
+                
+                # Process in chunks to avoid memory issues
                 for i in range(0, n_frames, chunk_size):
                     end_idx = min(i + chunk_size, n_frames)
-                    ArrayHandler._process_condensed_chunk(condensed_array, square_array, i, end_idx, n_residues, k)
+                    chunk = condensed_array[i:end_idx]
+                    square_chunk = md.geometry.squareform(chunk, residue_pairs)
+                    square_array[i:end_idx] = square_chunk
+                    
             else:
-                i_indices, j_indices = np.triu_indices(n_residues, k=k)
-                square_array[:, i_indices, j_indices] = condensed_array
-                ArrayHandler._apply_symmetry_to_chunk(square_array, 0, n_frames, k)
+                # Process all at once for non-memmap arrays
+                square_array = md.geometry.squareform(condensed_array, residue_pairs)
                 
         elif len(condensed_array.shape) == 1:
-            square_array = np.zeros((n_residues, n_residues), dtype=condensed_array.dtype)
-            i_indices, j_indices = np.triu_indices(n_residues, k=k)
-            square_array[i_indices, j_indices] = condensed_array
-            if k == 0:
-                square_array = square_array + square_array.T - np.diag(np.diag(square_array))
-            else:
-                square_array = square_array + square_array.T
+            # For 1D arrays, direct conversion
+            square_array = md.geometry.squareform(condensed_array.reshape(1, -1), residue_pairs)[0]
         else:
             raise ValueError("condensed_array must be 1D or 2D")
+            
         return square_array 
