@@ -23,7 +23,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import numpy as np
-from .ArrayHandler import ArrayHandler
+from .FeatureShapeHelper import FeatureShapeHelper
 from .CalculatorStatHelper import CalculatorStatHelper
 from .CalculatorComputeHelper import CalculatorComputeHelper
 
@@ -33,10 +33,10 @@ class ContactCalculator():
     All methods are static and can be used without instantiation.
     """
 
-    def __init__(self, use_memmap=False, contacts_path=None, 
+    def __init__(self, use_memmap=False, cache_path=None, 
                 chunk_size=None, squareform=True, k=0):
         self.use_memmap = use_memmap
-        self.contacts_path = contacts_path
+        self.contacts_path = cache_path
         self.chunk_size = chunk_size
         self.squareform = squareform
         self.k = k
@@ -113,9 +113,9 @@ class ContactCalculator():
             
             # Convert format if needed
             if len(distances.shape) == 3 and not self.squareform:
-                chunk_contacts = ArrayHandler.squareform_to_condensed(chunk_contacts, k=self.k, chunk_size=self.chunk_size)
+                chunk_contacts = FeatureShapeHelper.squareform_to_condensed(chunk_contacts, k=self.k, chunk_size=self.chunk_size)
             elif len(distances.shape) == 2 and self.squareform:
-                chunk_contacts = ArrayHandler.condensed_to_squareform(chunk_contacts, n_residues, k=self.k, chunk_size=self.chunk_size)
+                chunk_contacts = FeatureShapeHelper.condensed_to_squareform(chunk_contacts, n_residues, k=self.k, chunk_size=self.chunk_size)
             
             contacts[i:end_idx] = chunk_contacts
         
@@ -148,7 +148,7 @@ class ContactCalculator():
             raise ValueError(f"Unknown metric: {metric}. Supported: {supported_metrics}")
 
     def compute_dynamic_values(self, contacts, metric='frequency', threshold_min=0.1, threshold_max=0.9, 
-                              feature_names=None, reduced_contacts_path=None):
+                              feature_names=None, output_path=None):
         """Filter and select dynamic contacts based on specified criteria.
         
         Parameters:
@@ -167,7 +167,7 @@ class ContactCalculator():
             Names for contact pairs
         use_memmap : bool, default=False
             Whether to use memory mapping
-        reduced_contacts_path : str, optional
+        output_path : str, optional
             Path for memory-mapped output
         chunk_size : int, default=1000
             Chunk size for processing
@@ -189,6 +189,6 @@ class ContactCalculator():
             threshold_max=threshold_max,
             feature_names=feature_names,
             use_memmap=self.use_memmap,
-            output_path=reduced_contacts_path,
+            output_path=output_path,
             chunk_size=self.chunk_size
         )

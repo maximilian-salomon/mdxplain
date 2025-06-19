@@ -25,6 +25,8 @@
 import numpy as np
 import warnings
 
+from .FeatureShapeHelper import FeatureShapeHelper
+
 class CalculatorComputeHelper:
     """
     Common helper methods for dynamic value computation across calculators.
@@ -149,9 +151,8 @@ class CalculatorComputeHelper:
     @staticmethod
     def _fill_memmap_data(data, dynamic_data, mask, chunk_size):
         """Fill memory-mapped dynamic data."""
-        from .ArrayHandler import ArrayHandler
         
-        if ArrayHandler.is_memmap(data):
+        if FeatureShapeHelper.is_memmap(data):
             for i in range(0, data.shape[0], chunk_size):
                 end_idx = min(i + chunk_size, data.shape[0])
                 chunk = data[i:end_idx]

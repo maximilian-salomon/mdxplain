@@ -1,7 +1,7 @@
-# MDCatAFlow - A Molecular Dynamics Catalysis Analysis Workflow Tool
+# MDxplain - A Molecular Dynamics Analysis Toolkit
 # Utility modules for MD analysis
 #
-# Contains core calculation and conversion utilities.
+# Contains core utility functions for data handling and processing.
 #
 # Author: Maximilian Salomon
 # Created with assistance from Claude-4-Sonnet and Cursor AI.
@@ -21,12 +21,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from .DistanceCalculator import DistanceCalculator
-from .ContactCalculator import ContactCalculator
-from .ArrayHandler import ArrayHandler
+from .DataUtils import DataUtils
 
 __all__ = [
-    'DistanceCalculator',
-    'ContactCalculator',
-    'ArrayHandler'
+    'DataUtils'
 ] 

@@ -26,9 +26,9 @@ import numpy as np
 import os
 import mdtraj as md
 from tqdm import tqdm
-from .ArrayHandler import ArrayHandler
 from .CalculatorComputeHelper import CalculatorComputeHelper
 from .CalculatorStatHelper import CalculatorStatHelper
+from .FeatureShapeHelper import FeatureShapeHelper
 
 
 class DistanceCalculator():
@@ -36,10 +36,10 @@ class DistanceCalculator():
     Utility class for computing distances between residues in MD trajectories.
     """
     
-    def __init__(self, use_memmap=False, distances_path=None, 
+    def __init__(self, use_memmap=False, cache_path=None, 
                 chunk_size=None, squareform=True, k=0):
         self.use_memmap = use_memmap
-        self.distances_path = distances_path
+        self.distances_path = cache_path
         self.chunk_size = chunk_size
         self.squareform = squareform
         self.k = k
@@ -173,7 +173,7 @@ class DistanceCalculator():
 
         # Convert to squareform only if requested
         if self.squareform:
-            distances = ArrayHandler.condensed_to_squareform(
+            distances = FeatureShapeHelper.condensed_to_squareform(
                 distances, res_list, chunk_size=self.chunk_size, output_path=self.distances_path
             )
             
@@ -207,7 +207,7 @@ class DistanceCalculator():
 
     def _convert_to_angstrom(self, distances, total_frames):
         """Convert distances from nm to Angstrom."""
-        if ArrayHandler.is_memmap(distances) and self.chunk_size is not None:
+        if FeatureShapeHelper.is_memmap(distances) and self.chunk_size is not None:
             for i in range(0, total_frames, self.chunk_size):
                 end_idx = min(i + self.chunk_size, total_frames)
                 distances[i:end_idx] *= 10

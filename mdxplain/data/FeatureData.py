@@ -22,8 +22,8 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import os
-from ..utils.DistanceCalculator import DistanceCalculator
-from ..utils.ContactCalculator import ContactCalculator
+from ..calculators.DistanceCalculator import DistanceCalculator
+from ..calculators.ContactCalculator import ContactCalculator
 
 
 class FeatureData:
