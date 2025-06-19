@@ -1,8 +1,8 @@
-# MDCatAFlow - A Molecular Dynamics Catalysis Analysis Workflow Tool
-# Main Module - MD Catalytic Analysis Flow
+# MDxplain - A Molecular Dynamics Analysis Toolkit
+# Calculator Module - MD Feature Calculators and Helpers
 #
-# A high-performance Python toolkit that accelerates molecular dynamics
-# trajectory analysis through automated workflows and memory-efficient processing.
+# High-performance calculators for molecular dynamics feature extraction
+# including distances, contacts, and statistical analysis.
 #
 # Author: Maximilian Salomon
 # Created with assistance from Claude-4-Sonnet and Cursor AI.
@@ -22,15 +22,17 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# Import main components
-from .data.TrajectoryData import TrajectoryLoader
-from .utils.DistanceCalculator import DistanceCalculator
-from .utils.ContactCalculator import ContactCalculator
-from .utils.ArrayHandler import ArrayHandler
+# Import calculator components
+from .DistanceCalculator import DistanceCalculator
+from .ContactCalculator import ContactCalculator
+from .CalculatorComputeHelper import CalculatorComputeHelper
+from .CalculatorStatHelper import CalculatorStatHelper
+from .FeatureShapeHelper import FeatureShapeHelper
 
 __all__ = [
-    'TrajectoryLoader',
     'DistanceCalculator',
-    'ContactCalculator',
-    'ArrayHandler'
+    'ContactCalculator', 
+    'CalculatorComputeHelper',
+    'CalculatorStatHelper',
+    'FeatureShapeHelper'
 ] 

@@ -1,7 +1,7 @@
-# MDCatAFlow - A Molecular Dynamics Catalysis Analysis Workflow Tool
-# ArrayConverter - Array Format Conversion Utilities
+# MDxplain - A Molecular Dynamics Analysis Toolkit
+# FeatureShapeHelper - Feature Array Format Conversion Helper
 #
-# Utility class for converting between square and condensed array formats.
+# Helper class for converting between square and condensed feature array formats.
 # All methods are static and can be used without instantiation.
 #
 # Author: Maximilian Salomon
@@ -25,9 +25,9 @@
 import numpy as np
 import mdtraj as md
 
-class ArrayHandler:
+class FeatureShapeHelper:
     """
-    Utility class for converting between square and condensed array formats.
+    Helper class for converting between square and condensed feature array formats.
     All methods are static and can be used without instantiation.
     """
     
@@ -51,7 +51,7 @@ class ArrayHandler:
             else:
                 result = np.zeros((n_frames, n_contacts), dtype=square_array.dtype)
             
-            if ArrayHandler.is_memmap(square_array) and chunk_size is not None:
+            if FeatureShapeHelper.is_memmap(square_array) and chunk_size is not None:
                 for i in range(0, n_frames, chunk_size):
                     end_idx = min(i + chunk_size, n_frames)
                     chunk = square_array[i:end_idx]
@@ -70,7 +70,7 @@ class ArrayHandler:
             n_frames = condensed_array.shape[0]
             
             # For 2D arrays, we need to process chunk by chunk if using memmap
-            if ArrayHandler.is_memmap(condensed_array) and chunk_size is not None:
+            if FeatureShapeHelper.is_memmap(condensed_array) and chunk_size is not None:
               
                 if output_path is not None:
                     square_array = np.memmap(output_path, dtype=condensed_array.dtype, mode='w+',
