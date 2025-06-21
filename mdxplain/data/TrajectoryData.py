@@ -54,38 +54,54 @@ class TrajectoryData:
         self.features = {}  # Dictionary to store FeatureData instances by feature type
 
     def add_feature(self, feature_type, cache_path=None,
-                    chunk_size=None, squareform=True, k=0, **kwargs):
+                    chunk_size=None):
         """
         Add a FeatureData instance for the specified feature type.
         
         Parameters:
         -----------
-        feature_type : str
-            Type of feature ('distances', 'contacts', 'cci')
+        feature_type : object
+            Feature type object (e.g., Distances(), Contacts())
         cache_path : str, optional
             Specific cache path for this feature
+        chunk_size : int, optional
+            Chunk size for processing
         """
-        if feature_type == 'distances' and self.features['distances'].data is not None:
-            raise ValueError("Distances FeatureData already exists.")
+        feature_key = str(feature_type)
         
-        if feature_type == 'contacts' or feature_type == 'cci':
-            if self.features['distances'].data is None:
-                raise ValueError("First add a distances FeatureData before adding contacts or cci.")
-            else:
-                kwargs['distances'] = self.features['distances']
-
+        # Check if feature already exists
+        if feature_key in self.features and self.features[feature_key].data is not None:
+            raise ValueError(f"{feature_key.capitalize()} FeatureData already exists.")
+        
+        # Check dependencies
+        dependencies = feature_type.get_dependencies()
+        for dep in dependencies:
+            dep_key = str(dep)
+            if dep_key not in self.features or self.features[dep_key].data is None:
+                raise ValueError(f"Dependency '{dep_key}' must be computed before '{feature_key}'.")
+        
+        # Create FeatureData instance
         feature_data = FeatureData(
             feature_type=feature_type,
             use_memmap=self.use_memmap,
             cache_path=cache_path,
-            chunk_size=chunk_size,
-            squareform=squareform,
-            k=k
+            chunk_size=chunk_size
         )
 
-        feature_data.compute(**kwargs)
+        # If the feature type uses another feature as input, 
+        # compute the feature with the input feature data
+        # Otherwise, compute the feature with the trajectories
+        if feature_type.get_input() != None:
+            feature_data.compute(self.features[feature_type.get_input()].get_data(), 
+                                 self.features[feature_type.get_input()].get_feature_names()
+            )
+        else:
+            if self.trajectories is None:
+                raise ValueError("Trajectories must be loaded before computing features.")
+            feature_data.compute(self.trajectories, feature_names=None)
 
-        self.features[feature_type] = feature_data
+        # Store the feature data
+        self.features[feature_key] = feature_data
 
     def get_feature(self, feature_type):
         """
@@ -93,15 +109,18 @@ class TrajectoryData:
         
         Parameters:
         -----------
-        feature_type : str
-            Type of feature ('distances', 'contacts', 'cci')
+        feature_type : FeatureTypeBase
+            Feature type object (e.g., Distances(), Contacts())
             
         Returns:
         --------
         FeatureData or None
             The FeatureData instance if it exists, None otherwise
         """
-        return self.features.get(feature_type)
+        feature_data = self.features.get(feature_type.__str__())
+        if feature_data is None:
+            raise ValueError(f"Feature {feature_type.__str__()} not found.")
+        return feature_data
 
     def load_trajectories(self, data_input, concat=False, stride=1):
         """
