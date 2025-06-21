@@ -22,9 +22,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import os
-from ..calculators.DistanceCalculator import DistanceCalculator
-from ..calculators.ContactCalculator import ContactCalculator
-
+import functools
 
 class FeatureData:
     """
@@ -32,7 +30,7 @@ class FeatureData:
     """
     
     def __init__(self, feature_type, use_memmap=False, cache_path=None, 
-                chunk_size=None, squareform=True, k=0):
+                chunk_size=None):
         """
         Initialize feature data container.
         
@@ -45,18 +43,11 @@ class FeatureData:
         cache_path : str, optional
             Path for cache file. If None and use_memmap=True, uses ./cache/<feature_type>.dat
         """
-        if feature_type not in ['distances', 'contacts', 'cci']:
-            raise ValueError(f"feature_type must be one of ['distances', 'contacts', 'cci'], got {feature_type}")
-        
+
         self.feature_type = feature_type
         self.use_memmap = use_memmap
         self.chunk_size = chunk_size
-        self.squareform = squareform
-        self.k = k
-        
-        # Set calculator based on feature type
-        self.calculator_factory()
-        
+
         # Handle cache path
         if use_memmap:
             if cache_path is None:
@@ -70,49 +61,42 @@ class FeatureData:
             
         # Initialize data as None
         self.data = None
-        self.res_list = None
+        self.feature_names = None
         self.reduced_data = None
-        self.reduced_res_list = None
+        self.reduced_feature_names = None
         self.reduction_info = None
         
+        self.feature_type = feature_type
+        self.feature_type.init_calculator(use_memmap=self.use_memmap, cache_path=self.cache_path, 
+                                          chunk_size=self.chunk_size)
+
         # Bind stats methods from calculator
         self._bind_stats_methods()
 
-    def calculator_factory(self):
-        if self.feature_type == 'distances':
-            self.calculator = DistanceCalculator(use_memmap=self.use_memmap, 
-                                                 cache_path=self.cache_path, 
-                                                 chunk_size=self.chunk_size, 
-                                                 squareform=self.squareform, 
-                                                 k=self.k)
-        elif self.feature_type == 'contacts':
-            self.calculator = ContactCalculator(use_memmap=self.use_memmap, 
-                                                cache_path=self.cache_path, 
-                                                chunk_size=self.chunk_size, 
-                                                squareform=self.squareform, 
-                                                k=self.k)
-        elif self.feature_type == 'cci':
-            self.calculator = CCICalculator(use_memmap=self.use_memmap, 
-                                                cache_path=self.cache_path, 
-                                                chunk_size=self.chunk_size, 
-                                                squareform=self.squareform, 
-                                                k=self.k)
         
     def _bind_stats_methods(self):
         """Bind stat methods from calculator to self.stats with automatic parameter passing."""
-        if hasattr(self.calculator, 'stat'):
+        if hasattr(self.feature_type.calculator, 'analysis'):
             # Create a simple object to hold bound methods
-            self.stats = type('BoundStats', (), {})()
+            self.analysis = type('BoundStats', (), {})()
             
             # Bind each method from calculator.stat
-            for method_name in dir(self.calculator.stat):
-                if not method_name.startswith('_') and callable(getattr(self.calculator.stat, method_name)):
-                    method = getattr(self.calculator.stat, method_name)
+            for method_name in dir(self.feature_type.calculator.analysis):
+                if not method_name.startswith('_') and callable(getattr(self.feature_type.calculator.analysis, method_name)):
+                    original_method = getattr(self.feature_type.calculator.analysis, method_name)
+                    
                     # Create bound method that automatically uses reduced_data if available, else data
-                    bound_method = lambda m=method: m(self.reduced_data if self.reduced_data is not None else self.data)
-                    setattr(self.stats, method_name, bound_method)
+                    def create_bound_method(method):
+                        @functools.wraps(method)
+                        def bound_method(*args, **kwargs):
+                            data = self.reduced_data if self.reduced_data is not None else self.data
+                            return method(data, *args, **kwargs)
+                        return bound_method
+                    
+                    bound_method = create_bound_method(original_method)
+                    setattr(self.analysis, method_name, bound_method)
 
-    def compute(self, **kwargs):
+    def compute(self, input_data=None, feature_names=None):
         """
         Compute feature data using the associated calculator.
         
@@ -123,37 +107,18 @@ class FeatureData:
         **kwargs : keyword arguments  
             Keyword arguments to pass to calculator.compute()
         """
-        if self.feature_type == 'cci' or self.feature_type == 'contacts':
-            if 'distances' not in kwargs:
-                raise ValueError("Distances must be provided for cci or contacts")
-            else:
-                kwargs['distances'] = kwargs['distances'].data
-                self.res_list = kwargs['distances'].res_list
-
-        if self.feature_type == 'contacts':
-            if 'cutoff' not in kwargs:
-                raise ValueError("For contacts, cutoff must be provided")
-        
         # Call the compute method of the associated calculator
-        result = self.calculator.compute(**kwargs)
-        
-        # Handle different return types based on feature type
-        if self.feature_type == 'distances':
-            self.data, self.res_list = result
-        elif self.feature_type == 'contacts' or self.feature_type == 'cci':
-            self.data = result
+        self.data, self.feature_names = self.feature_type.compute(input_data, feature_names=feature_names)
 
-    def reduce_data(self, metric='cv', threshold_min=None, threshold_max=None,
+    def reduce_data(self, metric, threshold_min=None, threshold_max=None,
                     transition_threshold=2.0, window_size=10, transition_mode='window', lag_time=1):
         """
         Reduce data using dynamic value filtering and store in self.reduced_data.
         
         Parameters:
         -----------
-        metric : str, default='cv'
-            Metric to use for selection. Depending on feature type
-            For distances: 'cv', 'std', 'variance', 'range' and 'transitions'
-            For contacts: 'frequency' and 'stability'
+        metric : FeatureTypeBase.ReduceMetrics
+            Use the ReduceMetrics of your desired Feature_Type as input
         threshold_min : float, optional
             Minimum threshold for filtering
         threshold_max : float, optional
@@ -171,14 +136,14 @@ class FeatureData:
             raise ValueError("No data available. Call compute() first.")
         
         # Get reduction results from calculator
-        results = self.calculator.compute_dynamic_values(
-            distances=self.data,
+        results = self.feature_type.calculator.compute_dynamic_values(
+            input_data=self.data,
             metric=metric,
             threshold_min=threshold_min,
             threshold_max=threshold_max,
             transition_threshold=transition_threshold,
             window_size=window_size,
-            feature_names=self.res_list,
+            feature_names=self.feature_names,
             output_path=self.reduced_cache_path,
             transition_mode=transition_mode,
             lag_time=lag_time
@@ -186,13 +151,31 @@ class FeatureData:
         
         # Simply set reduced_data
         self.reduced_data = results['dynamic_data']
-        self.reduced_res_list = results['feature_names']
+        self.reduced_feature_names = results['feature_names']
         self.reduction_info = results['n_dynamic'] / results['total_pairs']
         
         print(f"Now using reduced data. "
               f"Data reduced from {self.data.shape} to {self.reduced_data.shape}. "
               f"({self.reduction_info:.1%} retained).")
 
+    def get_data(self):
+        """
+        Get the data.
+        """
+        if self.reduced_data is not None:
+            return self.reduced_data
+        else:
+            return self.data
+    
+    def get_feature_names(self):
+        """
+        Get the feature names.
+        """
+        if self.reduced_feature_names is not None:
+            return self.reduced_feature_names
+        else:
+            return self.feature_names
+    
     def reset_reduction(self):
         """
         Reset feature reduction and return to using full original data.

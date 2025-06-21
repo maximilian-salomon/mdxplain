@@ -42,3 +42,7 @@ env/
 # OS specific
 .DS_Store
 Thumbs.db 
+
+# TODO: temporary blocked
+data/
+notebooks/
