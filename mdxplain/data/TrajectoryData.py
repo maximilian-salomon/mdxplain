@@ -117,9 +117,9 @@ class TrajectoryData:
         FeatureData or None
             The FeatureData instance if it exists, None otherwise
         """
-        feature_data = self.features.get(feature_type.__str__())
+        feature_data = self.features.get(str(feature_type))
         if feature_data is None:
-            raise ValueError(f"Feature {feature_type.__str__()} not found.")
+            raise ValueError(f"Feature {str(feature_type)} not found.")
         return feature_data
 
     def load_trajectories(self, data_input, concat=False, stride=1):
@@ -146,7 +146,7 @@ class TrajectoryData:
         save_path : str
             Path where to save the object (should end with .npy)
         """
-        DataUtils.save_trajectory_data(self, save_path)
+        DataUtils.save_object(self, save_path)
 
     def load(self, load_path):
         """
@@ -157,4 +157,4 @@ class TrajectoryData:
         load_path : str
             Path to the saved TrajectoryData .npy file
         """
-        DataUtils.load_trajectory_data(self, load_path)
+        DataUtils.load_object(self, load_path)
