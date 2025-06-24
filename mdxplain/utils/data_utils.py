@@ -1,5 +1,5 @@
-# MDCatAFlow - A Molecular Dynamics Catalysis Analysis Workflow Tool
-# DataUtils - Utility functions for saving and loading Python objects with memmap support
+# mdxplain - A Python toolkit for molecular dynamics trajectory analysis
+# data_utils - Utility functions for saving and loading Python objects with memmap support
 #
 # Utility class for saving and loading Python objects with memmap support.
 # Works with any Python object, not just TrajectoryData.

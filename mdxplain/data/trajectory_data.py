@@ -1,5 +1,5 @@
-# MDCatAFlow - A Molecular Dynamics Catalysis Analysis Workflow Tool
-# TrajectoryData - MD Trajectory Loading and Processing
+# mdxplain - A Python toolkit for molecular dynamics trajectory analysis
+# trajectory_data - MD Trajectory Loading and Processing
 #
 # Container for MD trajectory data and analysis results.
 # Uses a pluggable Loader class for flexible loading strategies.
@@ -22,9 +22,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from .TrajectoryLoader import TrajectoryLoader
-from .FeatureData import FeatureData
-from ..utils.DataUtils import DataUtils
+from .trajectory_loader import TrajectoryLoader
+from .feature_data import FeatureData
+from ..utils.data_utils import DataUtils
 
 
 class TrajectoryData:
