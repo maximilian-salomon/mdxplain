@@ -22,9 +22,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from .trajectory_loader import TrajectoryLoader
-from .feature_data import FeatureData
 from ..utils.data_utils import DataUtils
+from .feature_data import FeatureData
+from .trajectory_loader import TrajectoryLoader
 
 
 class TrajectoryData:
@@ -32,11 +32,11 @@ class TrajectoryData:
     Container for MD trajectory data and analysis results.
     Uses a pluggable Loader class for flexible loading strategies.
     """
-    
+
     def __init__(self, use_memmap=False, cache_dir=None):
         """
         Initialize trajectory data container.
-        
+
         Parameters:
         -----------
         use_memmap : bool, default=False
@@ -46,18 +46,17 @@ class TrajectoryData:
         """
         self.use_memmap = use_memmap
         self.cache_dir = cache_dir
-        
+
         if use_memmap and cache_dir is None:
             self.cache_dir = "./cache"
-        
+
         self.trajectories = None
         self.features = {}  # Dictionary to store FeatureData instances by feature type
 
-    def add_feature(self, feature_type, cache_path=None,
-                    chunk_size=None):
+    def add_feature(self, feature_type, cache_path=None, chunk_size=None):
         """
         Add a FeatureData instance for the specified feature type.
-        
+
         Parameters:
         -----------
         feature_type : object
@@ -68,32 +67,33 @@ class TrajectoryData:
             Chunk size for processing
         """
         feature_key = str(feature_type)
-        
+
         # Check if feature already exists
         if feature_key in self.features and self.features[feature_key].data is not None:
             raise ValueError(f"{feature_key.capitalize()} FeatureData already exists.")
-        
+
         # Check dependencies
         dependencies = feature_type.get_dependencies()
         for dep in dependencies:
             dep_key = str(dep)
             if dep_key not in self.features or self.features[dep_key].data is None:
                 raise ValueError(f"Dependency '{dep_key}' must be computed before '{feature_key}'.")
-        
+
         # Create FeatureData instance
         feature_data = FeatureData(
             feature_type=feature_type,
             use_memmap=self.use_memmap,
             cache_path=cache_path,
-            chunk_size=chunk_size
+            chunk_size=chunk_size,
         )
 
-        # If the feature type uses another feature as input, 
+        # If the feature type uses another feature as input,
         # compute the feature with the input feature data
         # Otherwise, compute the feature with the trajectories
-        if feature_type.get_input() != None:
-            feature_data.compute(self.features[feature_type.get_input()].get_data(), 
-                                 self.features[feature_type.get_input()].get_feature_names()
+        if feature_type.get_input() is not None:
+            feature_data.compute(
+                self.features[feature_type.get_input()].get_data(),
+                self.features[feature_type.get_input()].get_feature_names(),
             )
         else:
             if self.trajectories is None:
@@ -106,12 +106,12 @@ class TrajectoryData:
     def get_feature(self, feature_type):
         """
         Get FeatureData instance for the specified feature type.
-        
+
         Parameters:
         -----------
         feature_type : FeatureTypeBase
             Feature type object (e.g., Distances(), Contacts())
-            
+
         Returns:
         --------
         FeatureData or None
@@ -140,7 +140,7 @@ class TrajectoryData:
     def save(self, save_path):
         """
         Save the TrajectoryData object using DataUtils.
-        
+
         Parameters:
         -----------
         save_path : str
@@ -151,7 +151,7 @@ class TrajectoryData:
     def load(self, load_path):
         """
         Load data into this TrajectoryData object using DataUtils.
-        
+
         Parameters:
         -----------
         load_path : str

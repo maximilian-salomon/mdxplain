@@ -21,33 +21,32 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from .distance_calculator import DistanceCalculator
-from typing import Optional, List
-from .reduce_distance_metrics import ReduceDistanceMetrics
+from typing import List, Optional
+
 from ..interfaces.feature_type_base import FeatureTypeBase
+from .distance_calculator import DistanceCalculator
+from .reduce_distance_metrics import ReduceDistanceMetrics
+
 
 class Distances(FeatureTypeBase):
     """Distance feature type for molecular dynamics analysis."""
-    
+
     ReduceMetrics = ReduceDistanceMetrics
     """Available reduce metrics for distance features."""
-    
 
     def __init__(self, ref: Optional[str] = None):
         """
         Initialize distance calculator for molecular dynamics analysis.
-        
+
         Args:
             ref: Reference structure for distance calculations
         """
         super().__init__()
         self.ref = ref
 
-    def init_calculator(self, use_memmap=False, cache_path=None, 
-                        chunk_size=None):
-        self.calculator = DistanceCalculator(use_memmap=use_memmap, 
-                                                 cache_path=cache_path, 
-                                                 chunk_size=chunk_size
+    def init_calculator(self, use_memmap=False, cache_path=None, chunk_size=None):
+        self.calculator = DistanceCalculator(
+            use_memmap=use_memmap, cache_path=cache_path, chunk_size=chunk_size
         )
 
     def compute(self, input_data=None, feature_names=None):
@@ -59,12 +58,12 @@ class Distances(FeatureTypeBase):
     def get_dependencies(self) -> List[str]:
         """
         Get list of dependencies required for distance calculations.
-        
+
         Returns:
             Empty list as distances have no dependencies
         """
         return []
-    
+
     @staticmethod
     def __str__() -> str:
         """Return string representation of the distance feature type."""

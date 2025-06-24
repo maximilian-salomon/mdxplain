@@ -23,6 +23,4 @@
 
 from .TrajectoryData import TrajectoryData
 
-__all__ = [
-    'TrajectoryData'
-] 
+__all__ = ["TrajectoryData"]

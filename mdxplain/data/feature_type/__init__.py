@@ -1,7 +1,4 @@
-from .distances.Distances import Distances
 from .contacts.Contacts import Contacts
+from .distances.Distances import Distances
 
-__all__ = [
-    'Distances',
-    'Contacts'
-]
+__all__ = ["Distances", "Contacts"]

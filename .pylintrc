@@ -1,0 +1,34 @@
+[MASTER]
+# Use multiple processes to speed up Pylint
+jobs=0
+
+[MESSAGES CONTROL]
+# Disable warnings that are reasonable for scientific/data analysis code
+disable=
+    # Design patterns - reasonable for scientific code
+    too-many-arguments,          # R0913 - Scientific functions often need many parameters
+    too-many-instance-attributes, # R0902 - Data classes legitimately have many attributes  
+    too-many-public-methods,     # R0904 - Analysis classes provide many statistical methods
+    too-few-public-methods,      # R0903 - Utility classes are fine with few methods
+    
+    # Documentation - handled separately
+    missing-module-docstring,    # C0114
+    missing-class-docstring,     # C0115  
+    missing-function-docstring,  # C0116
+    
+    # Naming - we follow scientific conventions
+    invalid-name,                # C0103 - Single letter variables are common in science
+    
+    # Import issues - external dependencies
+    import-error,                # E0401
+    no-name-in-module           # E0611
+
+[FORMAT]
+# Maximum number of characters on a single line
+max-line-length=100
+
+[DESIGN]
+# Increase reasonable limits for scientific code
+max-args=10                     # Allow up to 10 arguments (was 5)
+max-attributes=15               # Allow up to 15 attributes (was 7)  
+max-public-methods=30           # Allow up to 30 public methods (was 20) 

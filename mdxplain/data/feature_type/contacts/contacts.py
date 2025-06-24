@@ -21,34 +21,34 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from typing import List
+
 from ..distances.distances import Distances
+from ..interfaces.feature_type_base import FeatureTypeBase
 from .contact_calculator import ContactCalculator
 from .reduce_contact_metrics import ReduceContactMetrics
-from ..interfaces.feature_type_base import FeatureTypeBase
-from typing import List
+
 
 class Contacts(FeatureTypeBase):
     """Contact feature type for molecular dynamics analysis."""
-    
+
     ReduceMetrics = ReduceContactMetrics()
     """Available reduce metrics for contact features."""
 
     def __init__(self, cutoff=4.5):
         """
         Initialize contact calculator for molecular dynamics analysis.
-        
+
         Args:
             cutoff: Distance cutoff for contact determination (in Angstrom)
         """
         super().__init__()
         self.cutoff = cutoff
 
-    def init_calculator(self, use_memmap=False, cache_path=None, 
-                        chunk_size=None):
+    def init_calculator(self, use_memmap=False, cache_path=None, chunk_size=None):
         """Initialize the contact calculator with given parameters."""
-        self.calculator = ContactCalculator(use_memmap=use_memmap, 
-                                                cache_path=cache_path, 
-                                                chunk_size=chunk_size
+        self.calculator = ContactCalculator(
+            use_memmap=use_memmap, cache_path=cache_path, chunk_size=chunk_size
         )
 
     def compute(self, input_data, feature_names):
@@ -60,12 +60,12 @@ class Contacts(FeatureTypeBase):
     def get_dependencies(self) -> List[str]:
         """
         Get list of dependencies required for contact calculations.
-        
+
         Returns:
             List containing Distances dependency
         """
-        return [str(Distances)] 
-    
+        return [str(Distances)]
+
     @staticmethod
     def __str__() -> str:
         """Return string representation of the contact feature type."""
