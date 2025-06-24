@@ -44,5 +44,5 @@ env/
 Thumbs.db 
 
 # TODO: temporary blocked
-data/
-notebooks/
+/data/
+/notebooks/

@@ -1,4 +1,4 @@
-# MDxplain - A Molecular Dynamics Analysis Toolkit
+# mdxplain - A Python toolkit for molecular dynamics trajectory analysis
 # Utility modules for MD analysis
 #
 # Contains core utility functions for data handling and processing.
@@ -21,7 +21,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from .DataUtils import DataUtils
+from .data_utils import DataUtils
 
 __all__ = [
     'DataUtils'

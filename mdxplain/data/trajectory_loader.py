@@ -1,5 +1,5 @@
-# MDCatAFlow - A Molecular Dynamics Catalysis Analysis Workflow Tool
-# Loader - MD Trajectory Loading Strategies
+# mdxplain - A Python toolkit for molecular dynamics trajectory analysis
+# trajectory_loader - MD Trajectory Loading Strategies
 #
 # Handles the loading methodology for MD trajectories.
 # This class can be easily replaced or extended for different loading strategies.

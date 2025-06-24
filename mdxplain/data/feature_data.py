@@ -1,5 +1,5 @@
-# MDCatAFlow - A Molecular Dynamics Catalysis Analysis Workflow Tool
-# FeatureData - Feature Data Container
+# mdxplain - A Python toolkit for molecular dynamics trajectory analysis
+# feature_data - Feature Data Container
 #
 # Container for feature data (distances, contacts) with associated calculator.
 #
