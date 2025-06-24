@@ -21,19 +21,19 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import os
 import functools
+import os
+
 
 class FeatureData:
     """
     Container for feature data with associated calculator and statistics helper.
     """
-    
-    def __init__(self, feature_type, use_memmap=False, cache_path=None, 
-                chunk_size=None):
+
+    def __init__(self, feature_type, use_memmap=False, cache_path=None, chunk_size=None):
         """
         Initialize feature data container.
-        
+
         Parameters:
         -----------
         feature_type : str
@@ -58,63 +58,77 @@ class FeatureData:
         else:
             self.cache_path = None
             self.reduced_cache_path = None
-            
+
         # Initialize data as None
         self.data = None
         self.feature_names = None
         self.reduced_data = None
         self.reduced_feature_names = None
         self.reduction_info = None
-        
+
         self.feature_type = feature_type
-        self.feature_type.init_calculator(use_memmap=self.use_memmap, cache_path=self.cache_path, 
-                                          chunk_size=self.chunk_size)
+        self.feature_type.init_calculator(
+            use_memmap=self.use_memmap, cache_path=self.cache_path, chunk_size=self.chunk_size
+        )
 
         # Bind stats methods from calculator
         self._bind_stats_methods()
 
-        
     def _bind_stats_methods(self):
         """Bind stat methods from calculator to self.stats with automatic parameter passing."""
-        if hasattr(self.feature_type.calculator, 'analysis'):
+        if hasattr(self.feature_type.calculator, "analysis"):
             # Create a simple object to hold bound methods
-            self.analysis = type('BoundStats', (), {})()
-            
+            self.analysis = type("BoundStats", (), {})()
+
             # Bind each method from calculator.stat
             for method_name in dir(self.feature_type.calculator.analysis):
-                if not method_name.startswith('_') and callable(getattr(self.feature_type.calculator.analysis, method_name)):
+                if not method_name.startswith("_") and callable(
+                    getattr(self.feature_type.calculator.analysis, method_name)
+                ):
                     original_method = getattr(self.feature_type.calculator.analysis, method_name)
-                    
-                    # Create bound method that automatically uses reduced_data if available, else data
+
+                    # Create bound method that automatically uses reduced_data if available,
+                    # else data
                     def create_bound_method(method):
                         @functools.wraps(method)
                         def bound_method(*args, **kwargs):
                             data = self.reduced_data if self.reduced_data is not None else self.data
                             return method(data, *args, **kwargs)
+
                         return bound_method
-                    
+
                     bound_method = create_bound_method(original_method)
                     setattr(self.analysis, method_name, bound_method)
 
     def compute(self, input_data=None, feature_names=None):
         """
         Compute feature data using the associated calculator.
-        
+
         Parameters:
         -----------
         *args : arguments
             Arguments to pass to calculator.compute()
-        **kwargs : keyword arguments  
+        **kwargs : keyword arguments
             Keyword arguments to pass to calculator.compute()
         """
         # Call the compute method of the associated calculator
-        self.data, self.feature_names = self.feature_type.compute(input_data, feature_names=feature_names)
+        self.data, self.feature_names = self.feature_type.compute(
+            input_data, feature_names=feature_names
+        )
 
-    def reduce_data(self, metric, threshold_min=None, threshold_max=None,
-                    transition_threshold=2.0, window_size=10, transition_mode='window', lag_time=1):
+    def reduce_data(
+        self,
+        metric,
+        threshold_min=None,
+        threshold_max=None,
+        transition_threshold=2.0,
+        window_size=10,
+        transition_mode="window",
+        lag_time=1,
+    ):
         """
         Reduce data using dynamic value filtering and store in self.reduced_data.
-        
+
         Parameters:
         -----------
         metric : FeatureTypeBase.ReduceMetrics
@@ -134,7 +148,7 @@ class FeatureData:
         """
         if self.data is None:
             raise ValueError("No data available. Call compute() first.")
-        
+
         # Get reduction results from calculator
         results = self.feature_type.calculator.compute_dynamic_values(
             input_data=self.data,
@@ -146,17 +160,19 @@ class FeatureData:
             feature_names=self.feature_names,
             output_path=self.reduced_cache_path,
             transition_mode=transition_mode,
-            lag_time=lag_time
+            lag_time=lag_time,
         )
-        
+
         # Simply set reduced_data
-        self.reduced_data = results['dynamic_data']
-        self.reduced_feature_names = results['feature_names']
-        self.reduction_info = results['n_dynamic'] / results['total_pairs']
-        
-        print(f"Now using reduced data. "
-              f"Data reduced from {self.data.shape} to {self.reduced_data.shape}. "
-              f"({self.reduction_info:.1%} retained).")
+        self.reduced_data = results["dynamic_data"]
+        self.reduced_feature_names = results["feature_names"]
+        self.reduction_info = results["n_dynamic"] / results["total_pairs"]
+
+        print(
+            f"Now using reduced data. "
+            f"Data reduced from {self.data.shape} to {self.reduced_data.shape}. "
+            f"({self.reduction_info:.1%} retained)."
+        )
 
     def get_data(self):
         """
@@ -164,28 +180,26 @@ class FeatureData:
         """
         if self.reduced_data is not None:
             return self.reduced_data
-        else:
-            return self.data
-    
+        return self.data
+
     def get_feature_names(self):
         """
         Get the feature names.
         """
         if self.reduced_feature_names is not None:
             return self.reduced_feature_names
-        else:
-            return self.feature_names
-    
+        return self.feature_names
+
     def reset_reduction(self):
         """
         Reset feature reduction and return to using full original data.
-        
+
         Examples:
         --------
         # Apply reduction
         features.reduce_features(metric='cv', threshold_min=0.5)
         print(features.active_data.shape)  # Reduced shape
-        
+
         # Reset to full data
         features.reset_reduction()
         print(features.active_data.shape)  # Original shape
@@ -193,15 +207,17 @@ class FeatureData:
         if self.reduced_data is None:
             print("No reduction to reset - already using full data.")
             return
-        
+
         # Clear reduced data
         original_shape = self.data.shape
         reduced_shape = self.reduced_data.shape
-        
+
         self.reduced_data = None
         self.reduced_res_list = None
         old_info = self.reduction_info
         self.reduction_info = None
-        
-        print(f"Reset reduction: Now using full data {original_shape}. "
-              f"(Data was reduced to {reduced_shape}, {old_info:.1%})")
+
+        print(
+            f"Reset reduction: Now using full data {original_shape}. "
+            f"(Data was reduced to {reduced_shape}, {old_info:.1%})"
+        )

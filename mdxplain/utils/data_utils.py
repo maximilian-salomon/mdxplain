@@ -24,6 +24,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import os
+
 import numpy as np
 
 
@@ -33,12 +34,12 @@ class DataUtils:
     Works with any Python object, not just TrajectoryData.
     Preserves memmap properties correctly.
     """
-    
+
     @staticmethod
     def save_object(obj, save_path):
         """
         Save any Python object preserving memmap properties.
-        
+
         Parameters:
         -----------
         obj : object
@@ -53,7 +54,7 @@ class DataUtils:
     def load_object(obj, load_path):
         """
         Load data into any existing Python object preserving memmap properties.
-        
+
         Parameters:
         -----------
         obj : object
@@ -68,39 +69,39 @@ class DataUtils:
     def _prepare_save_object(obj):
         """Prepare any object for saving, handling memmaps specially."""
         save_obj = {}
-        
+
         for attr_name in dir(obj):
-            if attr_name.startswith('_'):
+            if attr_name.startswith("_"):
                 continue
-            
+
             attr_value = getattr(obj, attr_name)
-            
+
             if isinstance(attr_value, np.memmap):
                 save_obj[attr_name] = DataUtils._save_memmap_info(attr_value, attr_name)
             else:
                 save_obj[attr_name] = attr_value
-        
+
         return save_obj
 
     @staticmethod
     def _save_memmap_info(memmap_array, attr_name):
         """Save memmap info - every memmap must have a filename."""
-        if not (hasattr(memmap_array, 'filename') and memmap_array.filename):
+        if not (hasattr(memmap_array, "filename") and memmap_array.filename):
             raise ValueError(f"Memmap {attr_name} has no filename - this should not happen!")
-        
+
         return {
-            '_is_memmap': True,
-            'dtype': memmap_array.dtype,
-            'shape': memmap_array.shape,
-            'mode': getattr(memmap_array, 'mode', 'r'),
-            'original_path': memmap_array.filename
+            "_is_memmap": True,
+            "dtype": memmap_array.dtype,
+            "shape": memmap_array.shape,
+            "mode": getattr(memmap_array, "mode", "r"),
+            "original_path": memmap_array.filename,
         }
 
     @staticmethod
     def _restore_object_attributes(obj, loaded_obj):
         """Restore object attributes, recreating memmaps."""
         for attr_name, attr_value in loaded_obj.items():
-            if isinstance(attr_value, dict) and attr_value.get('_is_memmap', False):
+            if isinstance(attr_value, dict) and attr_value.get("_is_memmap", False):
                 restored_memmap = DataUtils._restore_memmap(obj, attr_value, attr_name)
                 setattr(obj, attr_name, restored_memmap)
             else:
@@ -109,17 +110,25 @@ class DataUtils:
     @staticmethod
     def _restore_memmap(obj, memmap_info, attr_name):
         """Restore a memmap from saved info."""
-        original_path = memmap_info['original_path']
-        
+        original_path = memmap_info["original_path"]
+
         if os.path.exists(original_path):
-            return np.memmap(original_path, dtype=memmap_info['dtype'], 
-                           mode='r', shape=tuple(memmap_info['shape']))
-        
-        if hasattr(obj, 'use_memmap') and obj.use_memmap:
+            return np.memmap(
+                original_path,
+                dtype=memmap_info["dtype"],
+                mode="r",
+                shape=tuple(memmap_info["shape"]),
+            )
+
+        if hasattr(obj, "use_memmap") and obj.use_memmap:
             if hasattr(obj, f"{attr_name}_path"):
                 target_path = getattr(obj, f"{attr_name}_path")
                 if target_path != original_path and os.path.exists(target_path):
-                    return np.memmap(target_path, dtype=memmap_info['dtype'], 
-                                   mode='r', shape=tuple(memmap_info['shape']))
-        
-        return None 
+                    return np.memmap(
+                        target_path,
+                        dtype=memmap_info["dtype"],
+                        mode="r",
+                        shape=tuple(memmap_info["shape"]),
+                    )
+
+        return None

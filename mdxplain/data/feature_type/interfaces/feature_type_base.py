@@ -23,42 +23,44 @@
 
 from abc import ABC, abstractmethod
 from typing import List, Tuple
+
 import numpy as np
+
 
 class FeatureTypeBase(ABC):
     """Base class for all feature types."""
-    
+
     def __init__(self):
         """Initialize the feature type with a calculator."""
         self.calculator = None
-    
+
     @abstractmethod
-    def get_dependencies(self) -> List['FeatureTypeBase']:
+    def get_dependencies(self) -> List[str]:
         """
         Get list of dependencies required for this feature type.
-        
+
         Returns:
-            List of feature type objects that must be computed first
+            List of feature type names that must be computed first
         """
         pass
-    
+
     @staticmethod
     @abstractmethod
     def __str__() -> str:
         """
         Return string representation of the feature type.
         Used as key for storing in feature dictionaries.
-        
+
         Returns:
             String identifier for this feature type
         """
-        pass 
+        pass
 
     @abstractmethod
     def init_calculator(self, **kwargs):
         """
         Initialize the calculator for this feature type.
-        
+
         Args:
             **kwargs: Parameters for calculator initialization
         """
@@ -68,12 +70,12 @@ class FeatureTypeBase(ABC):
     def compute(self, input_data=None, feature_names=None) -> Tuple[np.ndarray, List[str]]:
         """
         Compute the feature type.
-        
+
         Args:
             **kwargs: Parameters for computation
         """
         pass
-    
+
     def get_input(self):
         """
         Get the input feature type.

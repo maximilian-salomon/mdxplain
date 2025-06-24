@@ -22,10 +22,11 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from ..helper.FeatureShapeHelper import FeatureShapeHelper
-from ..helper.CalculatorComputeHelper import CalculatorComputeHelper
-from ..interfaces.CalculatorBase import CalculatorBase
+from ..helper.calculator_compute_helper import CalculatorComputeHelper
+from ..helper.feature_shape_helper import FeatureShapeHelper
+from ..interfaces.calculator_base import CalculatorBase
 from .contact_calculator_analysis import ContactCalculatorAnalysis
+
 
 class ContactCalculator(CalculatorBase):
     """
@@ -33,21 +34,20 @@ class ContactCalculator(CalculatorBase):
     All methods are static and can be used without instantiation.
     """
 
-    def __init__(self, use_memmap=False, cache_path=None, 
-                chunk_size=None):
+    def __init__(self, use_memmap=False, cache_path=None, chunk_size=None):
         super().__init__(use_memmap, cache_path, chunk_size)
         self.contacts_path = cache_path
         self.chunk_size = chunk_size
         self.use_memmap = use_memmap
 
         self.analysis = ContactCalculatorAnalysis(chunk_size=self.chunk_size)
-    
+
     # ===== MAIN COMPUTATION METHOD =====
-    
+
     def compute(self, distances, cutoff=4.5, squareform=False, k=0):
         """
         Compute contact maps from distance arrays.
-        
+
         Parameters:
         -----------
         distances : numpy.ndarray
@@ -64,7 +64,7 @@ class ContactCalculator(CalculatorBase):
             If True, output NxMxM. If False, output NxP (upper triangular)
         k : int, default=0
             Diagonal offset: 0=include diagonal, 1=exclude diagonal, >1=exclude additional diagonals
-            
+
         Returns:
         --------
         numpy.ndarray
@@ -72,34 +72,42 @@ class ContactCalculator(CalculatorBase):
         """
         # Calculate dimensions and conversion requirements
         output_shape, n_residues = CalculatorComputeHelper.calculate_output_dimensions(
-            distances.shape, squareform, k)
-        
+            distances.shape, squareform, k
+        )
+
         # Create output array
-        contacts = CalculatorComputeHelper.create_output_array(self.use_memmap, self.contacts_path, output_shape, dtype=bool)
-        
+        contacts = CalculatorComputeHelper.create_output_array(
+            self.use_memmap, self.contacts_path, output_shape, dtype=bool
+        )
+
         # Process in chunks
         if self.chunk_size is None:
             self.chunk_size = distances.shape[0]
-        
+
         for i in range(0, distances.shape[0], self.chunk_size):
             end_idx = min(i + self.chunk_size, distances.shape[0])
             chunk_contacts = distances[i:end_idx] <= cutoff
-            
+
             # Convert format if needed
             if len(distances.shape) == 3 and not squareform:
-                chunk_contacts = FeatureShapeHelper.squareform_to_condensed(chunk_contacts, k=k, chunk_size=self.chunk_size)
+                chunk_contacts = FeatureShapeHelper.squareform_to_condensed(
+                    chunk_contacts, k=k, chunk_size=self.chunk_size
+                )
             elif len(distances.shape) == 2 and squareform:
-                chunk_contacts = FeatureShapeHelper.condensed_to_squareform(chunk_contacts, n_residues, k=k, chunk_size=self.chunk_size)
-            
+                chunk_contacts = FeatureShapeHelper.condensed_to_squareform(
+                    chunk_contacts, n_residues, k=k, chunk_size=self.chunk_size
+                )
+
             contacts[i:end_idx] = chunk_contacts
-        
+
         return contacts
 
-    def _compute_metric_values(self,contacts, metric, threshold, window_size, 
-                              transition_mode='window', lag_time=1):
+    def _compute_metric_values(
+        self, contacts, metric, threshold, window_size, transition_mode="window", lag_time=1
+    ):
         """
         Compute metric values for contacts based on specified metric type.
-        
+
         Parameters:
         -----------
         contacts : numpy.ndarray
@@ -119,27 +127,42 @@ class ContactCalculator(CalculatorBase):
         numpy.ndarray
             Computed metric values
         """
-        if metric == 'frequency':
+        if metric == "frequency":
             return self.analysis.compute_frequency(contacts)
-        elif metric == 'stability':
+        if metric == "stability":
             return self.analysis.compute_stability(contacts)
-        elif metric == 'transitions':
+        if metric == "transitions":
             # For transitions, use threshold as transition threshold (default 2.0 Å)
-            if transition_mode == 'window':
-                return self.analysis.compute_transitions_window(contacts, threshold=threshold, window_size=window_size)
-            elif transition_mode == 'lagtime':
-                return self.analysis.compute_transitions_lagtime(contacts, threshold=threshold, lag_time=lag_time)
-            else:
-                raise ValueError(f"Unknown transition mode: {transition_mode}. Supported: 'window', 'lagtime'")
-        else:
-            supported_metrics = ['frequency', 'stability', 'transitions']
-            raise ValueError(f"Unknown metric: {metric}. Supported: {supported_metrics}")
+            if transition_mode == "window":
+                return self.analysis.compute_transitions_window(
+                    contacts, threshold=threshold, window_size=window_size
+                )
+            if transition_mode == "lagtime":
+                return self.analysis.compute_transitions_lagtime(
+                    contacts, threshold=threshold, lag_time=lag_time
+                )
+            raise ValueError(
+                f"Unknown transition mode: {transition_mode}. Supported: 'window', 'lagtime'"
+            )
 
-    def compute_dynamic_values(self, input_data, metric='frequency', threshold_min=None, threshold_max=None, 
-                              transition_threshold=2.0, window_size=10, feature_names=None, output_path=None,
-                              transition_mode='window', lag_time=1):
+        supported_metrics = ["frequency", "stability", "transitions"]
+        raise ValueError(f"Unknown metric: {metric}. Supported: {supported_metrics}")
+
+    def compute_dynamic_values(
+        self,
+        input_data,
+        metric="frequency",
+        threshold_min=None,
+        threshold_max=None,
+        transition_threshold=2.0,
+        window_size=10,
+        feature_names=None,
+        output_path=None,
+        transition_mode="window",
+        lag_time=1,
+    ):
         """Filter and select dynamic contacts based on specified criteria.
-        
+
         Parameters:
         -----------
         contacts : numpy.ndarray
@@ -166,7 +189,7 @@ class ContactCalculator(CalculatorBase):
             Mode for transitions metric: 'window' or 'lagtime'
         lag_time : int, default=1
             Lag time for transitions metric
-            
+
         Returns:
         --------
         dict
@@ -174,10 +197,9 @@ class ContactCalculator(CalculatorBase):
         """
         # Compute metric values using helper method
         metric_values = self._compute_metric_values(
-            input_data, metric, transition_threshold, window_size, 
-            transition_mode, lag_time
+            input_data, metric, transition_threshold, window_size, transition_mode, lag_time
         )
-        
+
         # Use the common helper
         return CalculatorComputeHelper.compute_dynamic_values(
             data=input_data,
@@ -188,5 +210,5 @@ class ContactCalculator(CalculatorBase):
             feature_names=feature_names,
             use_memmap=self.use_memmap,
             output_path=output_path,
-            chunk_size=self.chunk_size
+            chunk_size=self.chunk_size,
         )
