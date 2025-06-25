@@ -1,8 +1,4 @@
 # mdxplain - A Python toolkit for molecular dynamics trajectory analysis
-# contact_calculator - MD Trajectory Contact Analysis
-#
-# Utility class for computing contact maps from distance arrays.
-# All methods are static and can be used without instantiation.
 #
 # Author: Maximilian Salomon
 # Created with assistance from Claude-4-Sonnet and Cursor AI.
@@ -22,6 +18,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+"""
+Contact calculator for molecular dynamics trajectory analysis.
+
+Utility class for computing contact maps from distance arrays using distance cutoffs.
+Supports memory mapping for large datasets and provides statistical analysis capabilities.
+"""
+
 from ..helper.calculator_compute_helper import CalculatorComputeHelper
 from ..helper.feature_shape_helper import FeatureShapeHelper
 from ..interfaces.calculator_base import CalculatorBase
@@ -30,11 +33,45 @@ from .contact_calculator_analysis import ContactCalculatorAnalysis
 
 class ContactCalculator(CalculatorBase):
     """
-    Utility class for computing contact maps from distance arrays.
-    All methods are static and can be used without instantiation.
+    Calculator for computing binary contact maps from distance arrays.
+
+    Converts distance data into binary contact matrices by applying distance
+    cutoffs. Supports both memory-mapped arrays for large datasets and various
+    output formats (square/condensed). Includes statistical analysis capabilities
+    for contact frequency, stability, and transition analysis.
+
+    Examples:
+    ---------
+    >>> # Basic contact calculation
+    >>> calculator = ContactCalculator()
+    >>> contacts = calculator.compute(distance_data, cutoff=4.0)
+
+    >>> # With memory mapping
+    >>> calculator = ContactCalculator(use_memmap=True, cache_path='./cache/')
+    >>> contacts = calculator.compute(distance_data, cutoff=3.5)
     """
 
     def __init__(self, use_memmap=False, cache_path=None, chunk_size=None):
+        """
+        Initialize contact calculator with configuration parameters.
+
+        Parameters:
+        -----------
+        use_memmap : bool, default=False
+            Whether to use memory mapping for large datasets
+        cache_path : str, optional
+            Directory path for storing cache files
+        chunk_size : int, optional
+            Number of frames to process per chunk
+
+        Examples:
+        ---------
+        >>> # Basic initialization
+        >>> calculator = ContactCalculator()
+
+        >>> # With memory mapping
+        >>> calculator = ContactCalculator(use_memmap=True, cache_path='./cache/')
+        """
         super().__init__(use_memmap, cache_path, chunk_size)
         self.contacts_path = cache_path
         self.chunk_size = chunk_size
@@ -44,32 +81,39 @@ class ContactCalculator(CalculatorBase):
 
     # ===== MAIN COMPUTATION METHOD =====
 
-    def compute(self, distances, cutoff=4.5, squareform=False, k=0):
+    def compute(self, input_data, **kwargs):
         """
-        Compute contact maps from distance arrays.
+        Compute binary contact maps from distance arrays using distance cutoff.
 
         Parameters:
         -----------
-        distances : numpy.ndarray
-            Distance array (NxMxM for square form or NxP for condensed form)
-        cutoff : float, default=4.5
-            Distance cutoff for contacts (in Angstrom)
-        use_memmap : bool, default=False
-            Whether to use memory mapping
-        contacts_path : str, optional
-            Path for memory-mapped contact array
-        chunk_size : int, default=None
-            Chunk size for memmap processing (None for no chunking)
-        squareform : bool, default=True
-            If True, output NxMxM. If False, output NxP (upper triangular)
-        k : int, default=0
-            Diagonal offset: 0=include diagonal, 1=exclude diagonal, >1=exclude additional diagonals
+        input_data : numpy.ndarray
+            Distance array (NxMxM square or NxP condensed format) in Angstrom
+        **kwargs : dict
+            Additional parameters:
+            - cutoff : float, default=4.5 - Distance cutoff for contact determination
+            - squareform : bool, default=False - If True, output NxMxM format
+            - k : int, default=0 - Diagonal offset
 
         Returns:
         --------
         numpy.ndarray
-            Boolean contact array
+            Binary contact array where True/1 indicates contact (distance <= cutoff)
+
+        Examples:
+        ---------
+        >>> # Basic contact calculation
+        >>> contacts = calculator.compute(distance_data, cutoff=4.0)
+
+        >>> # With custom cutoff and square format
+        >>> contacts = calculator.compute(distance_data, cutoff=3.5, squareform=True)
         """
+        # Extract parameters from kwargs
+        distances = input_data
+        cutoff = kwargs.get('cutoff', 4.5)
+        squareform = kwargs.get('squareform', False)
+        k = kwargs.get('k', 0)
+
         # Calculate dimensions and conversion requirements
         output_shape, n_residues = CalculatorComputeHelper.calculate_output_dimensions(
             distances.shape, squareform, k
@@ -94,8 +138,11 @@ class ContactCalculator(CalculatorBase):
                     chunk_contacts, k=k, chunk_size=self.chunk_size
                 )
             elif len(distances.shape) == 2 and squareform:
+                # Need to create residue pairs for squareform conversion
+                residue_pairs = [[i, j] for i in range(
+                    n_residues) for j in range(i + 1, n_residues)]
                 chunk_contacts = FeatureShapeHelper.condensed_to_squareform(
-                    chunk_contacts, n_residues, k=k, chunk_size=self.chunk_size
+                    chunk_contacts, residue_pairs, n_residues, chunk_size=self.chunk_size
                 )
 
             contacts[i:end_idx] = chunk_contacts
@@ -103,29 +150,36 @@ class ContactCalculator(CalculatorBase):
         return contacts
 
     def _compute_metric_values(
-        self, contacts, metric, threshold, window_size, transition_mode="window", lag_time=1
+        self,
+        contacts,
+        metric,
+        threshold,
+        window_size,
+        transition_mode="window",
+        lag_time=1,
     ):
         """
-        Compute metric values for contacts based on specified metric type.
+        Compute statistical metric values for contact filtering.
 
         Parameters:
         -----------
         contacts : numpy.ndarray
-            Contact array
+            Binary contact array
         metric : str
-            Metric type to compute
+            Metric type ('frequency', 'stability', 'transitions')
         threshold : float
-            Threshold value (used for transitions metric)
+            Threshold for transition detection
         window_size : int
-            Window size for transitions metric
+            Window size for analysis
         transition_mode : str, default='window'
-            Mode for transitions metric: 'window' or 'lagtime'
+            Transition analysis mode ('window' or 'lagtime')
         lag_time : int, default=1
-            Lag time for transitions metric
+            Lag time for analysis
+
         Returns:
         --------
         numpy.ndarray
-            Computed metric values
+            Computed metric values per contact pair
         """
         if metric == "frequency":
             return self.analysis.compute_frequency(contacts)
@@ -146,7 +200,8 @@ class ContactCalculator(CalculatorBase):
             )
 
         supported_metrics = ["frequency", "stability", "transitions"]
-        raise ValueError(f"Unknown metric: {metric}. Supported: {supported_metrics}")
+        raise ValueError(
+            f"Unknown metric: {metric}. Supported: {supported_metrics}")
 
     def compute_dynamic_values(
         self,
@@ -154,50 +209,78 @@ class ContactCalculator(CalculatorBase):
         metric="frequency",
         threshold_min=None,
         threshold_max=None,
-        transition_threshold=2.0,
-        window_size=10,
         feature_names=None,
         output_path=None,
+        transition_threshold=2.0,
+        window_size=10,
         transition_mode="window",
         lag_time=1,
     ):
-        """Filter and select dynamic contacts based on specified criteria.
+        """
+        Filter and select dynamic contact pairs based on statistical criteria.
 
         Parameters:
         -----------
-        contacts : numpy.ndarray
-            Contact array
+        input_data : numpy.ndarray
+            Binary contact array to analyze (n_frames x n_pairs)
         metric : str, default='frequency'
-            Metric to use for selection:
-            - 'frequency': Frequency of contacts
-            - 'stability': Stability of contacts
-            - 'transitions': Number of transitions
+            Statistical metric for filtering contacts:
+            - 'frequency': Contact frequency (fraction of frames in contact)
+            - 'stability': Contact stability (persistence over time)
+            - 'transitions': Number of contact formation/breaking events
         threshold_min : float, optional
             Minimum threshold for filtering (metric_values >= threshold_min)
         threshold_max : float, optional
             Maximum threshold for filtering (metric_values <= threshold_max)
         transition_threshold : float, default=2.0
-            Distance threshold for detecting transitions
-            Only used for 'transitions' metric to compute the number of transitions
-        feature_names : list, optional
-            Names for distance pairs
-        output_path : str, optional
-            Path for memory-mapped output
+            Threshold for detecting contact transitions (only for 'transitions' metric)
         window_size : int, default=10
-            Window size for transitions metric
+            Window size for transition analysis
+        feature_names : list, optional
+            Contact pair names corresponding to data columns
+        output_path : str, optional
+            Path for memory-mapped filtered output
         transition_mode : str, default='window'
-            Mode for transitions metric: 'window' or 'lagtime'
+            Transition analysis mode ('window' or 'lagtime')
         lag_time : int, default=1
-            Lag time for transitions metric
+            Lag time for transition analysis (when transition_mode='lagtime')
 
         Returns:
         --------
         dict
-            Dictionary containing filtered data and metadata
+            Dictionary with keys: 'indices', 'values', 'dynamic_data', 'feature_names',
+            'metric_used', 'n_dynamic', 'total_pairs', 'threshold_min', 'threshold_max'
+
+        Examples:
+        ---------
+        >>> # Select frequently formed contacts (> 50% frequency)
+        >>> result = calculator.compute_dynamic_values(
+        ...     contact_data, metric='frequency', threshold_min=0.5
+        ... )
+        >>> frequent_contacts = result['dynamic_data']
+        >>> print(f"Found {result['n_dynamic']} frequent contacts")
+
+        >>> # Select moderately stable contacts (20% <= frequency <= 80%)
+        >>> result = calculator.compute_dynamic_values(
+        ...     contact_data, metric='frequency',
+        ...     threshold_min=0.2, threshold_max=0.8
+        ... )
+
+        >>> # Select highly dynamic contacts (many transitions)
+        >>> result = calculator.compute_dynamic_values(
+        ...     contact_data, metric='transitions', threshold_min=10,
+        ...     transition_threshold=1, window_size=5
+        ... )
+        >>> dynamic_contacts = result['dynamic_data']
         """
         # Compute metric values using helper method
         metric_values = self._compute_metric_values(
-            input_data, metric, transition_threshold, window_size, transition_mode, lag_time
+            input_data,
+            metric,
+            transition_threshold,
+            window_size,
+            transition_mode,
+            lag_time,
         )
 
         # Use the common helper

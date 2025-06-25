@@ -1,7 +1,4 @@
 # mdxplain - A Python toolkit for molecular dynamics trajectory analysis
-# contacts - Contact feature type for molecular dynamics analysis
-#
-# Contact feature type implementation with distance-based contact detection.
 #
 # Author: Maximilian Salomon
 # Created with assistance from Claude-4-Sonnet and Cursor AI.
@@ -21,6 +18,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+"""
+Contact feature type implementation for molecular dynamics analysis.
+
+Contact feature type implementation with distance-based contact detection
+for analyzing molecular dynamics trajectories.
+"""
+
 from typing import List
 
 from ..distances.distances import Distances
@@ -30,49 +34,189 @@ from .reduce_contact_metrics import ReduceContactMetrics
 
 
 class Contacts(FeatureTypeBase):
-    """Contact feature type for molecular dynamics analysis."""
+    """
+    Contact feature type for detecting atomic/residue contacts based on distance cutoffs.
 
-    ReduceMetrics = ReduceContactMetrics()
+    Converts distance data into binary contact maps by applying distance cutoffs.
+    A contact is defined as a pair being within the specified cutoff distance.
+    Depends on distance features as input data.
+
+    This feature type enables analysis of contact formation/breaking patterns,
+    contact frequencies, and structural stability through contact persistence.
+
+    Examples:
+    ---------
+    >>> # Basic contact calculation with default cutoff
+    >>> contacts = Contacts()
+    >>> contacts.init_calculator()
+    >>> contact_data, names = contacts.compute(distance_data, feature_names)
+
+    >>> # Contact calculation with custom cutoff
+    >>> contacts = Contacts(cutoff=3.5)  # 3.5 Angstrom cutoff
+    >>> contacts.init_calculator()
+    >>> contact_data, names = contacts.compute(distance_data, feature_names)
+
+    >>> # With memory mapping for large datasets
+    >>> contacts = Contacts(cutoff=4.0)
+    >>> contacts.init_calculator(use_memmap=True, cache_path='./cache/')
+    >>> contact_data, names = contacts.compute(distance_data, feature_names)
+    """
+
+    ReduceMetrics = ReduceContactMetrics
     """Available reduce metrics for contact features."""
 
-    def __init__(self, cutoff=4.5):
+    def __init__(self, cutoff=4.5, squareform=False, k=0):
         """
-        Initialize contact calculator for molecular dynamics analysis.
+        Initialize contact feature type with distance cutoff parameter.
 
-        Args:
-            cutoff: Distance cutoff for contact determination (in Angstrom)
+        Parameters:
+        -----------
+        cutoff : float, default=4.5
+            Distance cutoff in Angstrom for contact determination. Pairs with
+            distances <= cutoff are considered in contact (1), others not (0).
+        squareform : bool, default=False
+            If True, output NxMxM format. If False, output NxP condensed format
+        k : int, default=0
+            Diagonal offset (0=include diagonal, 1=exclude diagonal)
+
+        Examples:
+        ---------
+        >>> # Default cutoff (4.5 Angstrom)
+        >>> contacts = Contacts()
+
+        >>> # Custom cutoff for closer contacts
+        >>> contacts = Contacts(cutoff=3.5)
+
+        >>> # Longer range contacts
+        >>> contacts = Contacts(cutoff=6.0)
+
+        >>> # Square format
+        >>> contacts = Contacts(squareform=True)
+
+        >>> # Exclude diagonal
+        >>> contacts = Contacts(squareform=True, k=1)
         """
         super().__init__()
         self.cutoff = cutoff
+        self.squareform = squareform
+        self.k = k
 
     def init_calculator(self, use_memmap=False, cache_path=None, chunk_size=None):
-        """Initialize the contact calculator with given parameters."""
+        """
+        Initialize the contact calculator with specified configuration.
+
+        Parameters:
+        -----------
+        use_memmap : bool, default=False
+            Whether to use memory mapping for large datasets
+        cache_path : str, optional
+            Directory path for storing cache files when using memory mapping
+        chunk_size : int, optional
+            Number of frames to process per chunk (None for automatic sizing)
+
+        Examples:
+        ---------
+        >>> # Basic initialization
+        >>> contacts.init_calculator()
+
+        >>> # With memory mapping for large datasets
+        >>> contacts.init_calculator(use_memmap=True, cache_path='./cache/')
+
+        >>> # With custom chunk size
+        >>> contacts.init_calculator(chunk_size=1000)
+        """
         self.calculator = ContactCalculator(
             use_memmap=use_memmap, cache_path=cache_path, chunk_size=chunk_size
         )
 
     def compute(self, input_data, feature_names):
-        """Compute contacts from distance data."""
+        """
+        Compute binary contact maps from distance data using distance cutoff.
+
+        Parameters:
+        -----------
+        input_data : numpy.ndarray
+            Distance matrix data from distance feature type (n_frames, n_pairs)
+        feature_names : list
+            Feature names from distance calculations (pair identifiers)
+
+        Returns:
+        --------
+        tuple[numpy.ndarray, list]
+            Tuple containing (contact_matrix, feature_names) where contact_matrix
+            is binary (0/1) indicating contact presence and feature_names are
+            the same pair identifiers from input
+
+        Examples:
+        ---------
+        >>> # Compute contacts from distance data
+        >>> contacts = Contacts(cutoff=4.0)
+        >>> contacts.init_calculator()
+        >>> contact_data, names = contacts.compute(distance_data, pair_names)
+        >>> print(f"Contact matrix shape: {contact_data.shape}")
+        >>> print(f"Contact frequency: {contact_data.mean():.3f}")
+        """
         if self.calculator is None:
-            raise ValueError("Calculator not initialized. Call init_calculator() first.")
-        return self.calculator.compute(distances=input_data, cutoff=self.cutoff), feature_names
+            raise ValueError(
+                "Calculator not initialized. Call init_calculator() first."
+            )
+        return (
+            self.calculator.compute(
+                input_data=input_data,
+                cutoff=self.cutoff,
+                squareform=self.squareform,
+                k=self.k,
+            ),
+            feature_names,
+        )
 
     def get_dependencies(self) -> List[str]:
         """
-        Get list of dependencies required for contact calculations.
+        Get list of feature type dependencies for contact calculations.
 
         Returns:
-            List containing Distances dependency
+        --------
+        List[str]
+            List containing 'distances' as contacts require distance data
+
+        Examples:
+        ---------
+        >>> contacts = Contacts()
+        >>> print(contacts.get_dependencies())
+        ['distances']
         """
         return [str(Distances)]
 
     @staticmethod
     def __str__() -> str:
-        """Return string representation of the contact feature type."""
+        """
+        Return unique string identifier for the contact feature type.
+
+        Returns:
+        --------
+        str
+            String identifier 'contacts' used as key in feature dictionaries
+
+        Examples:
+        ---------
+        >>> print(str(Contacts()))
+        'contacts'
+        """
         return "contacts"
 
     def get_input(self):
         """
-        Get the input feature type.
+        Get the primary input feature type that contacts depend on.
+
+        Returns:
+        --------
+        str
+            String identifier 'distances' indicating contacts use distance data
+
+        Examples:
+        ---------
+        >>> contacts = Contacts()
+        >>> print(contacts.get_input())
+        'distances'
         """
         return str(Distances)

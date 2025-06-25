@@ -1,8 +1,4 @@
-# MDCatAFlow - A Molecular Dynamics Catalysis Analysis Workflow Tool
-# DistanceCalculator - MD Trajectory Distance Analysis
-#
-# Utility class for computing distances between residues in MD trajectories.
-# All methods are static and can be used without instantiation.
+# mdxplain - A Python toolkit for molecular dynamics trajectory analysis
 #
 # Author: Maximilian Salomon
 # Created with assistance from Claude-4-Sonnet and Cursor AI.
@@ -22,6 +18,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+"""
+Distance calculator for molecular dynamics trajectory analysis.
+
+Utility class for computing pairwise distances between residues in MD trajectories.
+Supports memory mapping for large datasets and provides statistical analysis capabilities.
+"""
+
 import os
 
 import mdtraj as md
@@ -35,10 +38,45 @@ from .distance_calculator_analysis import DistanceCalculatorAnalysis
 
 class DistanceCalculator(CalculatorBase):
     """
-    Utility class for computing distances between residues in MD trajectories.
+    Calculator for computing pairwise distances between atoms/residues in MD trajectories.
+
+    Computes all pairwise distances using MDTraj's distance calculation functions
+    with support for memory-mapped arrays, chunked processing, and various output
+    formats. Includes statistical analysis capabilities for variability analysis,
+    transition detection, and comparative studies.
+
+    Examples:
+    ---------
+    >>> # Basic distance calculation
+    >>> calculator = DistanceCalculator()
+    >>> distances, pairs = calculator.compute(trajectories)
+
+    >>> # With memory mapping for large datasets
+    >>> calculator = DistanceCalculator(use_memmap=True, cache_path='./cache/')
+    >>> distances, pairs = calculator.compute(trajectories)
     """
 
     def __init__(self, use_memmap=False, cache_path=None, chunk_size=None):
+        """
+        Initialize distance calculator with configuration parameters.
+
+        Parameters:
+        -----------
+        use_memmap : bool, default=False
+            Whether to use memory mapping for large datasets
+        cache_path : str, optional
+            Directory path for storing cache files
+        chunk_size : int, optional
+            Number of frames to process per chunk
+
+        Examples:
+        ---------
+        >>> # Basic initialization
+        >>> calculator = DistanceCalculator()
+
+        >>> # With memory mapping
+        >>> calculator = DistanceCalculator(use_memmap=True, cache_path='./cache/')
+        """
         super().__init__(use_memmap, cache_path, chunk_size)
         self.distances_path = cache_path
         self.pairs = None  # Will be computed from reference trajectory
@@ -48,33 +86,50 @@ class DistanceCalculator(CalculatorBase):
 
     # ===== MAIN COMPUTATION METHOD =====
 
-    def compute(self, trajectories, ref=None, squareform=False, k=0):
+    def compute(self, input_data, **kwargs):
         """
-        Compute pairwise distances between all residues for all frames in trajectories.
+        Compute pairwise distances between all atoms/residues for all frames.
 
         Parameters:
         -----------
-        trajectories : list
-            List of MDTraj trajectory objects
-        ref : mdtraj.Trajectory, optional
-            Reference trajectory for residue information. If None, uses first trajectory.
+        input_data : list
+            List of MDTraj trajectory objects to process
+        **kwargs : dict
+            Additional parameters:
+            - ref : mdtraj.Trajectory, optional - Reference trajectory for pair determination
+            - squareform : bool, default=False - If True, output NxMxM format
+            - k : int, default=0 - Diagonal offset
 
         Returns:
         --------
-        tuple : (distances, res_list)
-            distances : numpy.ndarray
-                Distance array in condensed format (total_frames, n_pairs) or
-                square format (total_frames, n_residues, n_residues) based on squareform
-            res_list : list
-                List of residue pairs used for distance computation
+        tuple[numpy.ndarray, list]
+            Tuple containing (distances, pair_list) where distances is the
+            distance matrix in Angstrom and pair_list contains pair identifiers
+
+        Examples:
+        ---------
+        >>> # Basic distance calculation
+        >>> distances, pairs = calculator.compute(trajectories)
+        >>> print(f"Distance matrix shape: {distances.shape}")
+
+        >>> # With reference trajectory for consistent naming
+        >>> distances, pairs = calculator.compute(trajectories, ref=ref_traj)
         """
+        # Extract parameters from kwargs
+        trajectories = input_data
+        ref = kwargs.get('ref', None)
+        squareform = kwargs.get('squareform', False)
+        k = kwargs.get('k', 0)
+
         # Setup computation parameters and arrays
         ref, total_frames, distances, condensed_path = self._setup_computation(
             trajectories, ref, squareform, k
         )
 
         # Process all trajectories
-        distances, res_list = self._process_all_trajectories(trajectories, distances, total_frames)
+        distances, res_list = self._process_all_trajectories(
+            trajectories, distances, total_frames
+        )
 
         # Finalize output (convert units, format, cleanup)
         distances = self._finalize_output(
@@ -84,7 +139,25 @@ class DistanceCalculator(CalculatorBase):
         return distances, res_list
 
     def _setup_computation(self, trajectories, ref, squareform, k):
-        """Setup computation parameters and create output arrays."""
+        """
+        Set up computation parameters and create output arrays.
+
+        Parameters:
+        -----------
+        trajectories : list
+            List of MDTraj trajectory objects to process
+        ref : mdtraj.Trajectory or None
+            Reference trajectory for pair determination
+        squareform : bool
+            Whether to output in square format
+        k : int
+            Diagonal offset for pair generation
+
+        Returns:
+        --------
+        tuple
+            (ref_trajectory, total_frames, distances_array, condensed_path)
+        """
         total_frames = sum(traj.n_frames for traj in trajectories)
 
         if ref is None:
@@ -93,7 +166,9 @@ class DistanceCalculator(CalculatorBase):
         # Generate pairs once from reference trajectory
         if self.pairs is None:
             self.pairs = self._generate_residue_pairs(ref.n_residues, k)
-            print(f"Generated {len(self.pairs)} residue pairs for {ref.n_residues} residues")
+            print(
+                f"Generated {len(self.pairs)} residue pairs for {ref.n_residues} residues"
+            )
 
         # Calculate condensed output shape (natural md.compute_contacts format)
         self.n_pairs = len(self.pairs)
@@ -102,17 +177,37 @@ class DistanceCalculator(CalculatorBase):
         condensed_path = self.distances_path
         if squareform and self.use_memmap and self.distances_path is not None:
             # If squareform is requested, use temporary path for condensed
-            condensed_path = self.distances_path.replace(".dat", "_condensed.dat")
+            condensed_path = self.distances_path.replace(
+                ".dat", "_condensed.dat")
 
         # Create output array in condensed format
         distances = CalculatorComputeHelper.create_output_array(
-            self.use_memmap, condensed_path, (total_frames, self.n_pairs), dtype="float32"
+            self.use_memmap,
+            condensed_path,
+            (total_frames, self.n_pairs),
+            dtype="float32",
         )
 
         return ref, total_frames, distances, condensed_path
 
     def _process_all_trajectories(self, trajectories, distances, total_frames):
-        """Process all trajectories and compute distances."""
+        """
+        Process all trajectories and compute distances.
+
+        Parameters:
+        -----------
+        trajectories : list
+            List of MDTraj trajectory objects to process
+        distances : np.ndarray or np.memmap
+            Output array for distance values
+        total_frames : int
+            Total number of frames across all trajectories
+
+        Returns:
+        --------
+        tuple
+            (distances_array, residue_list) with computed distances and residue names
+        """
         frame_idx = 0
         res_list = None
 
@@ -124,15 +219,43 @@ class DistanceCalculator(CalculatorBase):
 
         return distances, res_list
 
-    def _finalize_output(self, distances, res_list, total_frames, condensed_path, squareform):
-        """Convert units, format output, and cleanup temporary files."""
+    def _finalize_output(
+        self, distances, res_list, total_frames, condensed_path, squareform
+    ):
+        """
+        Convert units, format output, and cleanup temporary files.
+
+        Parameters:
+        -----------
+        distances : np.ndarray or np.memmap
+            Distance array in condensed format
+        res_list : list
+            List of residue pair names
+        total_frames : int
+            Total number of frames processed
+        condensed_path : str
+            Path to condensed format file (for cleanup)
+        squareform : bool
+            Whether to convert to square format
+
+        Returns:
+        --------
+        np.ndarray or np.memmap
+            Final distance array in requested format
+        """
         # Convert to Angstrom
         self._convert_to_angstrom(distances, total_frames)
 
         # Convert to squareform only if requested
         if squareform:
+            # Calculate n_residues from pairs
+            n_residues = max(max(pair) for pair in self.pairs) + 1
             distances = FeatureShapeHelper.condensed_to_squareform(
-                distances, res_list, chunk_size=self.chunk_size, output_path=self.distances_path
+                distances,
+                res_list,
+                n_residues,
+                chunk_size=self.chunk_size,
+                output_path=self.distances_path,
             )
 
             # Clean up temporary condensed memmap if it was created
@@ -151,6 +274,8 @@ class DistanceCalculator(CalculatorBase):
         -----------
         n_residues : int
             Number of residues
+        k : int
+            Diagonal offset (k=1 excludes diagonal, k=2 excludes first two diagonals)
 
         Returns:
         --------
@@ -161,12 +286,23 @@ class DistanceCalculator(CalculatorBase):
         if k <= 0:
             k = 1
         for i in range(n_residues):
-            for j in range(i + k, n_residues):  # i < j, excludes self-pairs and k diagonals
+            for j in range(
+                i + k, n_residues
+            ):  # i < j, excludes self-pairs and k diagonals
                 pairs.append([i, j])
         return pairs
 
     def _convert_to_angstrom(self, distances, total_frames):
-        """Convert distances from nm to Angstrom."""
+        """
+        Convert distances from nm to Angstrom.
+
+        Parameters:
+        -----------
+        distances : np.ndarray or np.memmap
+            Distance array in nanometers
+        total_frames : int
+            Total number of frames for chunked processing
+        """
         if FeatureShapeHelper.is_memmap(distances) and self.chunk_size is not None:
             for i in range(0, total_frames, self.chunk_size):
                 end_idx = min(i + self.chunk_size, total_frames)
@@ -175,13 +311,32 @@ class DistanceCalculator(CalculatorBase):
             distances *= 10
 
     def _process_trajectory(self, traj, distances, frame_idx, pbar=None):
-        """Process a single trajectory in batches."""
+        """
+        Process a single trajectory in batches.
+
+        Parameters:
+        -----------
+        traj : mdtraj.Trajectory
+            Trajectory object to process
+        distances : np.ndarray or np.memmap
+            Output array for distance values
+        frame_idx : int
+            Starting frame index for this trajectory
+        pbar : tqdm.tqdm, optional
+            Progress bar for updates
+
+        Returns:
+        --------
+        tuple
+            (distances_array, updated_frame_idx, residue_list)
+        """
         if self.chunk_size is None:
             dist, res_list = md.compute_contacts(
-                traj, contacts=self.pairs, scheme="closest-heavy"  # Use our generated pairs list
+                traj,
+                contacts=self.pairs,
+                scheme="closest-heavy",  # Use our generated pairs list
             )
             distances = dist
-            res_list = res_list
             frame_idx += traj.n_frames
             if pbar is not None:
                 pbar.update(traj.n_frames)
@@ -206,7 +361,13 @@ class DistanceCalculator(CalculatorBase):
         return distances, frame_idx, res_list
 
     def _compute_metric_values(
-        self, distances, metric, threshold, window_size, transition_mode="window", lag_time=1
+        self,
+        distances,
+        metric,
+        threshold,
+        window_size,
+        transition_mode="window",
+        lag_time=1,
     ):
         """
         Compute metric values for distances based on specified metric type.
@@ -259,7 +420,8 @@ class DistanceCalculator(CalculatorBase):
             )
 
         supported_metrics = ["cv", "std", "variance", "range", "transitions"]
-        raise ValueError(f"Unknown metric: {metric}. Supported: {supported_metrics}")
+        raise ValueError(
+            f"Unknown metric: {metric}. Supported: {supported_metrics}")
 
     def compute_dynamic_values(
         self,
@@ -337,7 +499,12 @@ class DistanceCalculator(CalculatorBase):
         """
         # Compute metric values using helper method
         metric_values = self._compute_metric_values(
-            input_data, metric, transition_threshold, window_size, transition_mode, lag_time
+            input_data,
+            metric,
+            transition_threshold,
+            window_size,
+            transition_mode,
+            lag_time,
         )
 
         # Use the common helper

@@ -395,7 +395,7 @@ class TestDataUtilsIntegration:
         save_path = os.path.join(temp_dir, "multi_cycle.npy")
         current_obj = simple_object
         
-        for cycle in range(3):
+        for _ in range(3):
             # Save current object
             DataUtils.save_object(current_obj, save_path)
             

@@ -21,6 +21,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+"""Utility functions and helper classes for mdxplain package."""
+
 from .data_utils import DataUtils
 
 __all__ = ["DataUtils"]
