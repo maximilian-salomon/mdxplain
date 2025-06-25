@@ -1,7 +1,4 @@
 # mdxplain - A Python toolkit for molecular dynamics trajectory analysis
-# feature_data - Feature Data Container
-#
-# Container for feature data (distances, contacts) with associated calculator.
 #
 # Author: Maximilian Salomon
 # Created with assistance from Claude-4-Sonnet and Cursor AI.
@@ -21,29 +18,43 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+"""
+Feature data container for computed features with analysis methods.
+
+Container for feature data (distances, contacts) with associated calculator.
+Stores feature data and provides bound analysis methods from calculators.
+Supports data reduction based on statistical criteria.
+"""
+
 import functools
 import os
 
 
 class FeatureData:
     """
-    Container for feature data with associated calculator and statistics helper.
+    Internal container for computed feature data with analysis methods.
+
+    Stores feature data and provides bound analysis methods from calculators.
+    Supports data reduction based on statistical criteria.
     """
 
-    def __init__(self, feature_type, use_memmap=False, cache_path=None, chunk_size=None):
+    def __init__(
+        self, feature_type, use_memmap=False, cache_path=None, chunk_size=None
+    ):
         """
         Initialize feature data container.
 
         Parameters:
         -----------
-        feature_type : str
-            Type of feature ('distances', 'contacts')
+        feature_type : FeatureTypeBase
+            Feature type object to compute data
         use_memmap : bool, default=False
-            Whether to use memory mapping for data storage
+            Whether to use memory mapping
         cache_path : str, optional
-            Path for cache file. If None and use_memmap=True, uses ./cache/<feature_type>.dat
+            Cache file path for memmap
+        chunk_size : int, optional
+            Processing chunk size
         """
-
         self.feature_type = feature_type
         self.use_memmap = use_memmap
         self.chunk_size = chunk_size
@@ -54,7 +65,9 @@ class FeatureData:
                 os.makedirs("./cache", exist_ok=True)
                 cache_path = f"./cache/{feature_type}.dat"
             self.cache_path = cache_path
-            self.reduced_cache_path = f"{os.path.splitext(self.cache_path)[0]}_reduced.dat"
+            self.reduced_cache_path = (
+                f"{os.path.splitext(self.cache_path)[0]}_reduced.dat"
+            )
         else:
             self.cache_path = None
             self.reduced_cache_path = None
@@ -68,14 +81,23 @@ class FeatureData:
 
         self.feature_type = feature_type
         self.feature_type.init_calculator(
-            use_memmap=self.use_memmap, cache_path=self.cache_path, chunk_size=self.chunk_size
+            use_memmap=self.use_memmap,
+            cache_path=self.cache_path,
+            chunk_size=self.chunk_size,
         )
 
         # Bind stats methods from calculator
         self._bind_stats_methods()
 
     def _bind_stats_methods(self):
-        """Bind stat methods from calculator to self.stats with automatic parameter passing."""
+        """
+        Bind analysis methods from calculator to self.analysis with automatic data passing.
+
+        Returns:
+        --------
+        None
+            Creates self.analysis object with bound methods that auto-use current data
+        """
         if hasattr(self.feature_type.calculator, "analysis"):
             # Create a simple object to hold bound methods
             self.analysis = type("BoundStats", (), {})()
@@ -85,14 +107,22 @@ class FeatureData:
                 if not method_name.startswith("_") and callable(
                     getattr(self.feature_type.calculator.analysis, method_name)
                 ):
-                    original_method = getattr(self.feature_type.calculator.analysis, method_name)
+                    original_method = getattr(
+                        self.feature_type.calculator.analysis, method_name
+                    )
 
                     # Create bound method that automatically uses reduced_data if available,
                     # else data
                     def create_bound_method(method):
+                        """Create bound method with automatic data selection."""
                         @functools.wraps(method)
                         def bound_method(*args, **kwargs):
-                            data = self.reduced_data if self.reduced_data is not None else self.data
+                            """Bound method that automatically uses current data."""
+                            data = (
+                                self.reduced_data
+                                if self.reduced_data is not None
+                                else self.data
+                            )
                             return method(data, *args, **kwargs)
 
                         return bound_method
@@ -106,10 +136,15 @@ class FeatureData:
 
         Parameters:
         -----------
-        *args : arguments
-            Arguments to pass to calculator.compute()
-        **kwargs : keyword arguments
-            Keyword arguments to pass to calculator.compute()
+        input_data : array-like or list
+            Input data for computation (trajectories, distance arrays, etc.)
+        feature_names : list, optional
+            Existing feature names to pass through
+
+        Returns:
+        --------
+        None
+            Stores computed data in self.data and feature names in self.feature_names
         """
         # Call the compute method of the associated calculator
         self.data, self.feature_names = self.feature_type.compute(
@@ -127,24 +162,29 @@ class FeatureData:
         lag_time=1,
     ):
         """
-        Reduce data using dynamic value filtering and store in self.reduced_data.
+        Filter features based on statistical criteria.
 
         Parameters:
         -----------
-        metric : FeatureTypeBase.ReduceMetrics
-            Use the ReduceMetrics of your desired Feature_Type as input
+        metric : str or ReduceMetrics
+            Statistical filtering metric ('cv', 'frequency', 'transitions', etc.)
         threshold_min : float, optional
-            Minimum threshold for filtering
+            Minimum value to keep (features >= threshold_min)
         threshold_max : float, optional
-            Maximum threshold for filtering
+            Maximum value to keep (features <= threshold_max)
         transition_threshold : float, default=2.0
-            Distance threshold for detecting transitions (only for 'transitions' metric)
+            Distance change threshold for transition detection (Angstrom)
         window_size : int, default=10
-            Window size for transitions metric (only for 'transitions' metric)
-        transition_mode : str, default='window'
-            Mode for transitions metric: 'window' or 'lagtime' (only for 'transitions' metric)
+            Number of frames for transition window analysis
+        transition_mode : str, default="window"
+            Mode for transition detection ('window', 'lag')
         lag_time : int, default=1
-            Lag time for transitions metric (only for 'transitions' metric)
+            Lag time for transition detection
+
+        Returns:
+        --------
+        None
+            Stores filtered data in self.reduced_data and prints reduction summary
         """
         if self.data is None:
             raise ValueError("No data available. Call compute() first.")
@@ -176,7 +216,12 @@ class FeatureData:
 
     def get_data(self):
         """
-        Get the data.
+        Get current dataset (reduced if available, else original).
+
+        Returns:
+        --------
+        numpy.ndarray
+            Feature data array, shape (n_frames, n_features)
         """
         if self.reduced_data is not None:
             return self.reduced_data
@@ -184,7 +229,12 @@ class FeatureData:
 
     def get_feature_names(self):
         """
-        Get the feature names.
+        Get current feature names (reduced if available, else original).
+
+        Returns:
+        --------
+        numpy.ndarray
+            Feature names array, shape (n_features, 2) with residue pair indices
         """
         if self.reduced_feature_names is not None:
             return self.reduced_feature_names
@@ -192,17 +242,12 @@ class FeatureData:
 
     def reset_reduction(self):
         """
-        Reset feature reduction and return to using full original data.
+        Reset to using full original data instead of reduced dataset.
 
-        Examples:
+        Returns:
         --------
-        # Apply reduction
-        features.reduce_features(metric='cv', threshold_min=0.5)
-        print(features.active_data.shape)  # Reduced shape
-
-        # Reset to full data
-        features.reset_reduction()
-        print(features.active_data.shape)  # Original shape
+        None
+            Clears reduced_data and prints confirmation with shape info
         """
         if self.reduced_data is None:
             print("No reduction to reset - already using full data.")
@@ -213,7 +258,7 @@ class FeatureData:
         reduced_shape = self.reduced_data.shape
 
         self.reduced_data = None
-        self.reduced_res_list = None
+        self.reduced_feature_names = None
         old_info = self.reduction_info
         self.reduction_info = None
 

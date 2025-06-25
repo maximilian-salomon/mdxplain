@@ -1,7 +1,4 @@
 # mdxplain - A Python toolkit for molecular dynamics trajectory analysis
-# feature_type_base - Base interface for feature types
-#
-# Abstract base class defining the interface for all feature types in mdxplain.
 #
 # Author: Maximilian Salomon
 # Created with assistance from Claude-4-Sonnet and Cursor AI.
@@ -21,6 +18,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+"""
+Abstract base class defining the interface for all feature types.
+
+Defines the interface that all feature types (distances, contacts, angles, etc.)
+must implement for consistency across different molecular dynamics features.
+"""
+
 from abc import ABC, abstractmethod
 from typing import List, Tuple
 
@@ -28,19 +32,57 @@ import numpy as np
 
 
 class FeatureTypeBase(ABC):
-    """Base class for all feature types."""
+    """
+    Abstract base class for all molecular dynamics feature types.
+
+    Defines the interface that all feature types (distances, contacts, angles, etc.)
+    must implement. Each feature type encapsulates computation logic and dependency
+    management for a specific type of molecular dynamics analysis.
+
+    Examples:
+    ---------
+    >>> class MyFeature(FeatureTypeBase):
+    ...     def get_dependencies(self):
+    ...         return ['distances']  # Depends on distance features
+    ...     def __str__(self):
+    ...         return 'my_feature'
+    ...     def init_calculator(self, **kwargs):
+    ...         self.calculator = MyCalculator(**kwargs)
+    ...     def compute(self, input_data, feature_names):
+    ...         return self.calculator.compute(input_data)
+    """
 
     def __init__(self):
-        """Initialize the feature type with a calculator."""
+        """
+        Initialize the feature type.
+
+        Sets up the feature type instance with an empty calculator that will
+        be initialized later through init_calculator().
+        """
         self.calculator = None
 
     @abstractmethod
     def get_dependencies(self) -> List[str]:
         """
-        Get list of dependencies required for this feature type.
+        Get list of feature type dependencies that must be computed first.
 
         Returns:
-            List of feature type names that must be computed first
+        --------
+        List[str]
+            List of feature type names (e.g., ['distances']) that this feature
+            type depends on and must be computed before this feature
+
+        Examples:
+        ---------
+        >>> # Contacts depend on distances
+        >>> contacts = ContactsFeature()
+        >>> print(contacts.get_dependencies())
+        ['distances']
+
+        >>> # Distances have no dependencies
+        >>> distances = DistancesFeature()
+        >>> print(distances.get_dependencies())
+        []
         """
         pass
 
@@ -48,36 +90,86 @@ class FeatureTypeBase(ABC):
     @abstractmethod
     def __str__() -> str:
         """
-        Return string representation of the feature type.
-        Used as key for storing in feature dictionaries.
+        Return unique string identifier for this feature type.
+
+        Used as the key for storing features in TrajectoryData dictionaries
+        and for dependency resolution.
 
         Returns:
-            String identifier for this feature type
+        --------
+        str
+            Unique string identifier (e.g., 'distances', 'contacts')
+
+        Examples:
+        ---------
+        >>> str(DistancesFeature())
+        'distances'
+        >>> str(ContactsFeature())
+        'contacts'
         """
         pass
 
     @abstractmethod
-    def init_calculator(self, **kwargs):
+    def init_calculator(self, use_memmap=False, cache_path=None, chunk_size=None):
         """
-        Initialize the calculator for this feature type.
+        Initialize the calculator instance for this feature type.
 
-        Args:
-            **kwargs: Parameters for calculator initialization
+        Parameters:
+        -----------
+        use_memmap : bool, default=False
+            Whether to use memory mapping for efficient handling of large datasets
+        cache_path : str, optional
+            Directory path for cache files
+        chunk_size : int, optional
+            Number of frames to process per chunk
+
+        Returns:
+        --------
+        None
+            Sets self.calculator to initialized calculator instance
         """
         pass
 
     @abstractmethod
-    def compute(self, input_data=None, feature_names=None) -> Tuple[np.ndarray, List[str]]:
+    def compute(
+        self, input_data, feature_names
+    ) -> Tuple[np.ndarray, List[str]]:
         """
-        Compute the feature type.
+        Compute features using the initialized calculator.
 
-        Args:
-            **kwargs: Parameters for computation
+        Parameters:
+        -----------
+        input_data : Any, optional
+            Input data for computation (trajectories, distances, etc.)
+        feature_names : list, optional
+            Names for input features (used by dependent features)
+
+        Returns:
+        --------
+        Tuple[np.ndarray, List[str]]
+            Tuple containing (computed_features, feature_names) where
+            computed_features is the calculated data matrix and
+            feature_names is list of feature labels
         """
         pass
 
     def get_input(self):
         """
-        Get the input feature type.
+        Get the input feature type that this feature depends on.
+
+        Returns:
+        --------
+        str or None
+            Name of the primary input feature type, or None for base features
+
+        Examples:
+        ---------
+        >>> contacts = ContactsFeature()
+        >>> print(contacts.get_input())
+        'distances'
+
+        >>> distances = DistancesFeature()
+        >>> print(distances.get_input())
+        None
         """
         return None

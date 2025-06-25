@@ -11,7 +11,7 @@ A Python toolkit for scalable molecular dynamics trajectory analysis, combining 
 - Statistical analyses (mean, variance, CV, transitions)
 - Dynamic analyses (stability, variability, transitions)
 - Automatic unit detection (nm/Angstrom)
-- Chunked processing for memory efficiency
+- Chunk-based processing for memory efficiency
 - Flexible data formats (Square/Condensed)
 - Dimensionality reduction of MD data
 - Structure clustering
@@ -22,14 +22,14 @@ A Python toolkit for scalable molecular dynamics trajectory analysis, combining 
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/md_analysis_pipeline.git
-cd md_analysis_pipeline
+git clone https://github.com/BioFreak95/mdxplain.git
+cd mdxplain
 
 # Create and activate virtual environment
-python -m venv mdap
-source mdap/bin/activate  # Linux/Mac
+python -m venv mdxplain
+source mdxplain/bin/activate  # Linux/Mac
 # or
-.\mdap\Scripts\activate  # Windows
+.\mdxplain\Scripts\activate  # Windows
 
 # Install dependencies
 pip install -r requirements.txt
@@ -43,14 +43,27 @@ The pipeline can be executed via Jupyter Notebooks or as Python scripts. Example
 
 ```
 md_analysis_pipeline/
-├── mdcataflow/         # Main Python package
-│   ├── data/          # Data loading utilities
-│   ├── utils/         # Core calculation modules
-│   └── __init__.py    # Package initialization
-├── notebooks/          # Jupyter Notebooks
-├── data/              # Example data
-├── tests/             # Test cases
-├── requirements.txt   # Python dependencies
+├── mdxplain/              # Main Python package
+│   ├── data/             # Data loading and feature utilities
+│   │   ├── feature_type/ # Feature type implementations
+│   │   │   ├── contacts/ # Contact calculations
+│   │   │   ├── distances/# Distance calculations
+│   │   │   ├── helper/   # Helper functions
+│   │   │   └── interfaces/# Base interfaces
+│   │   ├── feature_data.py
+│   │   ├── trajectory_data.py
+│   │   └── trajectory_loader.py
+│   ├── clustering/       # Clustering algorithms
+│   ├── decomposition/    # Dimensionality reduction
+│   ├── feature_analysis/ # Feature analysis tools
+│   ├── feature_selection/# Feature selection
+│   ├── plots/           # Visualization tools
+│   ├── utils/           # General utilities
+│   └── __init__.py      # Package initialization
+├── notebooks/           # Jupyter Notebooks
+├── data/               # Example data
+├── tests/              # Test cases
+├── requirements.txt    # Python dependencies
 └── LICENSE            # License information
 ```
 

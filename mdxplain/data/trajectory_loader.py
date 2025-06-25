@@ -1,8 +1,4 @@
 # mdxplain - A Python toolkit for molecular dynamics trajectory analysis
-# trajectory_loader - MD Trajectory Loading Strategies
-#
-# Handles the loading methodology for MD trajectories.
-# This class can be easily replaced or extended for different loading strategies.
 #
 # Author: Maximilian Salomon
 # Created with assistance from Claude-4-Sonnet and Cursor AI.
@@ -22,6 +18,14 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+"""
+MD trajectory loading strategies and utilities.
+
+Handles the loading methodology for MD trajectories from files and directories.
+This class can be easily replaced or extended for different loading strategies.
+Supports nested directory structures and trajectory concatenation.
+"""
+
 import os
 import warnings
 
@@ -31,8 +35,9 @@ from tqdm import tqdm
 
 class TrajectoryLoader:
     """
-    Handles the loading methodology for MD trajectories.
-    This class can be easily replaced or extended for different loading strategies.
+    Internal utility class for loading MD trajectories from files and directories.
+
+    Supports nested directory structures and trajectory concatenation.
     """
 
     @staticmethod
@@ -47,15 +52,15 @@ class TrajectoryLoader:
         concat : bool, default=False
             Whether to concatenate trajectories per system
         stride : int, default=1
-            Load every stride-th frame from trajectories
+            Frame striding parameter
 
         Returns:
         --------
         list
-            List of loaded trajectories
+            List of loaded trajectory objects
         """
         if isinstance(data_input, list):
-            return TrajectoryLoader._load_from_list(data_input, concat, stride)
+            return TrajectoryLoader._load_from_list(data_input, concat)
 
         if isinstance(data_input, str) and os.path.exists(data_input):
             return TrajectoryLoader._load_from_directory(data_input, concat, stride)
@@ -67,39 +72,106 @@ class TrajectoryLoader:
 
     @staticmethod
     def _load_from_list(trajectory_list, concat):
-        """Load from provided trajectory list."""
+        """
+        Handle trajectory list input with optional concatenation.
+
+        Parameters:
+        -----------
+        trajectory_list : list
+            List of MDTraj trajectory objects
+        concat : bool
+            Whether to concatenate all trajectories into one
+
+        Returns:
+        --------
+        list
+            List of trajectory objects (single concatenated or original list)
+        """
         if concat and len(trajectory_list) > 1:
-            print(f"Concatenating {len(trajectory_list)} provided trajectories...")
+            print(
+                f"Concatenating {len(trajectory_list)} provided trajectories...")
             concatenated = trajectory_list[0]
             for traj in tqdm(trajectory_list[1:], desc="Concatenating"):
                 concatenated = concatenated.join(traj)
-            print(f"Result: 1 concatenated trajectory with {concatenated.n_frames} frames")
+            print(
+                f"Result: 1 concatenated trajectory with {concatenated.n_frames} frames"
+            )
             return [concatenated]
         return trajectory_list
 
     @staticmethod
     def _load_from_directory(directory_path, concat, stride):
-        """Load trajectories from directory structure."""
+        """
+        Load trajectories from directory (flat or nested structure).
+
+        Parameters:
+        -----------
+        directory_path : str
+            Path to directory containing trajectory files
+        concat : bool
+            Whether to concatenate trajectories per system
+        stride : int
+            Frame striding (1=all frames, 2=every 2nd frame, etc.)
+
+        Returns:
+        --------
+        list
+            List of loaded MDTraj trajectory objects
+        """
         # Determine directory structure and collect trajectories
         if TrajectoryLoader._has_subdirectories(directory_path):
-            return TrajectoryLoader._load_nested_structure(directory_path, concat, stride)
+            return TrajectoryLoader._load_nested_structure(
+                directory_path, concat, stride
+            )
         return TrajectoryLoader._load_flat_structure(directory_path, concat, stride)
 
     @staticmethod
     def _has_subdirectories(directory_path):
-        """Check if directory contains subdirectories."""
+        """
+        Check if directory contains subdirectories.
+
+        Parameters:
+        -----------
+        directory_path : str
+            Path to directory to check
+
+        Returns:
+        --------
+        bool
+            True if subdirectories exist, False otherwise
+        """
         subdirs = [
-            d for d in os.listdir(directory_path) if os.path.isdir(os.path.join(directory_path, d))
+            d
+            for d in os.listdir(directory_path)
+            if os.path.isdir(os.path.join(directory_path, d))
         ]
         return len(subdirs) > 0
 
     @staticmethod
     def _load_nested_structure(directory_path, concat, stride):
-        """Load trajectories from nested directory structure."""
+        """
+        Load from nested directory structure (multiple systems).
+
+        Parameters:
+        -----------
+        directory_path : str
+            Path to directory containing trajectory files
+        concat : bool
+            Whether to concatenate trajectories per system
+        stride : int
+            Frame striding (1=all frames, 2=every 2nd frame, etc.)
+
+        Returns:
+        --------
+        list
+            List of loaded MDTraj trajectory objects
+        """
         trajectories = []
         system_summary = []
         subdirs = [
-            d for d in os.listdir(directory_path) if os.path.isdir(os.path.join(directory_path, d))
+            d
+            for d in os.listdir(directory_path)
+            if os.path.isdir(os.path.join(directory_path, d))
         ]
 
         for subdir in tqdm(subdirs, desc="Loading systems"):
@@ -117,7 +189,23 @@ class TrajectoryLoader:
 
     @staticmethod
     def _load_flat_structure(directory_path, concat, stride):
-        """Load trajectories from flat directory structure."""
+        """
+        Load from flat directory structure (single system).
+
+        Parameters:
+        -----------
+        directory_path : str
+            Path to directory containing trajectory files
+        concat : bool
+            Whether to concatenate trajectories per system
+        stride : int
+            Frame striding (1=all frames, 2=every 2nd frame, etc.)
+
+        Returns:
+        --------
+        list
+            List of loaded MDTraj trajectory objects
+        """
         trajectories = []
         system_name = os.path.basename(directory_path)
         system_trajs = TrajectoryLoader._load_system_trajectories(
@@ -133,7 +221,21 @@ class TrajectoryLoader:
 
     @staticmethod
     def _print_loading_summary(system_summary, concat):
-        """Print summary of loaded trajectories."""
+        """
+        Print summary of loaded trajectories.
+
+        Parameters:
+        -----------
+        system_summary : list
+            List of (system_name, trajectory_count) tuples
+        concat : bool
+            Whether concatenation was used
+
+        Returns:
+        --------
+        None
+            Prints loading summary to console
+        """
         total_trajectories = sum(count for _, count in system_summary)
 
         if concat:
@@ -155,8 +257,28 @@ class TrajectoryLoader:
 
     @staticmethod
     def _load_system_trajectories(subdir_path, subdir_name, concat, stride):
-        """Load all trajectories for a single system."""
-        pdb_path = TrajectoryLoader._validate_and_get_pdb_path_from_directory(subdir_path)
+        """
+        Load all trajectories for a single system.
+
+        Parameters:
+        -----------
+        subdir_path : str
+            Path to directory containing trajectory files
+        subdir_name : str
+            Name of the system
+        concat : bool
+            Whether to concatenate trajectories per system
+        stride : int
+            Frame striding (1=all frames, 2=every 2nd frame, etc.)
+
+        Returns:
+        --------
+        list
+            List of loaded MDTraj trajectory objects
+        """
+        pdb_path = TrajectoryLoader._validate_and_get_pdb_path_from_directory(
+            subdir_path
+        )
         if pdb_path is None:
             return []
 
@@ -165,17 +287,34 @@ class TrajectoryLoader:
             return []
 
         system_trajs = TrajectoryLoader._load_trajectory_files_from_directory(
-            xtc_files, pdb_path, subdir_path, subdir_name, stride)
+            xtc_files, pdb_path, subdir_path, subdir_name, stride
+        )
 
-        return TrajectoryLoader._handle_traj_concatenation(system_trajs, concat, subdir_name)
+        return TrajectoryLoader._handle_traj_concatenation(
+            system_trajs, concat, subdir_name
+        )
 
     @staticmethod
     def _validate_and_get_pdb_path_from_directory(subdir_path):
-        """Validate PDB files and return path to the single PDB file."""
+        """
+        Find and validate single PDB file in directory.
+
+        Parameters:
+        -----------
+        subdir_path : str
+            Path to directory containing trajectory files
+
+        Returns:
+        --------
+        str
+            Path to PDB file
+        """
         pdb_files = [f for f in os.listdir(subdir_path) if f.endswith(".pdb")]
 
         if len(pdb_files) > 1:
-            raise ValueError(f"More than one PDB file found in {subdir_path}: {pdb_files}")
+            raise ValueError(
+                f"More than one PDB file found in {subdir_path}: {pdb_files}"
+            )
 
         if not pdb_files:
             return None
@@ -184,13 +323,46 @@ class TrajectoryLoader:
 
     @staticmethod
     def _get_xtc_files_from_directory(subdir_path):
-        """Get list of XTC files in directory."""
+        """
+        Get list of XTC files in directory.
+
+        Parameters:
+        -----------
+        subdir_path : str
+            Path to directory to search
+
+        Returns:
+        --------
+        list
+            List of XTC filenames (not full paths)
+        """
         return [f for f in os.listdir(subdir_path) if f.endswith(".xtc")]
 
     @staticmethod
     def _load_trajectory_files_from_directory(
-            xtc_files, pdb_path, subdir_path, subdir_name, stride):
-        """Load all XTC files with the given PDB topology."""
+        xtc_files, pdb_path, subdir_path, subdir_name, stride
+    ):
+        """
+        Load XTC files with PDB topology.
+
+        Parameters:
+        -----------
+        xtc_files : list
+            List of XTC filenames (not full paths)
+        pdb_path : str
+            Path to PDB file
+        subdir_path : str
+            Path to directory containing trajectory files
+        subdir_name : str
+            Name of the system
+        stride : int
+            Frame striding (1=all frames, 2=every 2nd frame, etc.)
+
+        Returns:
+        --------
+        list
+            List of loaded MDTraj trajectory objects
+        """
         system_trajs = []
         for xtc in tqdm(xtc_files, desc=f"Loading {subdir_name}", leave=False):
             xtc_path = os.path.join(subdir_path, xtc)
@@ -200,9 +372,27 @@ class TrajectoryLoader:
 
     @staticmethod
     def _handle_traj_concatenation(system_trajs, concat, subdir_name):
-        """Handle trajectory concatenation if requested."""
+        """
+        Handle trajectory concatenation if requested.
+
+        Parameters:
+        -----------
+        system_trajs : list
+            List of loaded MDTraj trajectory objects
+        concat : bool
+            Whether to concatenate trajectories per system
+        subdir_name : str
+            Name of the system
+
+        Returns:
+        --------
+        list
+            List of loaded MDTraj trajectory objects
+        """
         if concat and len(system_trajs) > 1:
-            print(f"  Concatenating {len(system_trajs)} trajectories for {subdir_name}...")
+            print(
+                f"  Concatenating {len(system_trajs)} trajectories for {subdir_name}..."
+            )
             concatenated = system_trajs[0]
             for traj in system_trajs[1:]:
                 concatenated = concatenated.join(traj)

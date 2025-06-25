@@ -21,6 +21,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+"""
+Data handling and trajectory management for mdxplain package.
+
+This module provides classes for loading, managing, and processing molecular dynamics
+trajectory data, including feature extraction and data serialization capabilities.
+"""
+
 from .trajectory_data import TrajectoryData
 
 __all__ = ["TrajectoryData"]

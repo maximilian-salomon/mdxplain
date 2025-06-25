@@ -1,8 +1,4 @@
-# MDCatAFlow - A Molecular Dynamics Catalysis Analysis Workflow Tool
-# CalculatorComputeHelper - Common helper methods for calculators
-#
-# Helper class providing common functionality for dynamic value computation
-# across different calculators (ContactCalculator, DistanceCalculator, etc.)
+# mdxplain - A Python toolkit for molecular dynamics trajectory analysis
 #
 # Author: Maximilian Salomon
 # Created with assistance from Claude-4-Sonnet and Cursor AI.
@@ -22,16 +18,28 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+"""
+Common helper methods for calculator dynamic value computation.
+
+Provides common functionality for dynamic value computation across different 
+calculators (ContactCalculator, DistanceCalculator, etc.) with memory-mapped 
+array support and statistical filtering capabilities.
+"""
+
 import warnings
 
 import numpy as np
 
-from .FeatureShapeHelper import FeatureShapeHelper
+from .feature_shape_helper import FeatureShapeHelper
 
 
 class CalculatorComputeHelper:
     """
-    Common helper methods for dynamic value computation across calculators.
+    Static utility class for dynamic feature filtering and selection operations.
+
+    Provides common functionality for filtering features based on statistical
+    criteria with memory-mapped array support. Used by distance and contact
+    calculators for dynamic value computation.
     """
 
     @staticmethod
@@ -47,33 +55,34 @@ class CalculatorComputeHelper:
         chunk_size=1000,
     ):
         """
-        Generic method for filtering and selecting dynamic values based on specified criteria.
+        Filter feature data based on statistical metric thresholds.
 
         Parameters:
         -----------
-        data : numpy.ndarray
-            Input data array
-        metric_values : numpy.ndarray
-            Pre-computed metric values for filtering
+        data : np.ndarray
+            Feature data array to filter
+        metric_values : np.ndarray
+            Pre-computed statistical values for filtering
         metric_name : str
-            Name of the metric used (for reporting)
+            Name of the metric for reporting
         threshold_min : float, optional
-            Minimum threshold for filtering (metric_values >= threshold_min)
+            Minimum threshold (metric_values >= threshold_min)
         threshold_max : float, optional
-            Maximum threshold for filtering (metric_values <= threshold_max)
+            Maximum threshold (metric_values <= threshold_max)
         feature_names : list, optional
-            Names for feature pairs
+            Feature pair names
         use_memmap : bool, default=False
-            Whether to use memory mapping
+            Whether to use memory mapping for output
         output_path : str, optional
-            Path for memory-mapped output
+            Path for memory-mapped output file
         chunk_size : int, default=1000
             Chunk size for processing
 
         Returns:
         --------
         dict
-            Dictionary containing filtered data and metadata
+            Dictionary with keys: 'indices', 'values', 'dynamic_data',
+            'feature_names', 'metric_used', 'n_dynamic', 'total_pairs'
 
         Examples:
         --------
@@ -96,7 +105,9 @@ class CalculatorComputeHelper:
             mask = mask & (metric_values <= threshold_max)
 
         if threshold_min is None and threshold_max is None:
-            raise ValueError("At least one of 'threshold_min' or 'threshold_max' must be provided")
+            raise ValueError(
+                "At least one of 'threshold_min' or 'threshold_max' must be provided"
+            )
 
         n_selected = np.sum(mask.flatten())
 
@@ -108,7 +119,9 @@ class CalculatorComputeHelper:
             )
 
         # Handle feature names
-        feature_info = CalculatorComputeHelper._handle_feature_names(feature_names, mask)
+        feature_info = CalculatorComputeHelper._handle_feature_names(
+            feature_names, mask
+        )
 
         # Extract dynamic data
         dynamic_data = CalculatorComputeHelper._extract_dynamic_data(
@@ -129,7 +142,21 @@ class CalculatorComputeHelper:
 
     @staticmethod
     def _handle_feature_names(feature_names, mask):
-        """Handle feature names for dynamic values."""
+        """
+        Extract feature names based on filter mask.
+
+        Parameters:
+        -----------
+        feature_names : list or None
+            Original feature names
+        mask : np.ndarray
+            Boolean filter mask
+
+        Returns:
+        --------
+        np.ndarray or np.ndarray
+            Filtered feature names or mask if names invalid
+        """
         if feature_names is not None:
             if len(feature_names) != mask.size:
                 warnings.warn(
@@ -143,16 +170,42 @@ class CalculatorComputeHelper:
 
     @staticmethod
     def _extract_dynamic_data(data, mask, use_memmap, output_path, chunk_size):
-        """Extract dynamic data based on mask."""
+        """
+        Extract filtered data using boolean mask.
+
+        Parameters:
+        -----------
+        data : np.ndarray
+            Original feature data
+        mask : np.ndarray
+            Boolean filter mask
+        use_memmap : bool
+            Whether to use memory mapping
+        output_path : str or None
+            Path for memory-mapped output
+        chunk_size : int
+            Chunk size for processing
+
+        Returns:
+        --------
+        np.ndarray
+            Filtered data array
+        """
         if use_memmap:
             if output_path is None:
-                raise ValueError("output_path must be provided when use_memmap=True")
+                raise ValueError(
+                    "output_path must be provided when use_memmap=True")
 
             n_selected = np.sum(mask.flatten())
             dynamic_data = np.memmap(
-                output_path, dtype=data.dtype, mode="w+", shape=(data.shape[0], n_selected)
+                output_path,
+                dtype=data.dtype,
+                mode="w+",
+                shape=(data.shape[0], n_selected),
             )
-            CalculatorComputeHelper._fill_memmap_data(data, dynamic_data, mask, chunk_size)
+            CalculatorComputeHelper._fill_memmap_data(
+                data, dynamic_data, mask, chunk_size
+            )
         else:
             # Extract based on data format
             if len(data.shape) == 3:  # Square format
@@ -166,8 +219,25 @@ class CalculatorComputeHelper:
 
     @staticmethod
     def _fill_memmap_data(data, dynamic_data, mask, chunk_size):
-        """Fill memory-mapped dynamic data."""
+        """
+        Fill memory-mapped array with filtered data.
 
+        Parameters:
+        -----------
+        data : np.ndarray
+            Original feature data
+        dynamic_data : np.memmap
+            Memory-mapped output array
+        mask : np.ndarray
+            Boolean filter mask
+        chunk_size : int
+            Chunk size for processing
+
+        Returns:
+        --------
+        None
+            Fills dynamic_data array in-place
+        """
         if FeatureShapeHelper.is_memmap(data):
             for i in range(0, data.shape[0], chunk_size):
                 end_idx = min(i + chunk_size, data.shape[0])
@@ -183,16 +253,34 @@ class CalculatorComputeHelper:
                 indices = np.where(mask)
                 for i in range(0, data.shape[0], chunk_size):
                     end_idx = min(i + chunk_size, data.shape[0])
-                    dynamic_data[i:end_idx] = data[i:end_idx, indices[0], indices[1]]
+                    dynamic_data[i:end_idx] = data[i:end_idx,
+                                                   indices[0], indices[1]]
             else:  # Condensed format
                 data_flat = data.reshape(data.shape[0], -1)
                 for i in range(0, data.shape[0], chunk_size):
                     end_idx = min(i + chunk_size, data.shape[0])
-                    dynamic_data[i:end_idx] = data_flat[i:end_idx, mask.flatten()]
+                    dynamic_data[i:end_idx] = data_flat[i:end_idx,
+                                                        mask.flatten()]
 
     @staticmethod
     def calculate_output_dimensions(input_shape, squareform, k):
-        """Calculate output dimensions based on input format and parameters."""
+        """
+        Calculate output array dimensions after format conversion.
+
+        Parameters:
+        -----------
+        input_shape : tuple
+            Shape of input array
+        squareform : bool
+            Whether output should be square format
+        k : int
+            Diagonal offset parameter
+
+        Returns:
+        --------
+        tuple[tuple, int or None]
+            Output shape and number of residues
+        """
         needs_conversion = (len(input_shape) == 3 and not squareform) or (
             len(input_shape) == 2 and squareform
         )
@@ -204,7 +292,8 @@ class CalculatorComputeHelper:
                 if k == 0:
                     n_contacts = n_residues * (n_residues + 1) // 2
                 else:
-                    n_contacts = n_residues * (n_residues - k) // 2 - sum(range(k))
+                    n_contacts = n_residues * \
+                        (n_residues - k) // 2 - sum(range(k))
                 output_shape = (input_shape[0], n_contacts)
             else:
                 # Condensed to square
@@ -219,7 +308,25 @@ class CalculatorComputeHelper:
 
     @staticmethod
     def create_output_array(use_memmap, path, output_shape, dtype):
-        """Create output array based on use_memmap and contacts_path."""
+        """
+        Create output array (regular or memory-mapped).
+
+        Parameters:
+        -----------
+        use_memmap : bool
+            Whether to use memory mapping
+        path : str or None
+            File path for memory-mapped array
+        output_shape : tuple
+            Shape of output array
+        dtype : np.dtype
+            Data type of array
+
+        Returns:
+        --------
+        numpy.ndarray or numpy.memmap
+            Created output array
+        """
         if use_memmap:
             return np.memmap(path, dtype=dtype, mode="w+", shape=output_shape)
         else:

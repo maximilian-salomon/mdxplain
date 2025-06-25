@@ -1,9 +1,4 @@
 # mdxplain - A Python toolkit for molecular dynamics trajectory analysis
-# data_utils - Utility functions for saving and loading Python objects with memmap support
-#
-# Utility class for saving and loading Python objects with memmap support.
-# Works with any Python object, not just TrajectoryData.
-# Preserves memmap properties correctly.
 #
 # Author: Maximilian Salomon
 # Created with assistance from Claude-4-Sonnet and Cursor AI.
@@ -23,6 +18,14 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+"""
+Utility functions for saving and loading Python objects with memmap support.
+
+This module provides utility class for saving and loading Python objects 
+with memmap support. Works with any Python object, not just TrajectoryData.
+Preserves memmap properties correctly.
+"""
+
 import os
 
 import numpy as np
@@ -30,22 +33,46 @@ import numpy as np
 
 class DataUtils:
     """
-    Utility class for saving and loading Python objects with memmap support.
-    Works with any Python object, not just TrajectoryData.
-    Preserves memmap properties correctly.
+    Utility class for saving and loading Python objects with memory-mapped array support.
+
+    Provides methods to serialize and deserialize Python objects that contain
+    memory-mapped numpy arrays while preserving memmap properties and file
+    references. Works with any Python object, not just mdxplain classes.
+
+    Examples:
+    ---------
+    >>> # Save any object with memmap support
+    >>> DataUtils.save_object(my_object, 'data/my_object.pkl')
+
+    >>> # Load into existing object
+    >>> new_object = MyClass()
+    >>> DataUtils.load_object(new_object, 'data/my_object.pkl')
     """
 
     @staticmethod
     def save_object(obj, save_path):
         """
-        Save any Python object preserving memmap properties.
+        Save any Python object while preserving memory-mapped array properties.
 
         Parameters:
         -----------
         obj : object
-            Any Python object to save
+            Python object to save (can contain memmap arrays)
         save_path : str
-            Path where to save the object (should end with .npy)
+            File path for saving (should end with .pkl or .npy)
+
+        Returns:
+        --------
+        None
+            Saves object to disk using numpy.save with pickle support
+
+        Examples:
+        ---------
+        >>> # Save TrajectoryData object
+        >>> DataUtils.save_object(traj_data, 'analysis/results.pkl')
+
+        >>> # Save any custom object with memmaps
+        >>> DataUtils.save_object(my_analysis, 'outputs/analysis.pkl')
         """
         save_obj = DataUtils._prepare_save_object(obj)
         np.save(save_path, save_obj, allow_pickle=True)
@@ -53,21 +80,50 @@ class DataUtils:
     @staticmethod
     def load_object(obj, load_path):
         """
-        Load data into any existing Python object preserving memmap properties.
+        Load data into existing Python object while restoring memmap properties.
 
         Parameters:
         -----------
         obj : object
-            Any Python object to load data into
+            Existing Python object to load data into (will be modified in-place)
         load_path : str
-            Path to the saved object .npy file
+            Path to saved object file (.pkl or .npy)
+
+        Returns:
+        --------
+        None
+            Modifies obj in-place, restoring attributes and memmap connections
+
+        Examples:
+        ---------
+        >>> # Load into TrajectoryData object
+        >>> traj = TrajectoryData()
+        >>> DataUtils.load_object(traj, 'analysis/results.pkl')
+
+        >>> # Load into custom object
+        >>> my_obj = MyAnalysisClass()
+        >>> DataUtils.load_object(my_obj, 'outputs/analysis.pkl')
         """
         loaded_obj = np.load(load_path, allow_pickle=True).item()
         DataUtils._restore_object_attributes(obj, loaded_obj)
 
     @staticmethod
     def _prepare_save_object(obj):
-        """Prepare any object for saving, handling memmaps specially."""
+        """
+        Prepare object for saving by converting memmaps to metadata.
+
+        Prepare object attributes for saving.
+
+        Parameters:
+        -----------
+        obj : object
+            Object to prepare
+
+        Returns:
+        --------
+        dict
+            Dictionary with attributes, memmaps converted to metadata
+        """
         save_obj = {}
 
         for attr_name in dir(obj):
@@ -77,7 +133,8 @@ class DataUtils:
             attr_value = getattr(obj, attr_name)
 
             if isinstance(attr_value, np.memmap):
-                save_obj[attr_name] = DataUtils._save_memmap_info(attr_value, attr_name)
+                save_obj[attr_name] = DataUtils._save_memmap_info(
+                    attr_value, attr_name)
             else:
                 save_obj[attr_name] = attr_value
 
@@ -85,9 +142,25 @@ class DataUtils:
 
     @staticmethod
     def _save_memmap_info(memmap_array, attr_name):
-        """Save memmap info - every memmap must have a filename."""
+        """
+        Save memmap metadata for later restoration.
+
+        Parameters:
+        -----------
+        memmap_array : np.memmap
+            Memory-mapped array to save metadata for
+        attr_name : str
+            Attribute name for error messages
+
+        Returns:
+        --------
+        dict
+            Metadata dictionary with shape, dtype, and file path
+        """
         if not (hasattr(memmap_array, "filename") and memmap_array.filename):
-            raise ValueError(f"Memmap {attr_name} has no filename - this should not happen!")
+            raise ValueError(
+                f"Memmap {attr_name} has no filename - this should not happen!"
+            )
 
         return {
             "_is_memmap": True,
@@ -99,17 +172,48 @@ class DataUtils:
 
     @staticmethod
     def _restore_object_attributes(obj, loaded_obj):
-        """Restore object attributes, recreating memmaps."""
+        """
+        Restore object attributes from loaded data.
+
+        Parameters:
+        -----------
+        obj : object
+            Target object to restore attributes into
+        loaded_obj : dict
+            Loaded data dictionary with attributes
+
+        Returns:
+        --------
+        None
+            Modifies obj in-place
+        """
         for attr_name, attr_value in loaded_obj.items():
             if isinstance(attr_value, dict) and attr_value.get("_is_memmap", False):
-                restored_memmap = DataUtils._restore_memmap(obj, attr_value, attr_name)
+                restored_memmap = DataUtils._restore_memmap(
+                    obj, attr_value, attr_name)
                 setattr(obj, attr_name, restored_memmap)
             else:
                 setattr(obj, attr_name, attr_value)
 
     @staticmethod
     def _restore_memmap(obj, memmap_info, attr_name):
-        """Restore a memmap from saved info."""
+        """
+        Restore memmap from metadata.
+
+        Parameters:
+        -----------
+        obj : object
+            Target object for memmap restoration
+        memmap_info : dict
+            Metadata dictionary with memmap information
+        attr_name : str
+            Attribute name for the memmap
+
+        Returns:
+        --------
+        np.memmap or None
+            Restored memmap or None if file not found
+        """
         original_path = memmap_info["original_path"]
 
         if os.path.exists(original_path):
