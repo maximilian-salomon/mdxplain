@@ -89,6 +89,24 @@ class FeatureData:
         # Bind stats methods from calculator
         self._bind_stats_methods()
 
+    def _create_bound_method(self, original_method, method_name, requires_full_data):
+        """Create bound method with automatic data selection."""
+        @functools.wraps(original_method)
+        def bound_method(*args, **kwargs):
+            """Bound method that automatically uses current data."""
+            # Check if method requires full data
+            if method_name in requires_full_data:
+                data = self.data
+            else:
+                # Other methods use reduced_data if available, else data
+                data = (
+                    self.reduced_data
+                    if self.reduced_data is not None
+                    else self.data
+                )
+            return original_method(data, *args, **kwargs)
+        return bound_method
+
     def _bind_stats_methods(self):
         """
         Bind analysis methods from calculator to self.analysis with automatic data passing.
@@ -98,38 +116,29 @@ class FeatureData:
         None
             Creates self.analysis object with bound methods that auto-use current data
         """
-        if hasattr(self.feature_type.calculator, "analysis"):
-            # Create a simple object to hold bound methods
-            self.analysis = type("BoundStats", (), {})()
+        if not hasattr(self.feature_type.calculator, "analysis"):
+            return
 
-            # Bind each method from calculator.stat
-            for method_name in dir(self.feature_type.calculator.analysis):
-                if not method_name.startswith("_") and callable(
-                    getattr(self.feature_type.calculator.analysis, method_name)
-                ):
-                    original_method = getattr(
-                        self.feature_type.calculator.analysis, method_name
-                    )
+        # Create a simple object to hold bound methods
+        self.analysis = type("BoundStats", (), {})()
 
-                    # Create bound method that automatically uses reduced_data if available,
-                    # else data
-                    def create_bound_method(method):
-                        """Create bound method with automatic data selection."""
+        # Get the set of methods that require full data
+        requires_full_data = getattr(
+            self.feature_type.calculator.analysis, 'REQUIRES_FULL_DATA', set()
+        )
 
-                        @functools.wraps(method)
-                        def bound_method(*args, **kwargs):
-                            """Bound method that automatically uses current data."""
-                            data = (
-                                self.reduced_data
-                                if self.reduced_data is not None
-                                else self.data
-                            )
-                            return method(data, *args, **kwargs)
-
-                        return bound_method
-
-                    bound_method = create_bound_method(original_method)
-                    setattr(self.analysis, method_name, bound_method)
+        # Bind each method from calculator.analysis
+        for method_name in dir(self.feature_type.calculator.analysis):
+            if not method_name.startswith("_") and callable(
+                getattr(self.feature_type.calculator.analysis, method_name)
+            ):
+                original_method = getattr(
+                    self.feature_type.calculator.analysis, method_name
+                )
+                bound_method = self._create_bound_method(
+                    original_method, method_name, requires_full_data
+                )
+                setattr(self.analysis, method_name, bound_method)
 
     def compute(self, input_data=None, feature_names=None, labels=None):
         """

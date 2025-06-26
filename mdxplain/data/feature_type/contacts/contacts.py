@@ -65,7 +65,7 @@ class Contacts(FeatureTypeBase):
     ReduceMetrics = ReduceContactMetrics
     """Available reduce metrics for contact features."""
 
-    def __init__(self, cutoff=4.5, squareform=False, k=0):
+    def __init__(self, cutoff=4.5):
         """
         Initialize contact feature type with distance cutoff parameter.
 
@@ -74,10 +74,6 @@ class Contacts(FeatureTypeBase):
         cutoff : float, default=4.5
             Distance cutoff in Angstrom for contact determination. Pairs with
             distances <= cutoff are considered in contact (1), others not (0).
-        squareform : bool, default=False
-            If True, output NxMxM format. If False, output NxP condensed format
-        k : int, default=0
-            Diagonal offset (0=include diagonal, 1=exclude diagonal)
 
         Examples:
         ---------
@@ -89,17 +85,9 @@ class Contacts(FeatureTypeBase):
 
         >>> # Longer range contacts
         >>> contacts = Contacts(cutoff=6.0)
-
-        >>> # Square format
-        >>> contacts = Contacts(squareform=True)
-
-        >>> # Exclude diagonal
-        >>> contacts = Contacts(squareform=True, k=1)
         """
         super().__init__()
         self.cutoff = cutoff
-        self.squareform = squareform
-        self.k = k
 
     def init_calculator(self, use_memmap=False, cache_path=None, chunk_size=None):
         """
@@ -166,8 +154,6 @@ class Contacts(FeatureTypeBase):
             self.calculator.compute(
                 input_data=input_data,
                 cutoff=self.cutoff,
-                squareform=self.squareform,
-                k=self.k,
             ),
             feature_names,
         )

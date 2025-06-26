@@ -40,6 +40,13 @@ class DistanceCalculatorAnalysis:
     with memory-mapped array support.
     """
 
+    # Methods that require full data instead of reduced data
+    REQUIRES_FULL_DATA = {
+        "compute_per_residue_mean", "compute_per_residue_std", "compute_per_residue_min",
+        "compute_per_residue_max", "compute_per_residue_median", "compute_per_residue_sum",
+        "compute_per_residue_variance", "compute_per_residue_range"
+    }
+
     def __init__(self, chunk_size=None):
         """
         Initialize distance analysis with chunking configuration.
@@ -74,7 +81,7 @@ class DistanceCalculatorAnalysis:
         np.ndarray
             Mean distance for each pair with shape (n_pairs,)
         """
-        return CalculatorStatHelper.compute_func_per_pair(
+        return CalculatorStatHelper.compute_func_per_feature(
             distances, np.mean, self.chunk_size
         )
 
@@ -92,7 +99,7 @@ class DistanceCalculatorAnalysis:
         np.ndarray
             Standard deviation for each pair with shape (n_pairs,)
         """
-        return CalculatorStatHelper.compute_func_per_pair(
+        return CalculatorStatHelper.compute_func_per_feature(
             distances, np.std, self.chunk_size
         )
 
@@ -110,7 +117,7 @@ class DistanceCalculatorAnalysis:
         np.ndarray
             Minimum distance for each pair with shape (n_pairs,)
         """
-        return CalculatorStatHelper.compute_func_per_pair(
+        return CalculatorStatHelper.compute_func_per_feature(
             distances, np.min, self.chunk_size
         )
 
@@ -128,7 +135,7 @@ class DistanceCalculatorAnalysis:
         np.ndarray
             Maximum distance for each pair with shape (n_pairs,)
         """
-        return CalculatorStatHelper.compute_func_per_pair(
+        return CalculatorStatHelper.compute_func_per_feature(
             distances, np.max, self.chunk_size
         )
 
@@ -146,7 +153,7 @@ class DistanceCalculatorAnalysis:
         np.ndarray
             Median distance for each pair with shape (n_pairs,)
         """
-        return CalculatorStatHelper.compute_func_per_pair(
+        return CalculatorStatHelper.compute_func_per_feature(
             distances, np.median, self.chunk_size
         )
 
@@ -164,7 +171,7 @@ class DistanceCalculatorAnalysis:
         np.ndarray
             Variance for each pair with shape (n_pairs,)
         """
-        return CalculatorStatHelper.compute_func_per_pair(
+        return CalculatorStatHelper.compute_func_per_feature(
             distances, np.var, self.chunk_size
         )
 
@@ -182,7 +189,7 @@ class DistanceCalculatorAnalysis:
         np.ndarray
             Range (max - min) for each pair with shape (n_pairs,)
         """
-        return CalculatorStatHelper.compute_func_per_pair(
+        return CalculatorStatHelper.compute_func_per_feature(
             distances, np.ptp, self.chunk_size
         )
 
@@ -200,7 +207,7 @@ class DistanceCalculatorAnalysis:
         np.ndarray
             25th percentile for each pair with shape (n_pairs,)
         """
-        return CalculatorStatHelper.compute_func_per_pair(
+        return CalculatorStatHelper.compute_func_per_feature(
             distances, lambda x, axis: np.percentile(
                 x, 25, axis=axis), self.chunk_size
         )
@@ -219,7 +226,7 @@ class DistanceCalculatorAnalysis:
         np.ndarray
             75th percentile for each pair with shape (n_pairs,)
         """
-        return CalculatorStatHelper.compute_func_per_pair(
+        return CalculatorStatHelper.compute_func_per_feature(
             distances, lambda x, axis: np.percentile(
                 x, 75, axis=axis), self.chunk_size
         )
@@ -238,7 +245,7 @@ class DistanceCalculatorAnalysis:
         np.ndarray
             Interquartile range (Q75 - Q25) for each pair with shape (n_pairs,)
         """
-        return CalculatorStatHelper.compute_func_per_pair(
+        return CalculatorStatHelper.compute_func_per_feature(
             distances,
             lambda x, axis: np.percentile(x, 75, axis=axis)
             - np.percentile(x, 25, axis=axis),
@@ -263,7 +270,7 @@ class DistanceCalculatorAnalysis:
         np.ndarray
             MAD values per distance pair with shape (n_pairs,)
         """
-        return CalculatorStatHelper.compute_func_per_pair(
+        return CalculatorStatHelper.compute_func_per_feature(
             distances,
             lambda x, axis: np.median(
                 np.abs(x - np.median(x, axis=axis, keepdims=True)), axis=axis
@@ -398,148 +405,148 @@ class DistanceCalculatorAnalysis:
             distances, self.chunk_size, np.sum
         )
 
-    # === RESIDUE-BASED STATISTICS (only for square format) ===
+    # === PER-COLUMN ANALYSIS (auto-converts 2D to 3D) ===
     def compute_per_residue_mean(self, distances):
         """
-        Compute mean distances per residue. Requires squareform.
+        Compute mean distance for each residue. Auto-converts condensed to squareform.
 
         Parameters:
         -----------
         distances : np.ndarray or np.memmap
-            Distance array in square format with shape (n_frames, n_residues, n_residues)
+            Distance array in condensed format (n_frames, n_pairs) - automatically converted to squareform
 
         Returns:
         --------
         np.ndarray
             Mean distance for each residue with shape (n_residues,)
         """
-        return CalculatorStatHelper.compute_func_per_residue(
+        return CalculatorStatHelper.compute_func_per_column(
             distances, np.mean, self.chunk_size
         )
 
     def compute_per_residue_std(self, distances):
         """
-        Compute standard deviation of distances per residue. Requires squareform.
+        Compute standard deviation of distances per residue. Auto-converts condensed to squareform.
 
         Parameters:
         -----------
         distances : np.ndarray or np.memmap
-            Distance array in square format with shape (n_frames, n_residues, n_residues)
+            Distance array in condensed format (n_frames, n_pairs) - automatically converted to squareform
 
         Returns:
         --------
         np.ndarray
             Standard deviation for each residue with shape (n_residues,)
         """
-        return CalculatorStatHelper.compute_func_per_residue(
+        return CalculatorStatHelper.compute_func_per_column(
             distances, np.std, self.chunk_size
         )
 
     def compute_per_residue_min(self, distances):
         """
-        Compute minimum distances per residue. Requires squareform.
+        Compute minimum distances per residue. Auto-converts condensed to squareform.
 
         Parameters:
         -----------
         distances : np.ndarray or np.memmap
-            Distance array in square format with shape (n_frames, n_residues, n_residues)
+            Distance array in condensed format (n_frames, n_pairs) - automatically converted to squareform
 
         Returns:
         --------
         np.ndarray
             Minimum distance for each residue with shape (n_residues,)
         """
-        return CalculatorStatHelper.compute_func_per_residue(
+        return CalculatorStatHelper.compute_func_per_column(
             distances, np.min, self.chunk_size
         )
 
     def compute_per_residue_max(self, distances):
         """
-        Compute maximum distances per residue. Requires squareform.
+        Compute maximum distances per residue. Auto-converts condensed to squareform.
 
         Parameters:
         -----------
         distances : np.ndarray or np.memmap
-            Distance array in square format with shape (n_frames, n_residues, n_residues)
+            Distance array in condensed format (n_frames, n_pairs) - automatically converted to squareform
 
         Returns:
         --------
         np.ndarray
             Maximum distance for each residue with shape (n_residues,)
         """
-        return CalculatorStatHelper.compute_func_per_residue(
+        return CalculatorStatHelper.compute_func_per_column(
             distances, np.max, self.chunk_size
         )
 
     def compute_per_residue_median(self, distances):
         """
-        Compute median distances per residue. Requires squareform.
+        Compute median distances per residue. Auto-converts condensed to squareform.
 
         Parameters:
         -----------
         distances : np.ndarray or np.memmap
-            Distance array in square format with shape (n_frames, n_residues, n_residues)
+            Distance array in condensed format (n_frames, n_pairs) - automatically converted to squareform
 
         Returns:
         --------
         np.ndarray
             Median distance for each residue with shape (n_residues,)
         """
-        return CalculatorStatHelper.compute_func_per_residue(
+        return CalculatorStatHelper.compute_func_per_column(
             distances, np.median, self.chunk_size
         )
 
     def compute_per_residue_sum(self, distances):
         """
-        Compute sum of distances per residue. Requires squareform.
+        Compute sum of distances per residue. Auto-converts condensed to squareform.
 
         Parameters:
         -----------
         distances : np.ndarray or np.memmap
-            Distance array in square format with shape (n_frames, n_residues, n_residues)
+            Distance array in condensed format (n_frames, n_pairs) - automatically converted to squareform
 
         Returns:
         --------
         np.ndarray
             Sum of distances for each residue with shape (n_residues,)
         """
-        return CalculatorStatHelper.compute_func_per_residue(
+        return CalculatorStatHelper.compute_func_per_column(
             distances, np.sum, self.chunk_size
         )
 
     def compute_per_residue_variance(self, distances):
         """
-        Compute variance of distances per residue. Requires squareform.
+        Compute variance of distances per residue. Auto-converts condensed to squareform.
 
         Parameters:
         -----------
         distances : np.ndarray or np.memmap
-            Distance array in square format with shape (n_frames, n_residues, n_residues)
+            Distance array in condensed format (n_frames, n_pairs) - automatically converted to squareform
 
         Returns:
         --------
         np.ndarray
             Variance for each residue with shape (n_residues,)
         """
-        return CalculatorStatHelper.compute_func_per_residue(
+        return CalculatorStatHelper.compute_func_per_column(
             distances, np.var, self.chunk_size
         )
 
     def compute_per_residue_range(self, distances):
         """
-        Compute range of distances per residue. Requires squareform.
+        Compute range of distances per residue. Auto-converts condensed to squareform.
 
         Parameters:
         -----------
         distances : np.ndarray or np.memmap
-            Distance array in square format with shape (n_frames, n_residues, n_residues)
+            Distance array in condensed format (n_frames, n_pairs) - automatically converted to squareform
 
         Returns:
         --------
         np.ndarray
             Range (max - min) for each residue with shape (n_residues,)
         """
-        return CalculatorStatHelper.compute_func_per_residue(
+        return CalculatorStatHelper.compute_func_per_column(
             distances, np.ptp, self.chunk_size
         )
 
