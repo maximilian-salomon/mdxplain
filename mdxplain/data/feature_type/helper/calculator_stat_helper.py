@@ -22,7 +22,7 @@
 Statistical calculations for molecular dynamics feature data.
 
 Provides statistical calculations for feature data with support for memory-mapped
-arrays and chunked processing. All methods are static and can be used without 
+arrays and chunked processing. All methods are static and can be used without
 instantiation across different calculators.
 """
 
@@ -342,7 +342,7 @@ class CalculatorStatHelper:
         flat_result = result.flatten()
         for i in range(0, array.shape[1], chunk_size):
             end_idx = min(i + chunk_size, array.shape[1])
-            chunk = array[:, i: end_idx]
+            chunk = array[:, i:end_idx]
 
             for j in range(chunk.shape[1]):
                 if mode == "lagtime":

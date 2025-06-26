@@ -21,7 +21,7 @@
 """
 Statistical analysis methods for distance calculations.
 
-Provides comprehensive statistical analysis capabilities for distance data 
+Provides comprehensive statistical analysis capabilities for distance data
 including variability analysis, transition detection, and comparative studies
 with support for memory-mapped arrays.
 """

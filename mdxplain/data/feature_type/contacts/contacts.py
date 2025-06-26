@@ -129,7 +129,7 @@ class Contacts(FeatureTypeBase):
             use_memmap=use_memmap, cache_path=cache_path, chunk_size=chunk_size
         )
 
-    def compute(self, input_data, feature_names):
+    def compute(self, input_data, feature_names, labels=None):
         """
         Compute binary contact maps from distance data using distance cutoff.
 
@@ -139,6 +139,8 @@ class Contacts(FeatureTypeBase):
             Distance matrix data from distance feature type (n_frames, n_pairs)
         feature_names : list
             Feature names from distance calculations (pair identifiers)
+        labels : list, optional
+            Residue labels (not used by contacts - uses existing feature_names)
 
         Returns:
         --------
@@ -185,10 +187,10 @@ class Contacts(FeatureTypeBase):
         >>> print(contacts.get_dependencies())
         ['distances']
         """
-        return [str(Distances)]
+        return [Distances.get_type_name()]
 
-    @staticmethod
-    def __str__() -> str:
+    @classmethod
+    def get_type_name(cls) -> str:
         """
         Return unique string identifier for the contact feature type.
 
@@ -199,7 +201,7 @@ class Contacts(FeatureTypeBase):
 
         Examples:
         ---------
-        >>> print(str(Contacts()))
+        >>> print(Contacts.get_type_name())
         'contacts'
         """
         return "contacts"
@@ -219,4 +221,4 @@ class Contacts(FeatureTypeBase):
         >>> print(contacts.get_input())
         'distances'
         """
-        return str(Distances)
+        return Distances.get_type_name()

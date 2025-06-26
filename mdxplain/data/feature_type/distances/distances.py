@@ -133,7 +133,7 @@ class Distances(FeatureTypeBase):
             use_memmap=use_memmap, cache_path=cache_path, chunk_size=chunk_size
         )
 
-    def compute(self, input_data, feature_names):
+    def compute(self, input_data, feature_names, labels=None):
         """
         Compute pairwise distances from molecular dynamics trajectories.
 
@@ -143,6 +143,8 @@ class Distances(FeatureTypeBase):
             MD trajectories to compute distances from
         feature_names : list, optional
             Not used for distances (base feature type)
+        labels : list, optional
+            Residue labels for generating feature names
 
         Returns:
         --------
@@ -168,7 +170,11 @@ class Distances(FeatureTypeBase):
                 "Calculator not initialized. Call init_calculator() first."
             )
         return self.calculator.compute(
-            input_data=input_data, ref=self.ref, squareform=self.squareform, k=self.k
+            input_data=input_data,
+            ref=self.ref,
+            squareform=self.squareform,
+            k=self.k,
+            labels=labels,
         )
 
     def get_dependencies(self) -> List[str]:
@@ -188,19 +194,19 @@ class Distances(FeatureTypeBase):
         """
         return []
 
-    @staticmethod
-    def __str__() -> str:
+    @classmethod
+    def get_type_name(cls) -> str:
         """
-        Return unique string identifier for the distance feature type.
+        Get the type name as class method.
 
         Returns:
         --------
         str
-            String identifier 'distances' used as key in feature dictionaries
+            String identifier 'distances'
 
         Examples:
         ---------
-        >>> print(str(Distances()))
+        >>> print(Distances.get_type_name())
         'distances'
         """
         return "distances"

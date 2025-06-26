@@ -86,9 +86,9 @@ class FeatureTypeBase(ABC):
         """
         pass
 
-    @staticmethod
+    @classmethod
     @abstractmethod
-    def __str__() -> str:
+    def get_type_name(cls) -> str:
         """
         Return unique string identifier for this feature type.
 
@@ -99,13 +99,6 @@ class FeatureTypeBase(ABC):
         --------
         str
             Unique string identifier (e.g., 'distances', 'contacts')
-
-        Examples:
-        ---------
-        >>> str(DistancesFeature())
-        'distances'
-        >>> str(ContactsFeature())
-        'contacts'
         """
         pass
 
@@ -132,7 +125,7 @@ class FeatureTypeBase(ABC):
 
     @abstractmethod
     def compute(
-        self, input_data, feature_names
+        self, input_data, feature_names, labels=None
     ) -> Tuple[np.ndarray, List[str]]:
         """
         Compute features using the initialized calculator.
@@ -143,6 +136,8 @@ class FeatureTypeBase(ABC):
             Input data for computation (trajectories, distances, etc.)
         feature_names : list, optional
             Names for input features (used by dependent features)
+        labels : list, optional
+            Residue labels for generating feature names
 
         Returns:
         --------

@@ -21,8 +21,8 @@
 """
 Feature array format conversion utilities.
 
-Provides helper functions for converting between square and condensed feature 
-array formats. All methods are static and support memory-mapped arrays for 
+Provides helper functions for converting between square and condensed feature
+array formats. All methods are static and support memory-mapped arrays for
 efficient processing of large datasets.
 """
 

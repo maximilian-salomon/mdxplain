@@ -21,8 +21,8 @@
 """
 Common helper methods for calculator dynamic value computation.
 
-Provides common functionality for dynamic value computation across different 
-calculators (ContactCalculator, DistanceCalculator, etc.) with memory-mapped 
+Provides common functionality for dynamic value computation across different
+calculators (ContactCalculator, DistanceCalculator, etc.) with memory-mapped
 array support and statistical filtering capabilities.
 """
 

@@ -99,6 +99,7 @@ class DistanceCalculator(CalculatorBase):
             - ref : mdtraj.Trajectory, optional - Reference trajectory for pair determination
             - squareform : bool, default=False - If True, output NxMxM format
             - k : int, default=0 - Diagonal offset
+            - labels : list, optional - Residue labels for feature naming
 
         Returns:
         --------
@@ -114,12 +115,16 @@ class DistanceCalculator(CalculatorBase):
 
         >>> # With reference trajectory for consistent naming
         >>> distances, pairs = calculator.compute(trajectories, ref=ref_traj)
+
+        >>> # With residue labels for meaningful feature names
+        >>> distances, pairs = calculator.compute(trajectories, labels=residue_labels)
         """
         # Extract parameters from kwargs
         trajectories = input_data
-        ref = kwargs.get('ref', None)
-        squareform = kwargs.get('squareform', False)
-        k = kwargs.get('k', 0)
+        ref = kwargs.get("ref", None)
+        squareform = kwargs.get("squareform", False)
+        k = kwargs.get("k", 0)
+        labels = kwargs.get("labels", None)
 
         # Setup computation parameters and arrays
         ref, total_frames, distances, condensed_path = self._setup_computation(
@@ -131,12 +136,15 @@ class DistanceCalculator(CalculatorBase):
             trajectories, distances, total_frames
         )
 
+        # Generate feature names using labels if available
+        feature_names = self._generate_feature_names(res_list, labels)
+
         # Finalize output (convert units, format, cleanup)
         distances = self._finalize_output(
             distances, res_list, total_frames, condensed_path, squareform
         )
 
-        return distances, res_list
+        return distances, feature_names
 
     def _setup_computation(self, trajectories, ref, squareform, k):
         """
@@ -309,6 +317,38 @@ class DistanceCalculator(CalculatorBase):
                 distances[i:end_idx] *= 10
         else:
             distances *= 10
+
+    def _generate_feature_names(self, res_list, labels):
+        """
+        Generate feature names for residue pairs using labels if available.
+
+        Parameters:
+        -----------
+        res_list : list
+            List of residue pair indices from MDTraj
+        labels : list, optional
+            Residue labels for naming
+
+        Returns:
+        --------
+        list
+            List of feature names for each pair
+        """
+        if labels is None:
+            # Use original residue pair indices
+            return res_list
+
+        # Convert pairs to label-based names
+        feature_names = []
+        for pair in self.pairs:
+            i, j = pair
+            if i < len(labels) and j < len(labels):
+                feature_names.append(f"{labels[i]}-{labels[j]}")
+            else:
+                # Fallback to indices if labels don't cover all residues
+                feature_names.append(f"{i}-{j}")
+
+        return feature_names
 
     def _process_trajectory(self, traj, distances, frame_idx, pbar=None):
         """

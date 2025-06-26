@@ -7,6 +7,7 @@ jobs=0
 disable=
     # Design patterns - reasonable for scientific code
     too-many-arguments,          # R0913 - Scientific functions often need many parameters
+    too-many-positional-arguments, # R0917 - __init__ methods often need many parameters
     too-many-instance-attributes, # R0902 - Data classes legitimately have many attributes  
     too-many-public-methods,     # R0904 - Analysis classes provide many statistical methods
     too-few-public-methods,      # R0903 - Utility classes are fine with few methods
@@ -26,6 +27,9 @@ disable=
 [FORMAT]
 # Maximum number of characters on a single line
 max-line-length=100
+
+# Ignore long lines containing URLs (in comments or docstrings)
+ignore-long-lines=^\s*(#.*)?.*https?://
 
 [DESIGN]
 # Increase reasonable limits for scientific code
