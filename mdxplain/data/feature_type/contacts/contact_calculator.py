@@ -26,7 +26,6 @@ Supports memory mapping for large datasets and provides statistical analysis cap
 """
 
 from ..helper.calculator_compute_helper import CalculatorComputeHelper
-from ..helper.feature_shape_helper import FeatureShapeHelper
 from ..interfaces.calculator_base import CalculatorBase
 from .contact_calculator_analysis import ContactCalculatorAnalysis
 
@@ -88,12 +87,10 @@ class ContactCalculator(CalculatorBase):
         Parameters:
         -----------
         input_data : numpy.ndarray
-            Distance array (NxMxM square or NxP condensed format) in Angstrom
+            Distance array in condensed format (NxP) in Angstrom
         **kwargs : dict
             Additional parameters:
             - cutoff : float, default=4.5 - Distance cutoff for contact determination
-            - squareform : bool, default=False - If True, output NxMxM format
-            - k : int, default=0 - Diagonal offset
 
         Returns:
         --------
@@ -105,23 +102,16 @@ class ContactCalculator(CalculatorBase):
         >>> # Basic contact calculation
         >>> contacts = calculator.compute(distance_data, cutoff=4.0)
 
-        >>> # With custom cutoff and square format
-        >>> contacts = calculator.compute(distance_data, cutoff=3.5, squareform=True)
+        >>> # With custom cutoff
+        >>> contacts = calculator.compute(distance_data, cutoff=3.5)
         """
         # Extract parameters from kwargs
         distances = input_data
         cutoff = kwargs.get("cutoff", 4.5)
-        squareform = kwargs.get("squareform", False)
-        k = kwargs.get("k", 0)
 
-        # Calculate dimensions and conversion requirements
-        output_shape, n_residues = CalculatorComputeHelper.calculate_output_dimensions(
-            distances.shape, squareform, k
-        )
-
-        # Create output array
+        # Create output array with same shape as input (condensed format)
         contacts = CalculatorComputeHelper.create_output_array(
-            self.use_memmap, self.contacts_path, output_shape, dtype=bool
+            self.use_memmap, self.contacts_path, distances.shape, dtype=bool
         )
 
         # Process in chunks
@@ -130,26 +120,7 @@ class ContactCalculator(CalculatorBase):
 
         for i in range(0, distances.shape[0], self.chunk_size):
             end_idx = min(i + self.chunk_size, distances.shape[0])
-            chunk_contacts = distances[i:end_idx] <= cutoff
-
-            # Convert format if needed
-            if len(distances.shape) == 3 and not squareform:
-                chunk_contacts = FeatureShapeHelper.squareform_to_condensed(
-                    chunk_contacts, k=k, chunk_size=self.chunk_size
-                )
-            elif len(distances.shape) == 2 and squareform:
-                # Need to create residue pairs for squareform conversion
-                residue_pairs = [
-                    [i, j] for i in range(n_residues) for j in range(i + 1, n_residues)
-                ]
-                chunk_contacts = FeatureShapeHelper.condensed_to_squareform(
-                    chunk_contacts,
-                    residue_pairs,
-                    n_residues,
-                    chunk_size=self.chunk_size,
-                )
-
-            contacts[i:end_idx] = chunk_contacts
+            contacts[i:end_idx] = distances[i:end_idx] <= cutoff
 
         return contacts
 

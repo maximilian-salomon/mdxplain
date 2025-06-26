@@ -35,31 +35,12 @@ class ReduceContactMetrics:
 
     Examples:
     ---------
-    >>> metrics = ReduceContactMetrics()
-    >>> print(metrics.FREQUENCY)  # 'frequency'
-    >>> print(metrics.STABILITY)  # 'stability'
+    >>> print(ReduceContactMetrics.FREQUENCY)  # 'frequency'
+    >>> print(ReduceContactMetrics.STABILITY)  # 'stability'
     """
 
-    @property
-    def FREQUENCY(self) -> str:
-        """
-        Contact frequency metric - fraction of frames where pair is in contact.
+    FREQUENCY = "frequency"
+    """Contact frequency metric - fraction of frames where pair is in contact."""
 
-        Returns:
-        --------
-        str
-            Metric identifier 'frequency' for contact frequency analysis
-        """
-        return "frequency"
-
-    @property
-    def STABILITY(self) -> str:
-        """
-        Contact stability metric - measure of contact persistence over time.
-
-        Returns:
-        --------
-        str
-            Metric identifier 'stability' for contact stability analysis
-        """
-        return "stability"
+    STABILITY = "stability"
+    """Contact stability metric - measure of contact persistence over time."""

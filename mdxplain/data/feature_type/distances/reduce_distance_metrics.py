@@ -34,68 +34,28 @@ class ReduceDistanceMetrics:
 
     Examples:
     ---------
-    >>> metrics = ReduceDistanceMetrics()
-    >>> print(metrics.CV)         # 'cv'
-    >>> print(metrics.STD)        # 'std'
-    >>> print(metrics.TRANSITIONS) # 'transitions'
+    >>> print(ReduceDistanceMetrics.CV)         # 'cv'
+    >>> print(ReduceDistanceMetrics.STD)        # 'std'
+    >>> print(ReduceDistanceMetrics.TRANSITIONS) # 'transitions'
     """
 
-    @property
-    def CV(self) -> str:
-        """
-        Coefficient of variation metric - relative variability (std/mean).
+    CV = "cv"
+    """Coefficient of variation metric - relative variability (std/mean)."""
 
-        Returns:
-        --------
-        str
-            Metric identifier 'cv' for coefficient of variation analysis
-        """
-        return "cv"
+    STD = "std"
+    """Standard deviation metric - absolute variability measure."""
 
-    @property
-    def STD(self) -> str:
-        """
-        Standard deviation metric - absolute variability measure.
+    VARIANCE = "variance"
+    """Variance metric - squared standard deviation."""
 
-        Returns:
-        --------
-        str
-            Metric identifier 'std' for standard deviation analysis
-        """
-        return "std"
+    RANGE = "range"
+    """Range metric - difference between maximum and minimum values."""
 
-    @property
-    def VARIANCE(self) -> str:
-        """
-        Variance metric - squared standard deviation.
+    TRANSITIONS = "transitions"
+    """Transition analysis metric - detects conformational changes over time."""
 
-        Returns:
-        --------
-        str
-            Metric identifier 'variance' for variance analysis
-        """
-        return "variance"
+    MIN = "min"
+    """Minimum distance metric - minimum distance value."""
 
-    @property
-    def RANGE(self) -> str:
-        """
-        Range metric - difference between maximum and minimum values.
-
-        Returns:
-        --------
-        str
-            Metric identifier 'range' for range analysis
-        """
-        return "range"
-
-    @property
-    def TRANSITIONS(self) -> str:
-        """
-        Transition analysis metric - detects conformational changes over time.
-
-        Returns:
-        --------
-        str
-            Metric identifier 'transitions' for transition analysis
-        """
-        return "transitions"
+    MAD = "mad"
+    """Median absolute deviation metric - median absolute deviation."""

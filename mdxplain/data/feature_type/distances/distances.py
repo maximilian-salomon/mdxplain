@@ -63,7 +63,7 @@ class Distances(FeatureTypeBase):
     ReduceMetrics = ReduceDistanceMetrics
     """Available reduce metrics for distance features."""
 
-    def __init__(self, ref=None, squareform=False, k=0):
+    def __init__(self, ref=None, k=1):
         """
         Initialize distance feature type with optional reference trajectory.
 
@@ -76,9 +76,6 @@ class Distances(FeatureTypeBase):
             consistent feature naming across trajectories. Without reference, feature names
             depend on the specific trajectory topology, making cross-trajectory comparisons
             impossible. If None, uses first trajectory as reference.
-        squareform : bool, default=False
-            Whether to return the distance matrix in squareform (n_pairs, n_pairs)
-            or condensed form, what means basically flattening the matrix.
         k : int, default=0
             Number of nearest neighbors to consider for distance calculation.
             If 0, all pairs are computed.
@@ -94,15 +91,11 @@ class Distances(FeatureTypeBase):
         >>> ref_traj = traj_data.trajectories[2]  # Second trajectory as reference
         >>> traj_data.add_feature(Distances(ref=ref_traj))
 
-        >>> # Use squareform distance matrix
-        >>> distances = Distances(squareform=True)
-
-        >>> # Use k nearest neighbors
-        >>> distances = Distances(squareform=True, k=10)
+        >>> # Use custom diagonal offset
+        >>> distances = Distances(k=2)
         """
         super().__init__()
         self.ref = ref
-        self.squareform = squareform
         self.k = k
 
     def init_calculator(self, use_memmap=False, cache_path=None, chunk_size=None):
@@ -164,15 +157,34 @@ class Distances(FeatureTypeBase):
         >>> # Using memory mapping for large datasets
         >>> distances.init_calculator(use_memmap=True, cache_path='./cache/')
         >>> data, names = distances.compute(input_data=large_trajectories)
+
+        Raises:
+        -------
+        ValueError
+            If trajectories have different numbers of residues
+            If calculator is not initialized
         """
         if self.calculator is None:
             raise ValueError(
                 "Calculator not initialized. Call init_calculator() first."
             )
+
+        # Check for consistent residue counts
+        if len(input_data) > 1:
+            ref_n_residues = input_data[0].n_residues
+            for i, traj in enumerate(input_data):
+                if traj.n_residues != ref_n_residues:
+                    raise ValueError(
+                        f"Inconsistent residue counts detected! "
+                        f"Trajectory 0 has {ref_n_residues} residues, "
+                        f"but trajectory {i} has {traj.n_residues} residues. "
+                        f"Distance calculations require all trajectories to have the same number of residues. "
+                        f"Use select_atoms() to create a common selection across all trajectories."
+                    )
+
         return self.calculator.compute(
             input_data=input_data,
             ref=self.ref,
-            squareform=self.squareform,
             k=self.k,
             labels=labels,
         )

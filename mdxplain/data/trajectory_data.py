@@ -70,6 +70,8 @@ class TrajectoryData:
         Directory for cache files when using memory mapping
     trajectories : list or None
         List of loaded MD trajectory objects
+    trajectory_names : list or None
+        List of trajectory names
     features : dict
         Dictionary storing FeatureData instances by feature type string
     """
@@ -103,10 +105,11 @@ class TrajectoryData:
             self.cache_dir = "./cache"
 
         self.trajectories = None
+        self.trajectory_names = None  # List of trajectory names
         self.features = {}  # Dictionary to store FeatureData instances by feature type
         self.labels = None  # Labels for trajectory residues
 
-    def add_feature(self, feature_type, cache_path=None, chunk_size=None):
+    def add_feature(self, feature_type, cache_path=None, chunk_size=None, force=False):
         """
         Add and compute a feature for the loaded trajectories.
 
@@ -126,6 +129,8 @@ class TrajectoryData:
         chunk_size : int, optional
             Chunk size for processing large datasets. Smaller chunks use less
             memory but may be slower. If None, uses automatic chunking.
+        force : bool, default=False
+            Whether to force recomputation of the feature even if it already exists.
 
         Raises:
         -------
@@ -151,9 +156,15 @@ class TrajectoryData:
         feature_key = feature_type.get_type_name()
 
         # Check if feature already exists
-        if feature_key in self.features and self.features[feature_key].data is not None:
+        if (feature_key in self.features and
+            self.features[feature_key].data is not None and not force):
             raise ValueError(
                 f"{feature_key.capitalize()} FeatureData already exists.")
+        if (feature_key in self.features and
+            self.features[feature_key].data is not None and force):
+            print(f"WARNING: {feature_key.capitalize()} FeatureData already "
+                  f"exists. Forcing recomputation.")
+            self.features[feature_key].reset()
 
         # Check dependencies
         dependencies = feature_type.get_dependencies()
@@ -240,7 +251,7 @@ class TrajectoryData:
                 f"Feature {feature_type.get_type_name()} not found.")
         return feature_data
 
-    def load_trajectories(self, data_input, concat=False, stride=1):
+    def load_trajectories(self, data_input, concat=False, stride=1, selection=None):
         """
         Load molecular dynamics trajectories from files or directories.
 
@@ -261,6 +272,9 @@ class TrajectoryData:
         stride : int, default=1
             Load every stride-th frame from trajectories. Use values > 1 to
             reduce memory usage and computation time by subsampling frames.
+        selection : str, optional
+            MDTraj selection string to apply to all loaded trajectories.
+            See: https://mdtraj.org/1.9.4/atom_selection.html
 
         Examples:
         ---------
@@ -273,15 +287,545 @@ class TrajectoryData:
         >>> # Load and concatenate trajectories per system
         >>> traj.load_trajectories('../data', concat=True, stride=5)
 
+        >>> # Load only protein atoms
+        >>> traj.load_trajectories('../data', selection="protein")
+
+        >>> # Load backbone atoms with striding
+        >>> traj.load_trajectories('../data', stride=10, selection="backbone")
+
         Notes:
         -----
         - Supported formats depend on MDTraj capabilities
         - Topology files (.pdb, .gro, .psf) should be in the same directory
         - Large trajectories benefit from striding to reduce memory usage
+        - Selection is applied to all trajectories after loading
         """
-        self.trajectories = TrajectoryLoader.load_trajectories(
+        result = TrajectoryLoader.load_trajectories(
             data_input, concat, stride
         )
+        self.trajectories = result["trajectories"]
+        self.trajectory_names = result["names"]
+
+        # Apply atom selection if provided
+        if selection is not None:
+            self.select_atoms(selection)
+
+        # Check trajectory consistency
+        self._check_trajectory_consistency()
+
+    def add_trajectory(self, data_input, concat=False, stride=1, selection=None):
+        """
+        Add molecular dynamics trajectories to existing loaded trajectories.
+
+        This method works like load_trajectories but appends new trajectories
+        instead of replacing existing ones. Useful for loading additional
+        trajectory data without losing previously loaded trajectories.
+
+        Parameters:
+        -----------
+        data_input : str or list
+            Path to directory containing trajectory files, or list of trajectory
+            file paths. When a directory is provided, all supported trajectory
+            files in that directory will be loaded.
+        concat : bool, default=False
+            Whether to concatenate multiple trajectories per system into single
+            trajectory objects. Useful when dealing with trajectory splits.
+        stride : int, default=1
+            Load every stride-th frame from trajectories. Use values > 1 to
+            reduce memory usage and computation time by subsampling frames.
+        selection : str, optional
+            MDTraj selection string to apply to all newly loaded trajectories.
+            See: https://mdtraj.org/1.9.4/atom_selection.html
+
+        Examples:
+        ---------
+        >>> # Load initial trajectories
+        >>> traj.load_trajectories('../data1')
+
+        >>> # Add more trajectories from another directory
+        >>> traj.add_trajectory('../data2')
+
+        >>> # Add trajectories with specific selection
+        >>> traj.add_trajectory('../data3', selection="protein")
+
+        >>> # Add with striding and concatenation
+        >>> traj.add_trajectory('../data4', concat=True, stride=5)
+
+        Raises:
+        -------
+        ValueError
+            If no trajectories are currently loaded
+
+        Notes:
+        -----
+        - New trajectories are appended to existing ones
+        - Trajectory names are also appended to maintain consistency
+        - Selection is only applied to newly loaded trajectories
+        - Existing trajectories remain unchanged
+        """
+        if self.trajectories is None:
+            raise ValueError(
+                "No trajectories currently loaded. Use load_trajectories() first."
+            )
+
+        # Load new trajectories
+        result = TrajectoryLoader.load_trajectories(
+            data_input, concat, stride
+        )
+        new_trajectories = result["trajectories"]
+        new_names = result["names"]
+
+        # Apply atom selection to new trajectories if provided
+        if selection is not None:
+            for i, traj in enumerate(new_trajectories):
+                atom_indices = traj.topology.select(selection)
+                new_trajectories[i] = traj.atom_slice(atom_indices)
+
+        # Append to existing trajectories and names
+        self.trajectories.extend(new_trajectories)
+        self.trajectory_names.extend(new_names)
+
+        # Check trajectory consistency
+        self._check_trajectory_consistency()
+
+    def _check_trajectory_consistency(self):
+        """
+        Check if all trajectories have consistent atom and residue counts.
+
+        Issues detailed warnings if inconsistencies are found, providing
+        specific information about which trajectories differ and suggestions
+        for resolution.
+        """
+        if not self.trajectories or len(self.trajectories) <= 1:
+            return
+        atom_inconsistent = False
+        residue_inconsistent = False
+        # Check residue inconsistency first
+        residue_inconsistent = self._find_residue_inconsistency()
+
+        if not residue_inconsistent:
+            atom_inconsistent = self._find_atom_inconsistency()
+
+        if atom_inconsistent or residue_inconsistent:
+            print("\nSuggestion: Use select_atoms() with a selector that applies "
+                  "to all trajectories\nto find common ground for analysis, or use "
+                  "remove_trajectory() to exclude\nincompatible trajectories from "
+                  "the analysis.\n")
+
+    def _find_residue_inconsistency(self):
+        """
+        Check for residue count inconsistencies between trajectories.
+
+        All trajectories must have the same number of residues for some features.
+
+        Returns:
+        --------
+        bool
+            True if residue inconsistency found, False if all consistent
+        """
+        if not self.trajectories or len(self.trajectories) <= 1:
+            return False
+
+        ref_n_residues = self.trajectories[0].n_residues
+        residue_inconsistent = []
+
+        for i, traj in enumerate(self.trajectories):
+            if traj.n_residues != ref_n_residues:
+                residue_inconsistent.append(
+                    (i, self.trajectory_names[i], traj.n_residues))
+
+        if residue_inconsistent:
+            inconsistent_list = "\n".join([
+                f"  [{idx}] {name}: {n_residues} residues"
+                for idx, name, n_residues in residue_inconsistent
+            ])
+            print(f"\nWARNING: Inconsistent residue counts detected!\n"
+                  f"Reference trajectory '{self.trajectory_names[0]}' has "
+                  f"{ref_n_residues} residues.\n"
+                  f"Trajectories with different residue counts:\n"
+                  f"{inconsistent_list}\n\n"
+                  f"Residue-based feature calculations may fail or produce "
+                  f"incorrect results.")
+            return True
+
+        return False
+
+    def _find_atom_inconsistency(self):
+        """
+        Check for atom count inconsistencies between trajectories.
+
+        All trajectories must have the same number of atoms for some features.
+
+        Returns:
+        --------
+        bool
+            True if atom inconsistency found, False if all consistent
+        """
+        if not self.trajectories or len(self.trajectories) <= 1:
+            return False
+
+        ref_n_atoms = self.trajectories[0].n_atoms
+        atom_inconsistent = []
+
+        for i, traj in enumerate(self.trajectories):
+            if traj.n_atoms != ref_n_atoms:
+                atom_inconsistent.append(
+                    (i, self.trajectory_names[i], traj.n_atoms))
+
+        if atom_inconsistent:
+            inconsistent_list = "\n".join([
+                f"  [{idx}] {name}: {n_atoms} atoms"
+                for idx, name, n_atoms in atom_inconsistent
+            ])
+            print(f"\nWARNING: Inconsistent atom counts detected!\n"
+                  f"Reference trajectory '{self.trajectory_names[0]}' has {ref_n_atoms} atoms.\n"
+                  f"Trajectories with different atom counts:\n"
+                  f"{inconsistent_list}\n\n"
+                  f"Atom-based feature calculations may fail or produce incorrect results.")
+            return True
+
+        return False
+
+    def _print_consistency_suggestions(self):
+        """Print suggestions for resolving inconsistencies."""
+
+    def remove_trajectory(self, trajs, force=False):
+        """
+        Remove specified trajectories from the loaded trajectory list.
+
+        Parameters:
+        -----------
+        trajs : int, str, or list
+            Trajectory index (int), name (str), or list of indices/names to remove.
+            Can be mixed list of integers and strings.
+        force : bool, default=False
+            Force removal even when features have been calculated. When True,
+            existing features become invalid and should be recalculated.
+
+        Examples:
+        ---------
+        >>> # Remove single trajectory by index
+        >>> traj.remove_trajectory(0)
+
+        >>> # Remove single trajectory by name
+        >>> traj.remove_trajectory('system1_prot')
+
+        >>> # Remove multiple trajectories by indices
+        >>> traj.remove_trajectory([0, 2, 4])
+
+        >>> # Remove multiple trajectories by names
+        >>> traj.remove_trajectory(['system1_prot', 'system2_complex'])
+
+        >>> # Remove mixed indices and names
+        >>> traj.remove_trajectory([0, 'system2_prot', 3])
+
+        >>> # Force removal when features exist
+        >>> traj.remove_trajectory([1, 2], force=True)
+
+        Raises:
+        -------
+        ValueError
+            If trajectories are not loaded, if trajs contains invalid indices/names,
+            or if features exist and force=False
+        """
+        if self.trajectories is None:
+            raise ValueError("No trajectories loaded to remove.")
+
+        self._check_features_before_removal(force)
+        indices_to_remove = self._prepare_removal_indices(trajs)
+        self._execute_removal(indices_to_remove)
+        self._handle_post_removal(force)
+
+    def _check_features_before_removal(self, force):
+        """Check if features exist and raise error if force=False."""
+        if self.features and not force:
+            feature_list = list(self.features.keys())
+            raise ValueError(
+                f"Cannot remove trajectories: {len(feature_list)} feature(s) "
+                f"have been calculated.\nCalculated features: {', '.join(feature_list)}\n"
+                f"Removing trajectories would invalidate these features.\n"
+                f"Use force=True to proceed, then call reset_features() to clear "
+                f"invalid features."
+            )
+
+    def _prepare_removal_indices(self, trajs):
+        """Convert trajs input to sorted indices for removal."""
+        if not isinstance(trajs, list):
+            trajs = [trajs]
+        indices_to_remove = self._resolve_selection(trajs)
+        indices_to_remove.sort(reverse=True)  # Avoid index shifting issues
+        return indices_to_remove
+
+    def _execute_removal(self, indices_to_remove):
+        """Remove trajectories and names, return count of removed items."""
+        removed_trajectories = []
+        for idx in indices_to_remove:
+            removed_name = self.trajectory_names[idx]
+            removed_trajectories.append(f"{removed_name} (was at index {idx})")
+            del self.trajectories[idx]
+            del self.trajectory_names[idx]
+
+        # Print removal summary
+        for removed_info in removed_trajectories:
+            print(f"Removed trajectory: {removed_info}")
+
+        print(f"Removed {len(indices_to_remove)} trajectory(ies). "
+              f"{len(self.trajectories)} trajectory(ies) remaining.")
+        return len(indices_to_remove)
+
+    def _handle_post_removal(self, force):
+        """Handle warnings and consistency checks after removal."""
+        if self.features and force:
+            self._warn_invalid_features()
+
+        if self.trajectories:
+            self._check_trajectory_consistency()
+
+    def _warn_invalid_features(self):
+        """Warn user about invalid features after forced removal."""
+        feature_list = list(self.features.keys())
+        print("\nWARNING: Feature data is now INVALID!")
+        print(f"The following {len(feature_list)} feature(s) were calculated "
+              f"on the original trajectory set:")
+        print(f"  {', '.join(feature_list)}")
+        print("These features no longer correspond to the current trajectories.")
+        print("Call reset_features() to clear invalid features and "
+              "recalculate from scratch.\n")
+
+    def reset_features(self):
+        """
+        Reset all calculated features and clear feature data.
+
+        This method removes all computed features and their associated data,
+        requiring features to be recalculated from scratch. Use this method
+        after trajectory modifications that invalidate existing features.
+
+        Examples:
+        ---------
+        >>> # After removing trajectories with force=True
+        >>> traj.remove_trajectory([1, 2], force=True)
+        >>> traj.reset_features()
+
+        >>> # Manual reset before recalculating features
+        >>> traj.reset_features()
+        >>> traj.add_feature(feature_type.Distances())
+
+        Notes:
+        -----
+        - All feature data is permanently deleted
+        - Memory-mapped feature files remain on disk but are no longer referenced
+        - Features must be recalculated after reset
+        """
+        if not self.features:
+            print("No features to reset.")
+            return
+
+        feature_list = list(self.features.keys())
+        self.features.clear()
+
+        print(f"Reset {len(feature_list)} feature(s): "
+              f"{', '.join(feature_list)}")
+        print("All feature data has been cleared. Features must be recalculated.")
+
+    def cut_traj(self, cut=None, stride=1, selection=None):
+        """
+        Cut and/or stride trajectories.
+
+        Parameters:
+        -----------
+        cut : int, optional
+            Frame number after which to cut the trajectories.
+            Frames after this index will be removed.
+        stride : int, default=1
+            Take every stride-th frame. Use values > 1 to subsample frames.
+        selection : list, optional
+            List of trajectory indices (int) or names (str) to process.
+            If None, all trajectories will be processed.
+
+        Examples:
+        ---------
+        >>> # Cut all trajectories after frame 1000
+        >>> traj.cut_traj(cut=1000)
+
+        >>> # Take every 10th frame from all trajectories
+        >>> traj.cut_traj(stride=10)
+
+        >>> # Cut and stride specific trajectories by index
+        >>> traj.cut_traj(cut=500, stride=5, selection=[0, 2, 4])
+
+        >>> # Cut and stride specific trajectories by name
+        >>> traj.cut_traj(cut=500, stride=5, selection=['system1_prot_traj1', 'system2_prot_traj2'])
+
+        >>> # Combine cut and stride
+        >>> traj.cut_traj(cut=2000, stride=2)
+
+        Raises:
+        -------
+        ValueError
+            If trajectories are not loaded or if selection contains invalid indices/names
+        """
+        if self.trajectories is None:
+            raise ValueError("Trajectories must be loaded before cutting.")
+
+        # Determine which trajectories to process
+        if selection is None:
+            # Process all trajectories
+            indices_to_process = list(range(len(self.trajectories)))
+        else:
+            indices_to_process = self._resolve_selection(selection)
+
+        # Process selected trajectories
+        for idx in indices_to_process:
+            traj = self.trajectories[idx]
+
+            # Apply cut if specified
+            if cut is not None:
+                if cut < traj.n_frames:
+                    traj = traj[:cut]
+
+            # Apply stride if not 1
+            if stride > 1:
+                traj = traj[::stride]
+
+            # Update trajectory
+            self.trajectories[idx] = traj
+
+    def _resolve_selection(self, selection):
+        """
+        Resolve selection list to trajectory indices.
+
+        Parameters:
+        -----------
+        selection : list
+            List of trajectory indices (int) or names (str)
+
+        Returns:
+        --------
+        list
+            List of trajectory indices
+
+        Raises:
+        -------
+        ValueError
+            If selection contains invalid indices or names
+        """
+        indices = []
+
+        for item in selection:
+            if isinstance(item, int):
+                if 0 <= item < len(self.trajectories):
+                    indices.append(item)
+                else:
+                    raise ValueError(
+                        f"Trajectory index {item} out of range "
+                        f"(0-{len(self.trajectories)-1})")
+            elif isinstance(item, str):
+                if item in self.trajectory_names:
+                    idx = self.trajectory_names.index(item)
+                    indices.append(idx)
+                else:
+                    raise ValueError(
+                        f"Trajectory name '{item}' not found. Available names: "
+                        f"{self.trajectory_names}")
+            else:
+                raise ValueError(
+                    f"Selection item must be int (index) or str (name), "
+                    f"got {type(item)}")
+
+        return indices
+
+    def select_atoms(self, selection, trajs=None):
+        """
+        Apply atom selection to trajectories using MDTraj selection syntax.
+
+        Parameters:
+        -----------
+        selection : str
+            MDTraj selection string (e.g., "protein", "backbone", "resid 10 to 50")
+            See: https://mdtraj.org/1.9.4/atom_selection.html
+        trajs : list, optional
+            List of trajectory indices (int) or names (str) to process.
+            If None, all trajectories will be processed.
+
+        Examples:
+        ---------
+        >>> # Select only protein atoms from all trajectories
+        >>> traj.select_atoms("protein")
+
+        >>> # Select backbone atoms from specific trajectories
+        >>> traj.select_atoms("backbone", trajs=[0, 2])
+
+        >>> # Select specific residues by name
+        >>> traj.select_atoms("resname ALA or resname GLY", trajs=['system1_prot'])
+
+        >>> # Select atoms within distance range
+        >>> traj.select_atoms("name CA and resid 10 to 50")
+
+        Raises:
+        -------
+        ValueError
+            If trajectories are not loaded or if selection/trajs contain invalid values
+        """
+        if self.trajectories is None:
+            raise ValueError(
+                "Trajectories must be loaded before atom selection.")
+
+        # Determine which trajectories to process
+        if trajs is None:
+            # Process all trajectories
+            indices_to_process = list(range(len(self.trajectories)))
+        else:
+            indices_to_process = self._resolve_selection(trajs)
+
+        # Apply atom selection to each trajectory
+        for idx in indices_to_process:
+            traj = self.trajectories[idx]
+
+            # Get atom indices matching the selection
+            atom_indices = traj.topology.select(selection)
+
+            # Apply atom slice to trajectory
+            selected_traj = traj.atom_slice(atom_indices)
+
+            # Update trajectory
+            self.trajectories[idx] = selected_traj
+
+    def get_trajectory_names(self):
+        """
+        Get list of trajectory names.
+
+        Returns:
+        --------
+        list or None
+            List of trajectory names, or None if trajectories not loaded
+
+        Examples:
+        ---------
+        >>> names = traj.get_trajectory_names()
+        >>> print(names)
+        ['system1_prot_traj1', 'system1_prot_traj2', 'system2_prot_traj1']
+        """
+        return self.trajectory_names
+
+    def print_trajectory_info(self):
+        """
+        Print information about loaded trajectories.
+
+        Examples:
+        ---------
+        >>> traj.print_trajectory_info()
+        Loaded 3 trajectories:
+          [0] system1_prot_traj1: 1000 frames
+          [1] system1_prot_traj2: 1500 frames
+          [2] system2_prot_traj1: 800 frames
+        """
+        if self.trajectories is None or self.trajectory_names is None:
+            print("No trajectories loaded.")
+            return
+
+        print(f"Loaded {len(self.trajectories)} trajectories:")
+        for i, (traj, name) in enumerate(zip(self.trajectories, self.trajectory_names)):
+            print(f"  [{i}] {name}: {traj}")
 
     def save(self, save_path):
         """

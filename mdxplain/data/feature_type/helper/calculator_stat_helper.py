@@ -27,6 +27,7 @@ instantiation across different calculators.
 """
 
 import numpy as np
+from .feature_shape_helper import FeatureShapeHelper
 
 
 class CalculatorStatHelper:
@@ -68,8 +69,8 @@ class CalculatorStatHelper:
         if preprocessing_func is None:
 
             def preprocessing_func(arr, **kw):
-                """Apply default preprocessing using mean per pair."""
-                return CalculatorStatHelper.compute_func_per_pair(arr, np.mean, **kw)
+                """Apply default preprocessing using mean per feature."""
+                return CalculatorStatHelper.compute_func_per_feature(arr, np.mean, **kw)
 
         # Apply preprocessing function to both arrays
         processed1 = preprocessing_func(
@@ -79,9 +80,9 @@ class CalculatorStatHelper:
         return processed1 - processed2
 
     @staticmethod
-    def compute_func_per_pair(array, func, chunk_size=None, **func_kwargs):
+    def compute_func_per_feature(array, func, chunk_size=None, **func_kwargs):
         """
-        Apply statistical function per feature pair across all frames.
+        Apply statistical function per feature across all frames (2D format).
 
         Parameters:
         -----------
@@ -90,36 +91,36 @@ class CalculatorStatHelper:
         func : callable
             NumPy function to apply (np.mean, np.std, np.min, np.max, etc.)
         chunk_size : int, optional
-            Number of pairs to process per chunk
+            Number of features to process per chunk
         **func_kwargs : dict
             Additional arguments for the function
 
         Returns:
         --------
         np.ndarray
-            Statistical values per pair (preserves spatial dimensions)
+            Statistical values per feature (preserves spatial dimensions)
         """
         if chunk_size is None:
-            # No chunking - process all pairs at once
+            # No chunking - process all features at once
             return func(array, axis=0, **func_kwargs)
 
         # Determine spatial dimensions
         if len(array.shape) == 3:
             # Square format NxMxM
-            n_pairs = array.shape[1] * array.shape[2]
+            n_features = array.shape[1] * array.shape[2]
             spatial_shape = (array.shape[1], array.shape[2])
             # Flatten spatial dimensions for chunking
             flat_array = array.reshape(array.shape[0], -1)
         else:
             # Condensed format NxP
-            n_pairs = array.shape[1]
+            n_features = array.shape[1]
             spatial_shape = (array.shape[1],)
             flat_array = array
 
         # Process in chunks
         result_chunks = []
-        for i in range(0, n_pairs, chunk_size):
-            end_idx = min(i + chunk_size, n_pairs)
+        for i in range(0, n_features, chunk_size):
+            end_idx = min(i + chunk_size, n_features)
             chunk_result = func(
                 flat_array[:, i:end_idx], axis=0, **func_kwargs)
             result_chunks.append(chunk_result)
@@ -171,14 +172,29 @@ class CalculatorStatHelper:
         return np.concatenate(result_chunks)
 
     @staticmethod
-    def compute_func_per_residue(array, func, chunk_size=None, **func_kwargs):
+    def _convert_2d_to_3d(array, chunk_size=None):
+        """Convert 2D condensed array to 3D squareform array."""
+        n_pairs = array.shape[1]
+        n_residues = int((1 + np.sqrt(1 + 8 * n_pairs)) / 2)
+
+        pairs = []
+        for i in range(n_residues):
+            for j in range(i + 1, n_residues):
+                pairs.append([i, j])
+
+        return FeatureShapeHelper.condensed_to_squareform(
+            array, pairs, n_residues, chunk_size=chunk_size
+        )
+
+    @staticmethod
+    def compute_func_per_column(array, func, chunk_size=None, **func_kwargs):
         """
-        Apply statistical function per residue (square format only).
+        Apply statistical function per column (3D format required, auto-converts 2D).
 
         Parameters:
         -----------
         array : np.ndarray
-            Square format array (NxMxM)
+            Feature array - if 2D (condensed), automatically converts to 3D (squareform)
         func : callable
             NumPy function to apply
         chunk_size : int, optional
@@ -189,11 +205,15 @@ class CalculatorStatHelper:
         Returns:
         --------
         np.ndarray
-            Statistical values per residue
+            Statistical values per column
         """
+        # Convert 2D to 3D if needed
+        if len(array.shape) == 2:
+            array = CalculatorStatHelper._convert_2d_to_3d(array, chunk_size)
+
         if len(array.shape) != 3:
             raise ValueError(
-                "compute_func_per_residue requires square format arrays (NxMxM)"
+                "compute_func_per_column requires 3D arrays or convertible 2D arrays"
             )
 
         if chunk_size is None:

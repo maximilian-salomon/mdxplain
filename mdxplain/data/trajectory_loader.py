@@ -56,8 +56,9 @@ class TrajectoryLoader:
 
         Returns:
         --------
-        list
-            List of loaded trajectory objects
+        dict
+            Dictionary with 'trajectories' and 'names' keys containing
+            list of loaded trajectory objects and their corresponding names
         """
         if isinstance(data_input, list):
             return TrajectoryLoader._load_from_list(data_input, concat)
@@ -68,7 +69,7 @@ class TrajectoryLoader:
         warnings.warn(
             f"Invalid data input: {data_input}. Expected list of trajectories or valid path."
         )
-        return []
+        return {"trajectories": [], "names": []}
 
     @staticmethod
     def _load_from_list(trajectory_list, concat):
@@ -84,9 +85,12 @@ class TrajectoryLoader:
 
         Returns:
         --------
-        list
-            List of trajectory objects (single concatenated or original list)
+        dict
+            Dictionary with 'trajectories' and 'names' keys
         """
+        # Generate names for provided trajectories
+        names = [f"provided_traj_{i}" for i in range(len(trajectory_list))]
+
         if concat and len(trajectory_list) > 1:
             print(
                 f"Concatenating {len(trajectory_list)} provided trajectories...")
@@ -96,8 +100,8 @@ class TrajectoryLoader:
             print(
                 f"Result: 1 concatenated trajectory with {concatenated.n_frames} frames"
             )
-            return [concatenated]
-        return trajectory_list
+            return {"trajectories": [concatenated], "names": ["provided_traj_concatenated"]}
+        return {"trajectories": trajectory_list, "names": names}
 
     @staticmethod
     def _load_from_directory(directory_path, concat, stride):
@@ -115,8 +119,8 @@ class TrajectoryLoader:
 
         Returns:
         --------
-        list
-            List of loaded MDTraj trajectory objects
+        dict
+            Dictionary with 'trajectories' and 'names' keys
         """
         # Determine directory structure and collect trajectories
         if TrajectoryLoader._has_subdirectories(directory_path):
@@ -151,6 +155,7 @@ class TrajectoryLoader:
     def _load_nested_structure(directory_path, concat, stride):
         """
         Load from nested directory structure (multiple systems).
+        Also handles files in root directory as separate system.
 
         Parameters:
         -----------
@@ -163,29 +168,39 @@ class TrajectoryLoader:
 
         Returns:
         --------
-        list
-            List of loaded MDTraj trajectory objects
+        dict
+            Dictionary with 'trajectories' and 'names' keys
         """
         trajectories = []
+        names = []
         system_summary = []
+
+        # Get subdirectories
         subdirs = [
             d
             for d in os.listdir(directory_path)
             if os.path.isdir(os.path.join(directory_path, d))
         ]
 
+        # Load from subdirectories
         for subdir in tqdm(subdirs, desc="Loading systems"):
             subdir_path = os.path.join(directory_path, subdir)
-            system_trajs = TrajectoryLoader._load_system_trajectories(
+            result = TrajectoryLoader._load_system_trajectories(
                 subdir_path, subdir, concat, stride
             )
 
-            if system_trajs:
-                trajectories.extend(system_trajs)
-                system_summary.append((subdir, len(system_trajs)))
+            if result["trajectories"]:
+                trajectories.extend(result["trajectories"])
+                names.extend(result["names"])
+                system_summary.append((subdir, len(result["trajectories"])))
+
+        # Load root directory files as separate system if present
+        TrajectoryLoader._load_root_system_if_present(
+            directory_path, concat, stride, trajectories, names, system_summary
+        )
 
         TrajectoryLoader._print_loading_summary(system_summary, concat)
-        return trajectories
+        return {"trajectories": trajectories, "names": names}
 
     @staticmethod
     def _load_flat_structure(directory_path, concat, stride):
@@ -203,21 +218,19 @@ class TrajectoryLoader:
 
         Returns:
         --------
-        list
-            List of loaded MDTraj trajectory objects
+        dict
+            Dictionary with 'trajectories' and 'names' keys
         """
-        trajectories = []
-        system_name = os.path.basename(directory_path)
-        system_trajs = TrajectoryLoader._load_system_trajectories(
+        system_name = os.path.basename(directory_path.rstrip('/\\'))
+        result = TrajectoryLoader._load_system_trajectories(
             directory_path, system_name, concat, stride
         )
 
-        if system_trajs:
-            trajectories.extend(system_trajs)
-            system_summary = [(system_name, len(system_trajs))]
+        if result["trajectories"]:
+            system_summary = [(system_name, len(result["trajectories"]))]
             TrajectoryLoader._print_loading_summary(system_summary, concat)
 
-        return trajectories
+        return result
 
     @staticmethod
     def _print_loading_summary(system_summary, concat):
@@ -273,8 +286,8 @@ class TrajectoryLoader:
 
         Returns:
         --------
-        list
-            List of loaded MDTraj trajectory objects
+        dict
+            Dictionary with 'trajectories' and 'names' keys
         """
         pdb_files = TrajectoryLoader._get_pdb_files_from_directory(subdir_path)
         xtc_files = TrajectoryLoader._get_xtc_files_from_directory(subdir_path)
@@ -282,7 +295,7 @@ class TrajectoryLoader:
         # Validate file combination
         if not pdb_files:
             warnings.warn(f"No PDB files found in {subdir_path}")
-            return []
+            return {"trajectories": [], "names": []}
 
         # Case 1: XTC files present - use single PDB as topology
         if xtc_files:
@@ -294,18 +307,18 @@ class TrajectoryLoader:
                     f"Use either: 1 PDB + multiple XTCs, or multiple PDBs without XTCs."
                 )
             pdb_path = os.path.join(subdir_path, pdb_files[0])
-            system_trajs = TrajectoryLoader._load_trajectory_files_from_directory(
+            result = TrajectoryLoader._load_trajectory_files_from_directory(
                 xtc_files, pdb_path, subdir_path, subdir_name, stride
             )
 
         # Case 2: No XTC files - load each PDB as separate trajectory
         else:
-            system_trajs = TrajectoryLoader._load_pdb_files_from_directory(
+            result = TrajectoryLoader._load_pdb_files_from_directory(
                 pdb_files, subdir_path, subdir_name, stride
             )
 
         return TrajectoryLoader._handle_traj_concatenation(
-            system_trajs, concat, subdir_name
+            result["trajectories"], result["names"], concat, subdir_name
         )
 
     @staticmethod
@@ -364,15 +377,27 @@ class TrajectoryLoader:
 
         Returns:
         --------
-        list
-            List of loaded MDTraj trajectory objects
+        dict
+            Dictionary with 'trajectories' and 'names' keys
         """
         system_trajs = []
+        names = []
+
+        # Extract PDB basename for naming
+        pdb_basename = os.path.splitext(os.path.basename(pdb_path))[0]
+
         for xtc in tqdm(xtc_files, desc=f"Loading {subdir_name}", leave=False):
             xtc_path = os.path.join(subdir_path, xtc)
+            xtc_basename = os.path.splitext(xtc)[0]
+
             traj = md.load(xtc_path, top=pdb_path, stride=stride)
             system_trajs.append(traj)
-        return system_trajs
+
+            # Generate name: directory_pdbname_xtcname
+            name = f"{subdir_name}_{pdb_basename}_{xtc_basename}"
+            names.append(name)
+
+        return {"trajectories": system_trajs, "names": names}
 
     @staticmethod
     def _load_pdb_files_from_directory(pdb_files, subdir_path, subdir_name, stride):
@@ -392,18 +417,27 @@ class TrajectoryLoader:
 
         Returns:
         --------
-        list
-            List of loaded MDTraj trajectory objects
+        dict
+            Dictionary with 'trajectories' and 'names' keys
         """
         system_trajs = []
+        names = []
+
         for pdb in tqdm(pdb_files, desc=f"Loading {subdir_name}", leave=False):
             pdb_path = os.path.join(subdir_path, pdb)
+            pdb_basename = os.path.splitext(pdb)[0]
+
             traj = md.load(pdb_path, stride=stride)
             system_trajs.append(traj)
-        return system_trajs
+
+            # Generate name: directory_pdbname (no xtc for PDB-only trajectories)
+            name = f"{subdir_name}_{pdb_basename}"
+            names.append(name)
+
+        return {"trajectories": system_trajs, "names": names}
 
     @staticmethod
-    def _handle_traj_concatenation(system_trajs, concat, subdir_name):
+    def _handle_traj_concatenation(system_trajs, names, concat, subdir_name):
         """
         Handle trajectory concatenation if requested.
 
@@ -411,6 +445,8 @@ class TrajectoryLoader:
         -----------
         system_trajs : list
             List of loaded MDTraj trajectory objects
+        names : list
+            List of trajectory names
         concat : bool
             Whether to concatenate trajectories per system
         subdir_name : str
@@ -418,8 +454,8 @@ class TrajectoryLoader:
 
         Returns:
         --------
-        list
-            List of loaded MDTraj trajectory objects
+        dict
+            Dictionary with 'trajectories' and 'names' keys
         """
         if concat and len(system_trajs) > 1:
             print(
@@ -428,5 +464,44 @@ class TrajectoryLoader:
             concatenated = system_trajs[0]
             for traj in system_trajs[1:]:
                 concatenated = concatenated.join(traj)
-            return [concatenated]
-        return system_trajs
+            return {"trajectories": [concatenated], "names": [f"{subdir_name}_concatenated"]}
+        return {"trajectories": system_trajs, "names": names}
+
+    @staticmethod
+    def _load_root_system_if_present(directory_path, concat, stride, trajectories, names, system_summary):
+        """
+        Load root directory files as separate system if present.
+
+        Parameters:
+        -----------
+        directory_path : str
+            Path to directory containing trajectory files
+        concat : bool
+            Whether to concatenate trajectories per system
+        stride : int
+            Frame striding (1=all frames, 2=every 2nd frame, etc.)
+        trajectories : list
+            List of loaded MDTraj trajectory objects
+        names : list
+            List of trajectory names
+        system_summary : list
+            List of (system_name, trajectory_count) tuples
+
+        Returns:
+        --------
+        None
+            Loads root directory files as separate system if present
+        """
+        root_pdb_files = TrajectoryLoader._get_pdb_files_from_directory(
+            directory_path)
+        if root_pdb_files:
+            root_system_name = os.path.basename(directory_path.rstrip('/\\'))
+            root_result = TrajectoryLoader._load_system_trajectories(
+                directory_path, root_system_name, concat, stride
+            )
+
+            if root_result["trajectories"]:
+                trajectories.extend(root_result["trajectories"])
+                names.extend(root_result["names"])
+                system_summary.append(
+                    (root_system_name, len(root_result["trajectories"])))

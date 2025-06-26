@@ -39,6 +39,11 @@ class ContactCalculatorAnalysis:
     and transition analysis with memory-mapped array support.
     """
 
+    # Methods that require full data instead of reduced data
+    REQUIRES_FULL_DATA = {
+        "compute_per_residue_mean", "compute_per_residue_std", "compute_per_residue_sum"
+    }
+
     def __init__(self, chunk_size=None):
         """
         Initialize contact analysis with chunking configuration.
@@ -73,7 +78,7 @@ class ContactCalculatorAnalysis:
         numpy.ndarray
             Contact frequencies per pair (0.0 to 1.0)
         """
-        return CalculatorStatHelper.compute_func_per_pair(
+        return CalculatorStatHelper.compute_func_per_feature(
             contacts, np.mean, self.chunk_size
         )
 
@@ -114,58 +119,58 @@ class ContactCalculatorAnalysis:
             contacts, self.chunk_size, np.mean
         )
 
-    # === RESIDUE-BASED STATISTICS (only for square format) ===
+    # === PER-COLUMN ANALYSIS (auto-converts 2D to 3D) ===
     def compute_per_residue_mean(self, contacts):
         """
-        Compute mean contact frequency per residue (square format only).
+        Compute mean contact frequency per residue. Auto-converts condensed to squareform.
 
         Parameters:
         -----------
         contacts : numpy.ndarray
-            Square format contact array (NxMxM)
+            Contact array in condensed format (n_frames, n_pairs) - automatically converted to squareform
 
         Returns:
         --------
         numpy.ndarray
             Mean contact frequency per residue
         """
-        return CalculatorStatHelper.compute_func_per_residue(
+        return CalculatorStatHelper.compute_func_per_column(
             contacts, np.mean, self.chunk_size
         )
 
     def compute_per_residue_std(self, contacts):
         """
-        Compute standard deviation of contacts per residue (square format only).
+        Compute standard deviation of contacts per residue. Auto-converts condensed to squareform.
 
         Parameters:
         -----------
         contacts : numpy.ndarray
-            Square format contact array (NxMxM)
+            Contact array in condensed format (n_frames, n_pairs) - automatically converted to squareform
 
         Returns:
         --------
         numpy.ndarray
             Standard deviation of contacts per residue
         """
-        return CalculatorStatHelper.compute_func_per_residue(
+        return CalculatorStatHelper.compute_func_per_column(
             contacts, np.std, self.chunk_size
         )
 
     def compute_per_residue_sum(self, contacts):
         """
-        Compute total contact count per residue (square format only).
+        Compute total contact count per residue. Auto-converts condensed to squareform.
 
         Parameters:
         -----------
         contacts : numpy.ndarray
-            Square format contact array (NxMxM)
+            Contact array in condensed format (n_frames, n_pairs) - automatically converted to squareform
 
         Returns:
         --------
         numpy.ndarray
             Total contact count per residue
         """
-        return CalculatorStatHelper.compute_func_per_residue(
+        return CalculatorStatHelper.compute_func_per_column(
             contacts, np.sum, self.chunk_size
         )
 
