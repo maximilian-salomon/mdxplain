@@ -21,7 +21,7 @@
 """
 Utility functions for saving and loading Python objects with memmap support.
 
-This module provides utility class for saving and loading Python objects 
+This module provides utility class for saving and loading Python objects
 with memmap support. Works with any Python object, not just TrajectoryData.
 Preserves memmap properties correctly.
 """

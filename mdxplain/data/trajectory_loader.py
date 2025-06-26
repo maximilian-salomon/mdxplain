@@ -276,50 +276,54 @@ class TrajectoryLoader:
         list
             List of loaded MDTraj trajectory objects
         """
-        pdb_path = TrajectoryLoader._validate_and_get_pdb_path_from_directory(
-            subdir_path
-        )
-        if pdb_path is None:
-            return []
-
+        pdb_files = TrajectoryLoader._get_pdb_files_from_directory(subdir_path)
         xtc_files = TrajectoryLoader._get_xtc_files_from_directory(subdir_path)
-        if not xtc_files:
+
+        # Validate file combination
+        if not pdb_files:
+            warnings.warn(f"No PDB files found in {subdir_path}")
             return []
 
-        system_trajs = TrajectoryLoader._load_trajectory_files_from_directory(
-            xtc_files, pdb_path, subdir_path, subdir_name, stride
-        )
+        # Case 1: XTC files present - use single PDB as topology
+        if xtc_files:
+            if len(pdb_files) != 1:
+                raise ValueError(
+                    f"Ambiguous file configuration in {subdir_path}: "
+                    f"Found {len(pdb_files)} PDB files and {len(xtc_files)} XTC files. "
+                    f"Cannot determine topology-trajectory pairing. "
+                    f"Use either: 1 PDB + multiple XTCs, or multiple PDBs without XTCs."
+                )
+            pdb_path = os.path.join(subdir_path, pdb_files[0])
+            system_trajs = TrajectoryLoader._load_trajectory_files_from_directory(
+                xtc_files, pdb_path, subdir_path, subdir_name, stride
+            )
+
+        # Case 2: No XTC files - load each PDB as separate trajectory
+        else:
+            system_trajs = TrajectoryLoader._load_pdb_files_from_directory(
+                pdb_files, subdir_path, subdir_name, stride
+            )
 
         return TrajectoryLoader._handle_traj_concatenation(
             system_trajs, concat, subdir_name
         )
 
     @staticmethod
-    def _validate_and_get_pdb_path_from_directory(subdir_path):
+    def _get_pdb_files_from_directory(subdir_path):
         """
-        Find and validate single PDB file in directory.
+        Get list of PDB files in directory.
 
         Parameters:
         -----------
         subdir_path : str
-            Path to directory containing trajectory files
+            Path to directory to search
 
         Returns:
         --------
-        str
-            Path to PDB file
+        list
+            List of PDB filenames (not full paths)
         """
-        pdb_files = [f for f in os.listdir(subdir_path) if f.endswith(".pdb")]
-
-        if len(pdb_files) > 1:
-            raise ValueError(
-                f"More than one PDB file found in {subdir_path}: {pdb_files}"
-            )
-
-        if not pdb_files:
-            return None
-
-        return os.path.join(subdir_path, pdb_files[0])
+        return [f for f in os.listdir(subdir_path) if f.endswith(".pdb")]
 
     @staticmethod
     def _get_xtc_files_from_directory(subdir_path):
@@ -367,6 +371,34 @@ class TrajectoryLoader:
         for xtc in tqdm(xtc_files, desc=f"Loading {subdir_name}", leave=False):
             xtc_path = os.path.join(subdir_path, xtc)
             traj = md.load(xtc_path, top=pdb_path, stride=stride)
+            system_trajs.append(traj)
+        return system_trajs
+
+    @staticmethod
+    def _load_pdb_files_from_directory(pdb_files, subdir_path, subdir_name, stride):
+        """
+        Load PDB files as separate trajectories.
+
+        Parameters:
+        -----------
+        pdb_files : list
+            List of PDB filenames (not full paths)
+        subdir_path : str
+            Path to directory containing trajectory files
+        subdir_name : str
+            Name of the system
+        stride : int
+            Frame striding (1=all frames, 2=every 2nd frame, etc.)
+
+        Returns:
+        --------
+        list
+            List of loaded MDTraj trajectory objects
+        """
+        system_trajs = []
+        for pdb in tqdm(pdb_files, desc=f"Loading {subdir_name}", leave=False):
+            pdb_path = os.path.join(subdir_path, pdb)
+            traj = md.load(pdb_path, stride=stride)
             system_trajs.append(traj)
         return system_trajs
 

@@ -21,12 +21,13 @@
 """
 MD trajectory data container and analysis interface.
 
-Container for MD trajectory data and analysis results. Uses a pluggable 
-Loader class for flexible loading strategies. Provides unified interface 
+Container for MD trajectory data and analysis results. Uses a pluggable
+Loader class for flexible loading strategies. Provides unified interface
 for handling multiple trajectories and their derived features.
 """
 
 from ..utils.data_utils import DataUtils
+from ..utils.nomenclature import Nomenclature
 from .feature_data import FeatureData
 from .trajectory_loader import TrajectoryLoader
 
@@ -103,6 +104,7 @@ class TrajectoryData:
 
         self.trajectories = None
         self.features = {}  # Dictionary to store FeatureData instances by feature type
+        self.labels = None  # Labels for trajectory residues
 
     def add_feature(self, feature_type, cache_path=None, chunk_size=None):
         """
@@ -146,7 +148,7 @@ class TrajectoryData:
         ...     chunk_size=500
         ... )
         """
-        feature_key = str(feature_type)
+        feature_key = feature_type.get_type_name()
 
         # Check if feature already exists
         if feature_key in self.features and self.features[feature_key].data is not None:
@@ -156,10 +158,9 @@ class TrajectoryData:
         # Check dependencies
         dependencies = feature_type.get_dependencies()
         for dep in dependencies:
-            dep_key = str(dep)
-            if dep_key not in self.features or self.features[dep_key].data is None:
+            if dep not in self.features or self.features[dep].get_data() is None:
                 raise ValueError(
-                    f"Dependency '{dep_key}' must be computed before '{feature_key}'."
+                    f"Dependency '{dep}' must be computed before '{feature_key}'."
                 )
 
         # Create FeatureData instance
@@ -177,13 +178,16 @@ class TrajectoryData:
             feature_data.compute(
                 self.features[feature_type.get_input()].get_data(),
                 self.features[feature_type.get_input()].get_feature_names(),
+                labels=self.labels,
             )
         else:
             if self.trajectories is None:
                 raise ValueError(
                     "Trajectories must be loaded before computing features."
                 )
-            feature_data.compute(self.trajectories, feature_names=None)
+            feature_data.compute(
+                self.trajectories, feature_names=None, labels=self.labels
+            )
 
         # Store the feature data
         self.features[feature_key] = feature_data
@@ -230,9 +234,10 @@ class TrajectoryData:
         ...     threshold_max=0.9
         ... )
         """
-        feature_data = self.features.get(str(feature_type))
+        feature_data = self.features.get(feature_type.get_type_name())
         if feature_data is None:
-            raise ValueError(f"Feature {str(feature_type)} not found.")
+            raise ValueError(
+                f"Feature {feature_type.get_type_name()} not found.")
         return feature_data
 
     def load_trajectories(self, data_input, concat=False, stride=1):
@@ -360,3 +365,111 @@ class TrajectoryData:
         - Trajectories are fully restored with all metadata
         """
         DataUtils.load_object(self, load_path)
+
+    def add_labels(
+        self,
+        fragment_definition=None,
+        fragment_type=None,
+        fragment_molecule_name=None,
+        consensus=False,
+        aa_short=True,
+        try_web_lookup=True,
+        **nomenclature_kwargs,
+    ):
+        """
+        Initialize the Nomenclature labeler.
+
+        This class provides a unified interface to create consensus labels for MD trajectories
+        using different mdciao nomenclature systems.
+
+        Parameters
+        ----------
+        fragment_definition : str or dict, default None
+            If string, uses that as fragment name for entire topology.
+            If dict, maps fragment names to residue ranges: {"cgn_a": (0, 348), "beta2": (400, 684)}
+            Only required when consensus=True.
+        fragment_type : str or dict, default None
+            If string, uses that nomenclature type for all fragments.
+            If dict, maps fragment names to nomenclature types: {"cgn_a": "cgn", "beta2": "gpcr"}
+            Use mdciao nomenclature types.
+            Allowed types: gpcr, cgn, klifs
+            Only required when consensus=True.
+        fragment_molecule_name : str or dict, default None
+            If string, uses that molecule name for all fragments.
+            If dict, maps fragment names to molecule names:
+            {"cgn_a": "gnas2_bovin", "beta2": "adrb2_human"}
+            Use the UniProt entry name (not accession ID) for GPCR/CGN labelers,
+            or KLIFS string for KLIFS labelers.
+            See https://www.uniprot.org/help/difference_accession_entryname for UniProt naming conventions.
+            See https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerKLIFS.html#mdciao.nomenclature.LabelerKLIFS for KLIFS naming conventions.
+            Only required when consensus=True.
+        consensus : bool, default False
+            Whether to use consensus labeling (combines AA codes with nomenclature labels).
+            If False, only returns amino acid labels without nomenclature.
+        aa_short : bool, default True
+            Whether to use short amino acid names (T vs THR)
+        verbose : bool, default False
+            Whether to enable verbose output from labelers
+        try_web_lookup : bool, default True
+            Whether to try web lookup for molecule data
+        write_to_disk : bool, default False
+            Whether to write cache files to disk
+        cache_folder : str, default "./cache"
+            Folder for cache files
+        **nomenclature_kwargs
+            Additional keyword arguments passed to the mdciao labelers
+
+        Notes
+        -----
+        This class uses mdciao consensus nomenclature systems:
+        https://proteinformatics.uni-leipzig.de/mdciao/api/generated/mdciao.nomenclature.html
+
+        Supported fragment types:
+        - gpcr: https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerGPCR.html#mdciao.nomenclature.LabelerGPCR
+        - cgn: https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerCGN.html#mdciao.nomenclature.LabelerCGN
+        - klifs: https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerKLIFS.html#mdciao.nomenclature.LabelerKLIFS
+
+        Examples
+        --------
+        >>> # Amino acid labels only (no nomenclature)
+        >>> traj.add_labels(consensus=False, aa_short=True)
+
+        >>> # Simple nomenclature labeling
+        >>> traj.add_labels(
+        ...     fragment_definition="receptor",
+        ...     fragment_type="gpcr",
+        ...     fragment_molecule_name="adrb2_human",
+        ...     consensus=True
+        ... )
+
+        >>> # Complex multi-fragment labeling
+        >>> traj.add_labels(
+        ...     fragment_definition={"gpcr": (0, 300), "g_protein": (300, 600)},
+        ...     fragment_type={"gpcr": "gpcr", "g_protein": "cgn"},
+        ...     fragment_molecule_name={"gpcr": "adrb2_human", "g_protein": "gnas_human"},
+        ...     consensus=True
+        ... )
+        """
+        if self.trajectories is None:
+            raise ValueError(
+                "Trajectories must be loaded before adding labels.")
+        if self.cache_dir is None:
+            write_to_disk = False
+        else:
+            write_to_disk = True
+
+        # Use first trajectory topology for labeling
+        nomenclature = Nomenclature(
+            topology=self.trajectories[0].topology,
+            fragment_definition=fragment_definition,
+            fragment_type=fragment_type,
+            fragment_molecule_name=fragment_molecule_name,
+            consensus=consensus,
+            aa_short=aa_short,
+            try_web_lookup=try_web_lookup,
+            write_to_disk=write_to_disk,
+            cache_folder=self.cache_dir,
+            **nomenclature_kwargs,
+        )
+
+        self.labels = nomenclature.create_labels()

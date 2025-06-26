@@ -110,9 +110,9 @@ class ContactCalculator(CalculatorBase):
         """
         # Extract parameters from kwargs
         distances = input_data
-        cutoff = kwargs.get('cutoff', 4.5)
-        squareform = kwargs.get('squareform', False)
-        k = kwargs.get('k', 0)
+        cutoff = kwargs.get("cutoff", 4.5)
+        squareform = kwargs.get("squareform", False)
+        k = kwargs.get("k", 0)
 
         # Calculate dimensions and conversion requirements
         output_shape, n_residues = CalculatorComputeHelper.calculate_output_dimensions(
@@ -139,10 +139,14 @@ class ContactCalculator(CalculatorBase):
                 )
             elif len(distances.shape) == 2 and squareform:
                 # Need to create residue pairs for squareform conversion
-                residue_pairs = [[i, j] for i in range(
-                    n_residues) for j in range(i + 1, n_residues)]
+                residue_pairs = [
+                    [i, j] for i in range(n_residues) for j in range(i + 1, n_residues)
+                ]
                 chunk_contacts = FeatureShapeHelper.condensed_to_squareform(
-                    chunk_contacts, residue_pairs, n_residues, chunk_size=self.chunk_size
+                    chunk_contacts,
+                    residue_pairs,
+                    n_residues,
+                    chunk_size=self.chunk_size,
                 )
 
             contacts[i:end_idx] = chunk_contacts

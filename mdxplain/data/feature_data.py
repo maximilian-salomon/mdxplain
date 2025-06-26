@@ -115,6 +115,7 @@ class FeatureData:
                     # else data
                     def create_bound_method(method):
                         """Create bound method with automatic data selection."""
+
                         @functools.wraps(method)
                         def bound_method(*args, **kwargs):
                             """Bound method that automatically uses current data."""
@@ -130,7 +131,7 @@ class FeatureData:
                     bound_method = create_bound_method(original_method)
                     setattr(self.analysis, method_name, bound_method)
 
-    def compute(self, input_data=None, feature_names=None):
+    def compute(self, input_data=None, feature_names=None, labels=None):
         """
         Compute feature data using the associated calculator.
 
@@ -140,6 +141,8 @@ class FeatureData:
             Input data for computation (trajectories, distance arrays, etc.)
         feature_names : list, optional
             Existing feature names to pass through
+        labels : list, optional
+            Residue labels for generating feature names
 
         Returns:
         --------
@@ -148,7 +151,7 @@ class FeatureData:
         """
         # Call the compute method of the associated calculator
         self.data, self.feature_names = self.feature_type.compute(
-            input_data, feature_names=feature_names
+            input_data, feature_names=feature_names, labels=labels
         )
 
     def reduce_data(

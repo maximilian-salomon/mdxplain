@@ -101,8 +101,8 @@ def main():
     # 9. Documentation coverage
     print("\n" + "="*60)
     print("11. DOCSTRING COVERAGE WITH INTERROGATE")
-    run_command(['interrogate', 'mdxplain/', '--verbose'], 
-                "Documentation coverage check with interrogate")
+    run_command(['interrogate', 'mdxplain/', '--verbose', '--fail-under=100'], 
+                "Documentation coverage check with interrogate (requires 100%)")
     
     # 10. Dependency security check
     print("\n" + "="*60)
