@@ -156,27 +156,37 @@ class ContactCalculator(CalculatorBase):
         numpy.ndarray
             Computed metric values per contact pair
         """
-        if metric == "frequency":
-            return self.analysis.compute_frequency(contacts)
-        if metric == "stability":
-            return self.analysis.compute_stability(contacts)
+        # Define simple metrics mapping
+        simple_metrics = {
+            "frequency": self.analysis.compute_frequency,
+            "stability": self.analysis.compute_stability,
+        }
+
+        if metric in simple_metrics:
+            return simple_metrics[metric](contacts)
         if metric == "transitions":
-            # For transitions, use threshold as transition threshold (default 2.0 Å)
-            if transition_mode == "window":
-                return self.analysis.compute_transitions_window(
-                    contacts, threshold=threshold, window_size=window_size
-                )
-            if transition_mode == "lagtime":
-                return self.analysis.compute_transitions_lagtime(
-                    contacts, threshold=threshold, lag_time=lag_time
-                )
-            raise ValueError(
-                f"Unknown transition mode: {transition_mode}. Supported: 'window', 'lagtime'"
+            return self._compute_transitions_metric(
+                contacts, threshold, window_size, transition_mode, lag_time
             )
 
         supported_metrics = ["frequency", "stability", "transitions"]
+        raise ValueError(f"Unknown metric: {metric}. Supported: {supported_metrics}")
+
+    def _compute_transitions_metric(
+        self, contacts, threshold, window_size, transition_mode, lag_time
+    ):
+        """Compute transitions metric based on specified mode and parameters."""
+        if transition_mode == "window":
+            return self.analysis.compute_transitions_window(
+                contacts, threshold=threshold, window_size=window_size
+            )
+        if transition_mode == "lagtime":
+            return self.analysis.compute_transitions_lagtime(
+                contacts, threshold=threshold, lag_time=lag_time
+            )
         raise ValueError(
-            f"Unknown metric: {metric}. Supported: {supported_metrics}")
+            f"Unknown transition mode: {transition_mode}. Supported: 'window', 'lagtime'"
+        )
 
     def compute_dynamic_values(
         self,

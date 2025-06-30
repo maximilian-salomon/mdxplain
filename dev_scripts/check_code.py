@@ -49,19 +49,19 @@ def main():
     # 2. Import sorting check
     print("\n" + "="*60)
     print("2. IMPORT SORTING CHECK WITH ISORT") 
-    run_command(['isort', '--check-only', '--diff', 'mdxplain/'], 
-                "Check import sorting with isort")
+    run_command(['isort', '--profile', 'black', '--check-only', '--diff', 'mdxplain/'], 
+                "Check import sorting with isort (black-compatible)")
     
     # 3. Style checks
     print("\n" + "="*60) 
     print("3. STYLE CHECK WITH FLAKE8")
-    run_command(['flake8', 'mdxplain/', '--max-line-length=100'], 
-                "Style check with flake8")
+    run_command(['flake8', 'mdxplain/', '--max-line-length=100', '--ignore=E203,W503,W504'], 
+                "Style check with flake8 (black-compatible)")
     
     print("\n" + "="*60)
     print("4. PEP8 STYLE CHECK WITH PYCODESTYLE")
-    run_command(['pycodestyle', 'mdxplain/', '--max-line-length=100'], 
-                "PEP8 style check with pycodestyle")
+    run_command(['pycodestyle', 'mdxplain/', '--max-line-length=100', '--ignore=E203,W503,W504'], 
+                "PEP8 style check with pycodestyle (black-compatible)")
     
     print("\n" + "="*60)
     print("5. ERROR CHECK WITH PYFLAKES")
@@ -119,8 +119,8 @@ def main():
     # 12. Auto-formatting check (what autopep8 would change)
     print("\n" + "="*60)
     print("14. AUTO-FORMATTING CHECK WITH AUTOPEP8")
-    run_command(['autopep8', '--diff', '--recursive', 'mdxplain/'], 
-                "Auto-formatting check with autopep8")
+    run_command(['autopep8', '--diff', '--recursive', '--ignore=E203', 'mdxplain/'], 
+                "Auto-formatting check with autopep8 (ignoring E203 whitespace before colon)")
     
     print(f"\n{'='*60}")
     print("Comprehensive code quality checks completed!")

@@ -96,7 +96,7 @@ class DistanceCalculator(CalculatorBase):
         **kwargs : dict
             Additional parameters:
             - ref : mdtraj.Trajectory, optional - Reference trajectory for pair determination
-            - k : int, default=1 - Diagonal offset (k=1 excludes diagonal, 
+            - k : int, default=1 - Diagonal offset (k=1 excludes diagonal,
               k=2 excludes first two diagonals)
             - labels : list, optional - Residue labels for feature naming
 
@@ -128,8 +128,7 @@ class DistanceCalculator(CalculatorBase):
         labels = kwargs.get("labels", None)
 
         # Setup computation parameters and arrays
-        ref, total_frames, distances = self._setup_computation(
-            trajectories, ref, k)
+        ref, total_frames, distances = self._setup_computation(trajectories, ref, k)
 
         # Process all trajectories
         distances, res_list = self._process_all_trajectories(
@@ -350,13 +349,13 @@ class DistanceCalculator(CalculatorBase):
 
                 # Use our precomputed pairs list for ALL residue pairs (except self-pairs)
                 dist, res_list = md.compute_contacts(
-                    traj[k: k + frames_to_process],
+                    traj[k : k + frames_to_process],
                     contacts=self.pairs,  # Use our generated pairs list
                     scheme="closest-heavy",
                 )
 
                 # Direct assignment - dist is already in condensed format
-                distances[frame_idx: frame_idx + frames_to_process] = dist
+                distances[frame_idx : frame_idx + frames_to_process] = dist
 
                 frame_idx += frames_to_process
                 if pbar is not None:
@@ -396,41 +395,60 @@ class DistanceCalculator(CalculatorBase):
         numpy.ndarray
             Computed metric values
         """
+        # Define simple metrics that map directly to analysis methods
+        simple_metrics = {
+            "std": self.analysis.compute_std,
+            "variance": self.analysis.compute_variance,
+            "min": self.analysis.compute_min,
+            "mad": self.analysis.compute_mad,
+        }
+
+        # Handle simple metrics
+        if metric in simple_metrics:
+            return simple_metrics[metric](distances)
+
+        # Handle complex metrics
         if metric == "cv":
-            # CV = std/mean
             mean_vals = self.analysis.compute_mean(distances)
             std_vals = self.analysis.compute_std(distances)
-            return std_vals / (mean_vals + 1e-10)  # Avoid division by zero
-        if metric == "std":
-            return self.analysis.compute_std(distances)
-        if metric == "variance":
-            return self.analysis.compute_variance(distances)
+            return std_vals / (mean_vals + 1e-10)
         if metric == "range":
             max_vals = self.analysis.compute_max(distances)
             min_vals = self.analysis.compute_min(distances)
             return max_vals - min_vals
-        if metric == "min":
-            return self.analysis.compute_min(distances)
-        if metric == "mad":
-            return self.analysis.compute_mad(distances)
         if metric == "transitions":
-            # For transitions, use threshold as transition threshold (default 2.0 Å)
-            if transition_mode == "window":
-                return self.analysis.compute_transitions_window(
-                    distances, threshold=threshold, window_size=window_size
-                )
-            if transition_mode == "lagtime":
-                return self.analysis.compute_transitions_lagtime(
-                    distances, threshold=threshold, lag_time=lag_time
-                )
-            raise ValueError(
-                f"Unknown transition mode: {transition_mode}. Supported: 'window', 'lagtime'"
+            return self._compute_transitions_metric(
+                distances, threshold, window_size, transition_mode, lag_time
             )
 
-        supported_metrics = ["cv", "std", "variance",
-                             "range", "transitions", "min", "mad"]
+        # Unknown metric
+        supported_metrics = [
+            "cv",
+            "std",
+            "variance",
+            "range",
+            "transitions",
+            "min",
+            "mad",
+        ]
+        raise ValueError(f"Unknown metric: {metric}. Supported: {supported_metrics}")
+
+    def _compute_transitions_metric(
+        self, distances, threshold, window_size, transition_mode, lag_time
+    ):
+        """Compute transitions metric based on specified mode and parameters."""
+        if transition_mode == "window":
+            return self.analysis.compute_transitions_window(
+                distances, threshold=threshold, window_size=window_size
+            )
+        if transition_mode == "lagtime":
+            return self.analysis.compute_transitions_lagtime(
+                distances, threshold=threshold, lag_time=lag_time
+            )
         raise ValueError(
-            f"Unknown metric: {metric}. Supported: {supported_metrics}")
+            f"Unknown transition mode: {transition_mode}. "
+            f"Supported: 'window', 'lagtime'"
+        )
 
     def compute_dynamic_values(
         self,

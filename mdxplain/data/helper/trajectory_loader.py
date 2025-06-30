@@ -92,15 +92,17 @@ class TrajectoryLoader:
         names = [f"provided_traj_{i}" for i in range(len(trajectory_list))]
 
         if concat and len(trajectory_list) > 1:
-            print(
-                f"Concatenating {len(trajectory_list)} provided trajectories...")
+            print(f"Concatenating {len(trajectory_list)} provided trajectories...")
             concatenated = trajectory_list[0]
             for traj in tqdm(trajectory_list[1:], desc="Concatenating"):
                 concatenated = concatenated.join(traj)
             print(
                 f"Result: 1 concatenated trajectory with {concatenated.n_frames} frames"
             )
-            return {"trajectories": [concatenated], "names": ["provided_traj_concatenated"]}
+            return {
+                "trajectories": [concatenated],
+                "names": ["provided_traj_concatenated"],
+            }
         return {"trajectories": trajectory_list, "names": names}
 
     @staticmethod
@@ -155,6 +157,7 @@ class TrajectoryLoader:
     def _load_nested_structure(directory_path, concat, stride):
         """
         Load from nested directory structure (multiple systems).
+
         Also handles files in root directory as separate system.
 
         Parameters:
@@ -221,7 +224,7 @@ class TrajectoryLoader:
         dict
             Dictionary with 'trajectories' and 'names' keys
         """
-        system_name = os.path.basename(directory_path.rstrip('/\\'))
+        system_name = os.path.basename(directory_path.rstrip("/\\"))
         result = TrajectoryLoader._load_system_trajectories(
             directory_path, system_name, concat, stride
         )
@@ -251,22 +254,35 @@ class TrajectoryLoader:
         """
         total_trajectories = sum(count for _, count in system_summary)
 
+        # Print header
+        TrajectoryLoader._print_summary_header(
+            len(system_summary), total_trajectories, concat
+        )
+
+        # Print system details
+        for system, count in system_summary:
+            TrajectoryLoader._print_system_info(system, count, concat)
+
+    @staticmethod
+    def _print_summary_header(num_systems, total_trajectories, concat):
+        """Print the header line of the loading summary."""
         if concat:
             print(
-                f"\nLoaded {len(system_summary)} systems with "
-                f"{total_trajectories} concatenated trajectories:"
+                f"\nLoaded {num_systems} systems with {total_trajectories} "
+                f"concatenated trajectories:"
             )
         else:
             print(
-                f"\nLoaded {len(system_summary)} systems with "
-                f"{total_trajectories} total trajectories:"
+                f"\nLoaded {num_systems} systems with {total_trajectories} total trajectories:"
             )
 
-        for system, count in system_summary:
-            if concat and count > 1:
-                print(f"  {system}: 1 concatenated trajectory ({count} files)")
-            else:
-                print(f"  {system}: {count} trajectories")
+    @staticmethod
+    def _print_system_info(system, count, concat):
+        """Print information for a single system."""
+        if concat and count > 1:
+            print(f"  {system}: 1 concatenated trajectory ({count} files)")
+        else:
+            print(f"  {system}: {count} trajectories")
 
     @staticmethod
     def _load_system_trajectories(subdir_path, subdir_name, concat, stride):
@@ -459,16 +475,22 @@ class TrajectoryLoader:
         """
         if concat and len(system_trajs) > 1:
             print(
-                f"  Concatenating {len(system_trajs)} trajectories for {subdir_name}..."
+                f"  Concatenating {len(system_trajs)} trajectories "
+                f"for {subdir_name}..."
             )
             concatenated = system_trajs[0]
             for traj in system_trajs[1:]:
                 concatenated = concatenated.join(traj)
-            return {"trajectories": [concatenated], "names": [f"{subdir_name}_concatenated"]}
+            return {
+                "trajectories": [concatenated],
+                "names": [f"{subdir_name}_concatenated"],
+            }
         return {"trajectories": system_trajs, "names": names}
 
     @staticmethod
-    def _load_root_system_if_present(directory_path, concat, stride, trajectories, names, system_summary):
+    def _load_root_system_if_present(
+        directory_path, concat, stride, trajectories, names, system_summary
+    ):
         """
         Load root directory files as separate system if present.
 
@@ -492,10 +514,9 @@ class TrajectoryLoader:
         None
             Loads root directory files as separate system if present
         """
-        root_pdb_files = TrajectoryLoader._get_pdb_files_from_directory(
-            directory_path)
+        root_pdb_files = TrajectoryLoader._get_pdb_files_from_directory(directory_path)
         if root_pdb_files:
-            root_system_name = os.path.basename(directory_path.rstrip('/\\'))
+            root_system_name = os.path.basename(directory_path.rstrip("/\\"))
             root_result = TrajectoryLoader._load_system_trajectories(
                 directory_path, root_system_name, concat, stride
             )
@@ -504,4 +525,5 @@ class TrajectoryLoader:
                 trajectories.extend(root_result["trajectories"])
                 names.extend(root_result["names"])
                 system_summary.append(
-                    (root_system_name, len(root_result["trajectories"])))
+                    (root_system_name, len(root_result["trajectories"]))
+                )

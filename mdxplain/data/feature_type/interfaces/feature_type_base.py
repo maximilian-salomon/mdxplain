@@ -88,7 +88,7 @@ class FeatureTypeBase(ABC):
 
     @classmethod
     @abstractmethod
-    def get_type_name(cls) -> str:
+    def get_type_name(cls) -> str:  # noqa: vulture
         """
         Return unique string identifier for this feature type.
 
