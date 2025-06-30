@@ -41,7 +41,9 @@ class ContactCalculatorAnalysis:
 
     # Methods that require full data instead of reduced data
     REQUIRES_FULL_DATA = {
-        "compute_per_residue_mean", "compute_per_residue_std", "compute_per_residue_sum"
+        "compute_per_residue_mean",
+        "compute_per_residue_std",
+        "compute_per_residue_sum",
     }
 
     def __init__(self, chunk_size=None):
@@ -127,7 +129,8 @@ class ContactCalculatorAnalysis:
         Parameters:
         -----------
         contacts : numpy.ndarray
-            Contact array in condensed format (n_frames, n_pairs) - automatically converted to squareform
+            Contact array in condensed format (n_frames, n_pairs) -
+            automatically converted to squareform
 
         Returns:
         --------
@@ -145,7 +148,8 @@ class ContactCalculatorAnalysis:
         Parameters:
         -----------
         contacts : numpy.ndarray
-            Contact array in condensed format (n_frames, n_pairs) - automatically converted to squareform
+            Contact array in condensed format (n_frames, n_pairs) -
+            automatically converted to squareform
 
         Returns:
         --------
@@ -163,7 +167,8 @@ class ContactCalculatorAnalysis:
         Parameters:
         -----------
         contacts : numpy.ndarray
-            Contact array in condensed format (n_frames, n_pairs) - automatically converted to squareform
+            Contact array in condensed format (n_frames, n_pairs) -
+            automatically converted to squareform
 
         Returns:
         --------

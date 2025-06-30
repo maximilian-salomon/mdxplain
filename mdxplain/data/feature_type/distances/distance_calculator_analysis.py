@@ -42,9 +42,14 @@ class DistanceCalculatorAnalysis:
 
     # Methods that require full data instead of reduced data
     REQUIRES_FULL_DATA = {
-        "compute_per_residue_mean", "compute_per_residue_std", "compute_per_residue_min",
-        "compute_per_residue_max", "compute_per_residue_median", "compute_per_residue_sum",
-        "compute_per_residue_variance", "compute_per_residue_range"
+        "compute_per_residue_mean",
+        "compute_per_residue_std",
+        "compute_per_residue_min",
+        "compute_per_residue_max",
+        "compute_per_residue_median",
+        "compute_per_residue_sum",
+        "compute_per_residue_variance",
+        "compute_per_residue_range",
     }
 
     def __init__(self, chunk_size=None):
@@ -208,8 +213,7 @@ class DistanceCalculatorAnalysis:
             25th percentile for each pair with shape (n_pairs,)
         """
         return CalculatorStatHelper.compute_func_per_feature(
-            distances, lambda x, axis: np.percentile(
-                x, 25, axis=axis), self.chunk_size
+            distances, lambda x, axis: np.percentile(x, 25, axis=axis), self.chunk_size
         )
 
     def compute_q75(self, distances):
@@ -227,8 +231,7 @@ class DistanceCalculatorAnalysis:
             75th percentile for each pair with shape (n_pairs,)
         """
         return CalculatorStatHelper.compute_func_per_feature(
-            distances, lambda x, axis: np.percentile(
-                x, 75, axis=axis), self.chunk_size
+            distances, lambda x, axis: np.percentile(x, 75, axis=axis), self.chunk_size
         )
 
     def compute_iqr(self, distances):
@@ -247,8 +250,9 @@ class DistanceCalculatorAnalysis:
         """
         return CalculatorStatHelper.compute_func_per_feature(
             distances,
-            lambda x, axis: np.percentile(x, 75, axis=axis)
-            - np.percentile(x, 25, axis=axis),
+            lambda x, axis: (
+                np.percentile(x, 75, axis=axis) - np.percentile(x, 25, axis=axis)
+            ),
             self.chunk_size,
         )
 
@@ -413,7 +417,8 @@ class DistanceCalculatorAnalysis:
         Parameters:
         -----------
         distances : np.ndarray or np.memmap
-            Distance array in condensed format (n_frames, n_pairs) - automatically converted to squareform
+            Distance array in condensed format (n_frames, n_pairs) -
+            automatically converted to squareform
 
         Returns:
         --------
@@ -426,12 +431,15 @@ class DistanceCalculatorAnalysis:
 
     def compute_per_residue_std(self, distances):
         """
-        Compute standard deviation of distances per residue. Auto-converts condensed to squareform.
+        Compute standard deviation of distances per residue.
+
+        Auto-converts condensed to squareform.
 
         Parameters:
         -----------
         distances : np.ndarray or np.memmap
-            Distance array in condensed format (n_frames, n_pairs) - automatically converted to squareform
+            Distance array in condensed format (n_frames, n_pairs) -
+            automatically converted to squareform
 
         Returns:
         --------
@@ -449,7 +457,8 @@ class DistanceCalculatorAnalysis:
         Parameters:
         -----------
         distances : np.ndarray or np.memmap
-            Distance array in condensed format (n_frames, n_pairs) - automatically converted to squareform
+            Distance array in condensed format (n_frames, n_pairs) -
+            automatically converted to squareform
 
         Returns:
         --------
@@ -467,7 +476,8 @@ class DistanceCalculatorAnalysis:
         Parameters:
         -----------
         distances : np.ndarray or np.memmap
-            Distance array in condensed format (n_frames, n_pairs) - automatically converted to squareform
+            Distance array in condensed format (n_frames, n_pairs) -
+            automatically converted to squareform
 
         Returns:
         --------
@@ -485,7 +495,8 @@ class DistanceCalculatorAnalysis:
         Parameters:
         -----------
         distances : np.ndarray or np.memmap
-            Distance array in condensed format (n_frames, n_pairs) - automatically converted to squareform
+            Distance array in condensed format (n_frames, n_pairs) -
+            automatically converted to squareform
 
         Returns:
         --------
@@ -503,7 +514,8 @@ class DistanceCalculatorAnalysis:
         Parameters:
         -----------
         distances : np.ndarray or np.memmap
-            Distance array in condensed format (n_frames, n_pairs) - automatically converted to squareform
+            Distance array in condensed format (n_frames, n_pairs) -
+            automatically converted to squareform
 
         Returns:
         --------
@@ -521,7 +533,8 @@ class DistanceCalculatorAnalysis:
         Parameters:
         -----------
         distances : np.ndarray or np.memmap
-            Distance array in condensed format (n_frames, n_pairs) - automatically converted to squareform
+            Distance array in condensed format (n_frames, n_pairs) -
+            automatically converted to squareform
 
         Returns:
         --------
@@ -539,7 +552,8 @@ class DistanceCalculatorAnalysis:
         Parameters:
         -----------
         distances : np.ndarray or np.memmap
-            Distance array in condensed format (n_frames, n_pairs) - automatically converted to squareform
+            Distance array in condensed format (n_frames, n_pairs) -
+            automatically converted to squareform
 
         Returns:
         --------

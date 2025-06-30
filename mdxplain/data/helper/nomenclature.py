@@ -7,15 +7,15 @@ using different nomenclature systems (GPCR, CGN, KLIFS) via mdciao labelers.
 Notes
 -----
 This module uses mdciao consensus nomenclature systems:
-https://proteinformatics.uni-leipzig.de/mdciao/api/generated/mdciao.nomenclature.html
+        https://proteinformatics.uni-leipzig.de/mdciao/api/generated/mdciao.nomenclature.html  # noqa: E501
 
-Supported fragment types:
-- gpcr: https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerGPCR.html#mdciao.nomenclature.LabelerGPCR
-- cgn: https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerCGN.html#mdciao.nomenclature.LabelerCGN
-- klifs: https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerKLIFS.html#mdciao.nomenclature.LabelerKLIFS
+        Supported fragment types:
+        - gpcr: https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerGPCR.html#mdciao.nomenclature.LabelerGPCR  # noqa: E501
+        - cgn: https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerCGN.html#mdciao.nomenclature.LabelerCGN  # noqa: E501
+        - klifs: https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerKLIFS.html#mdciao.nomenclature.LabelerKLIFS  # noqa: E501
 """
 
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import mdciao
 import mdtraj as md
@@ -32,9 +32,9 @@ class Nomenclature:
     def __init__(
         self,
         topology: md.Topology,
-        fragment_definition: Union[str, Dict[str, Tuple[int, int]]] = None,
-        fragment_type: Union[str, Dict[str, str]] = None,
-        fragment_molecule_name: Union[str, Dict[str, str]] = None,
+        fragment_definition: Optional[Union[str, Dict[str, Tuple[int, int]]]] = None,
+        fragment_type: Optional[Union[str, Dict[str, str]]] = None,
+        fragment_molecule_name: Optional[Union[str, Dict[str, str]]] = None,
         consensus: bool = False,
         aa_short: bool = False,
         verbose: bool = False,
@@ -69,8 +69,8 @@ class Nomenclature:
             {"cgn_a": "gnas2_bovin", "beta2": "adrb2_human"}
             Use the UniProt entry name (not accession ID) for GPCR/CGN labelers,
             or KLIFS string for KLIFS labelers.
-            See https://www.uniprot.org/help/difference_accession_entryname for UniProt naming conventions.
-            See https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerKLIFS.html#mdciao.nomenclature.LabelerKLIFS for KLIFS naming conventions.
+            See https://www.uniprot.org/help/difference_accession_entryname for UniProt naming conventions.  # noqa: E501
+            See https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerKLIFS.html#mdciao.nomenclature.LabelerKLIFS for KLIFS naming conventions.  # noqa: E501
             Only required when consensus=True.
         consensus : bool, default False
             Whether to use consensus labeling (combines AA codes with nomenclature labels).
@@ -142,24 +142,18 @@ class Nomenclature:
 
         # Only parse fragments and init labelers if consensus mode is enabled
         if self.consensus:
-            # Check that all required configurations are provided
-            if any(
-                param is None
-                for param in [
-                    fragment_definition,
-                    fragment_type,
-                    fragment_molecule_name,
-                ]
-            ):
-                raise ValueError(
-                    "When consensus=True, all fragment configurations must be provided: "
-                    + "fragment_definition, fragment_type, and fragment_molecule_name"
-                )
+            # Validate required parameters for consensus mode
+            if fragment_definition is None:
+                raise ValueError("fragment_definition is required when consensus=True")
+            if fragment_type is None:
+                raise ValueError("fragment_type is required when consensus=True")
+            if fragment_molecule_name is None:
+                raise ValueError("fragment_molecule_name is required when consensus=True")
 
             self.fragments = self._parse_fragment_config(
                 fragment_definition, fragment_type, fragment_molecule_name
             )
-            self.labelers = {}
+            self.labelers: Dict[str, object] = {}
             self._init_labelers()
         else:
             self.fragments = {}
@@ -300,19 +294,23 @@ class Nomenclature:
         ValueError
             If any fragment has incomplete configuration
         """
-        fragments = {}
+        fragments: Dict[str, Dict[str, Union[Tuple[int, int], str]]] = {}
         for fragment_name in fragment_names:
-            fragments[fragment_name] = {
-                "range": ranges.get(fragment_name),
-                "type": types.get(fragment_name),
-                "molecule_name": molecule_names.get(fragment_name),
-            }
+            range_val = ranges.get(fragment_name)
+            type_val = types.get(fragment_name)
+            molecule_val = molecule_names.get(fragment_name)
 
             # Validate configuration
-            if not all(fragments[fragment_name].values()):
+            if range_val is None or type_val is None or molecule_val is None:
                 raise ValueError(
                     f"Incomplete configuration for fragment '{fragment_name}'"
                 )
+
+            fragments[fragment_name] = {
+                "range": range_val,
+                "type": type_val,
+                "molecule_name": molecule_val,
+            }
 
         return fragments
 
@@ -336,35 +334,54 @@ class Nomenclature:
             If an unknown nomenclature type is encountered
         """
         for fragment_name, fragment_config in self.fragments.items():
-            nomenclature_type = fragment_config["type"]
-            molecule_name = fragment_config["molecule_name"]
+            nomenclature_type = str(fragment_config["type"])
+            molecule_name = str(fragment_config["molecule_name"])
 
-            # Common parameters for all labelers
-            common_params = {
-                "verbose": self.verbose,
-                "try_web_lookup": self.try_web_lookup,
-                "write_to_disk": self.write_to_disk,
-                **self.labeler_kwargs,
-            }
-            if self.cache_folder is not None:
-                common_params["local_path"] = self.cache_folder
+            common_params = self._build_common_params()
+            labeler = self._create_labeler_for_type(
+                nomenclature_type, molecule_name, common_params, fragment_name
+            )
+            self.labelers[fragment_name] = labeler
 
-            if nomenclature_type.lower() == "gpcr":
-                self.labelers[fragment_name] = mdciao.nomenclature.LabelerGPCR(
-                    UniProt_name=molecule_name, **common_params
-                )
-            elif nomenclature_type.lower() == "cgn":
-                self.labelers[fragment_name] = mdciao.nomenclature.LabelerCGN(
-                    UniProt_name=molecule_name, **common_params
-                )
-            elif nomenclature_type.lower() == "klifs":
-                self.labelers[fragment_name] = mdciao.nomenclature.LabelerKLIFS(
-                    KLIFS_string=molecule_name, **common_params
-                )
-            else:
-                raise ValueError(
-                    f"Unknown nomenclature type for fragment '{fragment_name}': {nomenclature_type}"
-                )
+    def _build_common_params(self) -> dict:
+        """Build common parameters for all labelers."""
+        common_params = {
+            "verbose": self.verbose,
+            "try_web_lookup": self.try_web_lookup,
+            "write_to_disk": self.write_to_disk,
+            **self.labeler_kwargs,
+        }
+        if self.cache_folder is not None:
+            common_params["local_path"] = self.cache_folder
+        return common_params
+
+    def _create_labeler_for_type(
+        self,
+        nomenclature_type: str,
+        molecule_name: str,
+        common_params: dict,
+        fragment_name: str,
+    ):
+        """Create appropriate labeler based on nomenclature type."""
+        labeler_creators = {
+            "gpcr": lambda: mdciao.nomenclature.LabelerGPCR(
+                UniProt_name=molecule_name, **common_params
+            ),
+            "cgn": lambda: mdciao.nomenclature.LabelerCGN(
+                UniProt_name=molecule_name, **common_params
+            ),
+            "klifs": lambda: mdciao.nomenclature.LabelerKLIFS(
+                KLIFS_string=molecule_name, **common_params
+            ),
+        }
+
+        nomenclature_key = nomenclature_type.lower()
+        if nomenclature_key not in labeler_creators:
+            raise ValueError(
+                f"Unknown nomenclature type for fragment '{fragment_name}': {nomenclature_type}"
+            )
+
+        return labeler_creators[nomenclature_key]()
 
     def create_labels(self) -> List[str]:
         """
@@ -375,35 +392,61 @@ class Nomenclature:
         List[str]
             List of labels for each residue in the topology
         """
-        labels = list(self.topology.residues)
-        if self.aa_short:
-            labels = [self._get_aa_short_code(res.name) for res in labels]
+        labels = self._create_base_labels()
 
         # If consensus is disabled, return amino acid labels only
         if not self.consensus:
             return labels
 
         # Apply nomenclature labels in consensus mode
+        return self._apply_consensus_labels(labels)
+
+    def _create_base_labels(self) -> List[str]:
+        """Create base labels from topology residues."""
+        labels = list(self.topology.residues)
+        if self.aa_short:
+            labels = [self._get_aa_short_code(res.name) for res in labels]
+        return labels
+
+    def _apply_consensus_labels(self, labels: List[str]) -> List[str]:
+        """Apply consensus nomenclature labels to base labels."""
         for fragment_name, fragment_config in self.fragments.items():
-            start_idx, end_idx = fragment_config["range"]
+            labels = self._apply_fragment_labels(labels, fragment_name, fragment_config)
+        return labels
 
-            if fragment_name not in self.labelers:
-                raise ValueError(
-                    f"No labeler configured for fragment: {fragment_name}")
+    def _apply_fragment_labels(
+        self, labels: List[str], fragment_name: str, fragment_config: dict
+    ) -> List[str]:
+        """Apply labels for a single fragment."""
+        start_idx, end_idx = self._validate_and_extract_range(
+            fragment_config, fragment_name
+        )
+        labeler = self._get_fragment_labeler(fragment_name)
 
-            labeler = self.labelers[fragment_name]
+        # Get labels from the labeler
+        fragment_labels = labeler.top2labels(self.topology)  # type: ignore
 
-            # Get labels from the labeler
-            fragment_labels = labeler.top2labels(self.topology)
-
-            # Apply labels to the correct range
-            for i, label in enumerate(
-                fragment_labels[start_idx:end_idx], start=start_idx
-            ):
-                if label is not None:
-                    labels[i] = f"{labels[i]}x{label}"
+        # Apply labels to the correct range
+        for i, label in enumerate(fragment_labels[start_idx:end_idx], start=start_idx):
+            if label is not None:
+                labels[i] = f"{labels[i]}x{label}"
 
         return labels
+
+    def _validate_and_extract_range(
+        self, fragment_config: dict, fragment_name: str
+    ) -> tuple:
+        """Validate range tuple and extract start/end indices."""
+        range_tuple = fragment_config["range"]
+        if not isinstance(range_tuple, tuple):
+            raise ValueError(f"Invalid range type for fragment '{fragment_name}'")
+        return range_tuple
+
+    def _get_fragment_labeler(self, fragment_name: str):
+        """Get labeler for fragment, ensuring it exists."""
+        if fragment_name not in self.labelers:
+            raise ValueError(f"No labeler configured for fragment: {fragment_name}")
+        return self.labelers[fragment_name]
 
     def _get_aa_short_code(self, three_letter: str) -> str:
         """

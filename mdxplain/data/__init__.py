@@ -28,6 +28,8 @@ This module provides classes for loading, managing, and processing molecular dyn
 trajectory data, including feature extraction and data serialization capabilities.
 """
 
-from .trajectory_data import TrajectoryData
+from .entities.trajectory_data import TrajectoryData
+from .managers.feature_manager import FeatureManager
+from .managers.trajcetory_manager import TrajectoryManager
 
-__all__ = ["TrajectoryData"]
+__all__ = ["TrajectoryData", "TrajectoryManager", "FeatureManager"]

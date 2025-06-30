@@ -178,8 +178,9 @@ class Distances(FeatureTypeBase):
                         f"Inconsistent residue counts detected! "
                         f"Trajectory 0 has {ref_n_residues} residues, "
                         f"but trajectory {i} has {traj.n_residues} residues. "
-                        f"Distance calculations require all trajectories to have the same number of residues. "
-                        f"Use select_atoms() to create a common selection across all trajectories."
+                        f"Distance calculations require all trajectories to have "
+                        f"the same number of residues. Use select_atoms() to "
+                        f"create a common selection across all trajectories."
                     )
 
         return self.calculator.compute(
@@ -207,7 +208,7 @@ class Distances(FeatureTypeBase):
         return []
 
     @classmethod
-    def get_type_name(cls) -> str:
+    def get_type_name(cls):  # noqa: vulture
         """
         Get the type name as class method.
 

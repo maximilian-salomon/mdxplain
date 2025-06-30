@@ -176,7 +176,7 @@ class Contacts(FeatureTypeBase):
         return [Distances.get_type_name()]
 
     @classmethod
-    def get_type_name(cls) -> str:
+    def get_type_name(cls):  # noqa: vulture
         """
         Return unique string identifier for the contact feature type.
 

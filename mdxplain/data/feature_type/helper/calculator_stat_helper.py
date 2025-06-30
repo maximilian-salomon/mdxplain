@@ -27,6 +27,7 @@ instantiation across different calculators.
 """
 
 import numpy as np
+
 from .feature_shape_helper import FeatureShapeHelper
 
 
@@ -73,10 +74,8 @@ class CalculatorStatHelper:
                 return CalculatorStatHelper.compute_func_per_feature(arr, np.mean, **kw)
 
         # Apply preprocessing function to both arrays
-        processed1 = preprocessing_func(
-            array1, chunk_size=chunk_size, **func_kwargs)
-        processed2 = preprocessing_func(
-            array2, chunk_size=chunk_size, **func_kwargs)
+        processed1 = preprocessing_func(array1, chunk_size=chunk_size, **func_kwargs)
+        processed2 = preprocessing_func(array2, chunk_size=chunk_size, **func_kwargs)
         return processed1 - processed2
 
     @staticmethod
@@ -121,8 +120,7 @@ class CalculatorStatHelper:
         result_chunks = []
         for i in range(0, n_features, chunk_size):
             end_idx = min(i + chunk_size, n_features)
-            chunk_result = func(
-                flat_array[:, i:end_idx], axis=0, **func_kwargs)
+            chunk_result = func(flat_array[:, i:end_idx], axis=0, **func_kwargs)
             result_chunks.append(chunk_result)
 
         # Concatenate results and reshape back to original spatial dimensions
@@ -152,24 +150,39 @@ class CalculatorStatHelper:
             func = np.mean
 
         if chunk_size is None:
-            # No chunking - process all frames at once
-            if len(array.shape) == 3:
-                return func(array.reshape(array.shape[0], -1), axis=1)
-            else:
-                return func(array, axis=1)
+            return CalculatorStatHelper._compute_frames_direct(array, func)
+        else:
+            return CalculatorStatHelper._compute_frames_chunked(array, func, chunk_size)
 
-        # Process in chunks
+    @staticmethod
+    def _compute_frames_direct(array, func):
+        """Compute function per frame without chunking."""
+        if len(array.shape) == 3:
+            return func(array.reshape(array.shape[0], -1), axis=1)
+        else:
+            return func(array, axis=1)
+
+    @staticmethod
+    def _compute_frames_chunked(array, func, chunk_size):
+        """Compute function per frame with chunking."""
         result_chunks = []
         for i in range(0, array.shape[0], chunk_size):
             end_idx = min(i + chunk_size, array.shape[0])
-            if len(array.shape) == 3:
-                chunk_result = func(
-                    array[i:end_idx].reshape(end_idx - i, -1), axis=1)
-            else:
-                chunk_result = func(array[i:end_idx], axis=1)
+            chunk_result = CalculatorStatHelper._process_frame_chunk(
+                array, func, i, end_idx
+            )
             result_chunks.append(chunk_result)
-
         return np.concatenate(result_chunks)
+
+    @staticmethod
+    def _process_frame_chunk(array, func, start_idx, end_idx):
+        """Process a single frame chunk."""
+        if len(array.shape) == 3:
+            return func(
+                array[start_idx:end_idx].reshape(end_idx - start_idx, -1), axis=1
+            )
+        else:
+            return func(array[start_idx:end_idx], axis=1)
 
     @staticmethod
     def _convert_2d_to_3d(array, chunk_size=None):
@@ -219,15 +232,24 @@ class CalculatorStatHelper:
         if chunk_size is None:
             return func(array, axis=(0, 2), **func_kwargs)
 
+        return CalculatorStatHelper._compute_columns_chunked(
+            array, func, chunk_size, **func_kwargs
+        )
+
+    @staticmethod
+    def _compute_columns_chunked(array, func, chunk_size, **func_kwargs):
+        """Compute function per column with chunking."""
         result_chunks = []
         for i in range(0, array.shape[0], chunk_size):
             end_idx = min(i + chunk_size, array.shape[0])
             chunk_result = func(array[i:end_idx], axis=(0, 2), **func_kwargs)
-            if len(chunk_result.shape) == 1:
-                result_chunks.append(chunk_result)
-            else:
-                result_chunks.append(chunk_result)
+            result_chunks.append(chunk_result)
 
+        return CalculatorStatHelper._combine_chunk_results(result_chunks)
+
+    @staticmethod
+    def _combine_chunk_results(result_chunks):
+        """Combine results from chunked processing."""
         if len(result_chunks[0].shape) == 1:
             return np.mean(result_chunks, axis=0)
         else:
@@ -363,22 +385,46 @@ class CalculatorStatHelper:
         for i in range(0, array.shape[1], chunk_size):
             end_idx = min(i + chunk_size, array.shape[1])
             chunk = array[:, i:end_idx]
+            CalculatorStatHelper._process_chunk_transitions(
+                chunk, threshold, window_size, mode, flat_result, i
+            )
 
-            for j in range(chunk.shape[1]):
-                if mode == "lagtime":
-                    diff = np.abs(chunk[:-window_size, j] -
-                                  chunk[window_size:, j])
-                    flat_result[i + j] = np.sum(diff >= threshold)
-                else:  # window mode - corrected implementation
-                    transitions = 0
-                    for k in range(len(chunk) - window_size + 1):
-                        window_data = chunk[k: k + window_size, j]
-                        # Check min/max difference within window
-                        window_min = np.min(window_data)
-                        window_max = np.max(window_data)
-                        if (window_max - window_min) >= threshold:
-                            transitions += 1
-                    flat_result[i + j] = transitions
+    @staticmethod
+    def _process_chunk_transitions(
+        chunk, threshold, window_size, mode, flat_result, start_idx
+    ):
+        """Process transitions for a single chunk."""
+        for j in range(chunk.shape[1]):
+            if mode == "lagtime":
+                flat_result[start_idx + j] = (
+                    CalculatorStatHelper._compute_lagtime_transitions(
+                        chunk[:, j], threshold, window_size
+                    )
+                )
+            else:
+                flat_result[start_idx + j] = (
+                    CalculatorStatHelper._compute_window_transitions(
+                        chunk[:, j], threshold, window_size
+                    )
+                )
+
+    @staticmethod
+    def _compute_lagtime_transitions(data_column, threshold, window_size):
+        """Compute lagtime transitions for a single data column."""
+        diff = np.abs(data_column[:-window_size] - data_column[window_size:])
+        return np.sum(diff >= threshold)
+
+    @staticmethod
+    def _compute_window_transitions(data_column, threshold, window_size):
+        """Compute window transitions for a single data column."""
+        transitions = 0
+        for k in range(len(data_column) - window_size + 1):
+            window_data = data_column[k : k + window_size]
+            window_min = np.min(window_data)
+            window_max = np.max(window_data)
+            if (window_max - window_min) >= threshold:
+                transitions += 1
+        return transitions
 
     @staticmethod
     def _compute_transitions_direct(array, threshold, window_size, mode, result):
@@ -411,7 +457,7 @@ class CalculatorStatHelper:
             else:  # window mode - corrected implementation
                 transitions = 0
                 for k in range(len(array) - window_size + 1):
-                    window_data = array[k: k + window_size, j]
+                    window_data = array[k : k + window_size, j]
                     # Check min/max difference within window
                     window_min = np.min(window_data)
                     window_max = np.max(window_data)

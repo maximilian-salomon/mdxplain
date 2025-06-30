@@ -24,6 +24,5 @@
 """Utility functions and helper classes for mdxplain package."""
 
 from .data_utils import DataUtils
-from .nomenclature import Nomenclature
 
-__all__ = ["DataUtils", "Nomenclature"]
+__all__ = ["DataUtils"]

@@ -133,8 +133,7 @@ class DataUtils:
             attr_value = getattr(obj, attr_name)
 
             if isinstance(attr_value, np.memmap):
-                save_obj[attr_name] = DataUtils._save_memmap_info(
-                    attr_value, attr_name)
+                save_obj[attr_name] = DataUtils._save_memmap_info(attr_value, attr_name)
             else:
                 save_obj[attr_name] = attr_value
 
@@ -189,8 +188,7 @@ class DataUtils:
         """
         for attr_name, attr_value in loaded_obj.items():
             if isinstance(attr_value, dict) and attr_value.get("_is_memmap", False):
-                restored_memmap = DataUtils._restore_memmap(
-                    obj, attr_value, attr_name)
+                restored_memmap = DataUtils._restore_memmap(obj, attr_value, attr_name)
                 setattr(obj, attr_name, restored_memmap)
             else:
                 setattr(obj, attr_name, attr_value)
@@ -216,23 +214,50 @@ class DataUtils:
         """
         original_path = memmap_info["original_path"]
 
-        if os.path.exists(original_path):
+        # Try to restore from original path first
+        restored = DataUtils._try_restore_from_path(original_path, memmap_info)
+        if restored is not None:
+            return restored
+
+        # Try alternative path if object supports it
+        return DataUtils._try_restore_from_alternative_path(
+            obj, attr_name, memmap_info, original_path
+        )
+
+    @staticmethod
+    def _try_restore_from_path(path, memmap_info):
+        """Try to restore memmap from given path."""
+        if os.path.exists(path):
             return np.memmap(
-                original_path,
+                path,
                 dtype=memmap_info["dtype"],
                 mode="r",
                 shape=tuple(memmap_info["shape"]),
             )
-
-        if hasattr(obj, "use_memmap") and obj.use_memmap:
-            if hasattr(obj, f"{attr_name}_path"):
-                target_path = getattr(obj, f"{attr_name}_path")
-                if target_path != original_path and os.path.exists(target_path):
-                    return np.memmap(
-                        target_path,
-                        dtype=memmap_info["dtype"],
-                        mode="r",
-                        shape=tuple(memmap_info["shape"]),
-                    )
-
         return None
+
+    @staticmethod
+    def _try_restore_from_alternative_path(obj, attr_name, memmap_info, original_path):
+        """Try to restore memmap from alternative path."""
+        if not DataUtils._check_supports_alternative_path(obj, attr_name):
+            return None
+
+        target_path = getattr(obj, f"{attr_name}_path")
+        if DataUtils._check_is_invalid_alternative_path(target_path, original_path):
+            return None
+
+        return DataUtils._try_restore_from_path(target_path, memmap_info)
+
+    @staticmethod
+    def _check_supports_alternative_path(obj, attr_name):
+        """Check if object supports alternative path restoration."""
+        return (
+            hasattr(obj, "use_memmap")
+            and obj.use_memmap
+            and hasattr(obj, f"{attr_name}_path")
+        )
+
+    @staticmethod
+    def _check_is_invalid_alternative_path(target_path, original_path):
+        """Check if alternative path is invalid."""
+        return target_path == original_path or not os.path.exists(target_path)
