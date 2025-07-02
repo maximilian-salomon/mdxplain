@@ -98,13 +98,18 @@ class FeatureManager:
         dependencies (like Contacts depending on Distances) will automatically
         use the required input data.
 
+        Supports all three input variants:
+        - feature_type.Distances() (instance)
+        - feature_type.Distances (class with metaclass)  
+        - "distances" (string)
+
         Parameters:
         -----------
         traj_data : TrajectoryData
             Trajectory data object
-        feature_type : FeatureTypeBase
-            Feature type object (e.g., Distances(), Contacts()). The feature
-            type determines what kind of analysis will be performed.
+        feature_type : FeatureTypeBase, FeatureTypeBase class, or str
+            Feature type instance, class, or string (e.g., Distances(), Distances, "distances").
+            The feature type determines what kind of analysis will be performed.
         force : bool, default=False
             Whether to force recomputation of the feature even if it already exists.
 
@@ -118,12 +123,11 @@ class FeatureManager:
         ---------
         >>> traj_data = TrajectoryData()
         >>> feature_manager = FeatureManager()
-        >>> feature_manager.add_feature(traj_data, feature_type.Distances())
-        >>> feature_manager.add_feature(traj_data, feature_type.Contacts())
-        # Overwrite existing feature data
-        >>> feature_manager.add_feature(traj_data, feature_type.Distances(), force=True)
+        >>> feature_manager.add_feature(traj_data, feature_type.Distances())  # instance
+        >>> feature_manager.add_feature(traj_data, feature_type.Contacts)     # class
+        >>> feature_manager.add_feature(traj_data, "distances", force=True)   # string
         """
-        feature_key = feature_type.get_type_name()
+        feature_key = self._get_feature_key(feature_type)
 
         self._check_feature_existence(traj_data, feature_key, force)
         self._check_dependencies(traj_data, feature_type, feature_key)
@@ -269,10 +273,15 @@ class FeatureManager:
         """
         Get the feature key from the feature type.
 
+        Supports all three input variants:
+        - feature_type.Distances() (instance)
+        - feature_type.Distances (class with metaclass)  
+        - "distances" (string)
+
         Parameters:
         -----------
-        feature_type : FeatureTypeBase or str
-            Feature type object or feature key
+        feature_type : FeatureTypeBase, FeatureTypeBase class, or str
+            Feature type instance, class, or feature key string
 
         Returns:
         --------
@@ -280,24 +289,30 @@ class FeatureManager:
             Feature key
         """
         if isinstance(feature_type, str):
+            # Direct string: "distances"
             return feature_type
-        elif isinstance(feature_type, FeatureTypeBase):
+        elif hasattr(feature_type, 'get_type_name'):
+            # Instance or class with get_type_name method
             return feature_type.get_type_name()
         else:
-            raise ValueError(
-                "Feature type must be a FeatureTypeBase object or a string."
-            )
+            # Fallback: try to convert to string (handles metaclass)
+            return str(feature_type)
 
     def reset_reduction(self, traj_data, feature_type):
         """
         Reset to using full original data instead of reduced dataset.
 
+        Supports all three input variants:
+        - feature_type.Distances() (instance)
+        - feature_type.Distances (class with metaclass)  
+        - "distances" (string)
+
         Parameters:
         -----------
         traj_data : TrajectoryData
             Trajectory data object
-        feature_type : FeatureTypeBase or str
-            Feature type object or feature key
+        feature_type : FeatureTypeBase, FeatureTypeBase class, or str
+            Feature type instance, class, or string
 
         Returns:
         --------
@@ -309,11 +324,9 @@ class FeatureManager:
         >>> traj_data = TrajectoryData()
         >>> feature_manager = FeatureManager()
         >>> feature_manager.add_feature(traj_data, feature_type.Distances())
-        >>> feature_manager.reduce_data(traj_data,
-                                        feature_type.Distances(),
-                                        metric=feature_type.ReduceMetrics.CV,
-                                        threshold_min=0.1)
-        >>> feature_manager.reset_reduction(traj_data, "Distances")
+        >>> feature_manager.reduce_data(traj_data, feature_type.Distances,
+                                        metric="cv", threshold_min=0.1)
+        >>> feature_manager.reset_reduction(traj_data, "distances")  # string
         """
         feature_key = self._get_feature_key(feature_type)
         if traj_data.features[feature_key].reduced_data is None:
@@ -349,12 +362,17 @@ class FeatureManager:
         """
         Filter features based on statistical criteria.
 
+        Supports all three input variants:
+        - feature_type.Distances() (instance)
+        - feature_type.Distances (class with metaclass)  
+        - "distances" (string)
+
         Parameters:
         -----------
         traj_data : TrajectoryData
             Trajectory data object
-        feature_type : FeatureTypeBase or str
-            Feature type object or feature key
+        feature_type : FeatureTypeBase, FeatureTypeBase class, or str
+            Feature type instance, class, or string
         metric : str or ReduceMetrics
             Statistical filtering metric ('cv', 'frequency', 'transitions', etc.)
         threshold_min : float, optional
@@ -384,10 +402,9 @@ class FeatureManager:
         ---------
         >>> traj_data = TrajectoryData()
         >>> feature_manager = FeatureManager()
-        >>> feature_manager.add_feature(traj_data, feature_type.Distances())
-        >>> feature_manager.reduce_data(traj_data, feature_type.Distances(),
-                                        metric=feature_type.ReduceMetrics.CV,
-                                        threshold_min=0.1)
+        >>> feature_manager.add_feature(traj_data, feature_type.Distances())  # instance
+        >>> feature_manager.reduce_data(traj_data, feature_type.Distances,   # class
+                                        metric="cv", threshold_min=0.1)
         """
         feature_key = self._get_feature_key(feature_type)
         if traj_data.features[feature_key].data is None:

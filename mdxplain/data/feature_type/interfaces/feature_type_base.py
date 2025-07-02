@@ -30,8 +30,10 @@ from typing import List, Tuple
 
 import numpy as np
 
+from .feature_type_meta import FeatureTypeMeta
 
-class FeatureTypeBase(ABC):
+
+class FeatureTypeBase(ABC, metaclass=FeatureTypeMeta):
     """
     Abstract base class for all molecular dynamics feature types.
 
