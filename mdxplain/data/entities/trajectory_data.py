@@ -116,11 +116,15 @@ class TrajectoryData:
         feature. The returned object provides access to the computed data,
         feature names, analysis methods, and data reduction capabilities.
 
+        Supports all three input variants:
+        - feature_type.Distances() (instance)
+        - feature_type.Distances (class with metaclass)  
+        - "distances" (string)
+
         Parameters:
         -----------
-        feature_type : FeatureTypeBase
-            Feature type object (e.g., Distances(), Contacts()). Must be
-            the same type as used when adding the feature.
+        feature_type : FeatureTypeBase, FeatureTypeBase class, or str
+            Feature type instance, class, or string (e.g., Distances(), Distances, "distances")
 
         Returns:
         --------
@@ -134,30 +138,25 @@ class TrajectoryData:
 
         Examples:
         ---------
-        >>> # Get distances feature
-        >>> distances = traj.get_feature(feature_type.Distances())
+        >>> # Get distances feature - all variants work:
+        >>> distances = traj.get_feature(feature_type.Distances())  # instance
+        >>> distances = traj.get_feature(feature_type.Distances)    # class
+        >>> distances = traj.get_feature("distances")               # string
         >>> distance_data = distances.get_data()
         >>> feature_names = distances.get_feature_names()
 
         >>> # Get contacts and apply analysis
-        >>> contacts = traj.get_feature(feature_type.Contacts())
+        >>> contacts = traj.get_feature(feature_type.Contacts)
         >>> frequency = contacts.analysis.compute_frequency()
-
-        >>> # Apply data reduction
-        >>> contacts.reduce_data(
-        ...     contacts.ReduceMetrics.FREQUENCY,
-        ...     threshold_min=0.1,
-        ...     threshold_max=0.9
-        ... )
         """
+        # Convert to feature key using same logic as FeatureManager
         if isinstance(feature_type, str):
             key = feature_type
-        elif isinstance(feature_type, FeatureTypeBase):
+        elif hasattr(feature_type, 'get_type_name'):
             key = feature_type.get_type_name()
         else:
-            raise ValueError(
-                "Feature type must be a FeatureTypeBase object or a string."
-            )
+            # Fallback: try to convert to string (handles metaclass)
+            key = str(feature_type)
 
         feature_data = self.features.get(key)
         if feature_data is None:
