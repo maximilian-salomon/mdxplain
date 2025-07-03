@@ -26,7 +26,7 @@ Loader class for flexible loading strategies. Provides unified interface
 for handling multiple trajectories and their derived features.
 """
 
-from mdxplain.data.feature_type.interfaces.feature_type_base import FeatureTypeBase
+import numpy as np
 
 from ...utils.data_utils import DataUtils
 
@@ -103,10 +103,11 @@ class TrajectoryData:
         if use_memmap and cache_dir is None:
             self.cache_dir = "./cache"
 
-        self.trajectories = None
-        self.trajectory_names = None  # List of trajectory names
+        self.trajectories = []
+        self.trajectory_names = []  # List of trajectory names
         self.features = {}  # Dictionary to store FeatureData instances by feature type
-        self.res_labels = None  # res_labels for trajectory residues
+        self.res_label_data = None  # res_labels for trajectory residues
+        self.selected_data = {}  # selected data for trajectory residues
 
     def get_feature(self, feature_type):
         """
@@ -282,3 +283,118 @@ class TrajectoryData:
         - Trajectories are fully restored with all metadata
         """
         DataUtils.load_object(self, load_path)
+
+    def get_selected_matrix(self, name):
+        """
+        Return merged matrix from all selected features.
+        
+        Parameters:
+        -----------
+        name : str
+            Name of the selection to retrieve
+            
+        Returns:
+        --------
+        numpy.ndarray
+            Merged matrix with selected columns from all features
+            
+        Raises:
+        -------
+        ValueError
+            If selection not found or no data available
+        """
+        if not hasattr(self, 'selected_data') or name not in self.selected_data:
+            raise ValueError(f"No selection named '{name}' found.")
+        
+        matrices = []
+        
+        for feature_type, selection_info in self.selected_data[name].items():
+            feature_data = self.features[feature_type]
+            indices = selection_info['indices']
+            use_reduced_flags = selection_info['use_reduced']
+            
+            # Initialize arrays for both data types
+            reduced_indices = []
+            original_indices = []
+            
+            # Sort indices by data type
+            for _, (col_idx, use_reduced) in enumerate(zip(indices, use_reduced_flags)):
+                if use_reduced:
+                    reduced_indices.append(col_idx)
+                else:
+                    original_indices.append(col_idx)
+            
+            # Get reduced data if needed
+            if reduced_indices:
+                if feature_data.reduced_data is None:
+                    raise ValueError(f"Reduced data not available for feature '{feature_type}' in selection '{name}'.")
+                matrices.append(feature_data.reduced_data[:, reduced_indices])
+            
+            # Get original data if needed
+            if original_indices:
+                if feature_data.data is None:
+                    raise ValueError(f"Original data not available for feature '{feature_type}' in selection '{name}'.")
+                matrices.append(feature_data.data[:, original_indices])
+        
+        # Merge horizontally (along columns)
+        if not matrices:
+            raise ValueError(f"No valid data found for selection '{name}'.")
+        
+        return np.hstack(matrices)
+
+    def get_selected_feature_metadata(self, name):
+        """
+        Return metadata for all selected features.
+        
+        Parameters:
+        -----------
+        name : str
+            Name of the selection to retrieve
+            
+        Returns:
+        --------
+        numpy.ndarray
+            Array of dictionaries, one for each column in the selected matrix.
+            Each dictionary has the structure:
+            {
+                'features': original feature metadata entry,
+                'type': feature type name as string
+            }
+            
+        Raises:
+        -------
+        ValueError
+            If selection not found or no metadata available
+        """
+        if not hasattr(self, 'selected_data') or name not in self.selected_data:
+            raise ValueError(f"No selection named '{name}' found.")
+        
+        selected_metadata = []
+        
+        for feature_type, selection_info in self.selected_data[name].items():
+            feature_data = self.features[feature_type]
+            indices = selection_info['indices']
+            use_reduced_flags = selection_info['use_reduced']
+            
+            for _, (col_idx, use_reduced) in enumerate(zip(indices, use_reduced_flags)):
+                # Get the appropriate metadata based on use_reduced flag
+                if use_reduced:
+                    if feature_data.reduced_feature_metadata is None:
+                        raise ValueError(f"Reduced metadata not available for feature '{feature_type}' in selection '{name}'.")
+                    metadata = feature_data.reduced_feature_metadata
+                else:
+                    if feature_data.feature_metadata is None:
+                        raise ValueError(f"Metadata not available for feature '{feature_type}' in selection '{name}'.")
+                    metadata = feature_data.feature_metadata
+                
+                # Add selected feature metadata
+                if 'features' in metadata:
+                    selected_metadata.append({
+                        'features': metadata['features'][col_idx],
+                        'type': feature_type
+                    })
+        
+        if not selected_metadata:
+            raise ValueError(f"No valid metadata found for selection '{name}'.")
+        
+        return np.array(selected_metadata)

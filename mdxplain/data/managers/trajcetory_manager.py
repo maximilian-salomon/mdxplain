@@ -56,7 +56,7 @@ class TrajectoryManager:
         self.default_selection = selection
 
     def load_trajectories(
-        self, traj_data, data_input, concat=False, stride=None, selection=None
+        self, traj_data, data_input, concat=False, stride=None, selection=None, force=False
     ):
         """
         Load molecular dynamics trajectories from files or directories into a TrajectoryData object.
@@ -83,6 +83,9 @@ class TrajectoryManager:
         selection : str, optional
             MDTraj selection string to apply to all loaded trajectories.
             See: https://mdtraj.org/1.9.4/atom_selection.html
+        force : bool, default=False
+            Whether to force loading even when features have been calculated. When True,
+            existing features become invalid and should be recalculated.
 
         Examples:
         ---------
@@ -97,12 +100,12 @@ class TrajectoryManager:
         - Large trajectories benefit from striding to reduce memory usage
         - Selection is applied to all trajectories after loading
         """
-        if selection is None:
-            selection = self.default_selection
-        if concat is None:
-            concat = self.default_concat
-        if stride is None:
-            stride = self.default_stride
+        # Check for existing features before loading new trajectories
+        self._check_features_before_trajectory_changes(traj_data, force, "load")
+        
+        selection, concat, stride = self._prepare_add_parameters(
+            selection, concat, stride
+        )
 
         result = TrajectoryLoader.load_trajectories(data_input, concat, stride)
         traj_data.trajectories = result["trajectories"]
@@ -115,8 +118,46 @@ class TrajectoryManager:
         # Check trajectory consistency
         self._check_trajectory_consistency(traj_data)
 
+    def _check_features_before_trajectory_changes(self, traj_data, force, operation_name):
+        """
+        Check if features exist before changing trajectories and handle accordingly.
+        
+        Parameters:
+        -----------
+        traj_data : TrajectoryData
+            Trajectory data object
+        force : bool
+            Whether to force the operation
+        operation_name : str
+            Name of the operation for error messages ("load" or "add")
+            
+        Raises:
+        -------
+        ValueError
+            If features exist and force=False
+        """
+        if not traj_data.features:
+            return
+            
+        feature_list = list(traj_data.features.keys())
+        
+        if not force:
+            raise ValueError(
+                f"Cannot {operation_name} trajectories: {len(feature_list)} feature(s) already computed: {', '.join(feature_list)}. "
+                f"{operation_name.capitalize()}ing new trajectories would invalidate these features. "
+                f"Use force=True to proceed, or call reset_features() with FeatureManager to clear features first."
+                f"The whole analysis is based on the trajectory data, so if you want to change this base, you need to make the analysis again."
+                f"Maybe create a new TrajectoryData object and start from scratch, to not lose your results."
+            )
+        
+        print(f"WARNING: {operation_name.capitalize()}ing new trajectories will invalidate {len(feature_list)} existing features. "
+              f"Features must be recalculated and labels reset."
+              f"The whole analysis is based on the trajectory data, so if you want to change this base, you need to make the analysis again."
+              f"Maybe create a new TrajectoryData object and start from scratch, to not lose your results."
+              )
+
     def add_trajectory(
-        self, traj_data, data_input, concat=False, stride=None, selection=None
+        self, traj_data, data_input, concat=False, stride=None, selection=None, force=False
     ):
         """
         Add molecular dynamics trajectories to TrajectoryData object.
@@ -142,6 +183,9 @@ class TrajectoryManager:
         selection : str, optional
             MDTraj selection string to apply to all newly loaded trajectories.
             See: https://mdtraj.org/1.9.4/atom_selection.html
+        force : bool, default=False
+            Whether to force loading even when features have been calculated. When True,
+            existing features become invalid and should be recalculated.
 
         Examples:
         ---------
@@ -162,11 +206,13 @@ class TrajectoryManager:
         - Selection is only applied to newly loaded trajectories
         - Existing trajectories remain unchanged
         """
+        # Check for existing features before adding new trajectories
+        self._check_features_before_trajectory_changes(traj_data, force, "add")
+            
         # Prepare parameters and validate
         selection, concat, stride = self._prepare_add_parameters(
             selection, concat, stride
         )
-        self._validate_existing_trajectories(traj_data)
 
         # Load and process new trajectories
         new_trajectories, new_names = self._load_new_trajectories(
@@ -192,13 +238,6 @@ class TrajectoryManager:
         if stride is None:
             stride = self.default_stride
         return selection, concat, stride
-
-    def _validate_existing_trajectories(self, traj_data):
-        """Validate that trajectories are already loaded."""
-        if traj_data.trajectories is None:
-            raise ValueError(
-                "No trajectories currently loaded. Use load_trajectories() first."
-            )
 
     def _load_new_trajectories(self, data_input, concat, stride):
         """Load new trajectories and return trajectories and names."""
@@ -410,31 +449,10 @@ class TrajectoryManager:
         if traj_data.trajectories is None:
             raise ValueError("No trajectories loaded to remove.")
 
-        self._check_features_before_removal(traj_data, force)
+        self._check_features_before_trajectory_changes(traj_data, force, "remove")
         indices_to_remove = self._prepare_removal_indices(traj_data, trajs)
         self._execute_removal(traj_data, indices_to_remove)
-        self._handle_post_removal(traj_data, force)
-
-    def _check_features_before_removal(self, traj_data, force):
-        """
-        Check if features exist and raise error if force=False.
-
-        Parameters:
-        -----------
-        traj_data : TrajectoryData
-            Trajectory data object
-        force : bool
-            Whether to force removal even when features have been calculated
-        """
-        if traj_data.features and not force:
-            feature_list = list(traj_data.features.keys())
-            raise ValueError(
-                f"Cannot remove trajectories: {len(feature_list)} feature(s) "
-                f"have been calculated.\nCalculated features: {', '.join(feature_list)}\n"
-                f"Removing trajectories would invalidate these features.\n"
-                f"Use force=True to proceed, then call reset_features() to clear "
-                f"invalid features."
-            )
+        self._check_trajectory_consistency(traj_data)
 
     def _prepare_removal_indices(self, traj_data, trajs):
         """
@@ -487,46 +505,7 @@ class TrajectoryManager:
         )
         return len(indices_to_remove)
 
-    def _handle_post_removal(self, traj_data, force):
-        """
-        Handle warnings and consistency checks after removal.
-
-        Parameters:
-        -----------
-        traj_data : TrajectoryData
-            Trajectory data object
-        force : bool
-            Whether to force removal even when features have been calculated
-        """
-        if traj_data.features and force:
-            self._warn_invalid_features(traj_data)
-
-        if traj_data.trajectories:
-            self._check_trajectory_consistency()
-
-    def _warn_invalid_features(self, traj_data):
-        """
-        Warn user about invalid features after forced removal.
-
-        Parameters:
-        -----------
-        traj_data : TrajectoryData
-            Trajectory data object
-        """
-        feature_list = list(traj_data.features.keys())
-        print("\nWARNING: Feature data is now INVALID!")
-        print(
-            f"The following {len(feature_list)} feature(s) were calculated "
-            f"on the original trajectory set:"
-        )
-        print(f"  {', '.join(feature_list)}")
-        print("These features no longer correspond to the current trajectories.")
-        print(
-            "Call reset_features() to clear invalid features and "
-            "recalculate from scratch.\n"
-        )
-
-    def cut_traj(self, traj_data, cut=None, stride=None, selection=None):
+    def cut_traj(self, traj_data, cut=None, stride=None, selection=None, force=False):
         """
         Cut and/or stride trajectories.
 
@@ -542,6 +521,9 @@ class TrajectoryManager:
         selection : list, optional
             List of trajectory indices (int) or names (str) to process.
             If None, all trajectories will be processed.
+        force : bool, default=False
+            Whether to force cutting even when features have been calculated. When True,
+            existing features become invalid and should be recalculated.
 
         Examples:
         ---------
@@ -564,6 +546,8 @@ class TrajectoryManager:
         ValueError
             If trajectories are not loaded or if selection contains invalid indices/names
         """
+        self._check_features_before_trajectory_changes(traj_data, force, "cut")
+
         # Validate and set defaults
         selection, stride = self._prepare_cut_parameters(selection, stride)
         self._validate_trajectories_loaded(traj_data)
@@ -670,7 +654,7 @@ class TrajectoryManager:
                 f"Trajectory name '{item}' not found. Available names: {traj_data.trajectory_names}"
             )
 
-    def select_atoms(self, traj_data, selection=None, trajs=None):
+    def select_atoms(self, traj_data, selection=None, trajs=None, force=False):
         """
         Apply atom selection to trajectories using MDTraj selection syntax.
 
@@ -684,6 +668,9 @@ class TrajectoryManager:
         trajs : list, optional
             List of trajectory indices (int) or names (str) to process.
             If None, all trajectories will be processed.
+        force : bool, default=False
+            Whether to force atom selection even when features have been calculated. When True,
+            existing features become invalid and should be recalculated.
 
         Examples:
         ---------
@@ -697,6 +684,8 @@ class TrajectoryManager:
         ValueError
             If trajectories are not loaded or if selection/trajs contain invalid values
         """
+        self._check_features_before_trajectory_changes(traj_data, force, "select_atoms")
+        
         if selection is None:
             selection = self.default_selection
 
@@ -730,7 +719,7 @@ class TrajectoryManager:
         fragment_type=None,
         fragment_molecule_name=None,
         consensus=False,
-        aa_short=True,
+        aa_short=False,
         try_web_lookup=True,
         **nomenclature_kwargs,
     ):
@@ -822,4 +811,26 @@ class TrajectoryManager:
             **nomenclature_kwargs,
         )
 
-        traj_data.res_labels = nomenclature.create_labels()
+        traj_data.res_label_data = nomenclature.create_trajectory_label_dicts()
+    
+    def reset_trajectory_data(self, traj_data):
+        """
+        Reset the trajectory data object.
+
+        Parameters:
+        -----------
+        traj_data : TrajectoryData
+            Trajectory data object
+
+        Returns:
+        --------
+        None
+
+        Notes:
+        -----
+        This method resets the trajectory data object to its initial state.
+        """
+        traj_data.trajectories = []
+        traj_data.trajectory_names = []
+        traj_data.res_label_data = None
+        traj_data.features = {}

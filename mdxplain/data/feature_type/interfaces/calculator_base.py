@@ -27,7 +27,7 @@ contacts, and other molecular dynamics features.
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
 
@@ -80,7 +80,7 @@ class CalculatorBase(ABC):
         self.analysis = None
 
     @abstractmethod
-    def compute(self, input_data: Any, **kwargs) -> tuple:
+    def compute(self, input_data: Any, **kwargs) -> Tuple[np.ndarray, dict]:
         """
         Compute feature data from input data (must be implemented by subclasses).
 
@@ -93,9 +93,9 @@ class CalculatorBase(ABC):
 
         Returns:
         --------
-        tuple[np.ndarray, list]
-            Tuple containing (computed_data, feature_names) where computed_data
-            is the calculated feature matrix and feature_names is list of feature labels
+        Tuple[np.ndarray, dict]
+            Tuple containing (computed_data, feature_metadata) where computed_data
+            is the calculated feature matrix and feature_metadata is structured metadata
         """
         pass
 
@@ -106,7 +106,7 @@ class CalculatorBase(ABC):
         metric: str,
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
-        feature_names: Optional[list] = None,
+        feature_metadata: Optional[list] = None,
         output_path: Optional[str] = None,
         transition_threshold: Optional[float] = None,
         window_size: Optional[int] = None,
@@ -126,8 +126,8 @@ class CalculatorBase(ABC):
             Minimum threshold value for filtering features
         threshold_max : float, optional
             Maximum threshold value for filtering features
-        feature_names : list, optional
-            Feature labels corresponding to data columns
+        feature_metadata : list, optional
+            Feature metadata corresponding to data columns
         output_path : str, optional
             Path for saving memory-mapped filtered results
         transition_threshold : float, optional

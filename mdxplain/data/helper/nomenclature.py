@@ -155,9 +155,12 @@ class Nomenclature:
             )
             self.labelers: Dict[str, object] = {}
             self._init_labelers()
+            # Cache consensus labels for all residues once
+            self.cached_consensus_labels = self._compute_all_consensus_labels()
         else:
             self.fragments = {}
             self.labelers = {}
+            self.cached_consensus_labels = []
 
     def _parse_fragment_config(
         self,
@@ -383,55 +386,82 @@ class Nomenclature:
 
         return labeler_creators[nomenclature_key]()
 
-    def create_labels(self) -> List[str]:
+    def create_trajectory_label_dicts(self) -> List[Dict]:
         """
-        Create label list for the trajectory.
+        Create structured label dictionaries for the trajectory.
 
         Returns
         -------
-        List[str]
-            List of labels for each residue in the topology
+        List[Dict]
+            List of label dictionaries for each residue in the topology.
+            Each dict contains: aaa_code, a_code, index, consensus, full_name
         """
-        labels = self._create_base_labels()
+        return self._create_structured_labels()
 
-        # If consensus is disabled, return amino acid labels only
-        if not self.consensus:
-            return labels
-
-        # Apply nomenclature labels in consensus mode
-        return self._apply_consensus_labels(labels)
-
-    def _create_base_labels(self) -> List[str]:
-        """Create base labels from topology residues."""
-        labels = list(self.topology.residues)
-        if self.aa_short:
-            labels = [self._get_aa_short_code(res.name) for res in labels]
+    def _create_structured_labels(self) -> List[Dict]:
+        """Create structured label dictionaries from topology residues."""
+        labels = []
+        
+        for idx, residue in enumerate(self.topology.residues):
+            aaa_code = residue.name
+            a_code = self._get_aa_short_code(aaa_code)
+            consensus = self.cached_consensus_labels[idx] if self.consensus else None
+            full_name = self._get_full_name(aaa_code, a_code, residue.index, consensus)
+            
+            label_dict = {
+                'aaa_code': aaa_code,
+                'a_code': a_code,
+                'index': residue.index,
+                'consensus': consensus,
+                'full_name': full_name
+            }
+            labels.append(label_dict)
+        
         return labels
-
-    def _apply_consensus_labels(self, labels: List[str]) -> List[str]:
-        """Apply consensus nomenclature labels to base labels."""
+    
+    def _compute_all_consensus_labels(self) -> List[str]:
+        """Compute and cache consensus labels for all residues."""
+        # Initialize array with None for all residues
+        cached_labels = [None] * self.topology.n_residues
+        
         for fragment_name, fragment_config in self.fragments.items():
-            labels = self._apply_fragment_labels(labels, fragment_name, fragment_config)
-        return labels
-
-    def _apply_fragment_labels(
-        self, labels: List[str], fragment_name: str, fragment_config: dict
-    ) -> List[str]:
-        """Apply labels for a single fragment."""
-        start_idx, end_idx = self._validate_and_extract_range(
-            fragment_config, fragment_name
-        )
+            self._process_fragment_labels(cached_labels, fragment_name, fragment_config)
+        
+        return cached_labels
+    
+    def _process_fragment_labels(self, cached_labels: List[str], fragment_name: str, fragment_config: dict):
+        """Process labels for a single fragment."""
+        start_idx, end_idx = self._validate_and_extract_range(fragment_config, fragment_name)
         labeler = self._get_fragment_labeler(fragment_name)
-
-        # Get labels from the labeler
         fragment_labels = labeler.top2labels(self.topology)  # type: ignore
-
-        # Apply labels to the correct range
-        for i, label in enumerate(fragment_labels[start_idx:end_idx], start=start_idx):
-            if label is not None:
-                labels[i] = f"{labels[i]}x{label}"
-
-        return labels
+        
+        self._apply_fragment_labels_to_cache(cached_labels, fragment_labels, start_idx, end_idx, fragment_name)
+    
+    def _apply_fragment_labels_to_cache(self, cached_labels: List[str], fragment_labels: List[str], 
+                                       start_idx: int, end_idx: int, fragment_name: str):
+        """Apply fragment labels to cache with overlap detection."""
+        for idx in range(start_idx, end_idx):
+            if idx < len(fragment_labels) and fragment_labels[idx] is not None:
+                self._check_and_set_label(cached_labels, idx, fragment_labels[idx], fragment_name)
+    
+    def _check_and_set_label(self, cached_labels: List[str], idx: int, new_label: str, fragment_name: str):
+        """Check for overlap and set label if valid."""
+        if cached_labels[idx] is not None:
+            raise ValueError(
+                f"Fragment overlap detected at residue {idx}: "
+                f"existing label '{cached_labels[idx]}' vs new label '{new_label}' "
+                f"from fragment '{fragment_name}'"
+            )
+        cached_labels[idx] = new_label
+    
+    def _get_full_name(self, aaa_code: str, a_code: str, residue_index: int, consensus: str | None) -> str:
+        """Generate full name based on aa_short setting and consensus label."""
+        base_code = a_code if self.aa_short else aaa_code
+        base_name = f"{base_code}{residue_index}"
+        
+        if consensus is not None:
+            return f"{base_name}x{consensus}"
+        return base_name
 
     def _validate_and_extract_range(
         self, fragment_config: dict, fragment_name: str

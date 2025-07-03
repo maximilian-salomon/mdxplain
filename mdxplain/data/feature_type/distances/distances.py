@@ -126,7 +126,7 @@ class Distances(FeatureTypeBase):
             use_memmap=use_memmap, cache_path=cache_path, chunk_size=chunk_size
         )
 
-    def compute(self, input_data, feature_names, labels=None):
+    def compute(self, input_data, feature_metadata):
         """
         Compute pairwise distances from molecular dynamics trajectories.
 
@@ -134,16 +134,15 @@ class Distances(FeatureTypeBase):
         -----------
         input_data : mdtraj.Trajectory or list
             MD trajectories to compute distances from
-        feature_names : list, optional
+        feature_metadata : dict, optional
             Not used for distances (base feature type)
-        labels : list, optional
-            Residue labels for generating feature names
 
         Returns:
         --------
-        tuple[numpy.ndarray, list]
-            Tuple containing (distance_matrix, feature_names) where distance_matrix
-            is shape (n_frames, n_pairs) and feature_names are pair identifiers
+        tuple[numpy.ndarray, dict]
+            Tuple containing (distance_matrix, feature_metadata) where distance_matrix
+            is shape (n_frames, n_pairs) and feature_metadata is structured metadata
+            with features in same order as data columns
 
         Examples:
         ---------
@@ -187,7 +186,7 @@ class Distances(FeatureTypeBase):
             input_data=input_data,
             ref=self.ref,
             k=self.k,
-            labels=labels,
+            res_metadata=feature_metadata,
         )
 
     def get_dependencies(self) -> List[str]:
