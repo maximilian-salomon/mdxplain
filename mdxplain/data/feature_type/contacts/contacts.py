@@ -117,7 +117,7 @@ class Contacts(FeatureTypeBase):
             use_memmap=use_memmap, cache_path=cache_path, chunk_size=chunk_size
         )
 
-    def compute(self, input_data, feature_names, labels=None):
+    def compute(self, input_data, feature_metadata):
         """
         Compute binary contact maps from distance data using distance cutoff.
 
@@ -125,24 +125,22 @@ class Contacts(FeatureTypeBase):
         -----------
         input_data : numpy.ndarray
             Distance matrix data from distance feature type (n_frames, n_pairs)
-        feature_names : list
-            Feature names from distance calculations (pair identifiers)
-        labels : list, optional
-            Residue labels (not used by contacts - uses existing feature_names)
+        feature_metadata : dict
+            Feature metadata from distance calculations (structured metadata)
 
         Returns:
         --------
-        tuple[numpy.ndarray, list]
-            Tuple containing (contact_matrix, feature_names) where contact_matrix
-            is binary (0/1) indicating contact presence and feature_names are
-            the same pair identifiers from input
+        tuple[numpy.ndarray, dict]
+            Tuple containing (contact_matrix, feature_metadata) where contact_matrix
+            is binary (0/1) indicating contact presence and feature_metadata is
+            the same structured metadata from input with features in same order as data columns
 
         Examples:
         ---------
         >>> # Compute contacts from distance data
         >>> contacts = Contacts(cutoff=4.0)
         >>> contacts.init_calculator()
-        >>> contact_data, names = contacts.compute(distance_data, pair_names)
+        >>> contact_data, metadata = contacts.compute(distance_data, distance_metadata)
         >>> print(f"Contact matrix shape: {contact_data.shape}")
         >>> print(f"Contact frequency: {contact_data.mean():.3f}")
         """
@@ -155,7 +153,7 @@ class Contacts(FeatureTypeBase):
                 input_data=input_data,
                 cutoff=self.cutoff,
             ),
-            feature_names,
+            feature_metadata,  # Pass through the metadata unchanged
         )
 
     def get_dependencies(self) -> List[str]:

@@ -72,9 +72,9 @@ class FeatureData:
 
         # Initialize data as None
         self.data = None
-        self.feature_names = None
+        self.feature_metadata = None  # Structured feature metadata
         self.reduced_data = None
-        self.reduced_feature_names = None
+        self.reduced_feature_metadata = None  # Reduced structured metadata
         self.reduction_info = None
 
         self.feature_type.init_calculator(
@@ -98,15 +98,40 @@ class FeatureData:
             return self.reduced_data
         return self.data
 
-    def get_feature_names(self):
+    def get_feature_metadata(self):
         """
-        Get current feature names (reduced if available, else original).
+        Get current feature metadata (reduced if available, else original).
 
         Returns:
         --------
-        numpy.ndarray
-            Feature names array, shape (n_features, 2) with residue pair indices
+        dict or None
+            Feature metadata dictionary with 'is_pair' and 'features' keys,
+            or None if not available
         """
-        if self.reduced_feature_names is not None:
-            return self.reduced_feature_names
-        return self.feature_names
+        if self.reduced_feature_metadata is not None:
+            return self.reduced_feature_metadata
+        return self.feature_metadata
+
+    def get_feature_names(self, force_original=False):
+        """
+        Extract feature names from metadata for backward compatibility.
+
+        Parameters:
+        -----------
+        force_original : bool, default=False
+            Whether to return the feature names for the original data
+
+        Returns:
+        --------
+        list or None
+            List of feature names extracted from metadata, or None if not available
+        """
+        metadata = self.feature_metadata if force_original else self.get_feature_metadata()
+        
+        if metadata is None:
+            return None
+        
+        return [
+            '-'.join(partner['full_name'] for partner in feature)
+            for feature in metadata.get('features', [])
+        ]

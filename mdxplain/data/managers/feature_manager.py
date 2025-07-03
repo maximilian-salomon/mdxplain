@@ -24,8 +24,7 @@ It is used to add, reset, and reduce features to the trajectory data.
 """
 
 import functools
-
-from mdxplain.data.feature_type.interfaces.feature_type_base import FeatureTypeBase
+import numpy as np
 
 from ..entities.feature_data import FeatureData
 
@@ -127,6 +126,12 @@ class FeatureManager:
         >>> feature_manager.add_feature(traj_data, feature_type.Contacts)     # class
         >>> feature_manager.add_feature(traj_data, "distances", force=True)   # string
         """
+        if traj_data.res_label_data is None:
+            raise ValueError(
+                f"Trajectory labels must be set before computing features. "
+                f"Use TrajectoryManager.set_labels() to set labels."
+            )
+        
         feature_key = self._get_feature_key(feature_type)
 
         self._check_feature_existence(traj_data, feature_key, force)
@@ -250,24 +255,31 @@ class FeatureManager:
             If the feature type has no input or if trajectories are not loaded
         """
         data = None
-        feature_names = None
-
+        feature_metadata = None
+        if traj_data.res_label_data is None:
+            raise ValueError(
+                "Trajectory labels must be set before computing features."
+            )
         if feature_type.get_input() is not None:
-            data, feature_names = feature_data.feature_type.compute(
+            data, feature_metadata = feature_data.feature_type.compute(
                 traj_data.features[feature_type.get_input()].get_data(),
-                traj_data.features[feature_type.get_input()].get_feature_names(),
-                labels=traj_data.res_labels,
+                traj_data.features[feature_type.get_input()].get_feature_metadata(),
             )
         else:
             if traj_data.trajectories is None:
                 raise ValueError(
                     "Trajectories must be loaded before computing features."
                 )
-            data, feature_names = feature_data.feature_type.compute(
-                traj_data.trajectories, feature_names=None, labels=traj_data.res_labels
+
+            data, feature_metadata = feature_data.feature_type.compute(
+                traj_data.trajectories, feature_metadata=traj_data.res_label_data
             )
         feature_data.data = data
-        feature_data.feature_names = feature_names
+        # Ensure features are always numpy arrays for consistency
+        if feature_metadata and 'features' in feature_metadata:
+            if not isinstance(feature_metadata['features'], np.ndarray):
+                feature_metadata['features'] = np.array(feature_metadata['features'])
+        feature_data.feature_metadata = feature_metadata
 
     def _get_feature_key(self, feature_type):
         """
@@ -338,7 +350,7 @@ class FeatureManager:
         reduced_shape = traj_data.features[feature_key].reduced_data.shape
 
         traj_data.features[feature_key].reduced_data = None
-        traj_data.features[feature_key].reduced_feature_names = None
+        traj_data.features[feature_key].reduced_feature_metadata = None
         old_info = traj_data.features[feature_key].reduction_info
         traj_data.features[feature_key].reduction_info = None
 
@@ -427,7 +439,7 @@ class FeatureManager:
             threshold_max=threshold_max,
             transition_threshold=transition_threshold,
             window_size=window_size,
-            feature_names=traj_data.features[feature_key].feature_names,
+            feature_metadata=traj_data.features[feature_key].feature_metadata["features"],
             output_path=traj_data.features[feature_key].reduced_cache_path,
             transition_mode=transition_mode,
             lag_time=lag_time,
@@ -435,7 +447,12 @@ class FeatureManager:
 
         # Simply set reduced_data
         traj_data.features[feature_key].reduced_data = results["dynamic_data"]
-        traj_data.features[feature_key].reduced_feature_names = results["feature_names"]
+        traj_data.features[feature_key].reduced_feature_metadata = traj_data.features[feature_key].feature_metadata.copy()
+        # Ensure features are always numpy arrays for consistency
+        if isinstance(results["feature_names"], np.ndarray):
+            traj_data.features[feature_key].reduced_feature_metadata["features"] = results["feature_names"]
+        else:
+            traj_data.features[feature_key].reduced_feature_metadata["features"] = np.array(results["feature_names"])
         traj_data.features[feature_key].reduction_info = (
             results["n_dynamic"] / results["total_pairs"]
         )

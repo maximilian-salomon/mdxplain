@@ -49,7 +49,7 @@ class CalculatorComputeHelper:
         metric_name,
         threshold_min=None,
         threshold_max=None,
-        feature_names=None,
+        feature_metadata=None,
         use_memmap=False,
         output_path=None,
         chunk_size=1000,
@@ -69,8 +69,8 @@ class CalculatorComputeHelper:
             Minimum threshold (metric_values >= threshold_min)
         threshold_max : float, optional
             Maximum threshold (metric_values <= threshold_max)
-        feature_names : list, optional
-            Feature pair names
+        feature_metadata : list, optional
+            Feature metadata
         use_memmap : bool, default=False
             Whether to use memory mapping for output
         output_path : str, optional
@@ -106,8 +106,8 @@ class CalculatorComputeHelper:
         )
 
         # Handle feature names and extract data
-        feature_info = CalculatorComputeHelper._handle_feature_names(
-            feature_names, mask
+        feature_info = CalculatorComputeHelper._handle_feature_metadata(
+            feature_metadata, mask
         )
         dynamic_data = CalculatorComputeHelper._extract_dynamic_data(
             data, mask, use_memmap, output_path, chunk_size
@@ -156,14 +156,14 @@ class CalculatorComputeHelper:
             )
 
     @staticmethod
-    def _handle_feature_names(feature_names, mask):
+    def _handle_feature_metadata(feature_metadata, mask):
         """
         Extract feature names based on filter mask.
 
         Parameters:
         -----------
-        feature_names : list or None
-            Original feature names
+        feature_metadata : list or None
+            Original feature metadata
         mask : np.ndarray
             Boolean filter mask
 
@@ -172,15 +172,15 @@ class CalculatorComputeHelper:
         np.ndarray or np.ndarray
             Filtered feature names or mask if names invalid
         """
-        if feature_names is not None:
-            if len(feature_names) != mask.size:
+        if feature_metadata is not None:
+            if len(feature_metadata) != mask.size:
                 warnings.warn(
-                    f"feature_names length ({len(feature_names)}) doesn't match "
+                    f"feature_names length ({len(feature_metadata)}) doesn't match "
                     f"mask size ({mask.size}). Returning mask instead."
                 )
                 return mask
             else:
-                return np.array(feature_names)[mask.flatten()]
+                return np.array(feature_metadata)[mask.flatten()]
         return mask
 
     @staticmethod

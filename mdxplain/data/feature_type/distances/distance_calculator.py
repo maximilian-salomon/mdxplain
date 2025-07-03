@@ -28,6 +28,7 @@ Supports memory mapping for large datasets and provides statistical analysis cap
 
 import mdtraj as md
 from tqdm import tqdm
+import numpy as np
 
 from ..helper.calculator_compute_helper import CalculatorComputeHelper
 from ..helper.feature_shape_helper import FeatureShapeHelper
@@ -98,34 +99,31 @@ class DistanceCalculator(CalculatorBase):
             - ref : mdtraj.Trajectory, optional - Reference trajectory for pair determination
             - k : int, default=1 - Diagonal offset (k=1 excludes diagonal,
               k=2 excludes first two diagonals)
-            - labels : list, optional - Residue labels for feature naming
+            - res_metadata : dict - Residue metadata for feature naming
 
         Returns:
         --------
-        tuple[numpy.ndarray, list]
-            Tuple containing (distances, pair_list) where distances is the
-            distance matrix in Angstrom and pair_list contains pair identifiers
+        tuple[numpy.ndarray, dict]
+            Tuple containing (distances, feature_metadata) where distances is the
+            distance matrix in Angstrom and feature_metadata contains structured metadata
 
         Examples:
         ---------
         >>> # Basic distance calculation (excludes diagonal)
-        >>> distances, pairs = calculator.compute(trajectories)
+        >>> distances, metadata = calculator.compute(trajectories)
         >>> print(f"Distance matrix shape: {distances.shape}")
 
         >>> # With custom diagonal offset
-        >>> distances, pairs = calculator.compute(trajectories, k=2)
+        >>> distances, metadata = calculator.compute(trajectories, k=2)
 
         >>> # With reference trajectory for consistent naming
-        >>> distances, pairs = calculator.compute(trajectories, ref=ref_traj)
-
-        >>> # With residue labels for meaningful feature names
-        >>> distances, pairs = calculator.compute(trajectories, labels=residue_labels)
+        >>> distances, metadata = calculator.compute(trajectories, ref=ref_traj)
         """
         # Extract parameters from kwargs
         trajectories = input_data
         ref = kwargs.get("ref", None)
         k = kwargs.get("k", 1)  # Default k=1 excludes diagonal
-        labels = kwargs.get("labels", None)
+        res_metadata = kwargs.get("res_metadata", None)
 
         # Setup computation parameters and arrays
         ref, total_frames, distances = self._setup_computation(trajectories, ref, k)
@@ -135,13 +133,16 @@ class DistanceCalculator(CalculatorBase):
             trajectories, distances, total_frames
         )
 
-        # Generate feature names using labels if available
-        feature_names = self._generate_feature_names(res_list, labels)
+        # Consistency check: res_list should match self.pairs
+        self._validate_pair_consistency(res_list)
+
+        # Generate feature metadata using labels if available
+        feature_metadata = self._generate_feature_metadata(res_metadata)
 
         # Finalize output (convert units, cleanup)
         distances = self._finalize_output(distances, total_frames)
 
-        return distances, feature_names
+        return distances, feature_metadata
 
     def _setup_computation(self, trajectories, ref, k):
         """
@@ -236,6 +237,45 @@ class DistanceCalculator(CalculatorBase):
 
         return distances
 
+    def _validate_pair_consistency(self, res_list):
+        """
+        Validate that res_list from MDTraj matches our generated pairs.
+
+        Parameters:
+        -----------
+        res_list : list
+            List of residue pair indices from MDTraj
+
+        Raises:
+        -------
+        ValueError
+            If res_list and self.pairs are inconsistent
+        """
+        if res_list is not None:
+            if len(res_list) != len(self.pairs):
+                raise ValueError(
+                    f"Inconsistency detected: res_list has {len(res_list)} pairs "
+                    f"but self.pairs has {len(self.pairs)} pairs. "
+                    f"This indicates a problem with pair generation."
+                )
+            
+            # Check if the actual pairs match (convert formats if needed)
+            for i, (mdtraj_pair, our_pair) in enumerate(zip(res_list, self.pairs)):
+                # Convert mdtraj_pair to list format if it's a tuple
+                if isinstance(mdtraj_pair, tuple):
+                    mdtraj_pair = list(mdtraj_pair)
+                elif isinstance(mdtraj_pair, str):
+                    # Skip string format pairs from MDTraj
+                    continue
+                
+                if not np.array_equal(mdtraj_pair, our_pair):
+                    raise ValueError(
+                        f"Pair mismatch at index {i}: "
+                        f"MDTraj returned {mdtraj_pair}, "
+                        f"but we generated {our_pair}. "
+                        f"This indicates inconsistent pair ordering."
+                    )
+
     # ===== PRIVATE HELPER METHODS =====
     def _generate_residue_pairs(self, n_residues, k):
         """
@@ -281,37 +321,47 @@ class DistanceCalculator(CalculatorBase):
         else:
             distances *= 10
 
-    def _generate_feature_names(self, res_list, labels):
+    def _generate_feature_metadata(self, res_metadata):
         """
-        Generate feature names for residue pairs using labels if available.
+        Generate feature metadata for residue pairs using structured labels.
 
         Parameters:
         -----------
-        res_list : list
-            List of residue pair indices from MDTraj
-        labels : list, optional
-            Residue labels for naming
+        feature_metadata : dict, optional
+            Structured trajectory labels from res_label_data
 
         Returns:
         --------
-        list
-            List of feature names for each pair
-        """
-        if labels is None:
-            # Use original residue pair indices
-            return res_list
+        dict
+            Feature metadata dictionary with 'is_pair' and 'features' keys
 
-        # Convert pairs to label-based names
-        feature_names = []
+        Raises:
+        -------
+        ValueError
+            If res_list and self.pairs are inconsistent
+        """
+        # Generate metadata using structured labels
+        features = []
         for pair in self.pairs:
             i, j = pair
-            if i < len(labels) and j < len(labels):
-                feature_names.append(f"{labels[i]}-{labels[j]}")
+            if i < len(res_metadata) and j < len(res_metadata):
+                # Create partners from structured labels
+                partner1 = {
+                    'residue': res_metadata[i],
+                    'special_label': None,  # No special label for distances
+                    'full_name': res_metadata[i]['full_name']
+                }
+                partner2 = {
+                    'residue': res_metadata[j], 
+                    'special_label': None,  # No special label for distances
+                    'full_name': res_metadata[j]['full_name']
+                }
+                features.append([partner1, partner2])
             else:
-                # Fallback to indices if labels don't cover all residues
-                feature_names.append(f"{i}-{j}")
+                # This should not happen if FeatureManager validates properly
+                raise ValueError(f"Residue indices {i}, {j} not found in res_metadata (length: {len(res_metadata)})")
 
-        return feature_names
+        return {'is_pair': True, 'features': features}
 
     def _process_trajectory(self, traj, distances, frame_idx, pbar=None):
         """
@@ -456,7 +506,7 @@ class DistanceCalculator(CalculatorBase):
         metric="cv",
         threshold_min=None,
         threshold_max=None,
-        feature_names=None,
+        feature_metadata=None,
         output_path=None,
         transition_threshold=2.0,
         window_size=10,
@@ -486,7 +536,7 @@ class DistanceCalculator(CalculatorBase):
         transition_threshold : float, default=2.0
             Distance threshold for detecting transitions
             Only used for 'transitions' metric to compute the number of transitions
-        feature_names : list, optional
+        feature_metadata : list, optional
             Names for distance pairs
         output_path : str, optional
             Path for memory-mapped output
@@ -544,7 +594,7 @@ class DistanceCalculator(CalculatorBase):
             threshold_min=threshold_min,
             threshold_max=threshold_max,
             chunk_size=self.chunk_size,
-            feature_names=feature_names,
+            feature_metadata=feature_metadata,
             use_memmap=self.use_memmap,
             output_path=output_path,
         )

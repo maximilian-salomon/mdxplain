@@ -127,26 +127,25 @@ class FeatureTypeBase(ABC, metaclass=FeatureTypeMeta):
 
     @abstractmethod
     def compute(
-        self, input_data, feature_names, labels=None
-    ) -> Tuple[np.ndarray, List[str]]:
+        self, input_data, feature_metadata
+    ) -> Tuple[np.ndarray, dict]:
         """
         Compute features using the initialized calculator.
 
         Parameters:
         -----------
-        input_data : Any, optional
+        input_data : Any
             Input data for computation (trajectories, distances, etc.)
-        feature_names : list, optional
-            Names for input features (used by dependent features)
-        labels : list, optional
-            Residue labels for generating feature names
+        feature_metadata : dict, optional
+            Structured metadata for input features (used by dependent features)
 
         Returns:
         --------
-        Tuple[np.ndarray, List[str]]
-            Tuple containing (computed_features, feature_names) where
+        Tuple[np.ndarray, dict]
+            Tuple containing (computed_features, feature_metadata) where
             computed_features is the calculated data matrix and
-            feature_names is list of feature labels
+            feature_metadata is structured metadata dictionary with features
+            in same order as data columns
         """
         pass
 
