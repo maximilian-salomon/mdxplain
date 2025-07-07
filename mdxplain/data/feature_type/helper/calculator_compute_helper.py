@@ -127,7 +127,23 @@ class CalculatorComputeHelper:
 
     @staticmethod
     def _create_threshold_mask(metric_values, threshold_min, threshold_max):
-        """Create boolean mask based on threshold conditions."""
+        """
+        Create boolean mask based on threshold conditions.
+
+        Parameters:
+        -----------
+        metric_values : np.ndarray
+            Pre-computed statistical values for filtering
+        threshold_min : float, optional
+            Minimum threshold (metric_values >= threshold_min)
+        threshold_max : float, optional
+            Maximum threshold (metric_values <= threshold_max)
+
+        Returns:
+        --------
+        np.ndarray
+            Boolean mask
+        """
         if threshold_min is None and threshold_max is None:
             raise ValueError(
                 "At least one of 'threshold_min' or 'threshold_max' must be provided"
@@ -147,7 +163,25 @@ class CalculatorComputeHelper:
     def _validate_selection_results(
         n_selected, metric_name, threshold_min, threshold_max
     ):
-        """Validate that selection found some results."""
+        """
+        Validate that selection found some results.
+
+        Parameters:
+        -----------
+        n_selected : int
+            Number of selected values
+        metric_name : str
+            Name of the metric for reporting
+        threshold_min : float, optional
+            Minimum threshold (metric_values >= threshold_min)
+        threshold_max : float, optional
+            Maximum threshold (metric_values <= threshold_max)
+
+        Returns:
+        --------
+        None
+            Raises warning if no values found within thresholds
+        """
         if n_selected == 0:
             threshold_desc = f"min={threshold_min}, max={threshold_max}"
             warnings.warn(
@@ -266,7 +300,27 @@ class CalculatorComputeHelper:
 
     @staticmethod
     def _fill_memmap_chunked(data, dynamic_data, mask, chunk_size, is_square_format):
-        """Fill memory-mapped data in chunks."""
+        """
+        Fill memory-mapped data in chunks.
+
+        Parameters:
+        -----------
+        data : np.ndarray
+            Original feature data
+        dynamic_data : np.memmap
+            Memory-mapped output array
+        mask : np.ndarray
+            Boolean filter mask
+        chunk_size : int
+            Chunk size for processing
+        is_square_format : bool
+            Whether the data is in square format
+
+        Returns:
+        --------
+        None
+            Fills dynamic_data array in-place
+        """
         for i in range(0, data.shape[0], chunk_size):
             end_idx = min(i + chunk_size, data.shape[0])
             chunk = data[i:end_idx]
@@ -276,7 +330,27 @@ class CalculatorComputeHelper:
 
     @staticmethod
     def _fill_regular_chunked(data, dynamic_data, mask, chunk_size, is_square_format):
-        """Fill regular data in chunks."""
+        """
+        Fill regular data in chunks.
+
+        Parameters:
+        -----------
+        data : np.ndarray
+            Original feature data
+        dynamic_data : np.ndarray
+            Memory-mapped output array
+        mask : np.ndarray
+            Boolean filter mask
+        chunk_size : int
+            Chunk size for processing
+        is_square_format : bool
+            Whether the data is in square format
+
+        Returns:
+        --------
+        None
+            Fills dynamic_data array in-place
+        """
         if is_square_format:
             indices = np.where(mask)
             for i in range(0, data.shape[0], chunk_size):
@@ -290,7 +364,29 @@ class CalculatorComputeHelper:
 
     @staticmethod
     def _process_chunk(chunk, dynamic_data, mask, start_idx, end_idx, is_square_format):
-        """Process a single chunk of data."""
+        """
+        Process a single chunk of data.
+
+        Parameters:
+        -----------
+        chunk : np.ndarray
+            Chunk of feature data
+        dynamic_data : np.ndarray
+            Memory-mapped output array
+        mask : np.ndarray
+            Boolean filter mask
+        start_idx : int
+            Start index of the chunk
+        end_idx : int
+            End index of the chunk
+        is_square_format : bool
+            Whether the data is in square format
+
+        Returns:
+        --------
+        None
+            Fills dynamic_data array in-place
+        """
         if is_square_format:
             indices = np.where(mask)
             dynamic_data[start_idx:end_idx] = chunk[:, indices[0], indices[1]]
@@ -330,14 +426,46 @@ class CalculatorComputeHelper:
 
     @staticmethod
     def _needs_format_conversion(is_square_input, squareform):
-        """Check if format conversion is needed."""
+        """
+        Check if format conversion is needed.
+
+        Parameters:
+        -----------
+        is_square_input : bool
+            Whether the input is in square format
+        squareform : bool
+            Whether output should be square format
+
+        Returns:
+        --------
+        bool
+            True if format conversion is needed
+        """
         return (is_square_input and not squareform) or (
             not is_square_input and squareform
         )
 
     @staticmethod
     def _convert_dimensions(input_shape, is_square_input, squareform, k):
-        """Convert dimensions based on input and output format."""
+        """
+        Convert dimensions based on input and output format.
+
+        Parameters:
+        -----------
+        input_shape : tuple
+            Shape of input array
+        is_square_input : bool
+            Whether the input is in square format
+        squareform : bool
+            Whether output should be square format
+        k : int
+            Diagonal offset parameter
+
+        Returns:
+        --------
+        tuple[tuple, int or None]
+            Output shape and number of residues
+        """
         if is_square_input and not squareform:
             return CalculatorComputeHelper._square_to_condensed_dims(input_shape, k)
         else:
@@ -345,7 +473,21 @@ class CalculatorComputeHelper:
 
     @staticmethod
     def _square_to_condensed_dims(input_shape, k):
-        """Convert square format dimensions to condensed format."""
+        """
+        Convert square format dimensions to condensed format.
+
+        Parameters:
+        -----------
+        input_shape : tuple
+            Shape of input array
+        k : int
+            Diagonal offset parameter
+
+        Returns:
+        --------
+        tuple[tuple, int]
+            Output shape and number of residues
+        """
         n_residues = input_shape[1]
         if k == 0:
             n_contacts = n_residues * (n_residues + 1) // 2
@@ -355,7 +497,21 @@ class CalculatorComputeHelper:
 
     @staticmethod
     def _condensed_to_square_dims(input_shape, k):
-        """Convert condensed format dimensions to square format."""
+        """
+        Convert condensed format dimensions to square format.
+
+        Parameters:
+        -----------
+        input_shape : tuple
+            Shape of input array
+        k : int
+            Diagonal offset parameter
+
+        Returns:
+        --------
+        tuple[tuple, int]
+            Output shape and number of residues
+        """
         n_contacts = input_shape[1]
         n_residues = k + int((-1 + np.sqrt(1 + 8 * n_contacts)) / 2)
         return (input_shape[0], n_residues, n_residues), n_residues

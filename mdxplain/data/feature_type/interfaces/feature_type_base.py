@@ -60,6 +60,14 @@ class FeatureTypeBase(ABC, metaclass=FeatureTypeMeta):
 
         Sets up the feature type instance with an empty calculator that will
         be initialized later through init_calculator().
+
+        Parameters:
+        -----------
+        None
+
+        Returns:
+        --------
+        None
         """
         self.calculator = None
 
@@ -67,6 +75,10 @@ class FeatureTypeBase(ABC, metaclass=FeatureTypeMeta):
     def get_dependencies(self) -> List[str]:
         """
         Get list of feature type dependencies that must be computed first.
+
+        Parameters:
+        -----------
+        None
 
         Returns:
         --------
@@ -97,6 +109,11 @@ class FeatureTypeBase(ABC, metaclass=FeatureTypeMeta):
         Used as the key for storing features in TrajectoryData dictionaries
         and for dependency resolution.
 
+        Parameters:
+        -----------
+        cls : type
+            The feature type class
+
         Returns:
         --------
         str
@@ -126,9 +143,7 @@ class FeatureTypeBase(ABC, metaclass=FeatureTypeMeta):
         pass
 
     @abstractmethod
-    def compute(
-        self, input_data, feature_metadata
-    ) -> Tuple[np.ndarray, dict]:
+    def compute(self, input_data, feature_metadata) -> Tuple[np.ndarray, dict]:
         """
         Compute features using the initialized calculator.
 
@@ -152,6 +167,10 @@ class FeatureTypeBase(ABC, metaclass=FeatureTypeMeta):
     def get_input(self):
         """
         Get the input feature type that this feature depends on.
+
+        Parameters:
+        -----------
+        None
 
         Returns:
         --------

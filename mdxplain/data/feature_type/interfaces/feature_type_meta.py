@@ -31,21 +31,57 @@ from abc import ABCMeta
 class FeatureTypeMeta(ABCMeta):
     """
     Metaclass for feature types to enable string representation of classes.
-    
+
     This allows feature_type.Contacts to return "contacts" directly
     instead of requiring instantiation or method calls.
-    
+
     Inherits from ABCMeta to be compatible with ABC classes.
     """
-    
+
     def __repr__(cls):
-        """Return string representation of the feature type class."""
+        """
+        Return string representation of the feature type class.
+
+        Parameters:
+        -----------
+        cls : type
+            The feature type class
+
+        Returns:
+        --------
+        str
+            String representation of the feature type class
+        """
         return cls.get_type_name()
-    
+
     def __str__(cls):
-        """Return string representation for use as dict keys, etc."""
+        """
+        Return string representation for use as dict keys, etc.
+
+        Parameters:
+        -----------
+        cls : type
+            The feature type class
+
+        Returns:
+        --------
+        str
+            String representation of the feature type class
+        """
         return cls.get_type_name()
-    
+
     def __hash__(cls):
-        """Make classes hashable for use as dict keys."""
-        return hash(cls.get_type_name()) 
+        """
+        Make classes hashable for use as dict keys.
+
+        Parameters:
+        -----------
+        cls : type
+            The feature type class
+
+        Returns:
+        --------
+        int
+            Hash value of the feature type class
+        """
+        return hash(cls.get_type_name())

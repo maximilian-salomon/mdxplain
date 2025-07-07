@@ -20,6 +20,8 @@
 
 """Trajectory management module for loading and manipulating MD trajectory data."""
 
+from typing import Any, List, Tuple
+
 from ..helper.nomenclature import Nomenclature
 from ..helper.trajectory_loader import TrajectoryLoader
 
@@ -33,8 +35,6 @@ class TrajectoryManager:
 
         Parameters:
         -----------
-        traj_data : TrajectoryData
-            Trajectory data object
         stride : int, default=1
             Load every stride-th frame from trajectories. Use values > 1 to
             reduce memory usage and computation time by subsampling frames.
@@ -44,6 +44,11 @@ class TrajectoryManager:
         selection : str, optional
             MDTraj selection string to apply to all loaded trajectories.
             See: https://mdtraj.org/1.9.4/atom_selection.html
+
+        Returns:
+        --------
+        None
+            Initializes TrajectoryManager instance with default parameters
 
         Examples:
         ---------
@@ -56,7 +61,13 @@ class TrajectoryManager:
         self.default_selection = selection
 
     def load_trajectories(
-        self, traj_data, data_input, concat=False, stride=None, selection=None, force=False
+        self,
+        traj_data,
+        data_input,
+        concat=False,
+        stride=None,
+        selection=None,
+        force=False,
     ):
         """
         Load molecular dynamics trajectories from files or directories into a TrajectoryData object.
@@ -93,6 +104,11 @@ class TrajectoryManager:
         >>> traj_manager = TrajectoryManager()
         >>> traj_manager.load_trajectories(traj_data, '../data')
 
+        Returns:
+        --------
+        None
+            Loads trajectories into traj_data object and sets up topology/names
+
         Notes:
         -----
         - Supported formats depend on MDTraj capabilities
@@ -102,7 +118,7 @@ class TrajectoryManager:
         """
         # Check for existing features before loading new trajectories
         self._check_features_before_trajectory_changes(traj_data, force, "load")
-        
+
         selection, concat, stride = self._prepare_add_parameters(
             selection, concat, stride
         )
@@ -118,10 +134,12 @@ class TrajectoryManager:
         # Check trajectory consistency
         self._check_trajectory_consistency(traj_data)
 
-    def _check_features_before_trajectory_changes(self, traj_data, force, operation_name):
+    def _check_features_before_trajectory_changes(
+        self, traj_data, force, operation_name
+    ):
         """
         Check if features exist before changing trajectories and handle accordingly.
-        
+
         Parameters:
         -----------
         traj_data : TrajectoryData
@@ -130,7 +148,12 @@ class TrajectoryManager:
             Whether to force the operation
         operation_name : str
             Name of the operation for error messages ("load" or "add")
-            
+
+        Returns:
+        --------
+        None
+            Validates operation or prints warning messages
+
         Raises:
         -------
         ValueError
@@ -138,26 +161,39 @@ class TrajectoryManager:
         """
         if not traj_data.features:
             return
-            
+
         feature_list = list(traj_data.features.keys())
-        
+
         if not force:
             raise ValueError(
-                f"Cannot {operation_name} trajectories: {len(feature_list)} feature(s) already computed: {', '.join(feature_list)}. "
-                f"{operation_name.capitalize()}ing new trajectories would invalidate these features. "
-                f"Use force=True to proceed, or call reset_features() with FeatureManager to clear features first."
-                f"The whole analysis is based on the trajectory data, so if you want to change this base, you need to make the analysis again."
-                f"Maybe create a new TrajectoryData object and start from scratch, to not lose your results."
+                f"Cannot {operation_name} trajectories: {len(feature_list)} feature(s) "
+                f"already computed: {', '.join(feature_list)}. "
+                f"{operation_name.capitalize()}ing new trajectories would invalidate these "
+                f"features. "
+                f"Use force=True to proceed, or call reset_features() with FeatureManager "
+                f"to clear features first. The whole analysis is based on the trajectory data, "
+                f"so if you want to change this base, you need to make the analysis again. "
+                f"Maybe create a new TrajectoryData object and start from scratch, "
+                f"to not lose your results."
             )
-        
-        print(f"WARNING: {operation_name.capitalize()}ing new trajectories will invalidate {len(feature_list)} existing features. "
-              f"Features must be recalculated and labels reset."
-              f"The whole analysis is based on the trajectory data, so if you want to change this base, you need to make the analysis again."
-              f"Maybe create a new TrajectoryData object and start from scratch, to not lose your results."
-              )
+
+        print(
+            f"WARNING: {operation_name.capitalize()}ing new trajectories will invalidate "
+            f"{len(feature_list)} existing features. Features must be recalculated and "
+            f"labels reset. "
+            f"The whole analysis is based on the trajectory data, so if you want to change "
+            f"this base, you need to make the analysis again. Maybe create a new TrajectoryData "
+            f"object and start from scratch, to not lose your results."
+        )
 
     def add_trajectory(
-        self, traj_data, data_input, concat=False, stride=None, selection=None, force=False
+        self,
+        traj_data,
+        data_input,
+        concat=False,
+        stride=None,
+        selection=None,
+        force=False,
     ):
         """
         Add molecular dynamics trajectories to TrajectoryData object.
@@ -199,6 +235,11 @@ class TrajectoryManager:
         ValueError
             If no trajectories are currently loaded
 
+        Returns:
+        --------
+        None
+            Appends new trajectories to existing trajectory list in traj_data
+
         Notes:
         -----
         - New trajectories are appended to existing ones
@@ -208,7 +249,7 @@ class TrajectoryManager:
         """
         # Check for existing features before adding new trajectories
         self._check_features_before_trajectory_changes(traj_data, force, "add")
-            
+
         # Prepare parameters and validate
         selection, concat, stride = self._prepare_add_parameters(
             selection, concat, stride
@@ -230,7 +271,23 @@ class TrajectoryManager:
         self._check_trajectory_consistency(traj_data)
 
     def _prepare_add_parameters(self, selection, concat, stride):
-        """Prepare and validate parameters for adding trajectories."""
+        """
+        Prepare and validate parameters for adding trajectories.
+
+        Parameters:
+        -----------
+        selection : str or None
+            Selection parameter to validate
+        concat : bool or None
+            Concat parameter to validate
+        stride : int or None
+            Stride parameter to validate
+
+        Returns:
+        --------
+        tuple
+            Tuple of (selection, concat, stride) with defaults applied
+        """
         if selection is None:
             selection = self.default_selection
         if concat is None:
@@ -239,13 +296,43 @@ class TrajectoryManager:
             stride = self.default_stride
         return selection, concat, stride
 
-    def _load_new_trajectories(self, data_input, concat, stride):
-        """Load new trajectories and return trajectories and names."""
+    def _load_new_trajectories(self, data_input: Any, concat: bool, stride: int) -> Tuple[List[Any], List[str]]:
+        """
+        Load new trajectories and return trajectories and names.
+
+        Parameters:
+        -----------
+        data_input : str or list
+            Input for trajectory loading
+        concat : bool
+            Whether to concatenate trajectories
+        stride : int
+            Stride for trajectory loading
+
+        Returns:
+        --------
+        Tuple[List[Any], List[str]]
+            Tuple of (trajectories, names) from loading operation
+        """
         result = TrajectoryLoader.load_trajectories(data_input, concat, stride)
         return result["trajectories"], result["names"]
 
     def _apply_selection_to_new_trajectories(self, new_trajectories, selection):
-        """Apply atom selection to new trajectories if provided."""
+        """
+        Apply atom selection to new trajectories if provided.
+
+        Parameters:
+        -----------
+        new_trajectories : list
+            List of trajectory objects to process
+        selection : str or None
+            MDTraj selection string to apply
+
+        Returns:
+        --------
+        list
+            List of trajectories with selection applied
+        """
         if selection is not None:
             for i, traj in enumerate(new_trajectories):
                 atom_indices = traj.topology.select(selection)
@@ -278,7 +365,19 @@ class TrajectoryManager:
             self._print_consistency_suggestion()
 
     def _check_all_inconsistencies(self, traj_data):
-        """Check for any type of trajectory inconsistency."""
+        """
+        Check for any type of trajectory inconsistency.
+
+        Parameters:
+        -----------
+        traj_data : TrajectoryData
+            Trajectory data object
+
+        Returns:
+        --------
+        bool
+            True if any inconsistency found, False if all consistent
+        """
         residue_inconsistent = self._find_residue_inconsistency(traj_data)
         if residue_inconsistent:
             return True
@@ -287,7 +386,18 @@ class TrajectoryManager:
         return atom_inconsistent
 
     def _print_consistency_suggestion(self):
-        """Print suggestion for handling trajectory inconsistencies."""
+        """
+        Print suggestion for handling trajectory inconsistencies.
+
+        Parameters:
+        -----------
+        None
+
+        Returns:
+        --------
+        None
+            Prints suggestion message to console
+        """
         print(
             "\nSuggestion: Use select_atoms() with a selector that applies "
             "to all trajectories\nto find common ground for analysis, or use "
@@ -375,7 +485,23 @@ class TrajectoryManager:
         return False
 
     def _collect_inconsistent_trajectories(self, traj_data, count_attr, ref_count):
-        """Collect trajectories with inconsistent counts."""
+        """
+        Collect trajectories with inconsistent counts.
+
+        Parameters:
+        -----------
+        traj_data : TrajectoryData
+            Trajectory data object
+        count_attr : str
+            Attribute name to check
+        ref_count : int
+            Reference count to compare against
+
+        Returns:
+        --------
+        list
+            List of (index, name, count) tuples for inconsistent trajectories
+        """
         inconsistent = []
         for i, traj in enumerate(traj_data.trajectories):
             count = getattr(traj, count_attr)
@@ -401,6 +527,11 @@ class TrajectoryManager:
             Single form of count type
         plural_type : str
             Plural form of count type
+
+        Returns:
+        --------
+        None
+            Prints warning message to console
         """
         inconsistent_list = "\n".join(
             [
@@ -487,6 +618,20 @@ class TrajectoryManager:
             Trajectory data object
         indices_to_remove : list
             List of trajectory indices to remove
+
+        Returns:
+        --------
+        int
+            Number of trajectories removed
+
+        Raises:
+        -------
+        ValueError
+            If trajectories are not loaded to remove
+        ValueError
+            If features have been calculated and force=False
+        ValueError
+            If trajs contains invalid indices/names
         """
         removed_trajectories = []
         for idx in indices_to_remove:
@@ -524,6 +669,10 @@ class TrajectoryManager:
         force : bool, default=False
             Whether to force cutting even when features have been calculated. When True,
             existing features become invalid and should be recalculated.
+
+        Returns:
+        --------
+        None
 
         Examples:
         ---------
@@ -563,7 +712,27 @@ class TrajectoryManager:
             traj_data.trajectories[idx] = processed_traj
 
     def _prepare_cut_parameters(self, selection, stride):
-        """Prepare and validate parameters for cutting."""
+        """
+        Prepare and validate parameters for cutting.
+
+        Parameters:
+        -----------
+        selection : list, optional
+            List of trajectory indices (int) or names (str) to process.
+            If None, all trajectories will be processed.
+        stride : int, default=1
+            Take every stride-th frame. Use values > 1 to subsample frames.
+
+        Returns:
+        --------
+        tuple
+            Tuple containing the selection list and stride value
+
+        Raises:
+        -------
+        ValueError
+            If selection is not a list
+        """
         if selection is None:
             selection = self.default_selection
         if stride is None:
@@ -571,19 +740,65 @@ class TrajectoryManager:
         return selection, stride
 
     def _validate_trajectories_loaded(self, traj_data):
-        """Validate that trajectories are loaded."""
+        """
+        Validate that trajectories are loaded.
+
+        Parameters:
+        -----------
+        traj_data : TrajectoryData
+            Trajectory data object
+
+        Returns:
+        --------
+        None
+
+        Raises:
+        -------
+        ValueError
+            If trajectories are not loaded
+        """
         if traj_data.trajectories is None:
             raise ValueError("Trajectories must be loaded before cutting.")
 
     def _get_indices_to_process(self, traj_data, selection):
-        """Get list of trajectory indices to process."""
+        """Get list of trajectory indices to process.
+
+        Parameters:
+        -----------
+        traj_data : TrajectoryData
+            Trajectory data object
+        selection : list, optional
+            List of trajectory indices (int) or names (str) to process.
+            If None, all trajectories will be processed.
+
+        Returns:
+        --------
+        list
+            List of trajectory indices to process
+        """
         if selection is None:
             return list(range(len(traj_data.trajectories)))
         else:
             return self._resolve_selection(traj_data, selection)
 
     def _process_trajectory_cuts(self, traj, cut, stride):
-        """Apply cut and stride operations to a single trajectory."""
+        """Apply cut and stride operations to a single trajectory.
+
+        Parameters:
+        -----------
+        traj : Trajectory
+            Trajectory object
+        cut : int, optional
+            Frame number after which to cut the trajectory.
+            Frames after this index will be removed.
+        stride : int, default=1
+            Take every stride-th frame. Use values > 1 to subsample frames.
+
+        Returns:
+        --------
+        Trajectory
+            Processed trajectory object
+        """
         # Apply cut if specified
         if cut is not None and cut < traj.n_frames:
             traj = traj[:cut]
@@ -626,7 +841,25 @@ class TrajectoryManager:
         return indices
 
     def _resolve_single_selection_item(self, item, traj_data):
-        """Resolve a single selection item to trajectory index."""
+        """Resolve a single selection item to trajectory index.
+
+        Parameters:
+        -----------
+        item : int or str
+            Selection item to resolve
+        traj_data : TrajectoryData
+            Trajectory data object
+
+        Returns:
+        --------
+        int
+            Index of the resolved selection item
+
+        Raises:
+        -------
+        ValueError
+            If selection item is not an integer or string
+        """
         if isinstance(item, int):
             return self._resolve_index_selection(item, traj_data)
         elif isinstance(item, str):
@@ -637,7 +870,25 @@ class TrajectoryManager:
             )
 
     def _resolve_index_selection(self, item, traj_data):
-        """Resolve integer index selection."""
+        """Resolve integer index selection.
+
+        Parameters:
+        -----------
+        item : int
+            Index to resolve
+        traj_data : TrajectoryData
+            Trajectory data object
+
+        Returns:
+        --------
+        int
+            Index of the resolved selection item
+
+        Raises:
+        -------
+        ValueError
+            If index is out of range
+        """
         if 0 <= item < len(traj_data.trajectories):
             return item
         else:
@@ -646,7 +897,25 @@ class TrajectoryManager:
             )
 
     def _resolve_name_selection(self, item, traj_data):
-        """Resolve string name selection."""
+        """Resolve string name selection.
+
+        Parameters:
+        -----------
+        item : str
+            Name to resolve
+        traj_data : TrajectoryData
+            Trajectory data object
+
+        Returns:
+        --------
+        int
+            Index of the resolved selection item
+
+        Raises:
+        -------
+        ValueError
+            If name is not found in trajectory names
+        """
         if item in traj_data.trajectory_names:
             return traj_data.trajectory_names.index(item)
         else:
@@ -672,6 +941,10 @@ class TrajectoryManager:
             Whether to force atom selection even when features have been calculated. When True,
             existing features become invalid and should be recalculated.
 
+        Returns:
+        --------
+        None
+
         Examples:
         ---------
         >>> traj_data = TrajectoryData()
@@ -685,7 +958,7 @@ class TrajectoryManager:
             If trajectories are not loaded or if selection/trajs contain invalid values
         """
         self._check_features_before_trajectory_changes(traj_data, force, "select_atoms")
-        
+
         if selection is None:
             selection = self.default_selection
 
@@ -770,6 +1043,27 @@ class TrajectoryManager:
         **nomenclature_kwargs
             Additional keyword arguments passed to the mdciao labelers
 
+        Returns:
+        --------
+        None
+
+        Raises:
+        -------
+        ValueError
+            If trajectories are not loaded
+        ValueError
+            If fragment_definition is required when consensus=True
+        ValueError
+            If fragment_type is required when consensus=True
+        ValueError
+            If fragment_molecule_name is required when consensus=True
+        ValueError
+            If fragment_definition is not a string or dictionary
+        ValueError
+            If fragment_type is not a string or dictionary
+        ValueError
+            If fragment_molecule_name is not a string or dictionary
+
         Notes
         -----
         This class uses mdciao consensus nomenclature systems:
@@ -812,7 +1106,7 @@ class TrajectoryManager:
         )
 
         traj_data.res_label_data = nomenclature.create_trajectory_label_dicts()
-    
+
     def reset_trajectory_data(self, traj_data):
         """
         Reset the trajectory data object.

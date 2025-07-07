@@ -24,6 +24,8 @@ It is used to add, reset, and reduce features to the trajectory data.
 """
 
 import functools
+from typing import Any
+
 import numpy as np
 
 from ..entities.feature_data import FeatureData
@@ -44,6 +46,11 @@ class FeatureManager:
             Processing chunk size
         cache_dir : str, optional
             Cache path for feature data
+
+        Returns:
+        --------
+        None
+            Initializes FeatureManager instance with specified configuration
         """
         self.use_memmap = use_memmap
         self.chunk_size = chunk_size
@@ -64,6 +71,11 @@ class FeatureManager:
         -----------
         traj_data : TrajectoryData
             Trajectory data object
+
+        Returns:
+        --------
+        None
+            Clears all feature data from traj_data.features in-place
 
         Examples:
         ---------
@@ -99,7 +111,7 @@ class FeatureManager:
 
         Supports all three input variants:
         - feature_type.Distances() (instance)
-        - feature_type.Distances (class with metaclass)  
+        - feature_type.Distances (class with metaclass)
         - "distances" (string)
 
         Parameters:
@@ -111,6 +123,11 @@ class FeatureManager:
             The feature type determines what kind of analysis will be performed.
         force : bool, default=False
             Whether to force recomputation of the feature even if it already exists.
+
+        Returns:
+        --------
+        None
+            Adds computed feature to trajectory data and creates analysis methods
 
         Raises:
         -------
@@ -128,10 +145,10 @@ class FeatureManager:
         """
         if traj_data.res_label_data is None:
             raise ValueError(
-                f"Trajectory labels must be set before computing features. "
-                f"Use TrajectoryManager.set_labels() to set labels."
+                "Trajectory labels must be set before computing features. "
+                "Use TrajectoryManager.set_labels() to set labels."
             )
-        
+
         feature_key = self._get_feature_key(feature_type)
 
         self._check_feature_existence(traj_data, feature_key, force)
@@ -185,14 +202,42 @@ class FeatureManager:
             raise ValueError(f"{feature_key.capitalize()} FeatureData already exists.")
 
     def _feature_already_exists(self, traj_data, feature_key):
-        """Check if feature already exists with data."""
+        """
+        Check if feature already exists with data.
+
+        Parameters:
+        -----------
+        traj_data : TrajectoryData
+            Trajectory data object
+        feature_key : str
+            Feature key to check
+
+        Returns:
+        --------
+        bool
+            True if feature exists and has data, False otherwise
+        """
         return (
             feature_key in traj_data.features
             and traj_data.features[feature_key].data is not None
         )
 
     def _handle_force_recomputation(self, traj_data, feature_key):
-        """Handle forced recomputation of existing feature."""
+        """
+        Handle forced recomputation of existing feature.
+
+        Parameters:
+        -----------
+        traj_data : TrajectoryData
+            Trajectory data object
+        feature_key : str
+            Feature key to remove and recompute
+
+        Returns:
+        --------
+        None
+            Removes existing feature and prints warning message
+        """
         print(
             f"WARNING: {feature_key.capitalize()} FeatureData already "
             f"exists. Forcing recomputation."
@@ -214,12 +259,13 @@ class FeatureManager:
 
         Returns:
         --------
-        None        self.analsis = None
-
+        None
+            Validates dependencies are available
 
         Raises:
         -------
-            Raises ValueError if dependency is missing
+        ValueError
+            If dependency is missing
         """
         dependencies = feature_type.get_dependencies()
         for dep in dependencies:
@@ -254,32 +300,107 @@ class FeatureManager:
         ValueError
             If the feature type has no input or if trajectories are not loaded
         """
-        data = None
-        feature_metadata = None
-        if traj_data.res_label_data is None:
-            raise ValueError(
-                "Trajectory labels must be set before computing features."
-            )
-        if feature_type.get_input() is not None:
-            data, feature_metadata = feature_data.feature_type.compute(
-                traj_data.features[feature_type.get_input()].get_data(),
-                traj_data.features[feature_type.get_input()].get_feature_metadata(),
-            )
-        else:
-            if traj_data.trajectories is None:
-                raise ValueError(
-                    "Trajectories must be loaded before computing features."
-                )
+        self._validate_computation_requirements(traj_data, feature_type)
+        data, feature_metadata = self._execute_computation(
+            traj_data, feature_data, feature_type
+        )
+        self._store_computation_results(feature_data, data, feature_metadata)
 
-            data, feature_metadata = feature_data.feature_type.compute(
-                traj_data.trajectories, feature_metadata=traj_data.res_label_data
+    def _validate_computation_requirements(self, traj_data, feature_type):
+        """
+        Validate that all requirements for computation are met.
+
+        Parameters:
+        -----------
+        traj_data : TrajectoryData
+            Trajectory data object
+        feature_type : FeatureTypeBase
+            Feature type object
+
+        Returns:
+        --------
+        None
+            Validates requirements are met
+
+        Raises:
+        -------
+        ValueError
+            If trajectory labels are not set or trajectories are not loaded
+        """
+        if traj_data.res_label_data is None:
+            raise ValueError("Trajectory labels must be set before computing features.")
+
+        if feature_type.get_input() is None and traj_data.trajectories is None:
+            raise ValueError("Trajectories must be loaded before computing features.")
+
+    def _execute_computation(self, traj_data, feature_data, feature_type) -> tuple[Any, dict]:
+        """
+        Execute the actual feature computation.
+
+        Parameters:
+        -----------
+        traj_data : TrajectoryData
+            Trajectory data object
+        feature_data : FeatureData
+            Feature data object
+        feature_type : FeatureTypeBase
+            Feature type object
+
+        Returns:
+        --------
+        tuple[Any, dict]
+            Tuple of (data, feature_metadata) from computation
+        """
+        if feature_type.get_input() is not None:
+            input_feature = traj_data.features[feature_type.get_input()]
+            return feature_data.feature_type.compute(
+                input_feature.get_data(),
+                input_feature.get_feature_metadata(),
             )
+
+        return feature_data.feature_type.compute(
+            traj_data.trajectories, feature_metadata=traj_data.res_label_data
+        )
+
+    def _store_computation_results(self, feature_data, data, feature_metadata):
+        """
+        Store computation results in the feature data object.
+
+        Parameters:
+        -----------
+        feature_data : FeatureData
+            Feature data object to store results in
+        data : numpy.ndarray
+            Computed feature data
+        feature_metadata : dict
+            Feature metadata dictionary
+
+        Returns:
+        --------
+        None
+            Stores data and metadata in feature_data object
+        """
         feature_data.data = data
-        # Ensure features are always numpy arrays for consistency
-        if feature_metadata and 'features' in feature_metadata:
-            if not isinstance(feature_metadata['features'], np.ndarray):
-                feature_metadata['features'] = np.array(feature_metadata['features'])
-        feature_data.feature_metadata = feature_metadata
+        feature_data.feature_metadata = self._ensure_numpy_arrays(feature_metadata)
+
+    def _ensure_numpy_arrays(self, feature_metadata):
+        """
+        Ensure features are always numpy arrays for consistency.
+
+        Parameters:
+        -----------
+        feature_metadata : dict
+            Feature metadata dictionary
+
+        Returns:
+        --------
+        dict
+            Feature metadata with features converted to numpy arrays
+        """
+        if feature_metadata and "features" in feature_metadata:
+            if not isinstance(feature_metadata["features"], np.ndarray):
+                feature_metadata["features"] = np.array(feature_metadata["features"])
+        return feature_metadata
 
     def _get_feature_key(self, feature_type):
         """
@@ -287,7 +408,7 @@ class FeatureManager:
 
         Supports all three input variants:
         - feature_type.Distances() (instance)
-        - feature_type.Distances (class with metaclass)  
+        - feature_type.Distances (class with metaclass)
         - "distances" (string)
 
         Parameters:
@@ -303,7 +424,7 @@ class FeatureManager:
         if isinstance(feature_type, str):
             # Direct string: "distances"
             return feature_type
-        elif hasattr(feature_type, 'get_type_name'):
+        elif hasattr(feature_type, "get_type_name"):
             # Instance or class with get_type_name method
             return feature_type.get_type_name()
         else:
@@ -316,7 +437,7 @@ class FeatureManager:
 
         Supports all three input variants:
         - feature_type.Distances() (instance)
-        - feature_type.Distances (class with metaclass)  
+        - feature_type.Distances (class with metaclass)
         - "distances" (string)
 
         Parameters:
@@ -376,7 +497,7 @@ class FeatureManager:
 
         Supports all three input variants:
         - feature_type.Distances() (instance)
-        - feature_type.Distances (class with metaclass)  
+        - feature_type.Distances (class with metaclass)
         - "distances" (string)
 
         Parameters:
@@ -439,7 +560,9 @@ class FeatureManager:
             threshold_max=threshold_max,
             transition_threshold=transition_threshold,
             window_size=window_size,
-            feature_metadata=traj_data.features[feature_key].feature_metadata["features"],
+            feature_metadata=traj_data.features[feature_key].feature_metadata[
+                "features"
+            ],
             output_path=traj_data.features[feature_key].reduced_cache_path,
             transition_mode=transition_mode,
             lag_time=lag_time,
@@ -447,12 +570,18 @@ class FeatureManager:
 
         # Simply set reduced_data
         traj_data.features[feature_key].reduced_data = results["dynamic_data"]
-        traj_data.features[feature_key].reduced_feature_metadata = traj_data.features[feature_key].feature_metadata.copy()
+        traj_data.features[feature_key].reduced_feature_metadata = traj_data.features[
+            feature_key
+        ].feature_metadata.copy()
         # Ensure features are always numpy arrays for consistency
         if isinstance(results["feature_names"], np.ndarray):
-            traj_data.features[feature_key].reduced_feature_metadata["features"] = results["feature_names"]
+            traj_data.features[feature_key].reduced_feature_metadata["features"] = (
+                results["feature_names"]
+            )
         else:
-            traj_data.features[feature_key].reduced_feature_metadata["features"] = np.array(results["feature_names"])
+            traj_data.features[feature_key].reduced_feature_metadata["features"] = (
+                np.array(results["feature_names"])
+            )
         traj_data.features[feature_key].reduction_info = (
             results["n_dynamic"] / results["total_pairs"]
         )

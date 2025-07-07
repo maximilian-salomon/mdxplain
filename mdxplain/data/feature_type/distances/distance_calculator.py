@@ -27,8 +27,8 @@ Supports memory mapping for large datasets and provides statistical analysis cap
 
 
 import mdtraj as md
-from tqdm import tqdm
 import numpy as np
+from tqdm import tqdm
 
 from ..helper.calculator_compute_helper import CalculatorComputeHelper
 from ..helper.feature_shape_helper import FeatureShapeHelper
@@ -68,6 +68,10 @@ class DistanceCalculator(CalculatorBase):
             Directory path for storing cache files
         chunk_size : int, optional
             Number of frames to process per chunk
+
+        Returns:
+        --------
+        None
 
         Examples:
         ---------
@@ -246,35 +250,120 @@ class DistanceCalculator(CalculatorBase):
         res_list : list
             List of residue pair indices from MDTraj
 
+        Returns:
+        --------
+        None
+
         Raises:
         -------
         ValueError
             If res_list and self.pairs are inconsistent
         """
-        if res_list is not None:
-            if len(res_list) != len(self.pairs):
-                raise ValueError(
-                    f"Inconsistency detected: res_list has {len(res_list)} pairs "
-                    f"but self.pairs has {len(self.pairs)} pairs. "
-                    f"This indicates a problem with pair generation."
-                )
-            
-            # Check if the actual pairs match (convert formats if needed)
-            for i, (mdtraj_pair, our_pair) in enumerate(zip(res_list, self.pairs)):
-                # Convert mdtraj_pair to list format if it's a tuple
-                if isinstance(mdtraj_pair, tuple):
-                    mdtraj_pair = list(mdtraj_pair)
-                elif isinstance(mdtraj_pair, str):
-                    # Skip string format pairs from MDTraj
-                    continue
-                
-                if not np.array_equal(mdtraj_pair, our_pair):
-                    raise ValueError(
-                        f"Pair mismatch at index {i}: "
-                        f"MDTraj returned {mdtraj_pair}, "
-                        f"but we generated {our_pair}. "
-                        f"This indicates inconsistent pair ordering."
-                    )
+        if res_list is None:
+            return
+
+        self._validate_pair_counts(res_list)
+        self._validate_individual_pairs(res_list)
+
+    def _validate_pair_counts(self, res_list):
+        """
+        Validate that the number of pairs matches.
+
+        Parameters:
+        -----------
+        res_list : list
+            List of residue pair indices from MDTraj
+
+        Returns:
+        --------
+        None
+
+        Raises:
+        -------
+        ValueError
+            If the number of pairs does not match
+        """
+        if len(res_list) != len(self.pairs):
+            raise ValueError(
+                f"Inconsistency detected: res_list has {len(res_list)} pairs "
+                f"but self.pairs has {len(self.pairs)} pairs. "
+                f"This indicates a problem with pair generation."
+            )
+
+    def _validate_individual_pairs(self, res_list):
+        """
+        Validate that individual pairs match between res_list and self.pairs.
+
+        Parameters:
+        -----------
+        res_list : list
+            List of residue pair indices from MDTraj
+
+        Returns:
+        --------
+        None
+
+        Raises:
+        -------
+        ValueError
+            If the number of pairs does not match
+        """
+        for i, (mdtraj_pair, our_pair) in enumerate(zip(res_list, self.pairs)):
+            converted_pair = self._convert_mdtraj_pair_format(mdtraj_pair)
+            if converted_pair is not None:
+                self._check_pair_equality(converted_pair, our_pair, i, mdtraj_pair)
+
+    def _convert_mdtraj_pair_format(self, mdtraj_pair):
+        """
+        Convert MDTraj pair to comparable format.
+
+        Parameters:
+        -----------
+        mdtraj_pair : tuple or str
+            MDTraj pair to convert
+
+        Returns:
+        --------
+        list
+            List of residue pair indices
+        """
+        if isinstance(mdtraj_pair, tuple):
+            return list(mdtraj_pair)
+        if isinstance(mdtraj_pair, str):
+            return None  # Skip string format pairs
+        return mdtraj_pair
+
+    def _check_pair_equality(self, converted_pair, our_pair, index, original_pair):
+        """
+        Check if converted pair equals our generated pair.
+
+        Parameters:
+        -----------
+        converted_pair : list
+            Converted pair from MDTraj
+        our_pair : list
+            Our generated pair
+        index : int
+            Index of the pair
+        original_pair : tuple or str
+            Original pair from MDTraj
+
+        Returns:
+        --------
+        None
+
+        Raises:
+        -------
+        ValueError
+            If the pair does not match
+        """
+        if not np.array_equal(converted_pair, our_pair):
+            raise ValueError(
+                f"Pair mismatch at index {index}: "
+                f"MDTraj returned {original_pair}, "
+                f"but we generated {our_pair}. "
+                f"This indicates inconsistent pair ordering."
+            )
 
     # ===== PRIVATE HELPER METHODS =====
     def _generate_residue_pairs(self, n_residues, k):
@@ -313,6 +402,10 @@ class DistanceCalculator(CalculatorBase):
             Distance array in nanometers
         total_frames : int
             Total number of frames for chunked processing
+
+        Returns:
+        --------
+        None
         """
         if FeatureShapeHelper.is_memmap(distances) and self.chunk_size is not None:
             for i in range(0, total_frames, self.chunk_size):
@@ -347,21 +440,24 @@ class DistanceCalculator(CalculatorBase):
             if i < len(res_metadata) and j < len(res_metadata):
                 # Create partners from structured labels
                 partner1 = {
-                    'residue': res_metadata[i],
-                    'special_label': None,  # No special label for distances
-                    'full_name': res_metadata[i]['full_name']
+                    "residue": res_metadata[i],
+                    "special_label": None,  # No special label for distances
+                    "full_name": res_metadata[i]["full_name"],
                 }
                 partner2 = {
-                    'residue': res_metadata[j], 
-                    'special_label': None,  # No special label for distances
-                    'full_name': res_metadata[j]['full_name']
+                    "residue": res_metadata[j],
+                    "special_label": None,  # No special label for distances
+                    "full_name": res_metadata[j]["full_name"],
                 }
                 features.append([partner1, partner2])
             else:
                 # This should not happen if FeatureManager validates properly
-                raise ValueError(f"Residue indices {i}, {j} not found in res_metadata (length: {len(res_metadata)})")
+                raise ValueError(
+                    f"Residue indices {i}, {j} not found in res_metadata "
+                    f"(length: {len(res_metadata)})"
+                )
 
-        return {'is_pair': True, 'features': features}
+        return {"is_pair": True, "features": features}
 
     def _process_trajectory(self, traj, distances, frame_idx, pbar=None):
         """
@@ -486,7 +582,27 @@ class DistanceCalculator(CalculatorBase):
     def _compute_transitions_metric(
         self, distances, threshold, window_size, transition_mode, lag_time
     ):
-        """Compute transitions metric based on specified mode and parameters."""
+        """
+        Compute transitions metric based on specified mode and parameters.
+
+        Parameters:
+        -----------
+        distances : numpy.ndarray
+            Distance array
+        threshold : float
+            Threshold value (used for transitions metric)
+        window_size : int
+            Window size for transitions metric
+        transition_mode : str, default='window'
+            Mode for transitions metric: 'window' or 'lagtime'
+        lag_time : int, default=1
+            Lag time for transitions metric
+
+        Returns:
+        --------
+        int
+            Number of transitions
+        """
         if transition_mode == "window":
             return self.analysis.compute_transitions_window(
                 distances, threshold=threshold, window_size=window_size
@@ -516,7 +632,7 @@ class DistanceCalculator(CalculatorBase):
         """
         Filter and select variable/dynamic distances based on specified criteria.
 
-            Parameters:
+        Parameters:
         -----------
         input_data : numpy.ndarray
             Distance array (square or condensed format)

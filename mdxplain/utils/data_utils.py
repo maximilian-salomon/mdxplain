@@ -226,7 +226,21 @@ class DataUtils:
 
     @staticmethod
     def _try_restore_from_path(path, memmap_info):
-        """Try to restore memmap from given path."""
+        """
+        Try to restore memmap from given path.
+
+        Parameters:
+        -----------
+        path : str
+            File path to try for memmap restoration
+        memmap_info : dict
+            Metadata dictionary with memmap information
+
+        Returns:
+        --------
+        np.memmap or None
+            Restored memmap if file exists, None otherwise
+        """
         if os.path.exists(path):
             return np.memmap(
                 path,
@@ -238,7 +252,25 @@ class DataUtils:
 
     @staticmethod
     def _try_restore_from_alternative_path(obj, attr_name, memmap_info, original_path):
-        """Try to restore memmap from alternative path."""
+        """
+        Try to restore memmap from alternative path.
+
+        Parameters:
+        -----------
+        obj : object
+            Target object for memmap restoration
+        attr_name : str
+            Attribute name for the memmap
+        memmap_info : dict
+            Metadata dictionary with memmap information
+        original_path : str
+            Original file path that failed
+
+        Returns:
+        --------
+        np.memmap or None
+            Restored memmap from alternative path or None if not possible
+        """
         if not DataUtils._check_supports_alternative_path(obj, attr_name):
             return None
 
@@ -250,7 +282,21 @@ class DataUtils:
 
     @staticmethod
     def _check_supports_alternative_path(obj, attr_name):
-        """Check if object supports alternative path restoration."""
+        """
+        Check if object supports alternative path restoration.
+
+        Parameters:
+        -----------
+        obj : object
+            Object to check for alternative path support
+        attr_name : str
+            Attribute name to check for path support
+
+        Returns:
+        --------
+        bool
+            True if object supports alternative path restoration
+        """
         return (
             hasattr(obj, "use_memmap")
             and obj.use_memmap
@@ -259,5 +305,19 @@ class DataUtils:
 
     @staticmethod
     def _check_is_invalid_alternative_path(target_path, original_path):
-        """Check if alternative path is invalid."""
+        """
+        Check if alternative path is invalid.
+
+        Parameters:
+        -----------
+        target_path : str
+            Alternative path to check
+        original_path : str
+            Original path for comparison
+
+        Returns:
+        --------
+        bool
+            True if alternative path is invalid
+        """
         return target_path == original_path or not os.path.exists(target_path)
