@@ -79,6 +79,14 @@ class Distances(FeatureTypeBase):
         k : int, default=0
             Number of nearest neighbors to consider for distance calculation.
             If 0, all pairs are computed.
+            If 1, only nearest neighbors are computed.
+            If 2, only nearest neighbors and their neighbors are computed.
+            If 3, only nearest neighbors and their neighbors and their neighbors are computed.
+            etc.
+
+        Returns:
+        --------
+        None
 
         Examples:
         ---------
@@ -110,6 +118,10 @@ class Distances(FeatureTypeBase):
             Directory path for storing cache files when using memory mapping
         chunk_size : int, optional
             Number of frames to process per chunk (None for automatic sizing)
+
+        Returns:
+        --------
+        None
 
         Examples:
         ---------
@@ -193,6 +205,10 @@ class Distances(FeatureTypeBase):
         """
         Get list of feature type dependencies for distance calculations.
 
+        Parameters:
+        -----------
+        None
+
         Returns:
         --------
         List[str]
@@ -211,6 +227,10 @@ class Distances(FeatureTypeBase):
         """
         Get the type name as class method.
 
+        Parameters:
+        -----------
+        None
+
         Returns:
         --------
         str
@@ -226,6 +246,10 @@ class Distances(FeatureTypeBase):
     def get_input(self):
         """
         Get the input feature type that distances depend on.
+
+        Parameters:
+        -----------
+        None
 
         Returns:
         --------

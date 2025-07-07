@@ -28,6 +28,7 @@ Supports nested directory structures and trajectory concatenation.
 
 import os
 import warnings
+from typing import Any, Dict, List, Union
 
 import mdtraj as md
 from tqdm import tqdm
@@ -41,7 +42,7 @@ class TrajectoryLoader:
     """
 
     @staticmethod
-    def load_trajectories(data_input, concat=False, stride=1):
+    def load_trajectories(data_input: Union[List[Any], str], concat: bool = False, stride: int = 1) -> Dict[str, List[Any]]:
         """
         Load trajectories from various input types.
 
@@ -72,7 +73,7 @@ class TrajectoryLoader:
         return {"trajectories": [], "names": []}
 
     @staticmethod
-    def _load_from_list(trajectory_list, concat):
+    def _load_from_list(trajectory_list: List[Any], concat: bool) -> Dict[str, List[Any]]:
         """
         Handle trajectory list input with optional concatenation.
 
@@ -106,7 +107,7 @@ class TrajectoryLoader:
         return {"trajectories": trajectory_list, "names": names}
 
     @staticmethod
-    def _load_from_directory(directory_path, concat, stride):
+    def _load_from_directory(directory_path: str, concat: bool, stride: int) -> Dict[str, List[Any]]:
         """
         Load trajectories from directory (flat or nested structure).
 
@@ -132,7 +133,7 @@ class TrajectoryLoader:
         return TrajectoryLoader._load_flat_structure(directory_path, concat, stride)
 
     @staticmethod
-    def _has_subdirectories(directory_path):
+    def _has_subdirectories(directory_path: str) -> bool:
         """
         Check if directory contains subdirectories.
 
@@ -154,7 +155,7 @@ class TrajectoryLoader:
         return len(subdirs) > 0
 
     @staticmethod
-    def _load_nested_structure(directory_path, concat, stride):
+    def _load_nested_structure(directory_path: str, concat: bool, stride: int) -> Dict[str, List[Any]]:
         """
         Load from nested directory structure (multiple systems).
 
@@ -265,7 +266,23 @@ class TrajectoryLoader:
 
     @staticmethod
     def _print_summary_header(num_systems, total_trajectories, concat):
-        """Print the header line of the loading summary."""
+        """
+        Print the header line of the loading summary.
+
+        Parameters:
+        -----------
+        num_systems : int
+            Number of systems loaded
+        total_trajectories : int
+            Total number of trajectories
+        concat : bool
+            Whether concatenation was used
+
+        Returns:
+        --------
+        None
+            Prints header line to console
+        """
         if concat:
             print(
                 f"\nLoaded {num_systems} systems with {total_trajectories} "
@@ -278,7 +295,23 @@ class TrajectoryLoader:
 
     @staticmethod
     def _print_system_info(system, count, concat):
-        """Print information for a single system."""
+        """
+        Print information for a single system.
+
+        Parameters:
+        -----------
+        system : str
+            System name
+        count : int
+            Number of trajectories for this system
+        concat : bool
+            Whether concatenation was used
+
+        Returns:
+        --------
+        None
+            Prints system information to console
+        """
         if concat and count > 1:
             print(f"  {system}: 1 concatenated trajectory ({count} files)")
         else:

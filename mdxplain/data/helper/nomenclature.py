@@ -1,3 +1,24 @@
+# mdxplain - A Python toolkit for molecular dynamics trajectory analysis
+#
+# Author: Maximilian Salomon
+# Created with assistance from Claude-4-Sonnet and Cursor AI.
+#
+# Copyright (C) 2025 Maximilian Salomon
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
 """
 Nomenclature utilities for molecular dynamics trajectory labeling.
 
@@ -88,6 +109,19 @@ class Nomenclature:
         **labeler_kwargs
             Additional keyword arguments passed to the mdciao labelers
 
+        Returns:
+        --------
+        None
+            Initializes the Nomenclature object
+
+        Raises:
+        -------
+        ValueError
+            If fragment_definition is required when consensus=True
+        ValueError
+            If fragment_type is required when consensus=True
+        ValueError
+            If fragment_molecule_name is required when consensus=True
         Notes
         -----
         This class uses mdciao consensus nomenclature systems:
@@ -148,7 +182,9 @@ class Nomenclature:
             if fragment_type is None:
                 raise ValueError("fragment_type is required when consensus=True")
             if fragment_molecule_name is None:
-                raise ValueError("fragment_molecule_name is required when consensus=True")
+                raise ValueError(
+                    "fragment_molecule_name is required when consensus=True"
+                )
 
             self.fragments = self._parse_fragment_config(
                 fragment_definition, fragment_type, fragment_molecule_name
@@ -168,7 +204,23 @@ class Nomenclature:
         fragment_type: Union[str, Dict[str, str]],
         fragment_molecule_name: Union[str, Dict[str, str]],
     ) -> Dict[str, Dict[str, Union[Tuple[int, int], str]]]:
-        """Parse fragment configuration into unified format."""
+        """
+        Parse fragment configuration into unified format.
+
+        Parameters:
+        -----------
+        fragment_definition : Union[str, Dict[str, Tuple[int, int]]]
+            Fragment definition input (string or dictionary)
+        fragment_type : Union[str, Dict[str, str]]
+            Fragment type input (string or dictionary)
+        fragment_molecule_name : Union[str, Dict[str, str]]
+            Fragment molecule name input (string or dictionary)
+
+        Returns:
+        --------
+        Dict[str, Dict[str, Union[Tuple[int, int], str]]]
+            Unified fragment configuration dictionary
+        """
         fragment_names = self._extract_fragment_names(fragment_definition)
         ranges = self._normalize_ranges(fragment_definition)
         types = self._normalize_types(fragment_type, fragment_names)
@@ -325,6 +377,14 @@ class Nomenclature:
         based on its nomenclature type. Each labeler is configured with the
         molecule identifier and the common parameters (verbose, web lookup, etc.).
 
+        Parameters:
+        -----------
+        None
+
+        Returns:
+        --------
+        None
+            Initializes the labelers
         Notes
         -----
         - GPCR and CGN labelers use UniProt_name parameter
@@ -347,7 +407,18 @@ class Nomenclature:
             self.labelers[fragment_name] = labeler
 
     def _build_common_params(self) -> dict:
-        """Build common parameters for all labelers."""
+        """
+        Build common parameters for all labelers.
+
+        Parameters:
+        -----------
+        None
+
+        Returns:
+        --------
+        dict
+            Dictionary of common parameters for mdciao labelers
+        """
         common_params = {
             "verbose": self.verbose,
             "try_web_lookup": self.try_web_lookup,
@@ -365,7 +436,30 @@ class Nomenclature:
         common_params: dict,
         fragment_name: str,
     ):
-        """Create appropriate labeler based on nomenclature type."""
+        """
+        Create appropriate labeler based on nomenclature type.
+
+        Parameters:
+        -----------
+        nomenclature_type : str
+            Type of nomenclature labeler to create
+        molecule_name : str
+            Molecule identifier for the labeler
+        common_params : dict
+            Common parameters for labeler initialization
+        fragment_name : str
+            Fragment name for error messages
+
+        Returns:
+        --------
+        object
+            Initialized mdciao labeler instance
+
+        Raises:
+        -------
+        ValueError
+            If unknown nomenclature type is provided
+        """
         labeler_creators = {
             "gpcr": lambda: mdciao.nomenclature.LabelerGPCR(
                 UniProt_name=molecule_name, **common_params
@@ -390,6 +484,10 @@ class Nomenclature:
         """
         Create structured label dictionaries for the trajectory.
 
+        Parameters:
+        -----------
+        None
+
         Returns
         -------
         List[Dict]
@@ -399,53 +497,151 @@ class Nomenclature:
         return self._create_structured_labels()
 
     def _create_structured_labels(self) -> List[Dict]:
-        """Create structured label dictionaries from topology residues."""
+        """
+        Create structured label dictionaries from topology residues.
+
+        Parameters:
+        -----------
+        None
+
+        Returns:
+        --------
+        List[Dict]
+            List of label dictionaries for each residue in the topology.
+            Each dict contains: aaa_code, a_code, index, consensus, full_name
+        """
         labels = []
-        
+
         for idx, residue in enumerate(self.topology.residues):
             aaa_code = residue.name
             a_code = self._get_aa_short_code(aaa_code)
             consensus = self.cached_consensus_labels[idx] if self.consensus else None
             full_name = self._get_full_name(aaa_code, a_code, residue.index, consensus)
-            
+
             label_dict = {
-                'aaa_code': aaa_code,
-                'a_code': a_code,
-                'index': residue.index,
-                'consensus': consensus,
-                'full_name': full_name
+                "aaa_code": aaa_code,
+                "a_code": a_code,
+                "index": residue.index,
+                "consensus": consensus,
+                "full_name": full_name,
             }
             labels.append(label_dict)
-        
+
         return labels
-    
-    def _compute_all_consensus_labels(self) -> List[str]:
-        """Compute and cache consensus labels for all residues."""
+
+    def _compute_all_consensus_labels(self) -> List[Optional[str]]:
+        """
+        Compute and cache consensus labels for all residues.
+
+        Parameters:
+        -----------
+        None
+
+        Returns:
+        --------
+        List[Optional[str]]
+            List of consensus labels for all residues
+        """
         # Initialize array with None for all residues
-        cached_labels = [None] * self.topology.n_residues
-        
+        cached_labels: List[Optional[str]] = [None] * self.topology.n_residues
+
         for fragment_name, fragment_config in self.fragments.items():
             self._process_fragment_labels(cached_labels, fragment_name, fragment_config)
-        
+
         return cached_labels
-    
-    def _process_fragment_labels(self, cached_labels: List[str], fragment_name: str, fragment_config: dict):
-        """Process labels for a single fragment."""
-        start_idx, end_idx = self._validate_and_extract_range(fragment_config, fragment_name)
+
+    def _process_fragment_labels(
+        self, cached_labels: List[Optional[str]], fragment_name: str, fragment_config: dict
+    ):
+        """
+        Process labels for a single fragment.
+
+        Parameters:
+        -----------
+        cached_labels : List[Optional[str]]
+            List of cached consensus labels to update
+        fragment_name : str
+            Name of the fragment for error messages
+        fragment_config : dict
+            Fragment configuration dictionary
+
+        Returns:
+        --------
+        None
+            Updates cached_labels in-place
+        """
+        start_idx, end_idx = self._validate_and_extract_range(
+            fragment_config, fragment_name
+        )
         labeler = self._get_fragment_labeler(fragment_name)
         fragment_labels = labeler.top2labels(self.topology)  # type: ignore
-        
-        self._apply_fragment_labels_to_cache(cached_labels, fragment_labels, start_idx, end_idx, fragment_name)
-    
-    def _apply_fragment_labels_to_cache(self, cached_labels: List[str], fragment_labels: List[str], 
-                                       start_idx: int, end_idx: int, fragment_name: str):
-        """Apply fragment labels to cache with overlap detection."""
+
+        self._apply_fragment_labels_to_cache(
+            cached_labels, fragment_labels, start_idx, end_idx, fragment_name
+        )
+
+    def _apply_fragment_labels_to_cache(
+        self,
+        cached_labels: List[Optional[str]],
+        fragment_labels: List[str],
+        start_idx: int,
+        end_idx: int,
+        fragment_name: str,
+    ):
+        """
+        Apply fragment labels to cache with overlap detection.
+
+        Parameters:
+        -----------
+        cached_labels : List[Optional[str]]
+            List of cached consensus labels to update
+        fragment_labels : List[str]
+            Fragment-specific labels from mdciao labeler
+        start_idx : int
+            Starting index for fragment range
+        end_idx : int
+            Ending index for fragment range
+        fragment_name : str
+            Name of the fragment for error messages
+
+        Returns:
+        --------
+        None
+            Updates cached_labels in-place
+        """
         for idx in range(start_idx, end_idx):
             if idx < len(fragment_labels) and fragment_labels[idx] is not None:
-                self._check_and_set_label(cached_labels, idx, fragment_labels[idx], fragment_name)
-    
-    def _check_and_set_label(self, cached_labels: List[str], idx: int, new_label: str, fragment_name: str):
-        """Check for overlap and set label if valid."""
+                self._check_and_set_label(
+                    cached_labels, idx, fragment_labels[idx], fragment_name
+                )
+
+    def _check_and_set_label(
+        self, cached_labels: List[Optional[str]], idx: int, new_label: str, fragment_name: str
+    ):
+        """
+        Check for overlap and set label if valid.
+
+        Parameters:
+        -----------
+        cached_labels : List[Optional[str]]
+            List of cached consensus labels
+        idx : int
+            Index position to set
+        new_label : str
+            New label to set
+        fragment_name : str
+            Fragment name for error messages
+
+        Returns:
+        --------
+        None
+            Updates cached_labels[idx] in-place
+
+        Raises:
+        -------
+        ValueError
+            If overlap is detected at the same index
+        """
         if cached_labels[idx] is not None:
             raise ValueError(
                 f"Fragment overlap detected at residue {idx}: "
@@ -453,27 +649,83 @@ class Nomenclature:
                 f"from fragment '{fragment_name}'"
             )
         cached_labels[idx] = new_label
-    
-    def _get_full_name(self, aaa_code: str, a_code: str, residue_index: int, consensus: str | None) -> str:
-        """Generate full name based on aa_short setting and consensus label."""
+
+    def _get_full_name(
+        self, aaa_code: str, a_code: str, residue_index: int, consensus: Optional[str]
+    ) -> str:
+        """
+        Generate full name based on aa_short setting and consensus label.
+
+        Parameters:
+        -----------
+        aaa_code : str
+            Three-letter amino acid code
+        a_code : str
+            One-letter amino acid code
+        residue_index : int
+            Residue index from topology
+        consensus : Optional[str]
+            Consensus label from nomenclature system
+
+        Returns:
+        --------
+        str
+            Full residue name with optional consensus label
+        """
         base_code = a_code if self.aa_short else aaa_code
         base_name = f"{base_code}{residue_index}"
-        
+
         if consensus is not None:
             return f"{base_name}x{consensus}"
         return base_name
 
     def _validate_and_extract_range(
         self, fragment_config: dict, fragment_name: str
-    ) -> tuple:
-        """Validate range tuple and extract start/end indices."""
+    ) -> Tuple[int, int]:
+        """
+        Validate range tuple and extract start/end indices.
+
+        Parameters:
+        -----------
+        fragment_config : dict
+            Fragment configuration dictionary
+        fragment_name : str
+            Fragment name for error messages
+
+        Returns:
+        --------
+        Tuple[int, int]
+            Tuple of (start_idx, end_idx) for the fragment range
+
+        Raises:
+        -------
+        ValueError
+            If range is not a tuple
+        """
         range_tuple = fragment_config["range"]
         if not isinstance(range_tuple, tuple):
             raise ValueError(f"Invalid range type for fragment '{fragment_name}'")
         return range_tuple
 
     def _get_fragment_labeler(self, fragment_name: str):
-        """Get labeler for fragment, ensuring it exists."""
+        """
+        Get labeler for fragment, ensuring it exists.
+
+        Parameters:
+        -----------
+        fragment_name : str
+            Name of the fragment to get labeler for
+
+        Returns:
+        --------
+        object
+            mdciao labeler instance for the fragment
+
+        Raises:
+        -------
+        ValueError
+            If no labeler is configured for the fragment
+        """
         if fragment_name not in self.labelers:
             raise ValueError(f"No labeler configured for fragment: {fragment_name}")
         return self.labelers[fragment_name]

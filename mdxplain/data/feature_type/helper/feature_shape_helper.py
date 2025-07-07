@@ -52,6 +52,16 @@ class FeatureShapeHelper:
         --------
         bool
             True if array is memory-mapped
+
+        Examples:
+        ---------
+        >>> array = np.memmap("array.npy", mode="w+", shape=(100, 100))
+        >>> FeatureShapeHelper.is_memmap(array)
+        True
+
+        >>> array = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+        >>> FeatureShapeHelper.is_memmap(array)
+        False
         """
         return hasattr(array, "filename") and array.filename is not None
 
@@ -75,6 +85,25 @@ class FeatureShapeHelper:
         --------
         np.ndarray
             Condensed format array (NxP)
+
+        Examples:
+        ---------
+        >>> array = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+        >>> FeatureShapeHelper.squareform_to_condensed(array)
+        array([1, 2, 3, 4, 5, 6, 7, 8, 9])
+
+        >>> array = np.memmap("array.npy", mode="w+", shape=(100, 100))
+        >>> FeatureShapeHelper.squareform_to_condensed(array)
+        array([1, 2, 3, 4, 5, 6, 7, 8, 9])
+
+        >>> array = np.memmap("array.npy", mode="w+", shape=(100, 100))
+        >>> FeatureShapeHelper.squareform_to_condensed(array, chunk_size=10)
+        array([1, 2, 3, 4, 5, 6, 7, 8, 9])
+
+        Raises:
+        -------
+        ValueError
+            If square_array is not 3D
         """
         i_indices, j_indices = np.triu_indices(square_array.shape[-1], k=k)
 
@@ -89,7 +118,27 @@ class FeatureShapeHelper:
     def _convert_3d_square_to_condensed(
         square_array, i_indices, j_indices, output_path, chunk_size
     ):
-        """Convert 3D square array to condensed format."""
+        """
+        Convert 3D square array to condensed format.
+
+        Parameters:
+        -----------
+        square_array : np.ndarray
+            Square format array (NxMxM)
+        i_indices : np.ndarray
+            Indices of the first dimension of the square array
+        j_indices : np.ndarray
+            Indices of the second dimension of the square array
+        output_path : str, optional
+            Path for memory-mapped output
+        chunk_size : int, optional
+            Chunk size for processing
+
+        Returns:
+        --------
+        np.ndarray
+            Condensed format array (NxP)
+        """
         n_frames = square_array.shape[0]
         n_contacts = len(i_indices)
 
@@ -112,7 +161,25 @@ class FeatureShapeHelper:
 
     @staticmethod
     def _create_condensed_output_array(output_path, dtype, n_frames, n_contacts):
-        """Create output array for condensed format."""
+        """
+        Create output array for condensed format.
+
+        Parameters:
+        -----------
+        output_path : str, optional
+            Path for memory-mapped output
+        dtype : dtype
+            Data type of the output array
+        n_frames : int
+            Number of frames in the input array
+        n_contacts : int
+            Number of contacts in the input array
+
+        Returns:
+        --------
+        np.ndarray
+            Output array for condensed format
+        """
         if output_path is not None:
             return np.memmap(
                 output_path,
@@ -127,7 +194,28 @@ class FeatureShapeHelper:
     def _fill_condensed_chunked(
         square_array, result, i_indices, j_indices, chunk_size, n_frames
     ):
-        """Fill condensed array using chunked processing."""
+        """
+        Fill condensed array using chunked processing.
+
+        Parameters:
+        -----------
+        square_array : np.ndarray
+            Square format array (NxMxM)
+        result : np.ndarray
+            Condensed format array (NxP)
+        i_indices : np.ndarray
+            Indices of the first dimension of the square array
+        j_indices : np.ndarray
+            Indices of the second dimension of the square array
+        chunk_size : int
+            Chunk size for processing
+        n_frames : int
+            Number of frames in the input array
+
+        Returns:
+        --------
+        None
+        """
         for i in range(0, n_frames, chunk_size):
             end_idx = min(i + chunk_size, n_frames)
             chunk = square_array[i:end_idx]
@@ -157,6 +245,11 @@ class FeatureShapeHelper:
         --------
         np.ndarray
             Square format array (NxMxM)
+
+        Raises:
+        -------
+        ValueError
+            If condensed_array is not 1D or 2D
         """
         array_dims = len(condensed_array.shape)
 
@@ -173,14 +266,48 @@ class FeatureShapeHelper:
 
     @staticmethod
     def _convert_1d_to_square(condensed_array, residue_pairs):
-        """Convert 1D condensed array to square format."""
+        """
+        Convert 1D condensed array to square format.
+
+        Parameters:
+        -----------
+        condensed_array : np.ndarray
+            Condensed format array (NxP)
+        residue_pairs : np.ndarray
+            Residue pair indices
+
+        Returns:
+        --------
+        np.ndarray
+            Square format array (NxMxM)
+        """
         return md.geometry.squareform(condensed_array.reshape(1, -1), residue_pairs)[0]
 
     @staticmethod
     def _convert_2d_to_square(
         condensed_array, residue_pairs, n_residues, chunk_size, output_path
     ):
-        """Convert 2D condensed array to square format."""
+        """
+        Convert 2D condensed array to square format.
+
+        Parameters:
+        -----------
+        condensed_array : np.ndarray
+            Condensed format array (NxP)
+        residue_pairs : np.ndarray
+            Residue pair indices
+        n_residues : int
+            Number of residues
+        chunk_size : int, optional
+            Chunk size for processing
+        output_path : str, optional
+            Path for memory-mapped output
+
+        Returns:
+        --------
+        np.ndarray
+            Square format array (NxMxM)
+        """
         use_chunked_processing = (
             FeatureShapeHelper.is_memmap(condensed_array) and chunk_size is not None
         )
@@ -196,7 +323,27 @@ class FeatureShapeHelper:
     def _convert_2d_chunked(
         condensed_array, residue_pairs, n_residues, chunk_size, output_path
     ):
-        """Convert 2D condensed array to square format using chunked processing."""
+        """
+        Convert 2D condensed array to square format using chunked processing.
+
+        Parameters:
+        -----------
+        condensed_array : np.ndarray
+            Condensed format array (NxP)
+        residue_pairs : np.ndarray
+            Residue pair indices
+        n_residues : int
+            Number of residues
+        chunk_size : int, optional
+            Chunk size for processing
+        output_path : str, optional
+            Path for memory-mapped output
+
+        Returns:
+        --------
+        np.ndarray
+            Square format array (NxMxM)
+        """
         n_frames = condensed_array.shape[0]
 
         if output_path is not None:

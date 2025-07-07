@@ -66,6 +66,13 @@ class CalculatorStatHelper:
         --------
         np.ndarray
             Element-wise differences between preprocessed arrays
+
+        Examples:
+        ---------
+        >>> array1 = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+        >>> array2 = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+        >>> CalculatorStatHelper.compute_differences(array1, array2)
+        array([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
         """
         if preprocessing_func is None:
 
@@ -98,6 +105,12 @@ class CalculatorStatHelper:
         --------
         np.ndarray
             Statistical values per feature (preserves spatial dimensions)
+
+        Examples:
+        ---------
+        >>> array = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+        >>> CalculatorStatHelper.compute_func_per_feature(array, np.mean)
+        array([3.0, 5.0, 7.0])
         """
         if chunk_size is None:
             # No chunking - process all features at once
@@ -145,6 +158,11 @@ class CalculatorStatHelper:
         --------
         np.ndarray
             Statistical values per frame
+
+        Examples:
+        ---------
+        >>> array = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+        >>> CalculatorStatHelper.compute_func_per_frame(array, np.mean)
         """
         if func is None:
             func = np.mean
@@ -156,7 +174,21 @@ class CalculatorStatHelper:
 
     @staticmethod
     def _compute_frames_direct(array, func):
-        """Compute function per frame without chunking."""
+        """
+        Compute function per frame without chunking.
+
+        Parameters:
+        -----------
+        array : np.ndarray
+            Feature array to process
+        func : callable, optional
+            Function to apply (default: np.mean)
+
+        Returns:
+        --------
+        np.ndarray
+            Statistical values per frame
+        """
         if len(array.shape) == 3:
             return func(array.reshape(array.shape[0], -1), axis=1)
         else:
@@ -164,7 +196,23 @@ class CalculatorStatHelper:
 
     @staticmethod
     def _compute_frames_chunked(array, func, chunk_size):
-        """Compute function per frame with chunking."""
+        """
+        Compute function per frame with chunking.
+
+        Parameters:
+        -----------
+        array : np.ndarray
+            Feature array to process
+        func : callable, optional
+            Function to apply (default: np.mean)
+        chunk_size : int, optional
+            Number of frames to process per chunk
+
+        Returns:
+        --------
+        np.ndarray
+            Statistical values per frame
+        """
         result_chunks = []
         for i in range(0, array.shape[0], chunk_size):
             end_idx = min(i + chunk_size, array.shape[0])
@@ -176,7 +224,25 @@ class CalculatorStatHelper:
 
     @staticmethod
     def _process_frame_chunk(array, func, start_idx, end_idx):
-        """Process a single frame chunk."""
+        """
+        Process a single frame chunk.
+
+        Parameters:
+        -----------
+        array : np.ndarray
+            Feature array to process
+        func : callable, optional
+            Function to apply (default: np.mean)
+        start_idx : int
+            Start index of the chunk
+        end_idx : int
+            End index of the chunk
+
+        Returns:
+        --------
+        np.ndarray
+            Statistical values per frame
+        """
         if len(array.shape) == 3:
             return func(
                 array[start_idx:end_idx].reshape(end_idx - start_idx, -1), axis=1
@@ -186,7 +252,21 @@ class CalculatorStatHelper:
 
     @staticmethod
     def _convert_2d_to_3d(array, chunk_size=None):
-        """Convert 2D condensed array to 3D squareform array."""
+        """
+        Convert 2D condensed array to 3D squareform array.
+
+        Parameters:
+        -----------
+        array : np.ndarray
+            Feature array to process
+        chunk_size : int, optional
+            Chunk size for processing
+
+        Returns:
+        --------
+        np.ndarray
+            Squareform array (NxMxM)
+        """
         n_pairs = array.shape[1]
         n_residues = int((1 + np.sqrt(1 + 8 * n_pairs)) / 2)
 
@@ -238,7 +318,25 @@ class CalculatorStatHelper:
 
     @staticmethod
     def _compute_columns_chunked(array, func, chunk_size, **func_kwargs):
-        """Compute function per column with chunking."""
+        """
+        Compute function per column with chunking.
+
+        Parameters:
+        -----------
+        array : np.ndarray
+            Feature array to process
+        func : callable, optional
+            Function to apply (default: np.mean)
+        chunk_size : int, optional
+            Number of columns to process per chunk
+        **func_kwargs : dict
+            Additional arguments for the function
+
+        Returns:
+        --------
+        np.ndarray
+            Statistical values per column
+        """
         result_chunks = []
         for i in range(0, array.shape[0], chunk_size):
             end_idx = min(i + chunk_size, array.shape[0])
@@ -249,7 +347,19 @@ class CalculatorStatHelper:
 
     @staticmethod
     def _combine_chunk_results(result_chunks):
-        """Combine results from chunked processing."""
+        """
+        Combine results from chunked processing.
+
+        Parameters:
+        -----------
+        result_chunks : list
+            List of chunk results
+
+        Returns:
+        --------
+        np.ndarray
+            Combined results
+        """
         if len(result_chunks[0].shape) == 1:
             return np.mean(result_chunks, axis=0)
         else:
@@ -393,7 +503,29 @@ class CalculatorStatHelper:
     def _process_chunk_transitions(
         chunk, threshold, window_size, mode, flat_result, start_idx
     ):
-        """Process transitions for a single chunk."""
+        """
+        Process transitions for a single chunk.
+
+        Parameters:
+        -----------
+        chunk : np.ndarray
+            Chunk of feature array
+        threshold : float
+            Transition threshold
+        window_size : int
+            Window or lag size
+        mode : str
+            Computation mode
+        flat_result : np.ndarray
+            Flattened result array
+        start_idx : int
+            Start index of the chunk
+
+        Returns:
+        --------
+        None
+            Modifies flat_result array in-place
+        """
         for j in range(chunk.shape[1]):
             if mode == "lagtime":
                 flat_result[start_idx + j] = (
@@ -410,13 +542,45 @@ class CalculatorStatHelper:
 
     @staticmethod
     def _compute_lagtime_transitions(data_column, threshold, window_size):
-        """Compute lagtime transitions for a single data column."""
+        """
+        Compute lagtime transitions for a single data column.
+
+        Parameters:
+        -----------
+        data_column : np.ndarray
+            Data column to process
+        threshold : float
+            Transition threshold
+        window_size : int
+            Window or lag size
+
+        Returns:
+        --------
+        int
+            Number of transitions
+        """
         diff = np.abs(data_column[:-window_size] - data_column[window_size:])
         return np.sum(diff >= threshold)
 
     @staticmethod
     def _compute_window_transitions(data_column, threshold, window_size):
-        """Compute window transitions for a single data column."""
+        """
+        Compute window transitions for a single data column.
+
+        Parameters:
+        -----------
+        data_column : np.ndarray
+            Data column to process
+        threshold : float
+            Transition threshold
+        window_size : int
+            Window or lag size
+
+        Returns:
+        --------
+        int
+            Number of transitions
+        """
         transitions = 0
         for k in range(len(data_column) - window_size + 1):
             window_data = data_column[k : k + window_size]

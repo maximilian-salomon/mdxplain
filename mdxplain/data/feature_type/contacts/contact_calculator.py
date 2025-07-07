@@ -63,6 +63,10 @@ class ContactCalculator(CalculatorBase):
         chunk_size : int, optional
             Number of frames to process per chunk
 
+        Returns:
+        --------
+        None
+
         Examples:
         ---------
         >>> # Basic initialization
@@ -155,6 +159,11 @@ class ContactCalculator(CalculatorBase):
         --------
         numpy.ndarray
             Computed metric values per contact pair
+
+        Raises:
+        -------
+        ValueError
+            If the metric is not supported
         """
         # Define simple metrics mapping
         simple_metrics = {
@@ -175,7 +184,27 @@ class ContactCalculator(CalculatorBase):
     def _compute_transitions_metric(
         self, contacts, threshold, window_size, transition_mode, lag_time
     ):
-        """Compute transitions metric based on specified mode and parameters."""
+        """
+        Compute transitions metric based on specified mode and parameters.
+
+        Parameters:
+        -----------
+        contacts : numpy.ndarray
+            Binary contact array
+        threshold : float
+            Threshold for transition detection
+        window_size : int
+            Window size for analysis
+        transition_mode : str, default='window'
+            Transition analysis mode ('window' or 'lagtime')
+        lag_time : int, default=1
+            Lag time for analysis
+
+        Returns:
+        --------
+        int
+            Number of transitions
+        """
         if transition_mode == "window":
             return self.analysis.compute_transitions_window(
                 contacts, threshold=threshold, window_size=window_size
@@ -194,7 +223,7 @@ class ContactCalculator(CalculatorBase):
         metric="frequency",
         threshold_min=None,
         threshold_max=None,
-        feature_names=None,
+        feature_metadata=None,
         output_path=None,
         transition_threshold=2.0,
         window_size=10,
@@ -221,8 +250,8 @@ class ContactCalculator(CalculatorBase):
             Threshold for detecting contact transitions (only for 'transitions' metric)
         window_size : int, default=10
             Window size for transition analysis
-        feature_names : list, optional
-            Contact pair names corresponding to data columns
+        feature_metadata : list, optional
+            Contact pair metadata corresponding to data columns
         output_path : str, optional
             Path for memory-mapped filtered output
         transition_mode : str, default='window'
@@ -233,7 +262,7 @@ class ContactCalculator(CalculatorBase):
         Returns:
         --------
         dict
-            Dictionary with keys: 'indices', 'values', 'dynamic_data', 'feature_names',
+            Dictionary with keys: 'indices', 'values', 'dynamic_data', 'feature_metadata',
             'metric_used', 'n_dynamic', 'total_pairs', 'threshold_min', 'threshold_max'
 
         Examples:
@@ -275,7 +304,7 @@ class ContactCalculator(CalculatorBase):
             metric_name=metric,
             threshold_min=threshold_min,
             threshold_max=threshold_max,
-            feature_names=feature_names,
+            feature_metadata=feature_metadata,
             use_memmap=self.use_memmap,
             output_path=output_path,
             chunk_size=self.chunk_size,

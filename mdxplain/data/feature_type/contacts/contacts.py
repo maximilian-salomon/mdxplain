@@ -75,6 +75,10 @@ class Contacts(FeatureTypeBase):
             Distance cutoff in Angstrom for contact determination. Pairs with
             distances <= cutoff are considered in contact (1), others not (0).
 
+        Returns:
+        --------
+        None
+
         Examples:
         ---------
         >>> # Default cutoff (4.5 Angstrom)
@@ -101,6 +105,10 @@ class Contacts(FeatureTypeBase):
             Directory path for storing cache files when using memory mapping
         chunk_size : int, optional
             Number of frames to process per chunk (None for automatic sizing)
+
+        Returns:
+        --------
+        None
 
         Examples:
         ---------
@@ -160,6 +168,10 @@ class Contacts(FeatureTypeBase):
         """
         Get list of feature type dependencies for contact calculations.
 
+        Parameters:
+        -----------
+        None
+
         Returns:
         --------
         List[str]
@@ -178,6 +190,10 @@ class Contacts(FeatureTypeBase):
         """
         Return unique string identifier for the contact feature type.
 
+        Parameters:
+        -----------
+        None
+
         Returns:
         --------
         str
@@ -193,6 +209,10 @@ class Contacts(FeatureTypeBase):
     def get_input(self):
         """
         Get the primary input feature type that contacts depend on.
+
+        Parameters:
+        -----------
+        None
 
         Returns:
         --------

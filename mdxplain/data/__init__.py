@@ -29,8 +29,8 @@ trajectory data, including feature extraction and data serialization capabilitie
 """
 
 from .entities.trajectory_data import TrajectoryData
-from .managers.feature_selector import FeatureSelector
 from .managers.feature_manager import FeatureManager
+from .managers.feature_selector import FeatureSelector
 from .managers.trajcetory_manager import TrajectoryManager
 
 __all__ = ["TrajectoryData", "TrajectoryManager", "FeatureManager", "FeatureSelector"]

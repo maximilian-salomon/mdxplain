@@ -71,6 +71,10 @@ class CalculatorBase(ABC):
             Directory path for storing cache files when using memory mapping
         chunk_size : int, optional
             Number of frames to process in each chunk (None for automatic sizing)
+
+        Returns:
+        --------
+        None
         """
         self.use_memmap = use_memmap
         self.cache_path = cache_path

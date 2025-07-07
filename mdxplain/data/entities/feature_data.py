@@ -52,6 +52,11 @@ class FeatureData:
         chunk_size : int, optional
             Chunk size for processing large datasets. Smaller chunks use less
             memory but may be slower. If None, uses automatic chunking.
+
+        Returns:
+        --------
+        None
+            Initializes feature data container
         """
         self.feature_type = feature_type
         self.use_memmap = use_memmap
@@ -89,10 +94,20 @@ class FeatureData:
         """
         Get current dataset (reduced if available, else original).
 
+        Parameters:
+        -----------
+        None
+
         Returns:
         --------
         numpy.ndarray
             Feature data array, shape (n_frames, n_features)
+
+        Examples:
+        ---------
+        >>> feature_data = traj.get_feature("distances")
+        >>> data = feature_data.get_data()
+        >>> print(f"Data shape: {data.shape}")
         """
         if self.reduced_data is not None:
             return self.reduced_data
@@ -102,11 +117,25 @@ class FeatureData:
         """
         Get current feature metadata (reduced if available, else original).
 
+        This method returns the metadata corresponding to the current
+        active dataset. If reduced data is available, it returns the
+        reduced metadata. Otherwise, it returns the original metadata.
+
+        Parameters:
+        -----------
+        None
+
         Returns:
         --------
         dict or None
             Feature metadata dictionary with 'is_pair' and 'features' keys,
             or None if not available
+
+        Examples:
+        ---------
+        >>> feature_data = traj.get_feature("distances")
+        >>> metadata = feature_data.get_feature_metadata()
+        >>> print(f"Number of features: {len(metadata['features'])}")
         """
         if self.reduced_feature_metadata is not None:
             return self.reduced_feature_metadata
@@ -115,6 +144,10 @@ class FeatureData:
     def get_feature_names(self, force_original=False):
         """
         Extract feature names from metadata for backward compatibility.
+
+        This method generates human-readable feature names from the
+        structured metadata. For pair-based features, it creates names
+        by joining the full names of the involved partners.
 
         Parameters:
         -----------
@@ -125,13 +158,22 @@ class FeatureData:
         --------
         list or None
             List of feature names extracted from metadata, or None if not available
+
+        Examples:
+        ---------
+        >>> feature_data = traj.get_feature("distances")
+        >>> names = feature_data.get_feature_names()
+        >>> print(f"First few feature names: {names[:3]}")
+        >>> # Output: ['ALA1-VAL2', 'ALA1-GLY3', 'VAL2-GLY3']
         """
-        metadata = self.feature_metadata if force_original else self.get_feature_metadata()
-        
+        metadata = (
+            self.feature_metadata if force_original else self.get_feature_metadata()
+        )
+
         if metadata is None:
             return None
-        
+
         return [
-            '-'.join(partner['full_name'] for partner in feature)
-            for feature in metadata.get('features', [])
+            "-".join(partner["full_name"] for partner in feature)
+            for feature in metadata.get("features", [])
         ]
