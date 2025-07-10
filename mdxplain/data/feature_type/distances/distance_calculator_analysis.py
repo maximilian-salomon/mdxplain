@@ -52,13 +52,15 @@ class DistanceCalculatorAnalysis:
         "compute_per_residue_range",
     }
 
-    def __init__(self, chunk_size=None):
+    def __init__(self, use_memmap=False, chunk_size=10000):
         """
         Initialize distance analysis with chunking configuration.
 
         Parameters:
         -----------
-        chunk_size : int, optional
+        use_memmap : bool, default=False
+            Whether to use memory mapping for large datasets
+        chunk_size : int, default=10000
             Number of frames to process per chunk for memory-mapped arrays
 
         Examples:
@@ -69,6 +71,7 @@ class DistanceCalculatorAnalysis:
         >>> # Custom chunk size
         >>> analysis = DistanceCalculatorAnalysis(chunk_size=1000)
         """
+        self.use_memmap = use_memmap
         self.chunk_size = chunk_size
 
     # === PAIR-BASED STATISTICS ===
@@ -87,7 +90,7 @@ class DistanceCalculatorAnalysis:
             Mean distance for each pair with shape (n_pairs,)
         """
         return CalculatorStatHelper.compute_func_per_feature(
-            distances, np.mean, self.chunk_size
+            distances, np.mean, self.chunk_size, self.use_memmap
         )
 
     def compute_std(self, distances):
@@ -105,7 +108,7 @@ class DistanceCalculatorAnalysis:
             Standard deviation for each pair with shape (n_pairs,)
         """
         return CalculatorStatHelper.compute_func_per_feature(
-            distances, np.std, self.chunk_size
+            distances, np.std, self.chunk_size, self.use_memmap
         )
 
     def compute_min(self, distances):
@@ -123,7 +126,7 @@ class DistanceCalculatorAnalysis:
             Minimum distance for each pair with shape (n_pairs,)
         """
         return CalculatorStatHelper.compute_func_per_feature(
-            distances, np.min, self.chunk_size
+            distances, np.min, self.chunk_size, self.use_memmap
         )
 
     def compute_max(self, distances):
@@ -141,7 +144,7 @@ class DistanceCalculatorAnalysis:
             Maximum distance for each pair with shape (n_pairs,)
         """
         return CalculatorStatHelper.compute_func_per_feature(
-            distances, np.max, self.chunk_size
+            distances, np.max, self.chunk_size, self.use_memmap
         )
 
     def compute_median(self, distances):
@@ -159,7 +162,7 @@ class DistanceCalculatorAnalysis:
             Median distance for each pair with shape (n_pairs,)
         """
         return CalculatorStatHelper.compute_func_per_feature(
-            distances, np.median, self.chunk_size
+            distances, np.median, self.chunk_size, self.use_memmap
         )
 
     def compute_variance(self, distances):
@@ -177,7 +180,7 @@ class DistanceCalculatorAnalysis:
             Variance for each pair with shape (n_pairs,)
         """
         return CalculatorStatHelper.compute_func_per_feature(
-            distances, np.var, self.chunk_size
+            distances, np.var, self.chunk_size, self.use_memmap
         )
 
     def compute_range(self, distances):
@@ -195,7 +198,7 @@ class DistanceCalculatorAnalysis:
             Range (max - min) for each pair with shape (n_pairs,)
         """
         return CalculatorStatHelper.compute_func_per_feature(
-            distances, np.ptp, self.chunk_size
+            distances, np.ptp, self.chunk_size, self.use_memmap
         )
 
     def compute_q25(self, distances):
@@ -213,7 +216,10 @@ class DistanceCalculatorAnalysis:
             25th percentile for each pair with shape (n_pairs,)
         """
         return CalculatorStatHelper.compute_func_per_feature(
-            distances, lambda x, axis: np.percentile(x, 25, axis=axis), self.chunk_size
+            distances,
+            lambda x, axis: np.percentile(x, 25, axis=axis),
+            self.chunk_size,
+            self.use_memmap,
         )
 
     def compute_q75(self, distances):
@@ -231,7 +237,10 @@ class DistanceCalculatorAnalysis:
             75th percentile for each pair with shape (n_pairs,)
         """
         return CalculatorStatHelper.compute_func_per_feature(
-            distances, lambda x, axis: np.percentile(x, 75, axis=axis), self.chunk_size
+            distances,
+            lambda x, axis: np.percentile(x, 75, axis=axis),
+            self.chunk_size,
+            self.use_memmap,
         )
 
     def compute_iqr(self, distances):
@@ -254,6 +263,7 @@ class DistanceCalculatorAnalysis:
                 np.percentile(x, 75, axis=axis) - np.percentile(x, 25, axis=axis)
             ),
             self.chunk_size,
+            self.use_memmap,
         )
 
     def compute_mad(self, distances):
@@ -280,6 +290,7 @@ class DistanceCalculatorAnalysis:
                 np.abs(x - np.median(x, axis=axis, keepdims=True)), axis=axis
             ),
             self.chunk_size,
+            self.use_memmap,
         )
 
     # === FRAME-BASED STATISTICS ===
@@ -298,7 +309,7 @@ class DistanceCalculatorAnalysis:
             Mean distance across all pairs for each frame with shape (n_frames,)
         """
         return CalculatorStatHelper.compute_func_per_frame(
-            distances, self.chunk_size, np.mean
+            distances, self.chunk_size, self.use_memmap, np.mean
         )
 
     def distances_per_frame_std(self, distances):
@@ -316,7 +327,7 @@ class DistanceCalculatorAnalysis:
             Standard deviation across all pairs for each frame with shape (n_frames,)
         """
         return CalculatorStatHelper.compute_func_per_frame(
-            distances, self.chunk_size, np.std
+            distances, self.chunk_size, self.use_memmap, np.std
         )
 
     def distances_per_frame_min(self, distances):
@@ -334,7 +345,7 @@ class DistanceCalculatorAnalysis:
             Minimum distance across all pairs for each frame with shape (n_frames,)
         """
         return CalculatorStatHelper.compute_func_per_frame(
-            distances, self.chunk_size, np.min
+            distances, self.chunk_size, self.use_memmap, np.min
         )
 
     def distances_per_frame_max(self, distances):
@@ -352,7 +363,7 @@ class DistanceCalculatorAnalysis:
             Maximum distance across all pairs for each frame with shape (n_frames,)
         """
         return CalculatorStatHelper.compute_func_per_frame(
-            distances, self.chunk_size, np.max
+            distances, self.chunk_size, self.use_memmap, np.max
         )
 
     def distances_per_frame_median(self, distances):
@@ -370,7 +381,7 @@ class DistanceCalculatorAnalysis:
             Median distance across all pairs for each frame with shape (n_frames,)
         """
         return CalculatorStatHelper.compute_func_per_frame(
-            distances, self.chunk_size, np.median
+            distances, self.chunk_size, self.use_memmap, np.median
         )
 
     def distances_per_frame_range(self, distances):
@@ -388,7 +399,7 @@ class DistanceCalculatorAnalysis:
             Range (max - min) across all pairs for each frame with shape (n_frames,)
         """
         return CalculatorStatHelper.compute_func_per_frame(
-            distances, self.chunk_size, np.ptp
+            distances, self.chunk_size, self.use_memmap, np.ptp
         )
 
     def distances_per_frame_sum(self, distances):
@@ -406,7 +417,7 @@ class DistanceCalculatorAnalysis:
             Sum of distances across all pairs for each frame with shape (n_frames,)
         """
         return CalculatorStatHelper.compute_func_per_frame(
-            distances, self.chunk_size, np.sum
+            distances, self.chunk_size, self.use_memmap, np.sum
         )
 
     # === PER-COLUMN ANALYSIS (auto-converts 2D to 3D) ===
@@ -426,7 +437,7 @@ class DistanceCalculatorAnalysis:
             Mean distance for each residue with shape (n_residues,)
         """
         return CalculatorStatHelper.compute_func_per_column(
-            distances, np.mean, self.chunk_size
+            distances, np.mean, self.chunk_size, self.use_memmap
         )
 
     def compute_per_residue_std(self, distances):
@@ -447,7 +458,7 @@ class DistanceCalculatorAnalysis:
             Standard deviation for each residue with shape (n_residues,)
         """
         return CalculatorStatHelper.compute_func_per_column(
-            distances, np.std, self.chunk_size
+            distances, np.std, self.chunk_size, self.use_memmap
         )
 
     def compute_per_residue_min(self, distances):
@@ -466,7 +477,7 @@ class DistanceCalculatorAnalysis:
             Minimum distance for each residue with shape (n_residues,)
         """
         return CalculatorStatHelper.compute_func_per_column(
-            distances, np.min, self.chunk_size
+            distances, np.min, self.chunk_size, self.use_memmap
         )
 
     def compute_per_residue_max(self, distances):
@@ -485,7 +496,7 @@ class DistanceCalculatorAnalysis:
             Maximum distance for each residue with shape (n_residues,)
         """
         return CalculatorStatHelper.compute_func_per_column(
-            distances, np.max, self.chunk_size
+            distances, np.max, self.chunk_size, self.use_memmap
         )
 
     def compute_per_residue_median(self, distances):
@@ -504,7 +515,7 @@ class DistanceCalculatorAnalysis:
             Median distance for each residue with shape (n_residues,)
         """
         return CalculatorStatHelper.compute_func_per_column(
-            distances, np.median, self.chunk_size
+            distances, np.median, self.chunk_size, self.use_memmap
         )
 
     def compute_per_residue_sum(self, distances):
@@ -523,7 +534,7 @@ class DistanceCalculatorAnalysis:
             Sum of distances for each residue with shape (n_residues,)
         """
         return CalculatorStatHelper.compute_func_per_column(
-            distances, np.sum, self.chunk_size
+            distances, np.sum, self.chunk_size, self.use_memmap
         )
 
     def compute_per_residue_variance(self, distances):
@@ -542,7 +553,7 @@ class DistanceCalculatorAnalysis:
             Variance for each residue with shape (n_residues,)
         """
         return CalculatorStatHelper.compute_func_per_column(
-            distances, np.var, self.chunk_size
+            distances, np.var, self.chunk_size, self.use_memmap
         )
 
     def compute_per_residue_range(self, distances):
@@ -561,7 +572,7 @@ class DistanceCalculatorAnalysis:
             Range (max - min) for each residue with shape (n_residues,)
         """
         return CalculatorStatHelper.compute_func_per_column(
-            distances, np.ptp, self.chunk_size
+            distances, np.ptp, self.chunk_size, self.use_memmap
         )
 
     # === TRANSITION ANALYSIS ===
@@ -584,7 +595,7 @@ class DistanceCalculatorAnalysis:
             Transition counts for each pair with shape (n_pairs,)
         """
         return CalculatorStatHelper.compute_transitions_within_lagtime(
-            distances, threshold, lag_time, self.chunk_size
+            distances, threshold, lag_time, self.chunk_size, self.use_memmap
         )
 
     def compute_transitions_window(self, distances, threshold=2.0, window_size=10):
@@ -606,7 +617,7 @@ class DistanceCalculatorAnalysis:
             Transition counts for each pair with shape (n_pairs,)
         """
         return CalculatorStatHelper.compute_transitions_within_window(
-            distances, threshold, window_size, self.chunk_size
+            distances, threshold, window_size, self.chunk_size, self.use_memmap
         )
 
     def compute_stability(
@@ -632,7 +643,7 @@ class DistanceCalculatorAnalysis:
             Stability scores for each pair with shape (n_pairs,)
         """
         return CalculatorStatHelper.compute_stability(
-            distances, threshold, window_size, self.chunk_size, mode
+            distances, threshold, window_size, self.chunk_size, self.use_memmap, mode
         )
 
     # === COMPARISON METHODS ===
@@ -655,5 +666,5 @@ class DistanceCalculatorAnalysis:
             Difference values with shape (n_frames, n_pairs)
         """
         return CalculatorStatHelper.compute_differences(
-            distances1, distances2, self.chunk_size, preprocessing_func
+            distances1, distances2, self.chunk_size, self.use_memmap, preprocessing_func
         )

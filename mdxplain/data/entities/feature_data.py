@@ -25,7 +25,7 @@ Container for feature data (distances, contacts) with associated calculator.
 Stores feature data and provides bound analysis methods from calculators.
 """
 
-import os
+from ...utils.data_utils import DataUtils
 
 
 class FeatureData:
@@ -36,7 +36,7 @@ class FeatureData:
     """
 
     def __init__(
-        self, feature_type, use_memmap=False, cache_path=None, chunk_size=None
+        self, feature_type, use_memmap=False, cache_path="./cache", chunk_size=10000
     ):
         """
         Initialize feature data container.
@@ -64,12 +64,11 @@ class FeatureData:
 
         # Handle cache path
         if use_memmap:
-            if cache_path is None:
-                os.makedirs("./cache", exist_ok=True)
-                cache_path = f"./cache/{feature_type}.dat"
-            self.cache_path = cache_path
-            self.reduced_cache_path = (
-                f"{os.path.splitext(self.cache_path)[0]}_reduced.dat"
+            self.cache_path = DataUtils.get_cache_file_path(
+                f"{str(feature_type)}.dat", cache_path
+            )
+            self.reduced_cache_path = DataUtils.get_cache_file_path(
+                f"{str(feature_type)}_reduced.dat", cache_path
             )
         else:
             self.cache_path = None

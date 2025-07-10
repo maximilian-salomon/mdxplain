@@ -46,13 +46,15 @@ class ContactCalculatorAnalysis:
         "compute_per_residue_sum",
     }
 
-    def __init__(self, chunk_size=None):
+    def __init__(self, use_memmap=False, chunk_size=10000):
         """
         Initialize contact analysis with chunking configuration.
 
         Parameters:
         -----------
-        chunk_size : int, optional
+        use_memmap : bool, default=False
+            Whether to use memory mapping for large datasets
+        chunk_size : int, default=10000
             Number of frames to process per chunk for memory-mapped arrays
 
         Examples:
@@ -63,6 +65,7 @@ class ContactCalculatorAnalysis:
         >>> # Custom chunk size for large datasets
         >>> analysis = ContactCalculatorAnalysis(chunk_size=1000)
         """
+        self.use_memmap = use_memmap
         self.chunk_size = chunk_size
 
     # === PAIR-BASED STATISTICS ===
@@ -81,7 +84,7 @@ class ContactCalculatorAnalysis:
             Contact frequencies per pair (0.0 to 1.0)
         """
         return CalculatorStatHelper.compute_func_per_feature(
-            contacts, np.mean, self.chunk_size
+            contacts, np.mean, self.chunk_size, self.use_memmap
         )
 
     # === FRAME-BASED STATISTICS ===
@@ -100,7 +103,7 @@ class ContactCalculatorAnalysis:
             Total contact count per frame
         """
         return CalculatorStatHelper.compute_func_per_frame(
-            contacts, self.chunk_size, np.sum
+            contacts, self.chunk_size, self.use_memmap, np.sum
         )
 
     def contacts_per_frame_percentage(self, contacts):
@@ -118,7 +121,7 @@ class ContactCalculatorAnalysis:
             Fraction of pairs in contact per frame (0.0 to 1.0)
         """
         return CalculatorStatHelper.compute_func_per_frame(
-            contacts, self.chunk_size, np.mean
+            contacts, self.chunk_size, self.use_memmap, np.mean
         )
 
     # === PER-COLUMN ANALYSIS (auto-converts 2D to 3D) ===
@@ -138,7 +141,7 @@ class ContactCalculatorAnalysis:
             Mean contact frequency per residue
         """
         return CalculatorStatHelper.compute_func_per_column(
-            contacts, np.mean, self.chunk_size
+            contacts, np.mean, self.chunk_size, self.use_memmap
         )
 
     def compute_per_residue_std(self, contacts):
@@ -157,7 +160,7 @@ class ContactCalculatorAnalysis:
             Standard deviation of contacts per residue
         """
         return CalculatorStatHelper.compute_func_per_column(
-            contacts, np.std, self.chunk_size
+            contacts, np.std, self.chunk_size, self.use_memmap
         )
 
     def compute_per_residue_sum(self, contacts):
@@ -176,7 +179,7 @@ class ContactCalculatorAnalysis:
             Total contact count per residue
         """
         return CalculatorStatHelper.compute_func_per_column(
-            contacts, np.sum, self.chunk_size
+            contacts, np.sum, self.chunk_size, self.use_memmap
         )
 
     # === TRANSITION ANALYSIS ===
@@ -199,7 +202,7 @@ class ContactCalculatorAnalysis:
             Number of transitions per contact pair
         """
         return CalculatorStatHelper.compute_transitions_within_lagtime(
-            contacts, threshold, lag_time, self.chunk_size
+            contacts, threshold, lag_time, self.chunk_size, self.use_memmap
         )
 
     def compute_transitions_window(self, contacts, threshold=1, window_size=10):
@@ -221,7 +224,7 @@ class ContactCalculatorAnalysis:
             Number of transitions per contact pair
         """
         return CalculatorStatHelper.compute_transitions_within_window(
-            contacts, threshold, window_size, self.chunk_size
+            contacts, threshold, window_size, self.chunk_size, self.use_memmap
         )
 
     def compute_stability(self, contacts, threshold=1, window_size=1):
@@ -243,7 +246,7 @@ class ContactCalculatorAnalysis:
             Stability values per contact pair (0=unstable, 1=stable)
         """
         return CalculatorStatHelper.compute_stability(
-            contacts, threshold, window_size, self.chunk_size
+            contacts, threshold, window_size, self.chunk_size, self.use_memmap
         )
 
     # === COMPARISON METHODS ===
@@ -266,5 +269,5 @@ class ContactCalculatorAnalysis:
             Element-wise differences between preprocessed contact arrays
         """
         return CalculatorStatHelper.compute_differences(
-            contacts1, contacts2, self.chunk_size, preprocessing_func
+            contacts1, contacts2, self.chunk_size, self.use_memmap, preprocessing_func
         )

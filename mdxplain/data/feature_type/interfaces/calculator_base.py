@@ -57,7 +57,7 @@ class CalculatorBase(ABC):
     def __init__(
         self,
         use_memmap: bool = False,
-        cache_path: Optional[str] = None,
+        cache_path: Optional[str] = "./cache",
         chunk_size: Optional[int] = None,
     ):
         """

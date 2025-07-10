@@ -122,7 +122,7 @@ class FeatureTypeBase(ABC, metaclass=FeatureTypeMeta):
         pass
 
     @abstractmethod
-    def init_calculator(self, use_memmap=False, cache_path=None, chunk_size=None):
+    def init_calculator(self, use_memmap=False, cache_path="./cache", chunk_size=10000):
         """
         Initialize the calculator instance for this feature type.
 

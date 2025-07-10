@@ -56,7 +56,7 @@ class DistanceCalculator(CalculatorBase):
     >>> distances, pairs = calculator.compute(trajectories)
     """
 
-    def __init__(self, use_memmap=False, cache_path=None, chunk_size=None):
+    def __init__(self, use_memmap=False, cache_path="./cache", chunk_size=10000):
         """
         Initialize distance calculator with configuration parameters.
 
@@ -86,7 +86,9 @@ class DistanceCalculator(CalculatorBase):
         self.pairs = None  # Will be computed from reference trajectory
         self.n_pairs = None  # Will be set after pairs are generated
 
-        self.analysis = DistanceCalculatorAnalysis(chunk_size=self.chunk_size)
+        self.analysis = DistanceCalculatorAnalysis(
+            use_memmap=self.use_memmap, chunk_size=self.chunk_size
+        )
 
     # ===== MAIN COMPUTATION METHOD =====
 
@@ -407,7 +409,7 @@ class DistanceCalculator(CalculatorBase):
         --------
         None
         """
-        if FeatureShapeHelper.is_memmap(distances) and self.chunk_size is not None:
+        if FeatureShapeHelper.is_memmap(distances) or self.use_memmap:
             for i in range(0, total_frames, self.chunk_size):
                 end_idx = min(i + self.chunk_size, total_frames)
                 distances[i:end_idx] *= 10

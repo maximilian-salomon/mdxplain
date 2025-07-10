@@ -1,7 +1,4 @@
-# MDCatAFlow - A Molecular Dynamics Catalysis Analysis Workflow Tool
-# Data loading utilities for MD analysis
-#
-# Contains trajectory loaders and data import utilities.
+# mdxplain - A Python toolkit for molecular dynamics trajectory analysis
 #
 # Author: Maximilian Salomon
 # Created with assistance from Claude-4-Sonnet and Cursor AI.
@@ -22,15 +19,18 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Data handling and trajectory management for mdxplain package.
+Decomposition module for dimensionality reduction of molecular dynamics data.
 
-This module provides classes for loading, managing, and processing molecular dynamics
-trajectory data, including feature extraction and data serialization capabilities.
+This module provides tools for performing dimensionality reduction on feature
+matrices from molecular dynamics trajectories.
 """
 
+from .decomposition_type import PCA, ContactKernelPCA, KernelPCA
+from .managers.decomposition_manager import DecompositionManager
 
-from .managers.feature_manager import FeatureManager
-from .managers.feature_selector import FeatureSelector
-from .managers.trajcetory_manager import TrajectoryManager
-
-__all__ = ["TrajectoryManager", "FeatureManager", "FeatureSelector"]
+__all__ = [
+    "PCA",
+    "KernelPCA",
+    "ContactKernelPCA",
+    "DecompositionManager",
+]

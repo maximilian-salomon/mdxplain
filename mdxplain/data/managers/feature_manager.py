@@ -34,7 +34,7 @@ from ..entities.feature_data import FeatureData
 class FeatureManager:
     """Manager for feature data objects."""
 
-    def __init__(self, use_memmap=False, chunk_size=None, cache_dir=None):
+    def __init__(self, use_memmap=False, chunk_size=10000, cache_dir="./cache"):
         """
         Initialize feature manager.
 
@@ -44,7 +44,7 @@ class FeatureManager:
             Whether to use memory mapping for feature data
         chunk_size : int, optional
             Processing chunk size
-        cache_dir : str, optional
+        cache_dir : str, default="./cache"
             Cache path for feature data
 
         Returns:
@@ -54,10 +54,7 @@ class FeatureManager:
         """
         self.use_memmap = use_memmap
         self.chunk_size = chunk_size
-
         self.cache_dir = cache_dir
-        if use_memmap and cache_dir is None:
-            self.cache_dir = "./cache"
 
     def reset_features(self, traj_data):
         """
@@ -333,7 +330,9 @@ class FeatureManager:
         if feature_type.get_input() is None and traj_data.trajectories is None:
             raise ValueError("Trajectories must be loaded before computing features.")
 
-    def _execute_computation(self, traj_data, feature_data, feature_type) -> tuple[Any, dict]:
+    def _execute_computation(
+        self, traj_data, feature_data, feature_type
+    ) -> tuple[Any, dict]:
         """
         Execute the actual feature computation.
 
