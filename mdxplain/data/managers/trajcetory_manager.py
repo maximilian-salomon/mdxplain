@@ -22,6 +22,7 @@
 
 from typing import Any, List, Tuple
 
+from ..entities.trajectory_data import TrajectoryData
 from ..helper.nomenclature import Nomenclature
 from ..helper.trajectory_loader import TrajectoryLoader
 
@@ -59,6 +60,44 @@ class TrajectoryManager:
         self.default_stride = stride
         self.default_concat = concat
         self.default_selection = selection
+
+    def create_trajectory_data(self):
+        """
+        Create a new TrajectoryData instance with manager's default configuration.
+
+        This is a convenience factory method that creates TrajectoryData objects
+        with consistent parameter settings that can be used with this manager.
+
+        Parameters:
+        -----------
+        use_memmap : bool, default=False
+            Whether to use memory mapping for large datasets
+        cache_dir : str, default="./cache"
+            Directory for cache files when using memory mapping
+        chunk_size : int, default=10000
+            Chunk size for memory-efficient processing
+
+        Returns:
+        --------
+        TrajectoryData
+            New TrajectoryData instance ready for trajectory loading
+
+        Examples:
+        ---------
+        >>> manager = TrajectoryManager()
+        >>> traj_data = manager.create_trajectory_data()
+        >>> manager.load_trajectories(traj_data, '../data')
+
+        >>> # For large datasets with memory mapping
+        >>> traj_data = manager.create_trajectory_data(
+        ...     use_memmap=True, chunk_size=5000
+        ... )
+        """
+        return TrajectoryData(
+            use_memmap=self.use_memmap,
+            cache_dir=self.cache_dir,
+            chunk_size=self.chunk_size,
+        )
 
     def load_trajectories(
         self,
@@ -296,7 +335,9 @@ class TrajectoryManager:
             stride = self.default_stride
         return selection, concat, stride
 
-    def _load_new_trajectories(self, data_input: Any, concat: bool, stride: int) -> Tuple[List[Any], List[str]]:
+    def _load_new_trajectories(
+        self, data_input: Any, concat: bool, stride: int
+    ) -> Tuple[List[Any], List[str]]:
         """
         Load new trajectories and return trajectories and names.
 

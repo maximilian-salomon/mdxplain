@@ -66,7 +66,7 @@ class FeatureShapeHelper:
         return hasattr(array, "filename") and array.filename is not None
 
     @staticmethod
-    def squareform_to_condensed(square_array, k=0, output_path=None, chunk_size=None):
+    def squareform_to_condensed(square_array, k=0, output_path=None, chunk_size=10000):
         """
         Convert square format to condensed format.
 
@@ -146,9 +146,7 @@ class FeatureShapeHelper:
             output_path, square_array.dtype, n_frames, n_contacts
         )
 
-        use_chunked_processing = (
-            FeatureShapeHelper.is_memmap(square_array) and chunk_size is not None
-        )
+        use_chunked_processing = FeatureShapeHelper.is_memmap(square_array)
 
         if use_chunked_processing:
             FeatureShapeHelper._fill_condensed_chunked(
@@ -223,7 +221,7 @@ class FeatureShapeHelper:
 
     @staticmethod
     def condensed_to_squareform(
-        condensed_array, residue_pairs, n_residues, chunk_size=None, output_path=None
+        condensed_array, residue_pairs, n_residues, chunk_size=10000, output_path=None
     ):
         """
         Convert condensed format to square format using MDTraj.
@@ -308,9 +306,7 @@ class FeatureShapeHelper:
         np.ndarray
             Square format array (NxMxM)
         """
-        use_chunked_processing = (
-            FeatureShapeHelper.is_memmap(condensed_array) and chunk_size is not None
-        )
+        use_chunked_processing = FeatureShapeHelper.is_memmap(condensed_array)
 
         if use_chunked_processing:
             return FeatureShapeHelper._convert_2d_chunked(

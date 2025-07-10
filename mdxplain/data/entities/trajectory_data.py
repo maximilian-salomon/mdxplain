@@ -31,6 +31,7 @@ from typing import Optional
 import numpy as np
 
 from ...utils.data_utils import DataUtils
+from ..feature_type.helper.feature_shape_helper import FeatureShapeHelper
 
 
 class TrajectoryData:
@@ -77,7 +78,7 @@ class TrajectoryData:
         Dictionary storing FeatureData instances by feature type string
     """
 
-    def __init__(self, use_memmap=False, cache_dir=None):
+    def __init__(self, use_memmap=False, cache_dir="./cache", chunk_size=10000):
         """
         Initialize trajectory data container.
 
@@ -87,9 +88,10 @@ class TrajectoryData:
             Whether to use memory mapping for large datasets. When True,
             large arrays are stored on disk and accessed via memory mapping
             to reduce RAM usage.
-        cache_dir : str, optional
-            Directory for cache files when using memory mapping. If None
-            and use_memmap is True, defaults to './cache'.
+        cache_dir : str, default="./cache"
+            Directory for cache files when using memory mapping.
+        chunk_size : int, default=10000
+            Chunk size for memory-efficient processing of large datasets.
 
         Returns:
         --------
@@ -106,15 +108,14 @@ class TrajectoryData:
         """
         self.use_memmap = use_memmap
         self.cache_dir = cache_dir
-
-        if use_memmap and cache_dir is None:
-            self.cache_dir = "./cache"
+        self.chunk_size = chunk_size
 
         self.trajectories = []
         self.trajectory_names = []  # List of trajectory names
         self.features = {}  # Dictionary to store FeatureData instances by feature type
         self.res_label_data = None  # res_labels for trajectory residues
         self.selected_data = {}  # selected data for trajectory residues
+        self.decomposition_data = {}  # Dictionary to store DecompositionData instances
 
     def get_feature(self, feature_type):
         """
@@ -500,6 +501,55 @@ class TrajectoryData:
 
         return reduced_indices, original_indices
 
+    def _create_memmap_selection(
+        self, data, indices: list, name: str, data_type: str, feature_type: str
+    ):
+        """
+        Create memory-efficient selection using chunk-wise processing.
+
+        This method avoids loading entire columns into RAM by processing
+        data in chunks and writing directly to a memmap output file.
+
+        Parameters:
+        -----------
+        data : numpy.ndarray or memmap
+            Source data to select from
+        indices : list
+            Column indices to select
+        name : str
+            Selection name for cache file naming
+        data_type : str
+            Type of data (for cache naming)
+        feature_type : str
+            Feature type name (for cache naming)
+
+        Returns:
+        --------
+        list
+            List containing the memmap-selected data matrix
+        """
+        n_rows, _ = data.shape
+        n_cols = len(indices)
+
+        cache_path = DataUtils.get_cache_file_path(
+            f"{name}_{feature_type}_{data_type}_selection.dat", self.cache_dir
+        )
+
+        result = np.memmap(
+            cache_path,
+            dtype=data.dtype,
+            mode="w+",
+            shape=(n_rows, n_cols),
+        )
+
+        chunk_size = self.chunk_size
+
+        for row_start in range(0, n_rows, chunk_size):
+            row_end = min(row_start + chunk_size, n_rows)
+            result[row_start:row_end, :] = data[row_start:row_end, indices]
+
+        return [result]
+
     def _get_data_matrices(
         self,
         feature_data,
@@ -547,6 +597,10 @@ class TrajectoryData:
                 f"in selection '{name}'."
             )
 
+        if self.use_memmap:
+            return self._create_memmap_selection(
+                data, indices, name, data_type, feature_type
+            )
         return [data[:, indices]]
 
     def _merge_matrices(self, matrices: list, name: str) -> np.ndarray:
@@ -573,7 +627,11 @@ class TrajectoryData:
         if not matrices:
             raise ValueError(f"No valid data found for selection '{name}'.")
 
-        return np.hstack(matrices)
+        # Check if any matrix is memmap and preserve memmap nature
+        if self.use_memmap:
+            return self._memmap_hstack(matrices, name)
+        else:
+            return np.hstack(matrices)
 
     def get_selected_feature_metadata(self, name):
         """
@@ -799,3 +857,140 @@ class TrajectoryData:
             raise ValueError(f"No valid metadata found for selection '{name}'.")
 
         return np.array(selected_metadata)
+
+    def get_decomposition(self, selection_name, decomposition_type):
+        """
+        Retrieve a computed decomposition by selection and type.
+
+        This method returns the DecompositionData instance for a previously
+        computed decomposition. The returned object provides access to the
+        decomposed data, metadata, hyperparameters, and transformation details.
+
+        Parameters:
+        -----------
+        selection_name : str
+            Name of the feature selection that was decomposed
+        decomposition_type : DecompositionTypeBase, class, or str
+            Decomposition type instance, class, or string (e.g., PCA(), PCA, "pca")
+
+        Returns:
+        --------
+        DecompositionData
+            The DecompositionData instance containing decomposed data and metadata
+
+        Raises:
+        -------
+        ValueError
+            If the requested decomposition has not been computed yet
+
+        Examples:
+        ---------
+        >>> # Get PCA decomposition - all variants work:
+        >>> from mdxplain.decomposition import decomposition_type
+        >>> pca_data = traj.get_decomposition("feature_sel", decomposition_type.PCA())
+        >>> pca_data = traj.get_decomposition("feature_sel", decomposition_type.PCA)
+        >>> pca_data = traj.get_decomposition("feature_sel", "pca")
+        >>> transformed = pca_data.get_data()
+        >>> metadata = pca_data.get_metadata()
+
+        >>> # Get KernelPCA decomposition
+        >>> kpca_data = traj.get_decomposition("contact_sel", decomposition_type.KernelPCA)
+        >>> components = kpca_data.get_components()
+        """
+        decomposition_key = DataUtils.get_type_key(decomposition_type)
+        full_key = f"{selection_name}_{decomposition_key}"
+
+        if full_key not in self.decomposition_data:
+            raise ValueError(
+                f"Decomposition '{decomposition_key}' for selection '{selection_name}' not found."
+            )
+
+        return self.decomposition_data[full_key]
+
+    def list_decompositions(self):
+        """
+        List all computed decompositions.
+
+        Returns a list of all computed decompositions with their selection
+        names and decomposition types for easy overview.
+
+        Parameters:
+        -----------
+        None
+
+        Returns:
+        --------
+        list
+            List of dictionaries containing decomposition information
+
+        Examples:
+        ---------
+        >>> decompositions = traj.list_decompositions()
+        >>> for decomp in decompositions:
+        ...     print(f"Selection: {decomp['selection']}, Type: {decomp['type']}")
+        """
+        decomposition_list = []
+
+        for full_key in self.decomposition_data.keys():
+            if "_" in full_key:
+                selection_name, decomposition_type = full_key.rsplit("_", 1)
+                decomposition_list.append(
+                    {
+                        "selection": selection_name,
+                        "type": decomposition_type,
+                        "full_key": full_key,
+                    }
+                )
+
+        return decomposition_list
+
+    def _memmap_hstack(self, matrices: list, name: str) -> np.ndarray:
+        """
+        Horizontally stack matrices while preserving memmap nature.
+
+        Parameters:
+        -----------
+        matrices : list
+            List of matrices to stack (all are memmap)
+        name : str
+            Name of the selection for cache file naming
+
+        Returns:
+        --------
+        numpy.ndarray
+            Stacked matrix stored as memmap
+        """
+        # Calculate total shape
+        total_samples = matrices[0].shape[0]
+        total_features = sum(matrix.shape[1] for matrix in matrices)
+
+        # Determine the appropriate dtype for mixed data types
+        dtypes = [matrix.dtype for matrix in matrices]
+        result_dtype = np.result_type(*dtypes)
+
+        # Create cache path for the stacked matrix
+        cache_path = DataUtils.get_cache_file_path(f"{name}.dat", self.cache_dir)
+
+        # Create memmap for the result
+        result = np.memmap(
+            cache_path,
+            dtype=result_dtype,
+            mode="w+",
+            shape=(total_samples, total_features),
+        )
+
+        # Fill the result matrix column by column, chunk by chunk
+        col_start = 0
+        for matrix in matrices:
+            col_end = col_start + matrix.shape[1]
+
+            # Process in chunks to avoid loading entire matrix into memory
+            for row_start in range(0, total_samples, self.chunk_size):
+                row_end = min(row_start + self.chunk_size, total_samples)
+                result[row_start:row_end, col_start:col_end] = matrix[
+                    row_start:row_end, :
+                ]
+
+            col_start = col_end
+
+        return result

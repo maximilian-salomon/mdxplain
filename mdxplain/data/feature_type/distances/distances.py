@@ -106,7 +106,7 @@ class Distances(FeatureTypeBase):
         self.ref = ref
         self.k = k
 
-    def init_calculator(self, use_memmap=False, cache_path=None, chunk_size=None):
+    def init_calculator(self, use_memmap=False, cache_path="./cache", chunk_size=10000):
         """
         Initialize the distance calculator with specified configuration.
 

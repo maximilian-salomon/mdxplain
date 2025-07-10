@@ -551,7 +551,10 @@ class Nomenclature:
         return cached_labels
 
     def _process_fragment_labels(
-        self, cached_labels: List[Optional[str]], fragment_name: str, fragment_config: dict
+        self,
+        cached_labels: List[Optional[str]],
+        fragment_name: str,
+        fragment_config: dict,
     ):
         """
         Process labels for a single fragment.
@@ -616,7 +619,11 @@ class Nomenclature:
                 )
 
     def _check_and_set_label(
-        self, cached_labels: List[Optional[str]], idx: int, new_label: str, fragment_name: str
+        self,
+        cached_labels: List[Optional[str]],
+        idx: int,
+        new_label: str,
+        fragment_name: str,
     ):
         """
         Check for overlap and set label if valid.

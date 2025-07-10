@@ -321,3 +321,81 @@ class DataUtils:
             True if alternative path is invalid
         """
         return target_path == original_path or not os.path.exists(target_path)
+
+    @staticmethod
+    def get_cache_file_path(cache_name, cache_path="./cache"):
+        """
+        Get cache file path from cache_path and cache_name.
+
+        Parameters:
+        -----------
+        cache_path : str or None
+            Base cache path (can be directory or full file path)
+        cache_name : str
+            Name for the cache file (e.g., 'pca.dat', 'kernel_pca.dat')
+
+        Returns:
+        --------
+        str
+            Full path to the cache file
+
+        Examples:
+        ---------
+        >>> # With directory cache_path
+        >>> path = DataUtils.get_cache_file_path("./cache", "pca.dat")
+        >>> print(path)  # "./cache/pca.dat"
+
+        >>> # With full file cache_path
+        >>> path = DataUtils.get_cache_file_path("./cache/my_data.dat", "pca.dat")
+        >>> print(path)  # "./cache/my_data.dat"
+
+        >>> # With None cache_path
+        >>> path = DataUtils.get_cache_file_path(None, "pca.dat")
+        >>> print(path)  # "./cache/pca.dat"
+        """
+        if cache_path:
+            # Check if cache_path is a directory or full file path
+            if cache_path.endswith(".dat") or "." in os.path.basename(cache_path):
+                # Full file path provided, use it directly
+                cache_dir = os.path.dirname(cache_path)
+                os.makedirs(cache_dir, exist_ok=True)
+                return cache_path
+            else:
+                # Directory path provided, append cache_name
+                os.makedirs(cache_path, exist_ok=True)
+                return os.path.join(cache_path, cache_name)
+
+    @staticmethod
+    def get_type_key(type_obj):
+        """
+        Get the type key from a type object.
+
+        This utility method handles conversion of various type formats
+        (instances, classes, strings) to their string identifier.
+        It is specially used for the conventions inside this software.
+
+        Parameters:
+        -----------
+        type_obj : str, class, or instance
+            Type object to get key for (e.g., decomposition type, feature type)
+
+        Returns:
+        --------
+        str
+            Type key string identifier
+
+        Examples:
+        ---------
+        >>> DataUtils.get_type_key("pca")
+        'pca'
+        >>> DataUtils.get_type_key(PCA())
+        'pca'
+        >>> DataUtils.get_type_key(PCA)
+        'pca'
+        """
+        if isinstance(type_obj, str):
+            return type_obj
+        elif hasattr(type_obj, "get_type_name"):
+            return type_obj.get_type_name()
+        else:
+            return str(type_obj)

@@ -44,7 +44,12 @@ class CalculatorStatHelper:
 
     @staticmethod
     def compute_differences(
-        array1, array2, chunk_size=None, preprocessing_func=None, **func_kwargs
+        array1,
+        array2,
+        chunk_size=10000,
+        use_memmap=False,
+        preprocessing_func=None,
+        **func_kwargs
     ):
         """
         Compute differences between two feature arrays with optional preprocessing.
@@ -57,6 +62,8 @@ class CalculatorStatHelper:
             Second feature array
         chunk_size : int, optional
             Chunk size for memory-mapped processing (over pairs, not frames)
+        use_memmap : bool, default=False
+            Whether output is for memory-mapped arrays (enables intelligent chunking)
         preprocessing_func : callable, optional
             Function to apply before computing differences (default: mean per pair)
         **func_kwargs : dict
@@ -78,7 +85,9 @@ class CalculatorStatHelper:
 
             def preprocessing_func(arr, **kw):
                 """Apply default preprocessing using mean per feature."""
-                return CalculatorStatHelper.compute_func_per_feature(arr, np.mean, **kw)
+                return CalculatorStatHelper.compute_func_per_feature(
+                    arr, np.mean, use_memmap=use_memmap, **kw
+                )
 
         # Apply preprocessing function to both arrays
         processed1 = preprocessing_func(array1, chunk_size=chunk_size, **func_kwargs)
@@ -86,7 +95,9 @@ class CalculatorStatHelper:
         return processed1 - processed2
 
     @staticmethod
-    def compute_func_per_feature(array, func, chunk_size=None, **func_kwargs):
+    def compute_func_per_feature(
+        array, func, chunk_size=10000, use_memmap=False, **func_kwargs
+    ):
         """
         Apply statistical function per feature across all frames (2D format).
 
@@ -98,6 +109,8 @@ class CalculatorStatHelper:
             NumPy function to apply (np.mean, np.std, np.min, np.max, etc.)
         chunk_size : int, optional
             Number of features to process per chunk
+        use_memmap : bool, default=False
+            Whether output is for memory-mapped arrays (enables intelligent chunking)
         **func_kwargs : dict
             Additional arguments for the function
 
@@ -112,7 +125,10 @@ class CalculatorStatHelper:
         >>> CalculatorStatHelper.compute_func_per_feature(array, np.mean)
         array([3.0, 5.0, 7.0])
         """
-        if chunk_size is None:
+        # Intelligent chunking decision: use chunking if use_memmap=True OR input data is memmap
+        should_use_chunking = use_memmap or FeatureShapeHelper.is_memmap(array)
+
+        if not should_use_chunking:
             # No chunking - process all features at once
             return func(array, axis=0, **func_kwargs)
 
@@ -141,7 +157,7 @@ class CalculatorStatHelper:
         return result.reshape(spatial_shape)
 
     @staticmethod
-    def compute_func_per_frame(array, chunk_size=None, func=None):
+    def compute_func_per_frame(array, chunk_size=10000, use_memmap=False, func=None):
         """
         Apply statistical function per frame across all pairs.
 
@@ -151,6 +167,8 @@ class CalculatorStatHelper:
             Feature array to process
         chunk_size : int, optional
             Number of frames to process per chunk
+        use_memmap : bool, default=False
+            Whether output is for memory-mapped arrays (enables intelligent chunking)
         func : callable, optional
             Function to apply (default: np.mean)
 
@@ -167,7 +185,10 @@ class CalculatorStatHelper:
         if func is None:
             func = np.mean
 
-        if chunk_size is None:
+        # Intelligent chunking decision: use chunking if use_memmap=True OR input data is memmap
+        should_use_chunking = use_memmap or FeatureShapeHelper.is_memmap(array)
+
+        if not should_use_chunking:
             return CalculatorStatHelper._compute_frames_direct(array, func)
         else:
             return CalculatorStatHelper._compute_frames_chunked(array, func, chunk_size)
@@ -251,7 +272,7 @@ class CalculatorStatHelper:
             return func(array[start_idx:end_idx], axis=1)
 
     @staticmethod
-    def _convert_2d_to_3d(array, chunk_size=None):
+    def _convert_2d_to_3d(array, chunk_size=10000):
         """
         Convert 2D condensed array to 3D squareform array.
 
@@ -280,7 +301,9 @@ class CalculatorStatHelper:
         )
 
     @staticmethod
-    def compute_func_per_column(array, func, chunk_size=None, **func_kwargs):
+    def compute_func_per_column(
+        array, func, chunk_size=10000, use_memmap=False, **func_kwargs
+    ):
         """
         Apply statistical function per column (3D format required, auto-converts 2D).
 
@@ -292,6 +315,8 @@ class CalculatorStatHelper:
             NumPy function to apply
         chunk_size : int, optional
             Chunk size for processing
+        use_memmap : bool, default=False
+            Whether output is for memory-mapped arrays (enables intelligent chunking)
         **func_kwargs : dict
             Additional arguments for the function
 
@@ -309,7 +334,10 @@ class CalculatorStatHelper:
                 "compute_func_per_column requires 3D arrays or convertible 2D arrays"
             )
 
-        if chunk_size is None:
+        # Intelligent chunking decision: use chunking if use_memmap=True OR input data is memmap
+        should_use_chunking = use_memmap or FeatureShapeHelper.is_memmap(array)
+
+        if not should_use_chunking:
             return func(array, axis=(0, 2), **func_kwargs)
 
         return CalculatorStatHelper._compute_columns_chunked(
@@ -367,7 +395,7 @@ class CalculatorStatHelper:
 
     @staticmethod
     def compute_transitions_within_lagtime(
-        array, threshold=1.0, lag_time=1, chunk_size=None
+        array, threshold=1.0, lag_time=1, chunk_size=10000, use_memmap=False
     ):
         """
         Count transitions using lag time analysis.
@@ -382,6 +410,8 @@ class CalculatorStatHelper:
             Number of frames to look ahead
         chunk_size : int, optional
             Chunk size for processing
+        use_memmap : bool, default=False
+            Whether output is for memory-mapped arrays (enables intelligent chunking)
 
         Returns:
         --------
@@ -389,12 +419,12 @@ class CalculatorStatHelper:
             Transition counts per pair
         """
         return CalculatorStatHelper._compute_transitions_unified(
-            array, threshold, lag_time, chunk_size, mode="lagtime"
+            array, threshold, lag_time, chunk_size, use_memmap, mode="lagtime"
         )
 
     @staticmethod
     def compute_transitions_within_window(
-        array, threshold=1.0, window_size=10, chunk_size=None
+        array, threshold=1.0, window_size=10, chunk_size=10000, use_memmap=False
     ):
         """
         Count transitions using sliding window analysis.
@@ -409,6 +439,8 @@ class CalculatorStatHelper:
             Size of sliding window
         chunk_size : int, optional
             Chunk size for processing
+        use_memmap : bool, default=False
+            Whether output is for memory-mapped arrays (enables intelligent chunking)
 
         Returns:
         --------
@@ -416,12 +448,12 @@ class CalculatorStatHelper:
             Transition counts per pair
         """
         return CalculatorStatHelper._compute_transitions_unified(
-            array, threshold, window_size, chunk_size, mode="window"
+            array, threshold, window_size, chunk_size, use_memmap, mode="window"
         )
 
     @staticmethod
     def _compute_transitions_unified(
-        array, threshold, window_size, chunk_size, mode="lagtime"
+        array, threshold, window_size, chunk_size, use_memmap=False, mode="lagtime"
     ):
         """
         Compute transitions using unified internal method.
@@ -436,6 +468,8 @@ class CalculatorStatHelper:
             Window or lag size
         chunk_size : int or None
             Chunk size for processing
+        use_memmap : bool, default=False
+            Whether output is for memory-mapped arrays (enables intelligent chunking)
         mode : str
             Computation mode ('lagtime' or 'window')
 
@@ -453,7 +487,10 @@ class CalculatorStatHelper:
 
         result = np.zeros(output_shape)
 
-        if chunk_size is not None:
+        # Intelligent chunking decision: use chunking if use_memmap=True OR input data is memmap
+        should_use_chunking = use_memmap or FeatureShapeHelper.is_memmap(array)
+
+        if should_use_chunking:
             CalculatorStatHelper._compute_transitions_chunks(
                 flat_array, threshold, window_size, chunk_size, mode, result
             )
@@ -631,7 +668,12 @@ class CalculatorStatHelper:
 
     @staticmethod
     def compute_stability(
-        array, threshold=2.0, window_size=1, chunk_size=None, mode="lagtime"
+        array,
+        threshold=2.0,
+        window_size=1,
+        chunk_size=10000,
+        use_memmap=False,
+        mode="lagtime",
     ):
         """
         Calculate stability (inverse of transition rate) per pair.
@@ -646,6 +688,8 @@ class CalculatorStatHelper:
             Window size for calculation
         chunk_size : int, optional
             Chunk size for processing
+        use_memmap : bool, default=False
+            Whether output is for memory-mapped arrays (enables intelligent chunking)
         mode : str, default='lagtime'
             Calculation mode ('lagtime' or 'window')
 
@@ -655,7 +699,7 @@ class CalculatorStatHelper:
             Stability values per pair (0=unstable, 1=stable)
         """
         transitions = CalculatorStatHelper._compute_transitions_unified(
-            array, threshold, window_size, chunk_size, mode
+            array, threshold, window_size, chunk_size, use_memmap, mode
         )
         max_possible_transitions = (
             array.shape[0] - window_size

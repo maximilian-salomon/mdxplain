@@ -42,7 +42,9 @@ class TrajectoryLoader:
     """
 
     @staticmethod
-    def load_trajectories(data_input: Union[List[Any], str], concat: bool = False, stride: int = 1) -> Dict[str, List[Any]]:
+    def load_trajectories(
+        data_input: Union[List[Any], str], concat: bool = False, stride: int = 1
+    ) -> Dict[str, List[Any]]:
         """
         Load trajectories from various input types.
 
@@ -73,7 +75,9 @@ class TrajectoryLoader:
         return {"trajectories": [], "names": []}
 
     @staticmethod
-    def _load_from_list(trajectory_list: List[Any], concat: bool) -> Dict[str, List[Any]]:
+    def _load_from_list(
+        trajectory_list: List[Any], concat: bool
+    ) -> Dict[str, List[Any]]:
         """
         Handle trajectory list input with optional concatenation.
 
@@ -107,7 +111,9 @@ class TrajectoryLoader:
         return {"trajectories": trajectory_list, "names": names}
 
     @staticmethod
-    def _load_from_directory(directory_path: str, concat: bool, stride: int) -> Dict[str, List[Any]]:
+    def _load_from_directory(
+        directory_path: str, concat: bool, stride: int
+    ) -> Dict[str, List[Any]]:
         """
         Load trajectories from directory (flat or nested structure).
 
@@ -155,7 +161,9 @@ class TrajectoryLoader:
         return len(subdirs) > 0
 
     @staticmethod
-    def _load_nested_structure(directory_path: str, concat: bool, stride: int) -> Dict[str, List[Any]]:
+    def _load_nested_structure(
+        directory_path: str, concat: bool, stride: int
+    ) -> Dict[str, List[Any]]:
         """
         Load from nested directory structure (multiple systems).
 

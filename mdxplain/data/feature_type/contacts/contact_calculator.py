@@ -50,7 +50,7 @@ class ContactCalculator(CalculatorBase):
     >>> contacts = calculator.compute(distance_data, cutoff=3.5)
     """
 
-    def __init__(self, use_memmap=False, cache_path=None, chunk_size=None):
+    def __init__(self, use_memmap=False, cache_path="./cache", chunk_size=10000):
         """
         Initialize contact calculator with configuration parameters.
 
@@ -80,7 +80,9 @@ class ContactCalculator(CalculatorBase):
         self.chunk_size = chunk_size
         self.use_memmap = use_memmap
 
-        self.analysis = ContactCalculatorAnalysis(chunk_size=self.chunk_size)
+        self.analysis = ContactCalculatorAnalysis(
+            use_memmap=self.use_memmap, chunk_size=self.chunk_size
+        )
 
     # ===== MAIN COMPUTATION METHOD =====
 
