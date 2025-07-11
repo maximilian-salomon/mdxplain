@@ -71,6 +71,28 @@ class FeatureTypeBase(ABC, metaclass=FeatureTypeMeta):
         """
         self.calculator = None
 
+    def __str__(self):
+        """
+        Return string representation of the feature type instance.
+
+        Returns:
+        --------
+        str
+            String representation using the class's get_type_name() method
+        """
+        return self.get_type_name()
+
+    def __repr__(self):
+        """
+        Return string representation of the feature type instance.
+
+        Returns:
+        --------
+        str
+            String representation using the class's get_type_name() method
+        """
+        return self.get_type_name()
+
     @abstractmethod
     def get_dependencies(self) -> List[str]:
         """

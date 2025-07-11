@@ -158,11 +158,11 @@ class KernelPCACalculator(CalculatorBase):
         dict
             Validated hyperparameters
         """
-        n_components = kwargs.get("n_components", self.n_components)
+        n_components = kwargs.get("n_components", data.shape[0])
         if n_components is None:
             raise ValueError("n_components must be specified")
 
-        gamma = kwargs.get("gamma", 1.0 / data.shape[1])
+        gamma = kwargs.get("gamma", 1.0 / data.shape[0])
         use_nystrom = kwargs.get("use_nystrom", False)
         n_landmarks = kwargs.get("n_landmarks", 10000)
         random_state = kwargs.get("random_state", None)
@@ -246,10 +246,10 @@ class KernelPCACalculator(CalculatorBase):
         n_samples = data.shape[0]
 
         # Create kernel matrix as memmap if use_memmap=True
-        kernel_matrix = self._create_kernel_memmap(n_samples, data.dtype)
+        kernel_matrix = self._create_kernel_memmap(n_samples)
 
         # Use half of the chunk size, cause we need to use two chunks of size chunk_size
-        used_chunk_size = self.chunk_size / 2
+        used_chunk_size = int(np.floor(self.chunk_size / 2))
 
         # Compute kernel matrix chunk-wise
         for row_start in range(0, n_samples, used_chunk_size):
@@ -343,7 +343,7 @@ class KernelPCACalculator(CalculatorBase):
         # RBF kernel values are always float64
         kernel_matrix = np.memmap(
             memmap_path,
-            dtype=np.float64,
+            dtype=float,
             mode="w+",
             shape=(n_samples, n_samples)
         )
@@ -383,8 +383,6 @@ class KernelPCACalculator(CalculatorBase):
             batch_size=self.chunk_size,
             whiten=True,
             copy=False,
-            n_jobs=-1,
-            random_state=hyperparameters["random_state"],
         )
 
         transformed_data = ipca.fit_transform(kernel_features)

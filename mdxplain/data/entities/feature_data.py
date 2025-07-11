@@ -89,13 +89,14 @@ class FeatureData:
 
         self.analsis = None
 
-    def get_data(self):
+    def get_data(self, force_original=False):
         """
         Get current dataset (reduced if available, else original).
 
         Parameters:
         -----------
-        None
+        force_original : bool, default=False
+            Whether to force using the original data instead of the reduced data
 
         Returns:
         --------
@@ -108,11 +109,11 @@ class FeatureData:
         >>> data = feature_data.get_data()
         >>> print(f"Data shape: {data.shape}")
         """
-        if self.reduced_data is not None:
+        if self.reduced_data is not None and not force_original:
             return self.reduced_data
         return self.data
 
-    def get_feature_metadata(self):
+    def get_feature_metadata(self, force_original=False):
         """
         Get current feature metadata (reduced if available, else original).
 
@@ -122,7 +123,8 @@ class FeatureData:
 
         Parameters:
         -----------
-        None
+        force_original : bool, default=False
+            Whether to force using the original data instead of the reduced data
 
         Returns:
         --------
@@ -136,7 +138,7 @@ class FeatureData:
         >>> metadata = feature_data.get_feature_metadata()
         >>> print(f"Number of features: {len(metadata['features'])}")
         """
-        if self.reduced_feature_metadata is not None:
+        if self.reduced_feature_metadata is not None and not force_original:
             return self.reduced_feature_metadata
         return self.feature_metadata
 

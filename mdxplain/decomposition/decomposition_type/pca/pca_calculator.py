@@ -148,10 +148,10 @@ class PCACalculator(CalculatorBase):
         dict
             Validated hyperparameters
         """
-        n_components = kwargs.get("n_components", min(data.shape))
+        n_components = kwargs.get("n_components", data.shape[1])
         random_state = kwargs.get("random_state", None)
 
-        max_components = min(data.shape)
+        max_components = data.shape[1]
         if n_components > max_components:
             raise ValueError(
                 f"n_components ({n_components}) cannot be larger than "
@@ -221,8 +221,6 @@ class PCACalculator(CalculatorBase):
             batch_size=self.chunk_size,
             whiten=True,
             copy=False,
-            n_jobs=-1,
-            random_state=hyperparameters["random_state"],
         )
 
         transformed_data = ipca.fit_transform(data)

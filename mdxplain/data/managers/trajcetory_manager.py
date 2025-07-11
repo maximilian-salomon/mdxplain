@@ -30,7 +30,7 @@ from ..helper.trajectory_loader import TrajectoryLoader
 class TrajectoryManager:
     """Manager for trajectory data objects."""
 
-    def __init__(self, stride=1, concat=False, selection=None):
+    def __init__(self, stride=1, concat=False, selection=None, use_memmap=False, cache_dir="./cache", chunk_size=10000):
         """
         Initialize trajectory manager.
 
@@ -60,6 +60,9 @@ class TrajectoryManager:
         self.default_stride = stride
         self.default_concat = concat
         self.default_selection = selection
+        self.use_memmap = use_memmap
+        self.cache_dir = cache_dir
+        self.chunk_size = chunk_size
 
     def create_trajectory_data(self):
         """
