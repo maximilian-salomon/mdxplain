@@ -68,10 +68,7 @@ class DecompositionData:
         """
         self.decomposition_type = decomposition_type
         self.use_memmap = use_memmap
-
-        self.cache_path = DataUtils.get_cache_file_path(
-            f"{self.decomposition_type}.dat", cache_path
-        )
+        self.cache_path = cache_path
 
         self.data = None
         self.metadata = None

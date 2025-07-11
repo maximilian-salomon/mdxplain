@@ -26,3 +26,13 @@ dimensionality reduction of feature matrices from MD trajectories.
 
 Import is handled by the mdxplain.decomposition module.
 """
+
+from .pca.pca import PCA
+from .kernel_pca.kernel_pca import KernelPCA
+from .contact_kernel_pca.contact_kernel_pca import ContactKernelPCA
+
+__all__ = [
+    "PCA",
+    "KernelPCA", 
+    "ContactKernelPCA",
+]

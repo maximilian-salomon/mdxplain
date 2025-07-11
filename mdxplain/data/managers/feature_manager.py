@@ -97,7 +97,7 @@ class FeatureManager:
         print(f"Reset {len(feature_list)} feature(s): " f"{', '.join(feature_list)}")
         print("All feature data has been cleared. Features must be recalculated.")
 
-    def add_feature(self, traj_data, feature_type, force=False):
+    def add_feature(self, traj_data, feature_type, force=False, force_original=True):
         """
         Add and compute a feature for the loaded trajectories.
 
@@ -120,6 +120,9 @@ class FeatureManager:
             The feature type determines what kind of analysis will be performed.
         force : bool, default=False
             Whether to force recomputation of the feature even if it already exists.
+        force_original : bool, default=True
+            Whether to force using the original data as base for the calculation for 
+            features using other features as input instead of the reduced data
 
         Returns:
         --------
@@ -159,7 +162,7 @@ class FeatureManager:
             chunk_size=self.chunk_size,
         )
 
-        self._compute_feature(traj_data, feature_data, feature_type)
+        self._compute_feature(traj_data, feature_data, feature_type, force_original=force_original)
         self._bind_stats_methods(feature_data)
 
         # Store the feature data
@@ -274,7 +277,7 @@ class FeatureManager:
                     f"Dependency '{dep}' must be computed before '{feature_key}'."
                 )
 
-    def _compute_feature(self, traj_data, feature_data, feature_type):
+    def _compute_feature(self, traj_data, feature_data, feature_type, force_original=True):
         """
         Compute the feature with appropriate input data.
 
@@ -299,7 +302,7 @@ class FeatureManager:
         """
         self._validate_computation_requirements(traj_data, feature_type)
         data, feature_metadata = self._execute_computation(
-            traj_data, feature_data, feature_type
+            traj_data, feature_data, feature_type, force_original=force_original
         )
         self._store_computation_results(feature_data, data, feature_metadata)
 
@@ -331,7 +334,7 @@ class FeatureManager:
             raise ValueError("Trajectories must be loaded before computing features.")
 
     def _execute_computation(
-        self, traj_data, feature_data, feature_type
+        self, traj_data, feature_data, feature_type, force_original=True
     ) -> tuple[Any, dict]:
         """
         Execute the actual feature computation.
@@ -344,6 +347,8 @@ class FeatureManager:
             Feature data object
         feature_type : FeatureTypeBase
             Feature type object
+        force_original : bool, default=False
+            Whether to force using the original data instead of the reduced data
 
         Returns:
         --------
@@ -353,8 +358,8 @@ class FeatureManager:
         if feature_type.get_input() is not None:
             input_feature = traj_data.features[feature_type.get_input()]
             return feature_data.feature_type.compute(
-                input_feature.get_data(),
-                input_feature.get_feature_metadata(),
+                input_feature.get_data(force_original=force_original),
+                input_feature.get_feature_metadata(force_original=force_original),
             )
 
         return feature_data.feature_type.compute(

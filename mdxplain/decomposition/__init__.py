@@ -25,12 +25,8 @@ This module provides tools for performing dimensionality reduction on feature
 matrices from molecular dynamics trajectories.
 """
 
-from .decomposition_type import PCA, ContactKernelPCA, KernelPCA
 from .managers.decomposition_manager import DecompositionManager
 
 __all__ = [
-    "PCA",
-    "KernelPCA",
-    "ContactKernelPCA",
     "DecompositionManager",
 ]
