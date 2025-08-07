@@ -221,7 +221,6 @@ class KernelPCACalculator(CalculatorBase):
         metadata.update(
             {
                 "method": "standard_kernel_pca",
-                "hyperparameters": hyperparameters,
             }
         )
 
@@ -316,7 +315,6 @@ class KernelPCACalculator(CalculatorBase):
             {
                 "method": "incremental_kernel_pca",
                 "n_chunks": int(np.ceil(data.shape[0] / self.chunk_size)),
-                "hyperparameters": hyperparameters,
             }
         )
 
@@ -407,7 +405,6 @@ class KernelPCACalculator(CalculatorBase):
                 "method": "nystrom_kernel_pca",
                 "n_landmarks": hyperparameters["n_landmarks"],
                 "approximation": "nystrom",
-                "hyperparameters": hyperparameters,
             }
         )
 

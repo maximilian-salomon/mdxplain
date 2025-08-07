@@ -73,10 +73,27 @@ class PCA(DecompositionTypeBase):
             If float, keeps components corresponding to the fraction of variance to keep.
         random_state : int, optional
             Random state for reproducible results
-
-        Returns:
-        --------
-        None
+            
+        Returned Metadata:
+        ------------------
+        hyperparameters : dict
+            Dictionary containing all PCA parameters used
+        original_shape : tuple
+            Shape of the input data (n_samples, n_features)
+        use_memmap : bool
+            Whether memory mapping was used
+        chunk_size : int
+            Chunk size used for incremental processing
+        cache_path : str
+            Path used for caching results
+        explained_variance_ratio : array
+            Percentage of variance explained by each component
+        explained_variance : array
+            Variance explained by each component
+        method : str
+            Method used ('standard_pca' or 'incremental_pca')
+        n_chunks : int
+            Number of chunks used (only for incremental_pca)
 
         Examples:
         ---------

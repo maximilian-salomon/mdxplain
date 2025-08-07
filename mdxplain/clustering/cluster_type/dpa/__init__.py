@@ -19,18 +19,8 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-mdxplain - A Python toolkit for molecular dynamics trajectory analysis.
+DPA (Density Peak Advanced) clustering implementation.
 
-This package provides tools for analyzing molecular dynamics trajectories with focus
-on feature extraction, dimensionality reduction, and machine learning applications.
+This module provides DPA clustering functionality for molecular dynamics
+trajectory analysis using the DPA package.
 """
-
-from . import data
-from . import decomposition
-from . import clustering
-
-__all__ = [
-    "data",
-    "decomposition",
-    "clustering"
-]

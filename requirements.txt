@@ -6,42 +6,44 @@ mdciao>=1.0.0
 matplotlib>=3.10.0
 scikit-learn>=1.6.0
 tqdm>=4.67.1
+# DPA - install separately with: pip install --no-deps DPA
+# DPA
 
 # Development dependencies (for code quality and testing)
 # Install with: pip install -r requirements.txt -r requirements-dev.txt
 # Or create requirements-dev.txt separately with these dependencies
 
 # Code formatting and style
-black>=25.1.0
-autopep8>=2.3.1
-isort>=5.13.3
+black
+autopep8
+isort
 
 # Linting and analysis
-flake8>=7.1.2
-pylint>=3.3.2
-pycodestyle>=2.13.0
-pyflakes>=3.3.0
-pydocstyle>=6.4.0
-vulture>=2.14
-radon>=6.1.0
+flake8
+pylint
+pycodestyle
+pyflakes
+pydocstyle
+vulture
+radon
 
 # Type checking
 mypy>=1.14.0
 
 # Security
-bandit>=1.8.0
-safety>=3.3.0
+bandit
+safety
 
 # Documentation coverage
-interrogate>=1.7.1
+interrogate
 
 # Testing and coverage
-pytest>=8.4.0
-coverage>=7.9.0
+pytest
+coverage
 
 # Pre-commit hooks
-pre-commit>=4.0.1
+pre-commit
 
 # Profiling and performance
-memory-profiler>=0.62.0
-snakeviz>=2.2.0
+memory-profiler
+snakeviz
