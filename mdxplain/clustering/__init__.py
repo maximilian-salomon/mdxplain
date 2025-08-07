@@ -19,18 +19,19 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-mdxplain - A Python toolkit for molecular dynamics trajectory analysis.
+Clustering module for molecular dynamics trajectory analysis.
 
-This package provides tools for analyzing molecular dynamics trajectories with focus
-on feature extraction, dimensionality reduction, and machine learning applications.
+This module provides clustering analysis capabilities for molecular dynamics
+trajectory data following the established mdxplain architecture pattern.
 """
 
-from . import data
-from . import decomposition
-from . import clustering
+# Import managers
+from .managers.cluster_manager import ClusterManager
+
+# Import cluster_type module
+from . import cluster_type
 
 __all__ = [
-    "data",
-    "decomposition",
-    "clustering"
+    "ClusterManager",
+    "cluster_type"
 ]

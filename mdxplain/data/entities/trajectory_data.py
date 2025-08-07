@@ -31,7 +31,6 @@ from typing import Optional
 import numpy as np
 
 from ...utils.data_utils import DataUtils
-from ..feature_type.helper.feature_shape_helper import FeatureShapeHelper
 
 
 class TrajectoryData:
@@ -116,6 +115,7 @@ class TrajectoryData:
         self.res_label_data = None  # res_labels for trajectory residues
         self.selected_data = {}  # selected data for trajectory residues
         self.decomposition_data = {}  # Dictionary to store DecompositionData instances
+        self.cluster_data = {}  # Dictionary to store ClusterData instances
 
     def get_feature(self, feature_type):
         """
@@ -858,9 +858,9 @@ class TrajectoryData:
 
         return np.array(selected_metadata)
 
-    def get_decomposition(self, selection_name, decomposition_type):
+    def get_decomposition(self, decomposition_name):
         """
-        Retrieve a computed decomposition by selection and type.
+        Retrieve a computed decomposition by selection name.
 
         This method returns the DecompositionData instance for a previously
         computed decomposition. The returned object provides access to the
@@ -868,10 +868,8 @@ class TrajectoryData:
 
         Parameters:
         -----------
-        selection_name : str
-            Name of the feature selection that was decomposed
-        decomposition_type : DecompositionTypeBase, class, or str
-            Decomposition type instance, class, or string (e.g., PCA(), PCA, "pca")
+        decomposition_name : str
+            Name of the decomposition
 
         Returns:
         --------
@@ -885,27 +883,23 @@ class TrajectoryData:
 
         Examples:
         ---------
-        >>> # Get PCA decomposition - all variants work:
-        >>> from mdxplain.decomposition import decomposition_type
-        >>> pca_data = traj.get_decomposition("feature_sel", decomposition_type.PCA())
-        >>> pca_data = traj.get_decomposition("feature_sel", decomposition_type.PCA)
-        >>> pca_data = traj.get_decomposition("feature_sel", "pca")
-        >>> transformed = pca_data.get_data()
-        >>> metadata = pca_data.get_metadata()
+        >>> # Get decomposition for a selection
+        >>> decomp_data = traj.get_decomposition("feature_sel")
+        >>> transformed = decomp_data.get_data()
+        >>> metadata = decomp_data.get_metadata()
 
-        >>> # Get KernelPCA decomposition
-        >>> kpca_data = traj.get_decomposition("contact_sel", decomposition_type.KernelPCA)
-        >>> components = kpca_data.get_components()
+        >>> # Get decomposition type from metadata
+        >>> decomp_type = decomp_data.metadata.get('decomposition_type', 'unknown')
+        >>> print(f"Decomposition type: {decomp_type}")
         """
-        decomposition_key = DataUtils.get_type_key(decomposition_type)
-        full_key = f"{selection_name}_{decomposition_key}"
-
-        if full_key not in self.decomposition_data:
+        if decomposition_name not in self.decomposition_data:
+            available_decompositions = list(self.decomposition_data.keys())
             raise ValueError(
-                f"Decomposition '{decomposition_key}' for selection '{selection_name}' not found."
+                f"Decomposition with name '{decomposition_name}' not found. "
+                f"Available decompositions: {available_decompositions}"
             )
 
-        return self.decomposition_data[full_key]
+        return self.decomposition_data[decomposition_name]
 
     def list_decompositions(self):
         """
@@ -931,18 +925,112 @@ class TrajectoryData:
         """
         decomposition_list = []
 
-        for full_key in self.decomposition_data.keys():
-            if "_" in full_key:
-                selection_name, decomposition_type = full_key.rsplit("_", 1)
-                decomposition_list.append(
-                    {
-                        "selection": selection_name,
-                        "type": decomposition_type,
-                        "full_key": full_key,
-                    }
-                )
+        for decomposition_name, decomp_data in self.decomposition_data.items():
+            # Get decomposition type from metadata
+            decomp_type = 'unknown'
+            if hasattr(decomp_data, 'metadata') and decomp_data.metadata:
+                decomp_type = decomp_data.metadata.get('decomposition_type', 'unknown')
+            elif hasattr(decomp_data, 'decomposition_type'):
+                decomp_type = decomp_data.decomposition_type
+            
+            decomposition_list.append(
+                {
+                    "decomposition_name": decomposition_name,
+                    "type": decomp_type,
+                }
+            )
 
         return decomposition_list
+
+    def get_cluster(self, cluster_name):
+        """
+        Retrieve a computed clustering result by cluster name.
+
+        This method returns the ClusterData instance for a previously
+        computed clustering analysis. The returned object provides access to the
+        cluster labels, metadata, and clustering parameters.
+
+        Parameters:
+        -----------
+        cluster_name : str
+            Name of the clustering result to retrieve
+
+        Returns:
+        --------
+        ClusterData
+            The ClusterData instance containing cluster labels and metadata
+
+        Raises:
+        -------
+        ValueError
+            If the requested clustering result has not been computed yet
+
+        Examples:
+        ---------
+        >>> # Get clustering result by name
+        >>> cluster_data = traj.get_cluster("dbscan_analysis")
+        >>> labels = cluster_data.labels
+        >>> metadata = cluster_data.metadata
+
+        >>> # Get clustering result with default name
+        >>> cluster_data = traj.get_cluster("dbscan_eps0.5_min5")
+        >>> n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
+        """
+        if cluster_name not in self.cluster_data:
+            available_clusters = list(self.cluster_data.keys())
+            raise ValueError(
+                f"Clustering result '{cluster_name}' not found. "
+                f"Available clusters: {available_clusters}"
+            )
+
+        return self.cluster_data[cluster_name]
+
+    def list_clusters(self):
+        """
+        List all computed clustering results.
+
+        Returns a list of all computed clustering results with their names
+        and basic information for easy overview.
+
+        Parameters:
+        -----------
+        None
+
+        Returns:
+        --------
+        list
+            List of dictionaries containing clustering information
+
+        Examples:
+        ---------
+        >>> clusters = traj.list_clusters()
+        >>> for cluster in clusters:
+        ...     print(f"Name: {cluster['name']}, Type: {cluster['type']}, "
+        ...           f"Clusters: {cluster['n_clusters']}")
+        """
+        cluster_list = []
+
+        for cluster_name, cluster_data in self.cluster_data.items():
+            # Get basic information from cluster data
+            labels = cluster_data.labels if hasattr(cluster_data, 'labels') else None
+            cluster_type = cluster_data.cluster_type if hasattr(cluster_data, 'cluster_type') else 'unknown'
+            
+            # Calculate number of clusters (excluding noise points labeled as -1)
+            n_clusters = 0
+            if labels is not None:
+                unique_labels = set(labels)
+                n_clusters = len(unique_labels) - (1 if -1 in unique_labels else 0)
+
+            cluster_list.append(
+                {
+                    "name": cluster_name,
+                    "type": cluster_type,
+                    "n_clusters": n_clusters,
+                    "n_points": len(labels) if labels is not None else 0,
+                }
+            )
+
+        return cluster_list
 
     def _memmap_hstack(self, matrices: list, name: str) -> np.ndarray:
         """

@@ -90,10 +90,27 @@ class KernelPCA(DecompositionTypeBase):
             Number of landmarks for Nyström approximation
         random_state : int, optional
             Random state for reproducible results
-
-        Returns:
-        --------
-        None
+            
+        Returned Metadata:
+        ------------------
+        hyperparameters : dict
+            Dictionary containing all Kernel PCA parameters used
+        original_shape : tuple
+            Shape of the input data (n_samples, n_features)
+        use_memmap : bool
+            Whether memory mapping was used
+        chunk_size : int
+            Chunk size used for processing
+        cache_path : str
+            Path used for caching results
+        method : str
+            Method used ('standard_kernel_pca', 'nystrom_kernel_pca', or 'chunk_wise_kernel_pca')
+        approximation : str
+            Approximation method used ('nystrom' when Nyström approximation is enabled)
+        n_chunks : int
+            Number of chunks used for incremental processing
+        n_landmarks : int
+            Number of landmarks used for Nyström approximation (when applicable)
 
         Examples:
         ---------

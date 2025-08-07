@@ -89,7 +89,8 @@ class DecompositionManager:
         self.chunk_size = chunk_size
         self.cache_dir = cache_dir
 
-    def add(self, traj_data, selection_name, decomposition_type, force=False):
+    def add(self, traj_data, selection_name, decomposition_type, 
+    decomposition_name=None, force=False):
         """
         Add and compute a decomposition for selected feature data.
 
@@ -106,6 +107,9 @@ class DecompositionManager:
             Name of the feature selection to decompose
         decomposition_type : DecompositionTypeBase instance
             Decomposition type instance with parameters (e.g., PCA(n_components=10))
+        decomposition_name : str
+            Name to save the decomposition. If None (default),
+            it is "selection_name_{str(decomposition_type)}"
         force : bool, default=False
             Whether to force recomputation if decomposition already exists
 
@@ -145,27 +149,28 @@ class DecompositionManager:
         ... )
         """
         decomposition_key = DataUtils.get_type_key(decomposition_type)
-        full_key = f"{selection_name}_{decomposition_key}"
+        if decomposition_name is None:
+            decomposition_name = f"{selection_name}_{decomposition_key}"
 
-        self._check_decomposition_existence(traj_data, full_key, force)
+        self._check_decomposition_existence(traj_data, decomposition_name, force)
 
         data_matrix = traj_data.get_selected_matrix(selection_name)
 
         decomposition_data = DecompositionData(
             decomposition_type=decomposition_key,
             use_memmap=self.use_memmap,
-            cache_path=self._get_selection_cache_path(selection_name),
+            cache_path=self._get_selection_cache_path(decomposition_name),
         )
 
         self._compute_decomposition(
-            decomposition_data, decomposition_type, data_matrix, selection_name
+            decomposition_data, decomposition_type, data_matrix, decomposition_name
         )
 
         self._store_decomposition_results(
-            traj_data, full_key, decomposition_data, data_matrix.shape
+            traj_data, selection_name, decomposition_name, decomposition_data, data_matrix.shape, decomposition_key
         )
 
-    def _check_decomposition_existence(self, traj_data, full_key, force):
+    def _check_decomposition_existence(self, traj_data, selection_name, force):
         """
         Check if decomposition already exists and handle accordingly.
 
@@ -173,8 +178,8 @@ class DecompositionManager:
         -----------
         traj_data : TrajectoryData
             Trajectory data object
-        full_key : str
-            Full decomposition key
+        selection_name : str
+            Selection name used as decomposition key
         force : bool
             Whether to force recomputation
 
@@ -191,14 +196,14 @@ class DecompositionManager:
         if not hasattr(traj_data, "decomposition_data"):
             traj_data.decomposition_data = {}
 
-        if full_key in traj_data.decomposition_data:
+        if selection_name in traj_data.decomposition_data:
             if force:
                 print(
-                    f"WARNING: Decomposition '{full_key}' already exists. Forcing recomputation."
+                    f"WARNING: Decomposition for selection '{selection_name}' already exists. Forcing recomputation."
                 )
-                del traj_data.decomposition_data[full_key]
+                del traj_data.decomposition_data[selection_name]
             else:
-                raise ValueError(f"Decomposition '{full_key}' already exists.")
+                raise ValueError(f"Decomposition for selection '{selection_name}' already exists.")
 
     def _get_selection_cache_path(self, selection_name):
         """
@@ -222,7 +227,7 @@ class DecompositionManager:
         return None
 
     def _compute_decomposition(
-        self, decomposition_data, decomposition_type, data_matrix, selection_name
+        self, decomposition_data, decomposition_type, data_matrix, decomposition_name
     ):
         """
         Compute the decomposition using the specified type and parameters.
@@ -235,7 +240,7 @@ class DecompositionManager:
             Decomposition type instance with parameters
         data_matrix : numpy.ndarray
             Data matrix to decompose
-        selection_name : str
+        decomposition_name : str
             Name of the feature selection used
 
         Returns:
@@ -256,13 +261,13 @@ class DecompositionManager:
         )
 
         transformed_data, metadata = decomposition_type.compute(data_matrix)
-        metadata["selection_name"] = selection_name
+        metadata["decomposition_name"] = decomposition_name
 
         decomposition_data.data = transformed_data
         decomposition_data.metadata = metadata
 
     def _store_decomposition_results(
-        self, traj_data, full_key, decomposition_data, original_shape
+        self, traj_data, selection_name, decomposition_name, decomposition_data, original_shape, decomposition_key
     ):
         """
         Store decomposition results in trajectory data.
@@ -271,22 +276,26 @@ class DecompositionManager:
         -----------
         traj_data : TrajectoryData
             Trajectory data object
-        full_key : str
-            Full decomposition key
+        selection_name : str
+            Name of the used selection
+        decomposition_name : str
+            Name of the decomposition
         decomposition_data : DecompositionData
             Computed decomposition data
         original_shape : tuple
             Shape of original data matrix
+        decomposition_key : str
+            Type of decomposition for logging
 
         Returns:
         --------
         None
             Stores decomposition results
         """
-        traj_data.decomposition_data[full_key] = decomposition_data
+        traj_data.decomposition_data[decomposition_name] = decomposition_data
 
         print(
-            f"Decomposition '{full_key}' computed successfully. "
+            f"Decomposition '{decomposition_key}' with name '{decomposition_name}' for selection '{selection_name}' computed successfully. "
             f"Data reduced from {original_shape} to {decomposition_data.data.shape}."
         )
 
