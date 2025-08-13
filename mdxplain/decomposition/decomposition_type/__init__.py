@@ -33,6 +33,6 @@ from .contact_kernel_pca.contact_kernel_pca import ContactKernelPCA
 
 __all__ = [
     "PCA",
-    "KernelPCA", 
+    "KernelPCA",
     "ContactKernelPCA",
 ]

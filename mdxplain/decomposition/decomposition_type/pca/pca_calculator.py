@@ -152,7 +152,7 @@ class PCACalculator(CalculatorBase):
         random_state = kwargs.get("random_state", None)
 
         max_components = data.shape[1]
-        if n_components > max_components:
+        if n_components is not None and n_components > data.shape[0]:
             raise ValueError(
                 f"n_components ({n_components}) cannot be larger than "
                 f"min(n_samples, n_features) = {max_components}"

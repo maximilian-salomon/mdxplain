@@ -90,7 +90,7 @@ class KernelPCA(DecompositionTypeBase):
             Number of landmarks for Nyström approximation
         random_state : int, optional
             Random state for reproducible results
-            
+
         Returned Metadata:
         ------------------
         hyperparameters : dict

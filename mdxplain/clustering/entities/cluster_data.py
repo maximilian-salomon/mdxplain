@@ -66,7 +66,7 @@ class ClusterData:
         """
         self.cluster_type = cluster_type
         self.cache_path = cache_path
-        
+
         # Initialize data attributes
         self.labels: Optional[np.ndarray] = None
         self.metadata: Optional[Dict[str, Any]] = None
@@ -184,7 +184,7 @@ class ClusterData:
         ...     print(f"Found {n_clusters} clusters")
         """
         if self.metadata is not None:
-            return self.metadata.get('n_clusters')
+            return self.metadata.get("n_clusters")
         return None
 
     def get_n_frames(self) -> Optional[int]:

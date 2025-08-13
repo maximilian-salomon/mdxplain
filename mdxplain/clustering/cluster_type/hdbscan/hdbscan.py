@@ -36,12 +36,12 @@ from .hdbscan_calculator import HDBSCANCalculator
 class HDBSCAN(ClusterTypeBase):
     """
     HDBSCAN (Hierarchical Density-Based Spatial Clustering of Applications with Noise) cluster type.
-    
+
     HDBSCAN extends DBSCAN by converting it into a hierarchical clustering algorithm,
     and then using a technique to extract a flat clustering based on the stability
     of clusters. It's particularly useful for identifying conformational states
     in molecular dynamics trajectories with varying densities.
-    
+
     Parameters:
     -----------
     min_cluster_size : int, optional
@@ -54,37 +54,42 @@ class HDBSCAN(ClusterTypeBase):
     cluster_selection_method : str, optional
         The method used to select clusters from the condensed tree.
         Options are 'eom' (Excess of Mass) or 'leaf'. Default is 'eom'.
-        
+
     Examples:
     ---------
     >>> # Create HDBSCAN with default parameters
     >>> hdbscan = HDBSCAN()
-    
+
     >>> # Create HDBSCAN with custom parameters
     >>> hdbscan = HDBSCAN(min_cluster_size=10, min_samples=5)
-    
+
     >>> # Initialize and compute clustering
     >>> hdbscan.init_calculator()
     >>> labels, metadata = hdbscan.compute(data)
     """
-    
-    def __init__(self, min_cluster_size=5, min_samples=None, 
-                 cluster_selection_epsilon=0.0, cluster_selection_method="eom"):
+
+    def __init__(
+        self,
+        min_cluster_size=5,
+        min_samples=None,
+        cluster_selection_epsilon=0.0,
+        cluster_selection_method="eom",
+    ):
         """
         Initialize HDBSCAN cluster type.
-        
+
         Parameters:
         -----------
         min_cluster_size : int, optional
             Minimum size of clusters. Default is 5.
         min_samples : int, optional
-            Minimum samples in neighborhood for core point. 
+            Minimum samples in neighborhood for core point.
             If None, defaults to min_cluster_size.
         cluster_selection_epsilon : float, optional
             Distance threshold for cluster selection. Default is 0.0.
         cluster_selection_method : str, optional
             Method for cluster selection ('eom' or 'leaf'). Default is 'eom'.
-            
+
         Returned Metadata:
         ------------------
         algorithm : str
@@ -114,66 +119,68 @@ class HDBSCAN(ClusterTypeBase):
         self.cluster_selection_epsilon = cluster_selection_epsilon
         self.cluster_selection_method = cluster_selection_method
         self._validate_parameters()
-    
+
     @classmethod
     def get_type_name(cls) -> str:
         """
         Return unique string identifier for HDBSCAN cluster type.
-        
+
         Returns:
         --------
         str
             The string 'hdbscan'
         """
         return "hdbscan"
-    
+
     def init_calculator(self, cache_path="./cache"):
         """
         Initialize the HDBSCAN calculator.
-        
+
         Parameters:
         -----------
         cache_path : str, optional
             Directory path for cache files. Default is './cache'.
         """
         self.calculator = HDBSCANCalculator(cache_path=cache_path)
-    
+
     def compute(self, data) -> Tuple[np.ndarray, Dict]:
         """
         Compute HDBSCAN clustering.
-        
+
         Parameters:
         -----------
         data : numpy.ndarray
             Input data matrix to cluster, shape (n_samples, n_features)
-            
+
         Returns:
         --------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
             - cluster_labels: Cluster labels for each sample (-1 for noise)
             - metadata: Dictionary with clustering information
-            
+
         Raises:
         -------
         ValueError
             If calculator is not initialized
         """
         if self.calculator is None:
-            raise ValueError("Calculator not initialized. Call init_calculator() first.")
-        
+            raise ValueError(
+                "Calculator not initialized. Call init_calculator() first."
+            )
+
         return self.calculator.compute(
-            data, 
+            data,
             min_cluster_size=self.min_cluster_size,
             min_samples=self.min_samples,
             cluster_selection_epsilon=self.cluster_selection_epsilon,
-            cluster_selection_method=self.cluster_selection_method
+            cluster_selection_method=self.cluster_selection_method,
         )
-    
+
     def _validate_parameters(self):
         """
         Validate HDBSCAN parameters.
-        
+
         Raises:
         -------
         ValueError
@@ -181,12 +188,15 @@ class HDBSCAN(ClusterTypeBase):
         """
         if not isinstance(self.min_cluster_size, int) or self.min_cluster_size < 2:
             raise ValueError("min_cluster_size must be an integer >= 2")
-        
+
         if not isinstance(self.min_samples, int) or self.min_samples < 1:
             raise ValueError("min_samples must be a positive integer")
-        
-        if not isinstance(self.cluster_selection_epsilon, (int, float)) or self.cluster_selection_epsilon < 0:
+
+        if (
+            not isinstance(self.cluster_selection_epsilon, (int, float))
+            or self.cluster_selection_epsilon < 0
+        ):
             raise ValueError("cluster_selection_epsilon must be a non-negative number")
-        
+
         if self.cluster_selection_method not in ["eom", "leaf"]:
             raise ValueError("cluster_selection_method must be 'eom' or 'leaf'")

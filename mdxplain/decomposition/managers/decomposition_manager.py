@@ -25,6 +25,8 @@ Manager for creating and managing decomposition results from feature matrices.
 Used to add, reset, and manage decomposition data in trajectory data objects.
 """
 
+import os
+
 from ..entities.decomposition_data import DecompositionData
 from ...utils.data_utils import DataUtils
 
@@ -43,14 +45,14 @@ class DecompositionManager:
     >>> from mdxplain.decomposition import decomposition_type
     >>> manager = DecompositionManager()
     >>> manager.add_decomposition(
-    ...     traj_data, "feature_selection", decomposition_type.PCA,
+    ...     pipeline_data, "feature_selection", decomposition_type.PCA,
     ...     n_components=10
     ... )
 
     >>> # Manager with memory mapping for large datasets
     >>> manager = DecompositionManager(use_memmap=True, chunk_size=1000)
     >>> manager.add_decomposition(
-    ...     traj_data, "contact_selection", decomposition_type.KernelPCA,
+    ...     pipeline_data, "contact_selection", decomposition_type.KernelPCA,
     ...     n_components=20, kernel='rbf'
     ... )
     """
@@ -88,9 +90,19 @@ class DecompositionManager:
         self.use_memmap = use_memmap
         self.chunk_size = chunk_size
         self.cache_dir = cache_dir
+        os.makedirs(self.cache_dir, exist_ok=True)
 
-    def add(self, traj_data, selection_name, decomposition_type, 
-    decomposition_name=None, force=False):
+        if chunk_size <= 0 and not isinstance(chunk_size, int):
+            raise ValueError("Chunk size must be a positive integer.")
+
+    def add(
+        self,
+        pipeline_data,
+        selection_name,
+        decomposition_type,
+        decomposition_name=None,
+        force=False,
+    ):
         """
         Add and compute a decomposition for selected feature data.
 
@@ -99,9 +111,23 @@ class DecompositionManager:
         the decomposition computation, and stores the result in the
         TrajectoryData object.
 
+        Warning:
+        --------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.decomposition.add("selection", decomposition_type.PCA())  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = DecompositionManager()
+        >>> manager.add(pipeline_data, "selection", decomposition_type.PCA())  # pipeline_data required
+
         Parameters:
         -----------
-        traj_data : TrajectoryData
+        pipeline_data : PipelineData
             Trajectory data object containing feature selections
         selection_name : str
             Name of the feature selection to decompose
@@ -130,31 +156,31 @@ class DecompositionManager:
         >>> from mdxplain.decomposition import decomposition_type
         >>> manager = DecompositionManager()
         >>> manager.add(
-        ...     traj_data, "feature_selection", decomposition_type.PCA(n_components=10)
+        ...     pipeline_data, "feature_selection", decomposition_type.PCA(n_components=10)
         ... )
 
         >>> # Add KernelPCA with custom parameters
         >>> manager.add(
-        ...     traj_data, "any_selection", decomposition_type.KernelPCA(n_components=15, gamma=0.1)
+        ...     pipeline_data, "any_selection", decomposition_type.KernelPCA(n_components=15, gamma=0.1)
         ... )
 
         >>> # Add ContactKernelPCA for contact features
         >>> manager.add(
-        ...     traj_data, "contact_selection", decomposition_type.ContactKernelPCA(n_components=20)
+        ...     pipeline_data, "contact_selection", decomposition_type.ContactKernelPCA(n_components=20)
         ... )
 
         >>> # Force recomputation of existing decomposition
         >>> manager.add(
-        ...     traj_data, "feature_selection", decomposition_type.PCA(n_components=20), force=True
+        ...     pipeline_data, "feature_selection", decomposition_type.PCA(n_components=20), force=True
         ... )
         """
         decomposition_key = DataUtils.get_type_key(decomposition_type)
         if decomposition_name is None:
             decomposition_name = f"{selection_name}_{decomposition_key}"
 
-        self._check_decomposition_existence(traj_data, decomposition_name, force)
+        self._check_decomposition_existence(pipeline_data, decomposition_name, force)
 
-        data_matrix = traj_data.get_selected_matrix(selection_name)
+        data_matrix = pipeline_data.get_selected_matrix(selection_name)
 
         decomposition_data = DecompositionData(
             decomposition_type=decomposition_key,
@@ -167,16 +193,21 @@ class DecompositionManager:
         )
 
         self._store_decomposition_results(
-            traj_data, selection_name, decomposition_name, decomposition_data, data_matrix.shape, decomposition_key
+            pipeline_data,
+            selection_name,
+            decomposition_name,
+            decomposition_data,
+            data_matrix.shape,
+            decomposition_key,
         )
 
-    def _check_decomposition_existence(self, traj_data, selection_name, force):
+    def _check_decomposition_existence(self, pipeline_data, selection_name, force):
         """
         Check if decomposition already exists and handle accordingly.
 
         Parameters:
         -----------
-        traj_data : TrajectoryData
+        pipeline_data : PipelineData
             Trajectory data object
         selection_name : str
             Selection name used as decomposition key
@@ -193,17 +224,16 @@ class DecompositionManager:
         ValueError
             If decomposition exists and force is False
         """
-        if not hasattr(traj_data, "decomposition_data"):
-            traj_data.decomposition_data = {}
-
-        if selection_name in traj_data.decomposition_data:
+        if selection_name in pipeline_data.decomposition_data:
             if force:
                 print(
                     f"WARNING: Decomposition for selection '{selection_name}' already exists. Forcing recomputation."
                 )
-                del traj_data.decomposition_data[selection_name]
+                del pipeline_data.decomposition_data[selection_name]
             else:
-                raise ValueError(f"Decomposition for selection '{selection_name}' already exists.")
+                raise ValueError(
+                    f"Decomposition for selection '{selection_name}' already exists."
+                )
 
     def _get_selection_cache_path(self, selection_name):
         """
@@ -267,14 +297,20 @@ class DecompositionManager:
         decomposition_data.metadata = metadata
 
     def _store_decomposition_results(
-        self, traj_data, selection_name, decomposition_name, decomposition_data, original_shape, decomposition_key
+        self,
+        pipeline_data,
+        selection_name,
+        decomposition_name,
+        decomposition_data,
+        original_shape,
+        decomposition_key,
     ):
         """
         Store decomposition results in trajectory data.
 
         Parameters:
         -----------
-        traj_data : TrajectoryData
+        pipeline_data : PipelineData
             Trajectory data object
         selection_name : str
             Name of the used selection
@@ -292,44 +328,55 @@ class DecompositionManager:
         None
             Stores decomposition results
         """
-        traj_data.decomposition_data[decomposition_name] = decomposition_data
+        pipeline_data.decomposition_data[decomposition_name] = decomposition_data
 
         print(
             f"Decomposition '{decomposition_key}' with name '{decomposition_name}' for selection '{selection_name}' computed successfully. "
             f"Data reduced from {original_shape} to {decomposition_data.data.shape}."
         )
 
-    def reset_decompositions(self, traj_data):
+    def reset_decompositions(self, pipeline_data):
         """
         Reset all computed decompositions and clear decomposition data.
 
         This method removes all computed decompositions and their associated data,
         requiring decompositions to be recalculated from scratch.
 
+        Warning:
+        --------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.decomposition.reset_decompositions()  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = DecompositionManager()
+        >>> manager.reset_decompositions(pipeline_data)  # pipeline_data required
+
         Parameters:
         -----------
-        traj_data : TrajectoryData
+        pipeline_data : PipelineData
             Trajectory data object
 
         Returns:
         --------
         None
-            Clears all decomposition data from traj_data.decomposition_data
+            Clears all decomposition data from pipeline_data.decomposition_data
 
         Examples:
         ---------
         >>> manager = DecompositionManager()
-        >>> manager.reset_decompositions(traj_data)
+        >>> manager.reset_decompositions(pipeline_data)
         """
-        if (
-            not hasattr(traj_data, "decomposition_data")
-            or not traj_data.decomposition_data
-        ):
+        if not pipeline_data.decomposition_data:
             print("No decompositions to reset.")
             return
 
-        decomposition_list = list(traj_data.decomposition_data.keys())
-        traj_data.decomposition_data.clear()
+        decomposition_list = list(pipeline_data.decomposition_data.keys())
+        pipeline_data.decomposition_data.clear()
 
         print(
             f"Reset {len(decomposition_list)} decomposition(s): {', '.join(decomposition_list)}"
