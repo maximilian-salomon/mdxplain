@@ -170,12 +170,12 @@ class CalculatorBase(ABC):
     def _count_clusters(self, labels):
         """
         Count number of clusters (excluding noise).
-        
+
         Parameters:
         -----------
         labels : numpy.ndarray
             Cluster labels (-1 indicates noise)
-            
+
         Returns:
         --------
         int
@@ -184,11 +184,11 @@ class CalculatorBase(ABC):
         unique_labels = np.unique(labels)
         # Exclude noise label (-1) from count
         return len(unique_labels[unique_labels != -1])
-    
-    def _count_noise_points(self, labels, noise_cluster = -1):
+
+    def _count_noise_points(self, labels, noise_cluster=-1):
         """
         Count number of noise points.
-        
+
         Parameters:
         -----------
         labels : numpy.ndarray
@@ -201,65 +201,69 @@ class CalculatorBase(ABC):
             Number of noise points
         """
         return np.sum(labels == noise_cluster)
-    
+
     def _compute_silhouette_score(self, data, labels):
         """
         Compute silhouette score for clustering quality assessment.
-        
+
         Parameters:
         -----------
         data : numpy.ndarray
             Original data used for clustering
         labels : numpy.ndarray
             Cluster labels
-            
+
         Returns:
         --------
         float or None
             Silhouette score, or None if cannot be computed
-        """        
+        """
         # Remove noise points for silhouette calculation
         non_noise_mask = labels != -1
-        
+
         if np.sum(non_noise_mask) < 2:
             return None
-        
+
         # Check if we have at least 2 different clusters
         unique_labels = np.unique(labels[non_noise_mask])
         if len(unique_labels) < 2:
             return None
-        
+
         # Compute silhouette score on non-noise points
         return silhouette_score(data[non_noise_mask], labels[non_noise_mask])
 
     def _load_cache_files(self, algorithm_name):
         """
         Load cached clustering results if both label and metadata files exist.
-        
+
         Parameters:
         -----------
         algorithm_name : str
             Name of the clustering algorithm (e.g., 'dbscan', 'hdbscan', 'dpa')
-            
+
         Returns:
         --------
         Tuple[numpy.ndarray, Dict] or None
             Cached results if valid, None otherwise
         """
-        labels_path = DataUtils.get_cache_file_path(f"{algorithm_name}_labels.npy", self.cache_path)
-        metadata_path = DataUtils.get_cache_file_path(f"{algorithm_name}_metadata.npy", self.cache_path)
-        
+        labels_path = DataUtils.get_cache_file_path(
+            f"{algorithm_name}_labels.npy", self.cache_path
+        )
+        metadata_path = DataUtils.get_cache_file_path(
+            f"{algorithm_name}_metadata.npy", self.cache_path
+        )
+
         if not (os.path.exists(labels_path) and os.path.exists(metadata_path)):
             return None
-    
+
         labels = np.load(labels_path, allow_pickle=True)
         metadata = np.load(metadata_path, allow_pickle=True).item()
         return labels, metadata
-    
+
     def _save_cache_files(self, algorithm_name, labels, metadata):
         """
         Save clustering results to separate label and metadata cache files.
-        
+
         Parameters:
         -----------
         algorithm_name : str
@@ -269,16 +273,20 @@ class CalculatorBase(ABC):
         metadata : dict
             Clustering metadata to save
         """
-        labels_path = DataUtils.get_cache_file_path(f"{algorithm_name}_labels.npy", self.cache_path)
-        metadata_path = DataUtils.get_cache_file_path(f"{algorithm_name}_metadata.npy", self.cache_path)
-        
+        labels_path = DataUtils.get_cache_file_path(
+            f"{algorithm_name}_labels.npy", self.cache_path
+        )
+        metadata_path = DataUtils.get_cache_file_path(
+            f"{algorithm_name}_metadata.npy", self.cache_path
+        )
+
         np.save(labels_path, labels, allow_pickle=True)
         np.save(metadata_path, metadata, allow_pickle=True)
-    
+
     def _compute_with_cache(self, data, algorithm_name, compute_func, **kwargs):
         """
         Compute clustering with caching support.
-        
+
         Parameters:
         -----------
         data : numpy.ndarray
@@ -289,7 +297,7 @@ class CalculatorBase(ABC):
             Function to perform actual computation
         **kwargs : dict
             Algorithm parameters
-            
+
         Returns:
         --------
         Tuple[numpy.ndarray, Dict]
@@ -299,11 +307,11 @@ class CalculatorBase(ABC):
         cached_result = self._load_cache_files(algorithm_name)
         if cached_result is not None:
             return cached_result
-        
+
         # Compute if not cached
         labels, metadata = compute_func(data, **kwargs)
-        
+
         # Save to cache
         self._save_cache_files(algorithm_name, labels, metadata)
-        
+
         return labels, metadata

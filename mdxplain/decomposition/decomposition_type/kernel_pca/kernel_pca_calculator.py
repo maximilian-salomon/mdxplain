@@ -168,7 +168,7 @@ class KernelPCACalculator(CalculatorBase):
         random_state = kwargs.get("random_state", None)
 
         # Validate n_components
-        if n_components > data.shape[0]:
+        if n_components is not None and n_components > data.shape[0]:
             raise ValueError(
                 f"n_components ({n_components}) cannot be larger than the sample-number {data.shape[0]:}."
             )
@@ -340,10 +340,7 @@ class KernelPCACalculator(CalculatorBase):
 
         # RBF kernel values are always float64
         kernel_matrix = np.memmap(
-            memmap_path,
-            dtype=float,
-            mode="w+",
-            shape=(n_samples, n_samples)
+            memmap_path, dtype=float, mode="w+", shape=(n_samples, n_samples)
         )
 
         return kernel_matrix

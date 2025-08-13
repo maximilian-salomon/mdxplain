@@ -25,12 +25,18 @@ This package provides tools for analyzing molecular dynamics trajectories with f
 on feature extraction, dimensionality reduction, and machine learning applications.
 """
 
-from . import data
+from . import trajectory
+from . import feature
+from . import feature_selection
 from . import decomposition
 from . import clustering
+from . import pipeline
 
 __all__ = [
-    "data",
+    "trajectory",
+    "feature", 
+    "feature_selection",
     "decomposition",
-    "clustering"
+    "clustering",
+    "pipeline"
 ]

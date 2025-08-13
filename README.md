@@ -70,8 +70,9 @@ md_analysis_pipeline/
 ## AI-Assisted Development
 
 Development was conducted using the Cursor IDE, an AI-first programming environment with access to multiple large language models (LLMs). The primary models used were Claude Sonnet 3.7 and 4.0 (Anthropic), Gemini 2.5 (Google), and ChatGPT 4 and 4.1 (OpenAI).
+Additional to Cursor IDE, Claude Code was used, which is a CLI Tool to use the coding capabillities of Claude Sonnet 4 in context of the codebase.
 
-The LLMs assisted with code generation, refactoring, optimization and documentation generation, and also served as a sounding board for brainstorming and exploring alternative implementation strategies.
+The LLMs assisted with code generation, refactoring, code optimization and documentation generation, and also served as a sounding board for brainstorming and exploring alternative implementation strategies. So it was mainly used for coding and implementation tasks.
 
 All architectural design, scientific analysis, algorithm development, prompting, and methodological decision-making, along with comprehensive code review and testing, were conducted by the developers. Responsibility for scientific accuracy and methodological responsibility rests entirely with the human contributors.
 

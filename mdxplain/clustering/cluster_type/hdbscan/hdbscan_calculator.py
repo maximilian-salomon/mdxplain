@@ -37,10 +37,10 @@ from ..interfaces.calculator_base import CalculatorBase
 class HDBSCANCalculator(CalculatorBase):
     """
     Calculator for HDBSCAN clustering.
-    
+
     This class implements the actual HDBSCAN clustering computation using
     scikit-learn's HDBSCAN implementation and computes clustering quality metrics.
-    
+
     Examples:
     ---------
     >>> # Create calculator and compute clustering
@@ -49,22 +49,22 @@ class HDBSCANCalculator(CalculatorBase):
     >>> labels, metadata = calc.compute(data, min_cluster_size=5, min_samples=5)
     >>> print(f"Found {metadata['n_clusters']} clusters")
     """
-    
+
     def __init__(self, cache_path="./cache"):
         """
         Initialize HDBSCAN calculator.
-        
+
         Parameters:
         -----------
         cache_path : str, optional
             Path for cache files. Default is './cache'.
         """
         super().__init__(cache_path)
-    
+
     def compute(self, data, **kwargs) -> Tuple[np.ndarray, Dict]:
         """
         Compute HDBSCAN clustering.
-        
+
         Parameters:
         -----------
         data : numpy.ndarray
@@ -75,21 +75,21 @@ class HDBSCANCalculator(CalculatorBase):
             - min_samples : int, minimum samples in neighborhood
             - cluster_selection_epsilon : float, distance threshold
             - cluster_selection_method : str, cluster selection method
-            
+
         Returns:
         --------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
             - cluster_labels: Cluster labels for each sample (-1 for noise)
             - metadata: Dictionary with clustering information
-            
+
         Raises:
         -------
         ValueError
             If input data is invalid or required parameters are missing
         """
         self._validate_input_data(data)
-        
+
         # Use caching functionality
         return self._compute_with_cache(
             data, 
@@ -97,85 +97,91 @@ class HDBSCANCalculator(CalculatorBase):
             self._compute_without_cache, 
             **kwargs
         )
-    
+
     def _compute_without_cache(self, data, **kwargs) -> Tuple[np.ndarray, Dict]:
         """
         Perform HDBSCAN clustering without caching.
-        
+
         Parameters:
         -----------
         data : numpy.ndarray
             Input data matrix to cluster
         **kwargs : dict
             HDBSCAN parameters
-            
+
         Returns:
         --------
         Tuple[numpy.ndarray, Dict]
             Cluster labels and metadata
         """
         parameters = self._extract_parameters(kwargs)
-        
-        cluster_labels, hdbscan_model, computation_time = self._perform_clustering(data, parameters)
-        metadata = self._build_metadata(data, cluster_labels, hdbscan_model, parameters, computation_time)
-        
+
+        cluster_labels, hdbscan_model, computation_time = self._perform_clustering(
+            data, parameters
+        )
+        metadata = self._build_metadata(
+            data, cluster_labels, hdbscan_model, parameters, computation_time
+        )
+
         return cluster_labels, metadata
-    
+
     def _extract_parameters(self, kwargs):
         """
         Extract and validate HDBSCAN parameters.
-        
+
         Parameters:
         -----------
         kwargs : dict
             Keyword arguments containing HDBSCAN parameters
-            
+
         Returns:
         --------
         dict
             Validated HDBSCAN parameters
         """
         return {
-            'min_cluster_size': kwargs.get('min_cluster_size', 5),
-            'min_samples': kwargs.get('min_samples', None),
-            'cluster_selection_epsilon': kwargs.get('cluster_selection_epsilon', 0.0),
-            'cluster_selection_method': kwargs.get('cluster_selection_method', 'eom')
+            "min_cluster_size": kwargs.get("min_cluster_size", 5),
+            "min_samples": kwargs.get("min_samples", None),
+            "cluster_selection_epsilon": kwargs.get("cluster_selection_epsilon", 0.0),
+            "cluster_selection_method": kwargs.get("cluster_selection_method", "eom"),
         }
-    
+
     def _perform_clustering(self, data, parameters):
         """
         Perform HDBSCAN clustering computation.
-        
+
         Parameters:
         -----------
         data : numpy.ndarray
             Input data to cluster
         parameters : dict
             HDBSCAN parameters
-            
+
         Returns:
         --------
         Tuple[numpy.ndarray, SklearnHDBSCAN, float]
             Cluster labels, HDBSCAN model, and computation time
         """
         start_time = time.time()
-        
+
         hdbscan = SklearnHDBSCAN(
-            min_cluster_size=parameters['min_cluster_size'],
-            min_samples=parameters['min_samples'],
-            cluster_selection_epsilon=parameters['cluster_selection_epsilon'],
-            cluster_selection_method=parameters['cluster_selection_method']
+            min_cluster_size=parameters["min_cluster_size"],
+            min_samples=parameters["min_samples"],
+            cluster_selection_epsilon=parameters["cluster_selection_epsilon"],
+            cluster_selection_method=parameters["cluster_selection_method"],
         )
         cluster_labels = hdbscan.fit_predict(data)
-        
+
         computation_time = time.time() - start_time
-        
+
         return cluster_labels, hdbscan, computation_time
-    
-    def _build_metadata(self, data, cluster_labels, hdbscan_model, parameters, computation_time):
+
+    def _build_metadata(
+        self, data, cluster_labels, hdbscan_model, parameters, computation_time
+    ):
         """
         Build comprehensive metadata dictionary.
-        
+
         Parameters:
         -----------
         data : numpy.ndarray
@@ -188,7 +194,7 @@ class HDBSCANCalculator(CalculatorBase):
             HDBSCAN parameters used
         computation_time : float
             Time taken for computation
-            
+
         Returns:
         --------
         dict
@@ -197,49 +203,59 @@ class HDBSCANCalculator(CalculatorBase):
         n_clusters = self._count_clusters(cluster_labels)
         n_noise = self._count_noise_points(cluster_labels)
         metadata = self._prepare_metadata(parameters, data.shape, n_clusters, n_noise)
-        
-        metadata.update({
-            "algorithm": "hdbscan",
-            "silhouette_score": self._compute_silhouette_score(data, cluster_labels),
-            "computation_time": computation_time,
-            "cluster_probabilities": self._get_cluster_probabilities(hdbscan_model),
-            "outlier_scores": self._get_outlier_scores(hdbscan_model)
-        })
-        
+
+        metadata.update(
+            {
+                "algorithm": "hdbscan",
+                "silhouette_score": self._compute_silhouette_score(
+                    data, cluster_labels
+                ),
+                "computation_time": computation_time,
+                "cluster_probabilities": self._get_cluster_probabilities(hdbscan_model),
+                "outlier_scores": self._get_outlier_scores(hdbscan_model),
+            }
+        )
+
         return metadata
-    
+
     def _get_cluster_probabilities(self, hdbscan_model):
         """
         Extract cluster membership probabilities from HDBSCAN model.
-        
+
         Parameters:
         -----------
         hdbscan_model : SklearnHDBSCAN
             Fitted HDBSCAN model
-            
+
         Returns:
         --------
         list or None
             List of cluster probabilities or None if not available
         """
-        if hasattr(hdbscan_model, 'probabilities_') and hdbscan_model.probabilities_ is not None:
+        if (
+            hasattr(hdbscan_model, "probabilities_")
+            and hdbscan_model.probabilities_ is not None
+        ):
             return hdbscan_model.probabilities_.tolist()
         return None
-    
+
     def _get_outlier_scores(self, hdbscan_model):
         """
         Extract outlier scores from HDBSCAN model.
-        
+
         Parameters:
         -----------
         hdbscan_model : SklearnHDBSCAN
             Fitted HDBSCAN model
-            
+
         Returns:
         --------
         list or None
             List of outlier scores or None if not available
         """
-        if hasattr(hdbscan_model, 'outlier_scores_') and hdbscan_model.outlier_scores_ is not None:
+        if (
+            hasattr(hdbscan_model, "outlier_scores_")
+            and hdbscan_model.outlier_scores_ is not None
+        ):
             return hdbscan_model.outlier_scores_.tolist()
         return None

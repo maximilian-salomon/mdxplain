@@ -73,7 +73,7 @@ class PCA(DecompositionTypeBase):
             If float, keeps components corresponding to the fraction of variance to keep.
         random_state : int, optional
             Random state for reproducible results
-            
+
         Returned Metadata:
         ------------------
         hyperparameters : dict

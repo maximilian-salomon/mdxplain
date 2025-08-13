@@ -29,6 +29,7 @@ in trajectory data objects.
 from ..entities.cluster_data import ClusterData
 from ...utils.data_utils import DataUtils
 import shutil
+import os
 
 
 class ClusterManager:
@@ -46,14 +47,14 @@ class ClusterManager:
     >>> from mdxplain.clustering import cluster_type
     >>> manager = ClusterManager()
     >>> manager.add(
-    ...     traj_data, "feature_selection", cluster_type.DBSCAN(eps=0.5),
+    ...     pipeline_data, "feature_selection", cluster_type.DBSCAN(eps=0.5),
     ...     use_decomposed=False
     ... )
 
     >>> # Manager with custom cache directory
     >>> manager = ClusterManager(cache_dir="./cache/clustering")
     >>> manager.add(
-    ...     traj_data, "pca_decomposition", cluster_type.HDBSCAN(min_cluster_size=10),
+    ...     pipeline_data, "pca_decomposition", cluster_type.HDBSCAN(min_cluster_size=10),
     ...     use_decomposed=True
     ... )
     """
@@ -81,53 +82,63 @@ class ClusterManager:
         >>> manager = ClusterManager(cache_dir="./cache/clustering")
         """
         self.cache_dir = cache_dir
+        os.makedirs(self.cache_dir, exist_ok=True)
 
-    def reset_clusters(self, traj_data):
+    def reset_clusters(self, pipeline_data):
         """
         Reset all computed clustering results and clear clustering data.
 
         This method removes all computed clustering results and their associated data,
         requiring clustering to be recalculated from scratch.
 
+        Warning:
+        --------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.clustering.reset_clusters()  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = ClusterManager()
+        >>> manager.reset_clusters(pipeline_data)  # pipeline_data required
+
         Parameters:
         -----------
-        traj_data : TrajectoryData
-            Trajectory data object
+        pipeline_data : PipelineData
+            Pipeline data object
 
         Returns:
         --------
         None
-            Clears all clustering data from traj_data.cluster_data
+            Clears all clustering data from pipeline_data.cluster_data
 
         Examples:
         ---------
         >>> manager = ClusterManager()
-        >>> manager.reset_clusters(traj_data)
+        >>> manager.reset_clusters(pipeline_data)
         """
-        if (
-            not hasattr(traj_data, "cluster_data")
-            or not traj_data.cluster_data
-        ):
+        if not pipeline_data.cluster_data:
             print("No clustering results to reset.")
             return
 
-        cluster_list = list(traj_data.cluster_data.keys())
-        traj_data.cluster_data.clear()
+        cluster_list = list(pipeline_data.cluster_data.keys())
+        pipeline_data.cluster_data.clear()
 
         print(
             f"Reset {len(cluster_list)} clustering result(s): {', '.join(cluster_list)}"
         )
-        print(
-            "All clustering data has been cleared. Clustering must be recalculated."
-        )
+        print("All clustering data has been cleared. Clustering must be recalculated.")
 
-    def _check_cluster_existence(self, traj_data, cluster_name, force):
+    def _check_cluster_existence(self, pipeline_data, cluster_name, force):
         """
         Check if clustering already exists and handle accordingly.
 
         Parameters:
         -----------
-        traj_data : TrajectoryData
+        pipeline_data : PipelineData
             Trajectory data object
         cluster_name : str
             Cluster name/key
@@ -144,15 +155,12 @@ class ClusterManager:
         ValueError
             If clustering exists and force is False
         """
-        if not hasattr(traj_data, "cluster_data"):
-            traj_data.cluster_data = {}
-
-        if cluster_name in traj_data.cluster_data:
+        if cluster_name in pipeline_data.cluster_data:
             if force:
                 print(
                     f"WARNING: Clustering '{cluster_name}' already exists. Forcing recomputation."
                 )
-                del traj_data.cluster_data[cluster_name]
+                del pipeline_data.cluster_data[cluster_name]
             else:
                 raise ValueError(f"Clustering '{cluster_name}' already exists.")
 
@@ -226,7 +234,7 @@ class ClusterManager:
                 f"Got {data_matrix.shape[0]} samples."
             )
 
-    def _get_decomposition_data(self, traj_data, decomposition_name):
+    def _get_decomposition_data(self, pipeline_data, decomposition_name):
         """
         Retrieve decomposition data matrix for clustering.
 
@@ -235,7 +243,7 @@ class ClusterManager:
 
         Parameters:
         -----------
-        traj_data : TrajectoryData
+        pipeline_data : PipelineData
             Trajectory data object containing decomposition results
         decomposition_name : str
             Name of the decomposition
@@ -250,28 +258,28 @@ class ClusterManager:
         ValueError
             If decomposition data is not found or invalid
         """
-        if not hasattr(traj_data, "decomposition_data") or not traj_data.decomposition_data:
+        if not pipeline_data.decomposition_data:
             raise ValueError(
                 f"No decomposition data found. Available decompositions: []"
             )
 
-        decomposition_data = traj_data.get_decomposition(decomposition_name)
+        decomposition_data = pipeline_data.get_decomposition(decomposition_name)
         data_matrix = decomposition_data.data
-        
+
         if data_matrix is None:
             raise ValueError(
                 f"Decomposition data matrix is None for selection '{decomposition_name}'"
             )
-        
+
         return data_matrix
 
-    def _get_feature_selection_data(self, traj_data, selection_name):
+    def _get_feature_selection_data(self, pipeline_data, selection_name):
         """
         Retrieve feature selection data matrix for clustering.
 
         Parameters:
         -----------
-        traj_data : TrajectoryData
+        pipeline_data : PipelineData
             Trajectory data object containing feature selections
         selection_name : str
             Name of the feature selection
@@ -286,12 +294,8 @@ class ClusterManager:
         ValueError
             If feature selection data is not found or invalid
         """
-        if not hasattr(traj_data, "selected_data") or not traj_data.selected_data:
-            raise ValueError(
-                f"No feature selections found. Available selections: []"
-            )
-
-        data_matrix = traj_data.get_selected_matrix(selection_name)
+        pipeline_data.validate_selection_exists(selection_name)
+        data_matrix = pipeline_data.get_selected_matrix(selection_name)
 
         if data_matrix is None:
             raise ValueError(
@@ -300,13 +304,13 @@ class ClusterManager:
 
         return data_matrix
 
-    def _get_data_matrix(self, traj_data, name, use_decomposed):
+    def _get_data_matrix(self, pipeline_data, name, use_decomposed):
         """
         Retrieve data matrix for clustering based on use_decomposed flag.
 
         Parameters:
         -----------
-        traj_data : TrajectoryData
+        pipeline_data : PipelineData
             Trajectory data object
         name : str
             Name to select data
@@ -324,30 +328,52 @@ class ClusterManager:
             If data retrieval fails or data is invalid
         """
         if use_decomposed:
-            return self._get_decomposition_data(traj_data, name)
+            return self._get_decomposition_data(pipeline_data, name)
         else:
-            return self._get_feature_selection_data(traj_data, name)
+            return self._get_feature_selection_data(pipeline_data, name)
 
-    def add(self, traj_data, selection_name, cluster_type, 
-    use_decomposed=True, cluster_name=None, force=False, override_cache=False):
+    def add(
+        self,
+        pipeline_data,
+        selection_name,
+        cluster_type,
+        use_decomposed=True,
+        cluster_name=None,
+        force=False,
+        override_cache=False,
+    ):
         """
         Add clustering analysis to trajectory data.
 
         This method performs clustering analysis on the specified data selection
-        using the provided cluster type. Results are stored in the TrajectoryData
+        using the provided cluster type. Results are stored in the PipelineData
         object's cluster_data dictionary with the specified or default cluster name.
+
+        Warning:
+        --------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.clustering.add("selection", cluster_type.DBSCAN())  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = ClusterManager()
+        >>> manager.add(pipeline_data, "selection", cluster_type.DBSCAN())  # pipeline_data required
 
         Parameters:
         -----------
-        traj_data : TrajectoryData
-            Trajectory data object containing feature selections or decomposition results
+        pipeline_data : PipelineData
+            Pipeline data object containing feature selections or decomposition results
         selection_name : str
-            Name of the feature selection (if use_decomposed=False) or 
+            Name of the feature selection (if use_decomposed=False) or
             decomposition result (if use_decomposed=True) to cluster
         cluster_type : ClusterTypeBase instance
             Cluster type instance with parameters (e.g., DBSCAN(eps=0.5))
         use_decomposed : bool, optional
-            Whether to use decomposition results (True) or feature selections (False), 
+            Whether to use decomposition results (True) or feature selections (False),
             default=True
         cluster_name : str, optional
             Custom name for storing clustering results. If None, defaults to str(cluster_type)
@@ -359,7 +385,7 @@ class ClusterManager:
         Returns:
         --------
         None
-            Stores ClusterData object in traj_data.cluster_data dictionary
+            Stores ClusterData object in pipeline_data.cluster_data dictionary
 
         Examples:
         ---------
@@ -367,13 +393,13 @@ class ClusterManager:
         >>> from mdxplain.clustering import cluster_type
         >>> manager = ClusterManager()
         >>> manager.add(
-        ...     traj_data, "pca_selection", cluster_type.DBSCAN(eps=0.5),
+        ...     pipeline_data, "pca_selection", cluster_type.DBSCAN(eps=0.5),
         ...     use_decomposed=True, cluster_name="my_dbscan"
         ... )
 
         >>> # Cluster feature selection with default name
         >>> manager.add(
-        ...     traj_data, "distance_selection", cluster_type.HDBSCAN(min_cluster_size=10),
+        ...     pipeline_data, "distance_selection", cluster_type.HDBSCAN(min_cluster_size=10),
         ...     use_decomposed=False
         ... )
 
@@ -386,19 +412,23 @@ class ClusterManager:
         cluster_name = self._determine_cluster_name(cluster_name, cluster_type)
 
         cache_path = DataUtils.get_cache_file_path(cluster_name, self.cache_dir)
-        
+
         if override_cache:
             self._clear_cache_directory(cache_path)
-        
+
         cluster_type.init_calculator(cache_path=cache_path)
-        
-        self._check_cluster_existence(traj_data, cluster_name, force)
-        
-        data_matrix = self._prepare_data_for_clustering(traj_data, selection_name, use_decomposed)
+
+        self._check_cluster_existence(pipeline_data, cluster_name, force)
+
+        data_matrix = self._prepare_data_for_clustering(
+            pipeline_data, selection_name, use_decomposed
+        )
         cluster_labels, metadata = self._perform_clustering(cluster_type, data_matrix)
-        
-        cluster_data = self._create_cluster_data(cluster_type, cluster_labels, metadata, selection_name)
-        self._store_clustering_results(traj_data, cluster_name, cluster_data)
+
+        cluster_data = self._create_cluster_data(
+            cluster_type, cluster_labels, metadata, selection_name
+        )
+        self._store_clustering_results(pipeline_data, cluster_name, cluster_data)
 
     def _determine_cluster_name(self, cluster_name, cluster_type):
         """
@@ -416,7 +446,11 @@ class ClusterManager:
         str
             Final cluster name to use for storage
         """
-        return cluster_name if cluster_name is not None else DataUtils.get_type_key(cluster_type)
+        return (
+            cluster_name
+            if cluster_name is not None
+            else DataUtils.get_type_key(cluster_type)
+        )
 
     def _clear_cache_directory(self, cache_path):
         """
@@ -431,17 +465,19 @@ class ClusterManager:
         --------
         None
             Removes all files in the cache directory
-        """      
+        """
         shutil.rmtree(cache_path)
         print(f"Cleared cache directory: {cache_path}")
 
-    def _prepare_data_for_clustering(self, traj_data, selection_name, use_decomposed):
+    def _prepare_data_for_clustering(
+        self, pipeline_data, selection_name, use_decomposed
+    ):
         """
         Prepare and validate data matrix for clustering.
 
         Parameters:
         -----------
-        traj_data : TrajectoryData
+        pipeline_data : PipelineData
             Trajectory data object
         selection_name : str
             Name of the selection to prepare data for
@@ -453,7 +489,9 @@ class ClusterManager:
         numpy.ndarray
             Validated data matrix ready for clustering
         """
-        data_matrix = self._get_data_matrix(traj_data, selection_name, use_decomposed)
+        data_matrix = self._get_data_matrix(
+            pipeline_data, selection_name, use_decomposed
+        )
         self._validate_data_matrix(data_matrix, selection_name)
         return data_matrix
 
@@ -475,7 +513,7 @@ class ClusterManager:
         """
         cluster_labels, metadata = cluster_type.compute(data_matrix)
         self._validate_cluster_labels(cluster_labels, data_matrix)
-        
+
         return cluster_labels, metadata
 
     def _validate_cluster_labels(self, cluster_labels, data_matrix):
@@ -505,7 +543,9 @@ class ClusterManager:
                 f"number of trajectory frames ({data_matrix.shape[0]})"
             )
 
-    def _create_cluster_data(self, cluster_type, cluster_labels, metadata, selection_name):
+    def _create_cluster_data(
+        self, cluster_type, cluster_labels, metadata, selection_name
+    ):
         """
         Create ClusterData object with results.
 
@@ -527,20 +567,19 @@ class ClusterManager:
         """
         cache_path = DataUtils.get_cache_file_path(selection_name, self.cache_dir)
         cluster_data = ClusterData(
-            cluster_type=cluster_type.get_type_name(),
-            cache_path=cache_path
+            cluster_type=cluster_type.get_type_name(), cache_path=cache_path
         )
         cluster_data.labels = cluster_labels
         cluster_data.metadata = metadata
         return cluster_data
 
-    def _store_clustering_results(self, traj_data, cluster_name, cluster_data):
+    def _store_clustering_results(self, pipeline_data, cluster_name, cluster_data):
         """
         Store clustering results and print success message.
 
         Parameters:
         -----------
-        traj_data : TrajectoryData
+        pipeline_data : PipelineData
             Trajectory data object to store results in
         cluster_name : str
             Name to use as key for storing clustering results
@@ -550,16 +589,16 @@ class ClusterManager:
         Returns:
         --------
         None
-            Stores results in traj_data.cluster_data and prints success message
+            Stores results in pipeline_data.cluster_data and prints success message
         """
-        traj_data.cluster_data[cluster_name] = cluster_data
-        
-        n_clusters = cluster_data.metadata.get('n_clusters', 'unknown')
+        pipeline_data.cluster_data[cluster_name] = cluster_data
+
+        n_clusters = cluster_data.metadata.get("n_clusters", "unknown")
         n_frames = len(cluster_data.labels)
-        
+
         print(f"Clustering '{cluster_name}' completed successfully.")
         print(f"Found {n_clusters} clusters for {n_frames} frames.")
-            
+
     def _handle_clustering_error(self, error, cluster_type, selection_name):
         """
         Handle clustering computation errors with informative messages.
@@ -583,8 +622,10 @@ class ClusterManager:
         ValueError
             Enhanced error message with clustering context
         """
-        cluster_type_name = getattr(cluster_type, 'get_type_name', lambda: str(cluster_type))()
-        
+        cluster_type_name = getattr(
+            cluster_type, "get_type_name", lambda: str(cluster_type)
+        )()
+
         raise ValueError(
             f"Clustering computation failed for '{cluster_type_name}' on selection '{selection_name}'. "
             f"Original error: {str(error)}"
