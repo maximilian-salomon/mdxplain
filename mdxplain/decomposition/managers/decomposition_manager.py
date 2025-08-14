@@ -1,7 +1,7 @@
 # mdxplain - A Python toolkit for molecular dynamics trajectory analysis
 #
 # Author: Maximilian Salomon
-# Created with assistance from Claude-4-Sonnet and Cursor AI.
+# Created with assistance from Kiro AI (Claude Sonnet 4.0).
 #
 # Copyright (C) 2025 Maximilian Salomon
 #

@@ -4,7 +4,7 @@
 # Contains core utility functions for data handling and processing.
 #
 # Author: Maximilian Salomon
-# Created with assistance from Claude-4-Sonnet and Cursor AI.
+# Created with assistance from Claude Code (Claude Sonnet 4.0) and GitHub Copilot (Claude Sonnet 4.0).
 #
 # Copyright (C) 2025 Maximilian Salomon
 #
