@@ -1,11 +1,7 @@
-#!/usr/bin/env python3
 # mdxplain - A Python toolkit for molecular dynamics trajectory analysis
-# Unit tests for DataUtils public methods
-#
-# Comprehensive tests for DataUtils public API: save_object and load_object
 #
 # Author: Maximilian Salomon
-# Created with assistance from Claude-4-Sonnet and Cursor AI.
+# Created with assistance from Claude Code (Claude Sonnet 4.0) and GitHub Copilot (Claude Sonnet 4.0).
 #
 # Copyright (C) 2025 Maximilian Salomon
 #
