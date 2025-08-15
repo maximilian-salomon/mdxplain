@@ -180,7 +180,7 @@ class DecompositionManager:
 
         self._check_decomposition_existence(pipeline_data, decomposition_name, force)
 
-        data_matrix = pipeline_data.get_selected_matrix(selection_name)
+        data_matrix = pipeline_data.get_selected_data(selection_name)
 
         decomposition_data = DecompositionData(
             decomposition_type=decomposition_key,

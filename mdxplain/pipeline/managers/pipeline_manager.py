@@ -37,6 +37,9 @@ from ...feature import FeatureManager
 from ...feature_selection.managers.feature_selector_manager import FeatureSelectorManager
 from ...clustering import ClusterManager
 from ...decomposition import DecompositionManager
+from ...data_selector.managers.data_selector_manager import DataSelectorManager
+from ...comparison.managers.comparison_manager import ComparisonManager
+from ...feature_importance.managers.feature_importance_manager import FeatureImportanceManager
 
 
 class PipelineManager:
@@ -141,6 +144,10 @@ class PipelineManager:
             use_memmap=use_memmap, chunk_size=chunk_size, cache_dir=cache_dir
         )
         self._feature_selector_manager = FeatureSelectorManager()
+        
+        self._data_selector_manager = DataSelectorManager()
+        self._comparison_manager = ComparisonManager()
+        self._feature_importance_manager = FeatureImportanceManager()
 
     @property
     def trajectory(self) -> TrajectoryManager:
@@ -213,6 +220,54 @@ class PipelineManager:
         return cast(
             FeatureSelectorManager,
             AutoInjectProxy(self._feature_selector_manager, self._data),
+        )
+
+    @property
+    def data_selector(self) -> DataSelectorManager:
+        """
+        Access data selector management with automatic PipelineData injection.
+
+        Returns:
+        --------
+        DataSelectorManager
+            Data selector manager with automatic PipelineData injection.
+            All methods that expect pipeline_data parameter will receive it automatically.
+        """
+        return cast(
+            DataSelectorManager,
+            AutoInjectProxy(self._data_selector_manager, self._data),
+        )
+
+    @property
+    def comparison(self) -> ComparisonManager:
+        """
+        Access comparison management with automatic PipelineData injection.
+
+        Returns:
+        --------
+        ComparisonManager
+            Comparison manager with automatic PipelineData injection.
+            All methods that expect pipeline_data parameter will receive it automatically.
+        """
+        return cast(
+            ComparisonManager,
+            AutoInjectProxy(self._comparison_manager, self._data),
+        )
+
+    @property
+    def feature_importance(self) -> FeatureImportanceManager:
+        """
+        Access feature importance analysis with automatic PipelineData injection.
+
+        Returns:
+        --------
+        FeatureImportanceManager
+            Feature importance manager with automatic PipelineData injection.
+            All methods that expect pipeline_data parameter will receive it automatically.
+        """
+        return cast(
+            FeatureImportanceManager,
+            AutoInjectProxy(self._feature_importance_manager, self._data),
         )
 
     @property

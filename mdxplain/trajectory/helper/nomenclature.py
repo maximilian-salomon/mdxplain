@@ -49,7 +49,7 @@ class Nomenclature:
     This class provides a unified interface to use different mdciao labelers
     (GPCR, CGN, KLIFS) and generate label lists for molecular dynamics analysis.
     """
-
+    # TODO: Use guess_fragments and guess_nomenclature methods from mdciao to automatically detect fragments and nomenclature types.
     def __init__(
         self,
         topology: md.Topology,
