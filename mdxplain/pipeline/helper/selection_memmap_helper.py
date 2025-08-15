@@ -147,3 +147,62 @@ class SelectionMemmapHelper:
             col_start = col_end
 
         return result
+
+    @staticmethod
+    def create_memmap_frame_selection(
+        data,
+        frame_indices: list,
+        name: str,
+        cache_dir: str,
+        chunk_size: int,
+    ):
+        """
+        Create memory-efficient frame selection using chunk-wise processing.
+
+        This method avoids loading entire rows into RAM by processing
+        data in chunks and writing directly to a memmap output file.
+        Handles frame selection (row-wise) efficiently for large datasets.
+
+        Parameters:
+        -----------
+        data : numpy.ndarray or memmap
+            Source data to select from
+        frame_indices : list
+            Row indices to select
+        name : str
+            Selection name for cache file naming
+        cache_dir : str
+            Cache directory for memmap files
+        chunk_size : int
+            Chunk size for processing
+
+        Returns:
+        --------
+        numpy.ndarray
+            Memmap array with selected frames
+        """
+        n_selected_frames = len(frame_indices)
+        _, n_cols = data.shape
+
+        cache_path = DataUtils.get_cache_file_path(
+            f"{name}_frame_selection.dat", cache_dir
+        )
+
+        result = np.memmap(
+            cache_path,
+            dtype=data.dtype,
+            mode="w+",
+            shape=(n_selected_frames, n_cols),
+        )
+
+        # Process in chunks to avoid loading entire data into memory
+        for chunk_start in range(0, n_selected_frames, chunk_size):
+            chunk_end = min(chunk_start + chunk_size, n_selected_frames)
+            
+            # Get indices for this chunk
+            chunk_indices = frame_indices[chunk_start:chunk_end]
+            
+            # Copy data for this chunk
+            result[chunk_start:chunk_end, :] = data[chunk_indices, :]
+
+        return result

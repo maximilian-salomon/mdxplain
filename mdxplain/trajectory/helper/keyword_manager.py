@@ -29,7 +29,7 @@ from ..entities.trajectory_data import TrajectoryData
 
 class KeywordManager:
     """Utility class for managing trajectory keywords."""
-
+    #TODO: Use Tag instead of keywords.
     @staticmethod
     def resolve_trajectory_selectors(
         traj_data: TrajectoryData,

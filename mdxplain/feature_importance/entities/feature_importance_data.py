@@ -1,0 +1,355 @@
+# mdxplain - A Python toolkit for molecular dynamics trajectory analysis
+#
+# Author: Maximilian Salomon
+# Created with assistance from Claude Code (Claude Sonnet 4.0) and GitHub Copilot (Claude Sonnet 4.0).
+#
+# Copyright (C) 2025 Maximilian Salomon
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+"""
+Feature importance data entity for storing ML analysis results.
+
+This module contains the FeatureImportanceData class that stores feature
+importance analysis results from various ML algorithms. It provides
+separated data and metadata storage with flexible access methods.
+"""
+
+from typing import List, Dict, Any, Tuple, Union, Optional
+import numpy as np
+
+
+class FeatureImportanceData:
+    """
+    Data entity for storing feature importance analysis results.
+
+    Stores feature importance results from ML algorithms with separated
+    data and metadata storage. Each FeatureImportanceData contains results
+    for all sub-comparisons from a single analysis run.
+
+    Attributes:
+    -----------
+    name : str
+        Name identifier for this analysis
+    analyzer_type : str
+        Type of analyzer used (e.g., "decision_tree")
+    comparison_name : str
+        Name of the comparison this analysis was run on
+    data : List[np.ndarray]
+        List of feature importance arrays (one per sub-comparison)
+    metadata : List[Dict[str, Any]]
+        List of metadata dictionaries (parallel to data list)
+
+    Examples:
+    ---------
+    >>> fi_data = FeatureImportanceData("tree_analysis")
+    >>> fi_data.analyzer_type = "decision_tree"
+    >>> fi_data.comparison_name = "folded_vs_unfolded"
+
+    >>> # Access by index
+    >>> importance_0, meta_0 = fi_data.get_comparison(0)
+
+    >>> # Access by name
+    >>> importance, meta = fi_data.get_comparison("folded_vs_rest")
+    """
+
+    def __init__(self, name: str):
+        """
+        Initialize feature importance data with given name.
+
+        Parameters:
+        -----------
+        name : str
+            Name identifier for this analysis
+
+        Returns:
+        --------
+        None
+            Initializes FeatureImportanceData with given name
+
+        Examples:
+        ---------
+        >>> fi_data = FeatureImportanceData("my_analysis")
+        >>> print(fi_data.name)
+        'my_analysis'
+        """
+        self.name = name
+        self.analyzer_type: Optional[str] = None
+        self.comparison_name: Optional[str] = None
+        self.feature_selector: Optional[str] = None
+
+        # Separated data and metadata lists (parallel indexed)
+        self.data: List[np.ndarray] = []
+        self.metadata: List[Dict[str, Any]] = []
+
+    def add_comparison_result(
+        self, importance_scores: np.ndarray, metadata: Dict[str, Any]
+    ) -> None:
+        """
+        Add results for a sub-comparison.
+
+        Parameters:
+        -----------
+        importance_scores : np.ndarray
+            Feature importance scores from ML algorithm
+        metadata : Dict[str, Any]
+            Metadata for this sub-comparison
+
+        Returns:
+        --------
+        None
+            Adds results to data and metadata lists
+
+        Examples:
+        ---------
+        >>> importance = np.array([0.3, 0.2, 0.1, 0.4])
+        >>> meta = {
+        ...     "comparison": "folded_vs_unfolded",
+        ...     "n_samples": 1000,
+        ...     "accuracy": 0.85
+        ... }
+        >>> fi_data.add_comparison_result(importance, meta)
+        """
+        self.data.append(importance_scores.copy())
+        self.metadata.append(metadata.copy())
+
+    def get_comparison(
+        self, identifier: Union[int, str]
+    ) -> Tuple[np.ndarray, Dict[str, Any]]:
+        """
+        Get comparison results by index or name.
+
+        Parameters:
+        -----------
+        identifier : int or str
+            - int: Index of the comparison (0-based)
+            - str: Name of the comparison from metadata
+
+        Returns:
+        --------
+        Tuple[np.ndarray, Dict[str, Any]]
+            Tuple of (importance_scores, metadata)
+
+        Raises:
+        -------
+        ValueError
+            If identifier not found
+        TypeError
+            If identifier is neither int nor str
+
+        Examples:
+        ---------
+        >>> # Access by index
+        >>> scores, meta = fi_data.get_comparison(0)
+
+        >>> # Access by name
+        >>> scores, meta = fi_data.get_comparison("folded_vs_rest")
+        """
+        # Case 1: Integer index
+        if isinstance(identifier, int):
+            if 0 <= identifier < len(self.data):
+                return self.data[identifier], self.metadata[identifier]
+            
+            raise ValueError(
+                f"Index {identifier} out of range. "
+                f"Available indices: 0-{len(self.data)-1}"
+            )
+
+        # Case 2: String name
+        if isinstance(identifier, str):
+            for i, meta in enumerate(self.metadata):
+                if meta.get("comparison") == identifier:
+                    return self.data[i], self.metadata[i]
+
+            # Name not found - show available names
+            available_names = [
+                m.get("comparison", f"unnamed_{i}") for i, m in enumerate(self.metadata)
+            ]
+            raise ValueError(
+                f"Comparison '{identifier}' not found. "
+                f"Available comparisons: {available_names}"
+            )
+
+        raise TypeError(
+            f"Identifier must be int or str, got {type(identifier).__name__}"
+        )
+
+    def get_all_comparisons(self) -> List[Tuple[np.ndarray, Dict[str, Any]]]:
+        """
+        Get all comparison results.
+
+        Returns:
+        --------
+        List[Tuple[np.ndarray, Dict[str, Any]]]
+            List of (importance_scores, metadata) tuples
+
+        Examples:
+        ---------
+        >>> all_results = fi_data.get_all_comparisons()
+        >>> for scores, meta in all_results:
+        ...     print(f"{meta['comparison']}: {scores[:3]}")
+        """
+        return list(zip(self.data, self.metadata))
+
+    def list_comparisons(self) -> List[str]:
+        """
+        List all available comparison names.
+
+        Returns:
+        --------
+        List[str]
+            List of comparison names from metadata
+
+        Examples:
+        ---------
+        >>> names = fi_data.list_comparisons()
+        >>> print(f"Available comparisons: {names}")
+        """
+        return [
+            meta.get("comparison", f"unnamed_{i}")
+            for i, meta in enumerate(self.metadata)
+        ]
+
+    def get_top_features(
+        self, identifier: Union[int, str], n: int = 10
+    ) -> List[Tuple[int, float]]:
+        """
+        Get top N most important features for a comparison.
+
+        Parameters:
+        -----------
+        identifier : int or str
+            Comparison identifier (index or name)
+        n : int, default=10
+            Number of top features to return
+
+        Returns:
+        --------
+        List[Tuple[int, float]]
+            List of (feature_index, importance_score) tuples, sorted by importance
+
+        Examples:
+        ---------
+        >>> top_features = fi_data.get_top_features("folded_vs_rest", n=5)
+        >>> for feat_idx, score in top_features:
+        ...     print(f"Feature {feat_idx}: {score:.3f}")
+        """
+        scores, _ = self.get_comparison(identifier)
+        
+        # Get indices sorted by importance (descending)
+        sorted_indices = np.argsort(scores)[::-1]
+        
+        # Return top N as (index, score) tuples
+        top_n = min(n, len(scores))
+        return [(int(idx), float(scores[idx])) for idx in sorted_indices[:top_n]]
+
+    def get_average_importance(self) -> np.ndarray:
+        """
+        Get average feature importance across all comparisons.
+
+        Returns:
+        --------
+        np.ndarray
+            Average importance scores across all sub-comparisons
+
+        Examples:
+        ---------
+        >>> avg_importance = fi_data.get_average_importance()
+        >>> top_overall = np.argmax(avg_importance)
+        >>> print(f"Most important feature overall: {top_overall}")
+        """
+        if not self.data:
+            return np.array([])
+
+        # Stack all importance arrays and compute mean
+        return np.mean(self.data, axis=0)
+
+    def get_analysis_info(self) -> Dict[str, Any]:
+        """
+        Get summary information about this analysis.
+
+        Returns:
+        --------
+        Dict[str, Any]
+            Dictionary with analysis summary information
+
+        Examples:
+        ---------
+        >>> info = fi_data.get_analysis_info()
+        >>> print(f"Analyzer: {info['analyzer_type']}")
+        >>> print(f"Comparisons: {info['n_comparisons']}")
+        """
+        return {
+            "name": self.name,
+            "analyzer_type": self.analyzer_type,
+            "comparison_name": self.comparison_name,
+            "n_comparisons": len(self.data),
+            "n_features": len(self.data[0]) if self.data else 0,
+            "comparison_names": self.list_comparisons(),
+        }
+
+    def __len__(self) -> int:
+        """
+        Get number of stored comparisons.
+
+        Returns:
+        --------
+        int
+            Number of comparisons
+
+        Examples:
+        ---------
+        >>> print(f"Number of comparisons: {len(fi_data)}")
+        """
+        return len(self.data)
+
+    def __contains__(self, comparison_name: str) -> bool:
+        """
+        Check if a comparison exists.
+
+        Parameters:
+        -----------
+        comparison_name : str
+            Name of the comparison to check
+
+        Returns:
+        --------
+        bool
+            True if comparison exists, False otherwise
+
+        Examples:
+        ---------
+        >>> if "folded_vs_rest" in fi_data:
+        ...     print("Comparison exists")
+        """
+        return comparison_name in self.list_comparisons()
+
+    def __repr__(self) -> str:
+        """
+        String representation of the FeatureImportanceData.
+
+        Returns:
+        --------
+        str
+            String representation
+
+        Examples:
+        ---------
+        >>> print(repr(fi_data))
+        FeatureImportanceData(name='tree_analysis', analyzer='decision_tree', n_comp=4)
+        """
+        return (
+            f"FeatureImportanceData(name='{self.name}', "
+            f"analyzer='{self.analyzer_type}', n_comp={len(self.data)})"
+        )

@@ -26,16 +26,22 @@ data container orchestrating all analysis data including trajectories,
 features, clustering results, and decomposition results.
 """
 
-from typing import Dict, Any
+from typing import Dict, Any, Optional, Tuple
+import numpy as np
 
 from ...trajectory.entities.trajectory_data import TrajectoryData
 from ...feature.entities.feature_data import FeatureData
 from ...feature_selection.entities.feature_selector_data import FeatureSelectorData
 from ...clustering.entities.cluster_data import ClusterData
 from ...decomposition.entities.decomposition_data import DecompositionData
+from ...data_selector.entities.data_selector_data import DataSelectorData
+from ...comparison.entities.comparison_data import ComparisonData
+from ...feature_importance.entities.feature_importance_data import FeatureImportanceData
 from ...utils.data_utils import DataUtils
 from ..helper.selection_matrix_helper import SelectionMatrixHelper
 from ..helper.selection_metadata_helper import SelectionMetadataHelper
+from ..helper.comparison_data_helper import ComparisonDataHelper
+from ..helper.selection_memmap_helper import SelectionMemmapHelper
 
 
 class PipelineData:
@@ -113,9 +119,10 @@ class PipelineData:
         self.decomposition_data: Dict[str, DecompositionData] = {}
         self.cluster_data: Dict[str, ClusterData] = {}
 
-        # Future analysis data (placeholders for upcoming modules)
-        self.data_picker_data: Dict[str, Any] = {}
-        self.feature_importance_data: Dict[str, Any] = {}
+        # New analysis modules
+        self.data_selector_data: Dict[str, DataSelectorData] = {}
+        self.comparison_data: Dict[str, ComparisonData] = {}
+        self.feature_importance_data: Dict[str, FeatureImportanceData] = {}
 
     def clear_all_data(self) -> None:
         """
@@ -141,7 +148,8 @@ class PipelineData:
         self.selected_feature_data.clear()
         self.decomposition_data.clear()
         self.cluster_data.clear()
-        self.data_picker_data.clear()
+        self.data_selector_data.clear()
+        self.comparison_data.clear()
         self.feature_importance_data.clear()
 
     def get_data_summary(self) -> Dict[str, Any]:
@@ -171,7 +179,8 @@ class PipelineData:
             "feature_selections": len(self.selected_feature_data),
             "clusterings_performed": len(self.cluster_data),
             "decompositions_computed": len(self.decomposition_data),
-            "data_picker_selections": len(self.data_picker_data),
+            "data_selectors_created": len(self.data_selector_data),
+            "comparisons_created": len(self.comparison_data),
             "feature_importance_analyses": len(self.feature_importance_data),
         }
 
@@ -561,48 +570,7 @@ class PipelineData:
     # FEATURE SELECTION SYSTEM METHODS
     # =============================================================================
 
-    def get_selected_matrix(self, name):
-        """
-        Return merged matrix from all selected features.
-
-        This method retrieves a previously created feature selection and
-        returns a merged matrix containing all selected columns from the
-        different feature types. The matrix combines both reduced and
-        original data as specified during selection creation.
-
-        Parameters:
-        -----------
-        name : str
-            Name of the selection to retrieve
-
-        Returns:
-        --------
-        numpy.ndarray
-            Merged matrix with selected columns from all features
-
-        Raises:
-        -------
-        ValueError
-            If selection not found or no data available
-
-        Examples:
-        ---------
-        >>> # After creating a selection with FeatureSelector
-        >>> selector = FeatureSelector()
-        >>> selector.add("distances", "res ALA")
-        >>> selector.select(pipeline_data, "ala_analysis")
-        >>>
-        >>> # Get the merged matrix
-        >>> matrix = pipeline_data.get_selected_matrix("ala_analysis")
-        >>> print(f"Selected data shape: {matrix.shape}")
-        """
-        self.validate_selection_exists(name)
-        matrices = SelectionMatrixHelper.collect_matrices_for_selection(self, name)
-        return SelectionMatrixHelper.merge_matrices(
-            matrices, name, self.use_memmap, self.cache_dir, self.chunk_size
-        )
-
-    def get_selected_feature_metadata(self, name):
+    def get_selected_metadata(self, name):
         """
         Return metadata for all selected features.
 
@@ -634,7 +602,7 @@ class PipelineData:
         Examples:
         ---------
         >>> # Get metadata for a selection
-        >>> metadata = pipeline_data.get_selected_feature_metadata("ala_analysis")
+        >>> metadata = pipeline_data.get_selected_metadata("ala_analysis")
         >>> print(f"Number of selected features: {len(metadata)}")
         >>>
         >>> # Examine first feature
@@ -674,3 +642,148 @@ class PipelineData:
             raise ValueError(
                 f"Selection '{name}' has not been processed yet. Run select() first."
             )
+        
+    def get_selected_data(
+        self,
+        feature_selector: str,
+        data_selector: Optional[str] = None
+    ) -> np.ndarray:
+        """
+        Get data matrix with selected features and optionally selected frames.
+
+        This method combines feature selection (columns) and data selection (rows)
+        to create a matrix with the desired subset of data. Feature selection is
+        required to define which columns to include.
+
+        Parameters:
+        -----------
+        feature_selector : str
+            Name of the feature selector (which columns to include).
+            Must be provided - cannot be None.
+        data_selector : str, optional
+            Name of the data selector (which rows to include).
+            If None, uses all available frames.
+
+        Returns:
+        --------
+        np.ndarray
+            Matrix with selected columns and optionally selected rows.
+            - With data_selector: (n_selected_frames, n_selected_features)
+            - Without data_selector: (n_all_frames, n_selected_features)
+
+        Raises:
+        -------
+        ValueError
+            If feature_selector doesn't exist, data_selector doesn't exist, or no data available
+
+        Examples:
+        ---------
+        >>> # Get data with both feature and frame selection
+        >>> data = pipeline_data.get_selected_data(
+        ...     feature_selector="key_distances",
+        ...     data_selector="folded_frames"
+        ... )
+        >>> print(f"Selected data shape: {data.shape}")
+
+        >>> # Get all frames but only selected features
+        >>> data = pipeline_data.get_selected_data(
+        ...     feature_selector="important_features"
+        ... )
+        """
+        # Validate feature selector exists
+        self.validate_selection_exists(feature_selector)
+        
+        # Get full feature matrix using SelectionMatrixHelper
+        matrices = SelectionMatrixHelper.collect_matrices_for_selection(self, feature_selector)
+        full_matrix = SelectionMatrixHelper.merge_matrices(
+            matrices, feature_selector, self.use_memmap, self.cache_dir, self.chunk_size
+        )
+
+        # If no data selector specified, return full matrix
+        if data_selector is None:
+            return full_matrix
+
+        # Validate data selector exists  
+        if data_selector not in self.data_selector_data:
+            available = list(self.data_selector_data.keys())
+            raise ValueError(
+                f"Data selector '{data_selector}' not found. "
+                f"Available data selectors: {available}"
+            )
+            
+        # Get selected frame indices
+        selector_data = self.data_selector_data[data_selector]
+        frame_indices = selector_data.get_frame_indices()
+        
+        if not frame_indices:
+            raise ValueError(f"Data selector '{data_selector}' has no selected frames")
+        
+        # Use memmap-safe frame selection for large datasets
+        if self.use_memmap and len(frame_indices) > self.chunk_size:
+            return SelectionMemmapHelper.create_memmap_frame_selection(
+                full_matrix, frame_indices, f"{feature_selector}_{data_selector}",
+                self.cache_dir, self.chunk_size
+            )
+        
+        # For small selections, direct indexing is fine
+        return full_matrix[frame_indices]
+
+    # =============================================================================
+    # COMPARISON DATA METHODS
+    # =============================================================================
+
+    def get_comparison_data(
+        self, comparison_name: str, sub_comparison_name: str
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Get X (features) and y (labels) for a specific comparison sub-comparison.
+
+        This method provides the central access point for comparison data,
+        combining ComparisonData metadata with efficient data processing.
+        Used by modules to get ready-to-use datasets for analysis.
+
+        Parameters:
+        -----------
+        comparison_name : str
+            Name of the comparison to retrieve data from
+        sub_comparison_name : str
+            Name of the specific sub-comparison within the comparison
+
+        Returns:
+        --------
+        Tuple[np.ndarray, np.ndarray]
+            Tuple of (X, y) where:
+            - X is the feature matrix with selected features and frames
+            - y is the label array for the comparison groups
+
+        Raises:
+        -------
+        ValueError
+            If comparison not found, sub-comparison not found, or no data available
+
+        Examples:
+        ---------
+        >>> # Get data for a binary comparison
+        >>> X, y = pipeline_data.get_comparison_data("folded_vs_unfolded", "main")
+        >>> print(f"Features shape: {X.shape}")
+        >>> print(f"Labels: {np.unique(y)}")
+
+        >>> # Get data for one-vs-rest comparison
+        >>> X, y = pipeline_data.get_comparison_data("conformations", "folded_vs_rest")
+        >>> print(f"Data shape: {X.shape}, Labels: {np.unique(y)}")
+        """
+        # Validate comparison exists
+        if comparison_name not in self.comparison_data:
+            available = list(self.comparison_data.keys())
+            raise ValueError(
+                f"Comparison '{comparison_name}' not found. "
+                f"Available comparisons: {available}"
+            )
+
+        # Get comparison metadata
+        comparison_data = self.comparison_data[comparison_name]
+
+        # Use ComparisonDataHelper for data processing
+        return ComparisonDataHelper.get_sub_comparison_data(
+            self, comparison_data, sub_comparison_name
+        )

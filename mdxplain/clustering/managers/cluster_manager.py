@@ -295,7 +295,7 @@ class ClusterManager:
             If feature selection data is not found or invalid
         """
         pipeline_data.validate_selection_exists(selection_name)
-        data_matrix = pipeline_data.get_selected_matrix(selection_name)
+        data_matrix = pipeline_data.get_selected_data(selection_name)
 
         if data_matrix is None:
             raise ValueError(
