@@ -20,7 +20,7 @@
 
 
 """
-Nomenclature utilities for molecular dynamics trajectory labeling.
+NomenclatureHelper utilities for molecular dynamics trajectory labeling.
 
 This module provides utilities to create consensus labels for MD trajectories
 using different nomenclature systems (GPCR, CGN, KLIFS) via mdciao labelers.
@@ -42,7 +42,7 @@ import mdciao
 import mdtraj as md
 
 
-class Nomenclature:
+class NomenclatureHelper:
     """
     A utility class for creating consensus labels from MD trajectories.
 
@@ -65,7 +65,7 @@ class Nomenclature:
         **labeler_kwargs,
     ):
         """
-        Initialize the Nomenclature labeler.
+        Initialize the NomenclatureHelper labeler.
 
         This class provides a unified interface to create consensus labels for MD trajectories
         using different mdciao nomenclature systems.
@@ -112,7 +112,7 @@ class Nomenclature:
         Returns:
         --------
         None
-            Initializes the Nomenclature object
+            Initializes the NomenclatureHelper object
 
         Raises:
         -------
@@ -136,7 +136,7 @@ class Nomenclature:
         --------
         Amino acid labels only (no nomenclature):
 
-        >>> nomenclature = Nomenclature(
+        >>> nomenclature = NomenclatureHelper(
         ...     topology=traj.top,
         ...     consensus=False,
         ...     aa_short=True  # Use single-letter codes: A, C, D, ...
@@ -145,7 +145,7 @@ class Nomenclature:
 
         Simple single fragment labeling:
 
-        >>> nomenclature = Nomenclature(
+        >>> nomenclature = NomenclatureHelper(
         ...     topology=traj.top,
         ...     fragment_definition="receptor",
         ...     fragment_type="gpcr",
@@ -156,7 +156,7 @@ class Nomenclature:
 
         Complex multi-fragment labeling:
 
-        >>> nomenclature = Nomenclature(
+        >>> nomenclature = NomenclatureHelper(
         ...     topology=traj.top,
         ...     fragment_definition={"gpcr": (0, 300), "g_protein": (300, 600)},
         ...     fragment_type={"gpcr": "gpcr", "g_protein": "cgn"},
@@ -281,7 +281,7 @@ class Nomenclature:
         Parameters
         ----------
         fragment_type : str or dict
-            Nomenclature type(s) - single string or dict mapping
+            NomenclatureHelper type(s) - single string or dict mapping
         fragment_names : List[str]
             List of fragment names for mapping
 

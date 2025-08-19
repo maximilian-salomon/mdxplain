@@ -22,7 +22,7 @@
 Frame selection helper for data selector operations.
 
 This module provides helper methods for selecting frames based on
-keywords and cluster assignments, extracting common logic from
+tags and cluster assignments, extracting common logic from
 DataSelectorManager methods.
 """
 
@@ -34,14 +34,14 @@ class FrameSelectionHelper:
     Helper class for frame selection operations.
     
     Provides static methods for selecting trajectory frames based on
-    various criteria such as keywords and cluster assignments. These
+    various criteria such as tags and cluster assignments. These
     methods extract common logic from DataSelectorManager to improve
     code organization and reusability.
     
     Examples:
     ---------
-    >>> # Select frames by keywords
-    >>> indices = FrameSelectionHelper.select_frames_by_keywords(
+    >>> # Select frames by tags
+    >>> indices = FrameSelectionHelper.select_frames_by_tags(
     ...     trajectory_data, ["system_A", "biased"], match_all=True
     ... )
     
@@ -52,56 +52,56 @@ class FrameSelectionHelper:
     """
     
     @staticmethod
-    def select_frames_by_keywords(
-        trajectory_data, keywords: List[str], match_all: bool
+    def select_frames_by_tags(
+        trajectory_data, tags: List[str], match_all: bool
     ) -> List[int]:
         """
-        Select frame indices based on keyword criteria.
+        Select frame indices based on tag criteria.
         
-        Searches through trajectory frame keyword mappings to find frames
-        that contain the specified keywords according to the matching mode.
+        Searches through trajectory frame tag mappings to find frames
+        that contain the specified tags according to the matching mode.
         
         Parameters:
         -----------
         trajectory_data : TrajectoryData
-            Trajectory data object containing frame keyword mappings
-        keywords : List[str]
-            List of keywords to search for in frame mappings
+            Trajectory data object containing frame tag mappings
+        tags : List[str]
+            List of tags to search for in frame mappings
         match_all : bool
-            If True, frame must contain ALL keywords. If False, ANY keyword matches.
+            If True, frame must contain ALL tags. If False, ANY tag matches.
             
         Returns:
         --------
         List[int]
-            List of global frame indices that match the keyword criteria
+            List of global frame indices that match the tag criteria
             
         Examples:
         ---------
-        >>> # Select frames with all keywords
-        >>> indices = FrameSelectionHelper.select_frames_by_keywords(
+        >>> # Select frames with all tags
+        >>> indices = FrameSelectionHelper.select_frames_by_tags(
         ...     trajectory_data, ["system_A", "biased"], match_all=True
         ... )
         
-        >>> # Select frames with any keyword
-        >>> indices = FrameSelectionHelper.select_frames_by_keywords(
+        >>> # Select frames with any tag
+        >>> indices = FrameSelectionHelper.select_frames_by_tags(
         ...     trajectory_data, ["system_A", "system_B"], match_all=False
         ... )
         """
         frame_indices = []
 
-        for frame_idx, frame_keywords in trajectory_data.frame_keyword_mapping.items():
-            if frame_keywords is None:
+        for frame_idx, frame_tags in trajectory_data.frame_tag_mapping.items():
+            if frame_tags is None:
                 continue
 
-            frame_keyword_set = set(frame_keywords)
+            frame_tag_set = set(frame_tags)
 
             if match_all:
-                # Frame must have ALL specified keywords
-                if all(kw in frame_keyword_set for kw in keywords):
+                # Frame must have ALL specified tags
+                if all(tag in frame_tag_set for tag in tags):
                     frame_indices.append(frame_idx)
             else:
-                # Frame must have ANY of the specified keywords
-                if any(kw in frame_keyword_set for kw in keywords):
+                # Frame must have ANY of the specified tags
+                if any(tag in frame_tag_set for tag in tags):
                     frame_indices.append(frame_idx)
 
         return frame_indices

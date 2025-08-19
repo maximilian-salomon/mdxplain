@@ -1,7 +1,7 @@
 # mdxplain - A Python toolkit for molecular dynamics trajectory analysis
 #
 # Author: Maximilian Salomon
-# Created with assistance from Cursor IDE (Claude Sonnet 4.0, occasional Claude Sonnet 3.7 and Gemini 2.5 Pro).
+# Created with assistance from Claude Code (Claude Sonnet 4.0) and GitHub Copilot (Claude Sonnet 4.0).
 #
 # Copyright (C) 2025 Maximilian Salomon
 #
@@ -18,22 +18,14 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""Trajectory helper utilities."""
+"""Trajectory processing helper utilities."""
 
-from .process_helper.trajectory_process_helper import TrajectoryProcessHelper
-from .process_helper.trajectory_load_helper import TrajectoryLoadHelper
-from .process_helper.selection_resolve_helper import SelectionResolveHelper
-from .validation_helper.consistency_check_helper import ConsistencyCheckHelper
-from .validation_helper.trajectory_validation_helper import TrajectoryValidationHelper
-from .metadata_helper.nomenclature_helper import NomenclatureHelper
-from .metadata_helper.tag_helper import TagHelper
+from .trajectory_process_helper import TrajectoryProcessHelper
+from .trajectory_load_helper import TrajectoryLoadHelper
+from .selection_resolve_helper import SelectionResolveHelper
 
 __all__ = [
     "TrajectoryProcessHelper",
-    "TrajectoryLoadHelper",
+    "TrajectoryLoadHelper", 
     "SelectionResolveHelper",
-    "ConsistencyCheckHelper",
-    "TrajectoryValidationHelper",
-    "NomenclatureHelper",
-    "TagHelper",
 ]

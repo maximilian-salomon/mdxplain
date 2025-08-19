@@ -134,7 +134,8 @@ class PipelineManager:
 
         # Create manager instances with their configurations
         self._trajectory_manager = TrajectoryManager(
-            stride=stride, concat=concat, selection=selection, cache_dir=cache_dir
+            stride=stride, concat=concat, selection=selection, cache_dir=cache_dir,
+            use_memmap=use_memmap, chunk_size=chunk_size
         )
         self._feature_manager = FeatureManager(
             use_memmap=use_memmap, chunk_size=chunk_size, cache_dir=cache_dir

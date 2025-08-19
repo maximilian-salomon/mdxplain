@@ -22,10 +22,10 @@
 
 from typing import Any, List, Optional, Union, Dict
 
-from ..entities.trajectory_data import TrajectoryData
+from ...entities.trajectory_data import TrajectoryData
 
 
-class TrajectoryProcessor:
+class TrajectoryProcessHelper:
     """Utility class for processing individual trajectory objects."""
 
     @staticmethod
@@ -49,7 +49,7 @@ class TrajectoryProcessor:
 
         Examples:
         ---------
-        >>> processed_traj = TrajectoryProcessor.process_trajectory_cuts(
+        >>> processed_traj = TrajectoryProcessHelper.process_trajectory_cuts(
         ...     traj, cut=1000, stride=2
         ... )
         """
@@ -84,7 +84,7 @@ class TrajectoryProcessor:
 
         Examples:
         ---------
-        >>> processed_trajs = TrajectoryProcessor.apply_selection_to_new_trajectories(
+        >>> processed_trajs = TrajectoryProcessHelper.apply_selection_to_new_trajectories(
         ...     trajectories, "protein"
         ... )
         """
@@ -116,7 +116,7 @@ class TrajectoryProcessor:
         Examples:
         ---------
         >>> # Remove trajectories at indices [3, 1, 0] (reverse sorted)
-        >>> TrajectoryProcessor.execute_removal(traj_data, [3, 1, 0])
+        >>> TrajectoryProcessHelper.execute_removal(traj_data, [3, 1, 0])
         """
         removed_trajectories = []
         for idx in indices_to_remove:
@@ -125,9 +125,9 @@ class TrajectoryProcessor:
             del traj_data.trajectories[idx]
             del traj_data.trajectory_names[idx]
 
-        # Also remove keywords for removed trajectories
+        # Also remove tags for removed trajectories
         for idx in indices_to_remove:
-            traj_data.trajectory_keywords.pop(idx, None)
+            traj_data.trajectory_tags.pop(idx, None)
 
         # Print removal summary
         for removed_info in removed_trajectories:
@@ -156,6 +156,13 @@ class TrajectoryProcessor:
         --------
         None
             Validation successful
+        
+        Examples:
+        ---------
+        >>> traj_data = TrajectoryData()
+        >>> # Load some trajectories first
+        >>> TrajectoryProcessHelper.validate_name_mapping(traj_data, ['new1', 'new2'])
+        >>> TrajectoryProcessHelper.validate_name_mapping(traj_data, {0: 'renamed_first'})
 
         Raises:
         -------
@@ -184,6 +191,16 @@ class TrajectoryProcessor:
         --------
         list
             Validated list of new trajectory names
+        
+        Examples:
+        ---------
+        >>> traj_data = TrajectoryData()
+        >>> # Assuming 3 trajectories are loaded
+        >>> new_names = TrajectoryProcessHelper.rename_with_list(
+        ...     traj_data, ['system1', 'system2', 'system3']
+        ... )
+        >>> print(new_names)
+        ['system1', 'system2', 'system3']
 
         Raises:
         -------
@@ -215,34 +232,172 @@ class TrajectoryProcessor:
         --------
         list
             New list of trajectory names with applied changes
+        
+        Examples:
+        ---------
+        >>> traj_data = TrajectoryData()
+        >>> # Rename specific trajectories by index
+        >>> new_names = TrajectoryProcessHelper.rename_with_dict(
+        ...     traj_data, {0: 'first_system', 2: 'third_system'}
+        ... )
+        >>> # Rename by existing name
+        >>> new_names = TrajectoryProcessHelper.rename_with_dict(
+        ...     traj_data, {'old_name': 'new_name'}
+        ... )
+
+        Raises:
+        -------
+        ValueError
+            If dictionary keys reference invalid trajectories
+
+        Parameters:
+        -----------
+        traj_data : TrajectoryData
+            Trajectory data object
+        name_dict : dict
+            Dictionary mapping old identifiers to new names
+
+        Returns:
+        --------
+        list
+            New list of trajectory names with applied changes
 
         Raises:
         -------
         ValueError
             If dictionary keys reference invalid trajectories
         """
-        # Create a copy of existing names
         new_names = list(traj_data.trajectory_names)
-
-        for old_identifier, new_name in name_dict.items():
-            if isinstance(old_identifier, int):
-                # Index-based renaming
-                if 0 <= old_identifier < len(new_names):
-                    new_names[old_identifier] = new_name
-                else:
-                    raise ValueError(
-                        f"Trajectory index {old_identifier} out of range. We have {len(new_names)} trajectories."
-                    )
-
-            elif isinstance(old_identifier, str):
-                # Name-based renaming
-                try:
-                    idx = traj_data.trajectory_names.index(old_identifier)
-                    new_names[idx] = new_name
-                except ValueError:
-                    raise ValueError(f"Trajectory name '{old_identifier}' not found")
-
-            else:
-                raise ValueError(f"Invalid identifier type: {type(old_identifier)}")
-
+        TrajectoryProcessHelper._apply_rename_dict(traj_data, name_dict, new_names)
         return new_names
+    
+    @staticmethod
+    def _apply_rename_dict(
+        traj_data: TrajectoryData, 
+        name_dict: Dict[Union[int, str], str], 
+        new_names: List[str]
+    ) -> None:
+        """
+        Apply renaming dictionary to names list.
+        
+        Parameters:
+        -----------
+        traj_data : TrajectoryData
+            Trajectory data object
+        name_dict : Dict[Union[int, str], str]
+            Dictionary mapping old identifiers to new names
+        new_names : List[str]
+            List of trajectory names to modify
+        
+        Returns:
+        --------
+        None
+            Modifies new_names list in-place
+        """
+        for old_identifier, new_name in name_dict.items():
+            TrajectoryProcessHelper._process_single_rename(
+                traj_data, old_identifier, new_name, new_names
+            )
+    
+    @staticmethod
+    def _process_single_rename(
+        traj_data: TrajectoryData, 
+        old_identifier: Union[int, str], 
+        new_name: str, 
+        new_names: List[str]
+    ) -> None:
+        """
+        Process a single rename operation.
+        
+        Parameters:
+        -----------
+        traj_data : TrajectoryData
+            Trajectory data object
+        old_identifier : Union[int, str]
+            Old trajectory identifier (index or name)
+        new_name : str
+            New trajectory name
+        new_names : List[str]
+            List of trajectory names to modify
+        
+        Returns:
+        --------
+        None
+            Modifies new_names list in-place
+        
+        Raises:
+        -------
+        ValueError
+            If identifier type is not int or str
+        """
+        if isinstance(old_identifier, int):
+            TrajectoryProcessHelper._rename_by_index(old_identifier, new_name, new_names)
+        elif isinstance(old_identifier, str):
+            TrajectoryProcessHelper._rename_by_name(traj_data, old_identifier, new_name, new_names)
+        else:
+            raise ValueError(f"Invalid identifier type: {type(old_identifier)}")
+    
+    @staticmethod
+    def _rename_by_index(old_index: int, new_name: str, new_names: List[str]) -> None:
+        """
+        Rename trajectory by index.
+        
+        Parameters:
+        -----------
+        old_index : int
+            Trajectory index to rename
+        new_name : str
+            New trajectory name
+        new_names : List[str]
+            List of trajectory names to modify
+        
+        Returns:
+        --------
+        None
+            Modifies new_names list in-place
+        
+        Raises:
+        -------
+        ValueError
+            If index is out of range
+        """
+        if 0 <= old_index < len(new_names):
+            new_names[old_index] = new_name
+        else:
+            raise ValueError(
+                f"Trajectory index {old_index} out of range. We have {len(new_names)} trajectories."
+            )
+    
+    @staticmethod
+    def _rename_by_name(
+        traj_data: TrajectoryData, old_name: str, new_name: str, new_names: List[str]
+    ) -> None:
+        """
+        Rename trajectory by name.
+        
+        Parameters:
+        -----------
+        traj_data : TrajectoryData
+            Trajectory data object
+        old_name : str
+            Old trajectory name to find
+        new_name : str
+            New trajectory name
+        new_names : List[str]
+            List of trajectory names to modify
+        
+        Returns:
+        --------
+        None
+            Modifies new_names list in-place
+        
+        Raises:
+        -------
+        ValueError
+            If old_name is not found in trajectory names
+        """
+        try:
+            idx = traj_data.trajectory_names.index(old_name)
+            new_names[idx] = new_name
+        except ValueError:
+            raise ValueError(f"Trajectory name '{old_name}' not found")

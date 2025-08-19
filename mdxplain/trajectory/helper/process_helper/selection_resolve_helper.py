@@ -20,12 +20,12 @@
 
 """Trajectory selection resolution utilities."""
 
-from typing import List, Optional, Union
+from typing import List, Union
 
-from ..entities.trajectory_data import TrajectoryData
+from ...entities.trajectory_data import TrajectoryData
 
 
-class TrajectorySelectionResolver:
+class SelectionResolveHelper:
     """Utility class for resolving trajectory selections to indices."""
 
     @staticmethod
@@ -54,13 +54,13 @@ class TrajectorySelectionResolver:
 
         Examples:
         ---------
-        >>> indices = TrajectorySelectionResolver.resolve_selection(
+        >>> indices = SelectionResolveHelper.resolve_selection(
         ...     traj_data, [0, "traj1", 2]
         ... )
         """
         indices = []
         for item in selection:
-            idx = TrajectorySelectionResolver._resolve_single_selection_item(
+            idx = SelectionResolveHelper._resolve_single_selection_item(
                 item, traj_data
             )
             indices.append(idx)
@@ -69,7 +69,7 @@ class TrajectorySelectionResolver:
 
     @staticmethod
     def get_indices_to_process(
-        traj_data: TrajectoryData, selection: Optional[List[Union[int, str]]]
+        traj_data: TrajectoryData, traj_selection: Union[int, str, List[Union[int, str]], "all"]
     ) -> List[int]:
         """
         Get list of trajectory indices to process.
@@ -78,9 +78,11 @@ class TrajectorySelectionResolver:
         -----------
         traj_data : TrajectoryData
             Trajectory data object
-        selection : list, optional
-            List of trajectory indices (int) or names (str) to process.
-            If None, all trajectories will be processed.
+        traj_selection : int, str, list, or "all"
+            Selection of trajectories to process:
+            - int: trajectory index
+            - str: trajectory name or "all" for all trajectories  
+            - list: list of indices/names
 
         Returns:
         --------
@@ -90,50 +92,25 @@ class TrajectorySelectionResolver:
         Examples:
         ---------
         >>> # Process all trajectories
-        >>> indices = TrajectorySelectionResolver.get_indices_to_process(traj_data, None)
+        >>> indices = SelectionResolveHelper.get_indices_to_process(traj_data, "all")
+
+        >>> # Process single trajectory
+        >>> indices = SelectionResolveHelper.get_indices_to_process(traj_data, 0)
 
         >>> # Process specific trajectories
-        >>> indices = TrajectorySelectionResolver.get_indices_to_process(
+        >>> indices = SelectionResolveHelper.get_indices_to_process(
         ...     traj_data, [0, "traj1"]
         ... )
         """
-        if selection is None:
+        # Handle "all" string
+        if traj_selection == "all":
             return list(range(len(traj_data.trajectories)))
         else:
-            return TrajectorySelectionResolver.resolve_selection(traj_data, selection)
-
-    @staticmethod
-    def prepare_removal_indices(
-        traj_data: TrajectoryData, trajs: Union[int, str, List[Union[int, str]]]
-    ) -> List[int]:
-        """
-        Convert trajs input to sorted indices for removal.
-
-        Parameters:
-        -----------
-        traj_data : TrajectoryData
-            Trajectory data object
-        trajs : int, str, or list
-            Trajectory index (int), name (str), or list of indices/names to remove.
-
-        Returns:
-        --------
-        list
-            List of trajectory indices to remove, sorted in reverse order
-
-        Examples:
-        ---------
-        >>> indices = TrajectorySelectionResolver.prepare_removal_indices(
-        ...     traj_data, [0, "traj1", 2]
-        ... )
-        """
-        if not isinstance(trajs, list):
-            trajs = [trajs]
-        indices_to_remove = TrajectorySelectionResolver.resolve_selection(
-            traj_data, trajs
-        )
-        indices_to_remove.sort(reverse=True)  # Avoid index shifting issues
-        return indices_to_remove
+            if not isinstance(traj_selection, list):
+                traj_selection = [traj_selection]
+            return SelectionResolveHelper.resolve_selection(
+                traj_data, traj_selection
+            )
 
     @staticmethod
     def _resolve_single_selection_item(
@@ -160,9 +137,9 @@ class TrajectorySelectionResolver:
             If selection item is not an integer or string
         """
         if isinstance(item, int):
-            return TrajectorySelectionResolver._resolve_index_selection(item, traj_data)
+            return SelectionResolveHelper._resolve_index_selection(item, traj_data)
         elif isinstance(item, str):
-            return TrajectorySelectionResolver._resolve_name_selection(item, traj_data)
+            return SelectionResolveHelper._resolve_name_selection(item, traj_data)
         else:
             raise ValueError(
                 f"Selection item must be int (index) or str (name), got {type(item)}"

@@ -29,12 +29,15 @@ Supports nested directory structures and trajectory concatenation.
 import os
 import warnings
 from typing import Any, Dict, List, Union, Optional
+from pathlib import Path
 
 import mdtraj as md
 from tqdm import tqdm
 
+from ...entities.dask_md_trajectory import DaskMDTrajectory
 
-class TrajectoryLoader:
+
+class TrajectoryLoadHelper:
     """
     Internal utility class for loading MD trajectories from files and directories.
 
@@ -46,7 +49,10 @@ class TrajectoryLoader:
         data_input: Union[List[Any], str], 
         concat: bool = False, 
         stride: int = 1,
-        selection: Optional[str] = None
+        selection: Optional[str] = None,
+        use_memmap: bool = False,
+        chunk_size: int = 1000,
+        cache_dir: str = "./cache"
     ) -> Dict[str, List[Any]]:
         """
         Load trajectories from various input types.
@@ -61,18 +67,36 @@ class TrajectoryLoader:
             Frame striding parameter
         selection : str, optional
             MDTraj selection string to apply to each trajectory before concatenation
+        use_memmap : bool, default=False
+            Whether to use memory-mapped DaskMDTrajectory for large files
+        chunk_size : int, default=1000
+            Chunk size for DaskMDTrajectory (only used when use_memmap=True)
+        cache_dir : str, default="./cache"
+            Cache directory for DaskMDTrajectory (only used when use_memmap=True)
 
         Returns:
         --------
         dict
             Dictionary with 'trajectories' and 'names' keys containing
             list of loaded trajectory objects and their corresponding names
+            
+        Examples:
+        ---------
+        >>> # Load from trajectory list
+        >>> trajs = [traj1, traj2, traj3]
+        >>> result = TrajectoryLoadHelper.load_trajectories(trajs, concat=True)
+        >>> print(f"Loaded {len(result['trajectories'])} trajectories")
+        >>> 
+        >>> # Load from directory
+        >>> result = TrajectoryLoadHelper.load_trajectories('../data', use_memmap=True)
+        >>> # Load with selection
+        >>> result = TrajectoryLoadHelper.load_trajectories('../data', selection='protein')
         """
         if isinstance(data_input, list):
-            return TrajectoryLoader._load_from_list(data_input, concat, selection)
+            return TrajectoryLoadHelper._load_from_list(data_input, concat, selection, use_memmap, chunk_size, cache_dir)
 
         if isinstance(data_input, str) and os.path.exists(data_input):
-            return TrajectoryLoader._load_from_directory(data_input, concat, stride, selection)
+            return TrajectoryLoadHelper._load_from_directory(data_input, concat, stride, selection, use_memmap, chunk_size, cache_dir)
 
         warnings.warn(
             f"Invalid data input: {data_input}. Expected list of trajectories or valid path."
@@ -83,7 +107,10 @@ class TrajectoryLoader:
     def _load_from_list(
         trajectory_list: List[Any], 
         concat: bool, 
-        selection: Optional[str] = None
+        selection: Optional[str] = None,
+        use_memmap: bool = False,
+        chunk_size: int = 1000,
+        cache_dir: str = "./cache"
     ) -> Dict[str, List[Any]]:
         """
         Handle trajectory list input with optional concatenation.
@@ -96,39 +123,117 @@ class TrajectoryLoader:
             Whether to concatenate all trajectories into one
         selection : str, optional
             MDTraj selection string to apply to each trajectory before concatenation
+        use_memmap : bool, default=False
+            Whether to use memory-mapped DaskMDTrajectory for large files
+        chunk_size : int, default=1000
+            Chunk size for DaskMDTrajectory (only used when use_memmap=True)
+        cache_dir : str, default="./cache"
+            Cache directory for DaskMDTrajectory (only used when use_memmap=True)
 
         Returns:
         --------
         dict
             Dictionary with 'trajectories' and 'names' keys
         """
-        # Generate names for provided trajectories
-        names = [f"provided_traj_{i}" for i in range(len(trajectory_list))]
-
-        # Create initial result structure
-        result = {"trajectories": trajectory_list, "names": names}
+        result = TrajectoryLoadHelper._create_initial_result(trajectory_list)
+        result = TrajectoryLoadHelper._apply_selection_if_needed(result, selection, concat)
+        return TrajectoryLoadHelper._handle_concatenation_if_needed(result, concat)
+    
+    @staticmethod
+    def _create_initial_result(trajectory_list: List[Any]) -> Dict[str, List[Any]]:
+        """
+        Create initial result structure from trajectory list.
         
-        # Apply selection to each trajectory before concatenation if provided
+        Parameters:
+        -----------
+        trajectory_list : List[Any]
+            List of trajectory objects
+            
+        Returns:
+        --------
+        dict
+            Dictionary with 'trajectories' and 'names' keys
+        """
+        names = [f"provided_traj_{i}" for i in range(len(trajectory_list))]
+        return {"trajectories": trajectory_list, "names": names}
+    
+    @staticmethod
+    def _apply_selection_if_needed(
+        result: Dict[str, List[Any]], selection: Optional[str], concat: bool
+    ) -> Dict[str, List[Any]]:
+        """
+        Apply selection to trajectories if specified.
+        
+        Parameters:
+        -----------
+        result : dict
+            Dictionary with 'trajectories' and 'names' keys
+        selection : str, optional
+            MDTraj selection string
+        concat : bool
+            Whether concatenation was used
+            
+        Returns:
+        --------
+        dict
+            Dictionary with selected trajectories
+        """
         if selection is not None:
-            result = TrajectoryLoader._apply_selection_to_result(result, selection, concat)
-
-        if concat and len(result["trajectories"]) > 1:
-            print(f"Concatenating {len(result['trajectories'])} processed trajectories...")
-            concatenated = result["trajectories"][0]
-            for traj in tqdm(result["trajectories"][1:], desc="Concatenating"):
-                concatenated = concatenated.join(traj)
-            print(
-                f"Result: 1 concatenated trajectory with {concatenated.n_frames} frames"
-            )
-            return {
-                "trajectories": [concatenated],
-                "names": ["provided_traj_concatenated"],
-            }
+            return TrajectoryLoadHelper._apply_selection_to_result(result, selection, concat)
         return result
+    
+    @staticmethod
+    def _handle_concatenation_if_needed(
+        result: Dict[str, List[Any]], concat: bool
+    ) -> Dict[str, List[Any]]:
+        """
+        Handle trajectory concatenation if requested.
+        
+        Parameters:
+        -----------
+        result : dict
+            Dictionary with 'trajectories' and 'names' keys
+        concat : bool
+            Whether to concatenate trajectories
+            
+        Returns:
+        --------
+        dict
+            Dictionary with potentially concatenated trajectories
+        """
+        if concat and len(result["trajectories"]) > 1:
+            return TrajectoryLoadHelper._concatenate_trajectories(result)
+        return result
+    
+    @staticmethod
+    def _concatenate_trajectories(result: Dict[str, List[Any]]) -> Dict[str, List[Any]]:
+        """
+        Concatenate multiple trajectories into single trajectory.
+        
+        Parameters:
+        -----------
+        result : dict
+            Dictionary with 'trajectories' and 'names' keys
+            
+        Returns:
+        --------
+        dict
+            Dictionary with single concatenated trajectory
+        """
+        print(f"Concatenating {len(result['trajectories'])} processed trajectories...")
+        concatenated = result["trajectories"][0]
+        for traj in tqdm(result["trajectories"][1:], desc="Concatenating"):
+            concatenated = concatenated.join(traj)
+        print(f"Result: 1 concatenated trajectory with {concatenated.n_frames} frames")
+        return {
+            "trajectories": [concatenated],
+            "names": ["provided_traj_concatenated"],
+        }
 
     @staticmethod
     def _load_from_directory(
-        directory_path: str, concat: bool, stride: int, selection: Optional[str] = None
+        directory_path: str, concat: bool, stride: int, selection: Optional[str] = None,
+        use_memmap: bool = False, chunk_size: int = 1000, cache_dir: str = "./cache"
     ) -> Dict[str, List[Any]]:
         """
         Load trajectories from directory (flat or nested structure).
@@ -143,6 +248,12 @@ class TrajectoryLoader:
             Frame striding (1=all frames, 2=every 2nd frame, etc.)
         selection : str, optional
             MDTraj selection string to apply to each trajectory before concatenation
+        use_memmap : bool, default=False
+            Whether to use memory-mapped DaskMDTrajectory for large files
+        chunk_size : int, default=1000
+            Chunk size for DaskMDTrajectory (only used when use_memmap=True)
+        cache_dir : str, default="./cache"
+            Cache directory for DaskMDTrajectory (only used when use_memmap=True)
 
         Returns:
         --------
@@ -150,13 +261,13 @@ class TrajectoryLoader:
             Dictionary with 'trajectories' and 'names' keys
         """
         # Determine directory structure and collect trajectories
-        if TrajectoryLoader._has_subdirectories(directory_path):
-            return TrajectoryLoader._load_nested_structure(
-                directory_path, concat, stride, selection
+        if TrajectoryLoadHelper._has_subdirectories(directory_path):
+            return TrajectoryLoadHelper._load_nested_structure(
+                directory_path, concat, stride, selection, use_memmap, chunk_size, cache_dir
             )
         else:
-            return TrajectoryLoader._load_flat_structure(
-                directory_path, concat, stride, selection
+            return TrajectoryLoadHelper._load_flat_structure(
+                directory_path, concat, stride, selection, use_memmap, chunk_size, cache_dir
             )
 
     @staticmethod
@@ -186,7 +297,10 @@ class TrajectoryLoader:
         directory_path: str, 
         concat: bool, 
         stride: int, 
-        selection: Optional[str] = None
+        selection: Optional[str] = None,
+        use_memmap: bool = False,
+        chunk_size: int = 1000,
+        cache_dir: str = "./cache"
     ) -> Dict[str, List[Any]]:
         """
         Load from nested directory structure (multiple systems).
@@ -203,6 +317,12 @@ class TrajectoryLoader:
             Frame striding (1=all frames, 2=every 2nd frame, etc.)
         selection : str, optional
             MDTraj selection string to apply to each trajectory before concatenation
+        use_memmap : bool, default=False
+            Whether to use memory-mapped DaskMDTrajectory for large files
+        chunk_size : int, default=1000
+            Chunk size for DaskMDTrajectory (only used when use_memmap=True)
+        cache_dir : str, default="./cache"
+            Cache directory for DaskMDTrajectory (only used when use_memmap=True)
 
         Returns:
         --------
@@ -223,8 +343,8 @@ class TrajectoryLoader:
         # Load from subdirectories
         for subdir in tqdm(subdirs, desc="Loading systems"):
             subdir_path = os.path.join(directory_path, subdir)
-            result = TrajectoryLoader._load_system_trajectories(
-                subdir_path, subdir, concat, stride, selection
+            result = TrajectoryLoadHelper._load_system_trajectories(
+                subdir_path, subdir, concat, stride, selection, use_memmap, chunk_size, cache_dir
             )
 
             if result["trajectories"]:
@@ -233,15 +353,17 @@ class TrajectoryLoader:
                 system_summary.append((subdir, len(result["trajectories"])))
 
         # Load root directory files as separate system if present
-        TrajectoryLoader._load_root_system_if_present(
-            directory_path, concat, stride, trajectories, names, system_summary, selection
+        TrajectoryLoadHelper._load_root_system_if_present(
+            directory_path, concat, stride, trajectories, names, system_summary, selection,
+            use_memmap, chunk_size, cache_dir
         )
 
-        TrajectoryLoader._print_loading_summary(system_summary, concat)
+        TrajectoryLoadHelper._print_loading_summary(system_summary, concat)
         return {"trajectories": trajectories, "names": names}
 
     @staticmethod
-    def _load_flat_structure(directory_path, concat, stride, selection=None):
+    def _load_flat_structure(directory_path, concat, stride, selection=None, 
+                            use_memmap=False, chunk_size=1000, cache_dir="./cache"):
         """
         Load from flat directory structure (single system).
 
@@ -255,6 +377,12 @@ class TrajectoryLoader:
             Frame striding (1=all frames, 2=every 2nd frame, etc.)
         selection : str, optional
             MDTraj selection string to apply to each trajectory before concatenation
+        use_memmap : bool, default=False
+            Whether to use memory-mapped DaskMDTrajectory for large files
+        chunk_size : int, default=1000
+            Chunk size for DaskMDTrajectory (only used when use_memmap=True)
+        cache_dir : str, default="./cache"
+            Cache directory for DaskMDTrajectory (only used when use_memmap=True)
 
         Returns:
         --------
@@ -262,13 +390,13 @@ class TrajectoryLoader:
             Dictionary with 'trajectories' and 'names' keys
         """
         system_name = os.path.basename(directory_path.rstrip("/\\"))
-        result = TrajectoryLoader._load_system_trajectories(
-            directory_path, system_name, concat, stride, selection
+        result = TrajectoryLoadHelper._load_system_trajectories(
+            directory_path, system_name, concat, stride, selection, use_memmap, chunk_size, cache_dir
         )
 
         if result["trajectories"]:
             system_summary = [(system_name, len(result["trajectories"]))]
-            TrajectoryLoader._print_loading_summary(system_summary, concat)
+            TrajectoryLoadHelper._print_loading_summary(system_summary, concat)
 
         return result
 
@@ -292,13 +420,13 @@ class TrajectoryLoader:
         total_trajectories = sum(count for _, count in system_summary)
 
         # Print header
-        TrajectoryLoader._print_summary_header(
+        TrajectoryLoadHelper._print_summary_header(
             len(system_summary), total_trajectories, concat
         )
 
         # Print system details
         for system, count in system_summary:
-            TrajectoryLoader._print_system_info(system, count, concat)
+            TrajectoryLoadHelper._print_system_info(system, count, concat)
 
     @staticmethod
     def _print_summary_header(num_systems, total_trajectories, concat):
@@ -354,7 +482,8 @@ class TrajectoryLoader:
             print(f"  {system}: {count} trajectories")
 
     @staticmethod
-    def _load_system_trajectories(subdir_path, subdir_name, concat, stride, selection=None):
+    def _load_system_trajectories(subdir_path, subdir_name, concat, stride, selection=None,
+                                 use_memmap=False, chunk_size=1000, cache_dir="./cache"):
         """
         Load all trajectories for a single system.
 
@@ -370,14 +499,20 @@ class TrajectoryLoader:
             Frame striding (1=all frames, 2=every 2nd frame, etc.)
         selection : str, optional
             MDTraj selection string to apply to each trajectory before concatenation
+        use_memmap : bool, default=False
+            Whether to use memory-mapped DaskMDTrajectory for large files
+        chunk_size : int, default=1000
+            Chunk size for DaskMDTrajectory (only used when use_memmap=True)
+        cache_dir : str, default="./cache"
+            Cache directory for DaskMDTrajectory (only used when use_memmap=True)
 
         Returns:
         --------
         dict
             Dictionary with 'trajectories' and 'names' keys
         """
-        pdb_files = TrajectoryLoader._get_pdb_files_from_directory(subdir_path)
-        xtc_files = TrajectoryLoader._get_xtc_files_from_directory(subdir_path)
+        pdb_files = TrajectoryLoadHelper._get_pdb_files_from_directory(subdir_path)
+        xtc_files = TrajectoryLoadHelper._get_xtc_files_from_directory(subdir_path)
 
         # Validate file combination
         if not pdb_files:
@@ -394,21 +529,21 @@ class TrajectoryLoader:
                     f"Use either: 1 PDB + multiple XTCs, or multiple PDBs without XTCs."
                 )
             pdb_path = os.path.join(subdir_path, pdb_files[0])
-            result = TrajectoryLoader._load_trajectory_files_from_directory(
-                xtc_files, pdb_path, subdir_path, subdir_name, stride
+            result = TrajectoryLoadHelper._load_trajectory_files_from_directory(
+                xtc_files, pdb_path, subdir_path, subdir_name, stride, use_memmap, chunk_size, cache_dir
             )
 
         # Case 2: No XTC files - load each PDB as separate trajectory
         else:
-            result = TrajectoryLoader._load_pdb_files_from_directory(
-                pdb_files, subdir_path, subdir_name, stride
+            result = TrajectoryLoadHelper._load_pdb_files_from_directory(
+                pdb_files, subdir_path, subdir_name, stride, use_memmap, chunk_size, cache_dir
             )
 
         # Apply selection to each trajectory before concatenation if provided
         if selection is not None:
-            result = TrajectoryLoader._apply_selection_to_result(result, selection, concat)
+            result = TrajectoryLoadHelper._apply_selection_to_result(result, selection, concat)
         
-        return TrajectoryLoader._handle_traj_concatenation(
+        return TrajectoryLoadHelper._handle_traj_concatenation(
             result["trajectories"], result["names"], concat, subdir_name
         )
 
@@ -448,7 +583,8 @@ class TrajectoryLoader:
 
     @staticmethod
     def _load_trajectory_files_from_directory(
-        xtc_files, pdb_path, subdir_path, subdir_name, stride
+        xtc_files, pdb_path, subdir_path, subdir_name, stride,
+        use_memmap=False, chunk_size=1000, cache_dir="./cache"
     ):
         """
         Load XTC files with PDB topology.
@@ -465,6 +601,12 @@ class TrajectoryLoader:
             Name of the system
         stride : int
             Frame striding (1=all frames, 2=every 2nd frame, etc.)
+        use_memmap : bool, default=False
+            Whether to use memory-mapped DaskMDTrajectory for large files
+        chunk_size : int, default=1000
+            Chunk size for DaskMDTrajectory (only used when use_memmap=True)
+        cache_dir : str, default="./cache"
+            Cache directory for DaskMDTrajectory (only used when use_memmap=True)
 
         Returns:
         --------
@@ -481,7 +623,9 @@ class TrajectoryLoader:
             xtc_path = os.path.join(subdir_path, xtc)
             xtc_basename = os.path.splitext(xtc)[0]
 
-            traj = md.load(xtc_path, top=pdb_path, stride=stride)
+            traj = TrajectoryLoadHelper._load_single_trajectory(
+                xtc_path, pdb_path, stride, use_memmap, chunk_size, cache_dir
+            )
             system_trajs.append(traj)
 
             # Generate name: directory_pdbname_xtcname
@@ -491,7 +635,8 @@ class TrajectoryLoader:
         return {"trajectories": system_trajs, "names": names}
 
     @staticmethod
-    def _load_pdb_files_from_directory(pdb_files, subdir_path, subdir_name, stride):
+    def _load_pdb_files_from_directory(pdb_files, subdir_path, subdir_name, stride,
+                                      use_memmap=False, chunk_size=1000, cache_dir="./cache"):
         """
         Load PDB files as separate trajectories.
 
@@ -505,6 +650,12 @@ class TrajectoryLoader:
             Name of the system
         stride : int
             Frame striding (1=all frames, 2=every 2nd frame, etc.)
+        use_memmap : bool, default=False
+            Whether to use memory-mapped DaskMDTrajectory for large files
+        chunk_size : int, default=1000
+            Chunk size for DaskMDTrajectory (only used when use_memmap=True)
+        cache_dir : str, default="./cache"
+            Cache directory for DaskMDTrajectory (only used when use_memmap=True)
 
         Returns:
         --------
@@ -518,7 +669,9 @@ class TrajectoryLoader:
             pdb_path = os.path.join(subdir_path, pdb)
             pdb_basename = os.path.splitext(pdb)[0]
 
-            traj = md.load(pdb_path, stride=stride)
+            traj = TrajectoryLoadHelper._load_single_trajectory(
+                pdb_path, None, stride, use_memmap, chunk_size, cache_dir
+            )
             system_trajs.append(traj)
 
             # Generate name: directory_pdbname (no xtc for PDB-only trajectories)
@@ -564,7 +717,8 @@ class TrajectoryLoader:
 
     @staticmethod
     def _load_root_system_if_present(
-        directory_path, concat, stride, trajectories, names, system_summary, selection=None
+        directory_path, concat, stride, trajectories, names, system_summary, selection=None,
+        use_memmap=False, chunk_size=1000, cache_dir="./cache"
     ):
         """
         Load root directory files as separate system if present.
@@ -585,17 +739,23 @@ class TrajectoryLoader:
             List of (system_name, trajectory_count) tuples
         selection : str, optional
             MDTraj selection string to apply to each trajectory before concatenation
+        use_memmap : bool, default=False
+            Whether to use memory-mapped DaskMDTrajectory for large files
+        chunk_size : int, default=1000
+            Chunk size for DaskMDTrajectory (only used when use_memmap=True)
+        cache_dir : str, default="./cache"
+            Cache directory for DaskMDTrajectory (only used when use_memmap=True)
 
         Returns:
         --------
         None
             Loads root directory files as separate system if present
         """
-        root_pdb_files = TrajectoryLoader._get_pdb_files_from_directory(directory_path)
+        root_pdb_files = TrajectoryLoadHelper._get_pdb_files_from_directory(directory_path)
         if root_pdb_files:
             root_system_name = os.path.basename(directory_path.rstrip("/\\"))
-            root_result = TrajectoryLoader._load_system_trajectories(
-                directory_path, root_system_name, concat, stride, selection
+            root_result = TrajectoryLoadHelper._load_system_trajectories(
+                directory_path, root_system_name, concat, stride, selection, use_memmap, chunk_size, cache_dir
             )
 
             if root_result["trajectories"]:
@@ -649,3 +809,57 @@ class TrajectoryLoader:
         print(f"Selection completed. All trajectories now have {selected_trajectories[0].n_atoms if selected_trajectories else 0} atoms.")
         
         return {"trajectories": selected_trajectories, "names": names}
+    
+    @staticmethod
+    def _load_single_trajectory(
+        trajectory_file: str, 
+        topology_file: Optional[str] = None,
+        stride: int = 1,
+        use_memmap: bool = False,
+        chunk_size: int = 1000,
+        cache_dir: str = "./cache"
+    ) -> Any:
+        """
+        Load a single trajectory file using either md.load or DaskMDTrajectory.
+        
+        Parameters:
+        -----------
+        trajectory_file : str
+            Path to trajectory file
+        topology_file : str, optional
+            Path to topology file
+        stride : int, default=1
+            Frame striding parameter
+        use_memmap : bool, default=False
+            Whether to use DaskMDTrajectory for memory mapping
+        chunk_size : int, default=1000
+            Chunk size for DaskMDTrajectory
+        cache_dir : str, default="./cache"
+            Cache directory for DaskMDTrajectory
+            
+        Returns:
+        --------
+        Any
+            Either md.Trajectory or DaskMDTrajectory object
+        """
+        if use_memmap:
+            # Create cache path
+            traj_path = Path(trajectory_file)
+            zarr_cache_path = os.path.join(cache_dir, f"{traj_path.stem}.dask.zarr")
+            
+            # Create DaskMDTrajectory
+            dask_traj = DaskMDTrajectory(
+                trajectory_file=trajectory_file,
+                topology_file=topology_file,
+                chunk_size=chunk_size,
+                zarr_cache_path=zarr_cache_path
+            )
+            
+            # Apply stride if needed
+            if stride > 1:
+                frame_indices = list(range(0, dask_traj.n_frames, stride))
+                dask_traj = dask_traj[frame_indices]
+                
+            return dask_traj
+        # Use regular MDTraj loading
+        return md.load(trajectory_file, top=topology_file, stride=stride)

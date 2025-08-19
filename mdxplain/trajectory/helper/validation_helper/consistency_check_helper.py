@@ -22,10 +22,10 @@
 
 from typing import List, Tuple
 
-from ..entities.trajectory_data import TrajectoryData
+from ...entities.trajectory_data import TrajectoryData
 
 
-class TrajectoryConsistencyChecker:
+class ConsistencyCheckHelper:
     """Utility class for checking trajectory consistency across multiple trajectories."""
 
     @staticmethod
@@ -45,16 +45,16 @@ class TrajectoryConsistencyChecker:
 
         Examples:
         ---------
-        >>> TrajectoryConsistencyChecker.check_trajectory_consistency(traj_data)
+        >>> ConsistencyCheckHelper.check_trajectory_consistency(traj_data)
         """
         if not traj_data.trajectories or len(traj_data.trajectories) <= 1:
             return
 
-        any_inconsistency = TrajectoryConsistencyChecker._check_all_inconsistencies(
+        any_inconsistency = ConsistencyCheckHelper._check_all_inconsistencies(
             traj_data
         )
         if any_inconsistency:
-            TrajectoryConsistencyChecker._print_consistency_suggestion()
+            ConsistencyCheckHelper._print_consistency_suggestion()
 
     @staticmethod
     def _check_all_inconsistencies(traj_data: TrajectoryData) -> bool:
@@ -71,13 +71,13 @@ class TrajectoryConsistencyChecker:
         bool
             True if any inconsistency found, False if all consistent
         """
-        residue_inconsistent = TrajectoryConsistencyChecker._find_residue_inconsistency(
+        residue_inconsistent = ConsistencyCheckHelper._find_residue_inconsistency(
             traj_data
         )
         if residue_inconsistent:
             return True
 
-        atom_inconsistent = TrajectoryConsistencyChecker._find_atom_inconsistency(
+        atom_inconsistent = ConsistencyCheckHelper._find_atom_inconsistency(
             traj_data
         )
         return atom_inconsistent
@@ -118,7 +118,7 @@ class TrajectoryConsistencyChecker:
         bool
             True if residue inconsistency found, False if all consistent
         """
-        return TrajectoryConsistencyChecker._find_count_inconsistency(
+        return ConsistencyCheckHelper._find_count_inconsistency(
             traj_data,
             count_attr="n_residues",
             count_type="residue",
@@ -140,7 +140,7 @@ class TrajectoryConsistencyChecker:
         bool
             True if atom inconsistency found, False if all consistent
         """
-        return TrajectoryConsistencyChecker._find_count_inconsistency(
+        return ConsistencyCheckHelper._find_count_inconsistency(
             traj_data, count_attr="n_atoms", count_type="atom", plural_type="atoms"
         )
 
@@ -174,12 +174,12 @@ class TrajectoryConsistencyChecker:
             return False
 
         ref_count = getattr(traj_data.trajectories[0], count_attr)
-        inconsistent = TrajectoryConsistencyChecker._collect_inconsistent_trajectories(
+        inconsistent = ConsistencyCheckHelper._collect_inconsistent_trajectories(
             traj_data, count_attr, ref_count
         )
 
         if inconsistent:
-            TrajectoryConsistencyChecker._print_inconsistency_warning(
+            ConsistencyCheckHelper._print_inconsistency_warning(
                 traj_data, inconsistent, ref_count, count_type, plural_type
             )
             return True
