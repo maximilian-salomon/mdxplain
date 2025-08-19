@@ -176,7 +176,7 @@ class DataSelectorData:
         ... })
         >>> # Second operation - appends to list
         >>> selector_data.append_selection_criteria({
-        ...     "type": "keywords", "keywords": ["system_A"], "mode": "intersect"
+        ...     "type": "tags", "tags": ["system_A"], "mode": "intersect"
         ... })
         >>> # Result: {"operations": [operation1, operation2]}
         """

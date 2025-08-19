@@ -23,13 +23,13 @@
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from ..entities.trajectory_data import TrajectoryData
-from ..helper.nomenclature import Nomenclature
-from ..helper.trajectory_loader import TrajectoryLoader
-from ..helper.consistency_checker import TrajectoryConsistencyChecker
-from ..helper.selection_resolver import TrajectorySelectionResolver
-from ..helper.keyword_manager import KeywordManager
-from ..helper.trajectory_processor import TrajectoryProcessor
-from ..helper.trajectory_validation_helper import TrajectoryValidationHelper
+from ..helper.metadata_helper.nomenclature_helper import NomenclatureHelper
+from ..helper.process_helper.trajectory_load_helper import TrajectoryLoadHelper
+from ..helper.validation_helper.consistency_check_helper import ConsistencyCheckHelper
+from ..helper.process_helper.selection_resolve_helper import SelectionResolveHelper
+from ..helper.metadata_helper.tag_helper import TagHelper
+from ..helper.process_helper.trajectory_process_helper import TrajectoryProcessHelper
+from ..helper.validation_helper.trajectory_validation_helper import TrajectoryValidationHelper
 
 import os
 
@@ -43,6 +43,8 @@ class TrajectoryManager:
         concat: bool = False,
         selection: Optional[str] = None,
         cache_dir: str = "./cache",
+        use_memmap: bool = False,
+        chunk_size: int = 1000,
     ):
         """
         Initialize trajectory manager.
@@ -58,6 +60,15 @@ class TrajectoryManager:
         selection : str, optional
             MDTraj selection string to apply to all loaded trajectories.
             See: https://mdtraj.org/1.9.4/atom_selection.html
+        use_memmap : bool, default=False
+            Whether to use memory-mapped DaskMDTrajectory for large files.
+            When True, trajectories are loaded as DaskMDTrajectory objects
+            for efficient memory usage.
+        chunk_size : int, default=1000
+            Chunk size for DaskMDTrajectory (only used when use_memmap=True).
+            Number of frames per chunk for memory management.
+        cache_dir : str, default="./cache"
+            Directory for caching intermediate results and Zarr files.
 
         Returns:
         --------
@@ -74,6 +85,8 @@ class TrajectoryManager:
         self.default_concat = concat
         self.default_selection = selection
         self.cache_dir = cache_dir
+        self.use_memmap = use_memmap
+        self.chunk_size = chunk_size
         os.makedirs(self.cache_dir, exist_ok=True)
 
         if stride <= 0:
@@ -93,7 +106,7 @@ class TrajectoryManager:
 
         This method handles loading of MD trajectories in various formats
         (e.g., .xtc, .dcd, .trr) along with their topology files. The loading
-        is performed using the TrajectoryLoader class which supports automatic
+        is performed using the TrajectoryLoadHelper class which supports automatic
         format detection and multiple trajectory handling.
 
         Warning:
@@ -146,9 +159,9 @@ class TrajectoryManager:
         >>> traj_manager = TrajectoryManager()
         >>> traj_manager.load_trajectories(pipeline_data, '../data')
 
-        >>> # Load with keywords
+        >>> # Load with tags
         >>> traj_manager.load_trajectories(
-        ...     pipeline_data, '../data', keywords_file='keywords.json'
+        ...     pipeline_data, '../data', tags_file='tags.json'
         ... )
 
         Notes:
@@ -165,21 +178,26 @@ class TrajectoryManager:
 
         selection, concat, stride = self._prepare_parameters(selection, concat, stride)
 
-        result = TrajectoryLoader.load_trajectories(data_input, concat, stride, selection)
+        # Load trajectories using TrajectoryLoadHelper (handles memmap automatically)
+        result = TrajectoryLoadHelper.load_trajectories(
+            data_input, concat, stride, selection, 
+            use_memmap=self.use_memmap, chunk_size=self.chunk_size, cache_dir=self.cache_dir
+        )
+        
         new_trajectory_data = TrajectoryData()
         new_trajectory_data.trajectories = result["trajectories"]
         new_trajectory_data.trajectory_names = result["names"]
         pipeline_data.trajectory_data = new_trajectory_data
 
         # Check trajectory consistency
-        TrajectoryConsistencyChecker.check_trajectory_consistency(
+        ConsistencyCheckHelper.check_trajectory_consistency(
             pipeline_data.trajectory_data
         )
-        # Build and set frame keyword mapping
-        frame_mapping = KeywordManager.build_frame_keyword_mapping(
+        # Build and set frame tag mapping
+        frame_mapping = TagHelper.build_frame_tag_mapping(
             pipeline_data.trajectory_data
         )
-        pipeline_data.trajectory_data.frame_keyword_mapping = frame_mapping
+        pipeline_data.trajectory_data.frame_tag_mapping = frame_mapping
 
     def add_trajectory(
         self,
@@ -263,7 +281,10 @@ class TrajectoryManager:
         selection, concat, stride = self._prepare_parameters(selection, concat, stride)
 
         # Load and process new trajectories
-        result = TrajectoryLoader.load_trajectories(data_input, concat, stride, selection)
+        result = TrajectoryLoadHelper.load_trajectories(
+            data_input, concat, stride, selection,
+            use_memmap=self.use_memmap, chunk_size=self.chunk_size, cache_dir=self.cache_dir
+        )
         new_trajectories, new_names = result["trajectories"], result["names"]
 
         # Add to existing trajectories
@@ -271,19 +292,19 @@ class TrajectoryManager:
         pipeline_data.trajectory_data.trajectory_names.extend(new_names)
 
         # Check trajectory consistency
-        TrajectoryConsistencyChecker.check_trajectory_consistency(
+        ConsistencyCheckHelper.check_trajectory_consistency(
             pipeline_data.trajectory_data
         )
-        # Build and set frame keyword mapping
-        frame_mapping = KeywordManager.build_frame_keyword_mapping(
+        # Build and set frame tag mapping
+        frame_mapping = TagHelper.build_frame_tag_mapping(
             pipeline_data.trajectory_data
         )
-        pipeline_data.trajectory_data.frame_keyword_mapping = frame_mapping
+        pipeline_data.trajectory_data.frame_tag_mapping = frame_mapping
 
     def remove_trajectory(
         self,
         pipeline_data,
-        trajs: Union[int, str, List[Union[int, str]]],
+        traj_selection: Union[int, str, List[Union[int, str]], "all"],
         force: bool = False,
     ) -> None:
         """
@@ -307,9 +328,12 @@ class TrajectoryManager:
         -----------
         pipeline_data : PipelineData
             Pipeline data object
-        trajs : int, str, or list
-            Trajectory index (int), name (str), or list of indices/names to remove.
-            Can be mixed list of integers and strings.
+        traj_selection : int, str, list, or "all"
+            Trajectory selection (required). Options:
+            - int: single trajectory by index (e.g., 0)
+            - str: trajectory name or "all" for all trajectories
+            - list: multiple indices/names (can be mixed)
+            - "all": all loaded trajectories
         force : bool, default=False
             Whether to force removal even when features have been calculated. When True,
             existing features become invalid and should be recalculated.
@@ -338,28 +362,29 @@ class TrajectoryManager:
         TrajectoryValidationHelper.check_features_before_trajectory_changes(
             pipeline_data, force, "remove"
         )
-
-        indices_to_remove = TrajectorySelectionResolver.prepare_removal_indices(
-            pipeline_data.trajectory_data, trajs
+        indices_to_remove = SelectionResolveHelper.get_indices_to_process(
+            pipeline_data.trajectory_data, traj_selection
         )
-        TrajectoryProcessor.execute_removal(
+        indices_to_remove.sort(reverse=True)  # Sort in reverse to avoid index shifting issues
+
+        TrajectoryProcessHelper.execute_removal(
             pipeline_data.trajectory_data, indices_to_remove
         )
-        TrajectoryConsistencyChecker.check_trajectory_consistency(
+        ConsistencyCheckHelper.check_trajectory_consistency(
             pipeline_data.trajectory_data
         )
-        # Build and set frame keyword mapping
-        frame_mapping = KeywordManager.build_frame_keyword_mapping(
+        # Build and set frame tag mapping
+        frame_mapping = TagHelper.build_frame_tag_mapping(
             pipeline_data.trajectory_data
         )
-        pipeline_data.trajectory_data.frame_keyword_mapping = frame_mapping
+        pipeline_data.trajectory_data.frame_tag_mapping = frame_mapping
 
     def cut_traj(
         self,
         pipeline_data,
+        traj_selection: Union[int, str, List[Union[int, str]], "all"],
         cut: Optional[int] = None,
         stride: Optional[int] = 1,
-        selection: Optional[List[Union[int, str]]] = None,
         force: bool = False,
     ) -> None:
         """
@@ -372,12 +397,12 @@ class TrajectoryManager:
 
         Pipeline mode:
         >>> pipeline = PipelineManager()
-        >>> pipeline.trajectory.cut_traj(cut=1000)  # NO pipeline_data parameter
+        >>> pipeline.trajectory.cut_traj(cut=1000, traj_selection="all")  # NO pipeline_data parameter
 
         Standalone mode:
         >>> pipeline_data = PipelineData()
         >>> manager = TrajectoryManager()
-        >>> manager.cut_traj(pipeline_data, cut=1000)  # pipeline_data required
+        >>> manager.cut_traj(pipeline_data, cut=1000, traj_selection="all")  # pipeline_data required
 
         Parameters:
         -----------
@@ -389,9 +414,12 @@ class TrajectoryManager:
         stride : int, optional
             Take every stride-th frame. Use values > 1 to subsample frames.
             If None, uses manager default.
-        selection : list, optional
-            List of trajectory indices (int) or names (str) to process.
-            If None, all trajectories will be processed.
+        traj_selection : int, str, list, or "all"
+            Selection of trajectories to process:
+            - int: trajectory index
+            - str: trajectory name or "all" for all trajectories
+            - list: list of indices/names
+            - "all": all loaded trajectories
         force : bool, default=False
             Whether to force cutting even when features have been calculated. When True,
             existing features become invalid and should be recalculated.
@@ -406,15 +434,18 @@ class TrajectoryManager:
         >>> pipeline_data = PipelineData()
         >>> traj_manager = TrajectoryManager()
         >>> traj_manager.load_trajectories(pipeline_data, '../data')
-        >>> traj_manager.cut_traj(pipeline_data, cut=1000)
+        >>> traj_manager.cut_traj(pipeline_data, cut=1000, traj_selection="all")
 
         >>> # Cut and stride specific trajectories by index
-        >>> traj_manager.cut_traj(pipeline_data, cut=500, stride=5, selection=[0, 2, 4])
+        >>> traj_manager.cut_traj(pipeline_data, cut=500, stride=5, traj_selection=[0, 2, 4])
+
+        >>> # Cut and stride all trajectories
+        >>> traj_manager.cut_traj(pipeline_data, cut=500, stride=5, traj_selection="all")
 
         >>> # Cut and stride specific trajectories by name
         >>> traj_manager.cut_traj(
         ...     pipeline_data, cut=500, stride=5,
-        ...     selection=['system1_prot_traj1', 'system2_prot_traj2']
+        ...     traj_selection=['system1_prot_traj1', 'system2_prot_traj2']
         ... )
 
         Raises:
@@ -422,47 +453,81 @@ class TrajectoryManager:
         ValueError
             If trajectories are not loaded or if selection contains invalid indices/names
         """
-        # Check for existing features before cutting trajectories
+        self._validate_cut_parameters(pipeline_data, cut, force)
+        _, _, stride = self._prepare_parameters(stride=stride)
+        
+        indices_to_process = SelectionResolveHelper.get_indices_to_process(
+            pipeline_data.trajectory_data, traj_selection
+        )
+
+        self._process_trajectory_cuts(pipeline_data, indices_to_process, cut, stride)
+        self._rebuild_frame_mapping(pipeline_data)
+    
+    def _validate_cut_parameters(self, pipeline_data, cut: Optional[int], force: bool) -> None:
+        """
+        Validate parameters for trajectory cutting.
+        
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data object containing trajectory data
+        cut : Optional[int]
+            Frame number after which to cut trajectories, or None
+        force : bool
+            Whether to force cutting even when features exist
+        
+        Returns:
+        --------
+        None
+            Performs validation, does not return value
+        
+        Raises:
+        -------
+        ValueError
+            If cut parameter is negative or not an integer, or if no trajectories are loaded
+        """
         TrajectoryValidationHelper.check_features_before_trajectory_changes(
             pipeline_data, force, "cut"
         )
-
-        # Validate cut parameter
+        
         if cut is not None:
             if cut < 0 or not isinstance(cut, int):
                 raise ValueError("Cut parameter must be a non-negative integer.")
-
-        # Validate and set defaults
-        selection, _, stride = self._prepare_parameters(
-            selection=selection, stride=stride
-        )
-
+        
         if not pipeline_data.trajectory_data.trajectories:
             raise ValueError("Trajectories must be loaded before cutting.")
-
-        # Determine which trajectories to process
-        indices_to_process = TrajectorySelectionResolver.get_indices_to_process(
-            pipeline_data.trajectory_data, selection
-        )
-
-        # Process selected trajectories
-        for idx in indices_to_process:
-            processed_traj = TrajectoryProcessor.process_trajectory_cuts(
+    
+    def _process_trajectory_cuts(self, pipeline_data, indices: List[int], cut: Optional[int], stride: int) -> None:
+        """
+        Process trajectory cuts for selected indices.
+        
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data object containing trajectory data
+        indices : List[int]
+            List of trajectory indices to process
+        cut : Optional[int]
+            Frame number after which to cut trajectories, or None
+        stride : int
+            Stride value for frame subsampling
+        
+        Returns:
+        --------
+        None
+            Modifies trajectories in-place
+        """
+        for idx in indices:
+            processed_traj = TrajectoryProcessHelper.process_trajectory_cuts(
                 pipeline_data.trajectory_data.trajectories[idx], cut, stride
             )
             pipeline_data.trajectory_data.trajectories[idx] = processed_traj
-
-        # Build and set frame keyword mapping
-        frame_mapping = KeywordManager.build_frame_keyword_mapping(
-            pipeline_data.trajectory_data
-        )
-        pipeline_data.trajectory_data.frame_keyword_mapping = frame_mapping
 
     def select_atoms(
         self,
         pipeline_data,
         selection: str,
-        trajs: Optional[List[Union[int, str]]] = None,
+        traj_selection: Union[int, str, List[Union[int, str]], "all"],
         force: bool = False,
     ) -> None:
         """
@@ -475,23 +540,25 @@ class TrajectoryManager:
 
         Pipeline mode:
         >>> pipeline = PipelineManager()
-        >>> pipeline.trajectory.select_atoms("protein")  # NO pipeline_data parameter
+        >>> pipeline.trajectory.select_atoms("protein", "all")  # NO pipeline_data parameter
 
         Standalone mode:
         >>> pipeline_data = PipelineData()
         >>> manager = TrajectoryManager()
-        >>> manager.select_atoms(pipeline_data, "protein")  # pipeline_data required
+        >>> manager.select_atoms(pipeline_data, "protein", "all")  # pipeline_data required
 
         Parameters:
         -----------
         pipeline_data : PipelineData
             Pipeline data object
+        traj_selection : int, str, list, or "all"
+            Selection of trajectories to process:
+            - int: trajectory index
+            - str: trajectory name or "all" for all trajectories
+            - list: list of indices/names
         selection : str
             MDTraj selection string (e.g., "protein", "backbone", "resid 10 to 50")
             See: https://mdtraj.org/1.9.4/atom_selection.html
-        trajs : list, optional
-            List of trajectory indices (int) or names (str) to process.
-            If None, all trajectories will be processed.
         force : bool, default=False
             Whether to force atom selection even when features have been calculated. When True,
             existing features become invalid and should be recalculated.
@@ -506,7 +573,10 @@ class TrajectoryManager:
         >>> pipeline_data = PipelineData()
         >>> traj_manager = TrajectoryManager()
         >>> traj_manager.load_trajectories(pipeline_data, '../data')
-        >>> traj_manager.select_atoms(pipeline_data, "protein")
+        >>> traj_manager.select_atoms(pipeline_data, "protein", "all")
+
+        >>> # Select atoms from specific trajectories
+        >>> traj_manager.select_atoms(pipeline_data, "protein", [0, 1, 2])
 
         Raises:
         -------
@@ -526,11 +596,11 @@ class TrajectoryManager:
             raise ValueError("Trajectories must be loaded before atom selection.")
 
         # Determine which trajectories to process
-        indices_to_process = TrajectorySelectionResolver.get_indices_to_process(
-            pipeline_data.trajectory_data, trajs
+        indices_to_process = SelectionResolveHelper.get_indices_to_process(
+            pipeline_data.trajectory_data, traj_selection
         )
 
-        # Apply atom selection to each trajectory
+        # Apply atom selection to selected trajectory
         for idx in indices_to_process:
             traj = pipeline_data.trajectory_data.trajectories[idx]
 
@@ -671,7 +741,7 @@ class TrajectoryManager:
         # Check if labels already exist and force is not set
         if pipeline_data.trajectory_data.res_label_data is not None and not force:
             raise ValueError(
-                "Nomenclature labels already exist. Use force=True to overwrite existing labels, "
+                "NomenclatureHelper labels already exist. Use force=True to overwrite existing labels, "
                 "or use a fresh PipelineData object to avoid conflicts."
             )
 
@@ -681,7 +751,7 @@ class TrajectoryManager:
             write_to_disk = True
 
         # Use first trajectory topology for labeling
-        nomenclature = Nomenclature(
+        nomenclature = NomenclatureHelper(
             topology=pipeline_data.trajectory_data.trajectories[0].topology,
             fragment_definition=fragment_definition,
             fragment_type=fragment_type,
@@ -698,18 +768,18 @@ class TrajectoryManager:
             nomenclature.create_trajectory_label_dicts()
         )
 
-    def add_keywords(
+    def add_tags(
         self,
         pipeline_data,
         trajectory_selector,
-        keywords=None,
+        tags=None,
     ) -> None:
         """
-        Add keywords to trajectories using flexible selectors.
+        Add tags to trajectories using flexible selectors.
 
         This method supports single trajectories, multiple trajectories, pattern matching,
         and bulk assignment using dictionaries. It provides a powerful interface for
-        managing trajectory keywords in complex scenarios.
+        managing trajectory tags in complex scenarios.
 
         Warning:
         --------
@@ -718,12 +788,12 @@ class TrajectoryManager:
 
         Pipeline mode:
         >>> pipeline = PipelineManager()
-        >>> pipeline.trajectory.add_keywords(0, ["system_A"])  # NO pipeline_data parameter
+        >>> pipeline.trajectory.add_tags(0, ["system_A"])  # NO pipeline_data parameter
 
         Standalone mode:
         >>> pipeline_data = PipelineData()
         >>> manager = TrajectoryManager()
-        >>> manager.add_keywords(pipeline_data, 0, ["system_A"])  # pipeline_data required
+        >>> manager.add_tags(pipeline_data, 0, ["system_A"])  # pipeline_data required
 
         Parameters:
         -----------
@@ -740,34 +810,34 @@ class TrajectoryManager:
                 - Pattern: "system_*" → fnmatch pattern matching
             - list: multiple selectors (e.g., [0, 1, "special_traj", range(5,8)])
             - range: range of indices (e.g., range(0, 4))
-            - dict: bulk assignment {selector: keywords, ...}
-        keywords : list, optional
-            List of keyword strings to add. Required when trajectory_selector is not dict.
+            - dict: bulk assignment {selector: tags, ...}
+        tags : list, optional
+            List of tag strings to add. Required when trajectory_selector is not dict.
             Ignored when trajectory_selector is dict.
 
         Returns:
         --------
         None
-            Adds keywords to selected trajectories and rebuilds frame mapping
+            Adds tags to selected trajectories and rebuilds frame mapping
 
         Examples:
         ---------
         >>> # Single trajectory
-        >>> traj_manager.add_keywords(pipeline_data, 0, ["system_A", "biased"])
-        >>> traj_manager.add_keywords(pipeline_data, "traj1", ["system_B"])
+        >>> traj_manager.add_tags(pipeline_data, 0, ["system_A", "biased"])
+        >>> traj_manager.add_tags(pipeline_data, "traj1", ["system_B"])
 
         >>> # Multiple trajectories
-        >>> traj_manager.add_keywords(pipeline_data, [0, 1, 2], ["control"])
-        >>> traj_manager.add_keywords(pipeline_data, range(0, 4), ["batch_1"])
+        >>> traj_manager.add_tags(pipeline_data, [0, 1, 2], ["control"])
+        >>> traj_manager.add_tags(pipeline_data, range(0, 4), ["batch_1"])
 
         >>> # Pattern matching
-        >>> traj_manager.add_keywords(pipeline_data, "system_2_*", ["system_B"])
+        >>> traj_manager.add_tags(pipeline_data, "system_2_*", ["system_B"])
 
         >>> # Complex nested selectors
-        >>> traj_manager.add_keywords(pipeline_data, [range(0,3), "system_2_*"], ["mixed"])
+        >>> traj_manager.add_tags(pipeline_data, [range(0,3), "system_2_*"], ["mixed"])
 
         >>> # Bulk assignment with dict
-        >>> traj_manager.add_keywords(pipeline_data, {
+        >>> traj_manager.add_tags(pipeline_data, {
         ...     [range(0,4)]: ["system_A", "unbiased"],
         ...     [range(4,8), "special_traj"]: ["control"],
         ...     "system_2_*": ["system_B", "production"]
@@ -776,39 +846,161 @@ class TrajectoryManager:
         Raises:
         -------
         ValueError
-            If keywords is None when trajectory_selector is not dict
+            If tags is None when trajectory_selector is not dict
         ValueError
             If trajectory selector contains invalid indices or names
         """
-        # Get assignments from KeywordManager
-        assignments = KeywordManager.resolve_trajectory_selectors(
-            pipeline_data.trajectory_data, trajectory_selector, keywords
+        # Get assignments from TagHelper
+        assignments = TagHelper.resolve_trajectory_selectors(
+            pipeline_data.trajectory_data, trajectory_selector, tags
         )
 
-        # Apply keywords to trajectory data
-        for indices, kw_list in assignments:
-            if not isinstance(kw_list, list):
-                raise ValueError("keywords must be a list of strings")
-
+        # Apply tags to trajectory data
+        for indices, tag_list in assignments:
+            if not isinstance(tag_list, list):
+                raise ValueError("tags must be a list of strings")
             for idx in indices:
-                existing_keywords = (
-                    pipeline_data.trajectory_data.get_trajectory_keywords(idx) or []
-                )
-                # Add new keywords to existing ones (avoiding duplicates)
-                updated_keywords = list(existing_keywords)
-                for keyword in kw_list:
-                    if keyword not in updated_keywords:
-                        updated_keywords.append(keyword)
+                existing_tags = pipeline_data.trajectory_data.get_trajectory_tags(idx) or []
+                updated_tags = self._merge_tags(existing_tags, tag_list)
+                pipeline_data.trajectory_data.set_trajectory_tags(idx, updated_tags)
+        
+        # Rebuild frame tag mapping
+        self._rebuild_frame_mapping(pipeline_data)
+    
+    def set_tags(
+        self,
+        pipeline_data,
+        trajectory_selector,
+        tags=None,
+    ) -> None:
+        """
+        Set (replace) tags for trajectories using flexible selectors.
 
-                pipeline_data.trajectory_data.set_trajectory_keywords(
-                    idx, updated_keywords
-                )
+        This method completely replaces existing tags instead of merging them.
+        It supports the same flexible selector system as add_tags() but provides
+        replacement semantics for tag management scenarios where you need to 
+        reset or completely change trajectory tags.
 
-        # Build and set frame keyword mapping
-        frame_mapping = KeywordManager.build_frame_keyword_mapping(
+        Warning:
+        --------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.trajectory.set_tags(0, ["system_A"])  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = TrajectoryManager()
+        >>> manager.set_tags(pipeline_data, 0, ["system_A"])  # pipeline_data required
+
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data object
+        trajectory_selector : int, str, list, range, dict
+            Flexible selector for trajectories:
+            - int: single trajectory by index (e.g., 0)
+            - str: single trajectory by name or pattern (e.g., "traj1", "system_*")
+                Supports multiple string formats:
+                - Range: "0-3", "id 0-3" → [0, 1, 2, 3]
+                - Comma list: "1,2,4,5", "id 1,2,4,5" → [1, 2, 4, 5]
+                - Single number: "7", "id 7" → [7]
+                - Pattern: "system_*" → fnmatch pattern matching
+            - list: multiple selectors (e.g., [0, 1, "special_traj", range(5,8)])
+            - range: range of indices (e.g., range(0, 4))
+            - dict: bulk assignment {selector: tags, ...}
+        tags : list, optional
+            List of tag strings to set. Required when trajectory_selector is not dict.
+            Ignored when trajectory_selector is dict.
+
+        Returns:
+        --------
+        None
+            Sets tags for selected trajectories and rebuilds frame mapping
+
+        Examples:
+        ---------
+        >>> # Replace tags for single trajectory
+        >>> traj_manager.add_tags(pipeline_data, 0, ["old_tag", "other"])
+        >>> traj_manager.set_tags(pipeline_data, 0, ["new_tag"])  # Replaces both old tags
+        
+        >>> # Reset multiple trajectories to same tags
+        >>> traj_manager.set_tags(pipeline_data, [0, 1, 2], ["reset", "control"])
+
+        >>> # Clear all tags (set to empty)
+        >>> traj_manager.set_tags(pipeline_data, "all", [])
+
+        >>> # Bulk replacement with dict
+        >>> traj_manager.set_tags(pipeline_data, {
+        ...     [0, 1]: ["system_A", "production"],
+        ...     [2, 3]: ["system_B", "test"],
+        ...     "control_*": ["control"]
+        ... })
+
+        Raises:
+        -------
+        ValueError
+            If tags is None when trajectory_selector is not dict
+        ValueError
+            If trajectory selector contains invalid indices or names
+        """
+        # Get assignments from TagHelper (same as add_tags)
+        assignments = TagHelper.resolve_trajectory_selectors(
+            pipeline_data.trajectory_data, trajectory_selector, tags
+        )
+
+        # Apply tag replacement directly (minimal implementation)
+        for indices, tag_list in assignments:
+            if not isinstance(tag_list, list):
+                raise ValueError("tags must be a list of strings")
+            for idx in indices:
+                pipeline_data.trajectory_data.set_trajectory_tags(idx, tag_list)
+
+        # Rebuild frame tag mapping
+        self._rebuild_frame_mapping(pipeline_data)
+    
+    def _merge_tags(self, existing_tags, new_tags) -> list:
+        """
+        Merge new tags with existing tags, avoiding duplicates.
+        
+        Parameters:
+        -----------
+        existing_tags : List[str]
+            Current list of tags
+        new_tags : List[str]
+            New tags to add
+        
+        Returns:
+        --------
+        list
+            Merged list of tags without duplicates
+        """
+        updated_tags = list(existing_tags)
+        for tag in new_tags:
+            if tag not in updated_tags:
+                updated_tags.append(tag)
+        return updated_tags
+    
+    def _rebuild_frame_mapping(self, pipeline_data) -> None:
+        """
+        Rebuild frame tag mapping after tag changes.
+        
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data object containing trajectory data
+        
+        Returns:
+        --------
+        None
+            Updates frame tag mapping in-place
+        """
+        frame_mapping = TagHelper.build_frame_tag_mapping(
             pipeline_data.trajectory_data
         )
-        pipeline_data.trajectory_data.frame_keyword_mapping = frame_mapping
+        pipeline_data.trajectory_data.frame_tag_mapping = frame_mapping
 
     def rename_trajectories(
         self, pipeline_data, name_mapping: Union[Dict[Union[int, str], str], List[str]]
@@ -846,7 +1038,7 @@ class TrajectoryManager:
         Returns:
         --------
         None
-            Renames trajectories and rebuilds frame keyword mapping
+            Renames trajectories and rebuilds frame tag mapping
 
         Examples:
         ---------
@@ -871,28 +1063,28 @@ class TrajectoryManager:
             If no trajectories are loaded, mapping is invalid, or references invalid trajectories
         """
         # Validate input
-        TrajectoryProcessor.validate_name_mapping(
+        TrajectoryProcessHelper.validate_name_mapping(
             pipeline_data.trajectory_data, name_mapping
         )
 
         # Get new names from appropriate processor
         if isinstance(name_mapping, list):
-            new_names = TrajectoryProcessor.rename_with_list(
+            new_names = TrajectoryProcessHelper.rename_with_list(
                 pipeline_data.trajectory_data, name_mapping
             )
         else:
-            new_names = TrajectoryProcessor.rename_with_dict(
+            new_names = TrajectoryProcessHelper.rename_with_dict(
                 pipeline_data.trajectory_data, name_mapping
             )
 
         # Manager sets the new names on PipelineData
         pipeline_data.trajectory_data.trajectory_names = new_names
 
-        # Rebuild frame keyword mapping (names might be used in keyword selectors)
-        frame_mapping = KeywordManager.build_frame_keyword_mapping(
+        # Rebuild frame tag mapping (names might be used in tag selectors)
+        frame_mapping = TagHelper.build_frame_tag_mapping(
             pipeline_data.trajectory_data
         )
-        pipeline_data.trajectory_data.frame_keyword_mapping = frame_mapping
+        pipeline_data.trajectory_data.frame_tag_mapping = frame_mapping
 
     def reset_trajectory_data(self, pipeline_data) -> None:
         """
@@ -959,3 +1151,4 @@ class TrajectoryManager:
             print("Stride must be a positive integer. Using default stride value.")
             stride = self.default_stride
         return selection, concat, stride
+    

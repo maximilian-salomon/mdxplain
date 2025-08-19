@@ -18,26 +18,26 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""Keyword management utilities for trajectory data."""
+"""Tag management utilities for trajectory data."""
 
 import fnmatch
 from typing import List, Union, Dict
 import re
 
-from ..entities.trajectory_data import TrajectoryData
+from ...entities.trajectory_data import TrajectoryData
 
 
-class KeywordManager:
-    """Utility class for managing trajectory keywords."""
-    #TODO: Use Tag instead of keywords.
+class TagHelper:
+    """Utility class for managing trajectory tags."""
+
     @staticmethod
     def resolve_trajectory_selectors(
         traj_data: TrajectoryData,
         trajectory_selector: Union[int, str, list, range, dict],
-        keywords: List[str] = None,
+        tags: List[str] = None,
     ) -> List[tuple]:
         """
-        Resolve trajectory selectors to list of (indices, keywords) assignments.
+        Resolve trajectory selectors to list of (indices, tags) assignments.
 
         This method handles all selector types and returns a list of assignments
         for the TrajectoryManager to apply. It does NOT modify the trajectory data.
@@ -48,46 +48,46 @@ class KeywordManager:
             Trajectory data object
         trajectory_selector : int, str, list, range, dict
             Flexible selector for trajectories
-        keywords : list, optional
-            List of keyword strings. Required when trajectory_selector is not dict.
+        tags : list, optional
+            List of tag strings. Required when trajectory_selector is not dict.
 
         Returns:
         --------
         List[tuple]
-            List of (indices, keywords) tuples for TrajectoryManager to apply
+            List of (indices, tags) tuples for TrajectoryManager to apply
 
         Examples:
         ---------
-        >>> # Returns: [(indices, keywords), ...]
-        >>> assignments = KeywordManager.resolve_trajectory_selectors(
+        >>> # Returns: [(indices, tags), ...]
+        >>> assignments = TagHelper.resolve_trajectory_selectors(
         ...     traj_data, 0, ["system_A"]
         ... )
 
         Raises:
         -------
         ValueError
-            If keywords is None when trajectory_selector is not dict
+            If tags is None when trajectory_selector is not dict
         """
         assignments = []
 
         # Dict mode - bulk assignment
         if isinstance(trajectory_selector, dict):
-            for selector, kw_list in trajectory_selector.items():
-                resolved_indices = KeywordManager._resolve_trajectory_selectors(
+            for selector, tag_list in trajectory_selector.items():
+                resolved_indices = TagHelper._resolve_trajectory_selectors(
                     traj_data, selector
                 )
-                assignments.append((resolved_indices, kw_list))
+                assignments.append((resolved_indices, tag_list))
         else:
             # Single selector mode
-            if keywords is None:
+            if tags is None:
                 raise ValueError(
-                    "keywords parameter is required when trajectory_selector is not dict"
+                    "tags parameter is required when trajectory_selector is not dict"
                 )
 
-            resolved_indices = KeywordManager._resolve_trajectory_selectors(
+            resolved_indices = TagHelper._resolve_trajectory_selectors(
                 traj_data, trajectory_selector
             )
-            assignments.append((resolved_indices, keywords))
+            assignments.append((resolved_indices, tags))
 
         return assignments
 
@@ -114,13 +114,13 @@ class KeywordManager:
             If selector contains invalid indices or names
         """
         if isinstance(selector, int):
-            return KeywordManager._resolve_int_selector(traj_data, selector)
+            return TagHelper._resolve_int_selector(traj_data, selector)
         elif isinstance(selector, str):
-            return KeywordManager._resolve_string_selector(traj_data, selector)
+            return TagHelper._resolve_string_selector(traj_data, selector)
         elif isinstance(selector, range):
-            return KeywordManager._resolve_range_selector(traj_data, selector)
+            return TagHelper._resolve_range_selector(traj_data, selector)
         elif isinstance(selector, list):
-            return KeywordManager._resolve_list_selector(traj_data, selector)
+            return TagHelper._resolve_list_selector(traj_data, selector)
         else:
             raise ValueError(f"Unsupported selector type: {type(selector)}")
 
@@ -153,7 +153,7 @@ class KeywordManager:
 
     @staticmethod
     def _resolve_string_selector(traj_data: TrajectoryData, selector: str) -> List[int]:
-        """
+        r"""
         Resolve string selector with flexible syntax to trajectory indices.
 
         Supports multiple string formats:
@@ -161,7 +161,7 @@ class KeywordManager:
         - Comma list: "1,2,4,5", "id 1,2,4,5" → [1, 2, 4, 5]
         - Single number: "7", "id 7" → [7]
         - Fnmatch pattern: "system_*" → fnmatch pattern matching
-        - Regex pattern: "regex system_\d+" → regex pattern matching
+        - Regex pattern: "regex system_\\d+" → regex pattern matching
 
         Parameters:
         -----------
@@ -180,34 +180,125 @@ class KeywordManager:
         ValueError
             If selector format is invalid or no trajectories match
         """
-        # Remove optional "id " prefix for parsing
-        clean_selector = selector.removeprefix("id ").strip()
-
-        # 1. Range: "0-3" → use range string parser
-        if "-" in clean_selector and "," not in clean_selector:
-            return KeywordManager._resolve_range_string(traj_data, clean_selector)
-
-        # 2. Comma list: "1,2,4,5" → use comma list parser
-        elif "," in clean_selector:
-            return KeywordManager._resolve_comma_list(traj_data, clean_selector)
-
-        # 3. Single number: "7" → use existing int resolver
-        elif clean_selector.isdigit():
-            return KeywordManager._resolve_int_selector(traj_data, int(clean_selector))
-
-        # 4. Pattern: regex vs fnmatch
+        clean_selector = TagHelper._clean_selector_string(selector)
+        return TagHelper._route_selector_by_format(traj_data, clean_selector)
+    
+    @staticmethod
+    def _clean_selector_string(selector: str) -> str:
+        """
+        Clean selector string by removing optional id prefix.
+        
+        Parameters:
+        -----------
+        selector : str
+            Raw selector string potentially with "id " prefix
+        
+        Returns:
+        --------
+        str
+            Cleaned selector string
+        """
+        return selector.removeprefix("id ").strip()
+    
+    @staticmethod
+    def _route_selector_by_format(traj_data: TrajectoryData, clean_selector: str) -> List[int]:
+        """
+        Route selector to appropriate resolver based on format.
+        
+        Parameters:
+        -----------
+        traj_data : TrajectoryData
+            Trajectory data object
+        clean_selector : str
+            Cleaned selector string
+        
+        Returns:
+        --------
+        List[int]
+            List of resolved trajectory indices
+        """
+        if TagHelper._is_range_format(clean_selector):
+            return TagHelper._resolve_range_string(traj_data, clean_selector)
+        elif TagHelper._is_comma_list_format(clean_selector):
+            return TagHelper._resolve_comma_list(traj_data, clean_selector)
+        elif TagHelper._is_single_number_format(clean_selector):
+            return TagHelper._resolve_int_selector(traj_data, int(clean_selector))
         else:
-            if clean_selector.startswith("regex "):
-                # Regex pattern
-                regex_pattern = clean_selector.removeprefix(
-                    "regex "
-                ).strip()  # Remove "regex " prefix
-                return KeywordManager._resolve_regex_pattern(traj_data, regex_pattern)
-            else:
-                # Fnmatch pattern
-                return KeywordManager._resolve_fnmatch_pattern(
-                    traj_data, clean_selector
-                )
+            return TagHelper._resolve_pattern_format(traj_data, clean_selector)
+    
+    @staticmethod
+    def _is_range_format(clean_selector: str) -> bool:
+        """
+        Check if selector is range format.
+        
+        Parameters:
+        -----------
+        clean_selector : str
+            Cleaned selector string to check
+        
+        Returns:
+        --------
+        bool
+            True if selector matches range format (e.g., "0-3")
+        """
+        return "-" in clean_selector and "," not in clean_selector
+    
+    @staticmethod
+    def _is_comma_list_format(clean_selector: str) -> bool:
+        """
+        Check if selector is comma list format.
+        
+        Parameters:
+        -----------
+        clean_selector : str
+            Cleaned selector string to check
+        
+        Returns:
+        --------
+        bool
+            True if selector matches comma list format (e.g., "1,2,4")
+        """
+        return "," in clean_selector
+    
+    @staticmethod
+    def _is_single_number_format(clean_selector: str) -> bool:
+        """
+        Check if selector is single number format.
+        
+        Parameters:
+        -----------
+        clean_selector : str
+            Cleaned selector string to check
+        
+        Returns:
+        --------
+        bool
+            True if selector is a single digit string (e.g., "7")
+        """
+        return clean_selector.isdigit()
+    
+    @staticmethod
+    def _resolve_pattern_format(traj_data: TrajectoryData, clean_selector: str) -> List[int]:
+        """
+        Resolve pattern format (regex or fnmatch).
+        
+        Parameters:
+        -----------
+        traj_data : TrajectoryData
+            Trajectory data object
+        clean_selector : str
+            Pattern selector string
+        
+        Returns:
+        --------
+        List[int]
+            List of matching trajectory indices
+        """
+        if clean_selector.startswith("regex "):
+            regex_pattern = clean_selector.removeprefix("regex ").strip()
+            return TagHelper._resolve_regex_pattern(traj_data, regex_pattern)
+        else:
+            return TagHelper._resolve_fnmatch_pattern(traj_data, clean_selector)
 
     @staticmethod
     def _resolve_range_selector(
@@ -259,7 +350,7 @@ class KeywordManager:
         """
         all_indices = []
         for sub_selector in selector:
-            resolved = KeywordManager._resolve_trajectory_selectors(
+            resolved = TagHelper._resolve_trajectory_selectors(
                 traj_data, sub_selector
             )
             all_indices.extend(resolved)
@@ -304,7 +395,7 @@ class KeywordManager:
 
         # Create range and use existing resolver (reuses all validation)
         range_obj = range(start, end + 1)  # inclusive
-        return KeywordManager._resolve_range_selector(traj_data, range_obj)
+        return TagHelper._resolve_range_selector(traj_data, range_obj)
 
     @staticmethod
     def _resolve_comma_list(traj_data: TrajectoryData, selector: str) -> List[int]:
@@ -334,7 +425,7 @@ class KeywordManager:
             raise ValueError(f"Invalid comma list: '{selector}'. Use 'X,Y,Z'")
 
         # Create list and use existing resolver (reuses all validation)
-        return KeywordManager._resolve_list_selector(traj_data, indices)
+        return TagHelper._resolve_list_selector(traj_data, indices)
 
     @staticmethod
     def _resolve_regex_pattern(traj_data: TrajectoryData, pattern: str) -> List[int]:
@@ -404,11 +495,11 @@ class KeywordManager:
         return matched_indices
 
     @staticmethod
-    def build_frame_keyword_mapping(traj_data: TrajectoryData) -> Dict[int, List[str]]:
+    def build_frame_tag_mapping(traj_data: TrajectoryData) -> Dict[int, List[str]]:
         """
-        Build mapping from global frame indices to trajectory keywords.
+        Build mapping from global frame indices to trajectory tags.
 
-        This method creates a mapping that allows quick lookup of keywords
+        This method creates a mapping that allows quick lookup of tags
         for any frame across all trajectories. Returns the mapping without
         modifying the trajectory data.
 
@@ -420,26 +511,26 @@ class KeywordManager:
         Returns:
         --------
         Dict[int, List[str]]
-            Dictionary mapping global frame indices to keyword lists
+            Dictionary mapping global frame indices to tag lists
 
         Examples:
         ---------
-        >>> frame_mapping = KeywordManager.build_frame_keyword_mapping(traj_data)
-        >>> traj_data.frame_keyword_mapping = frame_mapping
+        >>> frame_mapping = TagHelper.build_frame_tag_mapping(traj_data)
+        >>> traj_data.frame_tag_mapping = frame_mapping
         """
-        frame_keyword_mapping = {}
+        frame_tag_mapping = {}
         frame_offset = 0
 
         for traj_idx, traj in enumerate(traj_data.trajectories):
-            # Get keywords for this trajectory
-            keywords = traj_data.get_trajectory_keywords(traj_idx)
+            # Get tags for this trajectory
+            tags = traj_data.get_trajectory_tags(traj_idx)
 
-            if keywords:
-                # Map all frames from this trajectory to these keywords
+            if tags:
+                # Map all frames from this trajectory to these tags
                 for frame_idx in range(traj.n_frames):
                     global_frame_idx = frame_offset + frame_idx
-                    frame_keyword_mapping[global_frame_idx] = keywords
+                    frame_tag_mapping[global_frame_idx] = tags
 
             frame_offset += traj.n_frames
 
-        return frame_keyword_mapping
+        return frame_tag_mapping

@@ -18,17 +18,18 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""
-Helper classes for feature importance operations.
+"""DaskMD trajectory helper utilities."""
 
-This package contains helper classes that extract common logic from
-FeatureImportanceManager methods to improve code organization and reusability.
-"""
-
-from .analysis_runner_helper import AnalysisRunnerHelper
-from .metadata_builder_helper import MetadataBuilderHelper
+from .dask_trajectory_build_helper import DaskMDTrajectoryBuildHelper
+from .dask_trajectory_store_helper import DaskMDTrajectoryStoreHelper  
+from .dask_trajectory_join_stack_helper import DaskMDTrajectoryJoinStackHelper
+from .parallel_operations_helper import ParallelOperationsHelper
+from .zarr_cache_helper import ZarrCacheHelper
 
 __all__ = [
-    "AnalysisRunnerHelper",
-    "MetadataBuilderHelper",
+    "DaskMDTrajectoryBuildHelper",
+    "DaskMDTrajectoryStoreHelper", 
+    "DaskMDTrajectoryJoinStackHelper",
+    "ParallelOperationsHelper",
+    "ZarrCacheHelper",
 ]

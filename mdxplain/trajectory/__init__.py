@@ -22,11 +22,14 @@
 Trajectory module for MD trajectory management and manipulation.
 
 This module provides functionality for loading, manipulating, and managing
-molecular dynamics trajectories with support for keyword annotation and
+molecular dynamics trajectories with support for tag annotation and
 nomenclature systems.
 """
 
 from .entities.trajectory_data import TrajectoryData
 from .managers.trajectory_manager import TrajectoryManager
 
-__all__ = ["TrajectoryData", "TrajectoryManager"]
+__all__ = [
+    "TrajectoryData", 
+    "TrajectoryManager"
+]

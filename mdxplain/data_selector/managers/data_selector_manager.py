@@ -23,12 +23,11 @@ Data selector manager for trajectory frame selection.
 
 This module provides the DataSelectorManager class that manages frame
 selection (row selection) as the counterpart to FeatureSelector's
-column selection. It supports selection based on keywords, clusters,
+column selection. It supports selection based on tags, clusters,
 and combinations thereof.
 """
 
-from typing import List, Union, Optional, Dict, Any, Set
-import numpy as np
+from typing import List, Union, Dict, Any
 
 from ..entities.data_selector_data import DataSelectorData
 from ..helpers.frame_selection_helper import FrameSelectionHelper
@@ -40,12 +39,12 @@ class DataSelectorManager:
     Manager for creating and managing trajectory frame selections.
 
     This class provides methods to select trajectory frames (rows) based on
-    various criteria such as keywords, cluster assignments, or combinations.
+    various criteria such as tags, cluster assignments, or combinations.
     It serves as the counterpart to FeatureSelectorManager, focusing on
     row selection instead of column selection.
 
     The manager supports:
-    - Keyword-based frame selection
+    - Tag-based frame selection
     - Cluster-based frame selection
     - Combination of multiple selections
     - Frame index range selection
@@ -123,16 +122,16 @@ class DataSelectorManager:
 
         pipeline_data.data_selector_data[name] = DataSelectorData(name)
 
-    def select_by_keywords(
+    def select_by_tags(
         self,
         pipeline_data,
         name: str,
-        keywords: List[str],
+        tags: List[str],
         match_all: bool = True,
         mode: str = "add",
     ) -> None:
         """
-        Select frames based on trajectory keywords.
+        Select frames based on trajectory tags.
 
         Warning:
         --------
@@ -141,12 +140,12 @@ class DataSelectorManager:
 
         Pipeline mode:
         >>> pipeline = PipelineManager()
-        >>> pipeline.data_selector.select_by_keywords("biased_system_A", ["system_A", "biased"])  # NO pipeline_data parameter
+        >>> pipeline.data_selector.select_by_tags("biased_system_A", ["system_A", "biased"])  # NO pipeline_data parameter
 
         Standalone mode:
         >>> pipeline_data = PipelineData()
         >>> manager = DataSelectorManager()
-        >>> manager.select_by_keywords(pipeline_data, "biased_system_A", ["system_A", "biased"])  # WITH pipeline_data parameter
+        >>> manager.select_by_tags(pipeline_data, "biased_system_A", ["system_A", "biased"])  # WITH pipeline_data parameter
 
         Parameters:
         -----------
@@ -154,10 +153,10 @@ class DataSelectorManager:
             Pipeline data object containing trajectory data
         name : str
             Name of the data selector to populate
-        keywords : List[str]
-            List of keywords to search for
+        tags : List[str]
+            List of tags to search for
         match_all : bool, default=True
-            If True, frame must have ALL keywords. If False, ANY keyword matches.
+            If True, frame must have ALL tags. If False, ANY tag matches.
         mode : str, default="add"
             Selection mode: "add" (union), "subtract" (difference), "intersect" (intersection)
         # TODO: We could use an Enum for modes
@@ -174,18 +173,18 @@ class DataSelectorManager:
 
         Examples:
         ---------
-        >>> # Add frames with all specified keywords
-        >>> manager.select_by_keywords(
+        >>> # Add frames with all specified tags
+        >>> manager.select_by_tags(
         ...     pipeline_data, "biased_system_A", ["system_A", "biased"], match_all=True, mode="add"
         ... )
 
-        >>> # Remove frames with any of the keywords
-        >>> manager.select_by_keywords(
+        >>> # Remove frames with any of the tags
+        >>> manager.select_by_tags(
         ...     pipeline_data, "my_frames", ["system_A", "system_B"], match_all=False, mode="subtract"
         ... )
 
-        >>> # Keep only frames that have these keywords
-        >>> manager.select_by_keywords(
+        >>> # Keep only frames that have these tags
+        >>> manager.select_by_tags(
         ...     pipeline_data, "my_frames", ["production"], mode="intersect"
         ... )
         """
@@ -196,16 +195,16 @@ class DataSelectorManager:
         selector_data = pipeline_data.data_selector_data[name]
         
         # Frame selection using helper
-        frame_indices = FrameSelectionHelper.select_frames_by_keywords(
-            pipeline_data.trajectory_data, keywords, match_all
+        frame_indices = FrameSelectionHelper.select_frames_by_tags(
+            pipeline_data.trajectory_data, tags, match_all
         )
         
         # Update selector indices
         self._update_selector_indices(selector_data, frame_indices, mode)
         
         # Build and store criteria using helper
-        criteria = CriteriaBuilderHelper.build_keyword_criteria(
-            keywords, match_all, len(frame_indices)
+        criteria = CriteriaBuilderHelper.build_tag_criteria(
+            tags, match_all, len(frame_indices)
         )
         criteria["mode"] = mode  # Add mode to criteria
         

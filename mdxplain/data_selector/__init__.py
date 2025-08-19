@@ -23,7 +23,7 @@ Data selector module for row-based trajectory frame selection.
 
 This module provides the DataSelector functionality that serves as the
 counterpart to FeatureSelector. While FeatureSelector chooses columns (features),
-DataSelector chooses rows (frames) based on keywords, clusters, or combinations.
+DataSelector chooses rows (frames) based on tags, clusters, or combinations.
 
 Main Components:
 - DataSelectorData: Entity storing frame indices and selection criteria

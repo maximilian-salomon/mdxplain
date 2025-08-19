@@ -38,8 +38,8 @@ class CriteriaBuilderHelper:
     
     Examples:
     ---------
-    >>> # Build keyword criteria
-    >>> criteria = CriteriaBuilderHelper.build_keyword_criteria(
+    >>> # Build tag criteria
+    >>> criteria = CriteriaBuilderHelper.build_tag_criteria(
     ...     ["system_A", "biased"], True, 150
     ... )
     
@@ -50,21 +50,21 @@ class CriteriaBuilderHelper:
     """
     
     @staticmethod
-    def build_keyword_criteria(
-        keywords: List[str], match_all: bool, n_matches: int
+    def build_tag_criteria(
+        tags: List[str], match_all: bool, n_matches: int
     ) -> Dict[str, Any]:
         """
-        Build criteria dictionary for keyword-based selection.
+        Build criteria dictionary for tag-based selection.
         
         Creates a standardized criteria dictionary that documents how
-        a keyword-based frame selection was performed.
+        a tag-based frame selection was performed.
         
         Parameters:
         -----------
-        keywords : List[str]
-            List of keywords used for selection
+        tags : List[str]
+            List of tags used for selection
         match_all : bool
-            Whether all keywords were required (True) or any keyword (False)
+            Whether all tags were required (True) or any tag (False)
         n_matches : int
             Number of frames that matched the criteria
             
@@ -75,15 +75,15 @@ class CriteriaBuilderHelper:
             
         Examples:
         ---------
-        >>> criteria = CriteriaBuilderHelper.build_keyword_criteria(
+        >>> criteria = CriteriaBuilderHelper.build_tag_criteria(
         ...     ["system_A", "biased"], True, 150
         ... )
-        >>> print(criteria["type"])  # "keywords"
+        >>> print(criteria["type"])  # "tags"
         >>> print(criteria["n_matches"])  # 150
         """
         return {
-            "type": "keywords",
-            "keywords": keywords,
+            "type": "tags",
+            "tags": tags,
             "match_all": match_all,
             "n_matches": n_matches,
         }
