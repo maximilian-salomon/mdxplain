@@ -32,13 +32,14 @@ from typing import List, Union
 from .feature_selector_resid_parse_helper import FeatureSelectorResidParseHelper
 from .feature_selector_seqid_parse_helper import FeatureSelectorSeqidParseHelper
 from .feature_selector_resname_parse_helper import FeatureSelectorResnameParseHelper
+from .feature_selector_consensus_parse_helper import FeatureSelectorConsensusParseHelper
 
 
 class FeatureSelectorParseCoreHelper:
     """Core parser that coordinates pattern detection and delegates to specialized helpers."""
     
     @staticmethod
-    def parse_selection(selection_string: str, features_list: List[list]) -> List[int]:
+    def parse_selection(selection_string: str, features_list: List[list], require_all_partners: bool = False) -> List[int]:
         """
         Parse selection string and return matching feature indices.
         Coordinates pattern detection and delegates to specialized category helpers.
@@ -49,6 +50,8 @@ class FeatureSelectorParseCoreHelper:
             Selection string (e.g., "res ALA HIS", "resid 123 130", "res ALA and not resid 124-130")
         features_list : List[list]
             List of features from metadata (each feature is a list of partners)
+        require_all_partners : bool, default=False
+            For pairwise features, require all partners to be present in selection
 
         Returns:
         --------
@@ -62,7 +65,7 @@ class FeatureSelectorParseCoreHelper:
         """
         instructions = FeatureSelectorParseCoreHelper._split_instructions(selection_string)
         positive, negative = FeatureSelectorParseCoreHelper._process_instructions(
-            instructions, features_list
+            instructions, features_list, require_all_partners
         )
         return FeatureSelectorParseCoreHelper._combine_results(positive, negative, features_list)
     
@@ -85,7 +88,7 @@ class FeatureSelectorParseCoreHelper:
     
     @staticmethod
     def _process_instructions(
-        instructions: List[str], features_list: List[list]
+        instructions: List[str], features_list: List[list], require_all_partners: bool = False
     ) -> tuple:
         """
         Process all instructions and return positive and negative indices.
@@ -96,6 +99,8 @@ class FeatureSelectorParseCoreHelper:
             List of instruction strings
         features_list : List[list]
             List of features from metadata
+        require_all_partners : bool, default=False
+            For pairwise features, require all partners to be present in selection
 
         Returns:
         --------
@@ -112,7 +117,7 @@ class FeatureSelectorParseCoreHelper:
 
         for instr in instructions:
             instr_positive, instr_negative = (
-                FeatureSelectorParseCoreHelper._process_single_instruction(instr, features_list)
+                FeatureSelectorParseCoreHelper._process_single_instruction(instr, features_list, require_all_partners)
             )
             positive.extend(instr_positive)
             negative.extend(instr_negative)
@@ -121,7 +126,7 @@ class FeatureSelectorParseCoreHelper:
     
     @staticmethod
     def _process_single_instruction(
-        instruction: str, features_list: List[list]
+        instruction: str, features_list: List[list], require_all_partners: bool = False
     ) -> tuple:
         """
         Process a single instruction and return positive and negative indices.
@@ -132,6 +137,8 @@ class FeatureSelectorParseCoreHelper:
             Single instruction string
         features_list : List[list]
             List of features from metadata
+        require_all_partners : bool, default=False
+            For pairwise features, require all partners to be present in selection
 
         Returns:
         --------
@@ -151,7 +158,7 @@ class FeatureSelectorParseCoreHelper:
             FeatureSelectorParseCoreHelper._extract_category_info(tokens)
         )
         indices = FeatureSelectorParseCoreHelper._get_indices_for_category(
-            category, parameters, features_list
+            category, parameters, features_list, require_all_partners
         )
 
         if is_negative:
@@ -161,7 +168,7 @@ class FeatureSelectorParseCoreHelper:
     
     @staticmethod
     def _get_indices_for_category(
-        category: str, parameters: str, features_list: List[list]
+        category: str, parameters: str, features_list: List[list], require_all_partners: bool = False
     ) -> List[int]:
         """
         Get indices for a specific category and parameters.
@@ -190,11 +197,17 @@ class FeatureSelectorParseCoreHelper:
             "res": FeatureSelectorResnameParseHelper.parse_res_category,
             "resid": FeatureSelectorResidParseHelper.parse_resid_category,
             "seqid": FeatureSelectorSeqidParseHelper.parse_seqid_category,
+            "consensus": FeatureSelectorConsensusParseHelper.parse_consensus_category,
         }
+        
+        if category not in category_parsers:
+            raise ValueError(f"Unknown category: {category}")
 
-        normalized_params = FeatureSelectorParseCoreHelper._normalize_and_split_parameters(
-            parameters
-        )
+        # Handle parameters - don't split for consensus category
+        if category == "consensus":
+            normalized_params = [parameters.strip()] if parameters.strip() else []
+        else:
+            normalized_params = FeatureSelectorParseCoreHelper._normalize_and_split_parameters(parameters)
 
         if not normalized_params:
             return []
@@ -205,7 +218,7 @@ class FeatureSelectorParseCoreHelper:
             if isinstance(normalized_params, str):
                 # This should only happen if normalized_params is "ALL", which is handled above
                 raise ValueError(f"Unexpected string parameter: {normalized_params}")
-            return category_parsers[category](normalized_params, features_list)
+            return category_parsers[category](normalized_params, features_list, require_all_partners)
     
     @staticmethod
     def _combine_results(
@@ -341,7 +354,7 @@ class FeatureSelectorParseCoreHelper:
         remaining_params = " ".join(tokens[1:]) if len(tokens) > 1 else ""
         
         # Known explicit categories - no pattern detection needed
-        known_categories = {"res", "resid", "seqid"}
+        known_categories = {"res", "resid", "seqid", "consensus"}
         if first_token.lower() in known_categories:
             return (first_token.lower(), remaining_params)
         
@@ -365,6 +378,7 @@ class FeatureSelectorParseCoreHelper:
             # Unknown or mixed patterns - require explicit syntax
             raise ValueError(
                 f"Unknown pattern or mixed pattern in '{' '.join(tokens)}'. "
-                "Use resid, seqid or res as category followed by the values. "
+                "Use resid, seqid, res, or consensus as category followed by the values. "
                 "Combine different categories with 'and'."
             )
+    

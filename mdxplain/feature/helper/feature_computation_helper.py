@@ -27,7 +27,7 @@ in the FeatureManager.
 """
 
 import numpy as np
-from typing import Tuple, Any, Dict
+from typing import Tuple, Any, Dict, List
 
 
 class FeatureComputationHelper:
@@ -41,7 +41,8 @@ class FeatureComputationHelper:
     @staticmethod
     def check_feature_existence(
         pipeline_data, 
-        feature_key: str, 
+        feature_key: str,
+        traj_indices: List[int],
         force: bool
     ) -> None:
         """
@@ -73,7 +74,7 @@ class FeatureComputationHelper:
         ... )
         """
         feature_exists = FeatureComputationHelper._feature_already_exists(
-            pipeline_data, feature_key
+            pipeline_data, feature_key, traj_indices
         )
 
         if not feature_exists:
@@ -81,13 +82,13 @@ class FeatureComputationHelper:
 
         if force:
             FeatureComputationHelper._handle_force_recomputation(
-                pipeline_data, feature_key
+                pipeline_data, feature_key, traj_indices
             )
         else:
             raise ValueError(f"{feature_key.capitalize()} FeatureData already exists.")
 
     @staticmethod
-    def _feature_already_exists(pipeline_data, feature_key: str) -> bool:
+    def _feature_already_exists(pipeline_data, feature_key: str, traj_indices: List[int]) -> bool:
         """
         Check if feature already exists with computed data.
 
@@ -103,13 +104,18 @@ class FeatureComputationHelper:
         bool
             True if feature exists with data, False otherwise
         """
-        return (
-            feature_key in pipeline_data.feature_data
-            and pipeline_data.feature_data[feature_key].data is not None
+        if feature_key not in pipeline_data.feature_data:
+            return False
+        
+        # Check if any of the specified trajectories has data for this feature
+        feature_dict = pipeline_data.feature_data[feature_key]
+        return any(
+            traj_idx in feature_dict and feature_dict[traj_idx].data is not None
+            for traj_idx in traj_indices
         )
 
     @staticmethod
-    def _handle_force_recomputation(pipeline_data, feature_key: str) -> None:
+    def _handle_force_recomputation(pipeline_data, feature_key: str, traj_indices: List[int]) -> None:
         """
         Handle forced recomputation of existing feature.
 
@@ -127,19 +133,24 @@ class FeatureComputationHelper:
         """
         print(
             f"WARNING: {feature_key.capitalize()} FeatureData already "
-            f"exists. Forcing recomputation."
+            f"exists for trajectories {traj_indices}. Forcing recomputation."
         )
-        pipeline_data.feature_data.pop(feature_key)
+        # Remove only the data for the specified trajectories
+        if feature_key in pipeline_data.feature_data:
+            for traj_idx in traj_indices:
+                if traj_idx in pipeline_data.feature_data[feature_key]:
+                    del pipeline_data.feature_data[feature_key][traj_idx]
 
     @staticmethod
     def execute_computation(
         pipeline_data, 
         feature_data, 
         feature_type,
+        traj_idx: int,
         force_original: bool = True
     ) -> Tuple[Any, Dict]:
         """
-        Execute feature computation with appropriate input data.
+        Execute feature computation for a single trajectory.
 
         Parameters:
         -----------
@@ -149,33 +160,42 @@ class FeatureComputationHelper:
             Feature data object for computation
         feature_type : FeatureTypeBase
             Feature type object to compute
+        traj_idx : int
+            Trajectory index to process
         force_original : bool, default=True
             Whether to force using original data instead of reduced data
 
         Returns:
         --------
         Tuple[Any, Dict]
-            Tuple of (computed_data, feature_metadata)
+            Tuple of (computed_data, metadata) for single trajectory
 
         Examples:
         ---------
+        >>> # Process single trajectory
         >>> data, metadata = FeatureComputationHelper.execute_computation(
-        ...     pipeline_data, feature_data, distances_feature
+        ...     pipeline_data, feature_data, distances_feature, traj_idx=0
         ... )
         """
         if feature_type.get_input() is not None:
             # Feature depends on other features
-            input_feature = pipeline_data.feature_data[feature_type.get_input()]
-            return feature_data.feature_type.compute(
-                input_feature.get_data(force_original=force_original),
-                input_feature.get_feature_metadata(force_original=force_original),
-            )
+            input_feature_dict = pipeline_data.feature_data[feature_type.get_input()]
+            
+            # Get the specific trajectory's feature data
+            if traj_idx not in input_feature_dict:
+                raise ValueError(f"Input feature '{feature_type.get_input()}' not computed for trajectory {traj_idx}")
 
-        # Base feature - use trajectories
-        return feature_data.feature_type.compute(
-            pipeline_data.trajectory_data.trajectories,
-            feature_metadata=pipeline_data.trajectory_data.res_label_data,
-        )
+            input_feature = input_feature_dict[traj_idx]
+            input_data = input_feature.get_data(force_original=force_original)
+            input_metadata = input_feature.get_feature_metadata(force_original=force_original)
+            
+            return feature_data.feature_type.compute(input_data, input_metadata)
+        else:
+            # Base feature from trajectory
+            single_traj = pipeline_data.trajectory_data.trajectories[traj_idx]
+            single_labels = pipeline_data.trajectory_data.res_label_data[traj_idx]
+            return feature_data.feature_type.compute(single_traj, feature_metadata=single_labels)
+
 
     @staticmethod
     def store_computation_results(

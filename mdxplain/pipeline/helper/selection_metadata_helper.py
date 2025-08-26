@@ -25,7 +25,7 @@ Provides metadata collection, processing, and validation operations
 for the feature selection system in PipelineData.
 """
 
-from typing import Optional
+from typing import Optional, Union
 import numpy as np
 
 
@@ -35,7 +35,7 @@ class SelectionMetadataHelper:
     @staticmethod
     def collect_metadata_for_selection(pipeline_data, name: str) -> list:
         """
-        Collect metadata for all features in the selection.
+        Collect metadata for all features in the selection using stored reference trajectory.
 
         Parameters:
         -----------
@@ -52,17 +52,35 @@ class SelectionMetadataHelper:
         Raises:
         -------
         ValueError
-            If the selection does not exist
+            If the selection does not exist or reference trajectory not set/valid
         """
         selected_metadata = []
 
-        # Get results from FeatureSelectorData object instead of separate selected_data
+        # Get results from FeatureSelectorData object - new trajectory-specific structure
         selector_data = pipeline_data.selected_feature_data[name]
         all_results = selector_data.get_all_results()
 
+        # Get reference trajectory from selector data
+        reference_traj = selector_data.get_reference_trajectory()
+        if reference_traj is None:
+            raise ValueError(f"No reference trajectory set for selection '{name}'. Run select() first.")
+
         for feature_type, selection_info in all_results.items():
+            # New structure: {"trajectory_indices": {traj_idx: {"indices": [...], "use_reduced": [...]}}}
+            trajectory_results = selection_info.get("trajectory_indices", {})
+            
+            # Validate reference trajectory exists in this selection
+            if reference_traj not in trajectory_results:
+                available_trajs = list(trajectory_results.keys())
+                raise ValueError(
+                    f"Reference trajectory {reference_traj} not found in selection '{name}' "
+                    f"for feature '{feature_type}'. Available trajectories: {available_trajs}"
+                )
+            
+            # Get metadata using reference trajectory
+            reference_data = trajectory_results[reference_traj]
             feature_metadata = SelectionMetadataHelper._get_metadata_for_feature(
-                pipeline_data, feature_type, selection_info, name
+                pipeline_data, feature_type, reference_data, reference_traj, name
             )
             selected_metadata.extend(feature_metadata)
 
@@ -70,7 +88,7 @@ class SelectionMetadataHelper:
 
     @staticmethod
     def _get_metadata_for_feature(
-        pipeline_data, feature_type: str, selection_info: dict, name: str
+        pipeline_data, feature_type: str, reference_data: dict, reference_traj: int, name: str
     ) -> list:
         """
         Get metadata for a single feature type.
@@ -81,8 +99,10 @@ class SelectionMetadataHelper:
             Pipeline data object containing feature data
         feature_type : str
             Name of the feature type to get metadata for
-        selection_info : dict
-            Selection information for the feature type
+        reference_data : dict
+            Selection data for reference trajectory containing indices and use_reduced flags
+        reference_traj : int
+            Reference trajectory index
         name : str
             Name of the selection to get metadata for
 
@@ -96,9 +116,10 @@ class SelectionMetadataHelper:
         ValueError
             If the feature type does not exist
         """
-        feature_data = pipeline_data.feature_data[feature_type]
-        indices = selection_info["indices"]
-        use_reduced_flags = selection_info["use_reduced"]
+        # Get feature data for reference trajectory (trajektorien-spezifisch!)
+        feature_data = pipeline_data.feature_data[feature_type][reference_traj]
+        indices = reference_data["indices"]
+        use_reduced_flags = reference_data["use_reduced"]
 
         feature_metadata = []
 

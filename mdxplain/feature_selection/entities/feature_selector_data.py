@@ -25,7 +25,7 @@ This module contains the FeatureSelectorData class that stores feature
 selection configurations including selection criteria and data type preferences.
 """
 
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 
 class FeatureSelectorData:
@@ -53,6 +53,8 @@ class FeatureSelectorData:
         Each result dict contains:
         - 'indices': List of selected column indices
         - 'use_reduced': List of boolean flags for reduced data usage
+    reference_trajectory : int, optional
+        Trajectory index to use as reference for metadata extraction
 
     Examples:
     ---------
@@ -84,9 +86,12 @@ class FeatureSelectorData:
         self.name = name
         self.selections: Dict[str, List[dict]] = {}
         self.selection_results: Dict[str, dict] = {}
+        self.reference_trajectory: Optional[int] = None
+        self.n_columns: Optional[int] = None
 
     def add_selection(
-        self, feature_key: str, selection: str, use_reduced: bool = False
+        self, feature_key: str, selection: str, use_reduced: bool = False,
+        common_denominator: bool = True, traj_selection = "all", require_all_partners: bool = False
     ) -> None:
         """
         Add a selection configuration for a feature type.
@@ -96,9 +101,15 @@ class FeatureSelectorData:
         feature_key : str
             Feature type key (e.g., "distances", "contacts")
         selection : str
-            Selection criteria string (e.g., "res ALA", "resid 123-140", "all")
+            Selection criteria string (e.g., "res ALA", "resid 123-140", "7x50-8x50", "all")
         use_reduced : bool, default=False
             Whether to use reduced data (True) or original data (False)
+        common_denominator : bool, default=True
+            Whether to find common features across trajectories in traj_selection
+        traj_selection : int, str, list, or "all", default="all"
+            Selection of trajectories to process
+        require_all_partners : bool, default=False
+            For pairwise features, require all partners to be present in selection
 
         Returns:
         --------
@@ -116,9 +127,13 @@ class FeatureSelectorData:
         if feature_key not in self.selections:
             self.selections[feature_key] = []
 
-        self.selections[feature_key].append(
-            {"selection": selection, "use_reduced": use_reduced}
-        )
+        self.selections[feature_key].append({
+            "selection": selection, 
+            "use_reduced": use_reduced,
+            "common_denominator": common_denominator,
+            "traj_selection": traj_selection,
+            "require_all_partners": require_all_partners
+        })
 
     def get_selections(self, feature_key: str) -> List[dict]:
         """
@@ -283,7 +298,7 @@ class FeatureSelectorData:
         Examples:
         ---------
         >>> selector_data = FeatureSelectorData("analysis")
-        >>> results = {'indices': [0, 1, 2], 'use_reduced': [False, False, True]}
+        >>> results = {"trajectory_indices": {traj_idx: {"indices": [...], "use_reduced": [...]}}}
         >>> selector_data.store_results("distances", results)
         >>> print(selector_data.has_results("distances"))
         True
@@ -414,3 +429,57 @@ class FeatureSelectorData:
             f"selections={summary['total_selections']}, "
             f"results={results_count})"
         )
+
+    def set_reference_trajectory(self, reference_traj: int) -> None:
+        """
+        Set reference trajectory for metadata extraction.
+
+        Parameters:
+        -----------
+        reference_traj : int
+            Trajectory index to use as reference for metadata
+
+        Returns:
+        --------
+        None
+            Sets reference trajectory in the selector data
+        """
+        self.reference_trajectory = reference_traj
+
+    def get_reference_trajectory(self) -> Optional[int]:
+        """
+        Get reference trajectory for metadata extraction.
+
+        Returns:
+        --------
+        Optional[int]
+            Reference trajectory index, or None if not set
+        """
+        return self.reference_trajectory
+    
+    def set_n_columns(self, n_columns: int) -> None:
+        """
+        Set total number of columns in the final selection matrix.
+        
+        Parameters:
+        -----------
+        n_columns : int
+            Total number of columns across all features and trajectories
+            
+        Returns:
+        --------
+        None
+            Sets the n_columns attribute
+        """
+        self.n_columns = n_columns
+    
+    def get_n_columns(self) -> Optional[int]:
+        """
+        Get total number of columns in the final selection matrix.
+        
+        Returns:
+        --------
+        Optional[int]
+            Total number of columns, or None if not calculated yet
+        """
+        return self.n_columns

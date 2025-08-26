@@ -21,14 +21,14 @@
 """Trajectory management module for loading and manipulating MD trajectory data."""
 
 from typing import Any, Dict, List, Optional, Tuple, Union
+import numpy as np
 
 from ..entities.trajectory_data import TrajectoryData
 from ..helper.metadata_helper.nomenclature_helper import NomenclatureHelper
 from ..helper.process_helper.trajectory_load_helper import TrajectoryLoadHelper
-from ..helper.validation_helper.consistency_check_helper import ConsistencyCheckHelper
-from ..helper.process_helper.selection_resolve_helper import SelectionResolveHelper
 from ..helper.metadata_helper.tag_helper import TagHelper
 from ..helper.process_helper.trajectory_process_helper import TrajectoryProcessHelper
+from ..helper.process_helper.label_operation_helper import LabelOperationHelper
 from ..helper.validation_helper.trajectory_validation_helper import TrajectoryValidationHelper
 
 import os
@@ -189,15 +189,6 @@ class TrajectoryManager:
         new_trajectory_data.trajectory_names = result["names"]
         pipeline_data.trajectory_data = new_trajectory_data
 
-        # Check trajectory consistency
-        ConsistencyCheckHelper.check_trajectory_consistency(
-            pipeline_data.trajectory_data
-        )
-        # Build and set frame tag mapping
-        frame_mapping = TagHelper.build_frame_tag_mapping(
-            pipeline_data.trajectory_data
-        )
-        pipeline_data.trajectory_data.frame_tag_mapping = frame_mapping
 
     def add_trajectory(
         self,
@@ -206,7 +197,6 @@ class TrajectoryManager:
         concat: Optional[bool] = None,
         stride: Optional[int] = 1,
         selection: Optional[str] = None,
-        force: bool = False,
     ) -> None:
         """
         Add molecular dynamics trajectories to TrajectoryData object.
@@ -245,10 +235,6 @@ class TrajectoryManager:
         selection : str, optional
             MDTraj selection string to apply to all newly loaded trajectories.
             If None, uses manager default.
-        force : bool, default=False
-            Whether to force adding even when features have been calculated. When True,
-            existing features become invalid and should be recalculated.
-
         Returns:
         --------
         None
@@ -273,11 +259,6 @@ class TrajectoryManager:
         - Selection is only applied to newly loaded trajectories
         - Existing trajectories remain unchanged
         """
-        # Check for existing features before adding new trajectories
-        TrajectoryValidationHelper.check_features_before_trajectory_changes(
-            pipeline_data, force, "add"
-        )
-
         selection, concat, stride = self._prepare_parameters(selection, concat, stride)
 
         # Load and process new trajectories
@@ -291,15 +272,6 @@ class TrajectoryManager:
         pipeline_data.trajectory_data.trajectories.extend(new_trajectories)
         pipeline_data.trajectory_data.trajectory_names.extend(new_names)
 
-        # Check trajectory consistency
-        ConsistencyCheckHelper.check_trajectory_consistency(
-            pipeline_data.trajectory_data
-        )
-        # Build and set frame tag mapping
-        frame_mapping = TagHelper.build_frame_tag_mapping(
-            pipeline_data.trajectory_data
-        )
-        pipeline_data.trajectory_data.frame_tag_mapping = frame_mapping
 
     def remove_trajectory(
         self,
@@ -358,26 +330,17 @@ class TrajectoryManager:
         if not pipeline_data.trajectory_data.trajectories:
             raise ValueError("No trajectories loaded to remove.")
 
-        # Check for existing features before removing trajectories
+        # Get trajectory indices and check for features
+        indices_to_remove = pipeline_data.trajectory_data.get_trajectory_indices(traj_selection)
+        
         TrajectoryValidationHelper.check_features_before_trajectory_changes(
-            pipeline_data, force, "remove"
-        )
-        indices_to_remove = SelectionResolveHelper.get_indices_to_process(
-            pipeline_data.trajectory_data, traj_selection
+            pipeline_data, force, "remove", indices_to_remove
         )
         indices_to_remove.sort(reverse=True)  # Sort in reverse to avoid index shifting issues
 
         TrajectoryProcessHelper.execute_removal(
             pipeline_data.trajectory_data, indices_to_remove
         )
-        ConsistencyCheckHelper.check_trajectory_consistency(
-            pipeline_data.trajectory_data
-        )
-        # Build and set frame tag mapping
-        frame_mapping = TagHelper.build_frame_tag_mapping(
-            pipeline_data.trajectory_data
-        )
-        pipeline_data.trajectory_data.frame_tag_mapping = frame_mapping
 
     def cut_traj(
         self,
@@ -453,15 +416,16 @@ class TrajectoryManager:
         ValueError
             If trajectories are not loaded or if selection contains invalid indices/names
         """
+        # Check if features exist for trajectories to be cut
+        indices_to_process = pipeline_data.trajectory_data.get_trajectory_indices(traj_selection)
+        TrajectoryValidationHelper.check_features_before_trajectory_changes(
+            pipeline_data, force, "cut", indices_to_process
+        )
+        
         self._validate_cut_parameters(pipeline_data, cut, force)
         _, _, stride = self._prepare_parameters(stride=stride)
         
-        indices_to_process = SelectionResolveHelper.get_indices_to_process(
-            pipeline_data.trajectory_data, traj_selection
-        )
-
         self._process_trajectory_cuts(pipeline_data, indices_to_process, cut, stride)
-        self._rebuild_frame_mapping(pipeline_data)
     
     def _validate_cut_parameters(self, pipeline_data, cut: Optional[int], force: bool) -> None:
         """
@@ -486,10 +450,6 @@ class TrajectoryManager:
         ValueError
             If cut parameter is negative or not an integer, or if no trajectories are loaded
         """
-        TrajectoryValidationHelper.check_features_before_trajectory_changes(
-            pipeline_data, force, "cut"
-        )
-        
         if cut is not None:
             if cut < 0 or not isinstance(cut, int):
                 raise ValueError("Cut parameter must be a non-negative integer.")
@@ -583,9 +543,12 @@ class TrajectoryManager:
         ValueError
             If trajectories are not loaded or if selection/trajs contain invalid values
         """
-        # Check for existing features before applying atom selection
+        # Get trajectory indices first
+        indices_to_process = pipeline_data.trajectory_data.get_trajectory_indices(traj_selection)
+        
+        # Check if features exist for trajectories to be modified
         TrajectoryValidationHelper.check_features_before_trajectory_changes(
-            pipeline_data, force, "select_atoms"
+            pipeline_data, force, "select_atoms", indices_to_process
         )
 
         # Validate and set defaults
@@ -596,26 +559,37 @@ class TrajectoryManager:
             raise ValueError("Trajectories must be loaded before atom selection.")
 
         # Determine which trajectories to process
-        indices_to_process = SelectionResolveHelper.get_indices_to_process(
-            pipeline_data.trajectory_data, traj_selection
-        )
+        indices_to_process = pipeline_data.trajectory_data.get_trajectory_indices(traj_selection)
 
         # Apply atom selection to selected trajectory
+        original_residue_indices = {}
         for idx in indices_to_process:
             traj = pipeline_data.trajectory_data.trajectories[idx]
 
             # Get atom indices matching the selection
             atom_indices = traj.topology.select(selection)
 
+            # BEFORE reducing trajectory: Get original residue indices for labels
+            original_residue_indices[idx] = np.unique([
+                traj.topology.atom(atom_idx).residue.index 
+                for atom_idx in atom_indices
+            ])
+
             # Apply atom slice to trajectory
             selected_traj = traj.atom_slice(atom_indices)
 
             # Update trajectory
             pipeline_data.trajectory_data.trajectories[idx] = selected_traj
+        
+        # Apply same atom selection to labels for consistency (with original residue indices)
+        LabelOperationHelper.apply_atom_selection_to_labels(
+            pipeline_data.trajectory_data, indices_to_process, original_residue_indices
+        )
 
     def add_labels(
         self,
         pipeline_data,
+        traj_selection: Union[int, str, List[Union[int, str]], "all"],
         fragment_definition: Optional[Union[str, Dict[str, Tuple[int, int]]]] = None,
         fragment_type: Optional[Union[str, Dict[str, str]]] = None,
         fragment_molecule_name: Optional[Union[str, Dict[str, str]]] = None,
@@ -626,10 +600,11 @@ class TrajectoryManager:
         **nomenclature_kwargs,
     ) -> None:
         """
-        Add nomenclature labels to trajectory data.
+        Add nomenclature labels to selected trajectories.
 
         This method creates consensus labels for MD trajectories using different
-        mdciao nomenclature systems (GPCR, CGN, KLIFS).
+        mdciao nomenclature systems (GPCR, CGN, KLIFS). Different systems can have
+        different nomenclatures by applying labels to specific trajectory selections.
 
         Warning:
         --------
@@ -638,17 +613,23 @@ class TrajectoryManager:
 
         Pipeline mode:
         >>> pipeline = PipelineManager()
-        >>> pipeline.trajectory.add_labels(fragment_definition="receptor")  # NO pipeline_data parameter
+        >>> pipeline.trajectory.add_labels([0, 1], fragment_definition="receptor")  # NO pipeline_data parameter
 
         Standalone mode:
         >>> pipeline_data = PipelineData()
         >>> manager = TrajectoryManager()
-        >>> manager.add_labels(pipeline_data, fragment_definition="receptor")  # pipeline_data required
+        >>> manager.add_labels(pipeline_data, [0, 1], fragment_definition="receptor")  # pipeline_data required
 
         Parameters:
         -----------
         pipeline_data : PipelineData
             Pipeline data object
+        traj_selection : int, str, list, or "all"
+            Selection of trajectories to add labels to:
+            - int: trajectory index
+            - str: trajectory name or "all" for all trajectories
+            - list: list of indices/names
+            - "all": all loaded trajectories
         fragment_definition : str or dict, default None
             If string, uses that as fragment name for entire topology.
             If dict, maps fragment names to residue ranges: {"cgn_a": (0, 348), "beta2": (400, 684)}
@@ -698,7 +679,9 @@ class TrajectoryManager:
         ValueError
             If trajectories are not loaded
         ValueError
-            If nomenclature labels already exist and force=False
+            If traj_selection contains invalid indices or names
+        ValueError
+            If nomenclature labels already exist for selected trajectories and force=False
         ValueError
             If fragment_definition is required when consensus=True
         ValueError
@@ -727,46 +710,60 @@ class TrajectoryManager:
         >>> pipeline_data = PipelineData()
         >>> traj_manager = TrajectoryManager()
         >>> traj_manager.load_trajectories(pipeline_data, '../data')
+        
+        >>> # Add labels to specific trajectories (different systems)
         >>> traj_manager.add_labels(
-        ...     pipeline_data, fragment_definition="receptor", fragment_type="gpcr",
+        ...     pipeline_data, [0, 1], fragment_definition="receptor", fragment_type="gpcr",
         ...     fragment_molecule_name="adrb2_human", consensus=True
         ... )
+        >>> traj_manager.add_labels(
+        ...     pipeline_data, [2, 3], fragment_definition="kinase", fragment_type="klifs",
+        ...     fragment_molecule_name="abl1_human", consensus=True
+        ... )
+        
+        >>> # Add labels to all trajectories
+        >>> traj_manager.add_labels(pipeline_data, "all", fragment_definition="protein")
 
         >>> # Adding labels again requires force=True
-        >>> traj_manager.add_labels(pipeline_data, force=True)  # Overwrites existing labels
+        >>> traj_manager.add_labels(pipeline_data, "all", force=True)  # Overwrites existing labels
         """
         if not pipeline_data.trajectory_data.trajectories:
             raise ValueError("Trajectories must be loaded before adding labels.")
 
-        # Check if labels already exist and force is not set
-        if pipeline_data.trajectory_data.res_label_data is not None and not force:
-            raise ValueError(
-                "NomenclatureHelper labels already exist. Use force=True to overwrite existing labels, "
-                "or use a fresh PipelineData object to avoid conflicts."
-            )
+        # Determine which trajectories to process
+        indices_to_process = pipeline_data.trajectory_data.get_trajectory_indices(traj_selection)
+
+        # Check if labels already exist for selected trajectories
+        TrajectoryValidationHelper.check_features_before_trajectory_changes(
+            pipeline_data, force, "add_labels", indices_to_process
+        )
 
         if self.cache_dir is None:
             write_to_disk = False
         else:
             write_to_disk = True
 
-        # Use first trajectory topology for labeling
-        nomenclature = NomenclatureHelper(
-            topology=pipeline_data.trajectory_data.trajectories[0].topology,
-            fragment_definition=fragment_definition,
-            fragment_type=fragment_type,
-            fragment_molecule_name=fragment_molecule_name,
-            consensus=consensus,
-            aa_short=aa_short,
-            try_web_lookup=try_web_lookup,
-            write_to_disk=write_to_disk,
-            cache_folder=self.cache_dir,
-            **nomenclature_kwargs,
-        )
+        # Create labels for each selected trajectory
+        for idx in indices_to_process:
+            # Use the specific trajectory's topology for labeling
+            nomenclature = NomenclatureHelper(
+                topology=pipeline_data.trajectory_data.trajectories[idx].topology,
+                fragment_definition=fragment_definition,
+                fragment_type=fragment_type,
+                fragment_molecule_name=fragment_molecule_name,
+                consensus=consensus,
+                aa_short=aa_short,
+                try_web_lookup=try_web_lookup,
+                write_to_disk=write_to_disk,
+                cache_folder=self.cache_dir,
+                **nomenclature_kwargs,
+            )
 
-        pipeline_data.trajectory_data.res_label_data = (
-            nomenclature.create_trajectory_label_dicts()
-        )
+            # Create labels for this specific trajectory
+            trajectory_labels = nomenclature.create_trajectory_label_dicts()
+            
+            # Store labels with trajectory index as key (int, not str)
+            pipeline_data.trajectory_data.res_label_data[idx] = trajectory_labels
 
     def add_tags(
         self,
@@ -863,9 +860,6 @@ class TrajectoryManager:
                 existing_tags = pipeline_data.trajectory_data.get_trajectory_tags(idx) or []
                 updated_tags = self._merge_tags(existing_tags, tag_list)
                 pipeline_data.trajectory_data.set_trajectory_tags(idx, updated_tags)
-        
-        # Rebuild frame tag mapping
-        self._rebuild_frame_mapping(pipeline_data)
     
     def set_tags(
         self,
@@ -958,8 +952,6 @@ class TrajectoryManager:
             for idx in indices:
                 pipeline_data.trajectory_data.set_trajectory_tags(idx, tag_list)
 
-        # Rebuild frame tag mapping
-        self._rebuild_frame_mapping(pipeline_data)
     
     def _merge_tags(self, existing_tags, new_tags) -> list:
         """
@@ -983,24 +975,6 @@ class TrajectoryManager:
                 updated_tags.append(tag)
         return updated_tags
     
-    def _rebuild_frame_mapping(self, pipeline_data) -> None:
-        """
-        Rebuild frame tag mapping after tag changes.
-        
-        Parameters:
-        -----------
-        pipeline_data : PipelineData
-            Pipeline data object containing trajectory data
-        
-        Returns:
-        --------
-        None
-            Updates frame tag mapping in-place
-        """
-        frame_mapping = TagHelper.build_frame_tag_mapping(
-            pipeline_data.trajectory_data
-        )
-        pipeline_data.trajectory_data.frame_tag_mapping = frame_mapping
 
     def rename_trajectories(
         self, pipeline_data, name_mapping: Union[Dict[Union[int, str], str], List[str]]
@@ -1080,11 +1054,6 @@ class TrajectoryManager:
         # Manager sets the new names on PipelineData
         pipeline_data.trajectory_data.trajectory_names = new_names
 
-        # Rebuild frame tag mapping (names might be used in tag selectors)
-        frame_mapping = TagHelper.build_frame_tag_mapping(
-            pipeline_data.trajectory_data
-        )
-        pipeline_data.trajectory_data.frame_tag_mapping = frame_mapping
 
     def reset_trajectory_data(self, pipeline_data) -> None:
         """

@@ -24,6 +24,7 @@ It is used to add, reset, and reduce features to the trajectory data.
 """
 
 import os
+from tqdm import tqdm
 
 from ..entities.feature_data import FeatureData
 from ..helper.feature_validation_helper import FeatureValidationHelper
@@ -147,6 +148,7 @@ class FeatureManager:
         self, 
         pipeline_data, 
         feature_type, 
+        traj_selection="all",
         force=False, 
         force_original=True,
     ):
@@ -179,6 +181,12 @@ class FeatureManager:
         feature_type : FeatureTypeBase
             Feature type instance(e.g., Distances(), Contacts()).
             The feature type determines what kind of analysis will be performed.
+        traj_selection : int, str, list, or "all", default="all"
+            Selection of trajectories to compute features for:
+            - int: trajectory index
+            - str: trajectory name, tag (prefixed with "tag:"), or "all"
+            - list: list of indices/names/tags
+            - "all": all trajectories (default)
         force : bool, default=False
             Whether to force recomputation of the feature even if it already exists.
         force_original : bool, default=True
@@ -203,43 +211,36 @@ class FeatureManager:
         >>> feature_manager.add_feature(pipeline_data, feature_type.Distances())
         >>> feature_manager.add_feature(pipeline_data, feature_type.Contacts())
         """
-        if pipeline_data.trajectory_data.res_label_data is None:
+        # Get trajectory indices to process (same logic as cut_traj)
+        traj_indices = pipeline_data.trajectory_data.get_trajectory_indices(traj_selection)
+        
+        # Check that ALL trajectories in selection have labels (res_label_data uses int keys)
+        missing_labels = [traj_idx for traj_idx in traj_indices 
+                         if traj_idx not in pipeline_data.trajectory_data.res_label_data]
+        if missing_labels:
             raise ValueError(
-                "Trajectory labels must be set before computing features. "
-                "Use TrajectoryManager.add_labels() to set labels."
+                f"Trajectories {missing_labels} in selection {traj_selection} have no labels set. "
+                "Use TrajectoryManager.add_labels() to set labels for selected trajectories."
             )
 
         feature_key = DataUtils.get_type_key(feature_type)
 
         FeatureComputationHelper.check_feature_existence(
-            pipeline_data, feature_key, force
+            pipeline_data, feature_key, traj_indices, force
         )
         FeatureValidationHelper.validate_dependencies(
-            pipeline_data, feature_type, feature_key
+            pipeline_data, feature_type, feature_key, traj_indices
         )
 
-        # Create FeatureData instance
-        feature_data = FeatureData(
-            feature_type=feature_type,
-            use_memmap=self.use_memmap,
-            cache_path=self.cache_dir,
-            chunk_size=self.chunk_size,
-        )
-
-        # Compute feature
+        # Validate computation requirements
         FeatureValidationHelper.validate_computation_requirements(
             pipeline_data, feature_type
         )
-        data, feature_metadata = FeatureComputationHelper.execute_computation(
-            pipeline_data, feature_data, feature_type, force_original=force_original
+        
+        # Create FeatureData objects per trajectory
+        self._create_feature_data_per_trajectory(
+            pipeline_data, feature_type, feature_key, traj_indices, force_original
         )
-        FeatureComputationHelper.store_computation_results(
-            feature_data, data, feature_metadata
-        )
-        FeatureBindingHelper.bind_stats_methods(feature_data)
-
-        # Store the feature data
-        pipeline_data.feature_data[feature_key] = feature_data
 
     def reset_reduction(self, pipeline_data, feature_type):
         """
@@ -294,6 +295,7 @@ class FeatureManager:
         pipeline_data,
         feature_type,
         metric,
+        traj_selection="all",
         threshold_min=None,
         threshold_max=None,
         transition_threshold=2.0,
@@ -392,3 +394,92 @@ class FeatureManager:
         FeatureReductionHelper.process_reduction_results(
             pipeline_data, feature_key, results, threshold_min, threshold_max, metric
         )
+
+    def _create_feature_data_per_trajectory(
+        self, pipeline_data, feature_type, feature_key, traj_indices, force_original
+    ):
+        """
+        Create FeatureData objects for specified trajectories.
+        
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data object
+        feature_type : FeatureTypeBase
+            Feature type to compute
+        feature_key : str
+            Feature key for storage
+        traj_indices : list
+            List of trajectory indices
+        force_original : bool
+            Whether to force original data for dependent features
+            
+        Returns:
+        --------
+        None
+            Creates and stores FeatureData objects in pipeline_data
+        """
+        # Initialize 2-level dict structure
+        if feature_key not in pipeline_data.feature_data:
+            pipeline_data.feature_data[feature_key] = {}
+
+        # Create FeatureData per trajectory with progress bar        
+        with tqdm(total=len(traj_indices), desc=f"Computing {feature_type.get_type_name()}", unit="trajectories") as pbar:
+            for traj_idx in traj_indices:
+                trajectory_name = pipeline_data.trajectory_data.trajectory_names[traj_idx]
+                
+                # Create FeatureData for this trajectory
+                feature_data = FeatureData(
+                    feature_type=feature_type,
+                    use_memmap=self.use_memmap,
+                    cache_path=self.cache_dir,
+                    chunk_size=self.chunk_size,
+                    trajectory_name=trajectory_name,
+                )
+
+                # Compute feature for single trajectory
+                self._compute_and_store_single_trajectory(
+                    pipeline_data, feature_data, feature_type, traj_idx, force_original
+                )
+
+                # Store the feature data
+                pipeline_data.feature_data[feature_key][traj_idx] = feature_data
+                
+                # Update progress
+                pbar.update(1)
+
+    def _compute_and_store_single_trajectory(
+        self, pipeline_data, feature_data, feature_type, traj_idx, force_original
+    ):
+        """
+        Compute and store feature for single trajectory.
+        
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data object
+        feature_data : FeatureData
+            Feature data object for this trajectory
+        feature_type : FeatureTypeBase
+            Feature type to compute
+        traj_idx : int
+            Trajectory index
+        force_original : bool
+            Whether to force original data for dependent features
+            
+        Returns:
+        --------
+        None
+            Computes and stores data in feature_data
+        """
+        # Compute using helper for single trajectory
+        single_data, single_metadata = FeatureComputationHelper.execute_computation(
+            pipeline_data, feature_data, feature_type, traj_idx, force_original
+        )
+        
+        # Store results and bind methods
+        FeatureComputationHelper.store_computation_results(
+            feature_data, single_data, single_metadata
+        )
+        FeatureBindingHelper.bind_stats_methods(feature_data)
+

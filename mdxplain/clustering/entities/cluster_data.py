@@ -70,6 +70,7 @@ class ClusterData:
         # Initialize data attributes
         self.labels: Optional[np.ndarray] = None
         self.metadata: Optional[Dict[str, Any]] = None
+        self.frame_mapping: Optional[Dict[int, tuple]] = None
 
     def get_labels(self) -> Optional[np.ndarray]:
         """
@@ -206,3 +207,44 @@ class ClusterData:
         if self.labels is not None:
             return len(self.labels)
         return None
+
+    def get_frame_mapping(self) -> Optional[Dict[int, tuple]]:
+        """
+        Get frame mapping from global frame indices to trajectory origins.
+
+        Returns:
+        --------
+        dict or None
+            Mapping from global_frame_index to (trajectory_index, local_frame_index),
+            or None if clustering has not been computed or mapping is not available
+
+        Examples:
+        ---------
+        >>> cluster_data = ClusterData("dbscan")
+        >>> frame_mapping = cluster_data.get_frame_mapping()
+        >>> if frame_mapping is not None:
+        ...     print(f"Frame 0 comes from: {frame_mapping[0]}")  # (traj_idx, local_frame_idx)
+        """
+        return self.frame_mapping
+        
+    def set_frame_mapping(self, frame_mapping: Dict[int, tuple]) -> None:
+        """
+        Set frame mapping from global frame indices to trajectory origins.
+
+        Parameters:
+        -----------
+        frame_mapping : dict
+            Mapping from global_frame_index to (trajectory_index, local_frame_index)
+
+        Returns:
+        --------
+        None
+            Sets the frame mapping for trajectory tracking
+
+        Examples:
+        ---------
+        >>> cluster_data = ClusterData("dbscan")
+        >>> mapping = {0: (0, 10), 1: (0, 11), 2: (1, 5)}  # global -> (traj, local)
+        >>> cluster_data.set_frame_mapping(mapping)
+        """
+        self.frame_mapping = frame_mapping

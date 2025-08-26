@@ -38,7 +38,8 @@ class FeatureSelectorNumericParseHelper:
         param_parts: List[str], 
         features_list: List[list], 
         metadata_field: str, 
-        category_name: str
+        category_name: str,
+        require_all_partners: bool = False
     ) -> List[int]:
         """
         Parse numeric category and return matching feature indices.
@@ -54,6 +55,8 @@ class FeatureSelectorNumericParseHelper:
             Metadata field to use ("index" or "seqid")
         category_name : str
             Category name for error messages ("resid" or "seqid")
+        require_all_partners : bool, default=False
+            For pairwise features, require all partners to be present in selection
 
         Returns:
         --------
@@ -71,12 +74,12 @@ class FeatureSelectorNumericParseHelper:
             if "-" in part:
                 # Range like "123-140"
                 indices = FeatureSelectorNumericParseHelper._find_by_numeric_range(
-                    part, features_list, metadata_field, category_name
+                    part, features_list, metadata_field, category_name, require_all_partners
                 )
             else:
                 # Single number like "123"
                 indices = FeatureSelectorNumericParseHelper._find_by_single_numeric(
-                    part, features_list, metadata_field, category_name
+                    part, features_list, metadata_field, category_name, require_all_partners
                 )
 
             all_indices.extend(indices)
@@ -88,7 +91,8 @@ class FeatureSelectorNumericParseHelper:
         numeric_spec: str, 
         features_list: List[list], 
         metadata_field: str, 
-        category_name: str
+        category_name: str,
+        require_all_partners: bool = False
     ) -> List[int]:
         """
         Find features with numeric values in the specified range.
@@ -104,6 +108,8 @@ class FeatureSelectorNumericParseHelper:
             Metadata field to use ("index" or "seqid")
         category_name : str
             Category name for error messages ("resid" or "seqid")
+        require_all_partners : bool, default=False
+            For pairwise features, require all partners to be present in selection
 
         Returns:
         --------
@@ -125,7 +131,7 @@ class FeatureSelectorNumericParseHelper:
             )
         
         return FeatureSelectorNumericParseHelper._find_features_in_numeric_range(
-            features_list, start_id, end_id, metadata_field
+            features_list, start_id, end_id, metadata_field, require_all_partners
         )
     
     @staticmethod
@@ -133,7 +139,8 @@ class FeatureSelectorNumericParseHelper:
         numeric_spec: str, 
         features_list: List[list], 
         metadata_field: str, 
-        category_name: str
+        category_name: str,
+        require_all_partners: bool = False
     ) -> List[int]:
         """
         Find features containing the specified single numeric value.
@@ -149,6 +156,8 @@ class FeatureSelectorNumericParseHelper:
             Metadata field to use ("index" or "seqid")
         category_name : str
             Category name for error messages ("resid" or "seqid")
+        require_all_partners : bool, default=False
+            For pairwise features, require all partners to be present in selection
 
         Returns:
         --------
@@ -167,13 +176,28 @@ class FeatureSelectorNumericParseHelper:
         matching_indices = []
 
         for idx, feature in enumerate(features_list):
-            for partner in feature:
-                residue_info = partner.get("residue", {})
-                res_value = residue_info.get(metadata_field)
-
-                if res_value == target_id:
+            if require_all_partners:
+                # ALL partners must have the target numeric value
+                if len(feature) == 0:
+                    continue  # Skip empty features
+                all_match = True
+                for partner in feature:
+                    residue_info = partner.get("residue", {})
+                    res_value = residue_info.get(metadata_field)
+                    if res_value != target_id:
+                        all_match = False
+                        break
+                if all_match:
                     matching_indices.append(idx)
-                    break  # Found match in this feature, move to next
+            else:
+                # At least ONE partner must have the target numeric value (original behavior)
+                for partner in feature:
+                    residue_info = partner.get("residue", {})
+                    res_value = residue_info.get(metadata_field)
+
+                    if res_value == target_id:
+                        matching_indices.append(idx)
+                        break  # Found match in this feature, move to next
 
         return matching_indices
     
@@ -213,7 +237,8 @@ class FeatureSelectorNumericParseHelper:
         features_list: List[list], 
         start_id: int, 
         end_id: int, 
-        metadata_field: str
+        metadata_field: str,
+        require_all_partners: bool = False
     ) -> List[int]:
         """
         Find features with numeric values in the specified range.
@@ -229,6 +254,8 @@ class FeatureSelectorNumericParseHelper:
             End of the numeric range
         metadata_field : str
             Metadata field to use ("index" or "seqid")
+        require_all_partners : bool, default=False
+            For pairwise features, require all partners to be present in selection
 
         Returns:
         --------
@@ -239,7 +266,7 @@ class FeatureSelectorNumericParseHelper:
 
         for idx, feature in enumerate(features_list):
             if FeatureSelectorNumericParseHelper._feature_has_value_in_numeric_range(
-                feature, start_id, end_id, metadata_field
+                feature, start_id, end_id, metadata_field, require_all_partners
             ):
                 matching_indices.append(idx)
 
@@ -250,7 +277,8 @@ class FeatureSelectorNumericParseHelper:
         feature: list, 
         start_id: int, 
         end_id: int, 
-        metadata_field: str
+        metadata_field: str,
+        require_all_partners: bool = False
     ) -> bool:
         """
         Check if feature has any value in the specified numeric range.
@@ -266,12 +294,24 @@ class FeatureSelectorNumericParseHelper:
             End of the numeric range
         metadata_field : str
             Metadata field to use ("index" or "seqid")
+        require_all_partners : bool, default=False
+            For pairwise features, require all partners to be present in selection
 
         Returns:
         --------
         bool
             True if feature has any value in the specified range, False otherwise
         """
+        if require_all_partners:
+            if len(feature) == 0:
+                return False  # Empty feature cannot satisfy "all" condition
+            for partner in feature:
+                residue_info = partner.get("residue", {})
+                res_value = residue_info.get(metadata_field)
+                if res_value is None or not (start_id <= res_value <= end_id):
+                    return False
+            return True  # All partners satisfied the range condition
+        
         for partner in feature:
             residue_info = partner.get("residue", {})
             res_value = residue_info.get(metadata_field)

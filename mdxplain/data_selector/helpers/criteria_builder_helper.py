@@ -135,19 +135,19 @@ class CriteriaBuilderHelper:
         }
     
     @staticmethod
-    def build_indices_criteria(indices: List[int], n_matches: int) -> Dict[str, Any]:
+    def build_indices_criteria(trajectory_frames: Dict[int, List[int]], n_matches: int) -> Dict[str, Any]:
         """
-        Build criteria dictionary for explicit indices selection.
+        Build criteria dictionary for trajectory-specific explicit indices selection.
         
         Creates a standardized criteria dictionary that documents how
-        an explicit indices-based frame selection was performed.
+        a trajectory-specific explicit indices-based frame selection was performed.
         
         Parameters:
         -----------
-        indices : List[int]
-            List of frame indices that were explicitly selected
+        trajectory_frames : Dict[int, List[int]]
+            Dictionary mapping trajectory indices to their selected frame indices
         n_matches : int
-            Number of frames selected (should equal len(indices))
+            Number of frames selected
             
         Returns:
         --------
@@ -156,16 +156,17 @@ class CriteriaBuilderHelper:
             
         Examples:
         ---------
-        >>> criteria = CriteriaBuilderHelper.build_indices_criteria(
-        ...     [0, 10, 20, 100], 4
-        ... )
+        >>> trajectory_frames = {0: [0, 10, 20], 1: [100, 200]}
+        >>> criteria = CriteriaBuilderHelper.build_indices_criteria(trajectory_frames, 5)
         >>> print(criteria["type"])  # "indices"
-        >>> print(criteria["n_matches"])  # 4
+        >>> print(criteria["n_matches"])  # 5
+        >>> print(criteria["n_trajectories"])  # 2
         """
         return {
             "type": "indices",
-            "indices": indices,
+            "trajectory_frames": trajectory_frames,
             "n_matches": n_matches,
+            "n_trajectories": len(trajectory_frames),
         }
     
     @staticmethod

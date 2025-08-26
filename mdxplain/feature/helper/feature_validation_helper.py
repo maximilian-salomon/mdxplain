@@ -27,7 +27,7 @@ business logic.
 """
 
 import numbers
-from typing import Optional, Union
+from typing import Optional, Union, List
 
 
 class FeatureValidationHelper:
@@ -129,7 +129,7 @@ class FeatureValidationHelper:
         )
 
     @staticmethod
-    def validate_dependencies(pipeline_data, feature_type, feature_key: str) -> None:
+    def validate_dependencies(pipeline_data, feature_type, feature_key: str, traj_indices: List[int]) -> None:
         """
         Validate that all feature dependencies are available.
 
@@ -160,12 +160,20 @@ class FeatureValidationHelper:
         """
         dependencies = feature_type.get_dependencies()
         for dep in dependencies:
-            if (
-                dep not in pipeline_data.feature_data
-                or pipeline_data.feature_data[dep].get_data() is None
-            ):
+            if dep not in pipeline_data.feature_data:
+                raise ValueError(f"Dependency '{dep}' must be computed before '{feature_key}'.")
+            
+            # Check if dependency exists for ALL specified trajectories
+            dep_dict = pipeline_data.feature_data[dep]
+            missing_trajs = [
+                traj_idx for traj_idx in traj_indices
+                if traj_idx not in dep_dict or dep_dict[traj_idx].get_data() is None
+            ]
+            
+            if missing_trajs:
                 raise ValueError(
-                    f"Dependency '{dep}' must be computed before '{feature_key}'."
+                    f"Dependency '{dep}' must be computed for trajectories {missing_trajs} "
+                    f"before '{feature_key}'."
                 )
 
     @staticmethod

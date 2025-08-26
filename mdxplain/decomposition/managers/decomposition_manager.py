@@ -101,6 +101,7 @@ class DecompositionManager:
         selection_name,
         decomposition_type,
         decomposition_name=None,
+        data_selector_name=None,
         force=False,
     ):
         """
@@ -136,6 +137,9 @@ class DecompositionManager:
         decomposition_name : str
             Name to save the decomposition. If None (default),
             it is "selection_name_{str(decomposition_type)}"
+        data_selector_name : str, optional
+            Name of DataSelector to apply frame filtering before decomposition.
+            If None, uses all frames from the selection.
         force : bool, default=False
             Whether to force recomputation if decomposition already exists
 
@@ -180,7 +184,10 @@ class DecompositionManager:
 
         self._check_decomposition_existence(pipeline_data, decomposition_name, force)
 
-        data_matrix = pipeline_data.get_selected_data(selection_name)
+        # Get data with frame mapping
+        data_matrix, frame_mapping = pipeline_data.get_selected_data(
+            selection_name, data_selector_name, return_frame_mapping=True
+        )
 
         decomposition_data = DecompositionData(
             decomposition_type=decomposition_key,
@@ -191,6 +198,9 @@ class DecompositionManager:
         self._compute_decomposition(
             decomposition_data, decomposition_type, data_matrix, decomposition_name
         )
+
+        # Store frame mapping in decomposition data
+        decomposition_data.set_frame_mapping(frame_mapping)
 
         self._store_decomposition_results(
             pipeline_data,

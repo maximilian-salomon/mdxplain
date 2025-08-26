@@ -25,20 +25,18 @@ Provides validation logic for trajectory-changing operations in the pipeline,
 ensuring that existing features are properly handled before modifications.
 """
 
+from typing import List
+
 
 class TrajectoryValidationHelper:
     """Helper class for validating trajectory operations in pipeline context."""
 
     @staticmethod
     def check_features_before_trajectory_changes(
-        pipeline_data, force: bool, operation_name: str
+        pipeline_data, force: bool, operation_name: str, traj_indices: List[int] = None
     ):
         """
-        Check if features exist before changing trajectories and handle accordingly.
-
-        This method validates whether trajectory-changing operations should be allowed
-        based on existing computed features. Features become invalid when trajectories
-        are modified, so users must explicitly force the operation or clear features first.
+        Check if features exist before trajectory modification.
 
         Parameters:
         -----------
@@ -47,59 +45,125 @@ class TrajectoryValidationHelper:
         force : bool
             Whether to force the operation despite existing features
         operation_name : str
-            Name of the operation for error messages ("load", "add", "remove", "cut", "select_atoms")
-
-        Returns:
-        --------
-        None
-            Validates operation or prints warning messages
+            Name of the operation for error messages
+        traj_indices : List[int], optional
+            Trajectory indices to check for features.
+            If None, checks if ANY features exist at all.
 
         Raises:
         -------
         ValueError
             If features exist and force=False
-
-        Examples:
-        ---------
-        >>> # Check before loading new trajectories
-        >>> TrajectoryValidationHelper.check_features_before_trajectory_changes(
-        ...     pipeline_data, False, "load"
-        ... )
-        ValueError: Cannot load trajectories: 2 feature(s) already computed...
-
-        >>> # Force the operation
-        >>> TrajectoryValidationHelper.check_features_before_trajectory_changes(
-        ...     pipeline_data, True, "load"
-        ... )
-        WARNING: Loading new trajectories will invalidate 2 existing features...
         """
-        # No features computed - operation is safe
         if not pipeline_data.feature_data:
             return
 
-        feature_list = list(pipeline_data.feature_data.keys())
-        feature_count = len(feature_list)
-
-        if not force:
-            # Features exist and force=False - raise error
-            raise ValueError(
-                f"Cannot {operation_name} trajectories: {feature_count} feature(s) "
-                f"already computed: {', '.join(feature_list)}. "
-                f"{operation_name.capitalize()}ing trajectories would invalidate these "
-                f"features. "
-                f"Use force=True to proceed, or clear features first with FeatureManager. "
-                f"The whole analysis is based on the trajectory data, "
-                f"so if you want to change this base, you need to make the analysis again. "
-                f"Maybe create a new PipelineData object and start from scratch, "
-                f"to not lose your results."
+        if traj_indices is None:
+            TrajectoryValidationHelper._check_any_features_exist(
+                pipeline_data, force, operation_name
+            )
+        else:
+            TrajectoryValidationHelper._check_specific_trajectory_features(
+                pipeline_data, force, operation_name, traj_indices
             )
 
-        # Features exist and force=True - print warning
+    @staticmethod
+    def _check_any_features_exist(pipeline_data, force: bool, operation_name: str):
+        """
+        Check if any features exist in pipeline.
+
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data object containing feature data
+        force : bool
+            Whether to force the operation despite existing features
+        operation_name : str
+            Name of the operation for error messages
+
+        Raises:
+        -------
+        ValueError
+            If features exist and force=False
+        """
+        any_features_exist = any(
+            bool(feature_dict) 
+            for feature_dict in pipeline_data.feature_data.values()
+        )
+        
+        if any_features_exist and not force:
+            raise ValueError(
+                f"Features exist in pipeline. "
+                f"Operation '{operation_name}' will invalidate them. "
+                f"So you need to recalculate features after this operation. "
+                f"Use force=True to proceed anyway."
+            )
+        elif any_features_exist and force:
+            affected_features = [
+                feature_type for feature_type, feature_dict 
+                in pipeline_data.feature_data.items() 
+                if feature_dict
+            ]
+            print(
+                f"WARNING: Operation '{operation_name}' will invalidate "
+                f"existing features. Affected feature types: {affected_features}. "
+                f"These features must be recalculated."
+            )
+
+    @staticmethod
+    def _check_specific_trajectory_features(
+        pipeline_data, force: bool, operation_name: str, traj_indices: List[int]
+    ):
+        """
+        Check if specific trajectories have features.
+
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data object containing feature data
+        force : bool
+            Whether to force the operation despite existing features
+        operation_name : str
+            Name of the operation for error messages
+        traj_indices : List[int]
+            Trajectory indices to check for features
+
+        Raises:
+        -------
+        ValueError
+            If features exist for trajectories and force=False
+        """
+        trajectories_with_features = []
+        
+        for traj_idx in traj_indices:
+            for feature_type, feature_dict in pipeline_data.feature_data.items():
+                if traj_idx in feature_dict:
+                    trajectories_with_features.append(traj_idx)
+                    break
+        
+        unique_trajectories = list(set(trajectories_with_features))
+        
+        if not unique_trajectories:
+            return
+        
+        if not force:
+            raise ValueError(
+                f"Features exist for trajectories {unique_trajectories}. "
+                f"Operation '{operation_name}' will invalidate them. "
+                f"So you need to recalculate features after this operation. "
+                f"Use force=True to proceed anyway."
+            )
+        
+        affected_features = []
+        for feature_type in pipeline_data.feature_data.keys():
+            for traj_idx in unique_trajectories:
+                if traj_idx in pipeline_data.feature_data[feature_type]:
+                    affected_features.append(feature_type)
+                    break
+        
         print(
-            f"WARNING: {operation_name.capitalize()}ing trajectories will invalidate "
-            f"{feature_count} existing features. Features must be recalculated. "
-            f"Existing features: {', '.join(feature_list)}\n"
-            f"The whole analysis is based on the trajectory data, so if you want to change "
-            f"this base, you need to make the analysis again. Maybe create a new PipelineData "
-            f"object and start from scratch, to not lose your results."
+            f"WARNING: Operation '{operation_name}' will invalidate features for "
+            f"trajectories {unique_trajectories}. "
+            f"Affected feature types: {affected_features}. "
+            f"These features must be recalculated."
         )

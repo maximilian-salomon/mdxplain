@@ -63,7 +63,7 @@ class Distances(FeatureTypeBase):
     ReduceMetrics = ReduceDistanceMetrics
     """Available reduce metrics for distance features."""
 
-    def __init__(self, ref=None, k=1):
+    def __init__(self, ref=None, excluded_neighbors=1):
         """
         Initialize distance feature type with optional reference trajectory.
 
@@ -76,8 +76,9 @@ class Distances(FeatureTypeBase):
             consistent feature naming across trajectories. Without reference, feature names
             depend on the specific trajectory topology, making cross-trajectory comparisons
             impossible. If None, uses first trajectory as reference.
-        k : int, default=0
+        excluded_neighbors : int, default=0
             Number of nearest neighbors to consider for distance calculation.
+            Chain Breaks are automatically excluded. Meassured by jump in the seqid of a residue.
             If 0, all pairs are computed.
             If 1, only nearest neighbors are computed.
             If 2, only nearest neighbors and their neighbors are computed.
@@ -100,11 +101,11 @@ class Distances(FeatureTypeBase):
         >>> traj_data.add_feature(Distances(ref=ref_traj))
 
         >>> # Use custom diagonal offset
-        >>> distances = Distances(k=2)
+        >>> distances = Distances(excluded_neighbors=2)
         """
         super().__init__()
         self.ref = ref
-        self.k = k
+        self.excluded_neighbors = excluded_neighbors
 
     def init_calculator(self, use_memmap=False, cache_path="./cache", chunk_size=10000):
         """
@@ -179,25 +180,10 @@ class Distances(FeatureTypeBase):
             raise ValueError(
                 "Calculator not initialized. Call init_calculator() first."
             )
-
-        # Check for consistent residue counts
-        if len(input_data) > 1:
-            ref_n_residues = input_data[0].n_residues
-            for i, traj in enumerate(input_data):
-                if traj.n_residues != ref_n_residues:
-                    raise ValueError(
-                        f"Inconsistent residue counts detected! "
-                        f"Trajectory 0 has {ref_n_residues} residues, "
-                        f"but trajectory {i} has {traj.n_residues} residues. "
-                        f"Distance calculations require all trajectories to have "
-                        f"the same number of residues. Use select_atoms() to "
-                        f"create a common selection across all trajectories."
-                    )
-
+        
         return self.calculator.compute(
             input_data=input_data,
-            ref=self.ref,
-            k=self.k,
+            excluded_neighbors=self.excluded_neighbors,
             res_metadata=feature_metadata,
         )
 

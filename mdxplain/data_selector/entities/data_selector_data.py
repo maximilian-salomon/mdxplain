@@ -32,37 +32,37 @@ from typing import Dict, List, Any
 
 class DataSelectorData:
     """
-    Data entity for storing data selector configurations.
+    Data entity for storing trajectory-specific data selector configurations.
 
-    Stores frame indices and selection criteria for trajectory frame selection.
-    This entity serves as the counterpart to FeatureSelectorData, focusing on
-    row selection instead of column selection.
+    Stores frame indices per trajectory and selection criteria for trajectory
+    frame selection. This entity serves as the counterpart to FeatureSelectorData,
+    focusing on row selection instead of column selection.
 
-    The DataSelectorData follows the same pattern as FeatureSelectorData,
-    providing a container for frame selection configurations that can be
-    stored and retrieved by name.
+    The DataSelectorData works with the 2-level dictionary structure where
+    each trajectory has its own frame indices, supporting the new trajectory-
+    specific architecture.
 
     Attributes:
     -----------
     name : str
         Name identifier for this data selector configuration
-    frame_indices : List[int]
-        List of selected trajectory frame indices
+    trajectory_frames : Dict[int, List[int]]
+        Dictionary mapping trajectory indices to their selected frame indices
     selection_criteria : Dict[str, Any]
         Dictionary containing the criteria used for selection
     n_selected_frames : int
-        Number of selected frames (convenience property)
+        Total number of selected frames across all trajectories (convenience property)
 
     Examples:
     ---------
     >>> selector_data = DataSelectorData("folded_frames")
-    >>> selector_data.set_frame_indices([0, 5, 12, 18, 25])
+    >>> selector_data.set_trajectory_frames({0: [0, 5, 12], 1: [18, 25]})
     >>> print(f"Selected {selector_data.n_selected_frames} frames")
     5
 
     >>> # With selection criteria
     >>> criteria = {"type": "cluster", "clustering": "conformations", "cluster_ids": [0]}
-    >>> selector_data.set_selection_criteria(criteria)
+    >>> selector_data.append_selection_criteria(criteria)
     >>> print(selector_data.get_selection_info())
     """
 
@@ -85,69 +85,71 @@ class DataSelectorData:
         >>> selector_data = DataSelectorData("active_site_frames")
         >>> print(selector_data.name)
         'active_site_frames'
-        >>> print(len(selector_data.frame_indices))
+        >>> print(len(selector_data.trajectory_frames))
         0
         """
         self.name = name
-        self.frame_indices: List[int] = []
+        self.trajectory_frames: Dict[int, List[int]] = {}
         self.selection_criteria: Dict[str, Any] = {}
 
     @property
     def n_selected_frames(self) -> int:
         """
-        Get number of selected frames.
+        Get total number of selected frames across all trajectories.
 
         Returns:
         --------
         int
-            Number of frames in the selection
+            Total number of frames in the selection
 
         Examples:
         ---------
-        >>> selector_data.set_frame_indices([1, 5, 10])
+        >>> selector_data.set_trajectory_frames({0: [1, 5, 10], 1: [2, 7]})
         >>> print(selector_data.n_selected_frames)
-        3
+        5
         """
-        return len(self.frame_indices)
+        return sum(len(frames) for frames in self.trajectory_frames.values())
 
-    def set_frame_indices(self, indices: List[int]) -> None:
+    def set_trajectory_frames(self, trajectory_frames: Dict[int, List[int]]) -> None:
         """
-        Set the selected frame indices.
+        Set the selected frame indices per trajectory.
 
         Parameters:
         -----------
-        indices : List[int]
-            List of frame indices to select
+        trajectory_frames : Dict[int, List[int]]
+            Dictionary mapping trajectory indices to frame indices
 
         Returns:
         --------
         None
-            Updates the frame_indices attribute
+            Updates the trajectory_frames attribute
 
         Examples:
         ---------
         >>> selector_data = DataSelectorData("test")
-        >>> selector_data.set_frame_indices([0, 10, 20, 30])
-        >>> print(selector_data.frame_indices)
-        [0, 10, 20, 30]
+        >>> selector_data.set_trajectory_frames({0: [0, 10, 20], 1: [5, 15]})
+        >>> print(selector_data.trajectory_frames)
+        {0: [0, 10, 20], 1: [5, 15]}
         """
-        self.frame_indices = indices.copy() if indices else []
+        self.trajectory_frames = {}
+        for traj_idx, frames in trajectory_frames.items():
+            self.trajectory_frames[traj_idx] = frames.copy() if frames else []
 
-    def get_frame_indices(self) -> List[int]:
+    def get_trajectory_frames(self) -> Dict[int, List[int]]:
         """
-        Get the selected frame indices.
+        Get the selected frame indices per trajectory.
 
         Returns:
         --------
-        List[int]
-            List of selected frame indices
+        Dict[int, List[int]]
+            Dictionary mapping trajectory indices to frame indices
 
         Examples:
         ---------
-        >>> indices = selector_data.get_frame_indices()
-        >>> print(f"Selected frames: {indices[:5]}...")  # First 5
+        >>> traj_frames = selector_data.get_trajectory_frames()
+        >>> print(f"Trajectory 0 frames: {traj_frames.get(0, [])}")
         """
-        return self.frame_indices.copy()
+        return {traj_idx: frames.copy() for traj_idx, frames in self.trajectory_frames.items()}
 
     def append_selection_criteria(self, criteria: Dict[str, Any]) -> None:
         """
@@ -206,47 +208,51 @@ class DataSelectorData:
         """
         return self.selection_criteria.copy()
 
-    def add_frame_indices(self, indices: List[int]) -> None:
+    def add_trajectory_frames(self, trajectory_frames: Dict[int, List[int]]) -> None:
         """
-        Add additional frame indices to the existing selection.
+        Add additional frame indices to existing trajectories.
 
         Parameters:
         -----------
-        indices : List[int]
-            Frame indices to add to the current selection
+        trajectory_frames : Dict[int, List[int]]
+            Dictionary mapping trajectory indices to additional frame indices
 
         Returns:
         --------
         None
-            Extends the frame_indices list with new indices
+            Extends existing trajectory frame lists with new indices
 
         Examples:
         ---------
-        >>> selector_data.set_frame_indices([0, 5, 10])
-        >>> selector_data.add_frame_indices([15, 20])
-        >>> print(selector_data.frame_indices)
-        [0, 5, 10, 15, 20]
+        >>> selector_data.set_trajectory_frames({0: [0, 5, 10]})
+        >>> selector_data.add_trajectory_frames({0: [15, 20], 1: [2, 7]})
+        >>> print(selector_data.trajectory_frames)
+        {0: [0, 5, 10, 15, 20], 1: [2, 7]}
         """
-        if indices:
-            self.frame_indices.extend(indices)
+        for traj_idx, frames in trajectory_frames.items():
+            if frames:
+                if traj_idx not in self.trajectory_frames:
+                    self.trajectory_frames[traj_idx] = []
+                self.trajectory_frames[traj_idx].extend(frames)
 
     def remove_duplicates(self) -> None:
         """
-        Remove duplicate frame indices and sort the list.
+        Remove duplicate frame indices and sort the lists for each trajectory.
 
         Returns:
         --------
         None
-            Removes duplicates from frame_indices and sorts the list
+            Removes duplicates from trajectory frame lists and sorts them
 
         Examples:
         ---------
-        >>> selector_data.frame_indices = [5, 1, 5, 3, 1, 8]
+        >>> selector_data.trajectory_frames = {0: [5, 1, 5, 3], 1: [8, 1, 8]}
         >>> selector_data.remove_duplicates()
-        >>> print(selector_data.frame_indices)
-        [1, 3, 5, 8]
+        >>> print(selector_data.trajectory_frames)
+        {0: [1, 3, 5], 1: [1, 8]}
         """
-        self.frame_indices = sorted(list(set(self.frame_indices)))
+        for traj_idx in self.trajectory_frames:
+            self.trajectory_frames[traj_idx] = sorted(list(set(self.trajectory_frames[traj_idx])))
 
     def clear_selection(self) -> None:
         """
@@ -255,7 +261,7 @@ class DataSelectorData:
         Returns:
         --------
         None
-            Resets frame_indices and selection_criteria to empty
+            Resets trajectory_frames and selection_criteria to empty
 
         Examples:
         ---------
@@ -265,7 +271,7 @@ class DataSelectorData:
         >>> print(selector_data.selection_criteria)
         {}
         """
-        self.frame_indices = []
+        self.trajectory_frames = {}
         self.selection_criteria = {}
 
     def get_selection_info(self) -> Dict[str, Any]:
@@ -301,12 +307,28 @@ class DataSelectorData:
             "selection_type": selection_type,
             "n_operations": len(operations),
             "operations": operations,
-            "frame_range": (
-                f"{min(self.frame_indices)}-{max(self.frame_indices)}"
-                if self.frame_indices
-                else "none"
-            ),
+            "frame_range": self._get_frame_range_summary(),
+            "trajectories": list(self.trajectory_frames.keys()),
         }
+    
+    def _get_frame_range_summary(self) -> str:
+        """
+        Get a summary of frame ranges across all trajectories.
+        
+        Returns:
+        --------
+        str
+            Summary string of frame ranges
+        """
+        if not self.trajectory_frames:
+            return "none"
+        
+        ranges = []
+        for traj_idx, frames in self.trajectory_frames.items():
+            if frames:
+                ranges.append(f"traj{traj_idx}:{min(frames)}-{max(frames)}")
+        
+        return ", ".join(ranges) if ranges else "none"
 
     def is_empty(self) -> bool:
         """
@@ -323,7 +345,7 @@ class DataSelectorData:
         >>> print(empty_selector.is_empty())
         True
         """
-        return len(self.frame_indices) == 0
+        return len(self.trajectory_frames) == 0 or self.n_selected_frames == 0
 
     def __len__(self) -> int:
         """
@@ -332,39 +354,42 @@ class DataSelectorData:
         Returns:
         --------
         int
-            Number of selected frames
+            Total number of selected frames across all trajectories
 
         Examples:
         ---------
-        >>> selector_data.set_frame_indices([1, 2, 3])
+        >>> selector_data.set_trajectory_frames({0: [1, 2, 3], 1: [4, 5]})
         >>> print(len(selector_data))
-        3
+        5
         """
-        return len(self.frame_indices)
+        return self.n_selected_frames
 
-    def __contains__(self, frame_index: int) -> bool:
+    def __contains__(self, traj_frame_tuple) -> bool:
         """
-        Check if a frame index is in the selection.
+        Check if a (trajectory_index, frame_index) tuple is in the selection.
 
         Parameters:
         -----------
-        frame_index : int
-            Frame index to check
+        traj_frame_tuple : tuple
+            Tuple of (trajectory_index, frame_index) to check
 
         Returns:
         --------
         bool
-            True if frame_index is in the selection, False otherwise
+            True if the trajectory-frame combination is in the selection
 
         Examples:
         ---------
-        >>> selector_data.set_frame_indices([1, 5, 10])
-        >>> print(5 in selector_data)
+        >>> selector_data.set_trajectory_frames({0: [1, 5, 10], 1: [2, 7]})
+        >>> print((0, 5) in selector_data)
         True
-        >>> print(7 in selector_data)
+        >>> print((1, 10) in selector_data)
         False
         """
-        return frame_index in self.frame_indices
+        if not isinstance(traj_frame_tuple, tuple) or len(traj_frame_tuple) != 2:
+            return False
+        traj_idx, frame_idx = traj_frame_tuple
+        return traj_idx in self.trajectory_frames and frame_idx in self.trajectory_frames[traj_idx]
 
     def __repr__(self) -> str:
         """
@@ -378,7 +403,7 @@ class DataSelectorData:
         Examples:
         ---------
         >>> print(repr(selector_data))
-        DataSelectorData(name='folded_frames', n_frames=150)
+        DataSelectorData(name='folded_frames', n_frames=150, n_trajectories=3)
         """
-        return f"DataSelectorData(name='{self.name}', n_frames={self.n_selected_frames})"
+        return f"DataSelectorData(name='{self.name}', n_frames={self.n_selected_frames}, n_trajectories={len(self.trajectory_frames)})"
     

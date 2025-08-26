@@ -20,9 +20,10 @@
 
 """Trajectory processing utilities."""
 
-from typing import Any, List, Optional, Union, Dict
+from typing import Any, List, Optional, Union, Dict, TYPE_CHECKING
 
-from ...entities.trajectory_data import TrajectoryData
+if TYPE_CHECKING:
+    from ...entities.trajectory_data import TrajectoryData
 
 
 class TrajectoryProcessHelper:
@@ -96,14 +97,14 @@ class TrajectoryProcessHelper:
 
     @staticmethod
     def execute_removal(
-        traj_data: TrajectoryData, indices_to_remove: List[int]
+        traj_data: "TrajectoryData", indices_to_remove: List[int]
     ) -> None:
         """
         Remove trajectories and names from trajectory data.
 
         Parameters:
         -----------
-        traj_data : TrajectoryData
+        traj_data : "TrajectoryData"
             Trajectory data object
         indices_to_remove : list
             List of trajectory indices to remove (must be sorted in reverse order)
@@ -140,14 +141,14 @@ class TrajectoryProcessHelper:
 
     @staticmethod
     def validate_name_mapping(
-        traj_data: TrajectoryData, name_mapping: Union[Dict, List]
+        traj_data: "TrajectoryData", name_mapping: Union[Dict, List]
     ) -> None:
         """
         Validate name mapping input before processing.
 
         Parameters:
         -----------
-        traj_data : TrajectoryData
+        traj_data : "TrajectoryData"
             Trajectory data object
         name_mapping : dict or list
             Name mapping to validate
@@ -159,7 +160,7 @@ class TrajectoryProcessHelper:
         
         Examples:
         ---------
-        >>> traj_data = TrajectoryData()
+        >>> traj_data = "TrajectoryData"()
         >>> # Load some trajectories first
         >>> TrajectoryProcessHelper.validate_name_mapping(traj_data, ['new1', 'new2'])
         >>> TrajectoryProcessHelper.validate_name_mapping(traj_data, {0: 'renamed_first'})
@@ -176,13 +177,13 @@ class TrajectoryProcessHelper:
             raise ValueError("name_mapping must be dict or list")
 
     @staticmethod
-    def rename_with_list(traj_data: TrajectoryData, name_list: List[str]) -> List[str]:
+    def rename_with_list(traj_data: "TrajectoryData", name_list: List[str]) -> List[str]:
         """
         Process list-based positional renaming with validation.
 
         Parameters:
         -----------
-        traj_data : TrajectoryData
+        traj_data : "TrajectoryData"
             Trajectory data object
         name_list : list
             List of new names for positional assignment
@@ -194,7 +195,7 @@ class TrajectoryProcessHelper:
         
         Examples:
         ---------
-        >>> traj_data = TrajectoryData()
+        >>> traj_data = "TrajectoryData"()
         >>> # Assuming 3 trajectories are loaded
         >>> new_names = TrajectoryProcessHelper.rename_with_list(
         ...     traj_data, ['system1', 'system2', 'system3']
@@ -216,14 +217,14 @@ class TrajectoryProcessHelper:
 
     @staticmethod
     def rename_with_dict(
-        traj_data: TrajectoryData, name_dict: Dict[Union[int, str], str]
+        traj_data: "TrajectoryData", name_dict: Dict[Union[int, str], str]
     ) -> List[str]:
         """
         Process dict-based selective renaming with validation.
 
         Parameters:
         -----------
-        traj_data : TrajectoryData
+        traj_data : "TrajectoryData"
             Trajectory data object
         name_dict : dict
             Dictionary mapping old identifiers to new names
@@ -235,7 +236,7 @@ class TrajectoryProcessHelper:
         
         Examples:
         ---------
-        >>> traj_data = TrajectoryData()
+        >>> traj_data = "TrajectoryData"()
         >>> # Rename specific trajectories by index
         >>> new_names = TrajectoryProcessHelper.rename_with_dict(
         ...     traj_data, {0: 'first_system', 2: 'third_system'}
@@ -252,7 +253,7 @@ class TrajectoryProcessHelper:
 
         Parameters:
         -----------
-        traj_data : TrajectoryData
+        traj_data : "TrajectoryData"
             Trajectory data object
         name_dict : dict
             Dictionary mapping old identifiers to new names
@@ -273,7 +274,7 @@ class TrajectoryProcessHelper:
     
     @staticmethod
     def _apply_rename_dict(
-        traj_data: TrajectoryData, 
+        traj_data: "TrajectoryData", 
         name_dict: Dict[Union[int, str], str], 
         new_names: List[str]
     ) -> None:
@@ -282,7 +283,7 @@ class TrajectoryProcessHelper:
         
         Parameters:
         -----------
-        traj_data : TrajectoryData
+        traj_data : "TrajectoryData"
             Trajectory data object
         name_dict : Dict[Union[int, str], str]
             Dictionary mapping old identifiers to new names
@@ -301,7 +302,7 @@ class TrajectoryProcessHelper:
     
     @staticmethod
     def _process_single_rename(
-        traj_data: TrajectoryData, 
+        traj_data: "TrajectoryData", 
         old_identifier: Union[int, str], 
         new_name: str, 
         new_names: List[str]
@@ -311,7 +312,7 @@ class TrajectoryProcessHelper:
         
         Parameters:
         -----------
-        traj_data : TrajectoryData
+        traj_data : "TrajectoryData"
             Trajectory data object
         old_identifier : Union[int, str]
             Old trajectory identifier (index or name)
@@ -370,14 +371,14 @@ class TrajectoryProcessHelper:
     
     @staticmethod
     def _rename_by_name(
-        traj_data: TrajectoryData, old_name: str, new_name: str, new_names: List[str]
+        traj_data: "TrajectoryData", old_name: str, new_name: str, new_names: List[str]
     ) -> None:
         """
         Rename trajectory by name.
         
         Parameters:
         -----------
-        traj_data : TrajectoryData
+        traj_data : "TrajectoryData"
             Trajectory data object
         old_name : str
             Old trajectory name to find

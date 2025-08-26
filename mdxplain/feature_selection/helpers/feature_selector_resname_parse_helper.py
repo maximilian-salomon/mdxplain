@@ -34,7 +34,7 @@ class FeatureSelectorResnameParseHelper:
     
     @staticmethod
     def parse_res_category(
-        param_tokens: List[str], features_list: List[list]
+        param_tokens: List[str], features_list: List[list], require_all_partners: bool = False
     ) -> List[int]:
         """
         Parse 'res' category and return matching feature indices.
@@ -50,6 +50,8 @@ class FeatureSelectorResnameParseHelper:
             List of parameter tokens for residue selection
         features_list : List[list]
             List of features from metadata
+        require_all_partners : bool, default=False
+            If True, ALL partners must contain the residue ID
 
         Returns:
         --------
@@ -70,12 +72,12 @@ class FeatureSelectorResnameParseHelper:
             if residue_seqid is not None:
                 # Specific residue like ALA13
                 indices = FeatureSelectorResnameParseHelper._find_by_name_and_seqid(
-                    residue_name, residue_seqid, features_list
+                    residue_name, residue_seqid, features_list, require_all_partners
                 )
             else:
                 # Just residue type like ALA (all alanines)
                 indices = FeatureSelectorResnameParseHelper._find_by_residue_name(
-                    residue_name, features_list
+                    residue_name, features_list, require_all_partners
                 )
 
             all_indices.extend(indices)
@@ -122,7 +124,7 @@ class FeatureSelectorResnameParseHelper:
     
     @staticmethod
     def _find_by_residue_name(
-        residue_name: str, features_list: List[list]
+        residue_name: str, features_list: List[list], require_all_partners: bool = False
     ) -> List[int]:
         """
         Find features containing the specified residue name (any seqid).
@@ -133,6 +135,9 @@ class FeatureSelectorResnameParseHelper:
             Residue name to find (e.g., "ALA", "A")
         features_list : List[list]
             List of features from metadata
+        require_all_partners : bool, default=False
+            If True, ALL partners must contain the residue name
+            If False, at least ONE partner must contain the residue name
 
         Returns:
         --------
@@ -142,20 +147,16 @@ class FeatureSelectorResnameParseHelper:
         matching_indices = []
 
         for idx, feature in enumerate(features_list):
-            # Check each partner in the feature
-            for partner in feature:
-                residue_info = partner.get("residue", {})
-                if FeatureSelectorResnameParseHelper._residue_name_matches(
-                    residue_info, residue_name
-                ):
-                    matching_indices.append(idx)
-                    break
+            if FeatureSelectorResnameParseHelper._feature_has_residue_name(
+                feature, residue_name, require_all_partners
+            ):
+                matching_indices.append(idx)
 
         return matching_indices
     
     @staticmethod
     def _find_by_name_and_seqid(
-        residue_name: str, residue_seqid: int, features_list: List[list]
+        residue_name: str, residue_seqid: int, features_list: List[list], require_all_partners: bool = False
     ) -> List[int]:
         """
         Find features matching both residue name and sequence ID.
@@ -168,6 +169,9 @@ class FeatureSelectorResnameParseHelper:
             Sequence ID to find (e.g., 13)
         features_list : List[list]
             List of features from metadata
+        require_all_partners : bool, default=False
+            If True, ALL partners must contain both residue name and sequence ID
+            If False, at least ONE partner must contain both
 
         Returns:
         --------
@@ -178,18 +182,56 @@ class FeatureSelectorResnameParseHelper:
 
         for idx, feature in enumerate(features_list):
             if FeatureSelectorResnameParseHelper._feature_has_residue_name_and_seqid(
-                feature, residue_name, residue_seqid
+                feature, residue_name, residue_seqid, require_all_partners
             ):
                 matching_indices.append(idx)
 
         return matching_indices
     
     @staticmethod
-    def _feature_has_residue_name_and_seqid(
-        feature: list, residue_name: str, residue_seqid: int
+    def _feature_has_residue_name(
+        feature: list, residue_name: str, require_all_partners: bool = False
     ) -> bool:
         """
-        Check if feature has a residue with the specified name and sequence ID.
+        Check if feature has the specified residue name.
+
+        Parameters:
+        -----------
+        feature : list
+            Feature from metadata
+        residue_name : str
+            Residue name to find
+        require_all_partners : bool, default=False
+            If True, ALL partners must have the residue name
+            If False, at least ONE partner must have the residue name
+
+        Returns:
+        --------
+        bool
+            True if residue name criteria are met
+        """
+        if require_all_partners:
+            # ALL partners must have the residue name
+            if len(feature) == 0:
+                return False
+            for partner in feature:
+                residue = partner.get("residue", {})
+                if not FeatureSelectorResnameParseHelper._residue_name_matches(residue, residue_name):
+                    return False
+            return True
+        
+        for partner in feature:
+            residue = partner.get("residue", {})
+            if FeatureSelectorResnameParseHelper._residue_name_matches(residue, residue_name):
+                return True
+        return False
+
+    @staticmethod
+    def _feature_has_residue_name_and_seqid(
+        feature: list, residue_name: str, residue_seqid: int, require_all_partners: bool = False
+    ) -> bool:
+        """
+        Check if feature has the specified residue name and sequence ID.
 
         Parameters:
         -----------
@@ -199,12 +241,27 @@ class FeatureSelectorResnameParseHelper:
             Residue name to find
         residue_seqid : int
             Sequence ID to find
+        require_all_partners : bool, default=False
+            If True, ALL partners must have both residue name and sequence ID
+            If False, at least ONE partner must have both
 
         Returns:
         --------
         bool
-            True if feature has a residue with the specified name and sequence ID, False otherwise
+            True if residue name and sequence ID criteria are met
         """
+        if require_all_partners:
+            # ALL partners must have both name and seqid
+            if len(feature) == 0:
+                return False
+            for partner in feature:
+                residue = partner.get("residue", {})
+                if not (
+                    FeatureSelectorResnameParseHelper._residue_name_matches(residue, residue_name)
+                    and residue.get("seqid") == residue_seqid
+                ):
+                    return False
+            return True
         for partner in feature:
             residue = partner.get("residue", {})
             if (
