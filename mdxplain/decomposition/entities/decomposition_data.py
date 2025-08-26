@@ -25,9 +25,6 @@ Container for decomposition results (PCA, KernelPCA) with associated metadata
 and hyperparameters. Stores decomposed data with transformation information.
 """
 
-from ...utils.data_utils import DataUtils
-
-
 class DecompositionData:
     """
     Container for decomposition results with metadata and hyperparameters.
@@ -72,3 +69,45 @@ class DecompositionData:
 
         self.data = None
         self.metadata = None
+        self.frame_mapping = None
+
+    def get_frame_mapping(self):
+        """
+        Get frame mapping from global frame indices to trajectory origins.
+
+        Returns:
+        --------
+        dict or None
+            Mapping from global_frame_index to (trajectory_index, local_frame_index),
+            or None if decomposition has not been computed or mapping is not available
+
+        Examples:
+        ---------
+        >>> decomp_data = DecompositionData("pca")
+        >>> frame_mapping = decomp_data.get_frame_mapping()
+        >>> if frame_mapping is not None:
+        ...     print(f"Frame 0 comes from: {frame_mapping[0]}")  # (traj_idx, local_frame_idx)
+        """
+        return self.frame_mapping
+        
+    def set_frame_mapping(self, frame_mapping):
+        """
+        Set frame mapping from global frame indices to trajectory origins.
+
+        Parameters:
+        -----------
+        frame_mapping : dict
+            Mapping from global_frame_index to (trajectory_index, local_frame_index)
+
+        Returns:
+        --------
+        None
+            Sets the frame mapping for trajectory tracking
+
+        Examples:
+        ---------
+        >>> decomp_data = DecompositionData("pca")
+        >>> mapping = {0: (0, 10), 1: (0, 11), 2: (1, 5)}  # global -> (traj, local)
+        >>> decomp_data.set_frame_mapping(mapping)
+        """
+        self.frame_mapping = frame_mapping

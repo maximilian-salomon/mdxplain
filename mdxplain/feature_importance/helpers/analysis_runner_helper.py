@@ -32,6 +32,7 @@ import numpy as np
 from ..analyzer_types.interfaces.analyzer_type_base import AnalyzerTypeBase
 from ..entities.feature_importance_data import FeatureImportanceData
 from .metadata_builder_helper import MetadataBuilderHelper
+from ...pipeline.helper.comparison_data_helper import ComparisonDataHelper
 
 
 class AnalysisRunnerHelper:
@@ -61,7 +62,6 @@ class AnalysisRunnerHelper:
         analyzer_type: AnalyzerTypeBase,
         X: np.ndarray,
         y: np.ndarray,
-        sub_comp: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         Run feature importance analysis on a single sub-comparison.
@@ -77,8 +77,6 @@ class AnalysisRunnerHelper:
             Feature matrix for the sub-comparison
         y : np.ndarray
             Label array for the sub-comparison
-        sub_comp : Dict[str, Any]
-            Sub-comparison dictionary containing metadata
             
         Returns:
         --------
@@ -192,12 +190,14 @@ class AnalysisRunnerHelper:
 
         # Run analysis on each sub-comparison
         for sub_comp in comp_data.sub_comparisons:
-            # Get data for this sub-comparison
-            X, y = comp_data.get_sub_comparison_data(pipeline_data, sub_comp["name"])
+            # Get data for this sub-comparison using ComparisonDataHelper
+            X, y = ComparisonDataHelper.get_sub_comparison_data(
+                pipeline_data, comp_data, sub_comp["name"]
+            )
             
             # Run single analysis
             result = AnalysisRunnerHelper.run_single_analysis(
-                analyzer_type, X, y, sub_comp
+                analyzer_type, X, y
             )
             
             # Build metadata

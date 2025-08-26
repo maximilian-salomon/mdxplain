@@ -19,10 +19,11 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Feature data container for computed features with analysis methods.
+Feature data container for trajectory-specific computed features.
 
-Container for feature data (distances, contacts) with associated calculator.
-Stores feature data and provides bound analysis methods from calculators.
+Container for trajectory-specific feature data (distances, contacts) with 
+associated calculator. Stores per-trajectory feature data enabling mixed 
+systems with different proteins in a single pipeline.
 """
 
 from ...utils.data_utils import DataUtils
@@ -30,13 +31,28 @@ from ...utils.data_utils import DataUtils
 
 class FeatureData:
     """
-    Internal container for computed feature data with analysis methods.
+    Internal container for trajectory-specific computed feature data.
 
-    Stores feature data and provides bound analysis methods from calculators.
+    Stores per-trajectory feature data enabling mixed systems with different
+    proteins in a single pipeline. Each trajectory computes its own features
+    which are combined at the selection level.
+    
+    Attributes:
+    -----------
+    data : np.ndarray
+        Feature matrix for single trajectory
+    feature_metadata : dict
+        Feature metadata for single trajectory
+    reduced_data : np.ndarray 
+        Reduced feature matrix for single trajectory
+    reduced_feature_metadata : dict
+        Reduced metadata for single trajectory
+    reduction_info : dict
+        Reduction information for single trajectory
     """
 
     def __init__(
-        self, feature_type, use_memmap=False, cache_path="./cache", chunk_size=10000
+        self, feature_type, use_memmap=False, cache_path="./cache", chunk_size=10000, trajectory_name=None
     ):
         """
         Initialize feature data container.
@@ -48,10 +64,12 @@ class FeatureData:
         use_memmap : bool, default=False
             Whether to use memory mapping
         cache_path : str, optional
-            Cache file path for memmap
+            Cache directory path for memmap
         chunk_size : int, optional
             Chunk size for processing large datasets. Smaller chunks use less
             memory but may be slower. If None, uses automatic chunking.
+        trajectory_name : str, optional
+            Trajectory name for unique cache filenames
 
         Returns:
         --------
@@ -61,24 +79,27 @@ class FeatureData:
         self.feature_type = feature_type
         self.use_memmap = use_memmap
         self.chunk_size = chunk_size
-
-        # Handle cache path
+        
+        # Handle cache path with trajectory-specific naming
         if use_memmap:
-            self.cache_path = DataUtils.get_cache_file_path(
-                f"{str(feature_type)}.dat", cache_path
-            )
-            self.reduced_cache_path = DataUtils.get_cache_file_path(
-                f"{str(feature_type)}_reduced.dat", cache_path
-            )
+            if trajectory_name:
+                filename = f"{str(feature_type)}_{trajectory_name}.dat"
+                reduced_filename = f"{str(feature_type)}_reduced_{trajectory_name}.dat"
+            else:
+                filename = f"{str(feature_type)}.dat"
+                reduced_filename = f"{str(feature_type)}_reduced.dat"
+                
+            self.cache_path = DataUtils.get_cache_file_path(filename, cache_path)
+            self.reduced_cache_path = DataUtils.get_cache_file_path(reduced_filename, cache_path)
         else:
             self.cache_path = None
             self.reduced_cache_path = None
 
-        # Initialize data as None
+        # Initialize single-trajectory data structures
         self.data = None
-        self.feature_metadata = None  # Structured feature metadata
+        self.feature_metadata = None
         self.reduced_data = None
-        self.reduced_feature_metadata = None  # Reduced structured metadata
+        self.reduced_feature_metadata = None
         self.reduction_info = None
 
         self.feature_type.init_calculator(
@@ -101,11 +122,11 @@ class FeatureData:
         Returns:
         --------
         numpy.ndarray
-            Feature data array, shape (n_frames, n_features)
+            Feature data array for this trajectory
 
         Examples:
         ---------
-        >>> feature_data = traj.get_feature("distances")
+        >>> # Get current data
         >>> data = feature_data.get_data()
         >>> print(f"Data shape: {data.shape}")
         """
@@ -129,14 +150,15 @@ class FeatureData:
         Returns:
         --------
         dict or None
-            Feature metadata dictionary with 'is_pair' and 'features' keys,
-            or None if not available
+            Feature metadata dict for this trajectory
+            If traj_idx is None: Dict mapping trajectory indices to metadata dicts
+            Returns None if no metadata available
 
         Examples:
         ---------
-        >>> feature_data = traj.get_feature("distances")
+        >>> # Get current metadata
         >>> metadata = feature_data.get_feature_metadata()
-        >>> print(f"Number of features: {len(metadata['features'])}")
+        >>> print(f"Features: {len(metadata['features'])}")
         """
         if self.reduced_feature_metadata is not None and not force_original:
             return self.reduced_feature_metadata

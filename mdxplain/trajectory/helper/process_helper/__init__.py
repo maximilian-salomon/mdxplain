@@ -23,9 +23,11 @@
 from .trajectory_process_helper import TrajectoryProcessHelper
 from .trajectory_load_helper import TrajectoryLoadHelper
 from .selection_resolve_helper import SelectionResolveHelper
+from .label_operation_helper import LabelOperationHelper
 
 __all__ = [
     "TrajectoryProcessHelper",
     "TrajectoryLoadHelper", 
     "SelectionResolveHelper",
+    "LabelOperationHelper",
 ]

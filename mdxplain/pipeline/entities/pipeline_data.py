@@ -41,7 +41,6 @@ from ...utils.data_utils import DataUtils
 from ..helper.selection_matrix_helper import SelectionMatrixHelper
 from ..helper.selection_metadata_helper import SelectionMetadataHelper
 from ..helper.comparison_data_helper import ComparisonDataHelper
-from ..helper.selection_memmap_helper import SelectionMemmapHelper
 
 
 class PipelineData:
@@ -570,7 +569,7 @@ class PipelineData:
     # FEATURE SELECTION SYSTEM METHODS
     # =============================================================================
 
-    def get_selected_metadata(self, name):
+    def get_selected_metadata(self, name: str):
         """
         Return metadata for all selected features.
 
@@ -578,6 +577,9 @@ class PipelineData:
         providing detailed information about each column in the corresponding
         selected matrix. The metadata includes feature definitions and types,
         allowing for proper interpretation of the selected data.
+
+        The reference trajectory for metadata is determined by the one specified
+        during the FeatureSelector.select() operation.
 
         Parameters:
         -----------
@@ -646,14 +648,18 @@ class PipelineData:
     def get_selected_data(
         self,
         feature_selector: str,
-        data_selector: Optional[str] = None
-    ) -> np.ndarray:
+        data_selector: Optional[str] = None,
+        return_frame_mapping: bool = False
+    ):
         """
         Get data matrix with selected features and optionally selected frames.
 
         This method combines feature selection (columns) and data selection (rows)
         to create a matrix with the desired subset of data. Feature selection is
         required to define which columns to include.
+
+        Frame mapping is ALWAYS created internally to simplify filtering logic,
+        but only returned when requested.
 
         Parameters:
         -----------
@@ -663,13 +669,18 @@ class PipelineData:
         data_selector : str, optional
             Name of the data selector (which rows to include).
             If None, uses all available frames.
+        return_frame_mapping : bool, default=False
+            Whether to return frame mapping along with the matrix
 
         Returns:
         --------
-        np.ndarray
-            Matrix with selected columns and optionally selected rows.
-            - With data_selector: (n_selected_frames, n_selected_features)
-            - Without data_selector: (n_all_frames, n_selected_features)
+        np.ndarray or Tuple[np.ndarray, Dict[int, tuple]]
+            If return_frame_mapping=False: Matrix with selected columns and optionally selected rows.
+            If return_frame_mapping=True: Tuple of (matrix, frame_mapping).
+            - Matrix shapes:
+              - With data_selector: (n_selected_frames, n_selected_features)
+              - Without data_selector: (n_all_frames, n_selected_features)
+            - Frame mapping: {global_frame_index: (trajectory_index, local_frame_index)}
 
         Raises:
         -------
@@ -685,48 +696,23 @@ class PipelineData:
         ... )
         >>> print(f"Selected data shape: {data.shape}")
 
-        >>> # Get all frames but only selected features
-        >>> data = pipeline_data.get_selected_data(
-        ...     feature_selector="important_features"
+        >>> # Get all frames but only selected features with mapping
+        >>> data, mapping = pipeline_data.get_selected_data(
+        ...     feature_selector="important_features",
+        ...     return_frame_mapping=True
         ... )
         """
         # Validate feature selector exists
         self.validate_selection_exists(feature_selector)
-        
-        # Get full feature matrix using SelectionMatrixHelper
-        matrices = SelectionMatrixHelper.collect_matrices_for_selection(self, feature_selector)
-        full_matrix = SelectionMatrixHelper.merge_matrices(
-            matrices, feature_selector, self.use_memmap, self.cache_dir, self.chunk_size
+
+        # Build matrix directly with efficient memory usage
+        matrix, frame_mapping = SelectionMatrixHelper.build_selection_matrix(
+            self, feature_selector, data_selector
         )
-
-        # If no data selector specified, return full matrix
-        if data_selector is None:
-            return full_matrix
-
-        # Validate data selector exists  
-        if data_selector not in self.data_selector_data:
-            available = list(self.data_selector_data.keys())
-            raise ValueError(
-                f"Data selector '{data_selector}' not found. "
-                f"Available data selectors: {available}"
-            )
-            
-        # Get selected frame indices
-        selector_data = self.data_selector_data[data_selector]
-        frame_indices = selector_data.get_frame_indices()
         
-        if not frame_indices:
-            raise ValueError(f"Data selector '{data_selector}' has no selected frames")
-        
-        # Use memmap-safe frame selection for large datasets
-        if self.use_memmap and len(frame_indices) > self.chunk_size:
-            return SelectionMemmapHelper.create_memmap_frame_selection(
-                full_matrix, frame_indices, f"{feature_selector}_{data_selector}",
-                self.cache_dir, self.chunk_size
-            )
-        
-        # For small selections, direct indexing is fine
-        return full_matrix[frame_indices]
+        if return_frame_mapping:
+            return matrix, frame_mapping
+        return matrix
 
     # =============================================================================
     # COMPARISON DATA METHODS

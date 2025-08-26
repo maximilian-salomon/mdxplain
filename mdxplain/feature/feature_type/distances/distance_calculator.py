@@ -21,14 +21,13 @@
 """
 Distance calculator for molecular dynamics trajectory analysis.
 
-Utility class for computing pairwise distances between residues in MD trajectories.
+Utility class for computing pairwise distances between residues in MD trajectory.
 Supports memory mapping for large datasets and provides statistical analysis capabilities.
 """
 
 
 import mdtraj as md
 import numpy as np
-from tqdm import tqdm
 
 from ..helper.calculator_compute_helper import CalculatorComputeHelper
 from ..helper.feature_shape_helper import FeatureShapeHelper
@@ -38,7 +37,7 @@ from .distance_calculator_analysis import DistanceCalculatorAnalysis
 
 class DistanceCalculator(CalculatorBase):
     """
-    Calculator for computing pairwise distances between atoms/residues in MD trajectories.
+    Calculator for computing pairwise distances between atoms/residues in MD trajectory.
 
     Computes all pairwise distances using MDTraj's distance calculation functions
     with support for memory-mapped arrays, chunked processing, and various output
@@ -49,11 +48,11 @@ class DistanceCalculator(CalculatorBase):
     ---------
     >>> # Basic distance calculation
     >>> calculator = DistanceCalculator()
-    >>> distances, pairs = calculator.compute(trajectories)
+    >>> distances, pairs = calculator.compute(trajectory)
 
     >>> # With memory mapping for large datasets
     >>> calculator = DistanceCalculator(use_memmap=True, cache_path='./cache/')
-    >>> distances, pairs = calculator.compute(trajectories)
+    >>> distances, pairs = calculator.compute(trajectory)
     """
 
     def __init__(self, use_memmap=False, cache_path="./cache", chunk_size=10000):
@@ -83,7 +82,8 @@ class DistanceCalculator(CalculatorBase):
         """
         super().__init__(use_memmap, cache_path, chunk_size)
         self.distances_path = cache_path
-        self.pairs = None  # Will be computed from reference trajectory
+
+        self.pairs = None  # Will be computed
         self.n_pairs = None  # Will be set after pairs are generated
 
         self.analysis = DistanceCalculatorAnalysis(
@@ -102,9 +102,9 @@ class DistanceCalculator(CalculatorBase):
             List of MDTraj trajectory objects to process
         **kwargs : dict
             Additional parameters:
-            - ref : mdtraj.Trajectory, optional - Reference trajectory for pair determination
-            - k : int, default=1 - Diagonal offset (k=1 excludes diagonal,
-              k=2 excludes first two diagonals)
+            - excluded_neighbors : int, default=1 - Diagonal offset (excluded_neighbors=1 excludes diagonal,
+              excluded_neighbors=2 excludes first two diagonals)
+              Chain Breaks are automatically excluded. Meassured by jump in the seqid of a residue.
             - res_metadata : dict - Residue metadata for feature naming
 
         Returns:
@@ -116,27 +116,26 @@ class DistanceCalculator(CalculatorBase):
         Examples:
         ---------
         >>> # Basic distance calculation (excludes diagonal)
-        >>> distances, metadata = calculator.compute(trajectories)
+        >>> distances, metadata = calculator.compute(trajectory)
         >>> print(f"Distance matrix shape: {distances.shape}")
 
         >>> # With custom diagonal offset
-        >>> distances, metadata = calculator.compute(trajectories, k=2)
+        >>> distances, metadata = calculator.compute(trajectory, excluded_neighbors=2)
 
         >>> # With reference trajectory for consistent naming
-        >>> distances, metadata = calculator.compute(trajectories, ref=ref_traj)
+        >>> distances, metadata = calculator.compute(trajectory, ref=ref_traj)
         """
         # Extract parameters from kwargs
-        trajectories = input_data
-        ref = kwargs.get("ref", None)
-        k = kwargs.get("k", 1)  # Default k=1 excludes diagonal
+        trajectory = input_data 
+        excluded_neighbors = kwargs.get("excluded_neighbors", 1)  # Default excluded_neighbors=1 excludes diagonal  
         res_metadata = kwargs.get("res_metadata", None)
 
         # Setup computation parameters and arrays
-        ref, total_frames, distances = self._setup_computation(trajectories, ref, k)
+        total_frames, distances = self._setup_computation(trajectory, excluded_neighbors, res_metadata)
 
-        # Process all trajectories
-        distances, res_list = self._process_all_trajectories(
-            trajectories, distances, total_frames
+        # Process single trajectory
+        distances, res_list = self._process_trajectory(
+            trajectory, distances
         )
 
         # Consistency check: res_list should match self.pairs
@@ -150,35 +149,32 @@ class DistanceCalculator(CalculatorBase):
 
         return distances, feature_metadata
 
-    def _setup_computation(self, trajectories, ref, k):
+    def _setup_computation(self, trajectory, excluded_neighbors, res_metadata):
         """
         Set up computation parameters and create output arrays.
 
         Parameters:
         -----------
-        trajectories : list
-            List of MDTraj trajectory objects to process
-        ref : mdtraj.Trajectory or None
-            Reference trajectory for pair determination
-        k : int
-            Diagonal offset for pair generation
+        trajectory : mdtraj.Trajectory
+            MDTraj trajectory object to process
+        excluded_neighbors : int
+            Sequential seqid distance for neighbor exclusion
+        res_metadata : dict
+            Residue metadata containing seqid information
 
         Returns:
         --------
         tuple
-            (ref_trajectory, total_frames, distances_array)
+            (total_frames, distances_array)
         """
-        total_frames = sum(traj.n_frames for traj in trajectories)
+        total_frames = trajectory.n_frames
 
-        if ref is None:
-            ref = trajectories[0]
-
-        # Generate pairs once from reference trajectory
-        if self.pairs is None:
-            self.pairs = self._generate_residue_pairs(ref.n_residues, k)
-            print(
-                f"Generated {len(self.pairs)} residue pairs for {ref.n_residues} residues"
-            )
+        # Generate pairs for THIS trajectory (not cached globally)
+        # Each trajectory has different n_residues, so pairs must be trajectory-specific
+        self.pairs = self._generate_residue_pairs(trajectory.n_residues, excluded_neighbors, res_metadata)
+        print(
+            f"Generated {len(self.pairs)} residue pairs for {trajectory.n_residues} residues"
+        )
 
         # Calculate condensed output shape (natural md.compute_contacts format)
         self.n_pairs = len(self.pairs)
@@ -191,36 +187,7 @@ class DistanceCalculator(CalculatorBase):
             dtype="float32",
         )
 
-        return ref, total_frames, distances
-
-    def _process_all_trajectories(self, trajectories, distances, total_frames):
-        """
-        Process all trajectories and compute distances.
-
-        Parameters:
-        -----------
-        trajectories : list
-            List of MDTraj trajectory objects to process
-        distances : np.ndarray or np.memmap
-            Output array for distance values
-        total_frames : int
-            Total number of frames across all trajectories
-
-        Returns:
-        --------
-        tuple
-            (distances_array, residue_list) with computed distances and residue names
-        """
-        frame_idx = 0
-        res_list = None
-
-        with tqdm(total=total_frames, desc="Computing distances") as pbar:
-            for traj in trajectories:
-                distances, frame_idx, res_list = self._process_trajectory(
-                    traj, distances, frame_idx, pbar
-                )
-
-        return distances, res_list
+        return total_frames, distances
 
     def _finalize_output(self, distances, total_frames):
         """
@@ -368,31 +335,90 @@ class DistanceCalculator(CalculatorBase):
             )
 
     # ===== PRIVATE HELPER METHODS =====
-    def _generate_residue_pairs(self, n_residues, k):
+    def _generate_residue_pairs(self, n_residues, excluded_neighbors, res_metadata):
         """
-        Generate all unique residue pairs (excluding self-pairs i==j).
+        Generate residue pairs using chain-aware metadata-based neighbor exclusion.
 
         Parameters:
         -----------
         n_residues : int
             Number of residues
-        k : int
-            Diagonal offset (k=1 excludes diagonal, k=2 excludes first two diagonals)
+        excluded_neighbors : int
+            Sequential seqid distance for neighbor exclusion within chains
+        res_metadata : dict
+            Residue metadata containing seqid information for chain detection
 
         Returns:
         --------
         list
-            List of [i, j] pairs where i < j
+            List of [i, j] pairs where i < j, excluding consecutive residues in same chain
+
+        Raises:
+        -------
+        ValueError
+            If res_metadata is None
         """
+        if res_metadata is None:
+            raise ValueError(
+                "res_metadata is required for seqid-based neighbor exclusion. "
+                "Ensure trajectory has been processed with add_labels()."
+            )
+        
+        # Validate input consistency
+        if len(res_metadata) != n_residues:
+            raise ValueError(
+                f"Data inconsistency: n_residues={n_residues} but len(res_metadata)={len(res_metadata)}. "
+                "The trajectory and metadata must have the same number of residues."
+            )
+
         pairs = []
-        if k <= 0:
-            k = 1
+        if excluded_neighbors < 0:
+            raise ValueError(
+                "excluded_neighbors must be a positive integer or 0."
+            )
+        
         for i in range(n_residues):
-            for j in range(
-                i + k, n_residues
-            ):  # i < j, excludes self-pairs and k diagonals
-                pairs.append([i, j])
+            for j in range(i, n_residues):  # Check ALL pairs first
+                # Check if residues i and j are consecutive in same chain
+                if self._is_consecutive_in_sequence(i, j, res_metadata, excluded_neighbors):
+                    continue  # Skip consecutive residues in same chain
+                
+                pairs.append([i, j])  # Keep all other pairs
+                
         return pairs
+
+    def _is_consecutive_in_sequence(self, i, j, res_metadata, excluded_neighbors):
+        """
+        Check if residues i and j are consecutive within same chain sequence.
+
+        Parameters:
+        -----------
+        i : int
+            First residue index
+        j : int
+            Second residue index (j > i)
+        res_metadata : dict
+            Residue metadata containing seqid information
+        excluded_neighbors : int
+            Maximum sequential seqid distance for exclusion
+
+        Returns:
+        --------
+        bool
+            True if residues are consecutive in same chain with distance <= excluded_neighbors
+        """
+        # Check all residues between i and j for chain breaks
+        for k in range(i, j):
+            current_seqid = res_metadata[k]['seqid']
+            next_seqid = res_metadata[k + 1]['seqid']
+            
+            # Chain break detected → residues are not consecutive in same chain
+            if abs(next_seqid - current_seqid) != 1:
+                return False
+        
+        # All residues form continuous sequence → check distance threshold
+        seqid_distance = abs(res_metadata[j]['seqid'] - res_metadata[i]['seqid'])
+        return seqid_distance <= excluded_neighbors
 
     def _convert_to_angstrom(self, distances, total_frames):
         """
@@ -461,7 +487,7 @@ class DistanceCalculator(CalculatorBase):
 
         return {"is_pair": True, "features": features}
 
-    def _process_trajectory(self, traj, distances, frame_idx, pbar=None):
+    def _process_trajectory(self, traj, distances):
         """
         Process a single trajectory in batches.
 
@@ -471,15 +497,11 @@ class DistanceCalculator(CalculatorBase):
             Trajectory object to process
         distances : np.ndarray or np.memmap
             Output array for distance values
-        frame_idx : int
-            Starting frame index for this trajectory
-        pbar : tqdm.tqdm, optional
-            Progress bar for updates
 
         Returns:
         --------
         tuple
-            (distances_array, updated_frame_idx, residue_list)
+            (distances_array, residue_list)
         """
         if self.chunk_size is None:
             dist, res_list = md.compute_contacts(
@@ -487,29 +509,22 @@ class DistanceCalculator(CalculatorBase):
                 contacts=self.pairs,
                 scheme="closest-heavy",  # Use our generated pairs list
             )
-            distances = dist
-            frame_idx += traj.n_frames
-            if pbar is not None:
-                pbar.update(traj.n_frames)
+            distances[:] = dist  # Direct assignment
         else:
-            for k in range(0, traj.n_frames, self.chunk_size):
-                frames_to_process = min(self.chunk_size, traj.n_frames - k)
+            for frame_start in range(0, traj.n_frames, self.chunk_size):
+                frames_to_process = min(self.chunk_size, traj.n_frames - frame_start)
 
                 # Use our precomputed pairs list for ALL residue pairs (except self-pairs)
                 dist, res_list = md.compute_contacts(
-                    traj[k : k + frames_to_process],
+                    traj[frame_start : frame_start + frames_to_process],
                     contacts=self.pairs,  # Use our generated pairs list
                     scheme="closest-heavy",
                 )
 
                 # Direct assignment - dist is already in condensed format
-                distances[frame_idx : frame_idx + frames_to_process] = dist
+                distances[frame_start : frame_start + frames_to_process] = dist
 
-                frame_idx += frames_to_process
-                if pbar is not None:
-                    pbar.update(frames_to_process)
-
-        return distances, frame_idx, res_list
+        return distances, res_list
 
     def _compute_metric_values(
         self,

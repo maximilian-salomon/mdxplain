@@ -21,5 +21,7 @@
 """Feature selection helpers module."""
 
 from .feature_selector_parse_core_helper import FeatureSelectorParseCoreHelper
+from .feature_selector_consensus_parse_helper import FeatureSelectorConsensusParseHelper
+from .common_denominator_helper import CommonDenominatorHelper
 
-__all__ = ["FeatureSelectorParseCoreHelper"]
+__all__ = ["FeatureSelectorParseCoreHelper", "FeatureSelectorConsensusParseHelper", "CommonDenominatorHelper"]

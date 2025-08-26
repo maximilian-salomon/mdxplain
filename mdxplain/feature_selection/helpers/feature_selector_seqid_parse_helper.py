@@ -34,7 +34,7 @@ class FeatureSelectorSeqidParseHelper(FeatureSelectorNumericParseHelper):
     
     @staticmethod
     def parse_seqid_category(
-        param_parts: List[str], features_list: List[list]
+        param_parts: List[str], features_list: List[list], require_all_partners: bool = False
     ) -> List[int]:
         """
         Parse 'seqid' category and return matching feature indices.
@@ -46,6 +46,8 @@ class FeatureSelectorSeqidParseHelper(FeatureSelectorNumericParseHelper):
             List of parameter parts for sequence ID selection
         features_list : List[list]
             List of features from metadata
+        require_all_partners : bool, default=False
+            If True, ALL partners must contain the sequence ID
 
         Returns:
         --------
@@ -58,5 +60,5 @@ class FeatureSelectorSeqidParseHelper(FeatureSelectorNumericParseHelper):
             If the sequence ID specification is invalid
         """
         return FeatureSelectorNumericParseHelper.parse_numeric_category(
-            param_parts, features_list, "seqid", "seqid"
+            param_parts, features_list, "seqid", "seqid", require_all_partners
         )

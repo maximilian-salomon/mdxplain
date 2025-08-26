@@ -129,6 +129,7 @@ class DataSelectorManager:
         tags: List[str],
         match_all: bool = True,
         mode: str = "add",
+        stride: int = 1,
     ) -> None:
         """
         Select frames based on trajectory tags.
@@ -159,6 +160,9 @@ class DataSelectorManager:
             If True, frame must have ALL tags. If False, ANY tag matches.
         mode : str, default="add"
             Selection mode: "add" (union), "subtract" (difference), "intersect" (intersection)
+        stride : int, default=1
+            Minimum distance between consecutive frames (per trajectory).
+            stride=1 returns all frames, stride=10 returns every 10th frame.
         # TODO: We could use an Enum for modes
 
         Returns:
@@ -178,9 +182,9 @@ class DataSelectorManager:
         ...     pipeline_data, "biased_system_A", ["system_A", "biased"], match_all=True, mode="add"
         ... )
 
-        >>> # Remove frames with any of the tags
+        >>> # Select every 5th frame from tagged trajectories
         >>> manager.select_by_tags(
-        ...     pipeline_data, "my_frames", ["system_A", "system_B"], match_all=False, mode="subtract"
+        ...     pipeline_data, "biased_sparse", ["biased"], stride=5
         ... )
 
         >>> # Keep only frames that have these tags
@@ -194,19 +198,21 @@ class DataSelectorManager:
 
         selector_data = pipeline_data.data_selector_data[name]
         
-        # Frame selection using helper
-        frame_indices = FrameSelectionHelper.select_frames_by_tags(
-            pipeline_data.trajectory_data, tags, match_all
+        # Trajectory-specific frame selection using helper
+        trajectory_frames = FrameSelectionHelper.select_frames_by_tags(
+            pipeline_data.trajectory_data, tags, match_all, stride
         )
         
-        # Update selector indices
-        self._update_selector_indices(selector_data, frame_indices, mode)
+        # Update selector indices with trajectory-specific data
+        self._update_selector_indices(selector_data, trajectory_frames, mode)
         
         # Build and store criteria using helper
+        n_frames = sum(len(frames) for frames in trajectory_frames.values())
         criteria = CriteriaBuilderHelper.build_tag_criteria(
-            tags, match_all, len(frame_indices)
+            tags, match_all, n_frames
         )
         criteria["mode"] = mode  # Add mode to criteria
+        criteria["stride"] = stride  # Add stride to criteria
         
         # Use appropriate criteria method based on mode and existing data
         selector_data.append_selection_criteria(criteria)
@@ -218,6 +224,7 @@ class DataSelectorManager:
         clustering_name: str,
         cluster_ids: List[Union[int, str]],
         mode: str = "add",
+        stride: int = 1,
     ) -> None:
         """
         Select frames based on cluster assignments.
@@ -248,6 +255,9 @@ class DataSelectorManager:
             List of cluster IDs to select (can be numeric IDs or cluster names)
         mode : str, default="add"
             Selection mode: "add" (union), "subtract" (difference), "intersect" (intersection)
+        stride : int, default=1
+            Minimum distance between consecutive frames (per trajectory).
+            Applied after cluster selection to maintain cluster representation.
 
         Returns:
         --------
@@ -266,9 +276,9 @@ class DataSelectorManager:
         ...     pipeline_data, "structured", "conformations", [0, 1], mode="add"
         ... )
 
-        >>> # Remove frames from specific clusters
+        >>> # Select every 10th frame from clusters (sparse sampling)
         >>> manager.select_by_cluster(
-        ...     pipeline_data, "my_frames", "conformations", ["noise"], mode="subtract"
+        ...     pipeline_data, "structured_sparse", "conformations", [0, 1], stride=10
         ... )
 
         >>> # Keep only frames from these clusters
@@ -287,25 +297,35 @@ class DataSelectorManager:
         labels = cluster_data.get_labels()
         if labels is None:
             raise ValueError(f"No cluster labels found for clustering '{clustering_name}'")
+        
+        # Require frame_mapping for trajectory-specific operation
+        frame_mapping = cluster_data.get_frame_mapping()
+        if not frame_mapping:
+            raise ValueError(
+                f"Clustering '{clustering_name}' has no frame_mapping. "
+                f"Re-run clustering to generate trajectory-specific mapping."
+            )
 
         # Resolve cluster IDs using helper
         resolved_cluster_ids = FrameSelectionHelper.resolve_cluster_ids(
             cluster_data, cluster_ids, clustering_name
         )
 
-        # Select frames using helper
-        frame_indices = FrameSelectionHelper.select_frames_by_cluster(
-            labels, resolved_cluster_ids
+        # Trajectory-specific frame selection using new helper
+        trajectory_frames = FrameSelectionHelper.select_frames_by_cluster(
+            labels, resolved_cluster_ids, frame_mapping, stride
         )
 
-        # Update selector indices
-        self._update_selector_indices(selector_data, frame_indices, mode)
+        # Update selector indices with trajectory-specific data
+        self._update_selector_indices(selector_data, trajectory_frames, mode)
 
         # Build and store criteria using helper
+        n_frames = sum(len(frames) for frames in trajectory_frames.values())
         criteria = CriteriaBuilderHelper.build_cluster_criteria(
-            clustering_name, cluster_ids, resolved_cluster_ids, len(frame_indices)
+            clustering_name, cluster_ids, resolved_cluster_ids, n_frames
         )
         criteria["mode"] = mode  # Add mode to criteria
+        criteria["stride"] = stride  # Add stride to criteria
 
         # Use appropriate criteria method based on mode and existing data
         selector_data.append_selection_criteria(criteria)
@@ -314,11 +334,25 @@ class DataSelectorManager:
         self,
         pipeline_data,
         name: str,
-        indices: List[int],
+        trajectory_indices: Union[Dict[int, List[int]], Dict[str, List[int]], Dict[int, str], Dict[str, str]],
         mode: str = "add",
     ) -> None:
         """
-        Select frames by explicit frame indices.
+        Select frames by explicit trajectory-specific frame indices.
+
+        Warning:
+        --------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.data_selector.select_by_indices("custom_frames", {0: [10, 20], 1: [5, 15]})  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = DataSelectorManager()
+        >>> manager.select_by_indices(pipeline_data, "custom_frames", {0: [10, 20], 1: [5, 15]})  # pipeline_data required
 
         Parameters:
         -----------
@@ -326,26 +360,69 @@ class DataSelectorManager:
             Pipeline data object
         name : str
             Name of the data selector to populate
-        indices : List[int]
-            List of frame indices to select
+        trajectory_indices : Dict[traj_selection, frame_selection]
+            Dictionary mapping trajectory selectors to frame specifications.
+            
+            traj_selection:
+                - int: trajectory index (0, 1, 2...)
+                - str: trajectory name ("system_A"), tag ("tag:biased"), pattern ("system_*")
+                - Can resolve to multiple trajectories (e.g., tags apply frames to all matching)
+            
+            frame_selection:
+                - int: single frame (42)
+                - List[int]: explicit frames ([10, 20, 30])
+                - str: various formats:
+                    * Single: "42"
+                    * Range: "10-20" → [10, 11, ..., 20]
+                    * Comma list: "10,20,30" → [10, 20, 30]
+                    * Combined: "10-20,30-40,50" → [10...20, 30...40, 50]
+                    * All: "all" → all frames in trajectory
+                - dict: with stride support:
+                    * {"frames": frame_selection, "stride": N}
+                    * stride = minimum distance between consecutive frames
+                    * Example: {"frames": "0-100", "stride": 10} → [0, 10, 20, ..., 100]
         mode : str, default="add"
             Selection mode: "add" (union), "subtract" (difference), "intersect" (intersection)
 
         Returns:
         --------
         None
-            Updates DataSelectorData with specified frame indices
+            Updates DataSelectorData with specified trajectory frame indices
 
         Examples:
         ---------
-        >>> # Add specific frame indices
+        >>> # Direct trajectory-specific selection
         >>> manager.select_by_indices(
-        ...     pipeline_data, "custom_frames", [0, 10, 20, 100, 200], mode="add"
+        ...     pipeline_data, "custom_frames", 
+        ...     {0: [10, 20, 30], 1: [5, 15, 25]}, mode="add"
         ... )
 
-        >>> # Remove specific frame indices
+        >>> # Combined ranges
         >>> manager.select_by_indices(
-        ...     pipeline_data, "my_frames", [5, 15, 25], mode="subtract"
+        ...     pipeline_data, "complex_frames",
+        ...     {0: "10-20,30-40,50", "system_A": "100-200"}, mode="add"
+        ... )
+
+        >>> # All frames from tagged trajectories
+        >>> manager.select_by_indices(
+        ...     pipeline_data, "all_biased",
+        ...     {"tag:biased": "all"}, mode="add"
+        ... )
+
+        >>> # With stride for sparse sampling
+        >>> manager.select_by_indices(
+        ...     pipeline_data, "sparse_frames",
+        ...     {0: {"frames": "0-1000", "stride": 50}}, mode="add"
+        ... )
+
+        >>> # Complex mixed example
+        >>> manager.select_by_indices(
+        ...     pipeline_data, "mixed_selection",
+        ...     {
+        ...         "system_A": {"frames": "10-20,100-200", "stride": 5},
+        ...         "tag:biased": "all",
+        ...         1: [42, 84, 126]
+        ...     }, mode="add"
         ... )
         """
         # Validation using helper
@@ -353,11 +430,17 @@ class DataSelectorManager:
 
         selector_data = pipeline_data.data_selector_data[name]
         
-        # Update selector indices
-        self._update_selector_indices(selector_data, indices, mode)
+        # Parse input to trajectory-specific format using helper
+        trajectory_frames = FrameSelectionHelper.select_frames_by_indices(
+            trajectory_indices, pipeline_data.trajectory_data
+        )
+        
+        # Update selector indices with trajectory-specific data
+        self._update_selector_indices(selector_data, trajectory_frames, mode)
 
         # Build and store criteria using helper
-        criteria = CriteriaBuilderHelper.build_indices_criteria(indices, len(indices))
+        n_frames = sum(len(frames) for frames in trajectory_frames.values())
+        criteria = CriteriaBuilderHelper.build_indices_criteria(trajectory_frames, n_frames)
         criteria["mode"] = mode  # Add mode to criteria
 
         # Use appropriate criteria method based on mode and existing data
@@ -386,7 +469,7 @@ class DataSelectorManager:
         >>> print(f"Selected {info['n_frames']} frames")
         >>> print(f"Selection type: {info['selection_type']}")
         """
-        self._validate_selector_exists(pipeline_data, name)
+        FrameSelectionHelper.validate_selector_exists(pipeline_data, name)
         selector_data = pipeline_data.data_selector_data[name]
         return selector_data.get_selection_info()
 
@@ -445,7 +528,7 @@ class DataSelectorManager:
         ---------
         >>> manager.clear_selector(pipeline_data, "my_selection")
         """
-        self._validate_selector_exists(pipeline_data, name)
+        FrameSelectionHelper.validate_selector_exists(pipeline_data, name)
         pipeline_data.data_selector_data[name].clear_selection()
 
     def remove_selector(self, pipeline_data, name: str) -> None:
@@ -468,27 +551,25 @@ class DataSelectorManager:
         ---------
         >>> manager.remove_selector(pipeline_data, "old_selection")
         """
-        self._validate_selector_exists(pipeline_data, name)
         FrameSelectionHelper.validate_selector_exists(pipeline_data, name)
         del pipeline_data.data_selector_data[name]
 
     # Private helper methods
     
     def _update_selector_indices(
-        self, selector_data, frame_indices: List[int], mode: str
+        self, selector_data, trajectory_frames: Dict[int, List[int]], mode: str
     ) -> None:
         """
-        Update selector indices based on mode.
+        Update selector with trajectory-specific frame indices based on mode.
         
-        Helper method that handles frame index updates for different modes:
-        add (union), subtract (difference), and intersect (intersection).
+        IMPORTANT: Automatically removes duplicates when storing frames.
         
         Parameters:
         -----------
         selector_data : DataSelectorData
             Selector data object to update
-        frame_indices : List[int]
-            Frame indices for the operation
+        trajectory_frames : Dict[int, List[int]]
+            Dictionary mapping trajectory indices to frame indices
         mode : str
             Operation mode: "add", "subtract", or "intersect"
             
@@ -497,50 +578,68 @@ class DataSelectorManager:
         None
             Updates selector_data in-place
         """
-        current_indices = set(selector_data.get_frame_indices())
-        new_indices = set(frame_indices)
+        current = selector_data.get_trajectory_frames()
         
         if mode == "add":
-            # Union: add new indices to existing
-            if not current_indices:
-                # First operation - just set the indices
-                result_indices = new_indices
-            else:
-                result_indices = current_indices | new_indices
+            result = self._union_frames(current, trajectory_frames)
         elif mode == "subtract":
-            # Difference: remove new indices from existing
-            result_indices = current_indices - new_indices
+            result = self._subtract_frames(current, trajectory_frames)
         elif mode == "intersect":
-            # Intersection: keep only common indices
-            if not current_indices:
-                # If no existing indices, intersection is empty
-                result_indices = set()
-            else:
-                result_indices = current_indices & new_indices
+            result = self._intersect_frames(current, trajectory_frames)
         else:
-            raise ValueError(f"Invalid mode '{mode}'. Valid modes: 'add', 'subtract', 'intersect'")
+            raise ValueError(f"Invalid mode '{mode}'. Valid: 'add', 'subtract', 'intersect'")
         
-        # Update the selector with sorted indices
-        selector_data.set_frame_indices(sorted(list(result_indices)))
+        # Store with automatic duplicate removal
+        selector_data.set_trajectory_frames(result)
+    
+    def _union_frames(self, current, new_frames):
+        """
+        Union of frame sets per trajectory.
+        Automatically removes duplicates and sorts.
+        """
+        result = current.copy()
+        
+        for traj_idx, frames in new_frames.items():
+            if traj_idx in result:
+                # Merge with existing, remove duplicates, sort
+                combined = set(result[traj_idx]) | set(frames)
+                result[traj_idx] = sorted(list(combined))
+            else:
+                # New trajectory, ensure no duplicates and sorted
+                result[traj_idx] = sorted(list(set(frames)))
+        
+        return result
+    
+    def _subtract_frames(self, current, new_frames):
+        """
+        Subtract frame sets per trajectory.
+        Result is always sorted with no duplicates.
+        """
+        result = current.copy()
+        
+        for traj_idx, frames in new_frames.items():
+            if traj_idx in result:
+                remaining = set(result[traj_idx]) - set(frames)
+                if remaining:
+                    result[traj_idx] = sorted(list(remaining))
+                else:
+                    # No frames left, remove trajectory
+                    del result[traj_idx]
+        
+        return result
+    
+    def _intersect_frames(self, current, new_frames):
+        """
+        Intersect frame sets per trajectory.
+        Result is always sorted with no duplicates.
+        """
+        result = {}
+        
+        for traj_idx in current:
+            if traj_idx in new_frames:
+                common = set(current[traj_idx]) & set(new_frames[traj_idx])
+                if common:
+                    result[traj_idx] = sorted(list(common))
+        
+        return result
 
-    def _validate_selector_exists(self, pipeline_data, name: str) -> None:
-        """
-        Validate that a data selector with given name exists.
-        
-        Parameters:
-        -----------
-        pipeline_data : PipelineData
-            Pipeline data object containing selector data
-        name : str
-            Name of the selector to validate
-            
-        Returns:
-        --------
-        None
-            Method returns nothing, raises ValueError if selector not found
-        """
-        if name not in pipeline_data.data_selector_data:
-            available = list(pipeline_data.data_selector_data.keys())
-            raise ValueError(
-                f"Data selector '{name}' not found. Available selectors: {available}"
-            )

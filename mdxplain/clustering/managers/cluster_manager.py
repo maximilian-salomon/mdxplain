@@ -236,7 +236,7 @@ class ClusterManager:
 
     def _get_decomposition_data(self, pipeline_data, decomposition_name):
         """
-        Retrieve decomposition data matrix for clustering.
+        Retrieve decomposition data matrix and frame mapping for clustering.
 
         Uses the new simplified approach where decompositions are stored
         with selection_name as the key (not selection_name_decomposition_type).
@@ -250,8 +250,8 @@ class ClusterManager:
 
         Returns:
         --------
-        numpy.ndarray
-            Decomposition data matrix for clustering
+        tuple
+            Tuple of (data_matrix, frame_mapping) for clustering
 
         Raises:
         -------
@@ -265,17 +265,21 @@ class ClusterManager:
 
         decomposition_data = pipeline_data.get_decomposition(decomposition_name)
         data_matrix = decomposition_data.data
+        frame_mapping = decomposition_data.get_frame_mapping()
 
         if data_matrix is None:
             raise ValueError(
                 f"Decomposition data matrix is None for selection '{decomposition_name}'"
             )
 
-        return data_matrix
+        if frame_mapping is None:
+            raise ValueError(f"Decomposition '{decomposition_name}' has no frame mapping")
 
-    def _get_feature_selection_data(self, pipeline_data, selection_name):
+        return data_matrix, frame_mapping
+
+    def _get_feature_selection_data(self, pipeline_data, selection_name, data_selector_name=None):
         """
-        Retrieve feature selection data matrix for clustering.
+        Retrieve feature selection data matrix and frame mapping for clustering.
 
         Parameters:
         -----------
@@ -283,11 +287,14 @@ class ClusterManager:
             Trajectory data object containing feature selections
         selection_name : str
             Name of the feature selection
+        data_selector_name : str, optional
+            Name of DataSelector to apply frame filtering.
+            If None, uses all frames from the selection.
 
         Returns:
         --------
-        numpy.ndarray
-            Feature selection data matrix for clustering
+        tuple
+            Tuple of (data_matrix, frame_mapping) for clustering
 
         Raises:
         -------
@@ -295,18 +302,26 @@ class ClusterManager:
             If feature selection data is not found or invalid
         """
         pipeline_data.validate_selection_exists(selection_name)
-        data_matrix = pipeline_data.get_selected_data(selection_name)
+        
+        # Get data with frame mapping
+        data_matrix, frame_mapping = pipeline_data.get_selected_data(
+            selection_name, data_selector_name, return_frame_mapping=True
+        )
 
         if data_matrix is None:
             raise ValueError(
                 f"Feature selection data matrix is None for selection '{selection_name}'"
             )
+        if frame_mapping is None:
+            raise ValueError(
+                f"Feature selection '{selection_name}' has no frame mapping"
+            )
 
-        return data_matrix
+        return data_matrix, frame_mapping
 
-    def _get_data_matrix(self, pipeline_data, name, use_decomposed):
+    def _get_data_matrix(self, pipeline_data, name, use_decomposed, data_selector_name=None):
         """
-        Retrieve data matrix for clustering based on use_decomposed flag.
+        Retrieve data matrix and frame mapping for clustering based on use_decomposed flag.
 
         Parameters:
         -----------
@@ -316,11 +331,15 @@ class ClusterManager:
             Name to select data
         use_decomposed : bool
             Whether to use decomposition data (True) or feature selection data (False)
-
+        data_selector_name : str, optional
+            Name of DataSelector to apply frame filtering before clustering.
+            If None, uses all frames from the selection.
+            Only applies if use_decomposed=False
+    
         Returns:
         --------
-        numpy.ndarray
-            Data matrix for clustering
+        tuple
+            Tuple of (data_matrix, frame_mapping) for clustering
 
         Raises:
         -------
@@ -330,7 +349,7 @@ class ClusterManager:
         if use_decomposed:
             return self._get_decomposition_data(pipeline_data, name)
         else:
-            return self._get_feature_selection_data(pipeline_data, name)
+            return self._get_feature_selection_data(pipeline_data, name, data_selector_name)
 
     def add(
         self,
@@ -339,6 +358,7 @@ class ClusterManager:
         cluster_type,
         use_decomposed=True,
         cluster_name=None,
+        data_selector_name=None,
         force=False,
         override_cache=False,
     ):
@@ -377,6 +397,10 @@ class ClusterManager:
             default=True
         cluster_name : str, optional
             Custom name for storing clustering results. If None, defaults to str(cluster_type)
+        data_selector_name : str, optional
+            Name of DataSelector to apply frame filtering before clustering.
+            If None, uses all frames from the selection.
+            Only applies if use_decomposed=False
         force : bool, optional
             Whether to force recomputation if clustering already exists, default=False
         override_cache : bool, optional
@@ -397,10 +421,16 @@ class ClusterManager:
         ...     use_decomposed=True, cluster_name="my_dbscan"
         ... )
 
-        >>> # Cluster feature selection with default name
+        >>> # Cluster feature selection with default name  
         >>> manager.add(
         ...     pipeline_data, "distance_selection", cluster_type.HDBSCAN(min_cluster_size=10),
         ...     use_decomposed=False
+        ... )
+        
+        >>> # Cluster with data selector (only specific frames)
+        >>> manager.add(
+        ...     pipeline_data, "distance_selection", cluster_type.DBSCAN(eps=0.3),
+        ...     data_selector_name="folded_frames", use_decomposed=False
         ... )
 
         Raises:
@@ -420,13 +450,13 @@ class ClusterManager:
 
         self._check_cluster_existence(pipeline_data, cluster_name, force)
 
-        data_matrix = self._prepare_data_for_clustering(
-            pipeline_data, selection_name, use_decomposed
+        data_matrix, frame_mapping = self._prepare_data_for_clustering(
+            pipeline_data, selection_name, use_decomposed, data_selector_name
         )
         cluster_labels, metadata = self._perform_clustering(cluster_type, data_matrix)
 
         cluster_data = self._create_cluster_data(
-            cluster_type, cluster_labels, metadata, selection_name
+            cluster_type, cluster_labels, metadata, selection_name, frame_mapping
         )
         self._store_clustering_results(pipeline_data, cluster_name, cluster_data)
 
@@ -470,10 +500,10 @@ class ClusterManager:
         print(f"Cleared cache directory: {cache_path}")
 
     def _prepare_data_for_clustering(
-        self, pipeline_data, selection_name, use_decomposed
+        self, pipeline_data, selection_name, use_decomposed, data_selector_name=None
     ):
         """
-        Prepare and validate data matrix for clustering.
+        Prepare and validate data matrix for clustering with frame mapping.
 
         Parameters:
         -----------
@@ -483,17 +513,21 @@ class ClusterManager:
             Name of the selection to prepare data for
         use_decomposed : bool
             Whether to use decomposition data or feature selection data
-
+        data_selector_name : str, optional
+            Name of DataSelector to apply frame filtering before clustering.
+            If None, uses all frames from the selection.
+            Only applies if use_decomposed=False
+        
         Returns:
         --------
-        numpy.ndarray
-            Validated data matrix ready for clustering
+        tuple
+            Tuple of (data_matrix, frame_mapping) ready for clustering
         """
-        data_matrix = self._get_data_matrix(
-            pipeline_data, selection_name, use_decomposed
+        data_matrix, frame_mapping = self._get_data_matrix(
+            pipeline_data, selection_name, use_decomposed, data_selector_name
         )
         self._validate_data_matrix(data_matrix, selection_name)
-        return data_matrix
+        return data_matrix, frame_mapping
 
     def _perform_clustering(self, cluster_type, data_matrix):
         """
@@ -544,10 +578,10 @@ class ClusterManager:
             )
 
     def _create_cluster_data(
-        self, cluster_type, cluster_labels, metadata, selection_name
+        self, cluster_type, cluster_labels, metadata, selection_name, frame_mapping
     ):
         """
-        Create ClusterData object with results.
+        Create ClusterData object with results and frame mapping.
 
         Parameters:
         -----------
@@ -559,11 +593,13 @@ class ClusterManager:
             Dictionary containing clustering metadata
         selection_name : str
             Name of the selection that was clustered
+        frame_mapping : Dict[int, tuple]
+            Mapping from global frame index to (trajectory_index, local_frame_index)
 
         Returns:
         --------
         ClusterData
-            Initialized ClusterData object with results
+            Initialized ClusterData object with results and frame mapping
         """
         cache_path = DataUtils.get_cache_file_path(selection_name, self.cache_dir)
         cluster_data = ClusterData(
@@ -571,6 +607,7 @@ class ClusterManager:
         )
         cluster_data.labels = cluster_labels
         cluster_data.metadata = metadata
+        cluster_data.set_frame_mapping(frame_mapping)  # FRAME MAPPING SPEICHERN!
         return cluster_data
 
     def _store_clustering_results(self, pipeline_data, cluster_name, cluster_data):

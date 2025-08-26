@@ -23,7 +23,6 @@
 from .process_helper.trajectory_process_helper import TrajectoryProcessHelper
 from .process_helper.trajectory_load_helper import TrajectoryLoadHelper
 from .process_helper.selection_resolve_helper import SelectionResolveHelper
-from .validation_helper.consistency_check_helper import ConsistencyCheckHelper
 from .validation_helper.trajectory_validation_helper import TrajectoryValidationHelper
 from .metadata_helper.nomenclature_helper import NomenclatureHelper
 from .metadata_helper.tag_helper import TagHelper
@@ -31,8 +30,7 @@ from .metadata_helper.tag_helper import TagHelper
 __all__ = [
     "TrajectoryProcessHelper",
     "TrajectoryLoadHelper",
-    "SelectionResolveHelper",
-    "ConsistencyCheckHelper",
+    "SelectionResolveHelper", 
     "TrajectoryValidationHelper",
     "NomenclatureHelper",
     "TagHelper",

@@ -30,6 +30,7 @@ from typing import List, Union
 
 from ..entities.feature_selector_data import FeatureSelectorData
 from ..helpers.feature_selector_parse_core_helper import FeatureSelectorParseCoreHelper
+from ..helpers.common_denominator_helper import CommonDenominatorHelper
 from ...utils.data_utils import DataUtils
 
 
@@ -116,6 +117,9 @@ class FeatureSelectorManager:
         feature_type: Union[str, object],
         selection: str = "all",
         use_reduced: bool = False,
+        common_denominator: bool = True,
+        traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all",
+        require_all_partners: bool = False,
     ) -> None:
         """
         Add a feature selection to a named selector configuration.
@@ -147,9 +151,21 @@ class FeatureSelectorManager:
         feature_type : str or object
             Feature type to select from (e.g., "distances", "contacts")
         selection : str, default="all"
-            Selection criteria string (e.g., "res ALA", "resid 123-140", "all")
+            Selection criteria string (e.g., "res ALA", "resid 123-140", "7x50-8x50", "all")
         use_reduced : bool, default=False
             Whether to use reduced data (True) or original data (False)
+        common_denominator : bool, default=True
+            Whether to find common features across trajectories in traj_selection.
+            If True, only features present in ALL selected trajectories are included.
+            If False, union of all features from selected trajectories is used.
+        traj_selection : int, str, list, or "all", default="all"
+            Selection of trajectories to process:
+            - int: trajectory index
+            - str: trajectory name, tag (prefixed with "tag:"), or "all"
+            - list: list of indices/names/tags
+            - "all": all trajectories (default)
+        require_all_partners : bool, default=False
+            For pairwise features, require all partners to be present in selection
 
         Returns:
         --------
@@ -174,14 +190,16 @@ class FeatureSelectorManager:
         feature_key = DataUtils.get_type_key(feature_type)
         selector_data = pipeline_data.selected_feature_data[name]
 
-        selector_data.add_selection(feature_key, selection, use_reduced)
+        selector_data.add_selection(feature_key, selection, use_reduced, 
+                                   common_denominator, traj_selection, require_all_partners)
 
         print(
             f"Added to selector '{name}': {feature_key} -> '{selection}' "
-            f"(use_reduced={use_reduced})"
+            f"(use_reduced={use_reduced}, common_denominator={common_denominator}, "
+            f"traj_selection={traj_selection}, require_all_partners={require_all_partners})"
         )
 
-    def select(self, pipeline_data, name: str) -> None:
+    def select(self, pipeline_data, name: str, reference_traj: Union[int, str] = 0) -> None:
         """
         Apply a named selector configuration to create selected feature matrix.
 
@@ -197,11 +215,15 @@ class FeatureSelectorManager:
         Pipeline mode:
         >>> pipeline = PipelineManager()
         >>> pipeline.feature_selector.select("my_analysis")  # NO pipeline_data parameter
+        >>> # Or with specific reference trajectory
+        >>> pipeline.feature_selector.select("my_analysis", reference_traj=2)
 
         Standalone mode:
         >>> pipeline_data = PipelineData()
         >>> manager = FeatureSelectorManager()
         >>> manager.select(pipeline_data, "my_analysis")  # pipeline_data required
+        >>> # Or with specific reference trajectory
+        >>> manager.select(pipeline_data, "my_analysis", reference_traj="system_A")
 
         Parameters:
         -----------
@@ -209,11 +231,13 @@ class FeatureSelectorManager:
             Pipeline data object containing features and selector configurations
         name : str
             Name of the feature selector configuration to apply
+        reference_traj : Union[int, str], default=0
+            Trajectory index or name to use as reference for metadata extraction
 
         Returns:
         --------
         None
-            Applies selections and stores results in pipeline_data.selected_data
+            Applies selections and stores results with reference trajectory info
 
         Raises:
         -------
@@ -240,10 +264,15 @@ class FeatureSelectorManager:
             print(f"Warning: No selections configured for selector '{name}'")
             return
 
+        reference_traj = pipeline_data.trajectory_data.get_trajectory_indices(reference_traj)[0]
+
+        # Store reference trajectory in selector data
+        selector_data.set_reference_trajectory(reference_traj)
+
         self._validate_features_exist(pipeline_data, selector_data)
         self._process_all_selections(pipeline_data, selector_data)
 
-        print(f"Applied feature selector '{name}' successfully")
+        print(f"Applied feature selector '{name}' with reference trajectory {reference_traj} successfully")
 
     def list_selectors(self, pipeline_data) -> List[str]:
         """
@@ -346,12 +375,7 @@ class FeatureSelectorManager:
         >>> manager.remove_selector(pipeline_data, "old_analysis")
         """
         self._validate_selector_exists(pipeline_data, name)
-
         del pipeline_data.selected_feature_data[name]
-
-        # Note: Results are now stored directly in the FeatureSelectorData object
-        # and will be removed automatically with the object
-
         print(f"Removed feature selector: '{name}'")
 
     def _validate_selector_exists(self, pipeline_data, name: str) -> None:
@@ -422,7 +446,7 @@ class FeatureSelectorManager:
         self, feature_key: str, selections: List[dict], pipeline_data
     ) -> None:
         """
-        Validate that required data types are available for a feature.
+        Validate that required data types are available for ALL relevant trajectories.
 
         Parameters:
         -----------
@@ -436,26 +460,92 @@ class FeatureSelectorManager:
         Raises:
         -------
         ValueError
-            If required data types are not available
+            If required data types are not available for any relevant trajectory
         """
-        feature_data = pipeline_data.feature_data[feature_key]
+        feature_data_dict = pipeline_data.feature_data[feature_key]
 
         for selection_dict in selections:
             use_reduced = selection_dict["use_reduced"]
+            traj_selection = selection_dict.get("traj_selection", "all")
+            
+            # Get trajectory indices and validate them
+            traj_indices = pipeline_data.trajectory_data.get_trajectory_indices(traj_selection)
+            missing_trajectories = self._check_trajectories_for_data_type(
+                feature_data_dict, traj_indices, use_reduced
+            )
+            
+            # Report errors with trajectory-specific information
+            if missing_trajectories:
+                self._raise_missing_data_error(feature_key, missing_trajectories, use_reduced)
+
+    def _check_trajectories_for_data_type(
+        self, feature_data_dict: dict, traj_indices: List[int], use_reduced: bool
+    ) -> List[int]:
+        """
+        Check which trajectories are missing the required data type.
+
+        Parameters:
+        -----------
+        feature_data_dict : dict
+            Dictionary mapping trajectory indices to FeatureData objects
+        traj_indices : List[int]
+            Trajectory indices to check
+        use_reduced : bool
+            Whether to check for reduced data (True) or original data (False)
+
+        Returns:
+        --------
+        List[int]
+            List of trajectory indices that are missing the required data type
+        """
+        missing_trajectories = []
+        
+        for traj_idx in traj_indices:
+            if traj_idx not in feature_data_dict:
+                missing_trajectories.append(traj_idx)
+                continue
+                
+            feature_data = feature_data_dict[traj_idx]
+            
             if use_reduced:
                 if (
                     not hasattr(feature_data, "reduced_data")
                     or feature_data.reduced_data is None
                 ):
-                    raise ValueError(
-                        f"Reduced data not available for feature '{feature_key}'. "
-                        "Run reduction first."
-                    )
+                    missing_trajectories.append(traj_idx)
             else:
                 if not hasattr(feature_data, "data") or feature_data.data is None:
-                    raise ValueError(
-                        f"Original data not available for feature '{feature_key}'."
-                    )
+                    missing_trajectories.append(traj_idx)
+        
+        return missing_trajectories
+
+    def _raise_missing_data_error(
+        self, feature_key: str, missing_trajectories: List[int], use_reduced: bool
+    ) -> None:
+        """
+        Raise error with specific information about missing data.
+
+        Parameters:
+        -----------
+        feature_key : str
+            Feature key that has missing data
+        missing_trajectories : List[int]
+            Trajectory indices that are missing the data
+        use_reduced : bool
+            Whether reduced or original data is missing
+
+        Raises:
+        -------
+        ValueError
+            Always raised with descriptive error message
+        """
+        data_type = "reduced" if use_reduced else "original"
+        error_msg = (
+            f"{data_type.capitalize()} data not available for feature '{feature_key}' "
+            f"in trajectories {missing_trajectories}. "
+            f"{'Run reduction first.' if use_reduced else 'Feature computation may have failed.'}"
+        )
+        raise ValueError(error_msg)
 
     def _process_all_selections(
         self, pipeline_data, selector_data: FeatureSelectorData
@@ -476,12 +566,20 @@ class FeatureSelectorManager:
                 pipeline_data, feature_key, selections
             )
             selector_data.store_results(feature_key, processed_indices)
+        
+        # Calculate and store total number of columns
+        total_columns = self._calculate_total_columns(selector_data)
+        selector_data.set_n_columns(total_columns)
 
     def _process_feature_selections(
         self, pipeline_data, feature_key: str, selections: List[dict]
     ) -> dict:
         """
-        Process all selections for a single feature.
+        Process all selections for a single feature per trajectory.
+        
+        Each selection is processed individually. If a selection has common_denominator=True,
+        the CommonDenominatorHelper is applied only to that specific selection.
+        All results are then combined using union.
 
         Parameters:
         -----------
@@ -495,26 +593,158 @@ class FeatureSelectorManager:
         Returns:
         --------
         dict
-            Dictionary with indices and use_reduced flags
+            Dictionary with trajectory-specific indices and use_reduced flags:
+            {"trajectory_indices": {traj_idx: {"indices": [...], "use_reduced": [...]}}}
         """
-        all_column_indices, use_reduced_indices = self._collect_indices_for_feature(
-            pipeline_data, feature_key, selections
-        )
+        all_trajectory_results = {}
 
-        unique_indices, unique_use_reduced = self._remove_duplicate_indices(
-            all_column_indices, use_reduced_indices
-        )
+        # Process each selection individually
+        for selection_dict in selections:
+            selection_trajectory_results = self._process_single_selection(
+                pipeline_data, feature_key, selection_dict
+            )
+            
+            # Merge results from this selection into overall results
+            for traj_idx, result in selection_trajectory_results.items():
+                if traj_idx not in all_trajectory_results:
+                    all_trajectory_results[traj_idx] = {
+                        "indices": [],
+                        "use_reduced": [],
+                    }
+                
+                # Add indices from this selection
+                all_trajectory_results[traj_idx]["indices"].extend(result["indices"])
+                all_trajectory_results[traj_idx]["use_reduced"].extend(result["use_reduced"])
+        
+        # Remove duplicates for each trajectory
+        for traj_idx in all_trajectory_results:
+            unique_indices, unique_use_reduced = self._remove_duplicate_indices(
+                all_trajectory_results[traj_idx]["indices"],
+                all_trajectory_results[traj_idx]["use_reduced"]
+            )
+            all_trajectory_results[traj_idx] = {
+                "indices": unique_indices,
+                "use_reduced": unique_use_reduced,
+            }
+        
+        return {"trajectory_indices": all_trajectory_results}
+    
+    def _process_single_selection(
+        self, pipeline_data, feature_key: str, selection_dict: dict
+    ) -> dict:
+        """
+        Process a single selection and apply common_denominator if needed.
 
-        return {
-            "indices": unique_indices,
-            "use_reduced": unique_use_reduced,
-        }
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data object
+        feature_key : str
+            Feature key
+        selection_dict : dict
+            Single selection configuration
 
-    def _collect_indices_for_feature(
-        self, pipeline_data, feature_key: str, selections: List[dict]
+        Returns:
+        --------
+        dict
+            Dictionary with trajectory-specific indices and use_reduced flags
+        """
+        trajectory_results = {}
+        
+        # Get all trajectories that have this feature
+        feature_data_dict = pipeline_data.feature_data[feature_key]
+        
+        # Get trajectory selection for this specific selection
+        traj_selection = selection_dict.get("traj_selection", "all")
+        selected_traj_indices = pipeline_data.trajectory_data.get_trajectory_indices(traj_selection)
+        
+        # Process each trajectory
+        for traj_idx in feature_data_dict.keys():
+            # Skip if this selection doesn't apply to this trajectory
+            if traj_idx not in selected_traj_indices:
+                continue
+                
+            # Get indices for this trajectory and selection
+            feature_data = feature_data_dict[traj_idx]
+            selection_indices = self._get_indices_for_selection(
+                feature_data, selection_dict, feature_key
+            )
+            
+            if selection_indices:  # Only store if there are indices
+                trajectory_results[traj_idx] = {
+                    "indices": selection_indices,
+                    "use_reduced": [selection_dict["use_reduced"]] * len(selection_indices),
+                }
+        
+        # Apply common denominator filtering ONLY if this selection requires it
+        if selection_dict.get("common_denominator", False):
+            trajectory_results = CommonDenominatorHelper.apply_common_denominator(
+                pipeline_data, feature_key, trajectory_results
+            )
+        
+        return trajectory_results
+    
+    def _calculate_total_columns(self, selector_data) -> int:
+        """
+        Calculate total number of columns in final matrix.
+        
+        Validates that all trajectories have the same number of columns for each feature
+        to ensure consistent matrix construction.
+        
+        Parameters:
+        -----------
+        selector_data : FeatureSelectorData
+            Selector data with stored results
+            
+        Returns:
+        --------
+        int
+            Total number of columns across all features and trajectories
+            
+        Raises:
+        -------
+        ValueError
+            If trajectories have inconsistent column counts for any feature
+        """
+        total_columns = 0
+        all_results = selector_data.get_all_results()
+        
+        for feature_type, selection_info in all_results.items():
+            trajectory_indices_data = selection_info.get("trajectory_indices", {})
+            
+            if not trajectory_indices_data:
+                continue
+            
+            
+            # Check that all trajectories have same number of columns
+            column_counts = []
+            for traj_idx, traj_data in trajectory_indices_data.items():
+                n_cols = len(traj_data.get("indices", []))
+                column_counts.append((traj_idx, n_cols))
+            
+            if not column_counts:
+                continue
+            
+            # Validate consistency across trajectories
+            first_count = column_counts[0][1]
+            inconsistent = [(idx, count) for idx, count in column_counts if count != first_count]
+            
+            if inconsistent:
+                raise ValueError(
+                    f"Feature '{feature_type}' has inconsistent column counts across trajectories. "
+                    f"Expected {first_count} columns, but found: {inconsistent}. "
+                    f"Use common_denominator=True or ensure all trajectories have same features."
+                )
+            
+            total_columns += first_count
+        
+        return total_columns
+
+    def _collect_indices_for_trajectory(
+        self, pipeline_data, feature_key: str, selections: List[dict], traj_idx: int
     ) -> tuple:
         """
-        Collect all indices for a feature from all selections.
+        Collect indices for a specific trajectory from all selections.
 
         Parameters:
         -----------
@@ -524,29 +754,88 @@ class FeatureSelectorManager:
             Feature key
         selections : List[dict]
             List of selection configurations
+        traj_idx : int
+            Trajectory index to collect indices for
 
         Returns:
         --------
         tuple
-            Tuple of (all_column_indices, use_reduced_indices)
+            Tuple of (indices, use_reduced_flags) for this trajectory
         """
-        all_column_indices: List[int] = []
-        use_reduced_indices: List[int] = []
-
+        trajectory_indices = []
+        trajectory_use_reduced = []
+        
+        feature_data = pipeline_data.feature_data[feature_key][traj_idx]
+        
         for selection_dict in selections:
-            indices = self._get_column_indices_for_feature(
-                pipeline_data,
-                feature_key,
-                selection_dict["selection"],
-                selection_dict["use_reduced"],
+            traj_selection = selection_dict.get("traj_selection", "all")
+            
+            # Check if this selection applies to this trajectory
+            selected_traj_indices = pipeline_data.trajectory_data.get_trajectory_indices(traj_selection)
+            if traj_idx not in selected_traj_indices:
+                continue  # Skip this selection for this trajectory
+            
+            # Get indices for this trajectory
+            selection_indices = self._get_indices_for_selection(
+                feature_data, selection_dict, feature_key
             )
-            start_idx = len(all_column_indices)
-            all_column_indices.extend(indices)
+            
+            # Add to trajectory results
+            for idx in selection_indices:
+                trajectory_indices.append(idx)
+                trajectory_use_reduced.append(selection_dict["use_reduced"])
+        
+        return trajectory_indices, trajectory_use_reduced
 
-            if selection_dict["use_reduced"]:
-                use_reduced_indices.extend(range(start_idx, len(all_column_indices)))
+    def _get_indices_for_selection(
+        self, feature_data, selection_dict: dict, feature_key: str
+    ) -> List[int]:
+        """
+        Get indices for a selection on a specific trajectory's feature data.
 
-        return all_column_indices, use_reduced_indices
+        Parameters:
+        -----------
+        feature_data : FeatureData
+            Single trajectory's feature data
+        selection_dict : dict
+            Selection configuration
+        feature_key : str
+            Feature key for error messages
+
+        Returns:
+        --------
+        List[int]
+            List of matching indices for this trajectory
+        """
+        use_reduced = selection_dict["use_reduced"]
+        selection_string = selection_dict["selection"]
+        
+        # Get appropriate metadata for this trajectory
+        if use_reduced:
+            if feature_data.reduced_feature_metadata is not None:
+                metadata = feature_data.reduced_feature_metadata
+            else:
+                raise ValueError(
+                    f"Reduced metadata not available for feature '{feature_key}'. "
+                    "Run reduction first."
+                )
+        else:
+            if feature_data.feature_metadata is not None:
+                metadata = feature_data.feature_metadata
+            else:
+                raise ValueError(
+                    f"Original metadata not available for feature '{feature_key}'."
+                )
+        
+        # Find matching indices in this trajectory's metadata       
+        features_list = metadata.get("features", [])
+        require_all_partners = selection_dict.get("require_all_partners", False)
+        matching_indices = FeatureSelectorParseCoreHelper.parse_selection(
+            selection_string, features_list, require_all_partners
+        )
+        
+        return matching_indices
+
 
     def _remove_duplicate_indices(
         self, all_column_indices: list, use_reduced_indices: list
@@ -574,113 +863,12 @@ class FeatureSelectorManager:
             if col_idx not in seen:
                 seen.add(col_idx)
                 unique_indices.append(col_idx)
-                unique_use_reduced.append(idx in use_reduced_indices)
+                unique_use_reduced.append(use_reduced_indices[idx])
 
-        return unique_indices, unique_use_reduced
+        # Sort by indices for consistent, interpretable order
+        sorted_pairs = sorted(zip(unique_indices, unique_use_reduced))
+        sorted_indices = [idx for idx, _ in sorted_pairs]
+        sorted_use_reduced = [reduced for _, reduced in sorted_pairs]
 
-    def _get_column_indices_for_feature(
-        self, pipeline_data, feature_key: str, selection_string: str, use_reduced: bool
-    ) -> List[int]:
-        """
-        Get column indices for a specific feature selection.
+        return sorted_indices, sorted_use_reduced
 
-        Parameters:
-        -----------
-        pipeline_data : PipelineData
-            Pipeline data object
-        feature_key : str
-            Feature key
-        selection_string : str
-            Selection criteria string
-        use_reduced : bool
-            Whether to use reduced data
-
-        Returns:
-        --------
-        List[int]
-            List of matching column indices
-        """
-        feature_metadata = self._get_appropriate_metadata(
-            pipeline_data, feature_key, use_reduced
-        )
-        self._validate_metadata_structure(feature_metadata, feature_key)
-        return self._parse_selection(selection_string, feature_metadata)
-
-    def _get_appropriate_metadata(
-        self, pipeline_data, feature_key: str, use_reduced: bool
-    ):
-        """
-        Get the appropriate metadata based on use_reduced flag.
-
-        Parameters:
-        -----------
-        pipeline_data : PipelineData
-            Pipeline data object
-        feature_key : str
-            Feature key
-        use_reduced : bool
-            Whether to use reduced metadata
-
-        Returns:
-        --------
-        dict
-            Feature metadata dictionary
-        """
-        feature_data = pipeline_data.feature_data[feature_key]
-
-        if use_reduced:
-            return feature_data.reduced_feature_metadata
-        else:
-            return feature_data.feature_metadata
-
-    def _validate_metadata_structure(self, feature_metadata, feature_key: str) -> None:
-        """
-        Validate that metadata has the required structure.
-
-        Parameters:
-        -----------
-        feature_metadata : dict or None
-            Feature metadata dictionary
-        feature_key : str
-            Feature key for error messages
-
-        Raises:
-        -------
-        ValueError
-            If metadata is invalid
-        """
-        if feature_metadata is None:
-            raise ValueError(
-                f"No feature metadata available for feature '{feature_key}'"
-            )
-
-        if "features" not in feature_metadata:
-            raise ValueError(
-                f"Invalid feature metadata structure for feature '{feature_key}'. "
-                f"Missing 'features' key."
-            )
-
-    def _parse_selection(
-        self, selection_string: str, feature_metadata: dict
-    ) -> List[int]:
-        """
-        Parse selection string and return matching column indices.
-
-        Parameters:
-        -----------
-        selection_string : str
-            Selection criteria string
-        feature_metadata : dict
-            Feature metadata dictionary
-
-        Returns:
-        --------
-        List[int]
-            List of matching column indices
-        """
-        if selection_string.strip().lower() == "all":
-            return list(range(len(feature_metadata["features"])))
-
-        return FeatureSelectorParseCoreHelper.parse_selection(
-            selection_string, feature_metadata["features"]
-        )

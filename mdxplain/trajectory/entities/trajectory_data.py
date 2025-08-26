@@ -29,6 +29,7 @@ management and tag metadata.
 from typing import Dict, List, Optional, Union
 
 from ...utils.data_utils import DataUtils
+from ..helper.process_helper.selection_resolve_helper import SelectionResolveHelper
 
 
 class TrajectoryData:
@@ -67,8 +68,6 @@ class TrajectoryData:
         List of trajectory names corresponding to trajectories
     trajectory_tags : dict
         Dictionary mapping trajectory indices/names to tag lists
-    frame_tag_mapping : dict
-        Dictionary mapping global frame indices to tag lists
     res_label_data : dict or None
         Residue labeling data from nomenclature systems
     """
@@ -94,8 +93,7 @@ class TrajectoryData:
         self.trajectories = []
         self.trajectory_names = []
         self.trajectory_tags: Dict[Union[int, str], List[str]] = {}
-        self.frame_tag_mapping: Dict[int, List[str]] = {}
-        self.res_label_data = None
+        self.res_label_data: Dict[int, dict] = {}
 
     def get_trajectory_tags(
         self, trajectory_id: Union[int, str]
@@ -147,30 +145,18 @@ class TrajectoryData:
         >>> traj_data.set_trajectory_tags("traj1", ["system_B", "unbiased"])
         """
         self.trajectory_tags[trajectory_id] = tags
-
-    def get_frame_tags(self, frame_index: int) -> Optional[List[str]]:
+    
+    @property
+    def n_frames_total(self) -> int:
         """
-        Get tags for a specific global frame index.
-
-        Parameters:
-        -----------
-        frame_index : int
-            Global frame index across all trajectories
-
+        Get total number of frames across all trajectories.
+        
         Returns:
         --------
-        list or None
-            List of tags for the frame, or None if not found
-
-        Examples:
-        ---------
-        >>> traj_data = TrajectoryData()
-        >>> # After frame mapping is built by TrajectoryManager
-        >>> tags = traj_data.get_frame_tags(100)
-        >>> if tags:
-        ...     print(f"Frame 100 has tags: {tags}")
+        int
+            Total number of frames
         """
-        return self.frame_tag_mapping.get(frame_index)
+        return sum(len(traj) for traj in self.trajectories)
 
     def get_trajectory_names(self) -> List[str]:
         """
@@ -361,5 +347,58 @@ class TrajectoryData:
         self.trajectories = []
         self.trajectory_names = []
         self.trajectory_tags = {}
-        self.frame_tag_mapping = {}
-        self.res_label_data = None
+        self.res_label_data: Dict[int, dict] = {}
+
+    def get_trajectory_indices(
+        self,
+        traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all"
+    ) -> List[int]:
+        """
+        Get trajectory indices based on selection criteria.
+
+        Central method for trajectory selection supporting indices, names,
+        tags, and combinations thereof. Uses SelectionResolveHelper for
+        consistent trajectory resolution across all modules.
+
+        Parameters:
+        -----------
+        traj_selection : int, str, list, or "all"
+            Selection criteria:
+            - int: trajectory index
+            - str: trajectory name, tag (prefixed with "tag:") or advanced formats:
+                * Range: "0-3", "id 0-3" → [0, 1, 2, 3]
+                * Comma list: "1,2,4,5", "id 1,2,4,5" → [1, 2, 4, 5]
+                * Single number: "7", "id 7" → [7]
+                * Pattern: "system_*" → fnmatch pattern matching
+            - list: mix of indices/names/tags/patterns
+            - "all": all trajectories
+
+        Returns:
+        --------
+        List[int]
+            List of trajectory indices matching the selection criteria
+
+        Examples:
+        ---------
+        >>> # All trajectories
+        >>> indices = traj_data.get_trajectory_indices("all")
+
+        >>> # Single trajectory by index
+        >>> indices = traj_data.get_trajectory_indices(0)
+
+        >>> # Range format
+        >>> indices = traj_data.get_trajectory_indices("0-3")  # [0, 1, 2, 3]
+
+        >>> # Comma list format
+        >>> indices = traj_data.get_trajectory_indices("1,2,4,5")  # [1, 2, 4, 5]
+
+        >>> # Pattern matching
+        >>> indices = traj_data.get_trajectory_indices("system_*")
+
+        >>> # By tag
+        >>> indices = traj_data.get_trajectory_indices("tag:system_A")
+
+        >>> # Mixed selection
+        >>> indices = traj_data.get_trajectory_indices([0, "traj1", "tag:biased"])
+        """
+        return SelectionResolveHelper.get_indices_to_process(self, traj_selection)

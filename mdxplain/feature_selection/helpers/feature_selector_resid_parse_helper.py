@@ -34,7 +34,7 @@ class FeatureSelectorResidParseHelper(FeatureSelectorNumericParseHelper):
     
     @staticmethod
     def parse_resid_category(
-        param_parts: List[str], features_list: List[list]
+        param_parts: List[str], features_list: List[list], require_all_partners: bool = False
     ) -> List[int]:
         """
         Parse 'resid' category and return matching feature indices.
@@ -46,6 +46,8 @@ class FeatureSelectorResidParseHelper(FeatureSelectorNumericParseHelper):
             List of parameter parts for residue ID selection
         features_list : List[list]
             List of features from metadata
+        require_all_partners : bool, default=False
+            If True, ALL partners must contain the residue ID
 
         Returns:
         --------
@@ -58,5 +60,5 @@ class FeatureSelectorResidParseHelper(FeatureSelectorNumericParseHelper):
             If the residue ID specification is invalid
         """
         return FeatureSelectorNumericParseHelper.parse_numeric_category(
-            param_parts, features_list, "index", "resid"
+            param_parts, features_list, "index", "resid", require_all_partners
         )
