@@ -25,7 +25,7 @@ Implements PCA computation with support for incremental processing
 for large datasets using sklearn's PCA and IncrementalPCA.
 """
 
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Any
 
 import numpy as np
 from sklearn.decomposition import PCA, IncrementalPCA
@@ -55,7 +55,7 @@ class PCACalculator(CalculatorBase):
     >>> transformed, metadata = calc.compute(large_data, n_components=50)
     """
 
-    def __init__(self, use_memmap=False, cache_path="./cache", chunk_size=10000):
+    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 10000) -> None:
         """
         Initialize PCA calculator.
 
@@ -84,7 +84,7 @@ class PCACalculator(CalculatorBase):
         super().__init__(use_memmap, cache_path, chunk_size)
         self._cache_prefix = "pca"
 
-    def compute(self, data, **kwargs) -> Tuple[np.ndarray, Dict]:
+    def compute(self, data: np.ndarray, **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Compute PCA decomposition of input data.
 
@@ -132,7 +132,7 @@ class PCACalculator(CalculatorBase):
         else:
             return self._compute_standard_pca(data, hyperparameters)
 
-    def _extract_hyperparameters(self, data, kwargs):
+    def _extract_hyperparameters(self, data: np.ndarray, kwargs: Dict[str, Any]) -> Dict[str, Any]:
         """
         Extract and validate PCA hyperparameters.
 
@@ -163,7 +163,7 @@ class PCACalculator(CalculatorBase):
             "random_state": random_state,
         }
 
-    def _compute_standard_pca(self, data, hyperparameters):
+    def _compute_standard_pca(self, data: np.ndarray, hyperparameters: Dict[str, Any]) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Compute standard PCA using sklearn.decomposition.PCA.
 
@@ -200,7 +200,7 @@ class PCACalculator(CalculatorBase):
 
         return transformed_data, metadata
 
-    def _compute_incremental_pca(self, data, hyperparameters):
+    def _compute_incremental_pca(self, data: np.ndarray, hyperparameters: Dict[str, Any]) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Compute incremental PCA using sklearn.decomposition.IncrementalPCA.
 

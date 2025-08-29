@@ -27,11 +27,17 @@ column selection. It supports selection based on tags, clusters,
 and combinations thereof.
 """
 
-from typing import List, Union, Dict, Any
+from __future__ import annotations
+
+from typing import List, Union, Dict, Any, TYPE_CHECKING
 
 from ..entities.data_selector_data import DataSelectorData
 from ..helpers.frame_selection_helper import FrameSelectionHelper
 from ..helpers.criteria_builder_helper import CriteriaBuilderHelper
+from ...utils.data_utils import DataUtils
+
+if TYPE_CHECKING:
+    from ...pipeline.entities.pipeline_data import PipelineData
 
 
 class DataSelectorManager:
@@ -65,7 +71,7 @@ class DataSelectorManager:
     >>> manager.select_by_cluster(pipeline_data, "folded_frames", "conformations", [0])
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the data selector manager.
 
@@ -76,7 +82,7 @@ class DataSelectorManager:
         """
         pass
 
-    def create(self, pipeline_data, name: str) -> None:
+    def create(self, pipeline_data: PipelineData, name: str) -> None:
         """
         Create a new data selector with given name.
 
@@ -124,7 +130,7 @@ class DataSelectorManager:
 
     def select_by_tags(
         self,
-        pipeline_data,
+        pipeline_data: PipelineData,
         name: str,
         tags: List[str],
         match_all: bool = True,
@@ -219,7 +225,7 @@ class DataSelectorManager:
 
     def select_by_cluster(
         self,
-        pipeline_data,
+        pipeline_data: PipelineData,
         name: str,
         clustering_name: str,
         cluster_ids: List[Union[int, str]],
@@ -332,7 +338,7 @@ class DataSelectorManager:
 
     def select_by_indices(
         self,
-        pipeline_data,
+        pipeline_data: PipelineData,
         name: str,
         trajectory_indices: Union[Dict[int, List[int]], Dict[str, List[int]], Dict[int, str], Dict[str, str]],
         mode: str = "add",
@@ -447,7 +453,7 @@ class DataSelectorManager:
         selector_data.append_selection_criteria(criteria)
 
 
-    def get_selection_info(self, pipeline_data, name: str) -> Dict[str, Any]:
+    def get_selection_info(self, pipeline_data: PipelineData, name: str) -> Dict[str, Any]:
         """
         Get information about a data selection.
 
@@ -473,7 +479,7 @@ class DataSelectorManager:
         selector_data = pipeline_data.data_selector_data[name]
         return selector_data.get_selection_info()
 
-    def list_selectors(self, pipeline_data) -> List[str]:
+    def list_selectors(self, pipeline_data: PipelineData) -> List[str]:
         """
         List all available data selectors.
 
@@ -494,7 +500,7 @@ class DataSelectorManager:
         """
         return list(pipeline_data.data_selector_data.keys())
 
-    def clear_selector(self, pipeline_data, name: str) -> None:
+    def clear_selector(self, pipeline_data: PipelineData, name: str) -> None:
         """
         Clear all frames and criteria from a data selector.
 
@@ -531,7 +537,7 @@ class DataSelectorManager:
         FrameSelectionHelper.validate_selector_exists(pipeline_data, name)
         pipeline_data.data_selector_data[name].clear_selection()
 
-    def remove_selector(self, pipeline_data, name: str) -> None:
+    def remove_selector(self, pipeline_data: PipelineData, name: str) -> None:
         """
         Remove a data selector.
 
@@ -557,7 +563,7 @@ class DataSelectorManager:
     # Private helper methods
     
     def _update_selector_indices(
-        self, selector_data, trajectory_frames: Dict[int, List[int]], mode: str
+        self, selector_data: DataSelectorData, trajectory_frames: Dict[int, List[int]], mode: str
     ) -> None:
         """
         Update selector with trajectory-specific frame indices based on mode.
@@ -592,7 +598,7 @@ class DataSelectorManager:
         # Store with automatic duplicate removal
         selector_data.set_trajectory_frames(result)
     
-    def _union_frames(self, current, new_frames):
+    def _union_frames(self, current: Dict[int, List[int]], new_frames: Dict[int, List[int]]) -> Dict[int, List[int]]:
         """
         Union of frame sets per trajectory.
         Automatically removes duplicates and sorts.
@@ -610,7 +616,7 @@ class DataSelectorManager:
         
         return result
     
-    def _subtract_frames(self, current, new_frames):
+    def _subtract_frames(self, current: Dict[int, List[int]], new_frames: Dict[int, List[int]]) -> Dict[int, List[int]]:
         """
         Subtract frame sets per trajectory.
         Result is always sorted with no duplicates.
@@ -628,7 +634,7 @@ class DataSelectorManager:
         
         return result
     
-    def _intersect_frames(self, current, new_frames):
+    def _intersect_frames(self, current: Dict[int, List[int]], new_frames: Dict[int, List[int]]) -> Dict[int, List[int]]:
         """
         Intersect frame sets per trajectory.
         Result is always sorted with no duplicates.
@@ -642,4 +648,121 @@ class DataSelectorManager:
                     result[traj_idx] = sorted(list(common))
         
         return result
+    
+    def save(self, pipeline_data: PipelineData, save_path: str) -> None:
+        """
+        Save all data selector data to single file.
 
+        Warning:
+        --------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.data_selector.save('data_selector.npy')  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = DataSelectorManager()
+        >>> manager.save(pipeline_data, 'data_selector.npy')  # pipeline_data required
+
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data container with data selector data
+        save_path : str
+            Path where to save all data selector data in one file
+
+        Returns:
+        --------
+        None
+            Saves all data selector data to the specified file
+            
+        Examples:
+        ---------
+        >>> manager.save(pipeline_data, 'data_selector.npy')
+        """
+        DataUtils.save_object(pipeline_data.data_selector_data, save_path)
+
+    def load(self, pipeline_data: PipelineData, load_path: str) -> None:
+        """
+        Load all data selector data from single file.
+
+        Warning:
+        --------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.data_selector.load('data_selector.npy')  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = DataSelectorManager()
+        >>> manager.load(pipeline_data, 'data_selector.npy')  # pipeline_data required
+
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data container to load data selector data into
+        load_path : str
+            Path to saved data selector data file
+
+        Returns:
+        --------
+        None
+            Loads all data selector data from the specified file
+            
+        Examples:
+        ---------
+        >>> manager.load(pipeline_data, 'data_selector.npy')
+        """
+        temp_dict = {}
+        DataUtils.load_object(temp_dict, load_path)
+        pipeline_data.data_selector_data = temp_dict
+
+    def print_info(self, pipeline_data: PipelineData) -> None:
+        """
+        Print data selector information.
+
+        Warning:
+        --------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.data_selector.print_info()  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = DataSelectorManager()
+        >>> manager.print_info(pipeline_data)  # pipeline_data required
+
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data container with data selector data
+
+        Returns:
+        --------
+        None
+            Prints data selector information to console
+
+        Examples:
+        ---------
+        >>> manager.print_info(pipeline_data)
+        """
+        if len(pipeline_data.data_selector_data) == 0:
+            print("No dataselectordata data available.")
+            return
+
+        print("=== DataSelectorData Information ===")
+        data_names = list(pipeline_data.data_selector_data.keys())
+        print(f"DataSelectorData Names: {len(data_names)} ({", ".join(data_names)})")
+        
+        for name, data in pipeline_data.data_selector_data.items():
+            print(f"\n--- {name} ---")
+            data.print_info()

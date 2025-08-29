@@ -26,8 +26,7 @@ must implement for consistency across different molecular dynamics features.
 """
 
 from abc import ABC, abstractmethod
-from typing import List, Tuple
-
+from typing import List, Tuple, Dict, Any, Union
 import numpy as np
 
 from .feature_type_meta import FeatureTypeMeta
@@ -54,7 +53,7 @@ class FeatureTypeBase(ABC, metaclass=FeatureTypeMeta):
     ...         return self.calculator.compute(input_data)
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the feature type.
 
@@ -144,7 +143,7 @@ class FeatureTypeBase(ABC, metaclass=FeatureTypeMeta):
         pass
 
     @abstractmethod
-    def init_calculator(self, use_memmap=False, cache_path="./cache", chunk_size=10000):
+    def init_calculator(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 10000) -> None:
         """
         Initialize the calculator instance for this feature type.
 
@@ -165,7 +164,7 @@ class FeatureTypeBase(ABC, metaclass=FeatureTypeMeta):
         pass
 
     @abstractmethod
-    def compute(self, input_data, feature_metadata) -> Tuple[np.ndarray, dict]:
+    def compute(self, input_data: Any, feature_metadata: Dict[str, Any]) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Compute features using the initialized calculator.
 

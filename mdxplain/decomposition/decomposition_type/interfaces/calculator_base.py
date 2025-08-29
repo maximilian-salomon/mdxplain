@@ -26,8 +26,7 @@ for consistency across different dimensionality reduction methods.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Tuple
-
+from typing import Dict, Tuple, Any
 import numpy as np
 
 
@@ -42,14 +41,14 @@ class CalculatorBase(ABC):
     Examples:
     ---------
     >>> class MyCalculator(CalculatorBase):
-    ...     def __init__(self, use_memmap=False, cache_path="./cache", chunk_size=10000):
+    ...     def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 10000) -> None:
     ...         super().__init__(use_memmap, cache_path, chunk_size)
     ...     def compute(self, data, **kwargs):
     ...         # Implement computation logic
     ...         return transformed_data, metadata
     """
 
-    def __init__(self, use_memmap=False, cache_path="./cache", chunk_size=10000):
+    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 10000) -> None:
         """
         Initialize the decomposition calculator.
 
@@ -84,7 +83,7 @@ class CalculatorBase(ABC):
         self.chunk_size = chunk_size
 
     @abstractmethod
-    def compute(self, data, **kwargs) -> Tuple[np.ndarray, Dict]:
+    def compute(self, data: np.ndarray, **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Compute decomposition of input data.
 
@@ -118,7 +117,7 @@ class CalculatorBase(ABC):
         """
         pass
 
-    def _validate_input_data(self, data):
+    def _validate_input_data(self, data: np.ndarray) -> None:
         """
         Validate input data for decomposition.
 
@@ -146,7 +145,7 @@ class CalculatorBase(ABC):
         if data.shape[1] < 2:
             raise ValueError("Input data must have at least 2 feature")
 
-    def _prepare_metadata(self, hyperparameters, original_shape):
+    def _prepare_metadata(self, hyperparameters: Dict[str, Any], original_shape: Tuple) -> Dict[str, Any]:
         """
         Prepare base metadata dictionary.
 

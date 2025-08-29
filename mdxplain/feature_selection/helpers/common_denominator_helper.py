@@ -24,8 +24,12 @@ Common denominator helper for feature selection system.
 This module provides utilities for finding features that are present across
 all trajectories using biological feature identity comparison.
 """
+from __future__ import annotations
 
-from typing import List
+from typing import List, Dict, Any, Tuple, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ...pipeline.entities.pipeline_data import PipelineData
 
 
 class CommonDenominatorHelper:
@@ -33,8 +37,8 @@ class CommonDenominatorHelper:
 
     @staticmethod
     def apply_common_denominator(
-        pipeline_data, feature_key: str, trajectory_results: dict
-    ) -> dict:
+        pipeline_data: PipelineData, feature_key: str, trajectory_results: Dict[int, Any]
+    ) -> Dict[int, Any]:
         """
         Apply common denominator filtering to keep only features present in all trajectories.
 
@@ -122,9 +126,9 @@ class CommonDenominatorHelper:
 
     @staticmethod
     def extract_feature_identities(
-        pipeline_data, feature_key: str, traj_idx: int, 
+        pipeline_data: PipelineData, feature_key: str, traj_idx: int,
         indices: List[int], use_reduced_flags: List[bool]
-    ) -> List[dict]:
+    ) -> List[Dict[str, Any]]:
         """
         Extract biological feature identities for given indices.
 
@@ -219,10 +223,10 @@ class CommonDenominatorHelper:
 
     @staticmethod
     def filter_to_common_features(
-        pipeline_data, feature_key: str, traj_idx: int,
+        pipeline_data: PipelineData, feature_key: str, traj_idx: int,
         indices: List[int], use_reduced_flags: List[bool], 
-        common_identities: List[dict]
-    ) -> tuple:
+        common_identities: List[Dict[str, Any]]
+    ) -> Tuple[List[int], List[bool]]:
         """
         Filter indices to keep only those matching common identities.
 

@@ -25,7 +25,7 @@ PCA decomposition type implementation with standard and incremental
 Principal Component Analysis for dimensionality reduction of feature matrices.
 """
 
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional, Any
 
 import numpy as np
 
@@ -59,7 +59,7 @@ class PCA(DecompositionTypeBase):
     >>> transformed, metadata = pca.compute(large_data, n_components=50)
     """
 
-    def __init__(self, n_components=None, random_state=None):
+    def __init__(self, n_components: Optional[int] = None, random_state: Optional[int] = None) -> None:
         """
         Initialize PCA decomposition type with parameters.
 
@@ -107,7 +107,7 @@ class PCA(DecompositionTypeBase):
         self.random_state = random_state
 
     @classmethod
-    def get_type_name(cls):
+    def get_type_name(cls) -> str:
         """
         Get the type name for PCA decomposition.
 
@@ -134,7 +134,7 @@ class PCA(DecompositionTypeBase):
         """
         return "pca"
 
-    def init_calculator(self, use_memmap=False, cache_path="./cache", chunk_size=10000):
+    def init_calculator(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 10000) -> None:
         """
         Initialize the PCA calculator with specified configuration.
 
@@ -171,7 +171,7 @@ class PCA(DecompositionTypeBase):
             use_memmap=use_memmap, cache_path=cache_path, chunk_size=chunk_size
         )
 
-    def compute(self, data) -> Tuple[np.ndarray, Dict]:
+    def compute(self, data: np.ndarray) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Compute PCA decomposition of input data.
 

@@ -26,7 +26,7 @@ HDBSCAN clustering computation using scikit-learn.
 """
 
 import time
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Any, Optional, List
 
 import numpy as np
 from sklearn.cluster import HDBSCAN as SklearnHDBSCAN
@@ -50,7 +50,7 @@ class HDBSCANCalculator(CalculatorBase):
     >>> print(f"Found {metadata['n_clusters']} clusters")
     """
 
-    def __init__(self, cache_path="./cache"):
+    def __init__(self, cache_path: str = "./cache") -> None:
         """
         Initialize HDBSCAN calculator.
 
@@ -61,7 +61,7 @@ class HDBSCANCalculator(CalculatorBase):
         """
         super().__init__(cache_path)
 
-    def compute(self, data, **kwargs) -> Tuple[np.ndarray, Dict]:
+    def compute(self, data: np.ndarray, **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Compute HDBSCAN clustering.
 
@@ -98,7 +98,7 @@ class HDBSCANCalculator(CalculatorBase):
             **kwargs
         )
 
-    def _compute_without_cache(self, data, **kwargs) -> Tuple[np.ndarray, Dict]:
+    def _compute_without_cache(self, data: np.ndarray, **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Perform HDBSCAN clustering without caching.
 
@@ -125,7 +125,7 @@ class HDBSCANCalculator(CalculatorBase):
 
         return cluster_labels, metadata
 
-    def _extract_parameters(self, kwargs):
+    def _extract_parameters(self, **kwargs) -> Dict[str, Any]:
         """
         Extract and validate HDBSCAN parameters.
 
@@ -146,7 +146,7 @@ class HDBSCANCalculator(CalculatorBase):
             "cluster_selection_method": kwargs.get("cluster_selection_method", "eom"),
         }
 
-    def _perform_clustering(self, data, parameters):
+    def _perform_clustering(self, data: np.ndarray, parameters: Dict[str, Any]) -> Tuple[np.ndarray, Any, float]:
         """
         Perform HDBSCAN clustering computation.
 
@@ -177,8 +177,8 @@ class HDBSCANCalculator(CalculatorBase):
         return cluster_labels, hdbscan, computation_time
 
     def _build_metadata(
-        self, data, cluster_labels, hdbscan_model, parameters, computation_time
-    ):
+        self, data: np.ndarray, cluster_labels: np.ndarray, hdbscan_model: SklearnHDBSCAN, parameters: Dict[str, Any], computation_time: float
+    ) -> Dict[str, Any]:
         """
         Build comprehensive metadata dictionary.
 
@@ -218,7 +218,7 @@ class HDBSCANCalculator(CalculatorBase):
 
         return metadata
 
-    def _get_cluster_probabilities(self, hdbscan_model):
+    def _get_cluster_probabilities(self, hdbscan_model: SklearnHDBSCAN) -> Optional[List[float]]:
         """
         Extract cluster membership probabilities from HDBSCAN model.
 
@@ -239,7 +239,7 @@ class HDBSCANCalculator(CalculatorBase):
             return hdbscan_model.probabilities_.tolist()
         return None
 
-    def _get_outlier_scores(self, hdbscan_model):
+    def _get_outlier_scores(self, hdbscan_model: SklearnHDBSCAN) -> Optional[List[float]]:
         """
         Extract outlier scores from HDBSCAN model.
 

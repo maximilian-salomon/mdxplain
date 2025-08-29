@@ -24,16 +24,22 @@ Metadata operations helper for feature selection system.
 Provides metadata collection, processing, and validation operations
 for the feature selection system in PipelineData.
 """
+from __future__ import annotations
 
-from typing import Optional, Union
+from typing import Optional, List, Dict, Any, TYPE_CHECKING
 import numpy as np
+
+from ...feature.entities.feature_data import FeatureData
+
+if TYPE_CHECKING:
+    from ..entities.pipeline_data import PipelineData
 
 
 class SelectionMetadataHelper:
     """Helper class for metadata operations in feature selection system."""
 
     @staticmethod
-    def collect_metadata_for_selection(pipeline_data, name: str) -> list:
+    def collect_metadata_for_selection(pipeline_data: PipelineData, name: str) -> List[Dict[str, Any]]:
         """
         Collect metadata for all features in the selection using stored reference trajectory.
 
@@ -88,8 +94,8 @@ class SelectionMetadataHelper:
 
     @staticmethod
     def _get_metadata_for_feature(
-        pipeline_data, feature_type: str, reference_data: dict, reference_traj: int, name: str
-    ) -> list:
+        pipeline_data: PipelineData, feature_type: str, reference_data: Dict[str, Any], reference_traj: int, name: str
+    ) -> List[Dict[str, Any]]:
         """
         Get metadata for a single feature type.
 
@@ -134,12 +140,12 @@ class SelectionMetadataHelper:
 
     @staticmethod
     def _get_single_metadata_entry(
-        feature_data,
+        feature_data: FeatureData,
         col_idx: int,
         use_reduced: bool,
         feature_type: str,
         name: str,
-    ) -> Optional[dict]:
+    ) -> Optional[Dict[str, Any]]:
         """
         Get metadata entry for a single column.
 
@@ -176,8 +182,8 @@ class SelectionMetadataHelper:
 
     @staticmethod
     def _get_feature_metadata_by_type(
-        feature_data, use_reduced: bool, feature_type: str, name: str
-    ) -> dict:
+        feature_data: FeatureData, use_reduced: bool, feature_type: str, name: str
+    ) -> Dict[str, Any]:
         """
         Get the appropriate metadata based on use_reduced flag.
 

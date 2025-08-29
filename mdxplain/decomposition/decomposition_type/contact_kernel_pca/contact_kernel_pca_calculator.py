@@ -25,8 +25,7 @@ Implements specialized KernelPCA computation for binary contact matrices using
 Hamming distance-based kernel that is equivalent to RBF kernel for binary data.
 """
 
-from typing import Dict, Tuple
-
+from typing import Dict, Tuple, Any
 import numpy as np
 
 from ..kernel_pca.kernel_pca_calculator import KernelPCACalculator
@@ -63,7 +62,7 @@ class ContactKernelPCACalculator(KernelPCACalculator):
     >>> transformed, metadata = calc.compute(very_large_binary, n_components=50, use_nystrom=True, n_landmarks=5000)
     """
 
-    def __init__(self, use_memmap=False, cache_path="./cache", chunk_size=10000):
+    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 10000) -> None:
         """
         Initialize ContactKernelPCA calculator.
 
@@ -92,7 +91,7 @@ class ContactKernelPCACalculator(KernelPCACalculator):
         super().__init__(use_memmap, cache_path, chunk_size)
         self._cache_prefix = "contact_kernel_pca"
 
-    def compute(self, data, **kwargs) -> Tuple[np.ndarray, Dict]:
+    def compute(self, data: np.ndarray, **kwargs) -> Tuple[np.ndarray, Dict]:
         """
         Compute ContactKernelPCA decomposition of binary contact data.
 
@@ -150,7 +149,7 @@ class ContactKernelPCACalculator(KernelPCACalculator):
         else:
             return self._compute_standard_kernel_pca(data, hyperparameters)
 
-    def _validate_binary_data(self, data):
+    def _validate_binary_data(self, data: np.ndarray) -> None:
         """
         Validate that input data is binary (contains only 0s and 1s).
 
@@ -186,7 +185,7 @@ class ContactKernelPCACalculator(KernelPCACalculator):
                         "Probably your selection not only contains contacts."
                     )
 
-    def _extract_hyperparameters(self, data, kwargs):
+    def _extract_hyperparameters(self, data: np.ndarray, kwargs: Dict[str, Any]) -> Dict[str, Any]:
         """
         Extract and validate ContactKernelPCA hyperparameters.
 

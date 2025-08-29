@@ -28,6 +28,7 @@ data selectors for ML analysis.
 
 from typing import Dict, List, Any, Optional, Tuple
 
+from ...utils.data_utils import DataUtils
 
 class ComparisonData:
     """
@@ -273,3 +274,128 @@ class ComparisonData:
             f"ComparisonData(name='{self.name}', mode='{self.mode}', "
             f"n_sub={len(self.sub_comparisons)})"
         )
+
+    def save(self, save_path: str) -> None:
+        """
+        Save ComparisonData object to disk.
+
+        Parameters:
+        -----------
+        save_path : str
+            Path where to save the ComparisonData object
+
+        Returns:
+        --------
+        None
+            Saves the ComparisonData object to the specified path
+
+        Examples:
+        ---------
+        >>> comparison_data.save('analysis_results/folded_analysis.pkl')
+        """
+        DataUtils.save_object(self, save_path)
+
+    def load(self, load_path: str) -> None:
+        """
+        Load ComparisonData object from disk.
+
+        Parameters:
+        -----------
+        load_path : str
+            Path to the saved ComparisonData file
+
+        Returns:
+        --------
+        None
+            Loads the ComparisonData object from the specified path
+
+        Examples:
+        ---------
+        >>> comparison_data.load('analysis_results/folded_analysis.pkl')
+        """
+        DataUtils.load_object(self, load_path)
+
+    def print_info(self) -> None:
+        """
+        Print comprehensive comparison information.
+
+        Parameters:
+        -----------
+        None
+
+        Returns:
+        --------
+        None
+            Prints comparison information to console
+
+        Examples:
+        ---------
+        >>> comparison_data.print_info()
+        === ComparisonData ===
+        Name: folded_analysis
+        Comparison Mode: one_vs_rest
+        Feature Selector: key_features
+        Data Selectors: 3 (folded, intermediate, unfolded)
+        Sub-Comparisons: 3 (folded_vs_rest, intermediate_vs_rest, unfolded_vs_rest)
+        """
+        if self._has_no_comparisons():
+            print("No comparison data available.")
+            return
+
+        self._print_comparison_header()
+        self._print_comparison_details()
+        self._print_sub_comparison_details()
+
+    def _has_no_comparisons(self) -> bool:
+        """
+        Check if no comparisons are configured.
+
+        Returns:
+        --------
+        bool
+            True if no comparisons are available, False otherwise
+        """
+        return len(self.sub_comparisons) == 0
+
+    def _print_comparison_header(self) -> None:
+        """
+        Print header with comparison name.
+
+        Returns:
+        --------
+        None
+        """
+        print("=== ComparisonData ===")
+        print(f"Name: {self.name}")
+
+    def _print_comparison_details(self) -> None:
+        """
+        Print detailed comparison configuration.
+
+        Returns:
+        --------
+        None
+        """
+        print(f"Comparison Mode: {self.mode}")
+        print(f"Feature Selector: {self.feature_selector}")
+        
+        if self.data_selectors:
+            data_selector_names = ", ".join(self.data_selectors)
+            print(f"Data Selectors: {len(self.data_selectors)} ({data_selector_names})")
+        else:
+            print("Data Selectors: None configured")
+
+    def _print_sub_comparison_details(self) -> None:
+        """
+        Print information about sub-comparisons.
+
+        Returns:
+        --------
+        None
+        """
+        sub_names = self.list_sub_comparisons()
+        if sub_names:
+            sub_names_str = ", ".join(sub_names)
+            print(f"Sub-Comparisons: {len(sub_names)} ({sub_names_str})")
+        else:
+            print("Sub-Comparisons: None configured")

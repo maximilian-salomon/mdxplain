@@ -27,6 +27,7 @@ array support and statistical filtering capabilities.
 """
 
 import warnings
+from typing import Dict, Tuple, Any, List, Optional
 
 import numpy as np
 
@@ -44,16 +45,16 @@ class CalculatorComputeHelper:
 
     @staticmethod
     def compute_dynamic_values(
-        data,
-        metric_values,
-        metric_name,
-        threshold_min=None,
-        threshold_max=None,
-        feature_metadata=None,
-        use_memmap=False,
-        output_path=None,
-        chunk_size=1000,
-    ):
+        data: np.ndarray,
+        metric_values: np.ndarray,
+        metric_name: str,
+        threshold_min: Optional[float] = None,
+        threshold_max: Optional[float] = None,
+        feature_metadata: Optional[List[Any]] = None,
+        use_memmap: bool = False,
+        output_path: Optional[str] = None,
+        chunk_size: int = 1000,
+    ) -> Dict[str, Any]:
         """
         Filter feature data based on statistical metric thresholds.
 
@@ -126,7 +127,7 @@ class CalculatorComputeHelper:
         }
 
     @staticmethod
-    def _create_threshold_mask(metric_values, threshold_min, threshold_max):
+    def _create_threshold_mask(metric_values: np.ndarray, threshold_min: Optional[float], threshold_max: Optional[float]) -> np.ndarray:
         """
         Create boolean mask based on threshold conditions.
 
@@ -161,8 +162,11 @@ class CalculatorComputeHelper:
 
     @staticmethod
     def _validate_selection_results(
-        n_selected, metric_name, threshold_min, threshold_max
-    ):
+        n_selected: int, 
+        metric_name: str, 
+        threshold_min: Optional[float], 
+        threshold_max: Optional[float]
+    ) -> None:
         """
         Validate that selection found some results.
 
@@ -190,7 +194,7 @@ class CalculatorComputeHelper:
             )
 
     @staticmethod
-    def _handle_feature_metadata(feature_metadata, mask):
+    def _handle_feature_metadata(feature_metadata: Optional[List[Any]], mask: np.ndarray) -> Optional[List[Any]]:
         """
         Extract feature names based on filter mask.
 
@@ -218,7 +222,7 @@ class CalculatorComputeHelper:
         return mask
 
     @staticmethod
-    def _extract_dynamic_data(data, mask, use_memmap, output_path, chunk_size):
+    def _extract_dynamic_data(data: np.ndarray, mask: np.ndarray, use_memmap: bool, output_path: Optional[str], chunk_size: int) -> np.ndarray:
         """
         Extract filtered data using boolean mask.
 
@@ -266,7 +270,7 @@ class CalculatorComputeHelper:
         return dynamic_data
 
     @staticmethod
-    def _fill_memmap_data(data, dynamic_data, mask, chunk_size):
+    def _fill_memmap_data(data: np.ndarray, dynamic_data: np.ndarray, mask: np.ndarray, chunk_size: int) -> None:
         """
         Fill memory-mapped array with filtered data.
 
@@ -299,7 +303,7 @@ class CalculatorComputeHelper:
             )
 
     @staticmethod
-    def _fill_memmap_chunked(data, dynamic_data, mask, chunk_size, is_square_format):
+    def _fill_memmap_chunked(data: np.ndarray, dynamic_data: np.ndarray, mask: np.ndarray, chunk_size: int, is_square_format: bool) -> None:
         """
         Fill memory-mapped data in chunks.
 
@@ -329,7 +333,7 @@ class CalculatorComputeHelper:
             )
 
     @staticmethod
-    def _fill_regular_chunked(data, dynamic_data, mask, chunk_size, is_square_format):
+    def _fill_regular_chunked(data: np.ndarray, dynamic_data: np.ndarray, mask: np.ndarray, chunk_size: int, is_square_format: bool) -> None:
         """
         Fill regular data in chunks.
 
@@ -363,7 +367,7 @@ class CalculatorComputeHelper:
                 dynamic_data[i:end_idx] = data_flat[i:end_idx, mask.flatten()]
 
     @staticmethod
-    def _process_chunk(chunk, dynamic_data, mask, start_idx, end_idx, is_square_format):
+    def _process_chunk(chunk: np.ndarray, dynamic_data: np.ndarray, mask: np.ndarray, start_idx: int, end_idx: int, is_square_format: bool) -> None:
         """
         Process a single chunk of data.
 
@@ -395,7 +399,7 @@ class CalculatorComputeHelper:
             dynamic_data[start_idx:end_idx] = chunk_flat[:, mask.flatten()]
 
     @staticmethod
-    def calculate_output_dimensions(input_shape, squareform, k):
+    def calculate_output_dimensions(input_shape: Tuple[int, ...], squareform: bool, k: Optional[int]) -> Tuple[int, ...]:
         """
         Calculate output array dimensions after format conversion.
 
@@ -425,7 +429,7 @@ class CalculatorComputeHelper:
         )
 
     @staticmethod
-    def _needs_format_conversion(is_square_input, squareform):
+    def _needs_format_conversion(is_square_input: bool, squareform: bool) -> bool:
         """
         Check if format conversion is needed.
 
@@ -446,7 +450,7 @@ class CalculatorComputeHelper:
         )
 
     @staticmethod
-    def _convert_dimensions(input_shape, is_square_input, squareform, k):
+    def _convert_dimensions(input_shape: Tuple[int, ...], is_square_input: bool, squareform: bool, k: Optional[int]) -> Tuple[int, ...]:
         """
         Convert dimensions based on input and output format.
 
@@ -472,7 +476,7 @@ class CalculatorComputeHelper:
             return CalculatorComputeHelper._condensed_to_square_dims(input_shape, k)
 
     @staticmethod
-    def _square_to_condensed_dims(input_shape, k):
+    def _square_to_condensed_dims(input_shape: Tuple[int, ...], k: Optional[int]) -> Tuple[int, ...]:
         """
         Convert square format dimensions to condensed format.
 
@@ -496,7 +500,7 @@ class CalculatorComputeHelper:
         return (input_shape[0], n_contacts), n_residues
 
     @staticmethod
-    def _condensed_to_square_dims(input_shape, k):
+    def _condensed_to_square_dims(input_shape: Tuple[int, ...], k: Optional[int]) -> Tuple[int, ...]:
         """
         Convert condensed format dimensions to square format.
 
@@ -517,7 +521,7 @@ class CalculatorComputeHelper:
         return (input_shape[0], n_residues, n_residues), n_residues
 
     @staticmethod
-    def create_output_array(use_memmap, path, output_shape, dtype):
+    def create_output_array(use_memmap: bool, path: str, output_shape: Tuple[int, ...], dtype: np.dtype) -> np.ndarray:
         """
         Create output array (regular or memory-mapped).
 

@@ -26,7 +26,7 @@ DBSCAN clustering computation using scikit-learn.
 """
 
 import time
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Any
 
 import numpy as np
 from sklearn.cluster import DBSCAN as SklearnDBSCAN
@@ -50,7 +50,7 @@ class DBSCANCalculator(CalculatorBase):
     >>> print(f"Found {metadata['n_clusters']} clusters")
     """
 
-    def __init__(self, cache_path="./cache"):
+    def __init__(self, cache_path: str = "./cache") -> None:
         """
         Initialize DBSCAN calculator.
 
@@ -61,7 +61,7 @@ class DBSCANCalculator(CalculatorBase):
         """
         super().__init__(cache_path)
 
-    def compute(self, data, **kwargs) -> Tuple[np.ndarray, Dict]:
+    def compute(self, data: np.ndarray, **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Compute DBSCAN clustering.
 
@@ -93,7 +93,7 @@ class DBSCANCalculator(CalculatorBase):
             data, "dbscan", self._compute_without_cache, **kwargs
         )
 
-    def _compute_without_cache(self, data, **kwargs) -> Tuple[np.ndarray, Dict]:
+    def _compute_without_cache(self, data: np.ndarray, **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Perform DBSCAN clustering without caching.
 
@@ -120,7 +120,7 @@ class DBSCANCalculator(CalculatorBase):
 
         return cluster_labels, metadata
 
-    def _extract_parameters(self, kwargs):
+    def _extract_parameters(self, kwargs: Dict[str, Any]) -> Tuple[float, int]:
         """
         Extract and validate DBSCAN parameters.
 
@@ -147,7 +147,7 @@ class DBSCANCalculator(CalculatorBase):
 
         return eps, min_samples
 
-    def _perform_clustering(self, data, eps, min_samples):
+    def _perform_clustering(self, data: np.ndarray, eps: float, min_samples: int) -> Tuple[np.ndarray, Any, float]:
         """
         Perform DBSCAN clustering computation.
 
@@ -175,8 +175,8 @@ class DBSCANCalculator(CalculatorBase):
         return cluster_labels, dbscan, computation_time
 
     def _build_metadata(
-        self, data, cluster_labels, dbscan_model, eps, min_samples, computation_time
-    ):
+        self, data: np.ndarray, cluster_labels: np.ndarray, dbscan_model: SklearnDBSCAN, eps: float, min_samples: int, computation_time: float
+    ) -> Dict[str, Any]:
         """
         Build comprehensive metadata dictionary.
 
@@ -220,7 +220,7 @@ class DBSCANCalculator(CalculatorBase):
 
         return metadata
 
-    def _get_core_sample_indices(self, dbscan_model):
+    def _get_core_sample_indices(self, dbscan_model: SklearnDBSCAN) -> np.ndarray:
         """
         Extract core sample indices from DBSCAN model.
 

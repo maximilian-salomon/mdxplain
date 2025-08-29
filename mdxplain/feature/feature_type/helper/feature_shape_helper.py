@@ -26,6 +26,7 @@ array formats. All methods are static and support memory-mapped arrays for
 efficient processing of large datasets.
 """
 
+from typing import Optional, List, Tuple
 import mdtraj as md
 import numpy as np
 
@@ -39,7 +40,7 @@ class FeatureShapeHelper:
     """
 
     @staticmethod
-    def is_memmap(array):
+    def is_memmap(array: np.ndarray) -> bool:
         """
         Check if array is memory-mapped.
 
@@ -66,7 +67,7 @@ class FeatureShapeHelper:
         return hasattr(array, "filename") and array.filename is not None
 
     @staticmethod
-    def squareform_to_condensed(square_array, k=0, output_path=None, chunk_size=10000):
+    def squareform_to_condensed(square_array: np.ndarray, k: int = 0, output_path: Optional[str] = None, chunk_size: int = 10000) -> np.ndarray:
         """
         Convert square format to condensed format.
 
@@ -116,8 +117,12 @@ class FeatureShapeHelper:
 
     @staticmethod
     def _convert_3d_square_to_condensed(
-        square_array, i_indices, j_indices, output_path, chunk_size
-    ):
+        square_array: np.ndarray, 
+        i_indices: np.ndarray, 
+        j_indices: np.ndarray, 
+        output_path: Optional[str], 
+        chunk_size: int
+    ) -> np.ndarray:
         """
         Convert 3D square array to condensed format.
 
@@ -158,7 +163,7 @@ class FeatureShapeHelper:
         return result
 
     @staticmethod
-    def _create_condensed_output_array(output_path, dtype, n_frames, n_contacts):
+    def _create_condensed_output_array(output_path: Optional[str], dtype: type, n_frames: int, n_contacts: int) -> np.ndarray:
         """
         Create output array for condensed format.
 
@@ -190,8 +195,13 @@ class FeatureShapeHelper:
 
     @staticmethod
     def _fill_condensed_chunked(
-        square_array, result, i_indices, j_indices, chunk_size, n_frames
-    ):
+        square_array: np.ndarray, 
+        result: np.ndarray, 
+        i_indices: np.ndarray, 
+        j_indices: np.ndarray, 
+        chunk_size: int, 
+        n_frames: int
+    ) -> None:
         """
         Fill condensed array using chunked processing.
 
@@ -221,8 +231,12 @@ class FeatureShapeHelper:
 
     @staticmethod
     def condensed_to_squareform(
-        condensed_array, residue_pairs, n_residues, chunk_size=10000, output_path=None
-    ):
+        condensed_array: np.ndarray, 
+        residue_pairs: np.ndarray, 
+        n_residues: int, 
+        chunk_size: int = 10000, 
+        output_path: Optional[str] = None
+    ) -> np.ndarray:
         """
         Convert condensed format to square format using MDTraj.
 
@@ -263,7 +277,7 @@ class FeatureShapeHelper:
             raise ValueError("condensed_array must be 1D or 2D")
 
     @staticmethod
-    def _convert_1d_to_square(condensed_array, residue_pairs):
+    def _convert_1d_to_square(condensed_array: np.ndarray, residue_pairs: List[Tuple[int, int]]) -> np.ndarray:
         """
         Convert 1D condensed array to square format.
 
@@ -283,8 +297,12 @@ class FeatureShapeHelper:
 
     @staticmethod
     def _convert_2d_to_square(
-        condensed_array, residue_pairs, n_residues, chunk_size, output_path
-    ):
+        condensed_array: np.ndarray, 
+        residue_pairs: np.ndarray, 
+        n_residues: int, 
+        chunk_size: int, 
+        output_path: Optional[str]
+    ) -> np.ndarray:
         """
         Convert 2D condensed array to square format.
 
@@ -317,8 +335,12 @@ class FeatureShapeHelper:
 
     @staticmethod
     def _convert_2d_chunked(
-        condensed_array, residue_pairs, n_residues, chunk_size, output_path
-    ):
+        condensed_array: np.ndarray, 
+        residue_pairs: np.ndarray, 
+        n_residues: int, 
+        chunk_size: int, 
+        output_path: Optional[str]
+    ) -> np.ndarray:
         """
         Convert 2D condensed array to square format using chunked processing.
 

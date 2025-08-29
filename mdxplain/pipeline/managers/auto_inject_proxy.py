@@ -28,8 +28,10 @@ maintaining clean manager APIs.
 """
 
 import inspect
-from typing import Any
+from typing import Any, Union, Tuple, Dict
 from inspect import Parameter
+
+from ..entities.pipeline_data import PipelineData
 
 
 class AutoInjectProxy:
@@ -56,7 +58,7 @@ class AutoInjectProxy:
     >>> valid = pipeline.trajectory.validate_selection('res CA')  # no injection
     """
 
-    def __init__(self, manager: Any, pipeline_data: Any):
+    def __init__(self, manager: Any, pipeline_data: PipelineData):
         """
         Initialize the auto-injection proxy.
 
@@ -108,7 +110,7 @@ class AutoInjectProxy:
                 wrapper_method = self._create_auto_inject_wrapper(attr)
                 setattr(self, attr_name, wrapper_method)
 
-    def _create_auto_inject_wrapper(self, method):
+    def _create_auto_inject_wrapper(self, method: callable) -> callable:
         """
         Create auto-injection wrapper for a manager method.
 
@@ -156,7 +158,7 @@ class AutoInjectProxy:
 
         return injected_method
 
-    def _validate_no_manual_pipeline_data(self, args, kwargs):
+    def _validate_no_manual_pipeline_data(self, args: Tuple[Any, ...], kwargs: Dict[str, Any]) -> None:
         """
         Validate that user doesn't manually pass pipeline_data in Pipeline mode.
 
@@ -193,7 +195,7 @@ class AutoInjectProxy:
                 "TrajectoryManager().method(..., pipeline_data=your_data)"
             )
 
-    def _looks_like_pipeline_data(self, obj):
+    def _looks_like_pipeline_data(self, obj: PipelineData) -> bool:
         """
         Check if object looks like a pipeline-related data instance.
 
@@ -206,8 +208,8 @@ class AutoInjectProxy:
 
         Parameters:
         -----------
-        obj : Any
-            Object to check
+        obj : PipelineData
+            PipelineData to check
 
         Returns:
         --------
@@ -242,8 +244,8 @@ class AutoInjectProxy:
         return False
 
     def _inject_pipeline_data_intelligently(
-        self, pipeline_data_param, pipeline_data_index, args, kwargs
-    ):
+        self, pipeline_data_param: Parameter, pipeline_data_index: int, args: Tuple[Any, ...], kwargs: Dict[str, Any]
+    ) -> Tuple[Tuple[Any, ...], Dict[str, Any]]:
         """
         Inject pipeline_data at the correct position based on parameter definition.
 

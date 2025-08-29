@@ -29,6 +29,8 @@ separated data and metadata storage with flexible access methods.
 from typing import List, Dict, Any, Tuple, Union, Optional
 import numpy as np
 
+from ...utils.data_utils import DataUtils
+
 
 class FeatureImportanceData:
     """
@@ -353,3 +355,142 @@ class FeatureImportanceData:
             f"FeatureImportanceData(name='{self.name}', "
             f"analyzer='{self.analyzer_type}', n_comp={len(self.data)})"
         )
+
+    def save(self, save_path: str) -> None:
+        """
+        Save FeatureImportanceData object to disk.
+
+        Parameters:
+        -----------
+        save_path : str
+            Path where to save the FeatureImportanceData object
+
+        Returns:
+        --------
+        None
+            Saves the FeatureImportanceData object to the specified path
+
+        Examples:
+        ---------
+        >>> feature_importance_data.save('analysis_results/tree_importance.pkl')
+        """
+        DataUtils.save_object(self, save_path)
+
+    def load(self, load_path: str) -> None:
+        """
+        Load FeatureImportanceData object from disk.
+
+        Parameters:
+        -----------
+        load_path : str
+            Path to the saved FeatureImportanceData file
+
+        Returns:
+        --------
+        None
+            Loads the FeatureImportanceData object from the specified path
+
+        Examples:
+        ---------
+        >>> feature_importance_data.load('analysis_results/tree_importance.pkl')
+        """
+        DataUtils.load_object(self, load_path)
+
+    def print_info(self) -> None:
+        """
+        Print comprehensive feature importance information.
+
+        Parameters:
+        -----------
+        None
+
+        Returns:
+        --------
+        None
+            Prints feature importance information to console
+
+        Examples:
+        ---------
+        >>> feature_importance_data.print_info()
+        === FeatureImportanceData ===
+        Name: tree_analysis
+        Analyzer Type: RandomForest
+        Comparison: folded_vs_unfolded
+        Sub-Comparisons: 3 (folded_vs_rest, intermediate_vs_rest, unfolded_vs_rest)
+        Features Analyzed: 150
+        """
+        if self._has_no_data():
+            print("No feature importance data available.")
+            return
+
+        self._print_importance_header()
+        self._print_importance_details()
+        self._print_top_features_summary()
+
+    def _has_no_data(self) -> bool:
+        """
+        Check if no feature importance data is available.
+
+        Returns:
+        --------
+        bool
+            True if no data is available, False otherwise
+        """
+        return len(self.data) == 0
+
+    def _print_importance_header(self) -> None:
+        """
+        Print header with analysis name.
+
+        Returns:
+        --------
+        None
+        """
+        print("=== FeatureImportanceData ===")
+        print(f"Name: {self.name}")
+
+    def _print_importance_details(self) -> None:
+        """
+        Print detailed importance analysis information.
+
+        Returns:
+        --------
+        None
+        """
+        print(f"Analyzer Type: {self.analyzer_type}")
+        print(f"Comparison: {self.comparison_name}")
+        
+        comparison_names = self.list_comparisons()
+        if comparison_names:
+            comparison_str = ", ".join(comparison_names)
+            print(f"Sub-Comparisons: {len(comparison_names)} ({comparison_str})")
+        
+        info = self.get_analysis_info()
+        if info['n_features'] > 0:
+            print(f"Features Analyzed: {info['n_features']}")
+
+    def _print_top_features_summary(self) -> None:
+        """
+        Print summary of top features across comparisons.
+
+        Returns:
+        --------
+        None
+        """
+        if len(self.data) == 0:
+            return
+
+        # Show average importance summary
+        avg_importance = self.get_average_importance()
+        if len(avg_importance) > 0:
+            top_feature_idx = int(np.argmax(avg_importance))
+            top_importance = float(avg_importance[top_feature_idx])
+            print(f"Top Feature Overall: Feature {top_feature_idx} (avg importance: {top_importance:.4f})")
+            
+            # Show top 3 features on average
+            top_indices = np.argsort(avg_importance)[::-1][:3]
+            top_3_str = ", ".join([
+                f"Feature {int(idx)} ({float(avg_importance[idx]):.3f})" 
+                for idx in top_indices
+            ])
+            print(f"Top 3 Features: {top_3_str}")

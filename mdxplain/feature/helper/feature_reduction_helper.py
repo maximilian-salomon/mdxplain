@@ -29,6 +29,7 @@ in the FeatureManager.
 import numpy as np
 from typing import Optional, Union, Dict, Any
 
+from ...feature.entities.feature_data import FeatureData
 
 class FeatureReductionHelper:
     """
@@ -40,22 +41,19 @@ class FeatureReductionHelper:
 
     @staticmethod
     def process_reduction_results(
-        pipeline_data,
-        feature_key: str,
+        feature_data: FeatureData,
         results: Dict[str, Any],
         threshold_min: Optional[Union[int, float]],
         threshold_max: Optional[Union[int, float]],
         metric: str,
     ) -> None:
         """
-        Process and store reduction results with retention warnings.
+        Process and store reduction results for a single trajectory FeatureData object.
 
         Parameters:
         -----------
-        pipeline_data : PipelineData
-            Pipeline data object to update
-        feature_key : str
-            Feature key being reduced
+        feature_data : FeatureData
+            FeatureData object to update with reduction results
         results : Dict[str, Any]
             Results dictionary from compute_dynamic_values
         threshold_min : float or None
@@ -68,26 +66,24 @@ class FeatureReductionHelper:
         Returns:
         --------
         None
-            Updates pipeline_data with reduction results and prints warnings
+            Updates feature_data with reduction results and prints warnings
 
         Examples:
         ---------
         >>> FeatureReductionHelper.process_reduction_results(
-        ...     pipeline_data, "distances", results, 0.1, 0.9, "cv"
+        ...     feature_data, results, 0.1, 0.9, "cv"
         ... )
         Now using reduced data. Data reduced from (1000, 500) to (1000, 45). (9.0% retained).
         """
         # Store reduced data
-        pipeline_data.feature_data[feature_key].reduced_data = results["dynamic_data"]
+        feature_data.reduced_data = results["dynamic_data"]
 
         # Update reduced metadata
-        FeatureReductionHelper._update_reduced_metadata(
-            pipeline_data, feature_key, results
-        )
+        FeatureReductionHelper._update_reduced_metadata(feature_data, results)
 
         # Calculate and store retention info
         retention_rate = results["n_dynamic"] / results["total_pairs"]
-        pipeline_data.feature_data[feature_key].reduction_info = retention_rate
+        feature_data.reduction_info = retention_rate
 
         # Check and warn about low retention
         FeatureReductionHelper._check_retention_warnings(
@@ -95,14 +91,11 @@ class FeatureReductionHelper:
         )
 
         # Print summary
-        FeatureReductionHelper._print_reduction_summary(
-            pipeline_data, feature_key, retention_rate
-        )
+        FeatureReductionHelper._print_reduction_summary(feature_data, retention_rate)
 
     @staticmethod
     def _update_reduced_metadata(
-        pipeline_data, 
-        feature_key: str, 
+        feature_data: FeatureData, 
         results: Dict[str, Any]
     ) -> None:
         """
@@ -110,22 +103,18 @@ class FeatureReductionHelper:
 
         Parameters:
         -----------
-        pipeline_data : PipelineData
-            Pipeline data object to update
-        feature_key : str
-            Feature key being processed
+        feature_data : FeatureData
+            FeatureData object to update metadata for
         results : Dict[str, Any]
             Results dictionary containing feature names
 
         Returns:
         --------
         None
-            Updates reduced_feature_metadata in pipeline_data
+            Updates reduced_feature_metadata in feature_data
         """
         # Copy original metadata
-        pipeline_data.feature_data[feature_key].reduced_feature_metadata = (
-            pipeline_data.feature_data[feature_key].feature_metadata.copy()
-        )
+        feature_data.reduced_feature_metadata = feature_data.feature_metadata.copy()
 
         # Ensure feature names are numpy arrays for consistency
         feature_names = results["feature_names"]
@@ -134,9 +123,34 @@ class FeatureReductionHelper:
         else:
             reduced_features = np.array(feature_names)
 
-        pipeline_data.feature_data[feature_key].reduced_feature_metadata[
-            "features"
-        ] = reduced_features
+        feature_data.reduced_feature_metadata["features"] = reduced_features
+
+    @staticmethod
+    def _print_reduction_summary(feature_data: Any, retention_rate: float) -> None:
+        """
+        Print summary of data reduction operation.
+
+        Parameters:
+        -----------
+        feature_data : FeatureData
+            FeatureData object with reduction results
+        retention_rate : float
+            Data retention rate
+
+        Returns:
+        --------
+        None
+            Prints reduction summary
+        """
+        original_shape = feature_data.data.shape
+        reduced_shape = feature_data.reduced_data.shape
+
+        print(
+            f"Now using reduced data. "
+            f"Data reduced from {original_shape} "
+            f"to {reduced_shape}. "
+            f"({retention_rate:.1%} retained)."
+        )
 
     @staticmethod
     def _check_retention_warnings(
@@ -175,39 +189,6 @@ class FeatureReductionHelper:
                 f"WARNING: Very low data retention ({retention_rate:.1%}). "
                 f"Consider adjusting threshold parameters."
             )
-
-    @staticmethod
-    def _print_reduction_summary(
-        pipeline_data, 
-        feature_key: str, 
-        retention_rate: float
-    ) -> None:
-        """
-        Print summary of data reduction operation.
-
-        Parameters:
-        -----------
-        pipeline_data : PipelineData
-            Pipeline data object with reduction results
-        feature_key : str
-            Feature key that was reduced
-        retention_rate : float
-            Data retention rate
-
-        Returns:
-        --------
-        None
-            Prints reduction summary
-        """
-        original_shape = pipeline_data.feature_data[feature_key].data.shape
-        reduced_shape = pipeline_data.feature_data[feature_key].reduced_data.shape
-
-        print(
-            f"Now using reduced data. "
-            f"Data reduced from {original_shape} "
-            f"to {reduced_shape}. "
-            f"({retention_rate:.1%} retained)."
-        )
 
     @staticmethod
     def reset_reduction(pipeline_data, feature_key: str) -> None:

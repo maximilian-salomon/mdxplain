@@ -52,7 +52,7 @@ class DecisionTreeCalculator(CalculatorBase):
     >>> trained_model = result['model']
     """
 
-    def __init__(self, use_memmap=False, cache_path="./cache", chunk_size=10000):
+    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 10000):
         """
         Initialize Decision Tree calculator.
 

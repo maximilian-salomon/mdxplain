@@ -26,7 +26,16 @@ tags and cluster assignments, extracting common logic from
 DataSelectorManager methods.
 """
 
-from typing import List, Union, Dict
+from __future__ import annotations
+
+from typing import List, Union, Dict, Optional, TYPE_CHECKING
+import numpy as np
+
+from ...trajectory.entities.trajectory_data import TrajectoryData
+from ...clustering.entities.cluster_data import ClusterData
+
+if TYPE_CHECKING:
+    from ...pipeline.entities.pipeline_data import PipelineData
 
 
 class FrameSelectionHelper:
@@ -53,7 +62,7 @@ class FrameSelectionHelper:
     
     @staticmethod
     def select_frames_by_tags(
-        trajectory_data, tags: List[str], match_all: bool, stride: int = 1
+        trajectory_data: TrajectoryData, tags: List[str], match_all: bool, stride: int = 1
     ) -> Dict[int, List[int]]:
         """
         Select frames from trajectories that match tag criteria.
@@ -100,7 +109,7 @@ class FrameSelectionHelper:
         return trajectory_frames
     
     @staticmethod
-    def _trajectory_matches_tags(trajectory_data, traj_idx, tags, match_all):
+    def _trajectory_matches_tags(trajectory_data: TrajectoryData, traj_idx: int, tags: List[str], match_all: bool) -> bool:
         """Check if trajectory tags match criteria."""
         if traj_idx not in trajectory_data.trajectory_tags:
             return False
@@ -114,7 +123,7 @@ class FrameSelectionHelper:
     
     @staticmethod
     def select_frames_by_cluster(
-        labels: List[int], cluster_ids: List[int], frame_mapping=None, stride: int = 1
+        labels: List[int], cluster_ids: List[int], frame_mapping: Optional[Dict[int, int]] = None, stride: int = 1
     ) -> Dict[int, List[int]]:
         """
         Select frames based on cluster assignments.
@@ -158,7 +167,7 @@ class FrameSelectionHelper:
         return FrameSelectionHelper._apply_stride_per_trajectory(trajectory_frames, stride)
     
     @staticmethod
-    def _collect_cluster_frames(labels, cluster_ids, frame_mapping):
+    def _collect_cluster_frames(labels: np.ndarray, cluster_ids: List[int], frame_mapping: Dict[int, int]) -> Dict[int, List[int]]:
         """Collect frames belonging to specified clusters."""
         trajectory_frames = {}
         
@@ -176,7 +185,7 @@ class FrameSelectionHelper:
         return trajectory_frames
     
     @staticmethod
-    def _apply_stride_per_trajectory(trajectory_frames, stride):
+    def _apply_stride_per_trajectory(trajectory_frames: Dict[int, List[int]], stride: int) -> Dict[int, List[int]]:
         """Sort and apply stride to frames per trajectory."""
         result = {}
         for traj_idx, frames in trajectory_frames.items():
@@ -188,7 +197,7 @@ class FrameSelectionHelper:
     
     @staticmethod
     def resolve_cluster_ids(
-        cluster_data, cluster_ids: List[Union[int, str]], clustering_name: str
+        cluster_data: ClusterData, cluster_ids: List[Union[int, str]], clustering_name: str
     ) -> List[int]:
         """
         Convert cluster names to numeric IDs if necessary.
@@ -251,7 +260,7 @@ class FrameSelectionHelper:
     
     @staticmethod
     def select_frames_by_indices(
-        input_data, trajectory_data
+        input_data: Union[str, dict, List[int]], trajectory_data: TrajectoryData
     ) -> Dict[int, List[int]]:
         """
         Parse trajectory and frame selections from various input formats.
@@ -334,8 +343,29 @@ class FrameSelectionHelper:
         return FrameSelectionHelper._finalize_trajectory_frames(trajectory_frames)
     
     @staticmethod
-    def _validate_and_store_frames(trajectory_frames, traj_idx, frames, trajectory_data):
-        """Validate and store frames for a trajectory."""
+    def _validate_and_store_frames(trajectory_frames: Dict[int, List[int]], traj_idx: int, frames: List[int], trajectory_data: TrajectoryData) -> None:
+        """
+        Validate and store frames for a trajectory.
+        
+        Validates that frame indices are within bounds for the trajectory
+        and adds them to the trajectory_frames dictionary.
+        
+        Parameters:
+        -----------
+        trajectory_frames : Dict[int, List[int]]
+            Dictionary mapping trajectory indices to frame lists to update
+        traj_idx : int
+            Index of the trajectory to store frames for
+        frames : List[int]
+            Frame indices to validate and store
+        trajectory_data : TrajectoryData
+            Trajectory data object for validation
+            
+        Returns:
+        --------
+        None
+            Updates trajectory_frames dictionary in-place
+        """
         FrameSelectionHelper._validate_frame_indices(frames, traj_idx, trajectory_data)
         
         if traj_idx not in trajectory_frames:
@@ -343,17 +373,50 @@ class FrameSelectionHelper:
         trajectory_frames[traj_idx].extend(frames)
     
     @staticmethod  
-    def _finalize_trajectory_frames(trajectory_frames):
-        """Remove duplicates and sort frames per trajectory."""
+    def _finalize_trajectory_frames(trajectory_frames: Dict[int, List[int]]) -> Dict[int, List[int]]:
+        """
+        Remove duplicates and sort frames per trajectory.
+        
+        Takes a dictionary of trajectory frames and returns a cleaned version
+        with duplicates removed and frames sorted in ascending order.
+        
+        Parameters:
+        -----------
+        trajectory_frames : Dict[int, List[int]]
+            Dictionary mapping trajectory indices to lists of frame indices
+            
+        Returns:
+        --------
+        Dict[int, List[int]]
+            Dictionary with deduplicated and sorted frame indices per trajectory
+        """
         result = {}
         for traj_idx, frames in trajectory_frames.items():
             result[traj_idx] = sorted(list(set(frames)))
         return result
     
     @staticmethod
-    def _resolve_trajectory_key(traj_key, trajectory_data):
+    def _resolve_trajectory_key(traj_key: Union[int, str, List], trajectory_data: TrajectoryData) -> List[int]:
         """
         Resolve trajectory key to list of indices using get_trajectory_indices().
+        
+        Converts various trajectory selection formats to a list of trajectory indices.
+        Handles single integers, strings (names, tags, patterns), and lists.
+        
+        Parameters:
+        -----------
+        traj_key : Union[int, str, List]
+            Trajectory selection key to resolve:
+            - int: single trajectory index
+            - str: trajectory name, tag, or pattern
+            - List: list of indices/names/tags
+        trajectory_data : TrajectoryData
+            Trajectory data object for index resolution
+            
+        Returns:
+        --------
+        List[int]
+            List of resolved trajectory indices
         """
         if isinstance(traj_key, int):
             return [traj_key]
@@ -362,7 +425,7 @@ class FrameSelectionHelper:
         return trajectory_data.get_trajectory_indices(traj_key)
     
     @staticmethod
-    def _parse_frame_value(frame_value, trajectory_data=None, traj_idx=None):
+    def _parse_frame_value(frame_value: Union[str, dict, List[int]], trajectory_data: Optional[TrajectoryData] = None, traj_idx: Optional[int] = None) -> List[int]:
         """Parse frame specification from various formats including stride support."""
         # Handle dict with stride
         if isinstance(frame_value, dict):
@@ -385,7 +448,7 @@ class FrameSelectionHelper:
         raise TypeError(f"Frame value must be dict, list, int or str, got {type(frame_value)}")
     
     @staticmethod
-    def _parse_dict_frame_value(frame_dict, trajectory_data, traj_idx):
+    def _parse_dict_frame_value(frame_dict: dict, trajectory_data: TrajectoryData, traj_idx: int) -> List[int]:
         """Parse dict format with optional stride."""
         if "frames" not in frame_dict:
             raise ValueError("Dict format requires 'frames' key")
@@ -411,7 +474,7 @@ class FrameSelectionHelper:
         return FrameSelectionHelper._apply_stride(parsed_frames, stride) if stride > 1 else parsed_frames
     
     @staticmethod
-    def _parse_string_frame_value(frame_str, trajectory_data, traj_idx):
+    def _parse_string_frame_value(frame_str: str, trajectory_data: TrajectoryData, traj_idx: int) -> List[int]:
         """Parse string frame value, handling 'all' keyword."""
         parsed = FrameSelectionHelper._parse_frame_string(frame_str)
         if parsed == "all":
@@ -419,7 +482,7 @@ class FrameSelectionHelper:
         return parsed
     
     @staticmethod
-    def _get_all_frames(trajectory_data, traj_idx):
+    def _get_all_frames(trajectory_data: TrajectoryData, traj_idx: int) -> List[int]:
         """Get all frame indices for a trajectory."""
         if trajectory_data is None or traj_idx is None:
             raise ValueError("'all' keyword requires trajectory_data and traj_idx")
@@ -427,7 +490,7 @@ class FrameSelectionHelper:
         return list(range(n_frames))
     
     @staticmethod
-    def _parse_frame_string(frame_str):
+    def _parse_frame_string(frame_str: str) -> List[int]:
         """Parse frame string: ranges, comma lists, combined formats, or 'all'."""
         frame_str = frame_str.strip()
         
@@ -447,7 +510,7 @@ class FrameSelectionHelper:
         return [int(frame_str)]
     
     @staticmethod
-    def _parse_combined_frames(frame_str):
+    def _parse_combined_frames(frame_str: str) -> List[int]:
         """Parse comma-separated frame specifications."""
         frames = []
         for part in frame_str.split(","):
@@ -459,7 +522,7 @@ class FrameSelectionHelper:
         return sorted(list(set(frames)))  # Remove duplicates and sort
     
     @staticmethod
-    def _parse_range(range_str):
+    def _parse_range(range_str: str) -> List[int]:
         """Parse a single range like '10-20'."""
         parts = range_str.split("-")
         if len(parts) != 2:
@@ -471,7 +534,7 @@ class FrameSelectionHelper:
         return list(range(start, end + 1))
     
     @staticmethod
-    def _apply_stride(frames, stride):
+    def _apply_stride(frames: List[int], stride: int) -> List[int]:
         """
         Apply stride to frame list (minimum distance between consecutive frames).
         
@@ -500,7 +563,7 @@ class FrameSelectionHelper:
         return result
     
     @staticmethod
-    def _validate_frame_indices(frames, traj_idx, trajectory_data):
+    def _validate_frame_indices(frames: List[int], traj_idx: int, trajectory_data: TrajectoryData) -> None:
         """Validate that frame indices are within trajectory bounds."""
         n_frames = len(trajectory_data.trajectories[traj_idx])
         invalid = [f for f in frames if f < 0 or f >= n_frames]
@@ -510,7 +573,7 @@ class FrameSelectionHelper:
             )
     
     @staticmethod
-    def validate_selector_exists(pipeline_data, name: str) -> None:
+    def validate_selector_exists(pipeline_data: PipelineData, name: str) -> None:
         """
         Validate that a data selector with given name exists.
         
@@ -533,7 +596,7 @@ class FrameSelectionHelper:
             )
     
     @staticmethod
-    def validate_trajectories_loaded(pipeline_data) -> None:
+    def validate_trajectories_loaded(pipeline_data: PipelineData) -> None:
         """
         Validate that trajectory data is available for frame selection.
         
@@ -551,7 +614,7 @@ class FrameSelectionHelper:
             raise ValueError("No trajectories loaded. Load trajectories first.")
     
     @staticmethod
-    def validate_clustering_exists(pipeline_data, clustering_name: str) -> None:
+    def validate_clustering_exists(pipeline_data: PipelineData, clustering_name: str) -> None:
         """
         Validate that a clustering result with given name exists.
         

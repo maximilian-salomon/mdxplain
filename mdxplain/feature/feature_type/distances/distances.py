@@ -25,7 +25,9 @@ Distance feature type implementation with pairwise distance calculations
 for analyzing molecular dynamics trajectories using MDTraj.
 """
 
-from typing import List
+from typing import List, Dict, Tuple, Any, Optional, Union
+import numpy as np
+import mdtraj as md
 
 from ..interfaces.feature_type_base import FeatureTypeBase
 from .distance_calculator import DistanceCalculator
@@ -63,7 +65,7 @@ class Distances(FeatureTypeBase):
     ReduceMetrics = ReduceDistanceMetrics
     """Available reduce metrics for distance features."""
 
-    def __init__(self, ref=None, excluded_neighbors=1):
+    def __init__(self, ref: Optional[Any] = None, excluded_neighbors: int = 1) -> None:
         """
         Initialize distance feature type with optional reference trajectory.
 
@@ -107,7 +109,7 @@ class Distances(FeatureTypeBase):
         self.ref = ref
         self.excluded_neighbors = excluded_neighbors
 
-    def init_calculator(self, use_memmap=False, cache_path="./cache", chunk_size=10000):
+    def init_calculator(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 10000) -> None:
         """
         Initialize the distance calculator with specified configuration.
 
@@ -139,14 +141,14 @@ class Distances(FeatureTypeBase):
             use_memmap=use_memmap, cache_path=cache_path, chunk_size=chunk_size
         )
 
-    def compute(self, input_data, feature_metadata):
+    def compute(self, input_data: md.Trajectory, feature_metadata: Dict[str, Any]) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Compute pairwise distances from molecular dynamics trajectories.
 
         Parameters:
         -----------
-        input_data : mdtraj.Trajectory or list
-            MD trajectories to compute distances from
+        input_data : mdtraj.Trajectory
+            MD trajectory to compute distances from
         feature_metadata : dict, optional
             Not used for distances (base feature type)
 
@@ -209,7 +211,7 @@ class Distances(FeatureTypeBase):
         return []
 
     @classmethod
-    def get_type_name(cls):  # noqa: vulture
+    def get_type_name(cls) -> str:  # noqa: vulture
         """
         Get the type name as class method.
 

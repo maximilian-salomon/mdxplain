@@ -24,19 +24,20 @@ DaskMDTrajectory Join/Stack Helper - Extracted trajectory combination operations
 Handles memory-efficient joining and stacking of DaskMDTrajectory instances
 using secure temporary directories and chunk-wise data processing.
 """
+from __future__ import annotations
 
 import os
 import tempfile
-from typing import TYPE_CHECKING
 
 import numpy as np
 import zarr
 from zarr.codecs import BloscCodec
+from typing import TYPE_CHECKING
 
 from .zarr_cache_helper import ZarrCacheHelper
 
 if TYPE_CHECKING:
-    from ..entities.dask_md_trajectory import DaskMDTrajectory
+    from ...entities.dask_md_trajectory import DaskMDTrajectory
 
 # Default compression for all zarr operations
 DEFAULT_COMPRESSOR = BloscCodec(cname='lz4', clevel=1)
@@ -66,8 +67,8 @@ class DaskMDTrajectoryJoinStackHelper:
         """
         self.cache_dir = cache_dir
     
-    def join_trajectories(self, traj1: 'DaskMDTrajectory', traj2: 'DaskMDTrajectory', 
-                         check_topology: bool = True) -> 'DaskMDTrajectory':
+    def join_trajectories(self, traj1: DaskMDTrajectory, traj2: DaskMDTrajectory, 
+                         check_topology: bool = True) -> DaskMDTrajectory:
         """
         Combine trajectories along frame axis using memory-efficient approach.
         
@@ -141,7 +142,7 @@ class DaskMDTrajectoryJoinStackHelper:
         
         return result
     
-    def stack_trajectories(self, traj1: 'DaskMDTrajectory', traj2: 'DaskMDTrajectory') -> 'DaskMDTrajectory':
+    def stack_trajectories(self, traj1: DaskMDTrajectory, traj2: DaskMDTrajectory) -> DaskMDTrajectory:
         """
         Combine trajectories along atom axis using memory-efficient approach.
         
@@ -275,8 +276,8 @@ class DaskMDTrajectoryJoinStackHelper:
                 compressors=DEFAULT_COMPRESSOR
             )
     
-    def _stack_trajectories_chunked(self, store: zarr.Group, traj1: 'DaskMDTrajectory', 
-                                  traj2: 'DaskMDTrajectory'):
+    def _stack_trajectories_chunked(self, store: zarr.Group, traj1: DaskMDTrajectory, 
+                                  traj2: DaskMDTrajectory):
         """
         Stack trajectories chunk-wise along atom axis.
         

@@ -26,6 +26,7 @@ including variability analysis, transition detection, and comparative studies
 with support for memory-mapped arrays.
 """
 
+from typing import Callable, Optional
 import numpy as np
 
 from ..helper.calculator_stat_helper import CalculatorStatHelper
@@ -52,7 +53,7 @@ class DistanceCalculatorAnalysis:
         "compute_per_residue_range",
     }
 
-    def __init__(self, use_memmap=False, chunk_size=10000):
+    def __init__(self, use_memmap: bool = False, chunk_size: int = 10000) -> None:
         """
         Initialize distance analysis with chunking configuration.
 
@@ -75,7 +76,7 @@ class DistanceCalculatorAnalysis:
         self.chunk_size = chunk_size
 
     # === PAIR-BASED STATISTICS ===
-    def compute_mean(self, distances):
+    def compute_mean(self, distances: np.ndarray) -> np.ndarray:
         """
         Compute mean distances per pair.
 
@@ -93,7 +94,7 @@ class DistanceCalculatorAnalysis:
             distances, np.mean, self.chunk_size, self.use_memmap
         )
 
-    def compute_std(self, distances):
+    def compute_std(self, distances: np.ndarray) -> np.ndarray:
         """
         Compute standard deviation of distances per pair.
 
@@ -111,7 +112,7 @@ class DistanceCalculatorAnalysis:
             distances, np.std, self.chunk_size, self.use_memmap
         )
 
-    def compute_min(self, distances):
+    def compute_min(self, distances: np.ndarray) -> np.ndarray:
         """
         Compute minimum distances per pair.
 
@@ -129,7 +130,7 @@ class DistanceCalculatorAnalysis:
             distances, np.min, self.chunk_size, self.use_memmap
         )
 
-    def compute_max(self, distances):
+    def compute_max(self, distances: np.ndarray) -> np.ndarray:
         """
         Compute maximum distances per pair.
 
@@ -147,7 +148,7 @@ class DistanceCalculatorAnalysis:
             distances, np.max, self.chunk_size, self.use_memmap
         )
 
-    def compute_median(self, distances):
+    def compute_median(self, distances: np.ndarray) -> np.ndarray:
         """
         Compute median distances per pair.
 
@@ -165,7 +166,7 @@ class DistanceCalculatorAnalysis:
             distances, np.median, self.chunk_size, self.use_memmap
         )
 
-    def compute_variance(self, distances):
+    def compute_variance(self, distances: np.ndarray) -> np.ndarray:
         """
         Compute variance of distances per pair.
 
@@ -183,7 +184,7 @@ class DistanceCalculatorAnalysis:
             distances, np.var, self.chunk_size, self.use_memmap
         )
 
-    def compute_range(self, distances):
+    def compute_range(self, distances: np.ndarray) -> np.ndarray:
         """
         Compute range (peak-to-peak) of distances per pair.
 
@@ -201,7 +202,7 @@ class DistanceCalculatorAnalysis:
             distances, np.ptp, self.chunk_size, self.use_memmap
         )
 
-    def compute_q25(self, distances):
+    def compute_q25(self, distances: np.ndarray) -> np.ndarray:
         """
         Compute 25th percentile of distances per pair.
 
@@ -222,7 +223,7 @@ class DistanceCalculatorAnalysis:
             self.use_memmap,
         )
 
-    def compute_q75(self, distances):
+    def compute_q75(self, distances: np.ndarray) -> np.ndarray:
         """
         Compute 75th percentile of distances per pair.
 
@@ -243,7 +244,7 @@ class DistanceCalculatorAnalysis:
             self.use_memmap,
         )
 
-    def compute_iqr(self, distances):
+    def compute_iqr(self, distances: np.ndarray) -> np.ndarray:
         """
         Compute interquartile range of distances per pair.
 
@@ -266,7 +267,7 @@ class DistanceCalculatorAnalysis:
             self.use_memmap,
         )
 
-    def compute_mad(self, distances):
+    def compute_mad(self, distances: np.ndarray) -> np.ndarray:
         """
         Compute median absolute deviation for each distance pair.
 
@@ -294,7 +295,7 @@ class DistanceCalculatorAnalysis:
         )
 
     # === FRAME-BASED STATISTICS ===
-    def distances_per_frame_mean(self, distances):
+    def distances_per_frame_mean(self, distances: np.ndarray) -> np.ndarray:
         """
         Compute mean distances per frame.
 
@@ -312,7 +313,7 @@ class DistanceCalculatorAnalysis:
             distances, self.chunk_size, self.use_memmap, np.mean
         )
 
-    def distances_per_frame_std(self, distances):
+    def distances_per_frame_std(self, distances: np.ndarray) -> np.ndarray:
         """
         Compute standard deviation of distances per frame.
 
@@ -330,7 +331,7 @@ class DistanceCalculatorAnalysis:
             distances, self.chunk_size, self.use_memmap, np.std
         )
 
-    def distances_per_frame_min(self, distances):
+    def distances_per_frame_min(self, distances: np.ndarray) -> np.ndarray:
         """
         Compute minimum distances per frame.
 
@@ -348,7 +349,7 @@ class DistanceCalculatorAnalysis:
             distances, self.chunk_size, self.use_memmap, np.min
         )
 
-    def distances_per_frame_max(self, distances):
+    def distances_per_frame_max(self, distances: np.ndarray) -> np.ndarray:
         """
         Compute maximum distances per frame.
 
@@ -366,7 +367,7 @@ class DistanceCalculatorAnalysis:
             distances, self.chunk_size, self.use_memmap, np.max
         )
 
-    def distances_per_frame_median(self, distances):
+    def distances_per_frame_median(self, distances: np.ndarray) -> np.ndarray:
         """
         Compute median distances per frame.
 
@@ -384,7 +385,7 @@ class DistanceCalculatorAnalysis:
             distances, self.chunk_size, self.use_memmap, np.median
         )
 
-    def distances_per_frame_range(self, distances):
+    def distances_per_frame_range(self, distances: np.ndarray) -> np.ndarray:
         """
         Compute range of distances per frame.
 
@@ -402,7 +403,7 @@ class DistanceCalculatorAnalysis:
             distances, self.chunk_size, self.use_memmap, np.ptp
         )
 
-    def distances_per_frame_sum(self, distances):
+    def distances_per_frame_sum(self, distances: np.ndarray) -> np.ndarray:
         """
         Compute sum of distances per frame.
 
@@ -421,7 +422,7 @@ class DistanceCalculatorAnalysis:
         )
 
     # === PER-COLUMN ANALYSIS (auto-converts 2D to 3D) ===
-    def compute_per_residue_mean(self, distances):
+    def compute_per_residue_mean(self, distances: np.ndarray) -> np.ndarray:
         """
         Compute mean distance for each residue. Auto-converts condensed to squareform.
 
@@ -440,7 +441,7 @@ class DistanceCalculatorAnalysis:
             distances, np.mean, self.chunk_size, self.use_memmap
         )
 
-    def compute_per_residue_std(self, distances):
+    def compute_per_residue_std(self, distances: np.ndarray) -> np.ndarray:
         """
         Compute standard deviation of distances per residue.
 
@@ -461,7 +462,7 @@ class DistanceCalculatorAnalysis:
             distances, np.std, self.chunk_size, self.use_memmap
         )
 
-    def compute_per_residue_min(self, distances):
+    def compute_per_residue_min(self, distances: np.ndarray) -> np.ndarray:
         """
         Compute minimum distances per residue. Auto-converts condensed to squareform.
 
@@ -480,7 +481,7 @@ class DistanceCalculatorAnalysis:
             distances, np.min, self.chunk_size, self.use_memmap
         )
 
-    def compute_per_residue_max(self, distances):
+    def compute_per_residue_max(self, distances: np.ndarray) -> np.ndarray:
         """
         Compute maximum distances per residue. Auto-converts condensed to squareform.
 
@@ -499,7 +500,7 @@ class DistanceCalculatorAnalysis:
             distances, np.max, self.chunk_size, self.use_memmap
         )
 
-    def compute_per_residue_median(self, distances):
+    def compute_per_residue_median(self, distances: np.ndarray) -> np.ndarray:
         """
         Compute median distances per residue. Auto-converts condensed to squareform.
 
@@ -518,7 +519,7 @@ class DistanceCalculatorAnalysis:
             distances, np.median, self.chunk_size, self.use_memmap
         )
 
-    def compute_per_residue_sum(self, distances):
+    def compute_per_residue_sum(self, distances: np.ndarray) -> np.ndarray:
         """
         Compute sum of distances per residue. Auto-converts condensed to squareform.
 
@@ -537,7 +538,7 @@ class DistanceCalculatorAnalysis:
             distances, np.sum, self.chunk_size, self.use_memmap
         )
 
-    def compute_per_residue_variance(self, distances):
+    def compute_per_residue_variance(self, distances: np.ndarray) -> np.ndarray:
         """
         Compute variance of distances per residue. Auto-converts condensed to squareform.
 
@@ -556,7 +557,7 @@ class DistanceCalculatorAnalysis:
             distances, np.var, self.chunk_size, self.use_memmap
         )
 
-    def compute_per_residue_range(self, distances):
+    def compute_per_residue_range(self, distances: np.ndarray) -> np.ndarray:
         """
         Compute range of distances per residue. Auto-converts condensed to squareform.
 
@@ -576,7 +577,7 @@ class DistanceCalculatorAnalysis:
         )
 
     # === TRANSITION ANALYSIS ===
-    def compute_transitions_lagtime(self, distances, threshold=2.0, lag_time=10):
+    def compute_transitions_lagtime(self, distances: np.ndarray, threshold: float = 2.0, lag_time: int = 10) -> np.ndarray:
         """
         Compute transitions within lag time.
 
@@ -598,7 +599,7 @@ class DistanceCalculatorAnalysis:
             distances, threshold, lag_time, self.chunk_size, self.use_memmap
         )
 
-    def compute_transitions_window(self, distances, threshold=2.0, window_size=10):
+    def compute_transitions_window(self, distances: np.ndarray, threshold: float = 2.0, window_size: int = 10) -> np.ndarray:
         """
         Compute transitions within window.
 
@@ -621,8 +622,8 @@ class DistanceCalculatorAnalysis:
         )
 
     def compute_stability(
-        self, distances, threshold=2.0, window_size=10, mode="window"
-    ):
+        self, distances: np.ndarray, threshold: float = 2.0, window_size: int = 10, mode: str = "window"
+    ) -> np.ndarray:
         """
         Compute stability analysis.
 
@@ -647,7 +648,7 @@ class DistanceCalculatorAnalysis:
         )
 
     # === COMPARISON METHODS ===
-    def compute_differences(self, distances1, distances2, preprocessing_func=None):
+    def compute_differences(self, distances1: np.ndarray, distances2: np.ndarray, preprocessing_func: Optional[Callable] = None) -> np.ndarray:
         """
         Compute differences between two distance datasets.
 

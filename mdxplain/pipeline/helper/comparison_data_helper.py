@@ -25,10 +25,15 @@ This module provides the ComparisonDataHelper class with static methods
 for processing comparison data without creating circular dependencies.
 Used by PipelineData to provide comparison data access functionality.
 """
+from __future__ import annotations
 
-from typing import Dict, List, Any, Tuple
+from typing import Dict, List, Any, Tuple, TYPE_CHECKING
 import numpy as np
 
+if TYPE_CHECKING:
+    from ..entities.pipeline_data import PipelineData
+
+from ...comparison.entities.comparison_data import ComparisonData
 from ..helper.selection_memmap_helper import SelectionMemmapHelper
 
 
@@ -50,7 +55,7 @@ class ComparisonDataHelper:
 
     @staticmethod
     def get_sub_comparison_data(
-        pipeline_data, comparison_data, sub_comparison_name: str
+        pipeline_data: PipelineData, comparison_data: ComparisonData, sub_comparison_name: str
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Get X (features) and y (labels) for a specific sub-comparison.
@@ -112,7 +117,7 @@ class ComparisonDataHelper:
 
     @staticmethod
     def _get_binary_comparison_data(
-        pipeline_data, comparison_data, sub_comp: Dict[str, Any], 
+        pipeline_data: PipelineData, comparison_data: ComparisonData, sub_comp: Dict[str, Any], 
         full_matrix: np.ndarray, frame_mapping: Dict[int, Tuple[int, int]]
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
@@ -165,7 +170,7 @@ class ComparisonDataHelper:
 
     @staticmethod
     def _get_multiclass_data(
-        pipeline_data, comparison_data, sub_comp: Dict[str, Any],
+        pipeline_data: PipelineData, comparison_data: ComparisonData, sub_comp: Dict[str, Any],
         full_matrix: np.ndarray, frame_mapping: Dict[int, Tuple[int, int]]
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
@@ -211,7 +216,7 @@ class ComparisonDataHelper:
 
     @staticmethod
     def _collect_frame_indices(
-        pipeline_data, selector_names: List[str], frame_mapping: Dict[int, Tuple[int, int]]
+        pipeline_data: PipelineData, selector_names: List[str], frame_mapping: Dict[int, Tuple[int, int]]
     ) -> List[int]:
         """
         Collect global frame indices from trajectory-specific data selectors.
@@ -261,7 +266,7 @@ class ComparisonDataHelper:
 
     @staticmethod
     def _extract_comparison_matrix(
-        pipeline_data, comparison_data, all_frame_indices: List[int], 
+        pipeline_data: PipelineData, comparison_data: ComparisonData, all_frame_indices: List[int], 
         all_labels: List[int], sub_comparison_name: str, full_matrix: np.ndarray
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
@@ -313,7 +318,7 @@ class ComparisonDataHelper:
 
     @staticmethod
     def _get_comparison_data_memmap(
-        pipeline_data, comparison_data, frame_indices: List[int], full_matrix: np.ndarray
+        pipeline_data: PipelineData, comparison_data: ComparisonData, frame_indices: List[int], full_matrix: np.ndarray
     ) -> np.ndarray:
         """
         Get comparison data in a memmap-safe way for large datasets.

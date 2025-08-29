@@ -19,8 +19,9 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """Tag management utilities for trajectory data."""
+from __future__ import annotations
 
-from typing import List, Union, Dict, TYPE_CHECKING
+from typing import List, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ...entities.trajectory_data import TrajectoryData
@@ -31,7 +32,7 @@ class TagHelper:
 
     @staticmethod
     def resolve_trajectory_selectors(
-        traj_data: "TrajectoryData",
+        traj_data: TrajectoryData,
         trajectory_selector: Union[int, str, list, range, dict],
         tags: List[str] = None,
     ) -> List[tuple]:

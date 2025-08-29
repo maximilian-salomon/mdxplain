@@ -25,8 +25,11 @@ Provides the complete MDTraj.Trajectory interface with Dask/Zarr backend
 for efficient processing of large trajectory files.
 """
 
-from typing import Optional, Union
+from __future__ import annotations
+
+from typing import Optional, Union, Tuple, Dict, Any
 import os
+import pickle
 import shutil
 import numpy as np
 import zarr
@@ -39,7 +42,7 @@ from zarr.codecs import BloscCodec
 DEFAULT_COMPRESSOR = BloscCodec(cname='lz4', clevel=1)
 
 from ..helper.dask_trajectory_helper.dask_trajectory_build_helper import DaskMDTrajectoryBuildHelper
-from ..helper.dask_trajectory_helper.dask_trajectory_store_helper import DaskMDTrajectoryStoreHelper
+from ..helper.dask_trajectory_helper.dask_trajectory_store_helper import DaskMDTrajectoryStoreHelper  
 from ..helper.dask_trajectory_helper.dask_trajectory_join_stack_helper import DaskMDTrajectoryJoinStackHelper
 from ..helper.dask_trajectory_helper.parallel_operations_helper import ParallelOperationsHelper
 
@@ -84,6 +87,62 @@ class DaskMDTrajectory:
         # Temp file tracking for cleanup
         self._is_temp_store = False  # Flag to track if this is a temporary store
         self._temp_zarr_path = None  # Path to temp zarr file for cleanup
+    
+    @classmethod
+    def from_mdtraj(cls, mdtraj: md.Trajectory, 
+                    zarr_cache_path: Optional[str] = None,
+                    chunk_size: int = 1000,
+                    n_workers: Optional[int] = None) -> DaskMDTrajectory:
+        """
+        Create DaskMDTrajectory from existing MDTraj trajectory.
+        
+        Parameters:
+        -----------
+        mdtraj : md.Trajectory
+            MDTraj trajectory object to convert
+        zarr_cache_path : str, optional
+            Path for Zarr cache. If None, creates temporary cache.
+        chunk_size : int, default=1000
+            Number of frames per chunk for Dask arrays
+        n_workers : int, optional
+            Number of parallel workers (defaults to CPU count)
+            
+        Returns:
+        --------
+        DaskMDTrajectory
+            New DaskMDTrajectory instance with data from MDTraj
+            
+        Examples:
+        ---------
+        >>> import mdtraj as md
+        >>> traj = md.load('trajectory.xtc', top='topology.pdb')
+        >>> dask_traj = DaskMDTrajectory.from_mdtraj(traj)
+        >>> print(f"Converted {dask_traj.n_frames} frames")
+        
+        >>> # With custom cache path
+        >>> dask_traj = DaskMDTrajectory.from_mdtraj(
+        ...     traj, zarr_cache_path='/tmp/my_cache.zarr'
+        ... )
+        """
+        # Create new instance
+        instance = cls.__new__(cls)
+        
+        # Initialize basic attributes
+        instance._is_temp_store = zarr_cache_path is None
+        instance._temp_zarr_path = None
+        
+        # Delegate initialization to builder with mdtraj input
+        instance._builder = DaskMDTrajectoryBuildHelper()
+        instance._builder.initialize_from_mdtraj(
+            instance, mdtraj, zarr_cache_path, chunk_size, n_workers
+        )
+        
+        # Initialize helper for join/stack operations
+        instance._join_stack_helper = DaskMDTrajectoryJoinStackHelper(
+            cache_dir=instance._cache_dir
+        )
+        
+        return instance
     
     # ============================================================================
     # MDTraj Properties Interface
@@ -325,7 +384,7 @@ class DaskMDTrajectory:
     def atom_slice(
             self, 
             atom_indices: Union[np.ndarray, list]
-    ) -> 'DaskMDTrajectory':
+    ) -> DaskMDTrajectory:
         """
         Create trajectory from subset of atoms.
         
@@ -361,7 +420,7 @@ class DaskMDTrajectory:
         # Create new DaskMDTrajectory from processed store
         return self._create_from_zarr_store(new_zarr_store)
     
-    def center_coordinates(self, mass_weighted: bool = False) -> 'DaskMDTrajectory':
+    def center_coordinates(self, mass_weighted: bool = False) -> DaskMDTrajectory:
         """
         Center trajectory frames at origin.
         
@@ -392,10 +451,10 @@ class DaskMDTrajectory:
     
     def superpose(
             self, 
-            reference: Optional[Union['DaskMDTrajectory', md.Trajectory]] = None,
+            reference: Optional[Union[DaskMDTrajectory, md.Trajectory]] = None,
             frame: int = 0, 
             atom_indices: Optional[np.ndarray] = None
-    ) -> 'DaskMDTrajectory':
+    ) -> DaskMDTrajectory:
         """
         Align trajectory to reference structure.
         
@@ -454,7 +513,7 @@ class DaskMDTrajectory:
             width: int, 
             order: Optional[int] = None, 
             atom_indices: Optional[np.ndarray] = None
-    ) -> 'DaskMDTrajectory':
+    ) -> DaskMDTrajectory:
         """
         Apply smoothing filter to trajectory.
         
@@ -488,7 +547,7 @@ class DaskMDTrajectory:
         new_zarr_store = self._parallel_ops.smooth(width, order, atom_indices)
         return self._create_from_zarr_store(new_zarr_store)
     
-    def join(self, other: 'DaskMDTrajectory', check_topology: bool = True) -> 'DaskMDTrajectory':
+    def join(self, other: DaskMDTrajectory, check_topology: bool = True) -> DaskMDTrajectory:
         """
         Combine trajectories along frame axis.
         
@@ -522,7 +581,7 @@ class DaskMDTrajectory:
             
         return self._join_stack_helper.join_trajectories(self, other, check_topology)
     
-    def stack(self, other: 'DaskMDTrajectory') -> 'DaskMDTrajectory':
+    def stack(self, other: DaskMDTrajectory) -> DaskMDTrajectory:
         """
         Combine trajectories along atom axis.
         
@@ -618,7 +677,7 @@ class DaskMDTrajectory:
         return self._create_md_trajectory(coords, time, unitcell_data)
     
     
-    def _compute_basic_arrays(self, key) -> tuple:
+    def _compute_basic_arrays(self, key: Union[int, slice, np.ndarray]) -> Tuple[np.ndarray, np.ndarray]:
         """
         Compute basic coordinate and time arrays.
         
@@ -636,7 +695,7 @@ class DaskMDTrajectory:
         time = self._dask_time[key].compute()
         return coords, time
     
-    def _compute_unitcell_arrays(self, key) -> tuple:
+    def _compute_unitcell_arrays(self, key: Union[int, slice, np.ndarray]) -> Tuple[Optional[np.ndarray], Optional[np.ndarray], Optional[np.ndarray]]:
         """
         Compute unitcell arrays if present.
         
@@ -657,7 +716,7 @@ class DaskMDTrajectory:
             return unitcell_vectors, unitcell_lengths, unitcell_angles
         return None, None, None
     
-    def _create_md_trajectory(self, coords, time, unitcell_data) -> md.Trajectory:
+    def _create_md_trajectory(self, coords: np.ndarray, time: np.ndarray, unitcell_data: Tuple[Optional[np.ndarray], Optional[np.ndarray], Optional[np.ndarray]]) -> md.Trajectory:
         """
         Create md.Trajectory from computed arrays.
         
@@ -827,7 +886,7 @@ class DaskMDTrajectory:
                 target_store['unitcell_angles'][target_start:target_end] = \
                     self._dask_unitcell_angles[start_idx:end_idx].compute()
     
-    def _create_from_zarr_store(self, zarr_store: zarr.Group) -> 'DaskMDTrajectory':
+    def _create_from_zarr_store(self, zarr_store: zarr.Group) -> DaskMDTrajectory:
         """
         Create new DaskMDTrajectory from Zarr store.
         
@@ -889,7 +948,7 @@ class DaskMDTrajectory:
         
         return new_instance
     
-    def _create_slice(self, key: Union[slice, np.ndarray]) -> 'DaskMDTrajectory':
+    def _create_slice(self, key: Union[slice, np.ndarray]) -> DaskMDTrajectory:
         """
         Create new DaskMDTrajectory from slice.
         
@@ -907,3 +966,70 @@ class DaskMDTrajectory:
         store_manager = DaskMDTrajectoryStoreHelper(cache_dir=self._cache_dir)
         zarr_store = store_manager.create_slice_store(self, key)
         return self._create_from_zarr_store(zarr_store)
+
+    def save(self, filepath: str) -> None:
+        """
+        Save DaskMDTrajectory to file.
+        
+        Parameters:
+        -----------
+        filepath : str
+            Path where to save the trajectory. Directory will be created if needed.
+            
+        Returns:
+        --------
+        None
+            Saves trajectory to disk using pickle
+            
+        Notes:
+        ------
+        - Creates parent directories if they don't exist
+        - The zarr cache must remain available at its original location
+        - Uses pickle to preserve the complete object state
+        
+        Examples:
+        ---------
+        >>> traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
+        >>> traj.save('output/my_traj.pkl')
+        """
+        # Ensure parent directory exists
+        parent_dir = os.path.dirname(filepath)
+        if parent_dir:
+            os.makedirs(parent_dir, exist_ok=True)
+        
+        with open(filepath, 'wb') as f:
+            pickle.dump(self, f)
+
+    @classmethod
+    def load(cls, filepath: str) -> DaskMDTrajectory:
+        """
+        Load DaskMDTrajectory from file.
+        
+        Parameters:
+        -----------
+        filepath : str
+            Path to the saved trajectory file
+            
+        Returns:
+        --------
+        DaskMDTrajectory
+            Loaded trajectory object
+            
+        Raises:
+        -------
+        FileNotFoundError
+            If the saved file does not exist
+            
+        Notes:
+        ------
+        The zarr cache must still exist at the original location.
+        
+        Examples:
+        ---------
+        >>> traj = DaskMDTrajectory.load('output/my_traj.pkl')
+        """
+        if not os.path.exists(filepath):
+            raise FileNotFoundError(f"Trajectory file not found: {filepath}")
+            
+        with open(filepath, 'rb') as f:
+            return pickle.load(f)

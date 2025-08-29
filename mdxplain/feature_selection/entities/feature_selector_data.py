@@ -25,7 +25,9 @@ This module contains the FeatureSelectorData class that stores feature
 selection configurations including selection criteria and data type preferences.
 """
 
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
+
+from ...utils.data_utils import DataUtils
 
 
 class FeatureSelectorData:
@@ -91,7 +93,7 @@ class FeatureSelectorData:
 
     def add_selection(
         self, feature_key: str, selection: str, use_reduced: bool = False,
-        common_denominator: bool = True, traj_selection = "all", require_all_partners: bool = False
+        common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]]] = "all", require_all_partners: bool = False
     ) -> None:
         """
         Add a selection configuration for a feature type.
@@ -483,3 +485,135 @@ class FeatureSelectorData:
             Total number of columns, or None if not calculated yet
         """
         return self.n_columns
+
+    def save(self, save_path: str) -> None:
+        """
+        Save FeatureSelectorData object to disk.
+
+        Parameters:
+        -----------
+        save_path : str
+            Path where to save the FeatureSelectorData object
+
+        Returns:
+        --------
+        None
+            Saves the FeatureSelectorData object to the specified path
+
+        Examples:
+        ---------
+        >>> feature_selector_data.save('analysis_results/feature_selection.pkl')
+        """
+        DataUtils.save_object(self, save_path)
+
+    def load(self, load_path: str) -> None:
+        """
+        Load FeatureSelectorData object from disk.
+
+        Parameters:
+        -----------
+        load_path : str
+            Path to the saved FeatureSelectorData file
+
+        Returns:
+        --------
+        None
+            Loads the FeatureSelectorData object from the specified path
+
+        Examples:
+        ---------
+        >>> feature_selector_data.load('analysis_results/feature_selection.pkl')
+        """
+        DataUtils.load_object(self, load_path)
+
+    def print_info(self) -> None:
+        """
+        Print comprehensive feature selector information.
+
+        Parameters:
+        -----------
+        None
+
+        Returns:
+        --------
+        None
+            Prints feature selector information to console
+
+        Examples:
+        ---------
+        >>> feature_selector_data.print_info()
+        === FeatureSelectorData ===
+        Name: analysis
+        Feature Types: 2 (distances, contacts)
+        Total Selections: 3
+        Selection Results: Available for 2 feature types
+        """
+        if self._has_no_selections():
+            print("No feature selections configured.")
+            return
+
+        self._print_selector_header()
+        self._print_selector_details()
+        self._print_results_info()
+
+    def _has_no_selections(self) -> bool:
+        """
+        Check if no feature selections are configured.
+
+        Returns:
+        --------
+        bool
+            True if no selections are available, False otherwise
+        """
+        return len(self.get_feature_keys()) == 0
+
+    def _print_selector_header(self) -> None:
+        """
+        Print header with selector name.
+
+        Returns:
+        --------
+        None
+        """
+        print("=== FeatureSelectorData ===")
+        print(f"Name: {self.name}")
+
+    def _print_selector_details(self) -> None:
+        """
+        Print detailed selection information.
+
+        Returns:
+        --------
+        None
+        """
+        summary = self.get_summary()
+        feature_keys = self.get_feature_keys()
+        
+        print(f"Feature Types: {summary['feature_count']} ({', '.join(feature_keys)})")
+        print(f"Total Selections: {summary['total_selections']}")
+        
+        if summary['reduced_selections'] > 0:
+            print(f"  - Using reduced data: {summary['reduced_selections']}")
+            print(f"  - Using original data: {summary['original_selections']}")
+
+        # Show reference trajectory if set
+        if hasattr(self, 'reference_trajectory') and self.reference_trajectory is not None:
+            print(f"Reference Trajectory: {self.reference_trajectory}")
+
+        # Show column count if available
+        if hasattr(self, 'n_columns') and self.n_columns is not None:
+            print(f"Matrix Columns: {self.n_columns}")
+
+    def _print_results_info(self) -> None:
+        """
+        Print information about stored results.
+
+        Returns:
+        --------
+        None
+        """
+        if len(self.selection_results) > 0:
+            result_features = list(self.selection_results.keys())
+            print(f"Selection Results: Available for {len(result_features)} feature types ({', '.join(result_features)})")
+        else:
+            print("Selection Results: Not computed yet")

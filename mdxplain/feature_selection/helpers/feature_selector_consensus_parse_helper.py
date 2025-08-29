@@ -20,7 +20,7 @@
 
 """Consensus nomenclature pattern parsing utilities."""
 
-from typing import List, Optional
+from typing import List, Optional, Dict, Any, Tuple
 
 
 class FeatureSelectorConsensusParseHelper:
@@ -211,7 +211,7 @@ class FeatureSelectorConsensusParseHelper:
         return matches
 
     @staticmethod
-    def _feature_matches_consensus(feature, pattern: str, require_all_partners: bool = False, exact_match: bool = False) -> bool:
+    def _feature_matches_consensus(feature: List[Dict[str, Any]], pattern: str, require_all_partners: bool = False, exact_match: bool = False) -> bool:
         """
         Check if a feature matches consensus pattern (substring or exact).
         
@@ -255,7 +255,7 @@ class FeatureSelectorConsensusParseHelper:
             return False
 
     @staticmethod
-    def _feature_has_consensus(feature) -> bool:
+    def _feature_has_consensus(feature: List[Dict[str, Any]]) -> bool:
         """
         Check if a feature has any consensus information.
         
@@ -411,7 +411,7 @@ class FeatureSelectorConsensusParseHelper:
 
 
     @staticmethod
-    def _extract_unique_partners(features):
+    def _extract_unique_partners(features: List[List[Dict[str, Any]]]) -> List[Dict[str, Any]]:
         """
         Extract all unique partners (residues) from features.
         
@@ -437,7 +437,7 @@ class FeatureSelectorConsensusParseHelper:
         return list(partners_map.values())
     
     @staticmethod
-    def _find_seqid_ranges(partners, start_pattern, end_pattern, match_func):
+    def _find_seqid_ranges(partners: List[Dict[str, Any]], start_pattern: str, end_pattern: str, match_func: callable) -> List[Tuple[int, int]]:
         """
         Find all seqid ranges between start and end patterns.
         
@@ -496,7 +496,7 @@ class FeatureSelectorConsensusParseHelper:
         return ranges
     
     @staticmethod
-    def _find_fallback_seqid(partners, from_seqid, direction):
+    def _find_fallback_seqid(partners: List[Dict[str, Any]], from_seqid: int, direction: str) -> Optional[int]:
         """
         Find fallback seqid in given direction.
         
@@ -528,7 +528,7 @@ class FeatureSelectorConsensusParseHelper:
         return None
     
     @staticmethod
-    def _feature_matches_seqid_range(feature, min_seqid, max_seqid, include_none, require_all_partners=False):
+    def _feature_matches_seqid_range(feature: List[Dict[str, Any]], min_seqid: int, max_seqid: int, include_none: bool, require_all_partners: bool = False) -> bool:
         """
         Check if feature matches seqid range criteria.
         

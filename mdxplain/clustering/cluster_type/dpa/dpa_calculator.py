@@ -26,8 +26,7 @@ DPA clustering computation using the DPA package from conda environment.
 """
 
 import time
-from typing import Dict, Tuple
-
+from typing import Dict, Tuple, Any, Optional, List
 import numpy as np
 
 from ..interfaces.calculator_base import CalculatorBase
@@ -60,7 +59,7 @@ class DPACalculator(CalculatorBase):
     >>> print(f"Found {metadata['n_clusters']} clusters")
     """
 
-    def __init__(self, cache_path="./cache"):
+    def __init__(self, cache_path: str = "./cache") -> None:
         """
         Initialize DPA calculator.
 
@@ -71,7 +70,7 @@ class DPACalculator(CalculatorBase):
         """
         super().__init__(cache_path)
 
-    def compute(self, data, **kwargs) -> Tuple[np.ndarray, Dict]:
+    def compute(self, data: np.ndarray, **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Compute DPA clustering.
 
@@ -117,7 +116,7 @@ class DPACalculator(CalculatorBase):
             **kwargs
         )
 
-    def _compute_without_cache(self, data, **kwargs) -> Tuple[np.ndarray, Dict]:
+    def _compute_without_cache(self, data: np.ndarray, **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Perform DPA clustering without caching.
 
@@ -144,7 +143,7 @@ class DPACalculator(CalculatorBase):
 
         return cluster_labels, metadata
 
-    def _extract_parameters(self, kwargs):
+    def _extract_parameters(self, **kwargs) -> Dict[str, Any]:
         """
         Extract and validate DPA parameters.
 
@@ -189,7 +188,7 @@ class DPACalculator(CalculatorBase):
             "halos": kwargs.get("halos", False),
         }
 
-    def _perform_clustering(self, data, parameters):
+    def _perform_clustering(self, data: np.ndarray, parameters: Dict[str, Any]) -> Tuple[np.ndarray, Any, float]:
         """
         Perform DPA clustering computation.
 
@@ -214,7 +213,7 @@ class DPACalculator(CalculatorBase):
 
         return cluster_labels, dpa_model, computation_time
 
-    def _create_dpa_model(self, data, parameters):
+    def _create_dpa_model(self, data: np.ndarray, parameters: Dict[str, Any]) -> Any:
         """
         Create and fit DPA model.
 
@@ -247,7 +246,7 @@ class DPACalculator(CalculatorBase):
         dpa.fit(data)
         return dpa
 
-    def _extract_labels(self, dpa_model, use_halos):
+    def _extract_labels(self, dpa_model: DensityPeakAdvanced, use_halos: bool) -> np.ndarray:
         """
         Extract cluster labels from DPA model.
 
@@ -271,8 +270,13 @@ class DPACalculator(CalculatorBase):
             raise ValueError("DPA model does not have expected label attributes")
 
     def _build_metadata(
-        self, data, cluster_labels, dpa_model, parameters, computation_time
-    ):
+        self, 
+        data: np.ndarray, 
+        cluster_labels: np.ndarray, 
+        dpa_model: DensityPeakAdvanced, 
+        parameters: Dict[str, Any], 
+        computation_time: float
+    ) -> Dict[str, Any]:
         """
         Build comprehensive metadata dictionary.
 
@@ -319,7 +323,10 @@ class DPACalculator(CalculatorBase):
 
         return metadata
 
-    def _get_cluster_centers(self, dpa_model):
+    def _get_cluster_centers(
+            self, 
+            dpa_model: DensityPeakAdvanced
+    ) -> Optional[List[float]]:
         """
         Extract cluster centers from DPA model.
 
@@ -340,7 +347,7 @@ class DPACalculator(CalculatorBase):
                 return list(dpa_model.centers_)
         return None
 
-    def _get_densities(self, dpa_model):
+    def _get_densities(self, dpa_model: DensityPeakAdvanced) -> Optional[List[float]]:
         """
         Extract density values from DPA model.
 
@@ -361,7 +368,7 @@ class DPACalculator(CalculatorBase):
                 return list(dpa_model.densities_)
         return None
 
-    def _get_nn_indices(self, dpa_model):
+    def _get_nn_indices(self, dpa_model: DensityPeakAdvanced) -> Optional[List[int]]:
         """
         Extract indices of the k_max neighbors of each points.
 
@@ -382,7 +389,7 @@ class DPACalculator(CalculatorBase):
                 return list(dpa_model.nn_indices_)
         return None
 
-    def _get_topography(self, dpa_model):
+    def _get_topography(self, dpa_model: DensityPeakAdvanced) -> Optional[List[Any]]:
         """
         Extract the topography values, which consists in a Nclus x Nclus symmetric matrix,
         in which the diagonal entries are the heights of the peaks and the off-diagonal entries are the
@@ -410,7 +417,7 @@ class DPACalculator(CalculatorBase):
                 return list(dpa_model.topography_)
         return None
 
-    def _get_error_densities(self, dpa_model):
+    def _get_error_densities(self, dpa_model: DensityPeakAdvanced) -> Optional[List[float]]:
         """
         Extract uncertainty values of the density estimation from DPA model.
 
@@ -434,7 +441,7 @@ class DPACalculator(CalculatorBase):
                 return list(dpa_model.err_densities_)
         return None
 
-    def _get_nn_distances(self, dpa_model):
+    def _get_nn_distances(self, dpa_model: DensityPeakAdvanced) -> Optional[List[float]]:
         """
         Extract distances to k_max neighbors from DPA model.
 

@@ -27,11 +27,17 @@ It supports various comparison modes and automatically generates
 appropriate sub-comparisons.
 """
 
-from typing import List, Dict, Any
+from __future__ import annotations
+
+from typing import List, Dict, Any, TYPE_CHECKING
 
 from ..entities.comparison_data import ComparisonData
 from ..helpers.comparison_validation_helper import ComparisonValidationHelper
 from ..helpers.sub_comparison_creation_helper import SubComparisonCreationHelper
+from ...utils.data_utils import DataUtils
+
+if TYPE_CHECKING:
+    from ...pipeline.entities.pipeline_data import PipelineData
 
 
 class ComparisonManager:
@@ -69,7 +75,7 @@ class ComparisonManager:
     ... )
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the comparison manager.
 
@@ -86,7 +92,7 @@ class ComparisonManager:
 
     def create_comparison(
         self,
-        pipeline_data,
+        pipeline_data: PipelineData,
         name: str,
         mode: str,
         feature_selector: str,
@@ -171,7 +177,7 @@ class ComparisonManager:
         pipeline_data.comparison_data[name] = comp_data
 
 
-    def list_comparisons(self, pipeline_data) -> List[str]:
+    def list_comparisons(self, pipeline_data: PipelineData) -> List[str]:
         """
         List all available comparisons.
 
@@ -192,7 +198,7 @@ class ComparisonManager:
         """
         return list(pipeline_data.comparison_data.keys())
 
-    def get_comparison_info(self, pipeline_data, name: str) -> Dict[str, Any]:
+    def get_comparison_info(self, pipeline_data: PipelineData, name: str) -> Dict[str, Any]:
         """
         Get information about a comparison.
 
@@ -218,7 +224,7 @@ class ComparisonManager:
         comp_data = pipeline_data.comparison_data[name]
         return comp_data.get_comparison_info()
 
-    def remove_comparison(self, pipeline_data, name: str) -> None:
+    def remove_comparison(self, pipeline_data: PipelineData, name: str) -> None:
         """
         Remove a comparison.
 
@@ -240,3 +246,121 @@ class ComparisonManager:
         """
         ComparisonValidationHelper.validate_comparison_exists(pipeline_data, name)
         del pipeline_data.comparison_data[name]
+
+    def save(self, pipeline_data: PipelineData, save_path: str) -> None:
+        """
+        Save all comparison data to single file.
+
+        Warning:
+        --------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.comparison.save('comparison.npy')  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = ComparisonManager()
+        >>> manager.save(pipeline_data, 'comparison.npy')  # pipeline_data required
+
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data container with comparison data
+        save_path : str
+            Path where to save all comparison data in one file
+
+        Returns:
+        --------
+        None
+            Saves all comparison data to the specified file
+            
+        Examples:
+        ---------
+        >>> manager.save(pipeline_data, 'comparison.npy')
+        """
+        DataUtils.save_object(pipeline_data.comparison_data, save_path)
+
+    def load(self, pipeline_data: PipelineData, load_path: str) -> None:
+        """
+        Load all comparison data from single file.
+
+        Warning:
+        --------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.comparison.load('comparison.npy')  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = ComparisonManager()
+        >>> manager.load(pipeline_data, 'comparison.npy')  # pipeline_data required
+
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data container to load comparison data into
+        load_path : str
+            Path to saved comparison data file
+
+        Returns:
+        --------
+        None
+            Loads all comparison data from the specified file
+            
+        Examples:
+        ---------
+        >>> manager.load(pipeline_data, 'comparison.npy')
+        """
+        temp_dict = {}
+        DataUtils.load_object(temp_dict, load_path)
+        pipeline_data.comparison_data = temp_dict
+
+    def print_info(self, pipeline_data: PipelineData) -> None:
+        """
+        Print comparison information.
+
+        Warning:
+        --------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.comparison.print_info()  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = ComparisonManager()
+        >>> manager.print_info(pipeline_data)  # pipeline_data required
+
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data container with comparison data
+
+        Returns:
+        --------
+        None
+            Prints comparison information to console
+
+        Examples:
+        ---------
+        >>> manager.print_info(pipeline_data)
+        """
+        if len(pipeline_data.comparison_data) == 0:
+            print("No comparison data available.")
+            return
+
+        print("=== Comparison Information ===")
+        data_names = list(pipeline_data.comparison_data.keys())
+        print(f"Comparison Names: {len(data_names)} ({', '.join(data_names)})")
+        
+        for name, data in pipeline_data.comparison_data.items():
+            print(f"\n--- {name} ---")
+            data.print_info()

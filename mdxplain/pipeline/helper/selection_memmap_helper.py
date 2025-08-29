@@ -25,6 +25,7 @@ Provides memory-mapped matrix operations for efficient handling of
 large datasets in the feature selection system.
 """
 
+from typing import List
 import numpy as np
 from ...utils.data_utils import DataUtils
 
@@ -34,14 +35,14 @@ class SelectionMemmapHelper:
 
     @staticmethod
     def create_memmap_selection(
-        data,
-        indices: list,
+        data: np.ndarray,
+        indices: List[int],
         name: str,
         data_type: str,
         feature_type: str,
         cache_dir: str,
         chunk_size: int,
-    ):
+    ) -> List[np.ndarray]:
         """
         Create memory-efficient selection using chunk-wise processing.
 
@@ -150,12 +151,12 @@ class SelectionMemmapHelper:
 
     @staticmethod
     def create_memmap_frame_selection(
-        data,
-        frame_indices: list,
+        data: np.ndarray,
+        frame_indices: List[int],
         name: str,
         cache_dir: str,
         chunk_size: int,
-    ):
+    ) -> np.ndarray:
         """
         Create memory-efficient frame selection using chunk-wise processing.
 

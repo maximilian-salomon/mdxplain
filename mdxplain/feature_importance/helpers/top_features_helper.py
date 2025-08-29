@@ -25,10 +25,16 @@ This module provides helper methods for extracting and formatting
 top important features from feature importance analysis results.
 """
 
-from typing import List, Dict, Any, Tuple, Optional
+from __future__ import annotations
+
+from typing import List, Dict, Any, Tuple, Optional, TYPE_CHECKING
 import numpy as np
 
+from ..entities.feature_importance_data import FeatureImportanceData
 from .feature_name_mapping_helper import FeatureNameMappingHelper
+
+if TYPE_CHECKING:
+    from ...pipeline.entities.pipeline_data import PipelineData
 
 
 class TopFeaturesHelper:
@@ -54,7 +60,7 @@ class TopFeaturesHelper:
     
     @staticmethod
     def get_top_features_for_comparison(
-        fi_data, 
+        fi_data: FeatureImportanceData, 
         comparison_identifier: str, 
         n: int
     ) -> List[Tuple[int, float]]:
@@ -90,7 +96,7 @@ class TopFeaturesHelper:
     
     @staticmethod
     def get_top_features_averaged(
-        fi_data,
+        fi_data: FeatureImportanceData,
         n: int
     ) -> List[Tuple[int, float]]:
         """
@@ -136,7 +142,7 @@ class TopFeaturesHelper:
     @staticmethod
     def format_features_with_names(
         indices_scores: List[Tuple[int, float]],
-        feature_metadata
+        feature_metadata: Optional[List[Any]]
     ) -> List[Dict[str, Any]]:
         """
         Format feature indices and scores with human-readable names.
@@ -184,8 +190,8 @@ class TopFeaturesHelper:
     
     @staticmethod
     def get_top_features_with_names(
-        pipeline_data,
-        fi_data,
+        pipeline_data: PipelineData,
+        fi_data: FeatureImportanceData,
         comparison_identifier: Optional[str] = None,
         n: int = 10
     ) -> List[Dict[str, Any]]:

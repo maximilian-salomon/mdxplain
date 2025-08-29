@@ -26,7 +26,7 @@ must implement for consistency across different dimensionality reduction methods
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Any
 
 import numpy as np
 
@@ -45,7 +45,7 @@ class DecompositionTypeBase(ABC, metaclass=DecompositionTypeMeta):
     ---------
     >>> class MyDecomposition(DecompositionTypeBase):
     ...     @classmethod
-    ...     def get_type_name(cls):
+    ...     def get_type_name(cls) -> str:
     ...         return 'my_decomposition'
     ...     def init_calculator(self, **kwargs):
     ...         self.calculator = MyCalculator(**kwargs)
@@ -53,7 +53,7 @@ class DecompositionTypeBase(ABC, metaclass=DecompositionTypeMeta):
     ...         return self.calculator.compute(data, **kwargs)
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the decomposition type.
 
@@ -105,7 +105,7 @@ class DecompositionTypeBase(ABC, metaclass=DecompositionTypeMeta):
         pass
 
     @abstractmethod
-    def init_calculator(self, use_memmap=False, cache_path="./cache", chunk_size=10000):
+    def init_calculator(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 10000) -> None:
         """
         Initialize the calculator instance for this decomposition type.
 
@@ -139,7 +139,7 @@ class DecompositionTypeBase(ABC, metaclass=DecompositionTypeMeta):
         pass
 
     @abstractmethod
-    def compute(self, data) -> Tuple[np.ndarray, Dict]:
+    def compute(self, data: np.ndarray) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Compute decomposition using the initialized calculator.
 

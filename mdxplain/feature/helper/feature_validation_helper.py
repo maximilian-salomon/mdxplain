@@ -25,9 +25,15 @@ This module provides utilities for validating feature-related parameters
 and states in the FeatureManager, separating validation logic from core
 business logic.
 """
+from __future__ import annotations
 
 import numbers
-from typing import Optional, Union, List
+from typing import Optional, Union, List, TYPE_CHECKING
+
+from ..feature_type.interfaces.feature_type_base import FeatureTypeBase
+
+if TYPE_CHECKING:
+    from ...pipeline.entities.pipeline_data import PipelineData
 
 
 class FeatureValidationHelper:
@@ -101,7 +107,7 @@ class FeatureValidationHelper:
                 )
 
     @staticmethod
-    def validate_feature_exists(pipeline_data, feature_key: str) -> bool:
+    def validate_feature_exists(pipeline_data: PipelineData, feature_key: str) -> bool:
         """
         Check if feature exists and has computed data.
 
@@ -129,7 +135,7 @@ class FeatureValidationHelper:
         )
 
     @staticmethod
-    def validate_dependencies(pipeline_data, feature_type, feature_key: str, traj_indices: List[int]) -> None:
+    def validate_dependencies(pipeline_data: PipelineData, feature_type: FeatureTypeBase, feature_key: str, traj_indices: List[int]) -> None:
         """
         Validate that all feature dependencies are available.
 
@@ -177,7 +183,7 @@ class FeatureValidationHelper:
                 )
 
     @staticmethod
-    def validate_computation_requirements(pipeline_data, feature_type) -> None:
+    def validate_computation_requirements(pipeline_data: PipelineData, feature_type: FeatureTypeBase) -> None:
         """
         Validate that all requirements for feature computation are met.
 
@@ -214,7 +220,7 @@ class FeatureValidationHelper:
             raise ValueError("Trajectories must be loaded before computing features.")
 
     @staticmethod
-    def validate_reduction_state(pipeline_data, feature_key: str) -> None:
+    def validate_reduction_state(pipeline_data: PipelineData, feature_key: str) -> None:
         """
         Validate that feature is ready for reduction.
 

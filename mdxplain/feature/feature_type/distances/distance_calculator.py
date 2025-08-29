@@ -26,6 +26,7 @@ Supports memory mapping for large datasets and provides statistical analysis cap
 """
 
 
+from typing import Dict, Optional, Tuple, Any, List, Union
 import mdtraj as md
 import numpy as np
 
@@ -55,7 +56,7 @@ class DistanceCalculator(CalculatorBase):
     >>> distances, pairs = calculator.compute(trajectory)
     """
 
-    def __init__(self, use_memmap=False, cache_path="./cache", chunk_size=10000):
+    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 10000) -> None:
         """
         Initialize distance calculator with configuration parameters.
 
@@ -92,14 +93,14 @@ class DistanceCalculator(CalculatorBase):
 
     # ===== MAIN COMPUTATION METHOD =====
 
-    def compute(self, input_data, **kwargs):
+    def compute(self, input_data: md.Trajectory, **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Compute pairwise distances between all atoms/residues for all frames.
 
         Parameters:
         -----------
-        input_data : list
-            List of MDTraj trajectory objects to process
+        input_data : mdtraj.Trajectory
+            MDTraj trajectory object to process
         **kwargs : dict
             Additional parameters:
             - excluded_neighbors : int, default=1 - Diagonal offset (excluded_neighbors=1 excludes diagonal,
@@ -149,7 +150,7 @@ class DistanceCalculator(CalculatorBase):
 
         return distances, feature_metadata
 
-    def _setup_computation(self, trajectory, excluded_neighbors, res_metadata):
+    def _setup_computation(self, trajectory: md.Trajectory, excluded_neighbors: int, res_metadata: Dict[str, Any]) -> Tuple[np.ndarray, List[Tuple[int, int]], int]:
         """
         Set up computation parameters and create output arrays.
 
@@ -189,7 +190,7 @@ class DistanceCalculator(CalculatorBase):
 
         return total_frames, distances
 
-    def _finalize_output(self, distances, total_frames):
+    def _finalize_output(self, distances: np.ndarray, total_frames: int) -> np.ndarray:
         """
         Convert units, format output, and cleanup temporary files.
 
@@ -210,7 +211,7 @@ class DistanceCalculator(CalculatorBase):
 
         return distances
 
-    def _validate_pair_consistency(self, res_list):
+    def _validate_pair_consistency(self, res_list: List[int]) -> None:
         """
         Validate that res_list from MDTraj matches our generated pairs.
 
@@ -234,7 +235,7 @@ class DistanceCalculator(CalculatorBase):
         self._validate_pair_counts(res_list)
         self._validate_individual_pairs(res_list)
 
-    def _validate_pair_counts(self, res_list):
+    def _validate_pair_counts(self, res_list: List[int]) -> None:
         """
         Validate that the number of pairs matches.
 
@@ -259,7 +260,7 @@ class DistanceCalculator(CalculatorBase):
                 f"This indicates a problem with pair generation."
             )
 
-    def _validate_individual_pairs(self, res_list):
+    def _validate_individual_pairs(self, res_list: List[int]) -> None:
         """
         Validate that individual pairs match between res_list and self.pairs.
 
@@ -282,7 +283,7 @@ class DistanceCalculator(CalculatorBase):
             if converted_pair is not None:
                 self._check_pair_equality(converted_pair, our_pair, i, mdtraj_pair)
 
-    def _convert_mdtraj_pair_format(self, mdtraj_pair):
+    def _convert_mdtraj_pair_format(self, mdtraj_pair: Tuple[int, int]) -> Tuple[int, int]:
         """
         Convert MDTraj pair to comparable format.
 
@@ -302,7 +303,7 @@ class DistanceCalculator(CalculatorBase):
             return None  # Skip string format pairs
         return mdtraj_pair
 
-    def _check_pair_equality(self, converted_pair, our_pair, index, original_pair):
+    def _check_pair_equality(self, converted_pair: Tuple[int, int], our_pair: Tuple[int, int], index: int, original_pair: Tuple[int, int]) -> None:
         """
         Check if converted pair equals our generated pair.
 
@@ -335,7 +336,7 @@ class DistanceCalculator(CalculatorBase):
             )
 
     # ===== PRIVATE HELPER METHODS =====
-    def _generate_residue_pairs(self, n_residues, excluded_neighbors, res_metadata):
+    def _generate_residue_pairs(self, n_residues: int, excluded_neighbors: int, res_metadata: Dict[str, Any]) -> List[Tuple[int, int]]:
         """
         Generate residue pairs using chain-aware metadata-based neighbor exclusion.
 
@@ -387,7 +388,7 @@ class DistanceCalculator(CalculatorBase):
                 
         return pairs
 
-    def _is_consecutive_in_sequence(self, i, j, res_metadata, excluded_neighbors):
+    def _is_consecutive_in_sequence(self, i: int, j: int, res_metadata: Dict[str, Any], excluded_neighbors: int) -> bool:
         """
         Check if residues i and j are consecutive within same chain sequence.
 
@@ -420,7 +421,7 @@ class DistanceCalculator(CalculatorBase):
         seqid_distance = abs(res_metadata[j]['seqid'] - res_metadata[i]['seqid'])
         return seqid_distance <= excluded_neighbors
 
-    def _convert_to_angstrom(self, distances, total_frames):
+    def _convert_to_angstrom(self, distances: np.ndarray, total_frames: int) -> np.ndarray:
         """
         Convert distances from nm to Angstrom.
 
@@ -442,7 +443,7 @@ class DistanceCalculator(CalculatorBase):
         else:
             distances *= 10
 
-    def _generate_feature_metadata(self, res_metadata):
+    def _generate_feature_metadata(self, res_metadata: Dict[str, Any]) -> Dict[str, Any]:
         """
         Generate feature metadata for residue pairs using structured labels.
 
@@ -487,7 +488,7 @@ class DistanceCalculator(CalculatorBase):
 
         return {"is_pair": True, "features": features}
 
-    def _process_trajectory(self, traj, distances):
+    def _process_trajectory(self, traj: md.Trajectory, distances: np.ndarray) -> None:
         """
         Process a single trajectory in batches.
 
@@ -528,13 +529,13 @@ class DistanceCalculator(CalculatorBase):
 
     def _compute_metric_values(
         self,
-        distances,
-        metric,
-        threshold,
-        window_size,
-        transition_mode="window",
-        lag_time=1,
-    ):
+        distances: np.ndarray,
+        metric: str,
+        threshold: float,
+        window_size: int,
+        transition_mode: str = "window",
+        lag_time: int = 1,
+    ) -> np.ndarray:
         """
         Compute metric values for distances based on specified metric type.
 
@@ -598,8 +599,13 @@ class DistanceCalculator(CalculatorBase):
         raise ValueError(f"Unknown metric: {metric}. Supported: {supported_metrics}")
 
     def _compute_transitions_metric(
-        self, distances, threshold, window_size, transition_mode, lag_time
-    ):
+        self, 
+        distances: np.ndarray, 
+        threshold: float, 
+        window_size: int, 
+        transition_mode: str, 
+        lag_time: int
+    ) -> np.ndarray:
         """
         Compute transitions metric based on specified mode and parameters.
 
@@ -636,17 +642,17 @@ class DistanceCalculator(CalculatorBase):
 
     def compute_dynamic_values(
         self,
-        input_data,
-        metric="cv",
-        threshold_min=None,
-        threshold_max=None,
-        feature_metadata=None,
-        output_path=None,
-        transition_threshold=2.0,
-        window_size=10,
-        transition_mode="window",
-        lag_time=1,
-    ):
+        input_data: np.ndarray,
+        metric: str = "cv",
+        threshold_min: Optional[float] = None,
+        threshold_max: Optional[float] = None,
+        feature_metadata: Optional[List[Any]] = None,
+        output_path: Optional[str] = None,
+        transition_threshold: float = 2.0,
+        window_size: int = 10,
+        transition_mode: str = "window",
+        lag_time: int = 1,
+    ) -> Dict[str, Any]:
         """
         Filter and select variable/dynamic distances based on specified criteria.
 

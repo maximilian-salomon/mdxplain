@@ -26,6 +26,7 @@ arrays and chunked processing. All methods are static and can be used without
 instantiation across different calculators.
 """
 
+from typing import Callable, Optional, Any
 import numpy as np
 
 from .feature_shape_helper import FeatureShapeHelper
@@ -44,13 +45,13 @@ class CalculatorStatHelper:
 
     @staticmethod
     def compute_differences(
-        array1,
-        array2,
-        chunk_size=10000,
-        use_memmap=False,
-        preprocessing_func=None,
-        **func_kwargs
-    ):
+        array1: np.ndarray,
+        array2: np.ndarray,
+        chunk_size: int = 10000,
+        use_memmap: bool = False,
+        preprocessing_func: Optional[callable] = None,
+        **func_kwargs: Any
+    ) -> np.ndarray:
         """
         Compute differences between two feature arrays with optional preprocessing.
 
@@ -83,7 +84,7 @@ class CalculatorStatHelper:
         """
         if preprocessing_func is None:
 
-            def preprocessing_func(arr, **kw):
+            def preprocessing_func(arr: np.ndarray, **kw: Any) -> np.ndarray:
                 """Apply default preprocessing using mean per feature."""
                 return CalculatorStatHelper.compute_func_per_feature(
                     arr, np.mean, use_memmap=use_memmap, **kw
@@ -96,8 +97,12 @@ class CalculatorStatHelper:
 
     @staticmethod
     def compute_func_per_feature(
-        array, func, chunk_size=10000, use_memmap=False, **func_kwargs
-    ):
+        array: np.ndarray, 
+        func: callable, 
+        chunk_size: int = 10000, 
+        use_memmap: bool = False, 
+        **func_kwargs: Any
+    ) -> np.ndarray:
         """
         Apply statistical function per feature across all frames (2D format).
 
@@ -157,7 +162,7 @@ class CalculatorStatHelper:
         return result.reshape(spatial_shape)
 
     @staticmethod
-    def compute_func_per_frame(array, chunk_size=10000, use_memmap=False, func=None):
+    def compute_func_per_frame(array: np.ndarray, chunk_size: int = 10000, use_memmap: bool = False, func: Optional[Callable] = None) -> np.ndarray:
         """
         Apply statistical function per frame across all pairs.
 
@@ -194,7 +199,7 @@ class CalculatorStatHelper:
             return CalculatorStatHelper._compute_frames_chunked(array, func, chunk_size)
 
     @staticmethod
-    def _compute_frames_direct(array, func):
+    def _compute_frames_direct(array: np.ndarray, func: Callable) -> np.ndarray:
         """
         Compute function per frame without chunking.
 
@@ -216,7 +221,7 @@ class CalculatorStatHelper:
             return func(array, axis=1)
 
     @staticmethod
-    def _compute_frames_chunked(array, func, chunk_size):
+    def _compute_frames_chunked(array: np.ndarray, func: Callable, chunk_size: int) -> np.ndarray:
         """
         Compute function per frame with chunking.
 
@@ -244,7 +249,7 @@ class CalculatorStatHelper:
         return np.concatenate(result_chunks)
 
     @staticmethod
-    def _process_frame_chunk(array, func, start_idx, end_idx):
+    def _process_frame_chunk(array: np.ndarray, func: Callable, start_idx: int, end_idx: int) -> np.ndarray:
         """
         Process a single frame chunk.
 
@@ -272,7 +277,7 @@ class CalculatorStatHelper:
             return func(array[start_idx:end_idx], axis=1)
 
     @staticmethod
-    def _convert_2d_to_3d(array, chunk_size=10000):
+    def _convert_2d_to_3d(array: np.ndarray, chunk_size: int = 10000) -> np.ndarray:
         """
         Convert 2D condensed array to 3D squareform array.
 
@@ -302,8 +307,12 @@ class CalculatorStatHelper:
 
     @staticmethod
     def compute_func_per_column(
-        array, func, chunk_size=10000, use_memmap=False, **func_kwargs
-    ):
+        array: np.ndarray, 
+        func: callable, 
+        chunk_size: int = 10000, 
+        use_memmap: bool = False, 
+        **func_kwargs: Any
+    ) -> np.ndarray:
         """
         Apply statistical function per column (3D format required, auto-converts 2D).
 
@@ -345,7 +354,7 @@ class CalculatorStatHelper:
         )
 
     @staticmethod
-    def _compute_columns_chunked(array, func, chunk_size, **func_kwargs):
+    def _compute_columns_chunked(array: np.ndarray, func: Callable, chunk_size: int, **func_kwargs: Any) -> np.ndarray:
         """
         Compute function per column with chunking.
 
@@ -374,7 +383,7 @@ class CalculatorStatHelper:
         return CalculatorStatHelper._combine_chunk_results(result_chunks)
 
     @staticmethod
-    def _combine_chunk_results(result_chunks):
+    def _combine_chunk_results(result_chunks: list) -> np.ndarray:
         """
         Combine results from chunked processing.
 
@@ -395,8 +404,12 @@ class CalculatorStatHelper:
 
     @staticmethod
     def compute_transitions_within_lagtime(
-        array, threshold=1.0, lag_time=1, chunk_size=10000, use_memmap=False
-    ):
+        array: np.ndarray, 
+        threshold: float = 1.0, 
+        lag_time: int = 1, 
+        chunk_size: int = 10000, 
+        use_memmap: bool = False
+    ) -> np.ndarray:
         """
         Count transitions using lag time analysis.
 
@@ -424,8 +437,12 @@ class CalculatorStatHelper:
 
     @staticmethod
     def compute_transitions_within_window(
-        array, threshold=1.0, window_size=10, chunk_size=10000, use_memmap=False
-    ):
+        array: np.ndarray, 
+        threshold: float = 1.0, 
+        window_size: int = 10, 
+        chunk_size: int = 10000, 
+        use_memmap: bool = False
+    ) -> np.ndarray:
         """
         Count transitions using sliding window analysis.
 
@@ -453,8 +470,13 @@ class CalculatorStatHelper:
 
     @staticmethod
     def _compute_transitions_unified(
-        array, threshold, window_size, chunk_size, use_memmap=False, mode="lagtime"
-    ):
+        array: np.ndarray, 
+        threshold: float, 
+        window_size: int, 
+        chunk_size: int, 
+        use_memmap: bool = False, 
+        mode: str = "lagtime"
+    ) -> np.ndarray:
         """
         Compute transitions using unified internal method.
 
@@ -503,8 +525,13 @@ class CalculatorStatHelper:
 
     @staticmethod
     def _compute_transitions_chunks(
-        array, threshold, window_size, chunk_size, mode, result
-    ):
+        array: np.ndarray, 
+        threshold: float, 
+        window_size: int, 
+        chunk_size: int, 
+        mode: str, 
+        result: np.ndarray
+    ) -> None:
         """
         Compute transitions with chunked processing.
 
@@ -538,8 +565,13 @@ class CalculatorStatHelper:
 
     @staticmethod
     def _process_chunk_transitions(
-        chunk, threshold, window_size, mode, flat_result, start_idx
-    ):
+        chunk: np.ndarray, 
+        threshold: float, 
+        window_size: int, 
+        mode: str, 
+        flat_result: np.ndarray, 
+        start_idx: int
+    ) -> None:
         """
         Process transitions for a single chunk.
 
@@ -578,7 +610,7 @@ class CalculatorStatHelper:
                 )
 
     @staticmethod
-    def _compute_lagtime_transitions(data_column, threshold, window_size):
+    def _compute_lagtime_transitions(data_column: np.ndarray, threshold: float, window_size: int) -> int:
         """
         Compute lagtime transitions for a single data column.
 
@@ -600,7 +632,7 @@ class CalculatorStatHelper:
         return np.sum(diff >= threshold)
 
     @staticmethod
-    def _compute_window_transitions(data_column, threshold, window_size):
+    def _compute_window_transitions(data_column: np.ndarray, threshold: float, window_size: int) -> int:
         """
         Compute window transitions for a single data column.
 
@@ -628,7 +660,7 @@ class CalculatorStatHelper:
         return transitions
 
     @staticmethod
-    def _compute_transitions_direct(array, threshold, window_size, mode, result):
+    def _compute_transitions_direct(array: np.ndarray, threshold: float, window_size: int, mode: str, result: np.ndarray) -> None:
         """
         Compute transitions without chunking.
 
@@ -668,13 +700,13 @@ class CalculatorStatHelper:
 
     @staticmethod
     def compute_stability(
-        array,
-        threshold=2.0,
-        window_size=1,
-        chunk_size=10000,
-        use_memmap=False,
-        mode="lagtime",
-    ):
+        array: np.ndarray,
+        threshold: float = 2.0,
+        window_size: int = 1,
+        chunk_size: int = 10000,
+        use_memmap: bool = False,
+        mode: str = "lagtime",
+    ) -> np.ndarray:
         """
         Calculate stability (inverse of transition rate) per pair.
 

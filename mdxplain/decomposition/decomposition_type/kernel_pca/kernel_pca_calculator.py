@@ -25,7 +25,7 @@ Implements KernelPCA computation with support for incremental kernel
 computation for large datasets using sklearn's KernelPCA.
 """
 
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Any
 
 import numpy as np
 from sklearn.decomposition import IncrementalPCA, KernelPCA
@@ -57,7 +57,7 @@ class KernelPCACalculator(CalculatorBase):
     >>> transformed, metadata = calc.compute(large_data, n_components=50)
     """
 
-    def __init__(self, use_memmap=False, cache_path="./cache", chunk_size=10000):
+    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 10000) -> None:
         """
         Initialize KernelPCA calculator.
 
@@ -86,7 +86,7 @@ class KernelPCACalculator(CalculatorBase):
         super().__init__(use_memmap, cache_path, chunk_size)
         self._cache_prefix = "kernel_pca"
 
-    def compute(self, data, **kwargs) -> Tuple[np.ndarray, Dict]:
+    def compute(self, data: np.ndarray, **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Compute KernelPCA decomposition of input data.
 
@@ -142,7 +142,7 @@ class KernelPCACalculator(CalculatorBase):
         else:
             return self._compute_standard_kernel_pca(data, hyperparameters)
 
-    def _extract_hyperparameters(self, data, kwargs):
+    def _extract_hyperparameters(self, data: np.ndarray, kwargs: Dict[str, Any]) -> Dict[str, Any]:
         """
         Extract and validate KernelPCA hyperparameters.
 
@@ -190,7 +190,7 @@ class KernelPCACalculator(CalculatorBase):
             "random_state": random_state,
         }
 
-    def _compute_standard_kernel_pca(self, data, hyperparameters):
+    def _compute_standard_kernel_pca(self, data: np.ndarray, hyperparameters: Dict[str, Any]) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Compute standard KernelPCA using sklearn.decomposition.KernelPCA.
 
@@ -226,7 +226,7 @@ class KernelPCACalculator(CalculatorBase):
 
         return transformed_data, metadata
 
-    def _compute_chunk_wise_rbf_kernel(self, data, gamma):
+    def _compute_chunk_wise_rbf_kernel(self, data: np.ndarray, gamma: float) -> np.ndarray:
         """
         Compute RBF kernel matrix chunk-wise without loading all data into RAM.
 
@@ -265,7 +265,7 @@ class KernelPCACalculator(CalculatorBase):
 
         return kernel_matrix
 
-    def _compute_incremental_kernel_pca(self, data, hyperparameters):
+    def _compute_incremental_kernel_pca(self, data: np.ndarray, hyperparameters: Dict[str, Any]) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Compute incremental KernelPCA with precomputed kernel matrix.
 
@@ -320,7 +320,7 @@ class KernelPCACalculator(CalculatorBase):
 
         return transformed_data, metadata
 
-    def _create_kernel_memmap(self, n_samples):
+    def _create_kernel_memmap(self, n_samples: int) -> np.ndarray:
         """
         Create memmap for kernel matrix storage.
 
@@ -345,7 +345,7 @@ class KernelPCACalculator(CalculatorBase):
 
         return kernel_matrix
 
-    def _compute_nystrom_kernel_pca(self, data, hyperparameters):
+    def _compute_nystrom_kernel_pca(self, data: np.ndarray, hyperparameters: Dict[str, Any]) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Compute Nyström approximation KernelPCA with IncrementalPCA.
 

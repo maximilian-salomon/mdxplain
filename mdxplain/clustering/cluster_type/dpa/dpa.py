@@ -26,8 +26,7 @@ density-based clustering for molecular dynamics trajectory analysis using the
 DPA package from conda environment.
 """
 
-from typing import Dict, Tuple
-
+from typing import Dict, Tuple, Any
 import numpy as np
 
 from ..interfaces.cluster_type_base import ClusterTypeBase
@@ -65,18 +64,18 @@ class DPA(ClusterTypeBase):
 
     def __init__(
         self,
-        Z=1,
-        metric="euclidean",
-        affinity="precomputed",
-        density_algo="PAk",
-        k_max=1000,
-        D_thr=23.92812698,
-        dim_algo="twoNN",
-        blockAn=True,
-        block_ratio=20,
-        frac=1.0,
-        halos=False,
-    ):
+        Z: float = 1.0,
+        metric: str = "euclidean",
+        affinity: str = "precomputed",
+        density_algo: str = "PAk",
+        k_max: int = 1000,
+        D_thr: float = 23.92812698,
+        dim_algo: str = "twoNN",
+        blockAn: bool = True,
+        block_ratio: int = 20,
+        frac: float = 1.0,
+        halos: bool = False,
+    ) -> None:
         """
         Initialize DPA cluster type.
 
@@ -226,7 +225,7 @@ class DPA(ClusterTypeBase):
         """
         return "dpa"
 
-    def init_calculator(self, cache_path="./cache"):
+    def init_calculator(self, cache_path: str = "./cache") -> None:
         """
         Initialize the DPA calculator.
 
@@ -237,7 +236,7 @@ class DPA(ClusterTypeBase):
         """
         self.calculator = DPACalculator(cache_path=cache_path)
 
-    def compute(self, data) -> Tuple[np.ndarray, Dict]:
+    def compute(self, data: np.ndarray) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Compute DPA clustering.
 

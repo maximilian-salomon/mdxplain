@@ -25,7 +25,12 @@ This module provides helper methods for mapping feature indices to
 human-readable feature names using pipeline metadata.
 """
 
-from typing import Dict, Any, Optional
+from __future__ import annotations
+
+from typing import Dict, Any, Optional, List, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ...pipeline.entities.pipeline_data import PipelineData
 
 
 class FeatureNameMappingHelper:
@@ -50,7 +55,7 @@ class FeatureNameMappingHelper:
     """
     
     @staticmethod
-    def get_feature_metadata(pipeline_data, feature_selector: Optional[str]):
+    def get_feature_metadata(pipeline_data: PipelineData, feature_selector: Optional[str]) -> Optional[List[Any]]:
         """
         Get feature metadata for a feature selector.
         
@@ -84,7 +89,7 @@ class FeatureNameMappingHelper:
     
     @staticmethod
     def get_feature_name(
-        feature_metadata, 
+        feature_metadata: Optional[List[Any]], 
         feature_idx: int
     ) -> str:
         """
@@ -127,7 +132,7 @@ class FeatureNameMappingHelper:
 
     @staticmethod
     def get_feature_type(
-        feature_metadata, 
+        feature_metadata: Optional[List[Any]], 
         feature_idx: int
     ) -> str:
         """
@@ -165,7 +170,7 @@ class FeatureNameMappingHelper:
     @staticmethod
     def add_feature_names(
         feature_info: Dict[str, Any],
-        feature_metadata,
+        feature_metadata: Optional[List[Any]],
         feature_idx: int
     ) -> None:
         """

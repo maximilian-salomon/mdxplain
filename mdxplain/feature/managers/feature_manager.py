@@ -22,11 +22,18 @@ FeatureManager is a manager for feature data objects.
 
 It is used to add, reset, and reduce features to the trajectory data.
 """
+from __future__ import annotations
 
+from typing import Any, Callable, List, Optional, Union, TYPE_CHECKING
+import numpy as np
 import os
 from tqdm import tqdm
 
+if TYPE_CHECKING:
+    from ...pipeline.entities.pipeline_data import PipelineData
+
 from ..entities.feature_data import FeatureData
+from ..feature_type.interfaces.feature_type_base import FeatureTypeBase
 from ..helper.feature_validation_helper import FeatureValidationHelper
 from ..helper.feature_reset_helper import FeatureResetHelper
 from ..helper.feature_reduction_helper import FeatureReductionHelper
@@ -38,7 +45,7 @@ from ...utils.data_utils import DataUtils
 class FeatureManager:
     """Manager for feature data objects."""
 
-    def __init__(self, use_memmap=False, chunk_size=10000, cache_dir="./cache"):
+    def __init__(self, use_memmap: bool = False, chunk_size: int = 10000, cache_dir: str = "./cache") -> None:
         """
         Initialize feature manager.
 
@@ -64,7 +71,7 @@ class FeatureManager:
         if chunk_size <= 0 and not isinstance(chunk_size, int):
             raise ValueError("Chunk size must be a positive integer.")
 
-    def reset_features(self, pipeline_data, feature_type=None, strict=True):
+    def reset_features(self, pipeline_data: PipelineData, feature_type: Optional[Union[str, Any]] = None, strict: bool = True) -> None:
         """
         Reset calculated features and clear feature data.
 
@@ -146,12 +153,12 @@ class FeatureManager:
 
     def add_feature(
         self, 
-        pipeline_data, 
-        feature_type, 
-        traj_selection="all",
-        force=False, 
-        force_original=True,
-    ):
+        pipeline_data: PipelineData, 
+        feature_type: FeatureTypeBase, 
+        traj_selection: Union[str, int, List] = "all",
+        force: bool = False, 
+        force_original: bool = True,
+    ) -> None:
         """
         Add and compute a feature for the loaded trajectories.
 
@@ -242,7 +249,7 @@ class FeatureManager:
             pipeline_data, feature_type, feature_key, traj_indices, force_original
         )
 
-    def reset_reduction(self, pipeline_data, feature_type):
+    def reset_reduction(self, pipeline_data: PipelineData, feature_type: FeatureTypeBase) -> None:
         """
         Reset to using full original data instead of reduced dataset.
 
@@ -292,17 +299,17 @@ class FeatureManager:
 
     def reduce_data(
         self,
-        pipeline_data,
-        feature_type,
-        metric,
-        traj_selection="all",
-        threshold_min=None,
-        threshold_max=None,
-        transition_threshold=2.0,
-        window_size=10,
-        transition_mode="window",
-        lag_time=1,
-    ):
+        pipeline_data: PipelineData,
+        feature_type: FeatureTypeBase,
+        metric: Union[str, Callable[[np.ndarray], np.ndarray]],
+        traj_selection: Union[str, int, List] = "all",
+        threshold_min: Optional[float] = None,
+        threshold_max: Optional[float] = None,
+        transition_threshold: float = 2.0,
+        window_size: int = 10,
+        transition_mode: str = "window",
+        lag_time: int = 1,
+    ) -> None:
         """
         Filter features based on statistical criteria.
 
@@ -371,33 +378,45 @@ class FeatureManager:
         FeatureValidationHelper.validate_threshold_parameters(
             threshold_min, threshold_max, metric
         )
+        
+        # Get trajectory indices to process
+        traj_indices = pipeline_data.trajectory_data.get_trajectory_indices(traj_selection)
+        
+        # Apply reduction to each selected trajectory
+        for traj_idx in traj_indices:
+            if traj_idx not in pipeline_data.feature_data[feature_key]:
+                print(f"Warning: Trajectory {traj_idx} has no feature data for {feature_key}, skipping reduction.")
+                continue  # Skip if trajectory has no feature data
+                
+            feature_data = pipeline_data.feature_data[feature_key][traj_idx]
+            
+            # Get reduction results from calculator for this trajectory
+            results = feature_data.feature_type.calculator.compute_dynamic_values(
+                input_data=feature_data.data,
+                metric=metric,
+                threshold_min=threshold_min,
+                threshold_max=threshold_max,
+                transition_threshold=transition_threshold,
+                window_size=window_size,
+                feature_metadata=feature_data.feature_metadata["features"],
+                output_path=feature_data.reduced_cache_path,
+                transition_mode=transition_mode,
+                lag_time=lag_time,
+            )
 
-        # Get reduction results from calculator
-        results = pipeline_data.feature_data[
-            feature_key
-        ].feature_type.calculator.compute_dynamic_values(
-            input_data=pipeline_data.feature_data[feature_key].data,
-            metric=metric,
-            threshold_min=threshold_min,
-            threshold_max=threshold_max,
-            transition_threshold=transition_threshold,
-            window_size=window_size,
-            feature_metadata=pipeline_data.feature_data[feature_key].feature_metadata[
-                "features"
-            ],
-            output_path=pipeline_data.feature_data[feature_key].reduced_cache_path,
-            transition_mode=transition_mode,
-            lag_time=lag_time,
-        )
-
-        # Process and store results
-        FeatureReductionHelper.process_reduction_results(
-            pipeline_data, feature_key, results, threshold_min, threshold_max, metric
-        )
+            # Process and store results for this trajectory
+            FeatureReductionHelper.process_reduction_results(
+                feature_data, results, threshold_min, threshold_max, metric
+            )
 
     def _create_feature_data_per_trajectory(
-        self, pipeline_data, feature_type, feature_key, traj_indices, force_original
-    ):
+        self, 
+        pipeline_data: PipelineData, 
+        feature_type: FeatureTypeBase, 
+        feature_key: str, 
+        traj_indices: List[int], 
+        force_original: bool
+    ) -> None:
         """
         Create FeatureData objects for specified trajectories.
         
@@ -449,8 +468,13 @@ class FeatureManager:
                 pbar.update(1)
 
     def _compute_and_store_single_trajectory(
-        self, pipeline_data, feature_data, feature_type, traj_idx, force_original
-    ):
+        self, 
+        pipeline_data: PipelineData, 
+        feature_data: FeatureData, 
+        feature_type: FeatureTypeBase, 
+        traj_idx: int, 
+        force_original: bool
+    ) -> None:
         """
         Compute and store feature for single trajectory.
         
@@ -483,3 +507,124 @@ class FeatureManager:
         )
         FeatureBindingHelper.bind_stats_methods(feature_data)
 
+    def print_info(self, pipeline_data: PipelineData) -> None:
+        """
+        Print feature information.
+
+        Warning:
+        --------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.feature.print_info()  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = FeatureManager()
+        >>> manager.print_info(pipeline_data)  # pipeline_data required
+
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data container with feature data
+
+        Returns:
+        --------
+        None
+            Prints feature information to console
+
+        Examples:
+        ---------
+        >>> pipeline_data = PipelineData()
+        >>> feature_manager = FeatureManager()
+        >>> feature_manager.print_info(pipeline_data)
+        """
+        if len(pipeline_data.feature_data) == 0:
+            print("No feature data available.")
+            return
+
+        print("=== Feature Information ===")
+        feature_types = list(pipeline_data.feature_data.keys())
+        print(f"Feature Types: {len(feature_types)} ({', '.join(feature_types)})")
+        
+        for feature_type, traj_dict in pipeline_data.feature_data.items():
+            print(f"\n--- {feature_type} ---")
+            for traj_idx, feature_data in traj_dict.items():
+                print(f"Trajectory {traj_idx}:")
+                feature_data.print_info()
+
+    def save(self, pipeline_data: PipelineData, save_path: str) -> None:
+        """
+        Save all feature data to single file.
+
+        Warning:
+        --------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.feature.save('features.npy')  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = FeatureManager()
+        >>> manager.save(pipeline_data, 'features.npy')  # pipeline_data required
+
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data container with feature data
+        save_path : str
+            Path where to save all feature data in one file
+
+        Returns:
+        --------
+        None
+            Saves all feature data to the specified file
+            
+        Examples:
+        ---------
+        >>> feature_manager.save(pipeline_data, 'features.npy')
+        """
+        DataUtils.save_object(pipeline_data.feature_data, save_path)
+
+    def load(self, pipeline_data: PipelineData, load_path: str) -> None:
+        """
+        Load all feature data from single file.
+
+        Warning:
+        --------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.feature.load('features.npy')  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = FeatureManager()
+        >>> manager.load(pipeline_data, 'features.npy')  # pipeline_data required
+
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data container to load feature data into
+        load_path : str
+            Path to saved feature data file
+
+        Returns:
+        --------
+        None
+            Loads all feature data from the specified file
+            
+        Examples:
+        ---------
+        >>> feature_manager.load(pipeline_data, 'features.npy')
+        """
+        temp_dict = {}
+        DataUtils.load_object(temp_dict, load_path)
+        pipeline_data.feature_data = temp_dict

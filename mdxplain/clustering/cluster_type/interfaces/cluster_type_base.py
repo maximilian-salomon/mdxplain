@@ -26,8 +26,7 @@ must implement for consistency across different clustering methods.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Tuple
-
+from typing import Dict, Tuple, Any
 import numpy as np
 
 from .cluster_type_meta import ClusterTypeMeta
@@ -45,7 +44,7 @@ class ClusterTypeBase(ABC, metaclass=ClusterTypeMeta):
     ---------
     >>> class MyCluster(ClusterTypeBase):
     ...     @classmethod
-    ...     def get_type_name(cls):
+    ...     def get_type_name(cls) -> str:
     ...         return 'my_cluster'
     ...     def init_calculator(self, **kwargs):
     ...         self.calculator = MyCalculator(**kwargs)
@@ -53,7 +52,7 @@ class ClusterTypeBase(ABC, metaclass=ClusterTypeMeta):
     ...         return self.calculator.compute(data, **kwargs)
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the cluster type.
 
@@ -105,7 +104,7 @@ class ClusterTypeBase(ABC, metaclass=ClusterTypeMeta):
         pass
 
     @abstractmethod
-    def init_calculator(self, cache_path="./cache"):
+    def init_calculator(self, cache_path: str = "./cache") -> None:
         """
         Initialize the calculator instance for this cluster type.
 
@@ -131,7 +130,7 @@ class ClusterTypeBase(ABC, metaclass=ClusterTypeMeta):
         pass
 
     @abstractmethod
-    def compute(self, data) -> Tuple[np.ndarray, Dict]:
+    def compute(self, data: np.ndarray) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Compute clustering using the initialized calculator.
 

@@ -28,6 +28,7 @@ and hyperparameters. Stores cluster labels with clustering information.
 import numpy as np
 from typing import Dict, Optional, Any
 
+from ...utils.data_utils import DataUtils
 
 class ClusterData:
     """
@@ -248,3 +249,134 @@ class ClusterData:
         >>> cluster_data.set_frame_mapping(mapping)
         """
         self.frame_mapping = frame_mapping
+
+    def save(self, save_path: str) -> None:
+        """
+        Save ClusterData object to disk.
+
+        Parameters:
+        -----------
+        save_path : str
+            Path where to save the ClusterData object
+
+        Returns:
+        --------
+        None
+            Saves the ClusterData object to the specified path
+
+        Examples:
+        ---------
+        >>> cluster_data.save('analysis_results/dbscan_clustering.pkl')
+        """
+        DataUtils.save_object(self, save_path)
+
+    def load(self, load_path: str) -> None:
+        """
+        Load ClusterData object from disk.
+
+        Parameters:
+        -----------
+        load_path : str
+            Path to the saved ClusterData file
+
+        Returns:
+        --------
+        None
+            Loads the ClusterData object from the specified path
+
+        Examples:
+        ---------
+        >>> cluster_data.load('analysis_results/dbscan_clustering.pkl')
+        """
+        DataUtils.load_object(self, load_path)
+
+    def print_info(self) -> None:
+        """
+        Print comprehensive cluster information.
+
+        Parameters:
+        -----------
+        None
+
+        Returns:
+        --------
+        None
+            Prints cluster information to console
+
+        Examples:
+        ---------
+        >>> cluster_data.print_info()
+        === ClusterData ===
+        Cluster Type: DBSCAN
+        Number of Clusters: 5
+        Number of Frames: 1000
+        Noise Points: 127 (12.7%)
+        """
+        if not self.has_data():
+            print("No cluster data available.")
+            return
+
+        self._print_cluster_header()
+        self._print_cluster_details()
+        if self.frame_mapping is not None:
+            self._print_frame_mapping_info()
+
+    def _print_cluster_header(self) -> None:
+        """
+        Print header with cluster type.
+
+        Returns:
+        --------
+        None
+        """
+        print("=== ClusterData ===")
+        print(f"Cluster Type: {self.cluster_type.upper()}")
+
+    def _print_cluster_details(self) -> None:
+        """
+        Print detailed cluster information.
+
+        Returns:
+        --------
+        None
+        """
+        n_clusters = self.get_n_clusters()
+        n_frames = self.get_n_frames()
+        
+        if n_clusters is not None:
+            print(f"Number of Clusters: {n_clusters}")
+        
+        if n_frames is not None:
+            print(f"Number of Frames: {n_frames}")
+            
+            # Calculate noise points if labels contain -1
+            if self.labels is not None:
+                unique_labels = set(self.labels)
+                if -1 in unique_labels:
+                    noise_count = np.sum(self.labels == -1)
+                    noise_percent = (noise_count / len(self.labels)) * 100
+                    print(f"Noise Points: {noise_count} ({noise_percent:.1f}%)")
+
+        # Show hyperparameters if available
+        if self.metadata is not None:
+            hyperparams = self.metadata.get("hyperparameters", {})
+            if hyperparams:
+                param_str = ", ".join([f"{k}={v}" for k, v in hyperparams.items()])
+                print(f"Hyperparameters: {param_str}")
+
+    def _print_frame_mapping_info(self) -> None:
+        """
+        Print information about frame mapping.
+
+        Returns:
+        --------
+        None
+        """
+        if self.frame_mapping:
+            n_mapped_frames = len(self.frame_mapping)
+            # Count unique trajectories
+            trajectory_indices = set()
+            for traj_idx, _ in self.frame_mapping.values():
+                trajectory_indices.add(traj_idx)
+            n_trajectories = len(trajectory_indices)
+            print(f"Frame Mapping: {n_mapped_frames} frames from {n_trajectories} trajectories")

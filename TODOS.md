@@ -1,13 +1,5 @@
 # TODOs before Version 1.0
 ## Must Have
-- Save of PipelineManager manual
-
-- print_trajectory_info() add to trajectoryManager
-
-- Add print Info to all manager
-
-- Add option to select Frames as trajectory with DataSelector
-
 - Features, Decompositions, Clustering, FeatureImportance have different Methods. They need a Type Object directly initialised. But this is complicated, because the user needs to import more than just the PipelineManager. Therefore it should exist something like a factory for these objects, which can then be used by the TypeManager
 
 - The Data-Selector and the ComparisonData have different Modes => This should be addressable with ENUMS => Because this makes it easier. => But also for this we need a solution to handle this easily in pipeline-mode

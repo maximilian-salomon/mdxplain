@@ -27,7 +27,7 @@ for consistency across different clustering methods.
 
 import os
 from abc import ABC, abstractmethod
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Any, Optional, Callable
 
 import numpy as np
 from sklearn.metrics import silhouette_score
@@ -52,7 +52,7 @@ class CalculatorBase(ABC):
     ...         return cluster_labels, metadata
     """
 
-    def __init__(self, cache_path="./cache"):
+    def __init__(self, cache_path: str = "./cache") -> None:
         """
         Initialize the clustering calculator.
 
@@ -77,7 +77,7 @@ class CalculatorBase(ABC):
         self.cache_path = cache_path
 
     @abstractmethod
-    def compute(self, data, **kwargs) -> Tuple[np.ndarray, Dict]:
+    def compute(self, data: np.ndarray, **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Compute clustering of input data.
 
@@ -111,7 +111,7 @@ class CalculatorBase(ABC):
         """
         pass
 
-    def _validate_input_data(self, data):
+    def _validate_input_data(self, data: np.ndarray) -> None:
         """
         Validate input data for clustering.
 
@@ -139,7 +139,7 @@ class CalculatorBase(ABC):
         if data.shape[1] < 1:
             raise ValueError("Input data must have at least 1 feature")
 
-    def _prepare_metadata(self, hyperparameters, original_shape, n_clusters, n_noise=0):
+    def _prepare_metadata(self, hyperparameters: Dict[str, Any], original_shape: Tuple[int, int], n_clusters: int, n_noise: int = 0) -> Dict[str, Any]:
         """
         Prepare base metadata dictionary.
 
@@ -167,7 +167,7 @@ class CalculatorBase(ABC):
             "cache_path": self.cache_path,
         }
 
-    def _count_clusters(self, labels):
+    def _count_clusters(self, labels: np.ndarray) -> int:
         """
         Count number of clusters (excluding noise).
 
@@ -185,7 +185,7 @@ class CalculatorBase(ABC):
         # Exclude noise label (-1) from count
         return len(unique_labels[unique_labels != -1])
 
-    def _count_noise_points(self, labels, noise_cluster=-1):
+    def _count_noise_points(self, labels: np.ndarray, noise_cluster: int = -1) -> int:
         """
         Count number of noise points.
 
@@ -202,7 +202,7 @@ class CalculatorBase(ABC):
         """
         return np.sum(labels == noise_cluster)
 
-    def _compute_silhouette_score(self, data, labels):
+    def _compute_silhouette_score(self, data: np.ndarray, labels: np.ndarray) -> Optional[float]:
         """
         Compute silhouette score for clustering quality assessment.
 
@@ -232,7 +232,7 @@ class CalculatorBase(ABC):
         # Compute silhouette score on non-noise points
         return silhouette_score(data[non_noise_mask], labels[non_noise_mask])
 
-    def _load_cache_files(self, algorithm_name):
+    def _load_cache_files(self, algorithm_name: str) -> Tuple[Optional[np.ndarray], Optional[Dict[str, Any]]]:
         """
         Load cached clustering results if both label and metadata files exist.
 
@@ -260,7 +260,7 @@ class CalculatorBase(ABC):
         metadata = np.load(metadata_path, allow_pickle=True).item()
         return labels, metadata
 
-    def _save_cache_files(self, algorithm_name, labels, metadata):
+    def _save_cache_files(self, algorithm_name: str, labels: np.ndarray, metadata: Dict[str, Any]) -> None:
         """
         Save clustering results to separate label and metadata cache files.
 
@@ -283,7 +283,7 @@ class CalculatorBase(ABC):
         np.save(labels_path, labels, allow_pickle=True)
         np.save(metadata_path, metadata, allow_pickle=True)
 
-    def _compute_with_cache(self, data, algorithm_name, compute_func, **kwargs):
+    def _compute_with_cache(self, data: np.ndarray, algorithm_name: str, compute_func: Callable, **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Compute clustering with caching support.
 

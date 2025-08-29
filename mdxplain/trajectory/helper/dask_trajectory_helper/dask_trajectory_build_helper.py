@@ -25,15 +25,21 @@ Handles the complex initialization process for DaskMDTrajectory instances,
 including cache management, Zarr store setup, and Dask array initialization.
 """
 
-from typing import Optional
+from __future__ import annotations
+
+from typing import Optional, TYPE_CHECKING
 import os
 import multiprocessing
 
 import zarr
 import dask.array as da
+import mdtraj as md
 
 from .zarr_cache_helper import ZarrCacheHelper
 from .parallel_operations_helper import ParallelOperationsHelper
+
+if TYPE_CHECKING:
+    from ...entities.dask_md_trajectory import DaskMDTrajectory
 
 
 class DaskMDTrajectoryBuildHelper:
@@ -44,7 +50,7 @@ class DaskMDTrajectoryBuildHelper:
     manageable steps while maintaining full compatibility with the original API.
     """
     
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize DaskMDTrajectoryBuildHelper.
         
@@ -59,11 +65,11 @@ class DaskMDTrajectoryBuildHelper:
         """
         pass
     
-    def initialize_instance(self, instance, trajectory_file: str, 
+    def initialize_instance(self, instance: DaskMDTrajectory, trajectory_file: str, 
                            topology_file: Optional[str] = None,
                            zarr_cache_path: Optional[str] = None, 
                            chunk_size: int = 1000,
-                           n_workers: Optional[int] = None):
+                           n_workers: Optional[int] = None) -> None:
         """
         Initialize a DaskMDTrajectory instance with all required components.
         
@@ -111,6 +117,84 @@ class DaskMDTrajectoryBuildHelper:
         instance.zarr_cache_path, instance.metadata = instance.cache_manager.get_or_create_cache(
             trajectory_file, topology_file, zarr_cache_path
         )
+        
+        # Open Zarr store
+        instance._zarr_store = zarr.open(instance.zarr_cache_path, mode='r')
+        
+        # Load topology directly from store
+        instance._topology = ZarrCacheHelper.load_topology(instance._zarr_store)
+        
+        # Create Dask arrays
+        instance._dask_coords = da.from_zarr(instance.zarr_cache_path, component='coordinates')
+        instance._dask_time = da.from_zarr(instance.zarr_cache_path, component='time')
+        
+        # Optional unitcell data
+        instance._has_unitcell = 'unitcell_vectors' in instance._zarr_store
+        if instance._has_unitcell:
+            instance._dask_unitcell_vectors = da.from_zarr(instance.zarr_cache_path, component='unitcell_vectors')
+            instance._dask_unitcell_lengths = da.from_zarr(instance.zarr_cache_path, component='unitcell_lengths')
+            instance._dask_unitcell_angles = da.from_zarr(instance.zarr_cache_path, component='unitcell_angles')
+        
+        # Initialize parallel operations with cache_dir (already set as instance property)
+        instance._parallel_ops = ParallelOperationsHelper(
+            zarr_path=instance.zarr_cache_path, 
+            topology=instance._topology, 
+            n_workers=instance.n_workers, 
+            chunk_size=chunk_size,
+            cache_dir=instance._cache_dir
+        )
+        
+        # Cache for frequently accessed data
+        instance._xyz_cache = None
+        instance._time_cache = None
+    
+    def initialize_from_mdtraj(self, instance: DaskMDTrajectory, mdtraj: md.Trajectory,
+                               zarr_cache_path: Optional[str] = None,
+                               chunk_size: int = 1000,
+                               n_workers: Optional[int] = None) -> None:
+        """
+        Initialize DaskMDTrajectory instance from MDTraj trajectory object.
+        
+        Parameters:
+        -----------
+        instance : DaskMDTrajectory
+            Instance to initialize
+        mdtraj : md.Trajectory
+            MDTraj trajectory object
+        zarr_cache_path : str, optional
+            Path for zarr cache. If None, creates temporary cache.
+        chunk_size : int, default=1000
+            Number of frames per chunk
+        n_workers : int, optional
+            Number of parallel workers
+        """
+        # Set basic trajectory info (no actual files)
+        instance.trajectory_file = f"<mdtraj_object_{id(mdtraj)}>"
+        instance.topology_file = None
+        instance.chunk_size = chunk_size
+        instance.n_workers = n_workers if n_workers is not None else multiprocessing.cpu_count()
+        
+        # Extract cache directory from zarr_cache_path and set as instance property
+        if zarr_cache_path:
+            instance._cache_dir = os.path.dirname(zarr_cache_path)
+        else:
+            instance._cache_dir = './cache'
+        
+        # Initialize cache manager with cache_dir
+        instance.cache_manager = ZarrCacheHelper(chunk_size=chunk_size, cache_dir=instance._cache_dir)
+        
+        # Create cache from mdtraj object
+        instance.zarr_cache_path, instance.metadata = instance.cache_manager.create_cache_from_mdtraj(
+            mdtraj, zarr_cache_path
+        )
+        
+        # Track if this is a temporary cache for cleanup
+        if zarr_cache_path is None:
+            instance._is_temp_store = True
+            instance._temp_zarr_path = instance.zarr_cache_path
+        else:
+            instance._is_temp_store = False
+            instance._temp_zarr_path = None
         
         # Open Zarr store
         instance._zarr_store = zarr.open(instance.zarr_cache_path, mode='r')
