@@ -20,18 +20,24 @@
 
 """Trajectory management module for loading and manipulating MD trajectory data."""
 
-from typing import Any, Dict, List, Optional, Tuple, Union
+from __future__ import annotations
+
+from typing import Any, Dict, List, Optional, Tuple, Union, TYPE_CHECKING
 import numpy as np
+import os
+import mdtraj as md
+
+if TYPE_CHECKING:
+    from ...pipeline.entities.pipeline_data import PipelineData
 
 from ..entities.trajectory_data import TrajectoryData
+from ..entities.dask_md_trajectory import DaskMDTrajectory
 from ..helper.metadata_helper.nomenclature_helper import NomenclatureHelper
 from ..helper.process_helper.trajectory_load_helper import TrajectoryLoadHelper
 from ..helper.metadata_helper.tag_helper import TagHelper
 from ..helper.process_helper.trajectory_process_helper import TrajectoryProcessHelper
 from ..helper.process_helper.label_operation_helper import LabelOperationHelper
 from ..helper.validation_helper.trajectory_validation_helper import TrajectoryValidationHelper
-
-import os
 
 
 class TrajectoryManager:
@@ -94,7 +100,7 @@ class TrajectoryManager:
 
     def load_trajectories(
         self,
-        pipeline_data,
+        pipeline_data: PipelineData,
         data_input: Union[str, List[Any]],
         concat: Optional[bool] = None,
         stride: Optional[int] = 1,
@@ -188,11 +194,13 @@ class TrajectoryManager:
         new_trajectory_data.trajectories = result["trajectories"]
         new_trajectory_data.trajectory_names = result["names"]
         pipeline_data.trajectory_data = new_trajectory_data
-
+        
+        # Validate trajectory types match memmap setting
+        TrajectoryValidationHelper.validate_trajectory_types(pipeline_data)
 
     def add_trajectory(
         self,
-        pipeline_data,
+        pipeline_data: PipelineData,
         data_input: Union[str, List[Any]],
         concat: Optional[bool] = None,
         stride: Optional[int] = 1,
@@ -271,12 +279,13 @@ class TrajectoryManager:
         # Add to existing trajectories
         pipeline_data.trajectory_data.trajectories.extend(new_trajectories)
         pipeline_data.trajectory_data.trajectory_names.extend(new_names)
-
+        
+        TrajectoryValidationHelper.validate_trajectory_types(pipeline_data)
 
     def remove_trajectory(
         self,
-        pipeline_data,
-        traj_selection: Union[int, str, List[Union[int, str]], "all"],
+        pipeline_data: PipelineData,
+        traj_selection: Union[int, str, List[Union[int, str]], str],
         force: bool = False,
     ) -> None:
         """
@@ -342,16 +351,18 @@ class TrajectoryManager:
             pipeline_data.trajectory_data, indices_to_remove
         )
 
-    def cut_traj(
+    def slice_traj(
         self,
-        pipeline_data,
-        traj_selection: Union[int, str, List[Union[int, str]], "all"],
-        cut: Optional[int] = None,
+        pipeline_data: PipelineData,
+        traj_selection: Union[int, str, List[Union[int, str]], str] = "all",
+        frames: Optional[Union[int, slice, List[int]]] = None,
         stride: Optional[int] = 1,
+        cut: Optional[int] = None,
+        data_selector: Optional[str] = None,
         force: bool = False,
     ) -> None:
         """
-        Cut and/or stride trajectories.
+        Slice trajectories using frame ranges, stride, OR DataSelector.
 
         Warning:
         --------
@@ -360,31 +371,42 @@ class TrajectoryManager:
 
         Pipeline mode:
         >>> pipeline = PipelineManager()
-        >>> pipeline.trajectory.cut_traj(cut=1000, traj_selection="all")  # NO pipeline_data parameter
+        >>> pipeline.trajectory.slice_traj(frames=1000, traj_selection="all")  # NO pipeline_data parameter
+        >>> pipeline.trajectory.slice_traj(data_selector="folded_frames")  # Use DataSelector
 
         Standalone mode:
         >>> pipeline_data = PipelineData()
         >>> manager = TrajectoryManager()
-        >>> manager.cut_traj(pipeline_data, cut=1000, traj_selection="all")  # pipeline_data required
+        >>> manager.slice_traj(pipeline_data, frames=1000, traj_selection="all")  # pipeline_data required
 
         Parameters:
         -----------
         pipeline_data : PipelineData
             Pipeline data object
-        cut : int, optional
-            Frame number after which to cut the trajectories.
-            Frames after this index will be removed.
-        stride : int, optional
-            Take every stride-th frame. Use values > 1 to subsample frames.
-            If None, uses manager default.
-        traj_selection : int, str, list, or "all"
+        traj_selection : int, str, list, or "all", default="all"
             Selection of trajectories to process:
             - int: trajectory index
             - str: trajectory name or "all" for all trajectories
             - list: list of indices/names
             - "all": all loaded trajectories
+        frames : int, slice, list, optional
+            Frame specification for slicing:
+            - int: include frames 0 to frames (e.g., frames=1000 → frames 0-999)
+            - slice: direct slice object (e.g., slice(100, 500) → frames 100-499)
+            - list: specific frame indices (e.g., [0, 10, 20, 30])
+            Ignored if data_selector is provided.
+        stride : int, optional
+            Take every stride-th frame. Use values > 1 to subsample frames.
+            If None, uses manager default.
+        cut : int, optional
+            Frame number after which to cut trajectories. Frames after this 
+            index will be removed. Applied after frame selection and stride.
+        data_selector : str, optional
+            Name of DataSelector to use for frame selection.
+            If provided, overrides frames/stride parameters and uses
+            the selected frames from the DataSelector.
         force : bool, default=False
-            Whether to force cutting even when features have been calculated. When True,
+            Whether to force slicing even when features have been calculated. When True,
             existing features become invalid and should be recalculated.
 
         Returns:
@@ -397,95 +419,55 @@ class TrajectoryManager:
         >>> pipeline_data = PipelineData()
         >>> traj_manager = TrajectoryManager()
         >>> traj_manager.load_trajectories(pipeline_data, '../data')
-        >>> traj_manager.cut_traj(pipeline_data, cut=1000, traj_selection="all")
+        >>> traj_manager.slice_traj(pipeline_data, frames=1000, traj_selection="all")
 
-        >>> # Cut and stride specific trajectories by index
-        >>> traj_manager.cut_traj(pipeline_data, cut=500, stride=5, traj_selection=[0, 2, 4])
+        >>> # Slice specific frames with stride for specific trajectories by index
+        >>> traj_manager.slice_traj(pipeline_data, frames=500, stride=5, traj_selection=[0, 2, 4])
 
-        >>> # Cut and stride all trajectories
-        >>> traj_manager.cut_traj(pipeline_data, cut=500, stride=5, traj_selection="all")
+        >>> # Use slice object for precise frame ranges
+        >>> traj_manager.slice_traj(pipeline_data, frames=slice(100, 500), stride=2, traj_selection="all")
 
-        >>> # Cut and stride specific trajectories by name
-        >>> traj_manager.cut_traj(
-        ...     pipeline_data, cut=500, stride=5,
+        >>> # Select specific frame indices by name selection
+        >>> traj_manager.slice_traj(
+        ...     pipeline_data, frames=[0, 10, 20, 50, 100],
         ...     traj_selection=['system1_prot_traj1', 'system2_prot_traj2']
         ... )
+        
+        >>> # Cut trajectory after 1000 frames with stride
+        >>> traj_manager.slice_traj(pipeline_data, cut=1000, stride=2, traj_selection="all")
+        
+        >>> # Use DataSelector to slice trajectories to folded frames only
+        >>> traj_manager.slice_traj(pipeline_data, data_selector="folded_frames")
 
         Raises:
         -------
         ValueError
             If trajectories are not loaded or if selection contains invalid indices/names
+            or if DataSelector does not exist
         """
-        # Check if features exist for trajectories to be cut
+        # Validation: Cannot use both frames and data_selector
+        if frames is not None and data_selector is not None:
+            raise ValueError("Cannot specify both 'frames' and 'data_selector' parameters. Choose one.")
+        
+        # Get trajectory indices to process  
         indices_to_process = pipeline_data.trajectory_data.get_trajectory_indices(traj_selection)
+        
+        # Check if features exist for trajectories to be sliced
         TrajectoryValidationHelper.check_features_before_trajectory_changes(
-            pipeline_data, force, "cut", indices_to_process
+            pipeline_data, force, "slice", indices_to_process
         )
         
-        self._validate_cut_parameters(pipeline_data, cut, force)
-        _, _, stride = self._prepare_parameters(stride=stride)
+        # Apply slicing using unified helper method
+        TrajectoryProcessHelper.apply_slicing(
+            pipeline_data, indices_to_process, frames, data_selector, stride, cut
+        )
         
-        self._process_trajectory_cuts(pipeline_data, indices_to_process, cut, stride)
+        # Validate trajectory types match memmap setting
+        TrajectoryValidationHelper.validate_trajectory_types(pipeline_data)
     
-    def _validate_cut_parameters(self, pipeline_data, cut: Optional[int], force: bool) -> None:
-        """
-        Validate parameters for trajectory cutting.
-        
-        Parameters:
-        -----------
-        pipeline_data : PipelineData
-            Pipeline data object containing trajectory data
-        cut : Optional[int]
-            Frame number after which to cut trajectories, or None
-        force : bool
-            Whether to force cutting even when features exist
-        
-        Returns:
-        --------
-        None
-            Performs validation, does not return value
-        
-        Raises:
-        -------
-        ValueError
-            If cut parameter is negative or not an integer, or if no trajectories are loaded
-        """
-        if cut is not None:
-            if cut < 0 or not isinstance(cut, int):
-                raise ValueError("Cut parameter must be a non-negative integer.")
-        
-        if not pipeline_data.trajectory_data.trajectories:
-            raise ValueError("Trajectories must be loaded before cutting.")
-    
-    def _process_trajectory_cuts(self, pipeline_data, indices: List[int], cut: Optional[int], stride: int) -> None:
-        """
-        Process trajectory cuts for selected indices.
-        
-        Parameters:
-        -----------
-        pipeline_data : PipelineData
-            Pipeline data object containing trajectory data
-        indices : List[int]
-            List of trajectory indices to process
-        cut : Optional[int]
-            Frame number after which to cut trajectories, or None
-        stride : int
-            Stride value for frame subsampling
-        
-        Returns:
-        --------
-        None
-            Modifies trajectories in-place
-        """
-        for idx in indices:
-            processed_traj = TrajectoryProcessHelper.process_trajectory_cuts(
-                pipeline_data.trajectory_data.trajectories[idx], cut, stride
-            )
-            pipeline_data.trajectory_data.trajectories[idx] = processed_traj
-
     def select_atoms(
         self,
-        pipeline_data,
+        pipeline_data: PipelineData,
         selection: str,
         traj_selection: Union[int, str, List[Union[int, str]], "all"],
         force: bool = False,
@@ -585,10 +567,12 @@ class TrajectoryManager:
         LabelOperationHelper.apply_atom_selection_to_labels(
             pipeline_data.trajectory_data, indices_to_process, original_residue_indices
         )
+        
+        TrajectoryValidationHelper.validate_trajectory_types(pipeline_data)
 
     def add_labels(
         self,
-        pipeline_data,
+        pipeline_data: PipelineData,
         traj_selection: Union[int, str, List[Union[int, str]], "all"],
         fragment_definition: Optional[Union[str, Dict[str, Tuple[int, int]]]] = None,
         fragment_type: Optional[Union[str, Dict[str, str]]] = None,
@@ -767,9 +751,9 @@ class TrajectoryManager:
 
     def add_tags(
         self,
-        pipeline_data,
-        trajectory_selector,
-        tags=None,
+        pipeline_data: PipelineData,
+        trajectory_selector: Union[int, str, List[Any], range, Dict[Any, List[str]]],
+        tags: Optional[List[str]] = None,
     ) -> None:
         """
         Add tags to trajectories using flexible selectors.
@@ -863,9 +847,9 @@ class TrajectoryManager:
     
     def set_tags(
         self,
-        pipeline_data,
-        trajectory_selector,
-        tags=None,
+        pipeline_data: PipelineData,
+        trajectory_selector: Union[int, str, List[Any], range, Dict[Any, List[str]]],
+        tags: Optional[List[str]] = None,
     ) -> None:
         """
         Set (replace) tags for trajectories using flexible selectors.
@@ -953,7 +937,7 @@ class TrajectoryManager:
                 pipeline_data.trajectory_data.set_trajectory_tags(idx, tag_list)
 
     
-    def _merge_tags(self, existing_tags, new_tags) -> list:
+    def _merge_tags(self, existing_tags: List[str], new_tags: List[str]) -> List[str]:
         """
         Merge new tags with existing tags, avoiding duplicates.
         
@@ -977,7 +961,7 @@ class TrajectoryManager:
     
 
     def rename_trajectories(
-        self, pipeline_data, name_mapping: Union[Dict[Union[int, str], str], List[str]]
+        self, pipeline_data: PipelineData, name_mapping: Union[Dict[Union[int, str], str], List[str]]
     ) -> None:
         """
         Rename trajectory names.
@@ -1054,8 +1038,7 @@ class TrajectoryManager:
         # Manager sets the new names on PipelineData
         pipeline_data.trajectory_data.trajectory_names = new_names
 
-
-    def reset_trajectory_data(self, pipeline_data) -> None:
+    def reset_trajectory_data(self, pipeline_data: PipelineData) -> None:
         """
         Reset the trajectory data object to empty state.
 
@@ -1120,4 +1103,181 @@ class TrajectoryManager:
             print("Stride must be a positive integer. Using default stride value.")
             stride = self.default_stride
         return selection, concat, stride
-    
+
+    def save(self, pipeline_data: PipelineData, save_path: str) -> None:
+        """
+        Save trajectory data to disk.
+
+        Warning:
+        --------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.trajectory.save('trajectory_backup.pkl')  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = TrajectoryManager()
+        >>> manager.save(pipeline_data, 'trajectory_backup.pkl')  # pipeline_data required
+
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data container with trajectory data
+        save_path : str
+            Path where to save the trajectory data
+
+        Returns:
+        --------
+        None
+            Saves the trajectory data to the specified path
+
+        Examples:
+        ---------
+        >>> trajectory_manager.save(pipeline_data, 'trajectory_backup.pkl')
+        """
+        pipeline_data.trajectory_data.save(save_path)
+
+    def load(self, pipeline_data: PipelineData, load_path: str) -> None:
+        """
+        Load trajectory data from disk.
+
+        Warning:
+        --------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.trajectory.load('trajectory_backup.pkl')  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = TrajectoryManager()
+        >>> manager.load(pipeline_data, 'trajectory_backup.pkl')  # pipeline_data required
+
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data container to load trajectory data into
+        load_path : str
+            Path to the saved trajectory data file
+
+        Returns:
+        --------
+        None
+            Loads the trajectory data from the specified path
+
+        Examples:
+        ---------
+        >>> trajectory_manager.load(pipeline_data, 'trajectory_backup.pkl')
+        """
+        pipeline_data.trajectory_data.load(load_path)
+
+    def print_info(self, pipeline_data: PipelineData) -> None:
+        """
+        Print trajectory information.
+
+        Warning:
+        --------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.trajectory.print_info()  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = TrajectoryManager()
+        >>> manager.print_info(pipeline_data)  # pipeline_data required
+
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data container with trajectory data
+
+        Returns:
+        --------
+        None
+            Prints trajectory information to console
+
+        Examples:
+        ---------
+        >>> trajectory_manager.print_info(pipeline_data)
+        === TrajectoryData ===
+        Loaded 3 trajectories:
+          [0] system1_prot_traj1: 1000 frames, tags: ['system_A', 'biased']
+          [1] system1_prot_traj2: 1500 frames, tags: ['system_A', 'unbiased']
+          [2] system2_prot_traj1: 800 frames, tags: ['system_B', 'biased']
+        """
+        pipeline_data.trajectory_data.print_info()
+
+    def select_trajs(self, pipeline_data: PipelineData, data_selector: str) -> List[Union[DaskMDTrajectory, md.Trajectory]]:
+        """
+        Create new trajectory objects from DataSelector frames.
+
+        Warning:
+        --------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> selected = pipeline.trajectory.select_trajs("folded_frames")  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = TrajectoryManager()
+        >>> selected = manager.select_trajs(pipeline_data, "folded_frames")  # pipeline_data required
+        
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data with trajectories and DataSelector
+        data_selector : str
+            Name of DataSelector to use
+            
+        Returns:
+        --------
+        List[Union[DaskMDTrajectory, md.Trajectory]]
+            List of new trajectory objects with selected frames
+            
+        Examples:
+        ---------
+        >>> # Create new trajectories from DataSelector
+        >>> selected = pipeline.trajectory.select_trajs("folded_frames")
+        >>> print(f"Created {len(selected)} new trajectories")
+        >>> 
+        >>> # Use the returned trajectories for analysis
+        >>> for traj in selected:
+        ...     print(f"Trajectory has {traj.n_frames} frames")
+        """
+        selector_data = self._validate_data_selector(pipeline_data, data_selector)
+        
+        new_trajectories = []
+        for traj_idx, frame_indices in selector_data.trajectory_frames.items():
+            if not frame_indices:
+                continue
+                
+            traj = pipeline_data.trajectory_data.trajectories[traj_idx]
+            
+            # Create new trajectory using slice() method (unified interface)
+            new_traj = traj.slice(frame_indices)
+            
+            new_trajectories.append(new_traj)
+            print(f"Created new trajectory from traj {traj_idx} with {len(frame_indices)} frames")
+        
+        # Validate that all types are correct
+        for traj in new_trajectories:
+            if pipeline_data.use_memmap:
+                if not isinstance(traj, DaskMDTrajectory):
+                    raise TypeError("Internal error: Non-DaskMDTrajectory created with memmap=True")
+            else:
+                if isinstance(traj, DaskMDTrajectory):
+                    raise TypeError("Internal error: DaskMDTrajectory created with memmap=False")
+        
+        print(f"Created {len(new_trajectories)} trajectories from DataSelector '{data_selector}'")
+        return new_trajectories

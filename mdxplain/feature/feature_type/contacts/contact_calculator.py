@@ -25,6 +25,9 @@ Utility class for computing contact maps from distance arrays using distance cut
 Supports memory mapping for large datasets and provides statistical analysis capabilities.
 """
 
+from typing import Dict, Optional, Tuple, Any
+import numpy as np
+
 from ..helper.calculator_compute_helper import CalculatorComputeHelper
 from ..interfaces.calculator_base import CalculatorBase
 from .contact_calculator_analysis import ContactCalculatorAnalysis
@@ -50,7 +53,7 @@ class ContactCalculator(CalculatorBase):
     >>> contacts = calculator.compute(distance_data, cutoff=3.5)
     """
 
-    def __init__(self, use_memmap=False, cache_path="./cache", chunk_size=10000):
+    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 10000) -> None:
         """
         Initialize contact calculator with configuration parameters.
 
@@ -86,7 +89,7 @@ class ContactCalculator(CalculatorBase):
 
     # ===== MAIN COMPUTATION METHOD =====
 
-    def compute(self, input_data, **kwargs):
+    def compute(self, input_data: np.ndarray, **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Compute binary contact maps from distance arrays using distance cutoff.
 
@@ -132,13 +135,13 @@ class ContactCalculator(CalculatorBase):
 
     def _compute_metric_values(
         self,
-        contacts,
-        metric,
-        threshold,
-        window_size,
-        transition_mode="window",
-        lag_time=1,
-    ):
+        contacts: np.ndarray,
+        metric: str,
+        threshold: float,
+        window_size: int,
+        transition_mode: str = "window",
+        lag_time: int = 1,
+    ) -> np.ndarray:
         """
         Compute statistical metric values for contact filtering.
 
@@ -184,8 +187,8 @@ class ContactCalculator(CalculatorBase):
         raise ValueError(f"Unknown metric: {metric}. Supported: {supported_metrics}")
 
     def _compute_transitions_metric(
-        self, contacts, threshold, window_size, transition_mode, lag_time
-    ):
+        self, contacts: np.ndarray, threshold: float, window_size: int, transition_mode: str, lag_time: int
+    ) -> int:
         """
         Compute transitions metric based on specified mode and parameters.
 
@@ -221,17 +224,17 @@ class ContactCalculator(CalculatorBase):
 
     def compute_dynamic_values(
         self,
-        input_data,
-        metric="frequency",
-        threshold_min=None,
-        threshold_max=None,
-        feature_metadata=None,
-        output_path=None,
-        transition_threshold=2.0,
-        window_size=10,
-        transition_mode="window",
-        lag_time=1,
-    ):
+        input_data: np.ndarray,
+        metric: str = "frequency",
+        threshold_min: Optional[float] = None,
+        threshold_max: Optional[float] = None,
+        feature_metadata: Optional[list] = None,
+        output_path: Optional[str] = None,
+        transition_threshold: float = 2.0,
+        window_size: int = 10,
+        transition_mode: str = "window",
+        lag_time: int = 1,
+    ) -> Dict[str, Any]:
         """
         Filter and select dynamic contact pairs based on statistical criteria.
 

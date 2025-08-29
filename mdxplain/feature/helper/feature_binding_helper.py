@@ -28,6 +28,8 @@ to feature data objects with automatic data selection based on reduction state.
 import functools
 from typing import Set, Callable, Any
 
+from ..entities.feature_data import FeatureData
+
 
 class FeatureBindingHelper:
     """
@@ -38,7 +40,7 @@ class FeatureBindingHelper:
     """
 
     @staticmethod
-    def bind_stats_methods(feature_data) -> None:
+    def bind_stats_methods(feature_data: FeatureData) -> None:
         """
         Bind analysis methods from calculator to feature_data.analysis.
 
@@ -81,7 +83,7 @@ class FeatureBindingHelper:
 
     @staticmethod
     def _bind_analysis_methods(
-        feature_data, 
+        feature_data: FeatureData, 
         requires_full_data: Set[str]
     ) -> None:
         """
@@ -135,7 +137,7 @@ class FeatureBindingHelper:
 
     @staticmethod
     def _create_bound_method(
-        feature_data,
+        feature_data: FeatureData,
         original_method: Callable,
         method_name: str,
         requires_full_data: Set[str],
@@ -161,7 +163,7 @@ class FeatureBindingHelper:
         """
 
         @functools.wraps(original_method)
-        def bound_method(*args, **kwargs):
+        def bound_method(*args: Any, **kwargs: Any) -> Any:
             """Bound method that automatically uses current data."""
             # Determine which data to use
             if method_name in requires_full_data:

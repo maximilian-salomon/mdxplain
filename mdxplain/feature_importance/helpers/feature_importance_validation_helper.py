@@ -26,7 +26,14 @@ for validating feature importance inputs, analyses, and dependencies. Extracted 
 FeatureImportanceManager to improve code organization and testability.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from ..analyzer_types.interfaces.analyzer_type_base import AnalyzerTypeBase
+
+if TYPE_CHECKING:
+    from ...pipeline.entities.pipeline_data import PipelineData
 
 
 class FeatureImportanceValidationHelper:
@@ -38,7 +45,7 @@ class FeatureImportanceValidationHelper:
     """
 
     @staticmethod
-    def validate_analysis_name(pipeline_data, analysis_name: str, force: bool) -> None:
+    def validate_analysis_name(pipeline_data: PipelineData, analysis_name: str, force: bool) -> None:
         """
         Validate analysis name doesn't already exist unless force is used.
         
@@ -68,7 +75,7 @@ class FeatureImportanceValidationHelper:
             )
 
     @staticmethod
-    def validate_analysis_exists(pipeline_data, analysis_name: str) -> None:
+    def validate_analysis_exists(pipeline_data: PipelineData, analysis_name: str) -> None:
         """
         Validate that feature importance analysis with given name exists.
         
@@ -97,7 +104,7 @@ class FeatureImportanceValidationHelper:
             )
 
     @staticmethod
-    def validate_comparison_exists(pipeline_data, comparison_name: str) -> None:
+    def validate_comparison_exists(pipeline_data: PipelineData, comparison_name: str) -> None:
         """
         Validate that comparison with given name exists.
         
@@ -126,7 +133,7 @@ class FeatureImportanceValidationHelper:
             )
 
     @staticmethod
-    def validate_analyzer_type(analyzer_type) -> None:
+    def validate_analyzer_type(analyzer_type: AnalyzerTypeBase) -> None:
         """
         Validate analyzer type instance and its required interface.
         

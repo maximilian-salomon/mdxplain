@@ -28,7 +28,7 @@ Supports nested directory structures and trajectory concatenation.
 
 import os
 import warnings
-from typing import Any, Dict, List, Union, Optional
+from typing import Any, Dict, List, Tuple, Union, Optional
 from pathlib import Path
 
 import mdtraj as md
@@ -136,7 +136,7 @@ class TrajectoryLoadHelper:
             Dictionary with 'trajectories' and 'names' keys
         """
         result = TrajectoryLoadHelper._create_initial_result(trajectory_list)
-        result = TrajectoryLoadHelper._apply_selection_if_needed(result, selection, concat)
+        result = TrajectoryLoadHelper._apply_selection_if_needed(result, selection)
         return TrajectoryLoadHelper._handle_concatenation_if_needed(result, concat)
     
     @staticmethod
@@ -159,7 +159,7 @@ class TrajectoryLoadHelper:
     
     @staticmethod
     def _apply_selection_if_needed(
-        result: Dict[str, List[Any]], selection: Optional[str], concat: bool
+        result: Dict[str, List[Any]], selection: Optional[str]
     ) -> Dict[str, List[Any]]:
         """
         Apply selection to trajectories if specified.
@@ -170,8 +170,6 @@ class TrajectoryLoadHelper:
             Dictionary with 'trajectories' and 'names' keys
         selection : str, optional
             MDTraj selection string
-        concat : bool
-            Whether concatenation was used
             
         Returns:
         --------
@@ -179,7 +177,7 @@ class TrajectoryLoadHelper:
             Dictionary with selected trajectories
         """
         if selection is not None:
-            return TrajectoryLoadHelper._apply_selection_to_result(result, selection, concat)
+            return TrajectoryLoadHelper._apply_selection_to_result(result, selection)
         return result
     
     @staticmethod
@@ -362,8 +360,8 @@ class TrajectoryLoadHelper:
         return {"trajectories": trajectories, "names": names}
 
     @staticmethod
-    def _load_flat_structure(directory_path, concat, stride, selection=None, 
-                            use_memmap=False, chunk_size=1000, cache_dir="./cache"):
+    def _load_flat_structure(directory_path: str, concat: bool, stride: int, selection: Optional[str] = None, 
+                            use_memmap: bool = False, chunk_size: int = 1000, cache_dir: str = "./cache") -> Dict[str, List[Any]]:
         """
         Load from flat directory structure (single system).
 
@@ -401,7 +399,7 @@ class TrajectoryLoadHelper:
         return result
 
     @staticmethod
-    def _print_loading_summary(system_summary, concat):
+    def _print_loading_summary(system_summary: List[Tuple[str, int]], concat: bool) -> None:
         """
         Print summary of loaded trajectories.
 
@@ -429,7 +427,7 @@ class TrajectoryLoadHelper:
             TrajectoryLoadHelper._print_system_info(system, count, concat)
 
     @staticmethod
-    def _print_summary_header(num_systems, total_trajectories, concat):
+    def _print_summary_header(num_systems: int, total_trajectories: int, concat: bool) -> None:
         """
         Print the header line of the loading summary.
 
@@ -458,7 +456,7 @@ class TrajectoryLoadHelper:
             )
 
     @staticmethod
-    def _print_system_info(system, count, concat):
+    def _print_system_info(system: str, count: int, concat: bool) -> None:
         """
         Print information for a single system.
 
@@ -482,8 +480,8 @@ class TrajectoryLoadHelper:
             print(f"  {system}: {count} trajectories")
 
     @staticmethod
-    def _load_system_trajectories(subdir_path, subdir_name, concat, stride, selection=None,
-                                 use_memmap=False, chunk_size=1000, cache_dir="./cache"):
+    def _load_system_trajectories(subdir_path: str, subdir_name: str, concat: bool, stride: int, selection: Optional[str] = None,
+                                 use_memmap: bool = False, chunk_size: int = 1000, cache_dir: str = "./cache") -> Dict[str, List[Any]]:
         """
         Load all trajectories for a single system.
 
@@ -541,14 +539,14 @@ class TrajectoryLoadHelper:
 
         # Apply selection to each trajectory before concatenation if provided
         if selection is not None:
-            result = TrajectoryLoadHelper._apply_selection_to_result(result, selection, concat)
+            result = TrajectoryLoadHelper._apply_selection_to_result(result, selection)
         
         return TrajectoryLoadHelper._handle_traj_concatenation(
             result["trajectories"], result["names"], concat, subdir_name
         )
 
     @staticmethod
-    def _get_pdb_files_from_directory(subdir_path):
+    def _get_pdb_files_from_directory(subdir_path: str) -> List[str]:
         """
         Get list of PDB files in directory.
 
@@ -565,7 +563,7 @@ class TrajectoryLoadHelper:
         return [f for f in os.listdir(subdir_path) if f.endswith(".pdb")]
 
     @staticmethod
-    def _get_xtc_files_from_directory(subdir_path):
+    def _get_xtc_files_from_directory(subdir_path: str) -> List[str]:
         """
         Get list of XTC files in directory.
 
@@ -583,9 +581,9 @@ class TrajectoryLoadHelper:
 
     @staticmethod
     def _load_trajectory_files_from_directory(
-        xtc_files, pdb_path, subdir_path, subdir_name, stride,
-        use_memmap=False, chunk_size=1000, cache_dir="./cache"
-    ):
+        xtc_files: List[str], pdb_path: str, subdir_path: str, subdir_name: str, stride: int,
+        use_memmap: bool = False, chunk_size: int = 1000, cache_dir: str = "./cache"
+    ) -> Dict[str, List[Any]]:
         """
         Load XTC files with PDB topology.
 
@@ -635,8 +633,8 @@ class TrajectoryLoadHelper:
         return {"trajectories": system_trajs, "names": names}
 
     @staticmethod
-    def _load_pdb_files_from_directory(pdb_files, subdir_path, subdir_name, stride,
-                                      use_memmap=False, chunk_size=1000, cache_dir="./cache"):
+    def _load_pdb_files_from_directory(pdb_files: List[str], subdir_path: str, subdir_name: str, stride: int,
+                                      use_memmap: bool = False, chunk_size: int = 1000, cache_dir: str = "./cache") -> Dict[str, List[Any]]:
         """
         Load PDB files as separate trajectories.
 
@@ -681,7 +679,7 @@ class TrajectoryLoadHelper:
         return {"trajectories": system_trajs, "names": names}
 
     @staticmethod
-    def _handle_traj_concatenation(system_trajs, names, concat, subdir_name):
+    def _handle_traj_concatenation(system_trajs: List[Any], names: List[str], concat: bool, subdir_name: str) -> Dict[str, List[Any]]:
         """
         Handle trajectory concatenation if requested.
 
@@ -717,9 +715,9 @@ class TrajectoryLoadHelper:
 
     @staticmethod
     def _load_root_system_if_present(
-        directory_path, concat, stride, trajectories, names, system_summary, selection=None,
-        use_memmap=False, chunk_size=1000, cache_dir="./cache"
-    ):
+        directory_path: str, concat: bool, stride: int, trajectories: List[Any], names: List[str], system_summary: List[Tuple[str, int]], selection: Optional[str] = None,
+        use_memmap: bool = False, chunk_size: int = 1000, cache_dir: str = "./cache"
+    ) -> None:
         """
         Load root directory files as separate system if present.
 
@@ -766,7 +764,7 @@ class TrajectoryLoadHelper:
                 )
 
     @staticmethod
-    def _apply_selection_to_result(result: Dict[str, List[Any]], selection: str, concat: bool) -> Dict[str, List[Any]]:
+    def _apply_selection_to_result(result: Dict[str, List[Any]], selection: str) -> Dict[str, List[Any]]:
         """
         Apply atom selection to trajectories in result.
 
@@ -776,8 +774,6 @@ class TrajectoryLoadHelper:
             Dictionary with 'trajectories' and 'names' keys
         selection : str
             MDTraj selection string to apply
-        concat : bool
-            Whether concatenation was used (for logging purposes)
 
         Returns:
         --------
@@ -818,7 +814,7 @@ class TrajectoryLoadHelper:
         use_memmap: bool = False,
         chunk_size: int = 1000,
         cache_dir: str = "./cache"
-    ) -> Any:
+    ) -> Union[DaskMDTrajectory, md.Trajectory]:
         """
         Load a single trajectory file using either md.load or DaskMDTrajectory.
         
@@ -839,7 +835,7 @@ class TrajectoryLoadHelper:
             
         Returns:
         --------
-        Any
+        Union[DaskMDTrajectory, md.Trajectory]
             Either md.Trajectory or DaskMDTrajectory object
         """
         if use_memmap:

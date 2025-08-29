@@ -54,11 +54,11 @@ class AnalyzerTypeBase(ABC, metaclass=AnalyzerTypeMeta):
     ...         pass
     ...     
     ...     @classmethod
-    ...     def get_type_name(cls):
+    ...     def get_type_name(cls) -> str:
     ...         return "custom"
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize analyzer type base class.
 
@@ -124,7 +124,7 @@ class AnalyzerTypeBase(ABC, metaclass=AnalyzerTypeMeta):
         pass
 
     @abstractmethod
-    def init_calculator(self, use_memmap=False, cache_path="./cache", chunk_size=10000):
+    def init_calculator(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 10000) -> None:
         """
         Initialize the analyzer calculator with specified configuration.
 

@@ -26,8 +26,8 @@ with memmap support. Works with any Python object, not just TrajectoryData.
 Preserves memmap properties correctly.
 """
 
+from typing import Any, Dict, Optional, Union
 import os
-
 import numpy as np
 
 
@@ -50,14 +50,14 @@ class DataUtils:
     """
 
     @staticmethod
-    def save_object(obj, save_path):
+    def save_object(obj: Any, save_path: str) -> None:
         """
         Save any Python object while preserving memory-mapped array properties.
 
         Parameters:
         -----------
         obj : object
-            Python object to save (can contain memmap arrays)
+            Python object to save (can contain memmap arrays and DaskMDTrajectory objects)
         save_path : str
             File path for saving (should end with .pkl or .npy)
 
@@ -74,11 +74,11 @@ class DataUtils:
         >>> # Save any custom object with memmaps
         >>> DataUtils.save_object(my_analysis, 'outputs/analysis.pkl')
         """
-        save_obj = DataUtils._prepare_save_object(obj)
+        save_obj: Dict[str, Any] = DataUtils._prepare_save_object(obj)
         np.save(save_path, save_obj, allow_pickle=True)
 
     @staticmethod
-    def load_object(obj, load_path):
+    def load_object(obj: Any, load_path: str) -> None:
         """
         Load data into existing Python object while restoring memmap properties.
 
@@ -104,15 +104,13 @@ class DataUtils:
         >>> my_obj = MyAnalysisClass()
         >>> DataUtils.load_object(my_obj, 'outputs/analysis.pkl')
         """
-        loaded_obj = np.load(load_path, allow_pickle=True).item()
+        loaded_obj: Dict[str, Any] = np.load(load_path, allow_pickle=True).item()
         DataUtils._restore_object_attributes(obj, loaded_obj)
 
     @staticmethod
-    def _prepare_save_object(obj):
+    def _prepare_save_object(obj: Any) -> Dict[str, Any]:
         """
-        Prepare object for saving by converting memmaps to metadata.
-
-        Prepare object attributes for saving.
+        Prepare object for saving by converting memmaps and special objects to metadata.
 
         Parameters:
         -----------
@@ -122,25 +120,43 @@ class DataUtils:
         Returns:
         --------
         dict
-            Dictionary with attributes, memmaps converted to metadata
+            Dictionary with attributes, special objects converted to metadata
         """
-        save_obj = {}
+        save_obj: Dict[str, Any] = {}
 
         for attr_name in dir(obj):
             if attr_name.startswith("_"):
                 continue
 
             attr_value = getattr(obj, attr_name)
-
-            if isinstance(attr_value, np.memmap):
-                save_obj[attr_name] = DataUtils._save_memmap_info(attr_value, attr_name)
-            else:
-                save_obj[attr_name] = attr_value
+            save_obj[attr_name] = DataUtils._convert_attribute(attr_value, attr_name)
 
         return save_obj
 
     @staticmethod
-    def _save_memmap_info(memmap_array, attr_name):
+    def _convert_attribute(attr_value: Any, attr_name: str) -> Any:
+        """
+        Convert single attribute for saving.
+
+        Parameters:
+        -----------
+        attr_value : Any
+            Attribute value to convert
+        attr_name : str
+            Attribute name for error messages
+
+        Returns:
+        --------
+        Any
+            Converted attribute (metadata dict for special types, original value otherwise)
+        """
+        if isinstance(attr_value, np.memmap):
+            return DataUtils._save_memmap_info(attr_value, attr_name)
+        
+        return attr_value
+
+    @staticmethod
+    def _save_memmap_info(memmap_array: np.memmap, attr_name: str) -> Dict[str, Any]:
         """
         Save memmap metadata for later restoration.
 
@@ -170,7 +186,7 @@ class DataUtils:
         }
 
     @staticmethod
-    def _restore_object_attributes(obj, loaded_obj):
+    def _restore_object_attributes(obj: Any, loaded_obj: Dict[str, Any]) -> None:
         """
         Restore object attributes from loaded data.
 
@@ -187,14 +203,35 @@ class DataUtils:
             Modifies obj in-place
         """
         for attr_name, attr_value in loaded_obj.items():
-            if isinstance(attr_value, dict) and attr_value.get("_is_memmap", False):
-                restored_memmap = DataUtils._restore_memmap(obj, attr_value, attr_name)
-                setattr(obj, attr_name, restored_memmap)
-            else:
-                setattr(obj, attr_name, attr_value)
+            restored_value = DataUtils._restore_single_attribute(obj, attr_value, attr_name)
+            setattr(obj, attr_name, restored_value)
 
     @staticmethod
-    def _restore_memmap(obj, memmap_info, attr_name):
+    def _restore_single_attribute(obj: Any, attr_value: Any, attr_name: str) -> Any:
+        """
+        Restore single attribute from loaded data.
+
+        Parameters:
+        -----------
+        obj : object
+            Target object for restoration context
+        attr_value : Any
+            Loaded attribute value
+        attr_name : str
+            Attribute name
+
+        Returns:
+        --------
+        Any
+            Restored attribute value
+        """
+        if isinstance(attr_value, dict) and attr_value.get("_is_memmap", False):
+            return DataUtils._restore_memmap(obj, attr_value, attr_name)
+        
+        return attr_value
+
+    @staticmethod
+    def _restore_memmap(obj: Any, memmap_info: Dict[str, Any], attr_name: str) -> Optional[np.memmap]:
         """
         Restore memmap from metadata.
 
@@ -212,7 +249,7 @@ class DataUtils:
         np.memmap or None
             Restored memmap or None if file not found
         """
-        original_path = memmap_info["original_path"]
+        original_path: str = memmap_info["original_path"]
 
         # Try to restore from original path first
         restored = DataUtils._try_restore_from_path(original_path, memmap_info)
@@ -225,7 +262,7 @@ class DataUtils:
         )
 
     @staticmethod
-    def _try_restore_from_path(path, memmap_info):
+    def _try_restore_from_path(path: str, memmap_info: Dict[str, Any]) -> Optional[np.memmap]:
         """
         Try to restore memmap from given path.
 
@@ -251,7 +288,12 @@ class DataUtils:
         return None
 
     @staticmethod
-    def _try_restore_from_alternative_path(obj, attr_name, memmap_info, original_path):
+    def _try_restore_from_alternative_path(
+        obj: Any, 
+        attr_name: str, 
+        memmap_info: Dict[str, Any], 
+        original_path: str
+    ) -> Optional[np.memmap]:
         """
         Try to restore memmap from alternative path.
 
@@ -274,14 +316,14 @@ class DataUtils:
         if not DataUtils._check_supports_alternative_path(obj, attr_name):
             return None
 
-        target_path = getattr(obj, f"{attr_name}_path")
+        target_path: str = getattr(obj, f"{attr_name}_path")
         if DataUtils._check_is_invalid_alternative_path(target_path, original_path):
             return None
 
         return DataUtils._try_restore_from_path(target_path, memmap_info)
 
     @staticmethod
-    def _check_supports_alternative_path(obj, attr_name):
+    def _check_supports_alternative_path(obj: Any, attr_name: str) -> bool:
         """
         Check if object supports alternative path restoration.
 
@@ -304,7 +346,7 @@ class DataUtils:
         )
 
     @staticmethod
-    def _check_is_invalid_alternative_path(target_path, original_path):
+    def _check_is_invalid_alternative_path(target_path: str, original_path: str) -> bool:
         """
         Check if alternative path is invalid.
 
@@ -323,16 +365,16 @@ class DataUtils:
         return target_path == original_path or not os.path.exists(target_path)
 
     @staticmethod
-    def get_cache_file_path(cache_name, cache_path="./cache"):
+    def get_cache_file_path(cache_name: str, cache_path: str = "./cache") -> str:
         """
         Get cache file path from cache_path and cache_name.
 
         Parameters:
         -----------
-        cache_path : str or None
-            Base cache path (can be directory or full file path)
         cache_name : str
             Name for the cache file (e.g., 'pca.dat', 'kernel_pca.dat')
+        cache_path : str, default="./cache"
+            Base cache path (can be directory or full file path)
 
         Returns:
         --------
@@ -342,16 +384,12 @@ class DataUtils:
         Examples:
         ---------
         >>> # With directory cache_path
-        >>> path = DataUtils.get_cache_file_path("./cache", "pca.dat")
+        >>> path = DataUtils.get_cache_file_path("pca.dat", "./cache")
         >>> print(path)  # "./cache/pca.dat"
 
         >>> # With full file cache_path
-        >>> path = DataUtils.get_cache_file_path("./cache/my_data.dat", "pca.dat")
+        >>> path = DataUtils.get_cache_file_path("pca.dat", "./cache/my_data.dat")
         >>> print(path)  # "./cache/my_data.dat"
-
-        >>> # With None cache_path
-        >>> path = DataUtils.get_cache_file_path(None, "pca.dat")
-        >>> print(path)  # "./cache/pca.dat"
         """
         if cache_path:
             # Check if cache_path is a directory or full file path
@@ -364,9 +402,14 @@ class DataUtils:
                 # Directory path provided, append cache_name
                 os.makedirs(cache_path, exist_ok=True)
                 return os.path.join(cache_path, cache_name)
+        else:
+            # Default cache path
+            default_path = "./cache"
+            os.makedirs(default_path, exist_ok=True)
+            return os.path.join(default_path, cache_name)
 
     @staticmethod
-    def get_type_key(type_obj):
+    def get_type_key(type_obj: Union[str, type, object]) -> str:
         """
         Get the type key from a type object.
 

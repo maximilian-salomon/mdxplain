@@ -72,7 +72,7 @@ class TrajectoryData:
         Residue labeling data from nomenclature systems
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize trajectory data container.
 
@@ -175,7 +175,7 @@ class TrajectoryData:
         """
         return self.trajectory_names
 
-    def print_trajectory_info(self) -> None:
+    def print_info(self) -> None:
         """
         Print information about loaded trajectories.
 
@@ -190,7 +190,7 @@ class TrajectoryData:
 
         Examples:
         ---------
-        >>> traj_data.print_trajectory_info()
+        >>> traj_data.print_info()
         Loaded 3 trajectories:
           [0] system1_prot_traj1: 1000 frames, tags: ['system_A', 'biased']
           [1] system1_prot_traj2: 1500 frames, tags: ['system_A', 'unbiased']

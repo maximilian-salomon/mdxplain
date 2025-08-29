@@ -20,49 +20,161 @@
 
 """Trajectory processing utilities."""
 
+from __future__ import annotations
+
 from typing import Any, List, Optional, Union, Dict, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ...entities.trajectory_data import TrajectoryData
+    from ....pipeline.entities.pipeline_data import PipelineData
+
+from ..validation_helper.trajectory_validation_helper import TrajectoryValidationHelper
 
 
 class TrajectoryProcessHelper:
     """Utility class for processing individual trajectory objects."""
 
     @staticmethod
-    def process_trajectory_cuts(traj: Any, cut: Optional[int], stride: int) -> Any:
+    def apply_slicing(
+        pipeline_data: PipelineData, 
+        indices: List[int], 
+        frames: Optional[Union[int, slice, List[int]]], 
+        data_selector: Optional[str],
+        stride: Optional[int],
+        cut: Optional[int]
+    ) -> None:
         """
-        Apply cut and stride operations to a single trajectory.
-
+        Apply slicing to trajectories using frames OR DataSelector.
+        
         Parameters:
         -----------
-        traj : Trajectory
-            Trajectory object
-        cut : int, optional
-            Frame number after which to cut the trajectory.
-        stride : int
-            Take every stride-th frame.
-
+        pipeline_data : PipelineData
+            Pipeline data object containing trajectory data
+        indices : List[int]
+            List of trajectory indices to process
+        frames : int, slice, list, or None
+            Frame specification for slicing (ignored if data_selector is used)
+        data_selector : str or None
+            Name of DataSelector to use for frame selection
+        stride : int or None
+            Stride value for frame subsampling
+        cut : int or None
+            Frame number after which to cut trajectories
+        
         Returns:
         --------
-        Trajectory
-            Processed trajectory object
-
+        None
+            Modifies trajectories in-place
+            
         Examples:
         ---------
-        >>> processed_traj = TrajectoryProcessHelper.process_trajectory_cuts(
-        ...     traj, cut=1000, stride=2
+        >>> # Using frames parameter
+        >>> TrajectoryProcessHelper.apply_slicing(
+        ...     pipeline_data, [0, 1, 2], frames=1000, data_selector=None, stride=2, cut=500
+        ... )
+        >>> # Using DataSelector
+        >>> TrajectoryProcessHelper.apply_slicing(
+        ...     pipeline_data, [0, 1], frames=None, data_selector="folded_frames", stride=2, cut=None
         ... )
         """
-        # Apply cut if specified
-        if cut is not None and cut < traj.n_frames:
-            traj = traj[:cut]
+        # Get frames from DataSelector or use frames parameter
+        if data_selector is not None:
+            frames_dict = TrajectoryProcessHelper._get_frames_from_selector(pipeline_data, data_selector)
+        else:
+            TrajectoryValidationHelper.validate_slice_parameters(frames)
+            frames_dict = {idx: frames for idx in indices}
+        
+        # Default stride
+        if stride is None or stride <= 0:
+            stride = 1
+        
+        # Apply slicing to each trajectory
+        for idx in indices:
+            traj = pipeline_data.trajectory_data.trajectories[idx]
+            frame_spec = frames_dict.get(idx)
+            
+            if frame_spec is None or (isinstance(frame_spec, list) and not frame_spec):
+                print(f"No frames for trajectory {idx} - keeping unchanged")
+                continue
+            
+            # Build indices and apply ONE slice
+            indices_to_use = TrajectoryProcessHelper._combine_slice_params(frame_spec, stride, cut, traj.n_frames)
+            if indices_to_use is not None:
+                sliced_traj = traj.slice(indices_to_use)
+                pipeline_data.trajectory_data.trajectories[idx] = sliced_traj
+                
+                if data_selector:
+                    print(f"Sliced trajectory {idx} to {sliced_traj.n_frames} frames using DataSelector '{data_selector}'")
+                else:
+                    print(f"Sliced trajectory {idx} to {sliced_traj.n_frames} frames")
 
-        # Apply stride if not 1
+    @staticmethod
+    def _get_frames_from_selector(pipeline_data: PipelineData, data_selector: str) -> Dict[int, List[int]]:
+        """
+        Get frames dictionary from DataSelector.
+        
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data object
+        data_selector : str
+            Name of DataSelector
+            
+        Returns:
+        --------
+        Dict[int, List[int]]
+            Dictionary mapping trajectory index to frame list
+        """
+        selector_data = TrajectoryValidationHelper.validate_data_selector(pipeline_data, data_selector)
+        return selector_data.trajectory_frames
+
+    @staticmethod
+    def _combine_slice_params(
+        frames: Optional[Union[int, slice, List[int]]], 
+        stride: int, 
+        cut: Optional[int], 
+        n_frames: int
+    ) -> Optional[List[int]]:
+        """
+        Combine frames, stride, and cut into one index list.
+        
+        Parameters:
+        -----------
+        frames : int, slice, list, or None
+            Frame specification
+        stride : int
+            Stride value
+        cut : int or None
+            Cut value
+        n_frames : int
+            Total frames in trajectory
+            
+        Returns:
+        --------
+        list or None
+            Combined indices for slicing, or None if no slicing needed
+        """
+        # Start with base indices from frames parameter
+        if frames is None:
+            if stride <= 1 and cut is None:
+                return None  # No slicing needed
+            indices = list(range(n_frames))
+        elif isinstance(frames, int):
+            indices = list(range(min(frames, n_frames)))
+        elif isinstance(frames, slice):
+            indices = list(range(*frames.indices(n_frames)))
+        else:  # list or array
+            indices = list(frames)
+        
+        # Apply stride
         if stride > 1:
-            traj = traj[::stride]
-
-        return traj
+            indices = indices[::stride]
+        
+        # Apply cut
+        if cut is not None and len(indices) > cut:
+            indices = indices[:cut]
+        
+        return indices
 
     @staticmethod
     def apply_selection_to_new_trajectories(
@@ -97,7 +209,7 @@ class TrajectoryProcessHelper:
 
     @staticmethod
     def execute_removal(
-        traj_data: "TrajectoryData", indices_to_remove: List[int]
+        traj_data: TrajectoryData, indices_to_remove: List[int]
     ) -> None:
         """
         Remove trajectories and names from trajectory data.
@@ -141,7 +253,7 @@ class TrajectoryProcessHelper:
 
     @staticmethod
     def validate_name_mapping(
-        traj_data: "TrajectoryData", name_mapping: Union[Dict, List]
+        traj_data: TrajectoryData, name_mapping: Union[Dict, List]
     ) -> None:
         """
         Validate name mapping input before processing.
@@ -217,7 +329,7 @@ class TrajectoryProcessHelper:
 
     @staticmethod
     def rename_with_dict(
-        traj_data: "TrajectoryData", name_dict: Dict[Union[int, str], str]
+        traj_data: TrajectoryData, name_dict: Dict[Union[int, str], str]
     ) -> List[str]:
         """
         Process dict-based selective renaming with validation.
@@ -274,7 +386,7 @@ class TrajectoryProcessHelper:
     
     @staticmethod
     def _apply_rename_dict(
-        traj_data: "TrajectoryData", 
+        traj_data: TrajectoryData, 
         name_dict: Dict[Union[int, str], str], 
         new_names: List[str]
     ) -> None:
@@ -302,7 +414,7 @@ class TrajectoryProcessHelper:
     
     @staticmethod
     def _process_single_rename(
-        traj_data: "TrajectoryData", 
+        traj_data: TrajectoryData, 
         old_identifier: Union[int, str], 
         new_name: str, 
         new_names: List[str]
@@ -371,7 +483,7 @@ class TrajectoryProcessHelper:
     
     @staticmethod
     def _rename_by_name(
-        traj_data: "TrajectoryData", old_name: str, new_name: str, new_names: List[str]
+        traj_data: TrajectoryData, old_name: str, new_name: str, new_names: List[str]
     ) -> None:
         """
         Rename trajectory by name.

@@ -306,3 +306,142 @@ class PipelineManager:
         trajectories, features, clustering, and decomposition results.
         """
         self._data.clear_all_data()
+
+    def save(self, save_path: str) -> None:
+        """
+        Save complete pipeline to disk.
+
+        This method saves the entire PipelineData object including all
+        computed features, trajectories, clusterings, decompositions,
+        and metadata to a file.
+
+        Parameters:
+        -----------
+        save_path : str
+            Path where to save the complete pipeline
+
+        Returns:
+        --------
+        None
+            Saves the complete pipeline to the specified path
+
+        Examples:
+        ---------
+        >>> pipeline.save('complete_analysis.pkl')
+        """
+        self._data.save(save_path)
+
+    def load(self, load_path: str) -> None:
+        """
+        Load complete pipeline from disk.
+
+        This method loads a complete PipelineData object from a file,
+        restoring all computed features, trajectories, and analysis state.
+
+        Parameters:
+        -----------
+        load_path : str
+            Path to the saved pipeline file
+
+        Returns:
+        --------
+        None
+            Loads the complete pipeline from the specified path
+
+        Examples:
+        ---------
+        >>> pipeline.load('complete_analysis.pkl')
+        """
+        self._data.load(load_path)
+
+    @staticmethod
+    def load_pipeline(load_path: str) -> 'PipelineManager':
+        """
+        Load complete pipeline from disk as a static constructor.
+
+        This static method creates a new PipelineManager instance and
+        loads a complete pipeline state from a file.
+
+        Parameters:
+        -----------
+        load_path : str
+            Path to the saved pipeline file
+
+        Returns:
+        --------
+        PipelineManager
+            New PipelineManager instance with loaded pipeline state
+
+        Examples:
+        ---------
+        >>> loaded_pipeline = PipelineManager.load_pipeline('complete_analysis.pkl')
+        >>> loaded_pipeline.print_info()
+        """
+        pipeline = PipelineManager()
+        pipeline.load(load_path)
+        return pipeline
+
+    def print_info(self) -> None:
+        """
+        Print comprehensive pipeline information.
+
+        This method prints information from ALL managers to provide
+        a complete overview of the pipeline state.
+
+        Returns:
+        --------
+        None
+            Prints comprehensive pipeline information to console
+
+        Examples:
+        ---------
+        >>> pipeline.print_info()
+        ======= PIPELINE INFORMATION =======
+        
+        --- Trajectory Data ---
+        Loaded 3 trajectories:
+          [0] system1_traj1: 1000 frames
+          [1] system1_traj2: 1500 frames
+          [2] system2_traj1: 800 frames
+          
+        --- Feature Data ---
+        Feature Types: 2 (distances, contacts)
+        
+        --- Clustering Data ---
+        Clustering Names: 1 (conformations)
+        
+        (... information from all managers ...)
+        """
+        print("======= PIPELINE INFORMATION =======")
+        
+        print("\n--- Trajectory Data ---")
+        self.trajectory.print_info()
+        
+        print("\n--- Feature Data ---")
+        self.feature.print_info()
+        
+        print("\n--- Feature Selection Data ---")
+        self.feature_selector.print_info()
+        
+        print("\n--- Clustering Data ---")
+        self.clustering.print_info()
+        
+        print("\n--- Decomposition Data ---")
+        self.decomposition.print_info()
+        
+        print("\n--- Data Selector Data ---")
+        self.data_selector.print_info()
+        
+        print("\n--- Comparison Data ---")
+        self.comparison.print_info()
+        
+        print("\n--- Feature Importance Data ---")
+        self.feature_importance.print_info()
+        
+        print("\n======= END PIPELINE INFORMATION =======")
+        
+        # Summary at the end
+        summary = self.summary()
+        print(f"\nPipeline Summary: {summary['trajectories_loaded']} trajectories, "
+              f"{summary['features_computed']} feature types, "
+              f"{summary['clusterings_performed']} clusterings")

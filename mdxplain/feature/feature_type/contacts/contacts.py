@@ -25,7 +25,8 @@ Contact feature type implementation with distance-based contact detection
 for analyzing molecular dynamics trajectories.
 """
 
-from typing import List
+from typing import List, Dict, Tuple, Any
+import numpy as np
 
 from ..distances.distances import Distances
 from ..interfaces.feature_type_base import FeatureTypeBase
@@ -65,7 +66,7 @@ class Contacts(FeatureTypeBase):
     ReduceMetrics = ReduceContactMetrics
     """Available reduce metrics for contact features."""
 
-    def __init__(self, cutoff=4.5):
+    def __init__(self, cutoff: float = 4.5) -> None:
         """
         Initialize contact feature type with distance cutoff parameter.
 
@@ -93,7 +94,7 @@ class Contacts(FeatureTypeBase):
         super().__init__()
         self.cutoff = cutoff
 
-    def init_calculator(self, use_memmap=False, cache_path="./cache", chunk_size=10000):
+    def init_calculator(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 10000) -> None:
         """
         Initialize the contact calculator with specified configuration.
 
@@ -125,7 +126,7 @@ class Contacts(FeatureTypeBase):
             use_memmap=use_memmap, cache_path=cache_path, chunk_size=chunk_size
         )
 
-    def compute(self, input_data, feature_metadata):
+    def compute(self, input_data: np.ndarray, feature_metadata: Dict[str, Any]) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Compute binary contact maps from distance data using distance cutoff.
 
@@ -186,7 +187,7 @@ class Contacts(FeatureTypeBase):
         return [Distances.get_type_name()]
 
     @classmethod
-    def get_type_name(cls):  # noqa: vulture
+    def get_type_name(cls) -> str:  # noqa: vulture
         """
         Return unique string identifier for the contact feature type.
 

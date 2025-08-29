@@ -26,13 +26,18 @@ feature importance analysis using various ML algorithms. It follows
 the same pattern as DecompositionManager, working with analyzer_types
 and creating FeatureImportanceData objects.
 """
+from __future__ import annotations
 
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ...pipeline.entities.pipeline_data import PipelineData
 
 from ..analyzer_types.interfaces.analyzer_type_base import AnalyzerTypeBase
 from ..helpers.analysis_runner_helper import AnalysisRunnerHelper
 from ..helpers.feature_importance_validation_helper import FeatureImportanceValidationHelper
 from ..helpers.top_features_helper import TopFeaturesHelper
+from ...utils.data_utils import DataUtils
 
 
 class FeatureImportanceManager:
@@ -69,7 +74,7 @@ class FeatureImportanceManager:
     ... )
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the feature importance manager.
 
@@ -82,7 +87,7 @@ class FeatureImportanceManager:
 
     def add(
         self,
-        pipeline_data,
+        pipeline_data: PipelineData,
         comparison_name: str,
         analyzer_type: AnalyzerTypeBase,
         analysis_name: str,
@@ -169,9 +174,23 @@ class FeatureImportanceManager:
         # Store in pipeline data
         pipeline_data.feature_importance_data[analysis_name] = fi_data
 
-    def get_analysis_info(self, pipeline_data, analysis_name: str) -> Dict[str, Any]:
+    def get_analysis_info(self, pipeline_data: PipelineData, analysis_name: str) -> Dict[str, Any]:
         """
         Get information about a feature importance analysis.
+
+        Warning:
+        --------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.feature_importance.get_analysis_info("tree_analysis")  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = FeatureImportanceManager()
+        >>> manager.get_analysis_info(pipeline_data, "tree_analysis")  # pipeline_data required
 
         Parameters:
         -----------
@@ -197,7 +216,7 @@ class FeatureImportanceManager:
 
     def get_top_features(
         self,
-        pipeline_data,
+        pipeline_data: PipelineData,
         analysis_name: str,
         comparison_identifier: Optional[str] = None,
         n: int = 10,
@@ -242,9 +261,23 @@ class FeatureImportanceManager:
             pipeline_data, fi_data, comparison_identifier, n
         )
 
-    def list_analyses(self, pipeline_data) -> List[str]:
+    def list_analyses(self, pipeline_data: PipelineData) -> List[str]:
         """
         List all available feature importance analyses.
+
+        Warning:
+        --------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.feature_importance.list_analyses()  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = FeatureImportanceManager()
+        >>> manager.list_analyses(pipeline_data)  # pipeline_data required
 
         Parameters:
         -----------
@@ -263,9 +296,23 @@ class FeatureImportanceManager:
         """
         return list(pipeline_data.feature_importance_data.keys())
 
-    def remove_analysis(self, pipeline_data, analysis_name: str) -> None:
+    def remove_analysis(self, pipeline_data: PipelineData, analysis_name: str) -> None:
         """
         Remove a feature importance analysis.
+
+        Warning:
+        --------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.feature_importance.remove_analysis("old_analysis")  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = FeatureImportanceManager()
+        >>> manager.remove_analysis(pipeline_data, "old_analysis")  # pipeline_data required
 
         Parameters:
         -----------
@@ -285,4 +332,123 @@ class FeatureImportanceManager:
         """
         FeatureImportanceValidationHelper.validate_analysis_exists(pipeline_data, analysis_name)
         del pipeline_data.feature_importance_data[analysis_name]
+        
+    def save(self, pipeline_data: PipelineData, save_path: str) -> None:
+        """
+        Save all feature importance data to single file.
 
+        Warning:
+        --------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.feature_importance.save('feature_importance.npy')  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = FeatureImportanceManager()
+        >>> manager.save(pipeline_data, 'feature_importance.npy')  # pipeline_data required
+
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data container with feature importance data
+        save_path : str
+            Path where to save all feature importance data in one file
+
+        Returns:
+        --------
+        None
+            Saves all feature importance data to the specified file
+            
+        Examples:
+        ---------
+        >>> manager.save(pipeline_data, 'feature_importance.npy')
+        """
+        DataUtils.save_object(pipeline_data.feature_importance_data, save_path)
+
+    def load(self, pipeline_data: PipelineData, load_path: str) -> None:
+        """
+        Load all feature importance data from single file.
+
+        Warning:
+        --------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.feature_importance.load('feature_importance.npy')  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = FeatureImportanceManager()
+        >>> manager.load(pipeline_data, 'feature_importance.npy')  # pipeline_data required
+
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data container to load feature importance data into
+        load_path : str
+            Path to saved feature importance data file
+
+        Returns:
+        --------
+        None
+            Loads all feature importance data from the specified file
+            
+        Examples:
+        ---------
+        >>> manager.load(pipeline_data, 'feature_importance.npy')
+        """
+        temp_dict = {}
+        DataUtils.load_object(temp_dict, load_path)
+        pipeline_data.feature_importance_data = temp_dict
+
+    def print_info(self, pipeline_data: PipelineData) -> None:
+        """
+        Print feature importance data information.
+
+        Warning:
+        --------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.feature_importance.print_info()  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = FeatureImportanceManager()
+        >>> manager.print_info(pipeline_data)  # pipeline_data required
+
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data container with feature importance data
+        
+        Returns:
+        --------
+        None
+            Prints feature importance data information to console
+        
+        Examples:
+        ---------
+        >>> pipeline_data = PipelineData()
+        >>> feature_importance_manager = FeatureImportanceManager()
+        >>> feature_importance_manager.print_info(pipeline_data)
+        """
+        if len(pipeline_data.feature_importance_data) == 0:
+            print("No featureimportancedata data available.")
+            return
+
+        print("=== FeatureImportanceData Information ===")
+        data_names = list(pipeline_data.feature_importance_data.keys())
+        print(f"FeatureImportanceData Names: {len(data_names)} ({", ".join(data_names)})")
+        
+        for name, data in pipeline_data.feature_importance_data.items():
+            print(f"\n--- {name} ---")
+            data.print_info()

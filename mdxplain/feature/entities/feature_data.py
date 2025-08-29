@@ -26,7 +26,10 @@ associated calculator. Stores per-trajectory feature data enabling mixed
 systems with different proteins in a single pipeline.
 """
 
+from typing import Dict, Optional, Any, List
+import numpy as np
 from ...utils.data_utils import DataUtils
+from ..feature_type.interfaces.feature_type_base import FeatureTypeBase
 
 
 class FeatureData:
@@ -52,8 +55,8 @@ class FeatureData:
     """
 
     def __init__(
-        self, feature_type, use_memmap=False, cache_path="./cache", chunk_size=10000, trajectory_name=None
-    ):
+        self, feature_type: FeatureTypeBase, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 10000, trajectory_name: Optional[str] = None
+    ) -> None:
         """
         Initialize feature data container.
 
@@ -110,7 +113,7 @@ class FeatureData:
 
         self.analsis = None
 
-    def get_data(self, force_original=False):
+    def get_data(self, force_original: bool = False) -> np.ndarray:
         """
         Get current dataset (reduced if available, else original).
 
@@ -134,7 +137,7 @@ class FeatureData:
             return self.reduced_data
         return self.data
 
-    def get_feature_metadata(self, force_original=False):
+    def get_feature_metadata(self, force_original: bool = False) -> Dict[str, Any]:
         """
         Get current feature metadata (reduced if available, else original).
 
@@ -164,7 +167,7 @@ class FeatureData:
             return self.reduced_feature_metadata
         return self.feature_metadata
 
-    def get_feature_names(self, force_original=False):
+    def get_feature_names(self, force_original: bool = False) -> List[str]:
         """
         Extract feature names from metadata.
 
@@ -200,3 +203,131 @@ class FeatureData:
             "-".join(partner["full_name"] for partner in feature)
             for feature in metadata.get("features", [])
         ]
+
+    def save(self, save_path: str) -> None:
+        """
+        Save FeatureData object to disk.
+
+        Parameters:
+        -----------
+        save_path : str
+            Path where to save the FeatureData object
+
+        Returns:
+        --------
+        None
+            Saves the FeatureData object to the specified path
+
+        Examples:
+        ---------
+        >>> feature_data.save('analysis_results/distances.pkl')
+        """
+        DataUtils.save_object(self, save_path)
+
+    def load(self, load_path: str) -> None:
+        """
+        Load FeatureData object from disk.
+
+        Parameters:
+        -----------
+        load_path : str
+            Path to the saved FeatureData file
+
+        Returns:
+        --------
+        None
+            Loads the FeatureData object from the specified path
+
+        Examples:
+        ---------
+        >>> feature_data.load('analysis_results/distances.pkl')
+        """
+        DataUtils.load_object(self, load_path)
+
+    def print_info(self) -> None:
+        """
+        Print comprehensive feature information.
+
+        Parameters:
+        -----------
+        None
+
+        Returns:
+        --------
+        None
+            Prints feature information to console
+
+        Examples:
+        ---------
+        >>> feature_data.print_info()
+        === FeatureData ===
+        Feature Type: Distances
+        Original Data: 1000 frames x 250 features
+        Reduced Data: 1000 frames x 100 features (PCA)
+        """
+        if self._has_no_data():
+            print("No feature data available.")
+            return
+
+        self._print_feature_header()
+        self._print_feature_details()
+        if self.reduced_data is not None:
+            self._print_reduction_info()
+
+    def _has_no_data(self) -> bool:
+        """
+        Check if no feature data is available.
+
+        Returns:
+        --------
+        bool
+            True if no data is available, False otherwise
+        """
+        return self.data is None and self.reduced_data is None
+
+    def _print_feature_header(self) -> None:
+        """
+        Print header with feature type information.
+
+        Returns:
+        --------
+        None
+        """
+        print("=== FeatureData ===")
+        feature_type_name = getattr(self.feature_type, '__class__', str(self.feature_type)).__name__
+        print(f"Feature Type: {feature_type_name}")
+
+    def _print_feature_details(self) -> None:
+        """
+        Print detailed feature information.
+
+        Returns:
+        --------
+        None
+        """
+        if self.data is not None:
+            print(f"Original Data: {self.data.shape[0]} frames x {self.data.shape[1]} features")
+            
+        if self.feature_metadata is not None:
+            n_features = len(self.feature_metadata.get("features", []))
+            if n_features > 0:
+                print(f"Feature Metadata: {n_features} feature definitions")
+
+    def _print_reduction_info(self) -> None:
+        """
+        Print information about data reduction.
+
+        Returns:
+        --------
+        None
+        """
+        if self.reduced_data is not None:
+            reduction_method = "Unknown"
+            if self.reduction_info and "reduction_method" in self.reduction_info:
+                reduction_method = self.reduction_info["reduction_method"]
+            print(f"Reduced Data: {self.reduced_data.shape[0]} frames x {self.reduced_data.shape[1]} features ({reduction_method})")
+            
+        if self.reduced_feature_metadata is not None:
+            n_reduced_features = len(self.reduced_feature_metadata.get("features", []))
+            if n_reduced_features > 0:
+                print(f"Reduced Metadata: {n_reduced_features} feature definitions")

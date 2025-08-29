@@ -25,8 +25,7 @@ This module provides the HDBSCAN cluster type that implements hierarchical
 density-based clustering for molecular dynamics trajectory analysis.
 """
 
-from typing import Dict, Tuple
-
+from typing import Dict, Tuple, Any, Optional
 import numpy as np
 
 from ..interfaces.cluster_type_base import ClusterTypeBase
@@ -70,11 +69,11 @@ class HDBSCAN(ClusterTypeBase):
 
     def __init__(
         self,
-        min_cluster_size=5,
-        min_samples=None,
-        cluster_selection_epsilon=0.0,
-        cluster_selection_method="eom",
-    ):
+        min_cluster_size: int = 5,
+        min_samples: Optional[int] = None,
+        cluster_selection_epsilon: float = 0.0,
+        cluster_selection_method: str = "eom",
+    ) -> None:
         """
         Initialize HDBSCAN cluster type.
 
@@ -132,7 +131,7 @@ class HDBSCAN(ClusterTypeBase):
         """
         return "hdbscan"
 
-    def init_calculator(self, cache_path="./cache"):
+    def init_calculator(self, cache_path: str = "./cache") -> None:
         """
         Initialize the HDBSCAN calculator.
 
@@ -143,7 +142,7 @@ class HDBSCAN(ClusterTypeBase):
         """
         self.calculator = HDBSCANCalculator(cache_path=cache_path)
 
-    def compute(self, data) -> Tuple[np.ndarray, Dict]:
+    def compute(self, data: np.ndarray) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Compute HDBSCAN clustering.
 

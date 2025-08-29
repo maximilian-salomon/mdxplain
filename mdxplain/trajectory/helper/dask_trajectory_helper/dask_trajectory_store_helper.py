@@ -23,8 +23,9 @@ DaskMDTrajectory Store Manager - Zarr store management and slicing operations.
 Handles complex zarr store operations like path resolution, slicing, 
 and store creation for DaskMDTrajectory instances.
 """
+from __future__ import annotations
 
-from typing import Union
+from typing import Union, TYPE_CHECKING
 import os
 import tempfile
 
@@ -32,6 +33,9 @@ import numpy as np
 import zarr
 
 from .zarr_cache_helper import ZarrCacheHelper
+
+if TYPE_CHECKING:
+    from ...entities.dask_md_trajectory import DaskMDTrajectory
 
 
 class DaskMDTrajectoryStoreHelper:
@@ -57,7 +61,7 @@ class DaskMDTrajectoryStoreHelper:
         """
         self.cache_dir = cache_dir
     
-    def create_slice_store(self, dask_traj, key: Union[slice, np.ndarray]) -> zarr.Group:
+    def create_slice_store(self, dask_traj: DaskMDTrajectory, key: Union[slice, np.ndarray]) -> zarr.Group:
         """
         Create new zarr store with sliced trajectory data.
         

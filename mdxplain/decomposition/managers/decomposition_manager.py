@@ -25,10 +25,18 @@ Manager for creating and managing decomposition results from feature matrices.
 Used to add, reset, and manage decomposition data in trajectory data objects.
 """
 
+from __future__ import annotations
+
+from typing import Optional, Any, Tuple, TYPE_CHECKING
 import os
+import numpy as np
 
 from ..entities.decomposition_data import DecompositionData
+from ..decomposition_type.interfaces.decomposition_type_base import DecompositionTypeBase
 from ...utils.data_utils import DataUtils
+
+if TYPE_CHECKING:
+    from ...pipeline.entities.pipeline_data import PipelineData
 
 
 class DecompositionManager:
@@ -57,7 +65,7 @@ class DecompositionManager:
     ... )
     """
 
-    def __init__(self, use_memmap=False, chunk_size=10000, cache_dir="./cache"):
+    def __init__(self, use_memmap: bool = False, chunk_size: int = 10000, cache_dir: str = "./cache") -> None:
         """
         Initialize decomposition manager.
 
@@ -97,13 +105,13 @@ class DecompositionManager:
 
     def add(
         self,
-        pipeline_data,
-        selection_name,
-        decomposition_type,
-        decomposition_name=None,
-        data_selector_name=None,
-        force=False,
-    ):
+        pipeline_data: PipelineData,
+        selection_name: str,
+        decomposition_type: DecompositionTypeBase,
+        decomposition_name: Optional[str] = None,
+        data_selector_name: Optional[str] = None,
+        force: bool = False,
+    ) -> None:
         """
         Add and compute a decomposition for selected feature data.
 
@@ -211,7 +219,7 @@ class DecompositionManager:
             decomposition_key,
         )
 
-    def _check_decomposition_existence(self, pipeline_data, selection_name, force):
+    def _check_decomposition_existence(self, pipeline_data: PipelineData, selection_name: str, force: bool) -> None:
         """
         Check if decomposition already exists and handle accordingly.
 
@@ -245,7 +253,7 @@ class DecompositionManager:
                     f"Decomposition for selection '{selection_name}' already exists."
                 )
 
-    def _get_selection_cache_path(self, selection_name):
+    def _get_selection_cache_path(self, selection_name: str) -> str:
         """
         Get selection-specific cache path for decomposition data.
 
@@ -267,8 +275,8 @@ class DecompositionManager:
         return None
 
     def _compute_decomposition(
-        self, decomposition_data, decomposition_type, data_matrix, decomposition_name
-    ):
+        self, decomposition_data: DecompositionData, decomposition_type: DecompositionTypeBase, data_matrix: np.ndarray, decomposition_name: str
+    ) -> Any:
         """
         Compute the decomposition using the specified type and parameters.
 
@@ -308,13 +316,13 @@ class DecompositionManager:
 
     def _store_decomposition_results(
         self,
-        pipeline_data,
-        selection_name,
-        decomposition_name,
-        decomposition_data,
-        original_shape,
-        decomposition_key,
-    ):
+        pipeline_data: PipelineData,
+        selection_name: str,
+        decomposition_name: str,
+        decomposition_data: DecompositionData,
+        original_shape: Tuple[int, ...],
+        decomposition_key: str,
+    ) -> None:
         """
         Store decomposition results in trajectory data.
 
@@ -345,7 +353,7 @@ class DecompositionManager:
             f"Data reduced from {original_shape} to {decomposition_data.data.shape}."
         )
 
-    def reset_decompositions(self, pipeline_data):
+    def reset_decompositions(self, pipeline_data: PipelineData) -> None:
         """
         Reset all computed decompositions and clear decomposition data.
 
@@ -394,3 +402,121 @@ class DecompositionManager:
         print(
             "All decomposition data has been cleared. Decompositions must be recalculated."
         )
+
+    def save(self, pipeline_data: PipelineData, save_path: str) -> None:
+        """
+        Save all decomposition data to single file.
+
+        Warning:
+        --------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.decomposition.save('decomposition.npy')  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = DecompositionManager()
+        >>> manager.save(pipeline_data, 'decomposition.npy')  # pipeline_data required
+
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data container with decomposition data
+        save_path : str
+            Path where to save all decomposition data in one file
+
+        Returns:
+        --------
+        None
+            Saves all decomposition data to the specified file
+            
+        Examples:
+        ---------
+        >>> manager.save(pipeline_data, 'decomposition.npy')
+        """
+        DataUtils.save_object(pipeline_data.decomposition_data, save_path)
+
+    def load(self, pipeline_data: PipelineData, load_path: str) -> None:
+        """
+        Load all decomposition data from single file.
+
+        Warning:
+        --------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.decomposition.load('decomposition.npy')  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = DecompositionManager()
+        >>> manager.load(pipeline_data, 'decomposition.npy')  # pipeline_data required
+
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data container to load decomposition data into
+        load_path : str
+            Path to saved decomposition data file
+
+        Returns:
+        --------
+        None
+            Loads all decomposition data from the specified file
+            
+        Examples:
+        ---------
+        >>> manager.load(pipeline_data, 'decomposition.npy')
+        """
+        temp_dict = {}
+        DataUtils.load_object(temp_dict, load_path)
+        pipeline_data.decomposition_data = temp_dict
+
+    def print_info(self, pipeline_data: PipelineData) -> None:
+        """
+        Print decomposition data information.
+
+        Warning:
+        --------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.decomposition.print_info()  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = DecompositionManager()
+        >>> manager.print_info(pipeline_data)  # pipeline_data required
+
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data container with decomposition data
+
+        Returns:
+        --------
+        None
+            Prints decomposition data information to console
+
+        Examples:
+        ---------
+        >>> manager.print_info(pipeline_data)
+        """
+        if len(pipeline_data.decomposition_data) == 0:
+            print("No decompositiondata data available.")
+            return
+
+        print("=== DecompositionData Information ===")
+        data_names = list(pipeline_data.decomposition_data.keys())
+        print(f"DecompositionData Names: {len(data_names)} ({", ".join(data_names)})")
+        
+        for name, data in pipeline_data.decomposition_data.items():
+            print(f"\n--- {name} ---")
+            data.print_info()

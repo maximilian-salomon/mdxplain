@@ -26,7 +26,7 @@ data container orchestrating all analysis data including trajectories,
 features, clustering results, and decomposition results.
 """
 
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Optional, Tuple, Union
 import numpy as np
 
 from ...trajectory.entities.trajectory_data import TrajectoryData
@@ -231,7 +231,7 @@ class PipelineData:
     # FEATURE ACCESS METHODS
     # =============================================================================
 
-    def get_feature(self, feature_type):
+    def get_feature(self, feature_type: Union[str, Any]) -> Any:
         """
         Retrieve a computed feature by its type.
 

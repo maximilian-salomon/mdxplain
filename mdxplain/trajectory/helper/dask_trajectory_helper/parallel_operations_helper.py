@@ -24,7 +24,7 @@ Parallel operations for MDTraj methods using Dask arrays.
 Implements memory-efficient, parallelized versions of common MDTraj operations.
 """
 
-from typing import Optional
+from typing import Optional, Tuple, Any
 import multiprocessing
 import os
 import tempfile
@@ -118,7 +118,7 @@ class ParallelOperationsHelper:
         os.remove(temp_path)
         
         # Define operation function for centering
-        def center_operation(chunk_traj, mass_weighted):
+        def center_operation(chunk_traj: md.Trajectory, mass_weighted: bool) -> None:
             chunk_traj.center_coordinates(mass_weighted=mass_weighted)
         
         # Use generic helper method
@@ -129,7 +129,7 @@ class ParallelOperationsHelper:
             mass_weighted=mass_weighted
         )
     
-    def _process_frame_chunks(self, operation_func, result_store: zarr.Group, **operation_kwargs):
+    def _process_frame_chunks(self, operation_func: callable, result_store: zarr.Group, **operation_kwargs) -> None:
         """
         Sub-helper: Frame-wise chunking for operations like center_coordinates, superpose, atom_slice.
         
@@ -168,7 +168,7 @@ class ParallelOperationsHelper:
             result_store['coordinates'][start_idx:end_idx] = chunk_traj.xyz.astype(np.float32)
             result_store['time'][start_idx:end_idx] = chunk_time.astype(np.float32)
     
-    def _process_atom_chunks(self, operation_func, result_store: zarr.Group, atom_indices: np.ndarray, **operation_kwargs):
+    def _process_atom_chunks(self, operation_func: callable, result_store: zarr.Group, atom_indices: np.ndarray, **operation_kwargs) -> None:
         """
         Sub-helper: Atom-wise chunking for operations like smooth.
         
@@ -249,9 +249,9 @@ class ParallelOperationsHelper:
         
         return result_store
     
-    def _process_trajectory_chunked(self, operation_func, result_path: str, result_shape: tuple, 
+    def _process_trajectory_chunked(self, operation_func: callable, result_path: str, result_shape: Tuple[int, int, int], 
                                    chunking_mode: str = 'frame', result_topology: Optional[md.Topology] = None,
-                                   **operation_kwargs) -> zarr.Group:
+                                   **operation_kwargs: Any) -> zarr.Group:
         """
         Flexible helper for memory-efficient chunk processing directly to Zarr.
         
@@ -341,7 +341,7 @@ class ParallelOperationsHelper:
         os.remove(temp_path)
         
         # Define operation function for superpose
-        def superpose_operation(chunk_traj, reference_traj, atom_indices):
+        def superpose_operation(chunk_traj: md.Trajectory, reference_traj: md.Trajectory, atom_indices: Optional[np.ndarray]) -> None:
             chunk_traj.superpose(reference_traj, frame=0, atom_indices=atom_indices)
         
         # Use generic helper method
@@ -405,7 +405,7 @@ class ParallelOperationsHelper:
         os.remove(temp_path)
         
         # Define operation function for smoothing
-        def smooth_operation(chunk_traj, target_atom_indices, current_atom_indices, width, order):
+        def smooth_operation(chunk_traj: md.Trajectory, target_atom_indices: np.ndarray, current_atom_indices: np.ndarray, width: int, order: int) -> None:
             # Find intersection of target atoms with current chunk atoms
             # Convert global atom indices to local indices within current chunk
             global_to_local = {global_idx: local_idx for local_idx, global_idx in enumerate(current_atom_indices)}
@@ -471,7 +471,7 @@ class ParallelOperationsHelper:
         new_topology = self.topology.subset(atom_indices)
         
         # Define operation function for atom slicing
-        def atom_slice_operation(chunk_traj, atom_indices):
+        def atom_slice_operation(chunk_traj: md.Trajectory, atom_indices: np.ndarray) -> None:
             # Apply slicing and modify trajectory in-place
             sliced_traj = chunk_traj.atom_slice(atom_indices)
             # IMPORTANT: Set topology first, then coordinates (MDTraj validation!)
@@ -489,7 +489,7 @@ class ParallelOperationsHelper:
         )
     
     def _create_coordinate_array(self, store: zarr.Group, coords: np.ndarray, 
-                               n_atoms: int, compressor) -> None:
+                               n_atoms: int, compressor: BloscCodec) -> None:
         """
         Create coordinate array in zarr store.
         
@@ -516,7 +516,7 @@ class ParallelOperationsHelper:
             compressors=compressor
         )
     
-    def _create_time_array(self, store: zarr.Group, n_frames: int, compressor) -> None:
+    def _create_time_array(self, store: zarr.Group, n_frames: int, compressor: BloscCodec) -> None:
         """
         Create time array in zarr store.
         
@@ -551,7 +551,7 @@ class ParallelOperationsHelper:
         )
     
     
-    def _create_unitcell_arrays(self, store: zarr.Group, compressor) -> None:
+    def _create_unitcell_arrays(self, store: zarr.Group, compressor: BloscCodec) -> None:
         """
         Create all unitcell arrays in zarr store.
         
@@ -582,7 +582,7 @@ class ParallelOperationsHelper:
             )
     
     def _store_metadata_and_topology(self, store: zarr.Group, n_frames: int, n_atoms: int, 
-                                    topology: md.Topology, compressor) -> None:
+                                    topology: md.Topology, compressor: BloscCodec) -> None:
         """
         Store metadata and topology in zarr store.
         

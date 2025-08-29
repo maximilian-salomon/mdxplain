@@ -26,7 +26,12 @@ for validating comparison inputs, modes, and dependencies. Extracted from
 ComparisonManager to improve code organization and testability.
 """
 
-from typing import List
+from __future__ import annotations
+
+from typing import List, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ...pipeline.entities.pipeline_data import PipelineData
 
 
 class ComparisonValidationHelper:
@@ -38,7 +43,7 @@ class ComparisonValidationHelper:
     """
 
     @staticmethod
-    def validate_comparison_name(pipeline_data, name: str) -> None:
+    def validate_comparison_name(pipeline_data: PipelineData, name: str) -> None:
         """
         Validate that comparison name doesn't already exist.
         
@@ -58,7 +63,7 @@ class ComparisonValidationHelper:
             raise ValueError(f"Comparison '{name}' already exists.")
 
     @staticmethod
-    def validate_comparison_exists(pipeline_data, name: str) -> None:
+    def validate_comparison_exists(pipeline_data: PipelineData, name: str) -> None:
         """
         Validate that a comparison with given name exists.
         
@@ -100,7 +105,7 @@ class ComparisonValidationHelper:
             raise ValueError(f"Invalid mode '{mode}'. Valid modes: {valid_modes}")
 
     @staticmethod
-    def validate_feature_selector(pipeline_data, feature_selector: str) -> None:
+    def validate_feature_selector(pipeline_data: PipelineData, feature_selector: str) -> None:
         """
         Validate that a feature selector with given name exists.
         
@@ -124,7 +129,7 @@ class ComparisonValidationHelper:
             )
 
     @staticmethod
-    def validate_data_selectors(pipeline_data, data_selectors: List[str]) -> None:
+    def validate_data_selectors(pipeline_data: PipelineData, data_selectors: List[str]) -> None:
         """
         Validate that all specified data selectors exist.
         

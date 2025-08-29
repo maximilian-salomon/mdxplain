@@ -29,6 +29,7 @@ import time
 import pickle
 from typing import Optional, Dict, Any, Tuple
 from pathlib import Path
+import tempfile
 
 import numpy as np
 import zarr
@@ -294,7 +295,7 @@ class ZarrCacheHelper:
             
         return store
     
-    def _create_unitcell_arrays(self, store: zarr.Group, traj_info: dict, compressor) -> None:
+    def _create_unitcell_arrays(self, store: zarr.Group, traj_info: Dict[str, Any], compressor: BloscCodec) -> None:
         """
         Create unitcell arrays in zarr store.
         
@@ -356,7 +357,7 @@ class ZarrCacheHelper:
             self._store_chunk_data(store, chunk, frame_idx, end_idx)
             frame_idx = end_idx
     
-    def _store_chunk_data(self, store: zarr.Group, chunk, frame_idx: int, end_idx: int) -> None:
+    def _store_chunk_data(self, store: zarr.Group, chunk: md.Trajectory, frame_idx: int, end_idx: int) -> None:
         """
         Store single chunk data to zarr arrays.
         
@@ -547,7 +548,7 @@ class ZarrCacheHelper:
             return os.path.getsize(cache_path) / (1024**2)
     
     @staticmethod
-    def store_topology(store: zarr.Group, topology: md.Topology, compressor=None):
+    def store_topology(store: zarr.Group, topology: md.Topology, compressor: Optional[Any] = None) -> None:
         """
         Store topology in Zarr store using pickle serialization.
         
@@ -610,3 +611,78 @@ class ZarrCacheHelper:
         topology_uint8 = store['topology_pickle'][:]
         topology_bytes = topology_uint8.tobytes()        
         return pickle.loads(topology_bytes)
+    
+    def create_cache_from_mdtraj(self, mdtraj: 'md.Trajectory', 
+                                 cache_path: Optional[str] = None) -> Tuple[str, dict]:
+        """
+        Create Zarr cache directly from MDTraj trajectory object.
+        
+        Parameters:
+        -----------
+        mdtraj : md.Trajectory
+            MDTraj trajectory object to cache
+        cache_path : str, optional
+            Path for cache. If None, creates temporary cache.
+            
+        Returns:
+        --------
+        tuple
+            (cache_path, metadata_dict) containing cache location and info
+            
+        Examples:
+        ---------
+        >>> import mdtraj as md
+        >>> traj = md.load('trajectory.xtc', top='topology.pdb')
+        >>> cache_helper = ZarrCacheHelper()
+        >>> cache_path, metadata = cache_helper.create_cache_from_mdtraj(traj)
+        """       
+        if cache_path is None:
+            # Create temporary cache
+            temp_dir = tempfile.mkdtemp(prefix='dask_traj_', suffix='.zarr')
+            cache_path = temp_dir
+        
+        print(f"📦 Creating Zarr cache from MDTraj: {cache_path}")
+        
+        # Create trajectory info from mdtraj
+        traj_info = {
+            'n_frames': mdtraj.n_frames,
+            'n_atoms': mdtraj.n_atoms,
+            'has_unitcell': mdtraj.unitcell_vectors is not None
+        }
+        print(f"  📐 Trajectory: {traj_info['n_frames']} frames × {traj_info['n_atoms']} atoms")
+        
+        # Create zarr store
+        store = self._create_zarr_store(cache_path, traj_info)
+        
+        # Write data directly from mdtraj
+        print("  💾 Writing trajectory data...")
+        store['coordinates'][:] = mdtraj.xyz
+        store['time'][:] = mdtraj.time if mdtraj.time is not None else np.arange(mdtraj.n_frames)
+        
+        # Write unitcell data if present
+        if traj_info['has_unitcell']:
+            store['unitcell_vectors'][:] = mdtraj.unitcell_vectors
+            store['unitcell_lengths'][:] = mdtraj.unitcell_lengths
+            store['unitcell_angles'][:] = mdtraj.unitcell_angles
+        
+        # Save topology 
+        self.store_topology(store, mdtraj.topology)
+        
+        # Create metadata
+        metadata = {
+            'n_frames': traj_info['n_frames'],
+            'n_atoms': traj_info['n_atoms'],
+            'has_unitcell': traj_info['has_unitcell'],
+            'source': 'mdtraj_conversion',
+            'chunk_size': self.chunk_size
+        }
+        
+        # Save metadata
+        store.attrs['metadata'] = metadata
+        
+        # Calculate cache size
+        cache_size_mb = self._get_cache_size(cache_path)
+        print(f"  ✅ Cache created: {cache_path}")
+        print(f"  📊 Size: {cache_size_mb:.1f} MB")
+        
+        return cache_path, metadata

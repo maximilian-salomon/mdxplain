@@ -26,13 +26,19 @@ on individual sub-comparisons, extracting common logic from
 FeatureImportanceManager methods.
 """
 
-from typing import Dict, Any
+from __future__ import annotations
+
+from typing import Dict, Any, TYPE_CHECKING
 import numpy as np
 
 from ..analyzer_types.interfaces.analyzer_type_base import AnalyzerTypeBase
 from ..entities.feature_importance_data import FeatureImportanceData
 from .metadata_builder_helper import MetadataBuilderHelper
 from ...pipeline.helper.comparison_data_helper import ComparisonDataHelper
+from ...comparison.entities.comparison_data import ComparisonData
+
+if TYPE_CHECKING:
+    from ...pipeline.entities.pipeline_data import PipelineData
 
 
 class AnalysisRunnerHelper:
@@ -148,8 +154,8 @@ class AnalysisRunnerHelper:
     
     @staticmethod
     def run_comparison_analysis(
-        pipeline_data,
-        comp_data,
+        pipeline_data: PipelineData,
+        comp_data: ComparisonData,
         analyzer_type: AnalyzerTypeBase,
         analysis_name: str
     ) -> FeatureImportanceData:

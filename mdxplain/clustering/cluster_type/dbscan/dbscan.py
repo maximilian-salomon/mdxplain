@@ -25,8 +25,7 @@ This module provides the DBSCAN cluster type that implements density-based
 clustering for molecular dynamics trajectory analysis.
 """
 
-from typing import Dict, Tuple
-
+from typing import Dict, Tuple, Any
 import numpy as np
 
 from ..interfaces.cluster_type_base import ClusterTypeBase
@@ -63,7 +62,7 @@ class DBSCAN(ClusterTypeBase):
     >>> labels, metadata = dbscan.compute(data)
     """
 
-    def __init__(self, eps=0.5, min_samples=5):
+    def __init__(self, eps: float = 0.5, min_samples: int = 5) -> None:
         """
         Initialize DBSCAN cluster type.
 
@@ -112,7 +111,7 @@ class DBSCAN(ClusterTypeBase):
         """
         return "dbscan"
 
-    def init_calculator(self, cache_path="./cache"):
+    def init_calculator(self, cache_path: str = "./cache") -> None:
         """
         Initialize the DBSCAN calculator.
 
@@ -123,7 +122,7 @@ class DBSCAN(ClusterTypeBase):
         """
         self.calculator = DBSCANCalculator(cache_path=cache_path)
 
-    def compute(self, data) -> Tuple[np.ndarray, Dict]:
+    def compute(self, data: np.ndarray) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Compute DBSCAN clustering.
 

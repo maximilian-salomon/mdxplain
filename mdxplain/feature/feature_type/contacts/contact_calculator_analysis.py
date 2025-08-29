@@ -25,6 +25,7 @@ Analysis methods for contact calculations with statistical computations
 and support for memory-mapped arrays and contact pattern analysis.
 """
 
+from typing import Callable, Optional
 import numpy as np
 
 from ..helper.calculator_stat_helper import CalculatorStatHelper
@@ -46,7 +47,7 @@ class ContactCalculatorAnalysis:
         "compute_per_residue_sum",
     }
 
-    def __init__(self, use_memmap=False, chunk_size=10000):
+    def __init__(self, use_memmap: bool = False, chunk_size: int = 10000) -> None:
         """
         Initialize contact analysis with chunking configuration.
 
@@ -69,7 +70,7 @@ class ContactCalculatorAnalysis:
         self.chunk_size = chunk_size
 
     # === PAIR-BASED STATISTICS ===
-    def compute_frequency(self, contacts):
+    def compute_frequency(self, contacts: np.ndarray) -> np.ndarray:
         """
         Compute contact frequency (fraction of frames in contact) per pair.
 
@@ -88,7 +89,7 @@ class ContactCalculatorAnalysis:
         )
 
     # === FRAME-BASED STATISTICS ===
-    def contacts_per_frame_abs(self, contacts):
+    def contacts_per_frame_abs(self, contacts: np.ndarray) -> np.ndarray:
         """
         Compute absolute number of contacts per frame.
 
@@ -106,7 +107,7 @@ class ContactCalculatorAnalysis:
             contacts, self.chunk_size, self.use_memmap, np.sum
         )
 
-    def contacts_per_frame_percentage(self, contacts):
+    def contacts_per_frame_percentage(self, contacts: np.ndarray) -> np.ndarray:
         """
         Compute percentage of contacts per frame.
 
@@ -125,7 +126,7 @@ class ContactCalculatorAnalysis:
         )
 
     # === PER-COLUMN ANALYSIS (auto-converts 2D to 3D) ===
-    def compute_per_residue_mean(self, contacts):
+    def compute_per_residue_mean(self, contacts: np.ndarray) -> np.ndarray:
         """
         Compute mean contact frequency per residue. Auto-converts condensed to squareform.
 
@@ -144,7 +145,7 @@ class ContactCalculatorAnalysis:
             contacts, np.mean, self.chunk_size, self.use_memmap
         )
 
-    def compute_per_residue_std(self, contacts):
+    def compute_per_residue_std(self, contacts: np.ndarray) -> np.ndarray:
         """
         Compute standard deviation of contacts per residue. Auto-converts condensed to squareform.
 
@@ -163,7 +164,7 @@ class ContactCalculatorAnalysis:
             contacts, np.std, self.chunk_size, self.use_memmap
         )
 
-    def compute_per_residue_sum(self, contacts):
+    def compute_per_residue_sum(self, contacts: np.ndarray) -> np.ndarray:
         """
         Compute total contact count per residue. Auto-converts condensed to squareform.
 
@@ -183,7 +184,7 @@ class ContactCalculatorAnalysis:
         )
 
     # === TRANSITION ANALYSIS ===
-    def compute_transitions_lagtime(self, contacts, threshold=1, lag_time=1):
+    def compute_transitions_lagtime(self, contacts: np.ndarray, threshold: int = 1, lag_time: int = 1) -> np.ndarray:
         """
         Compute contact transitions using lag time analysis.
 
@@ -205,7 +206,7 @@ class ContactCalculatorAnalysis:
             contacts, threshold, lag_time, self.chunk_size, self.use_memmap
         )
 
-    def compute_transitions_window(self, contacts, threshold=1, window_size=10):
+    def compute_transitions_window(self, contacts: np.ndarray, threshold: int = 1, window_size: int = 10) -> np.ndarray:
         """
         Compute contact transitions using sliding window analysis.
 
@@ -227,7 +228,7 @@ class ContactCalculatorAnalysis:
             contacts, threshold, window_size, self.chunk_size, self.use_memmap
         )
 
-    def compute_stability(self, contacts, threshold=1, window_size=1):
+    def compute_stability(self, contacts: np.ndarray, threshold: int = 1, window_size: int = 1) -> np.ndarray:
         """
         Compute contact stability (inverse of transition rate).
 
@@ -250,7 +251,7 @@ class ContactCalculatorAnalysis:
         )
 
     # === COMPARISON METHODS ===
-    def compute_differences(self, contacts1, contacts2, preprocessing_func=None):
+    def compute_differences(self, contacts1: np.ndarray, contacts2: np.ndarray, preprocessing_func: Optional[Callable] = None) -> np.ndarray:
         """
         Compute differences between two contact datasets.
 

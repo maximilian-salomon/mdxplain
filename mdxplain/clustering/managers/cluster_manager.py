@@ -26,6 +26,15 @@ or decomposition results. Used to add, reset, and manage clustering data
 in trajectory data objects.
 """
 
+from __future__ import annotations
+
+from typing import Optional, Dict, Tuple, TYPE_CHECKING
+import numpy as np
+
+if TYPE_CHECKING:
+    from ...pipeline.entities.pipeline_data import PipelineData
+
+from ..cluster_type.interfaces.cluster_type_base import ClusterTypeBase
 from ..entities.cluster_data import ClusterData
 from ...utils.data_utils import DataUtils
 import shutil
@@ -59,7 +68,7 @@ class ClusterManager:
     ... )
     """
 
-    def __init__(self, cache_dir="./cache"):
+    def __init__(self, cache_dir: str = "./cache") -> None:
         """
         Initialize cluster manager.
 
@@ -84,7 +93,7 @@ class ClusterManager:
         self.cache_dir = cache_dir
         os.makedirs(self.cache_dir, exist_ok=True)
 
-    def reset_clusters(self, pipeline_data):
+    def reset_clusters(self, pipeline_data: PipelineData) -> None:
         """
         Reset all computed clustering results and clear clustering data.
 
@@ -132,7 +141,7 @@ class ClusterManager:
         )
         print("All clustering data has been cleared. Clustering must be recalculated.")
 
-    def _check_cluster_existence(self, pipeline_data, cluster_name, force):
+    def _check_cluster_existence(self, pipeline_data: PipelineData, cluster_name: str, force: bool) -> None:
         """
         Check if clustering already exists and handle accordingly.
 
@@ -164,7 +173,7 @@ class ClusterManager:
             else:
                 raise ValueError(f"Clustering '{cluster_name}' already exists.")
 
-    def _validate_cluster_type(self, cluster_type):
+    def _validate_cluster_type(self, cluster_type: ClusterTypeBase) -> None:
         """
         Validate cluster type instance and parameters.
 
@@ -195,7 +204,7 @@ class ClusterManager:
                 "Cluster type must implement get_type_name method."
             )
 
-    def _validate_data_matrix(self, data_matrix, selection_name):
+    def _validate_data_matrix(self, data_matrix: np.ndarray, selection_name: str) -> None:
         """
         Validate data matrix for clustering.
 
@@ -234,7 +243,7 @@ class ClusterManager:
                 f"Got {data_matrix.shape[0]} samples."
             )
 
-    def _get_decomposition_data(self, pipeline_data, decomposition_name):
+    def _get_decomposition_data(self, pipeline_data: PipelineData, decomposition_name: str) -> Tuple[np.ndarray, Dict[int, Tuple[int, int]]]:
         """
         Retrieve decomposition data matrix and frame mapping for clustering.
 
@@ -277,7 +286,7 @@ class ClusterManager:
 
         return data_matrix, frame_mapping
 
-    def _get_feature_selection_data(self, pipeline_data, selection_name, data_selector_name=None):
+    def _get_feature_selection_data(self, pipeline_data: PipelineData, selection_name: str, data_selector_name: Optional[str] = None) -> Tuple[np.ndarray, Dict[int, Tuple[int, int]]]:
         """
         Retrieve feature selection data matrix and frame mapping for clustering.
 
@@ -319,7 +328,7 @@ class ClusterManager:
 
         return data_matrix, frame_mapping
 
-    def _get_data_matrix(self, pipeline_data, name, use_decomposed, data_selector_name=None):
+    def _get_data_matrix(self, pipeline_data: PipelineData, name: str, use_decomposed: bool, data_selector_name: Optional[str] = None) -> Tuple[np.ndarray, Dict[int, Tuple[int, int]]]:
         """
         Retrieve data matrix and frame mapping for clustering based on use_decomposed flag.
 
@@ -353,15 +362,15 @@ class ClusterManager:
 
     def add(
         self,
-        pipeline_data,
-        selection_name,
-        cluster_type,
-        use_decomposed=True,
-        cluster_name=None,
-        data_selector_name=None,
-        force=False,
-        override_cache=False,
-    ):
+        pipeline_data: PipelineData,
+        selection_name: str,
+        cluster_type: ClusterTypeBase,
+        use_decomposed: bool = True,
+        cluster_name: Optional[str] = None,
+        data_selector_name: Optional[str] = None,
+        force: bool = False,
+        override_cache: bool = False,
+    ) -> None:
         """
         Add clustering analysis to trajectory data.
 
@@ -460,7 +469,7 @@ class ClusterManager:
         )
         self._store_clustering_results(pipeline_data, cluster_name, cluster_data)
 
-    def _determine_cluster_name(self, cluster_name, cluster_type):
+    def _determine_cluster_name(self, cluster_name: Optional[str], cluster_type: ClusterTypeBase) -> str:
         """
         Determine cluster name (use provided or default to str(cluster_type)).
 
@@ -482,7 +491,7 @@ class ClusterManager:
             else DataUtils.get_type_key(cluster_type)
         )
 
-    def _clear_cache_directory(self, cache_path):
+    def _clear_cache_directory(self, cache_path: str) -> None:
         """
         Clear entire cache directory for cluster_name subdirectory.
 
@@ -500,8 +509,8 @@ class ClusterManager:
         print(f"Cleared cache directory: {cache_path}")
 
     def _prepare_data_for_clustering(
-        self, pipeline_data, selection_name, use_decomposed, data_selector_name=None
-    ):
+        self, pipeline_data: PipelineData, selection_name: str, use_decomposed: bool, data_selector_name: Optional[str] = None
+    ) -> Tuple[np.ndarray, Dict[int, Tuple[int, int]]]:
         """
         Prepare and validate data matrix for clustering with frame mapping.
 
@@ -529,7 +538,7 @@ class ClusterManager:
         self._validate_data_matrix(data_matrix, selection_name)
         return data_matrix, frame_mapping
 
-    def _perform_clustering(self, cluster_type, data_matrix):
+    def _perform_clustering(self, cluster_type: ClusterTypeBase, data_matrix: np.ndarray) -> Tuple[np.ndarray, Dict]:
         """
         Perform clustering computation with error handling.
 
@@ -550,7 +559,7 @@ class ClusterManager:
 
         return cluster_labels, metadata
 
-    def _validate_cluster_labels(self, cluster_labels, data_matrix):
+    def _validate_cluster_labels(self, cluster_labels: np.ndarray, data_matrix: np.ndarray) -> None:
         """
         Ensure cluster labels correspond to trajectory frame indices.
 
@@ -578,8 +587,8 @@ class ClusterManager:
             )
 
     def _create_cluster_data(
-        self, cluster_type, cluster_labels, metadata, selection_name, frame_mapping
-    ):
+        self, cluster_type: ClusterTypeBase, cluster_labels: np.ndarray, metadata: Dict, selection_name: str, frame_mapping: Dict[int, Tuple[int, int]]
+    ) -> ClusterData:
         """
         Create ClusterData object with results and frame mapping.
 
@@ -610,7 +619,7 @@ class ClusterManager:
         cluster_data.set_frame_mapping(frame_mapping)  # FRAME MAPPING SPEICHERN!
         return cluster_data
 
-    def _store_clustering_results(self, pipeline_data, cluster_name, cluster_data):
+    def _store_clustering_results(self, pipeline_data: PipelineData, cluster_name: str, cluster_data: ClusterData) -> None:
         """
         Store clustering results and print success message.
 
@@ -636,7 +645,7 @@ class ClusterManager:
         print(f"Clustering '{cluster_name}' completed successfully.")
         print(f"Found {n_clusters} clusters for {n_frames} frames.")
 
-    def _handle_clustering_error(self, error, cluster_type, selection_name):
+    def _handle_clustering_error(self, error: Exception, cluster_type: ClusterTypeBase, selection_name: str) -> None:
         """
         Handle clustering computation errors with informative messages.
 
@@ -667,3 +676,121 @@ class ClusterManager:
             f"Clustering computation failed for '{cluster_type_name}' on selection '{selection_name}'. "
             f"Original error: {str(error)}"
         ) from error
+    
+    def save(self, pipeline_data: PipelineData, save_path: str) -> None:
+        """
+        Save all clustering data to single file.
+
+        Warning:
+        --------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.clustering.save('clustering.npy')  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = ClusterManager()
+        >>> manager.save(pipeline_data, 'clustering.npy')  # pipeline_data required
+
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data container with clustering data
+        save_path : str
+            Path where to save all clustering data in one file
+
+        Returns:
+        --------
+        None
+            Saves all clustering data to the specified file
+            
+        Examples:
+        ---------
+        >>> manager.save(pipeline_data, 'clustering.npy')
+        """
+        DataUtils.save_object(pipeline_data.clustering_data, save_path)
+
+    def load(self, pipeline_data: PipelineData, load_path: str) -> None:
+        """
+        Load all clustering data from single file.
+
+        Warning:
+        --------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.clustering.load('clustering.npy')  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = ClusterManager()
+        >>> manager.load(pipeline_data, 'clustering.npy')  # pipeline_data required
+
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data container to load clustering data into
+        load_path : str
+            Path to saved clustering data file
+
+        Returns:
+        --------
+        None
+            Loads all clustering data from the specified file
+            
+        Examples:
+        ---------
+        >>> manager.load(pipeline_data, 'clustering.npy')
+        """
+        temp_dict = {}
+        DataUtils.load_object(temp_dict, load_path)
+        pipeline_data.clustering_data = temp_dict
+
+    def print_info(self, pipeline_data: PipelineData) -> None:
+        """
+        Print clustering data information.
+
+        Warning:
+        --------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.clustering.print_info()  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = ClusterManager()
+        >>> manager.print_info(pipeline_data)  # pipeline_data required
+
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data container with clustering data
+
+        Returns:
+        --------
+        None
+            Prints clustering data information to console
+
+        Examples:
+        ---------
+        >>> manager.print_info(pipeline_data)
+        """
+        if len(pipeline_data.clustering_data) == 0:
+            print("No clusteringdata data available.")
+            return
+
+        print("=== ClusteringData Information ===")
+        data_names = list(pipeline_data.clustering_data.keys())
+        print(f"ClusteringData Names: {len(data_names)} ({", ".join(data_names)})")
+        
+        for name, data in pipeline_data.clustering_data.items():
+            print(f"\n--- {name} ---")
+            data.print_info()

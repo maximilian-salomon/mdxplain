@@ -24,9 +24,13 @@ Matrix operations helper for feature selection system.
 Provides efficient matrix construction directly with proper shape calculation, 
 memory management, and frame mapping instead of collecting and merging matrices.
 """
+from __future__ import annotations
 
 import numpy as np
-from typing import Dict, Tuple, Optional
+from typing import Dict, Tuple, Optional, List, Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..entities.pipeline_data import PipelineData
 
 
 class SelectionMatrixHelper:
@@ -39,7 +43,7 @@ class SelectionMatrixHelper:
 
     @staticmethod
     def build_selection_matrix(
-        pipeline_data, feature_selector_name: str, data_selector_name: Optional[str] = None
+        pipeline_data: PipelineData, feature_selector_name: str, data_selector_name: Optional[str] = None
     ) -> Tuple[np.ndarray, Dict[int, Tuple[int, int]]]:
         """
         Build selection matrix directly with efficient memory usage.
@@ -78,7 +82,7 @@ class SelectionMatrixHelper:
     
     @staticmethod
     def _calculate_matrix_shape(
-        pipeline_data, feature_selector_name: str, data_selector_name: Optional[str]
+        pipeline_data: PipelineData, feature_selector_name: str, data_selector_name: Optional[str]
     ) -> Tuple[int, int]:
         """
         Calculate final matrix shape efficiently.
@@ -152,7 +156,7 @@ class SelectionMatrixHelper:
     
     @staticmethod
     def _fill_matrix(
-        matrix: np.ndarray, pipeline_data, name: str, 
+        matrix: np.ndarray, pipeline_data: PipelineData, name: str, 
         data_selector_name: Optional[str]
     ) -> Dict[int, Tuple[int, int]]:
         """
@@ -197,8 +201,8 @@ class SelectionMatrixHelper:
     
     @staticmethod
     def _fill_trajectory_data(
-        matrix: np.ndarray, pipeline_data, all_results: dict, traj_idx: int,
-        start_row: int, frame_selection, frame_mapping: dict
+        matrix: np.ndarray, pipeline_data: PipelineData, all_results: Dict[str, Any], traj_idx: int,
+        start_row: int, frame_selection: Optional[Any], frame_mapping: Dict[int, Tuple[int, int]]
     ) -> int:
         """
         Fill matrix with data from one trajectory.
@@ -254,8 +258,8 @@ class SelectionMatrixHelper:
     
     @staticmethod
     def _fill_feature_data(
-        matrix: np.ndarray, pipeline_data, feature_type: str, 
-        selection_info: dict, traj_idx: int, frame_indices: list,
+        matrix: np.ndarray, pipeline_data: PipelineData, feature_type: str, 
+        selection_info: Dict[str, Any], traj_idx: int, frame_indices: List[int],
         start_row: int, start_col: int
     ) -> int:
         """

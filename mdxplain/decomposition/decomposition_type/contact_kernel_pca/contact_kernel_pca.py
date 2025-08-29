@@ -25,8 +25,7 @@ ContactKernelPCA decomposition type implementation specialized for binary
 contact matrices using Hamming distance-based kernel.
 """
 
-from typing import Dict, Tuple
-
+from typing import Dict, Tuple, Optional
 import numpy as np
 
 from ..interfaces.decomposition_type_base import DecompositionTypeBase
@@ -64,12 +63,12 @@ class ContactKernelPCA(DecompositionTypeBase):
 
     def __init__(
         self,
-        n_components=None,
-        gamma=1.0,
-        use_nystrom=False,
-        n_landmarks=10000,
-        random_state=None,
-    ):
+        n_components: Optional[int] = None,
+        gamma: float = 1.0,
+        use_nystrom: bool = False,
+        n_landmarks: int = 10000,
+        random_state: Optional[int] = None,
+    ) -> None:
         """
         Initialize ContactKernelPCA decomposition type for contact data.
 
@@ -129,7 +128,7 @@ class ContactKernelPCA(DecompositionTypeBase):
         self.calculator = None
 
     @classmethod
-    def get_type_name(cls):
+    def get_type_name(cls) -> str:
         """
         Get the type name for ContactKernelPCA decomposition.
 
@@ -156,7 +155,7 @@ class ContactKernelPCA(DecompositionTypeBase):
         """
         return "contact_kernel_pca"
 
-    def init_calculator(self, use_memmap=False, cache_path="./cache", chunk_size=10000):
+    def init_calculator(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 10000) -> None:
         """
         Initialize the ContactKernelPCA calculator with specified configuration.
 
@@ -196,7 +195,7 @@ class ContactKernelPCA(DecompositionTypeBase):
             use_memmap=use_memmap, cache_path=cache_path, chunk_size=chunk_size
         )
 
-    def compute(self, data) -> Tuple[np.ndarray, Dict]:
+    def compute(self, data: np.ndarray) -> Tuple[np.ndarray, Dict]:
         """
         Compute ContactKernelPCA decomposition of binary contact data.
 

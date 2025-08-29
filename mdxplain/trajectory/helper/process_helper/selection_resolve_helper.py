@@ -20,6 +20,8 @@
 
 """Trajectory selection resolution utilities."""
 
+from __future__ import annotations
+
 from typing import List, Union, TYPE_CHECKING
 import fnmatch
 import re
@@ -32,14 +34,14 @@ class SelectionResolveHelper:
 
     @staticmethod
     def _resolve_selection(
-        traj_data: "TrajectoryData", selection: List[Union[int, str]]
+        traj_data: TrajectoryData, selection: List[Union[int, str]]
     ) -> List[int]:
         """
         Resolve selection list to trajectory indices.
 
         Parameters:
         -----------
-        traj_data : "TrajectoryData"
+        traj_data : TrajectoryData
             Trajectory data object
         selection : int, str, list, or "all"
             Selection criteria:
@@ -84,14 +86,14 @@ class SelectionResolveHelper:
 
     @staticmethod
     def get_indices_to_process(
-        traj_data: "TrajectoryData", traj_selection: Union[int, str, List[Union[int, str]], "all"]
+        traj_data: TrajectoryData, traj_selection: Union[int, str, List[Union[int, str]], "all"]
     ) -> List[int]:
         """
         Get list of trajectory indices to process.
 
         Parameters:
         -----------
-        traj_data : "TrajectoryData"
+        traj_data : TrajectoryData
             Trajectory data object
         traj_selection : int, str, list, or "all"
             Selection criteria:
@@ -137,7 +139,7 @@ class SelectionResolveHelper:
 
     @staticmethod
     def _resolve_single_selection_item(
-        item: Union[int, str], traj_data: "TrajectoryData"
+        item: Union[int, str], traj_data: TrajectoryData
     ) -> Union[int, List[int]]:
         """
         Resolve a single selection item to trajectory index(es).
@@ -153,7 +155,7 @@ class SelectionResolveHelper:
         -----------
         item : int or str
             Selection item to resolve
-        traj_data : "TrajectoryData"
+        traj_data : TrajectoryData
             Trajectory data object
 
         Returns:
@@ -172,7 +174,7 @@ class SelectionResolveHelper:
             return SelectionResolveHelper._resolve_string_selection(item, traj_data)
     
     @staticmethod
-    def _resolve_string_selection(item: str, traj_data: "TrajectoryData") -> Union[int, List[int]]:
+    def _resolve_string_selection(item: str, traj_data: TrajectoryData) -> Union[int, List[int]]:
         """
         Resolve string selection with all supported formats.
         
@@ -189,7 +191,7 @@ class SelectionResolveHelper:
         -----------
         item : str
             String to resolve
-        traj_data : "TrajectoryData"
+        traj_data : TrajectoryData
             Trajectory data object
             
         Returns:
@@ -218,7 +220,7 @@ class SelectionResolveHelper:
         return selector.removeprefix("id ").strip()
     
     @staticmethod
-    def _route_selector_by_format(traj_data: "TrajectoryData", clean_selector: str) -> List[int]:
+    def _route_selector_by_format(traj_data: TrajectoryData, clean_selector: str) -> List[int]:
         """
         Route selector to appropriate resolver based on format.
         
@@ -298,7 +300,7 @@ class SelectionResolveHelper:
         return clean_selector.isdigit()
     
     @staticmethod
-    def _resolve_pattern_format(traj_data: "TrajectoryData", clean_selector: str) -> List[int]:
+    def _resolve_pattern_format(traj_data: TrajectoryData, clean_selector: str) -> List[int]:
         """
         Resolve pattern format (regex or fnmatch) or fallback to name/tag.
         
@@ -323,7 +325,7 @@ class SelectionResolveHelper:
         return SelectionResolveHelper._resolve_fnmatch_pattern(traj_data, clean_selector)
     
     @staticmethod
-    def _resolve_index_selection(item: int, traj_data: "TrajectoryData") -> int:
+    def _resolve_index_selection(item: int, traj_data: TrajectoryData) -> int:
         """
         Resolve integer index selection.
 
@@ -331,7 +333,7 @@ class SelectionResolveHelper:
         -----------
         item : int
             Index to resolve
-        traj_data : "TrajectoryData"
+        traj_data : TrajectoryData
             Trajectory data object
 
         Returns:
@@ -352,7 +354,7 @@ class SelectionResolveHelper:
             )
 
     @staticmethod
-    def _resolve_tag_selection(tag: str, traj_data: "TrajectoryData") -> int:
+    def _resolve_tag_selection(tag: str, traj_data: TrajectoryData) -> int:
         """
         Resolve tag-based selection to first matching trajectory index.
 
@@ -360,7 +362,7 @@ class SelectionResolveHelper:
         -----------
         tag : str
             Tag to search for
-        traj_data : "TrajectoryData"
+        traj_data : TrajectoryData
             Trajectory data object
 
         Returns:
@@ -384,7 +386,7 @@ class SelectionResolveHelper:
         return matching_indices[0]
 
     @staticmethod
-    def _find_trajectories_with_tag(tag: str, traj_data: "TrajectoryData") -> List[int]:
+    def _find_trajectories_with_tag(tag: str, traj_data: TrajectoryData) -> List[int]:
         """
         Find all trajectories that have the specified tag.
 
@@ -392,7 +394,7 @@ class SelectionResolveHelper:
         -----------
         tag : str
             Tag to search for
-        traj_data : "TrajectoryData"
+        traj_data : TrajectoryData
             Trajectory data object
 
         Returns:
@@ -408,7 +410,7 @@ class SelectionResolveHelper:
         return matching_indices
     
     @staticmethod  
-    def _resolve_range_string(traj_data: "TrajectoryData", selector: str) -> List[int]:
+    def _resolve_range_string(traj_data: TrajectoryData, selector: str) -> List[int]:
         """
         Parse range string and resolve to trajectory indices.
         
@@ -442,7 +444,7 @@ class SelectionResolveHelper:
             raise
     
     @staticmethod
-    def _resolve_comma_list(traj_data: "TrajectoryData", selector: str) -> List[int]:
+    def _resolve_comma_list(traj_data: TrajectoryData, selector: str) -> List[int]:
         """
         Parse comma-separated list and resolve to trajectory indices.
         
@@ -473,7 +475,7 @@ class SelectionResolveHelper:
             raise
     
     @staticmethod
-    def _resolve_int_selector(traj_data: "TrajectoryData", selector: int) -> List[int]:
+    def _resolve_int_selector(traj_data: TrajectoryData, selector: int) -> List[int]:
         """
         Resolve integer selector to single-element list.
         
@@ -495,7 +497,7 @@ class SelectionResolveHelper:
             raise ValueError(f"Trajectory index {selector} out of range")
     
     @staticmethod
-    def _resolve_fnmatch_pattern(traj_data: "TrajectoryData", pattern: str) -> List[int]:
+    def _resolve_fnmatch_pattern(traj_data: TrajectoryData, pattern: str) -> List[int]:
         """
         Resolve fnmatch pattern against trajectory names.
         
@@ -522,7 +524,7 @@ class SelectionResolveHelper:
         return matching_indices
     
     @staticmethod
-    def _resolve_regex_pattern(traj_data: "TrajectoryData", pattern: str) -> List[int]:
+    def _resolve_regex_pattern(traj_data: TrajectoryData, pattern: str) -> List[int]:
         """
         Resolve regex pattern against trajectory names.
         
@@ -553,13 +555,13 @@ class SelectionResolveHelper:
         return matching_indices
 
     @staticmethod
-    def _get_all_tags(traj_data: "TrajectoryData") -> List[str]:
+    def _get_all_tags(traj_data: TrajectoryData) -> List[str]:
         """
         Get all unique tags from all trajectories.
 
         Parameters:
         -----------
-        traj_data : "TrajectoryData"
+        traj_data : TrajectoryData
             Trajectory data object
 
         Returns:
@@ -575,7 +577,7 @@ class SelectionResolveHelper:
 
     @staticmethod
     def get_all_trajectories_with_tag(
-        tag: str, traj_data: "TrajectoryData"
+        tag: str, traj_data: TrajectoryData
     ) -> List[int]:
         """
         Get all trajectory indices that have the specified tag.
@@ -584,7 +586,7 @@ class SelectionResolveHelper:
         -----------
         tag : str
             Tag to search for
-        traj_data : "TrajectoryData"
+        traj_data : TrajectoryData
             Trajectory data object
 
         Returns:

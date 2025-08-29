@@ -29,6 +29,7 @@ FeatureSelectorData (which selects columns).
 
 from typing import Dict, List, Any
 
+from ...utils.data_utils import DataUtils
 
 class DataSelectorData:
     """
@@ -66,7 +67,7 @@ class DataSelectorData:
     >>> print(selector_data.get_selection_info())
     """
 
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         """
         Initialize data selector data with given name.
 
@@ -364,7 +365,7 @@ class DataSelectorData:
         """
         return self.n_selected_frames
 
-    def __contains__(self, traj_frame_tuple) -> bool:
+    def __contains__(self, traj_frame_tuple: tuple) -> bool:
         """
         Check if a (trajectory_index, frame_index) tuple is in the selection.
 
@@ -406,4 +407,121 @@ class DataSelectorData:
         DataSelectorData(name='folded_frames', n_frames=150, n_trajectories=3)
         """
         return f"DataSelectorData(name='{self.name}', n_frames={self.n_selected_frames}, n_trajectories={len(self.trajectory_frames)})"
+
+    def save(self, save_path: str) -> None:
+        """
+        Save DataSelectorData object to disk.
+
+        Parameters:
+        -----------
+        save_path : str
+            Path where to save the DataSelectorData object
+
+        Returns:
+        --------
+        None
+            Saves the DataSelectorData object to the specified path
+
+        Examples:
+        ---------
+        >>> data_selector_data.save('analysis_results/folded_frames.pkl')
+        """
+        DataUtils.save_object(self, save_path)
+
+    def load(self, load_path: str) -> None:
+        """
+        Load DataSelectorData object from disk.
+
+        Parameters:
+        -----------
+        load_path : str
+            Path to the saved DataSelectorData file
+
+        Returns:
+        --------
+        None
+            Loads the DataSelectorData object from the specified path
+
+        Examples:
+        ---------
+        >>> data_selector_data.load('analysis_results/folded_frames.pkl')
+        """
+        DataUtils.load_object(self, load_path)
+
+    def print_info(self) -> None:
+        """
+        Print comprehensive data selector information.
+
+        Parameters:
+        -----------
+        None
+
+        Returns:
+        --------
+        None
+            Prints data selector information to console
+
+        Examples:
+        ---------
+        >>> data_selector_data.print_info()
+        === DataSelectorData ===
+        Name: folded_frames
+        Selected Frames: 250 frames from 3 trajectories
+        Selection Type: cluster
+        Frame Distribution: traj0:0-45 (15), traj1:10-89 (20), traj2:5-95 (15)
+        """
+        if self.is_empty():
+            print("No data selection available.")
+            return
+
+        self._print_data_selector_header()
+        self._print_data_selector_details()
+        self._print_frame_distribution()
+
+    def _print_data_selector_header(self) -> None:
+        """
+        Print header with selector name.
+
+        Returns:
+        --------
+        None
+        """
+        print("=== DataSelectorData ===")
+        print(f"Name: {self.name}")
+
+    def _print_data_selector_details(self) -> None:
+        """
+        Print detailed selection information.
+
+        Returns:
+        --------
+        None
+        """
+        info = self.get_selection_info()
+        print(f"Selected Frames: {info['n_frames']} frames from {len(info['trajectories'])} trajectories")
+        print(f"Selection Type: {info['selection_type']}")
+
+        if info['n_operations'] > 1:
+            print(f"Operations: {info['n_operations']} selection operations applied")
+
+    def _print_frame_distribution(self) -> None:
+        """
+        Print frame distribution across trajectories.
+
+        Returns:
+        --------
+        None
+        """
+        if not self.trajectory_frames:
+            return
+
+        distributions = []
+        for traj_idx, frames in self.trajectory_frames.items():
+            if frames:
+                min_frame, max_frame = min(frames), max(frames)
+                n_frames = len(frames)
+                distributions.append(f"traj{traj_idx}:{min_frame}-{max_frame} ({n_frames})")
+
+        if distributions:
+            print(f"Frame Distribution: {', '.join(distributions)}")
     

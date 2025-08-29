@@ -19,6 +19,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """Label operation utilities for trajectory data consistency."""
+from __future__ import annotations
 
 import numpy as np
 from typing import Dict, List, TYPE_CHECKING
@@ -32,7 +33,7 @@ class LabelOperationHelper:
 
     @staticmethod
     def apply_atom_selection_to_labels(
-        traj_data: "TrajectoryData",
+        traj_data: TrajectoryData,
         traj_indices: List[int],
         original_residue_indices: Dict[int, np.ndarray]
     ) -> None:

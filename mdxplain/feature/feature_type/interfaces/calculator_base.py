@@ -27,7 +27,7 @@ contacts, and other molecular dynamics features.
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple, Union, List
 
 import numpy as np
 

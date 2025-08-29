@@ -25,9 +25,16 @@ This module provides utilities for handling feature computation processes,
 including existence checks, dependency validation, and result storage
 in the FeatureManager.
 """
+from __future__ import annotations
 
 import numpy as np
-from typing import Tuple, Any, Dict, List
+from typing import Tuple, Any, Dict, List, TYPE_CHECKING
+
+from ..entities.feature_data import FeatureData
+from ..feature_type.interfaces.feature_type_base import FeatureTypeBase
+
+if TYPE_CHECKING:
+    from ...pipeline.entities.pipeline_data import PipelineData
 
 
 class FeatureComputationHelper:
@@ -40,7 +47,7 @@ class FeatureComputationHelper:
 
     @staticmethod
     def check_feature_existence(
-        pipeline_data, 
+        pipeline_data: PipelineData, 
         feature_key: str,
         traj_indices: List[int],
         force: bool
@@ -88,7 +95,7 @@ class FeatureComputationHelper:
             raise ValueError(f"{feature_key.capitalize()} FeatureData already exists.")
 
     @staticmethod
-    def _feature_already_exists(pipeline_data, feature_key: str, traj_indices: List[int]) -> bool:
+    def _feature_already_exists(pipeline_data: PipelineData, feature_key: str, traj_indices: List[int]) -> bool:
         """
         Check if feature already exists with computed data.
 
@@ -115,7 +122,7 @@ class FeatureComputationHelper:
         )
 
     @staticmethod
-    def _handle_force_recomputation(pipeline_data, feature_key: str, traj_indices: List[int]) -> None:
+    def _handle_force_recomputation(pipeline_data: PipelineData, feature_key: str, traj_indices: List[int]) -> None:
         """
         Handle forced recomputation of existing feature.
 
@@ -143,9 +150,9 @@ class FeatureComputationHelper:
 
     @staticmethod
     def execute_computation(
-        pipeline_data, 
-        feature_data, 
-        feature_type,
+        pipeline_data: PipelineData, 
+        feature_data: FeatureData, 
+        feature_type: FeatureTypeBase,
         traj_idx: int,
         force_original: bool = True
     ) -> Tuple[Any, Dict]:
@@ -199,8 +206,8 @@ class FeatureComputationHelper:
 
     @staticmethod
     def store_computation_results(
-        feature_data, 
-        data: Any, 
+        feature_data: FeatureData, 
+        data: np.ndarray, 
         feature_metadata: Dict
     ) -> None:
         """
@@ -210,7 +217,7 @@ class FeatureComputationHelper:
         -----------
         feature_data : FeatureData
             Feature data object to store results in
-        data : Any
+        data : np.ndarray
             Computed feature data (typically numpy array)
         feature_metadata : Dict
             Feature metadata dictionary

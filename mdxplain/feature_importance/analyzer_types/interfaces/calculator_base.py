@@ -41,14 +41,14 @@ class CalculatorBase(ABC):
     Examples:
     ---------
     >>> class MyCalculator(CalculatorBase):
-    ...     def __init__(self, use_memmap=False, cache_path="./cache", chunk_size=10000):
+    ...     def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 10000):
     ...         super().__init__(use_memmap, cache_path, chunk_size)
     ...     def compute(self, X, y, **kwargs):
     ...         # Implement ML algorithm logic
     ...         return result_dict
     """
 
-    def __init__(self, use_memmap=False, cache_path="./cache", chunk_size=10000):
+    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 10000):
         """
         Initialize the calculator with configuration options.
 

@@ -26,10 +26,14 @@ in the FeatureManager, handling both single and multiple feature resets
 with different error handling modes.
 """
 
-from typing import Callable, List, Union, Any
+from __future__ import annotations
 
-from .feature_computation_helper import FeatureComputationHelper
+from typing import List, Union, Any, TYPE_CHECKING
+
 from ...utils.data_utils import DataUtils
+
+if TYPE_CHECKING:
+    from ...pipeline.entities.pipeline_data import PipelineData
 
 
 class FeatureResetHelper:
@@ -41,7 +45,7 @@ class FeatureResetHelper:
     """
 
     @staticmethod
-    def reset_all_features(pipeline_data) -> None:
+    def reset_all_features(pipeline_data: PipelineData) -> None:
         """
         Reset all features in the pipeline data.
 
@@ -68,7 +72,7 @@ class FeatureResetHelper:
 
     @staticmethod
     def reset_specific_features(
-        pipeline_data,
+        pipeline_data: PipelineData,
         feature_types: List[Any],
         strict: bool = False,
     ) -> None:
@@ -122,7 +126,7 @@ class FeatureResetHelper:
     def _handle_missing_keys(
         missing_keys: List[str], 
         strict: bool, 
-        pipeline_data
+        pipeline_data: PipelineData
     ) -> None:
         """
         Handle missing feature keys based on strict mode.
@@ -194,12 +198,12 @@ class FeatureResetHelper:
 
         Parameters:
         -----------
-        feature_type : Any or List[Any]
+        feature_type : FeatureType or List[FeatureType]
             Single feature type or list of feature types
 
         Returns:
         --------
-        List[Any]
+        List[Str]
             Normalized list of feature types
 
         Examples:
@@ -217,7 +221,7 @@ class FeatureResetHelper:
         return feature_type
 
     @staticmethod
-    def check_has_features(pipeline_data) -> bool:
+    def check_has_features(pipeline_data: PipelineData) -> bool:
         """
         Check if pipeline data has any features to reset.
 

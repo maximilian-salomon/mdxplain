@@ -26,6 +26,7 @@ analysis, following the analyzer_type pattern similar to decomposition_types.
 """
 
 from typing import Dict, Any, Optional
+import numpy as np
 
 from ..interfaces.analyzer_type_base import AnalyzerTypeBase
 from .decision_tree_calculator import DecisionTreeCalculator
@@ -163,7 +164,7 @@ class DecisionTree(AnalyzerTypeBase):
         """
         return "decision_tree"
 
-    def init_calculator(self, use_memmap=False, cache_path="./cache", chunk_size=10000):
+    def init_calculator(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 10000) -> None:
         """
         Initialize the Decision Tree calculator with specified configuration.
 
@@ -200,7 +201,7 @@ class DecisionTree(AnalyzerTypeBase):
             use_memmap=use_memmap, cache_path=cache_path, chunk_size=chunk_size
         )
 
-    def compute(self, X, y):
+    def compute(self, X: np.ndarray, y: np.ndarray) -> Dict[str, Any]:
         """
         Compute Decision Tree feature importance analysis.
 

@@ -25,7 +25,7 @@ KernelPCA decomposition type implementation with nonlinear dimensionality
 reduction using various kernel functions for feature matrices.
 """
 
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional, Any
 
 import numpy as np
 
@@ -66,12 +66,12 @@ class KernelPCA(DecompositionTypeBase):
 
     def __init__(
         self,
-        n_components=None,
-        gamma=None,
-        use_nystrom=False,
-        n_landmarks=10000,
-        random_state=None,
-    ):
+        n_components: Optional[int] = None,
+        gamma: Optional[float] = None,
+        use_nystrom: bool = False,
+        n_landmarks: int = 10000,
+        random_state: Optional[int] = None,
+    ) -> None:
         """
         Initialize KernelPCA decomposition type with RBF kernel.
 
@@ -130,7 +130,7 @@ class KernelPCA(DecompositionTypeBase):
         self.random_state = random_state
 
     @classmethod
-    def get_type_name(cls):
+    def get_type_name(cls) -> str:
         """
         Get the type name for KernelPCA decomposition.
 
@@ -157,7 +157,7 @@ class KernelPCA(DecompositionTypeBase):
         """
         return "kernel_pca"
 
-    def init_calculator(self, use_memmap=False, cache_path="./cache", chunk_size=10000):
+    def init_calculator(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 10000) -> None:
         """
         Initialize the KernelPCA calculator with specified configuration.
 
@@ -197,7 +197,7 @@ class KernelPCA(DecompositionTypeBase):
             use_memmap=use_memmap, cache_path=cache_path, chunk_size=chunk_size
         )
 
-    def compute(self, data) -> Tuple[np.ndarray, Dict]:
+    def compute(self, data: np.ndarray) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Compute KernelPCA decomposition of input data using RBF kernel.
 
