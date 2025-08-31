@@ -265,9 +265,74 @@ class KernelPCACalculator(CalculatorBase):
 
         return kernel_matrix
 
+    def _compute_kernel_statistics_from_matrix(self, kernel_matrix: np.ndarray) -> Tuple[np.ndarray, np.ndarray, float]:
+        """
+        Compute kernel statistics from precomputed kernel matrix for centering.
+
+        Parameters:
+        -----------
+        kernel_matrix : numpy.ndarray
+            Precomputed kernel matrix
+        
+        Returns:
+        --------
+        tuple
+            Tuple containing (row_means, col_means, grand_mean) for kernel centering
+        """
+        n_samples = kernel_matrix.shape[0]
+        row_sums = np.zeros(n_samples, dtype=np.float64)
+        col_sums = np.zeros(n_samples, dtype=np.float64)
+        
+        # First pass: compute row sums
+        for i in range(0, n_samples, self.chunk_size):
+            end = min(i + self.chunk_size, n_samples)
+            row_sums[i:end] = kernel_matrix[i:end].sum(axis=1)
+        
+        # Second pass: compute column sums
+        for j in range(0, n_samples, self.chunk_size):
+            end = min(j + self.chunk_size, n_samples)
+            col_sums[j:end] = kernel_matrix[:, j:end].sum(axis=0)
+        
+        row_means = row_sums / n_samples
+        col_means = col_sums / n_samples
+        grand_mean = row_sums.sum() / (n_samples * n_samples)
+        
+        return row_means, col_means, grand_mean
+
+    def _center_kernel_inplace(self, kernel_matrix: np.ndarray, row_means: np.ndarray, col_means: np.ndarray, grand_mean: float) -> None:
+        """
+        Center kernel matrix in-place using precomputed statistics.
+
+        Parameters:
+        -----------
+        kernel_matrix : numpy.ndarray
+            Kernel matrix to center (modified in-place)
+        row_means : numpy.ndarray
+            Row means for centering
+        col_means : numpy.ndarray
+            Column means for centering  
+        grand_mean : float
+            Grand mean for centering
+
+        Returns:
+        --------
+        None
+            Modifies kernel_matrix in-place
+        """
+        n_samples = kernel_matrix.shape[0]
+        
+        for i in range(0, n_samples, self.chunk_size):
+            i_end = min(i + self.chunk_size, n_samples)
+            
+            # Apply centering formula: K_centered = K - row_means - col_means + grand_mean
+            kernel_matrix[i:i_end] = (kernel_matrix[i:i_end] - 
+                                    row_means[i:i_end, np.newaxis] - 
+                                    col_means[np.newaxis, :] + 
+                                    grand_mean)
+
     def _compute_incremental_kernel_pca(self, data: np.ndarray, hyperparameters: Dict[str, Any]) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
-        Compute incremental KernelPCA with precomputed kernel matrix.
+        Compute incremental KernelPCA with chunk-wise centered kernel matrix.
 
         Parameters:
         -----------
@@ -285,16 +350,29 @@ class KernelPCACalculator(CalculatorBase):
             data, hyperparameters["gamma"]
         )
 
-        # NOTE: The kernel is centered in the fit_transform method!
-        kpca = KernelPCA(
-            n_components=hyperparameters["n_components"],
-            kernel="precomputed",
-            random_state=hyperparameters["random_state"],
-            copy_X=False,
-            n_jobs=-1,
+        row_means, col_means, grand_mean = self._compute_kernel_statistics_from_matrix(
+            kernel_matrix
         )
 
-        transformed_data = kpca.fit_transform(kernel_matrix)
+        self._center_kernel_inplace(kernel_matrix, row_means, col_means, grand_mean)
+
+        ipca = IncrementalPCA(
+            n_components=hyperparameters["n_components"],
+            batch_size=self.chunk_size,
+            whiten=True,
+            copy=False,
+        )
+
+        # Get principal components from IncrementalPCA
+        principal_components = ipca.fit_transform(kernel_matrix)
+        
+        # Use the eigenvalues from IncrementalPCA, scaled by (n_samples-1)
+        # IncrementalPCA uses explained_variance = eigenvals / (n_samples - 1)
+        n_samples = kernel_matrix.shape[0]
+        kernel_eigenvals = ipca.explained_variance_ * (n_samples - 1)
+        
+        # Scale to match sklearn KernelPCA: eigenvector * sqrt(eigenvalue)
+        transformed_data = principal_components * np.sqrt(kernel_eigenvals)
 
         # Store transformed_data as memmap when use_memmap=True
         if self.use_memmap:
@@ -380,8 +458,17 @@ class KernelPCACalculator(CalculatorBase):
             copy=False,
         )
 
-        transformed_data = ipca.fit_transform(kernel_features)
-
+        # Get principal components from IncrementalPCA
+        principal_components = ipca.fit_transform(kernel_features)
+        
+        # Use the eigenvalues from IncrementalPCA, scaled by (n_samples-1)
+        # IncrementalPCA uses explained_variance = eigenvals / (n_samples - 1)
+        n_samples = kernel_features.shape[0]
+        kernel_eigenvals = ipca.explained_variance_ * (n_samples - 1)
+        
+        # Scale to match sklearn KernelPCA: eigenvector * sqrt(eigenvalue)
+        transformed_data = principal_components * np.sqrt(kernel_eigenvals)
+        
         # Store transformed_data as memmap when use_memmap=True
         if self.use_memmap:
             memmap_path = DataUtils.get_cache_file_path(
