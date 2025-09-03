@@ -93,7 +93,7 @@ class TrajectoryProcessHelper:
             traj = pipeline_data.trajectory_data.trajectories[idx]
             frame_spec = frames_dict.get(idx)
             
-            if frame_spec is None or (isinstance(frame_spec, list) and not frame_spec):
+            if frame_spec is not None and isinstance(frame_spec, list) and not frame_spec:
                 print(f"No frames for trajectory {idx} - keeping unchanged")
                 continue
             

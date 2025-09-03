@@ -65,7 +65,7 @@ class DecompositionManager:
     ... )
     """
 
-    def __init__(self, use_memmap: bool = False, chunk_size: int = 10000, cache_dir: str = "./cache") -> None:
+    def __init__(self, use_memmap: bool = False, chunk_size: int = 2000, cache_dir: str = "./cache") -> None:
         """
         Initialize decomposition manager.
 
@@ -192,6 +192,9 @@ class DecompositionManager:
 
         self._check_decomposition_existence(pipeline_data, decomposition_name, force)
 
+        # Validate feature type requirements
+        self._validate_feature_type_compatibility(pipeline_data, selection_name, decomposition_type)
+        
         # Get data with frame mapping
         data_matrix, frame_mapping = pipeline_data.get_selected_data(
             selection_name, data_selector_name, return_frame_mapping=True
@@ -520,3 +523,58 @@ class DecompositionManager:
         for name, data in pipeline_data.decomposition_data.items():
             print(f"\n--- {name} ---")
             data.print_info()
+
+    def _validate_feature_type_compatibility(self, pipeline_data: PipelineData, 
+                                           selection_name: str, 
+                                           decomposition_type: DecompositionTypeBase) -> None:
+        """
+        Validate that decomposition type is compatible with feature selection.
+
+        Some decomposition methods require specific feature types (e.g., 
+        DiffusionMaps requires 'coordinates'). This method checks compatibility.
+
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data container
+        selection_name : str
+            Name of the feature selection
+        decomposition_type : DecompositionTypeBase
+            Decomposition type to validate
+
+        Returns:
+        --------
+        None
+            Validation passes silently
+
+        Raises:
+        -------
+        ValueError
+            If decomposition type is incompatible with feature selection
+        """
+        required_type = decomposition_type.get_required_feature_type()
+        if required_type is None:
+            # No specific requirement, all feature types allowed
+            return
+            
+        # Get feature metadata from the selection
+        if selection_name not in pipeline_data.feature_selector_data:
+            raise ValueError(f"Feature selection '{selection_name}' not found")
+            
+        selection_data = pipeline_data.feature_selector_data[selection_name]
+        
+        # Check if all features in selection match required type
+        incompatible_features = []
+        for feature_spec in selection_data.features:
+            feature_type = feature_spec.feature_type
+            
+            if feature_type != required_type:
+                incompatible_features.append(f"{feature_type}")
+        
+        if incompatible_features:
+            decomposition_name = decomposition_type.__class__.__name__
+            incompatible_list = ", ".join(incompatible_features)
+            raise ValueError(
+                f"{decomposition_name} requires features of type '{required_type}' only. "
+                f"Selection '{selection_name}' contains incompatible features: {incompatible_list}"
+            )

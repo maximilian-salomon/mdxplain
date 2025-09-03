@@ -53,7 +53,7 @@ class ContactCalculator(CalculatorBase):
     >>> contacts = calculator.compute(distance_data, cutoff=3.5)
     """
 
-    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 10000) -> None:
+    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000) -> None:
         """
         Initialize contact calculator with configuration parameters.
 

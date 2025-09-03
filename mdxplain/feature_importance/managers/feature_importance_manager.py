@@ -74,16 +74,27 @@ class FeatureImportanceManager:
     ... )
     """
 
-    def __init__(self) -> None:
+    def __init__(self, use_memmap: bool = False, chunk_size: int = 2000, cache_dir: str = "./cache") -> None:
         """
         Initialize the feature importance manager.
+
+        Parameters:
+        -----------
+        use_memmap : bool, default=False
+            Whether to use memory mapping for large datasets
+        chunk_size : int, default=10000
+            Processing chunk size for incremental computation
+        cache_dir : str, default="./cache"
+            Cache directory path
 
         Returns:
         --------
         None
-            Initializes FeatureImportanceManager instance
+            Initializes FeatureImportanceManager instance with specified configuration
         """
-        pass
+        self.use_memmap = use_memmap
+        self.chunk_size = chunk_size
+        self.cache_dir = cache_dir
 
     def add(
         self,
@@ -165,6 +176,14 @@ class FeatureImportanceManager:
 
         # Get comparison data
         comp_data = pipeline_data.comparison_data[comparison_name]
+
+        # Initialize calculator if needed
+        if hasattr(analyzer_type, 'init_calculator'):
+            analyzer_type.init_calculator(
+                use_memmap=self.use_memmap,
+                cache_path=f"{self.cache_dir}/{analysis_name}",
+                chunk_size=self.chunk_size,
+            )
 
         # Run analysis using helper
         fi_data = AnalysisRunnerHelper.run_comparison_analysis(
@@ -260,6 +279,71 @@ class FeatureImportanceManager:
         return TopFeaturesHelper.get_top_features_with_names(
             pipeline_data, fi_data, comparison_identifier, n
         )
+
+    def get_all_top_features(
+        self,
+        pipeline_data: PipelineData,
+        analysis_name: str,
+        n: int = 10
+    ) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        Get top features for all sub-comparisons in an analysis.
+        
+        Returns a dictionary where keys are comparison identifiers
+        and values are lists of top features for each comparison.
+        
+        Warning:
+        --------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+        
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> all_features = pipeline.feature_importance.get_all_top_features("dt_analysis", n=5)
+        
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = FeatureImportanceManager()
+        >>> all_features = manager.get_all_top_features(pipeline_data, "dt_analysis", n=5)
+        
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data object
+        analysis_name : str
+            Name of the analysis
+        n : int, default=10
+            Number of top features per comparison
+            
+        Returns:
+        --------
+        Dict[str, List[Dict[str, Any]]]
+            Dictionary mapping comparison names to their top features
+            
+        Examples:
+        ---------
+        >>> all_features = manager.get_all_top_features(
+        ...     pipeline_data, "dt_analysis", n=5
+        ... )
+        >>> # Access specific comparison
+        >>> cluster_0 = all_features["cluster_0_vs_rest"]
+        >>> print(f"Top feature: {cluster_0[0]['feature_name']}")
+        """
+        FeatureImportanceValidationHelper.validate_analysis_exists(pipeline_data, analysis_name)
+        fi_data = pipeline_data.feature_importance_data[analysis_name]
+        
+        result = {}
+        
+        # Get all comparison identifiers
+        comparisons = fi_data.list_comparisons()
+        
+        # Get top features for each comparison
+        for comp_name in comparisons:
+            result[comp_name] = TopFeaturesHelper.get_top_features_with_names(
+                pipeline_data, fi_data, comp_name, n
+            )
+        
+        return result
 
     def list_analyses(self, pipeline_data: PipelineData) -> List[str]:
         """

@@ -26,8 +26,10 @@ for consistency across different dimensionality reduction methods.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Tuple, Any
+from typing import Dict, Tuple, Any, Optional
 import numpy as np
+
+from ....utils.data_utils import DataUtils
 
 
 class CalculatorBase(ABC):
@@ -41,14 +43,14 @@ class CalculatorBase(ABC):
     Examples:
     ---------
     >>> class MyCalculator(CalculatorBase):
-    ...     def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 10000) -> None:
+    ...     def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000) -> None:
     ...         super().__init__(use_memmap, cache_path, chunk_size)
     ...     def compute(self, data, **kwargs):
     ...         # Implement computation logic
     ...         return transformed_data, metadata
     """
 
-    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 10000) -> None:
+    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000) -> None:
         """
         Initialize the decomposition calculator.
 
@@ -168,3 +170,53 @@ class CalculatorBase(ABC):
             "chunk_size": self.chunk_size,
             "cache_path": self.cache_path,
         }
+
+    def _create_array_or_memmap(self, shape: Tuple[int, ...], 
+                               dtype: np.dtype = np.float32,
+                               filename: Optional[str] = None) -> np.ndarray:
+        """
+        Create numpy array or memmap based on use_memmap setting.
+        
+        Automatically chooses between regular numpy array or memory-mapped array
+        based on self.use_memmap. Combines cache_path with cache_prefix and filename.
+
+        Parameters:
+        -----------
+        shape : tuple
+            Shape of the array to create
+        dtype : numpy.dtype, default=np.float32
+            Data type for the array
+        filename : str, optional
+            Filename for memmap. If None, uses "temp.dat"
+            Will be combined with cache_path and cache_prefix
+
+        Returns:
+        --------
+        numpy.ndarray
+            Either regular numpy array or memory-mapped array
+
+        Examples:
+        ---------
+        >>> # Create distance matrix
+        >>> matrix = self._create_array_or_memmap(
+        ...     (n_frames, n_frames), 
+        ...     filename="rmsd_matrix.dat"
+        ... )
+        
+        >>> # Create temporary array
+        >>> temp = self._create_array_or_memmap((1000, 50))
+        """
+        if self.use_memmap:            
+            if filename is None:
+                filename = "temp.dat"
+            
+            # Combine with cache_prefix if available
+            if hasattr(self, '_cache_prefix'):
+                full_filename = f"{self._cache_prefix}_{filename}"
+            else:
+                full_filename = filename
+            
+            memmap_path = DataUtils.get_cache_file_path(self.cache_path, full_filename)
+            return np.memmap(memmap_path, dtype=dtype, mode='w+', shape=shape)
+        else:
+            return np.zeros(shape, dtype=dtype)

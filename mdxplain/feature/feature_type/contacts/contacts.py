@@ -94,7 +94,7 @@ class Contacts(FeatureTypeBase):
         super().__init__()
         self.cutoff = cutoff
 
-    def init_calculator(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 10000) -> None:
+    def init_calculator(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000) -> None:
         """
         Initialize the contact calculator with specified configuration.
 

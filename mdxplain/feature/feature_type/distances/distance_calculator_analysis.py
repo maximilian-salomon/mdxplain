@@ -53,7 +53,7 @@ class DistanceCalculatorAnalysis:
         "compute_per_residue_range",
     }
 
-    def __init__(self, use_memmap: bool = False, chunk_size: int = 10000) -> None:
+    def __init__(self, use_memmap: bool = False, chunk_size: int = 2000) -> None:
         """
         Initialize distance analysis with chunking configuration.
 

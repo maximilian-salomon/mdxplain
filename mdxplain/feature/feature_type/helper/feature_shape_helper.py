@@ -67,7 +67,7 @@ class FeatureShapeHelper:
         return hasattr(array, "filename") and array.filename is not None
 
     @staticmethod
-    def squareform_to_condensed(square_array: np.ndarray, k: int = 0, output_path: Optional[str] = None, chunk_size: int = 10000) -> np.ndarray:
+    def squareform_to_condensed(square_array: np.ndarray, k: int = 0, output_path: Optional[str] = None, chunk_size: int = 2000) -> np.ndarray:
         """
         Convert square format to condensed format.
 
@@ -234,7 +234,7 @@ class FeatureShapeHelper:
         condensed_array: np.ndarray, 
         residue_pairs: np.ndarray, 
         n_residues: int, 
-        chunk_size: int = 10000, 
+        chunk_size: int = 2000, 
         output_path: Optional[str] = None
     ) -> np.ndarray:
         """

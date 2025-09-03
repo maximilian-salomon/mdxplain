@@ -55,7 +55,7 @@ class FeatureData:
     """
 
     def __init__(
-        self, feature_type: FeatureTypeBase, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 10000, trajectory_name: Optional[str] = None
+        self, feature_type: FeatureTypeBase, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000, trajectory_name: Optional[str] = None
     ) -> None:
         """
         Initialize feature data container.

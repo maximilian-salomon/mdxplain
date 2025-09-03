@@ -1,7 +1,7 @@
 # mdxplain - A Python toolkit for molecular dynamics trajectory analysis
 #
 # Author: Maximilian Salomon
-# Created with assistance from Kiro AI (Claude Sonnet 4.0).
+# Created with assistance from Claude Code (Claude Sonnet 4.0).
 #
 # Copyright (C) 2025 Maximilian Salomon
 #
@@ -19,22 +19,14 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Decomposition type implementations for molecular dynamics analysis.
+Diffusion Maps decomposition type for nonlinear dimensionality reduction.
 
-This module provides concrete implementations of decomposition types for
-dimensionality reduction of feature matrices from MD trajectories.
-
-Import is handled by the mdxplain.decomposition module.
+Diffusion Maps module providing nonlinear dimensionality reduction based on
+diffusion processes and spectral analysis of transition matrices. Supports
+standard computation, iterative computation for large datasets, and Nyström
+approximation for very large datasets.
 """
 
-from .pca.pca import PCA
-from .kernel_pca.kernel_pca import KernelPCA
-from .contact_kernel_pca.contact_kernel_pca import ContactKernelPCA
-from .diffusion_maps.diffusion_maps import DiffusionMaps
+from .diffusion_maps import DiffusionMaps
 
-__all__ = [
-    "PCA",
-    "KernelPCA",
-    "ContactKernelPCA",
-    "DiffusionMaps",
-]
+__all__ = ["DiffusionMaps"]

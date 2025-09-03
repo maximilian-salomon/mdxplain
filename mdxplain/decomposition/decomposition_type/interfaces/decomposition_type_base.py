@@ -26,7 +26,7 @@ must implement for consistency across different dimensionality reduction methods
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Tuple, Any
+from typing import Dict, Tuple, Any, Optional
 
 import numpy as np
 
@@ -105,7 +105,7 @@ class DecompositionTypeBase(ABC, metaclass=DecompositionTypeMeta):
         pass
 
     @abstractmethod
-    def init_calculator(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 10000) -> None:
+    def init_calculator(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000) -> None:
         """
         Initialize the calculator instance for this decomposition type.
 
@@ -171,3 +171,31 @@ class DecompositionTypeBase(ABC, metaclass=DecompositionTypeMeta):
             If calculator is not initialized or input data is invalid
         """
         pass
+
+    def get_required_feature_type(self) -> Optional[str]:
+        """
+        Return required feature type for this decomposition method.
+
+        Some decomposition methods require specific feature types (e.g., 
+        DiffusionMaps requires 'coordinates'). If a specific feature type 
+        is required, the DecompositionManager will validate that the 
+        FeatureSelector contains only features of this type.
+
+        Returns:
+        --------
+        Optional[str]
+            Required feature type name, or None if no specific type required
+
+        Examples:
+        ---------
+        >>> # Most decompositions work with any feature type
+        >>> pca = PCA()
+        >>> print(pca.get_required_feature_type())
+        None
+
+        >>> # DiffusionMaps requires coordinate features
+        >>> diffmaps = DiffusionMaps()
+        >>> print(diffmaps.get_required_feature_type())
+        'coordinates'
+        """
+        return None

@@ -62,7 +62,7 @@ class ContactKernelPCACalculator(KernelPCACalculator):
     >>> transformed, metadata = calc.compute(very_large_binary, n_components=50, use_nystrom=True, n_landmarks=5000)
     """
 
-    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 10000) -> None:
+    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000) -> None:
         """
         Initialize ContactKernelPCA calculator.
 

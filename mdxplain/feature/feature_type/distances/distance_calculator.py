@@ -56,7 +56,7 @@ class DistanceCalculator(CalculatorBase):
     >>> distances, pairs = calculator.compute(trajectory)
     """
 
-    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 10000) -> None:
+    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000) -> None:
         """
         Initialize distance calculator with configuration parameters.
 

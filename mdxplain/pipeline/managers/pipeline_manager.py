@@ -92,7 +92,7 @@ class PipelineManager:
         selection: Optional[str] = None,
         # Feature/Decomposition parameters
         use_memmap: bool = False,
-        chunk_size: int = 10000,
+        chunk_size: int = 2000,
         # Cache directory for all managers
         cache_dir: str = "./cache",
     ):
@@ -148,7 +148,9 @@ class PipelineManager:
         
         self._data_selector_manager = DataSelectorManager()
         self._comparison_manager = ComparisonManager()
-        self._feature_importance_manager = FeatureImportanceManager()
+        self._feature_importance_manager = FeatureImportanceManager(
+            use_memmap=use_memmap, chunk_size=chunk_size, cache_dir=cache_dir
+        )
 
     @property
     def trajectory(self) -> TrajectoryManager:

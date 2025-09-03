@@ -164,7 +164,7 @@ class DecisionTree(AnalyzerTypeBase):
         """
         return "decision_tree"
 
-    def init_calculator(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 10000) -> None:
+    def init_calculator(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000) -> None:
         """
         Initialize the Decision Tree calculator with specified configuration.
 
