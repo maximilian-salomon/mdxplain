@@ -122,6 +122,9 @@ class PipelineData:
         self.data_selector_data: Dict[str, DataSelectorData] = {}
         self.comparison_data: Dict[str, ComparisonData] = {}
         self.feature_importance_data: Dict[str, FeatureImportanceData] = {}
+        
+        # Dynamic memory management
+        self.max_memory_gb = max(2.0, (10000 * chunk_size * 8) / (1024**3))
 
     def clear_all_data(self) -> None:
         """
@@ -150,6 +153,41 @@ class PipelineData:
         self.data_selector_data.clear()
         self.comparison_data.clear()
         self.feature_importance_data.clear()
+
+    def update_max_memory_from_trajectories(self, max_atoms: int) -> None:
+        """
+        Update memory estimate after trajectory loading.
+
+        Parameters:
+        -----------
+        max_atoms : int
+            Maximum number of atoms across all trajectories
+
+        Returns:
+        --------
+        None
+            Updates max_memory_gb based on atom count
+        """
+        estimated_features = max_atoms * 3
+        new_max = (estimated_features * self.chunk_size * 8) / (1024**3)
+        self.max_memory_gb = max(new_max, self.max_memory_gb)
+
+    def update_max_memory_from_features(self, n_features: int) -> None:
+        """
+        Update memory estimate after feature computation.
+
+        Parameters:
+        -----------
+        n_features : int
+            Actual number of features computed
+
+        Returns:
+        --------
+        None
+            Updates max_memory_gb based on actual feature count
+        """
+        new_max = (n_features * self.chunk_size * 8) / (1024**3)
+        self.max_memory_gb = max(new_max, self.max_memory_gb)
 
     def get_data_summary(self) -> Dict[str, Any]:
         """

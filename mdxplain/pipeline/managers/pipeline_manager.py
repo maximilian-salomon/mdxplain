@@ -91,7 +91,7 @@ class PipelineManager:
         concat: bool = False,
         selection: Optional[str] = None,
         # Feature/Decomposition parameters
-        use_memmap: bool = False,
+        use_memmap: bool = True,
         chunk_size: int = 2000,
         # Cache directory for all managers
         cache_dir: str = "./cache",

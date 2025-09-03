@@ -29,7 +29,9 @@ import time
 from typing import Dict, Tuple, Any, Optional, List
 
 import numpy as np
-from sklearn.cluster import HDBSCAN as SklearnHDBSCAN
+import hdbscan
+from sklearn.neighbors import KNeighborsClassifier
+from tqdm import tqdm
 
 from ..interfaces.calculator_base import CalculatorBase
 
@@ -50,7 +52,13 @@ class HDBSCANCalculator(CalculatorBase):
     >>> print(f"Found {metadata['n_clusters']} clusters")
     """
 
-    def __init__(self, cache_path: str = "./cache") -> None:
+    def __init__(
+        self, 
+        cache_path: str = "./cache", 
+        max_memory_gb: float = 2.0,
+        chunk_size: int = 1000,
+        use_memmap: bool = False
+    ) -> None:
         """
         Initialize HDBSCAN calculator.
 
@@ -58,8 +66,15 @@ class HDBSCANCalculator(CalculatorBase):
         -----------
         cache_path : str, optional
             Path for cache files. Default is './cache'.
+        max_memory_gb : float, optional
+            Maximum memory threshold in GB. Default is 2.0.
+        chunk_size : int, optional
+            Chunk size for processing large datasets in sampling methods.
+            Used for chunked k-NN prediction and approximate_predict. Default is 1000.
+        use_memmap : bool, optional
+            Whether to use memory mapping for large datasets. Default is False.
         """
-        super().__init__(cache_path)
+        super().__init__(cache_path, max_memory_gb, chunk_size, use_memmap)
 
     def compute(self, data: np.ndarray, **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
@@ -75,6 +90,9 @@ class HDBSCANCalculator(CalculatorBase):
             - min_samples : int, minimum samples in neighborhood
             - cluster_selection_epsilon : float, distance threshold
             - cluster_selection_method : str, cluster selection method
+            - method : str, clustering method ('standard', 'sampling_approximate', 'sampling_knn')
+            - sample_fraction : float, fraction of data to sample
+            - force : bool, override memory and dimensionality checks
 
         Returns:
         --------
@@ -89,9 +107,9 @@ class HDBSCANCalculator(CalculatorBase):
             If input data is invalid or required parameters are missing
         """
         self._validate_input_data(data)
-
-        # Extract parameters and perform clustering
-        parameters = self._extract_parameters(kwargs)
+        parameters = self._extract_parameters(kwargs, data)
+        
+        self._validate_memory_and_dimensionality(data, parameters)
 
         cluster_labels, hdbscan_model, computation_time = self._perform_clustering(
             data, parameters
@@ -103,7 +121,7 @@ class HDBSCANCalculator(CalculatorBase):
         return cluster_labels, metadata
 
 
-    def _extract_parameters(self, kwargs: Dict[str, Any]) -> Dict[str, Any]:
+    def _extract_parameters(self, kwargs: Dict[str, Any], data: np.ndarray) -> Dict[str, Any]:
         """
         Extract and validate HDBSCAN parameters.
 
@@ -111,17 +129,30 @@ class HDBSCANCalculator(CalculatorBase):
         -----------
         kwargs : dict
             Keyword arguments containing HDBSCAN parameters
+        data : numpy.ndarray
+            Input data to calculate sample size
 
         Returns:
         --------
         dict
             Validated HDBSCAN parameters
         """
+        # Calculate sample size directly
+        sample_fraction = kwargs.get("sample_fraction", 0.1)
+        sample_size = self._calculate_sample_size(
+            data.shape[0], sample_fraction, 
+            min_samples=50000, max_samples=100000
+        )
+        
         return {
             "min_cluster_size": kwargs.get("min_cluster_size", 5),
             "min_samples": kwargs.get("min_samples", None),
             "cluster_selection_epsilon": kwargs.get("cluster_selection_epsilon", 0.0),
             "cluster_selection_method": kwargs.get("cluster_selection_method", "eom"),
+            "method": kwargs.get("method", "standard"),
+            "sample_size": sample_size,
+            "knn_neighbors": kwargs.get("knn_neighbors", 5),
+            "force": kwargs.get("force", False),
         }
 
     def _perform_clustering(self, data: np.ndarray, parameters: Dict[str, Any]) -> Tuple[np.ndarray, Any, float]:
@@ -137,25 +168,143 @@ class HDBSCANCalculator(CalculatorBase):
 
         Returns:
         --------
-        Tuple[numpy.ndarray, SklearnHDBSCAN, float]
+        Tuple[numpy.ndarray, hdbscan.HDBSCAN, float]
             Cluster labels, HDBSCAN model, and computation time
         """
         start_time = time.time()
+        
+        method = parameters.get("method", "standard")
+        
+        if method == "standard":
+            cluster_labels, hdbscan_model = self._perform_standard_clustering(data, parameters)
+        elif method == "approximate_predict":
+            cluster_labels, hdbscan_model = self._perform_approximate_predict(data, parameters)
+        elif method == "knn_sampling":
+            cluster_labels, hdbscan_model = self._perform_knn_sampling(data, parameters)
+        else:
+            raise ValueError(f"Unknown method: {method}")
 
-        hdbscan = SklearnHDBSCAN(
+        computation_time = time.time() - start_time
+        return cluster_labels, hdbscan_model, computation_time
+
+    def _perform_standard_clustering(self, data: np.ndarray, parameters: Dict[str, Any]) -> Tuple[np.ndarray, hdbscan.HDBSCAN]:
+        """
+        Perform standard HDBSCAN clustering by loading all data.
+
+        Parameters:
+        -----------
+        data : numpy.ndarray
+            Full dataset to cluster
+        parameters : dict
+            HDBSCAN parameters
+
+        Returns:
+        --------
+        Tuple[numpy.ndarray, hdbscan.HDBSCAN]
+            Cluster labels and fitted model
+        """
+        clusterer = hdbscan.HDBSCAN(
             min_cluster_size=parameters["min_cluster_size"],
             min_samples=parameters["min_samples"],
             cluster_selection_epsilon=parameters["cluster_selection_epsilon"],
             cluster_selection_method=parameters["cluster_selection_method"],
         )
-        cluster_labels = hdbscan.fit_predict(data)
+        cluster_labels = clusterer.fit_predict(data)
+        
+        # Apply memmap finalization
+        cluster_labels = self._finalize_labels(cluster_labels, "hdbscan", "standard")
+        
+        return cluster_labels, clusterer
 
-        computation_time = time.time() - start_time
+    def _perform_approximate_predict(self, data: np.ndarray, parameters: Dict[str, Any]) -> Tuple[np.ndarray, hdbscan.HDBSCAN]:
+        """
+        HDBSCAN Sampling + approximate_predict (Gold Standard).
 
-        return cluster_labels, hdbscan, computation_time
+        Parameters:
+        -----------
+        data : numpy.ndarray
+            Full dataset to cluster
+        parameters : dict
+            HDBSCAN parameters
+
+        Returns:
+        --------
+        Tuple[numpy.ndarray, hdbscan.HDBSCAN]
+            Cluster labels and fitted model
+        """
+        n_samples = data.shape[0]
+        sample_size = parameters["sample_size"]
+
+        # Sample data randomly (50k-100k points)
+        sample_indices = np.random.choice(n_samples, size=sample_size, replace=False)
+        sample_data = data[sample_indices]
+        
+        print(f"Using approximate_predict with {sample_size:,} samples "
+              f"({sample_size/n_samples*100:.1f}% of {n_samples:,} total)")
+        
+        # Fit HDBSCAN on sample with prediction_data=True
+        clusterer = hdbscan.HDBSCAN(
+            min_cluster_size=parameters["min_cluster_size"],
+            min_samples=parameters["min_samples"],
+            cluster_selection_epsilon=parameters["cluster_selection_epsilon"],
+            cluster_selection_method=parameters["cluster_selection_method"],
+            prediction_data=True  # Enable approximate_predict functionality
+        )
+        clusterer.fit(sample_data)
+        
+        # Use approximate_predict for all data in chunks (direct memmap/array writing)
+        full_labels = self._prepare_labels_storage(n_samples, "hdbscan", "approximate_predict")
+        chunk_size = self.chunk_size
+        
+        for start in tqdm(range(0, n_samples, chunk_size), 
+                          desc="HDBSCAN approximate_predict", unit="chunks"):
+            end = min(start + chunk_size, n_samples)
+            chunk_labels, _ = hdbscan.approximate_predict(clusterer, data[start:end])
+            full_labels[start:end] = chunk_labels
+        
+        return full_labels, clusterer
+
+    def _perform_knn_sampling(self, data: np.ndarray, parameters: Dict[str, Any]) -> Tuple[np.ndarray, hdbscan.HDBSCAN]:
+        """
+        Perform HDBSCAN on sample + k-NN classifier for rest.
+
+        Parameters:
+        -----------
+        data : numpy.ndarray
+            Full dataset to cluster
+        parameters : dict
+            HDBSCAN parameters
+
+        Returns:
+        --------
+        Tuple[numpy.ndarray, hdbscan.HDBSCAN]
+            Cluster labels and fitted model
+        """
+        n_samples = data.shape[0]
+        sample_size = parameters["sample_size"]
+        
+        # Sample data randomly
+        sample_indices = np.random.choice(n_samples, size=sample_size, replace=False)
+        sample_data = data[sample_indices]
+        
+        # Fit HDBSCAN on sample
+        clusterer = hdbscan.HDBSCAN(
+            min_cluster_size=parameters["min_cluster_size"],
+            min_samples=parameters["min_samples"],
+            cluster_selection_epsilon=parameters["cluster_selection_epsilon"],
+            cluster_selection_method=parameters["cluster_selection_method"],
+        )
+        sample_labels = clusterer.fit_predict(sample_data)
+        
+        # Use base class generic k-NN sampling implementation
+        full_labels = super()._perform_knn_sampling(
+            data, parameters, sample_indices, sample_labels, "hdbscan", -1
+        )
+        
+        return full_labels, clusterer
 
     def _build_metadata(
-        self, data: np.ndarray, cluster_labels: np.ndarray, hdbscan_model: SklearnHDBSCAN, parameters: Dict[str, Any], computation_time: float
+        self, data: np.ndarray, cluster_labels: np.ndarray, hdbscan_model: hdbscan.HDBSCAN, parameters: Dict[str, Any], computation_time: float
     ) -> Dict[str, Any]:
         """
         Build comprehensive metadata dictionary.
@@ -166,7 +315,7 @@ class HDBSCANCalculator(CalculatorBase):
             Original input data
         cluster_labels : numpy.ndarray
             Computed cluster labels
-        hdbscan_model : SklearnHDBSCAN
+        hdbscan_model : hdbscan.HDBSCAN
             Fitted HDBSCAN model
         parameters : dict
             HDBSCAN parameters used
@@ -186,7 +335,7 @@ class HDBSCANCalculator(CalculatorBase):
             {
                 "algorithm": "hdbscan",
                 "silhouette_score": self._compute_silhouette_score(
-                    data, cluster_labels
+                    data, cluster_labels, sample_size=parameters["sample_size"]
                 ),
                 "computation_time": computation_time,
                 "cluster_probabilities": self._get_cluster_probabilities(hdbscan_model),
@@ -196,13 +345,13 @@ class HDBSCANCalculator(CalculatorBase):
 
         return metadata
 
-    def _get_cluster_probabilities(self, hdbscan_model: SklearnHDBSCAN) -> Optional[List[float]]:
+    def _get_cluster_probabilities(self, hdbscan_model: hdbscan.HDBSCAN) -> Optional[List[float]]:
         """
         Extract cluster membership probabilities from HDBSCAN model.
 
         Parameters:
         -----------
-        hdbscan_model : SklearnHDBSCAN
+        hdbscan_model : hdbscan.HDBSCAN
             Fitted HDBSCAN model
 
         Returns:
@@ -217,13 +366,13 @@ class HDBSCANCalculator(CalculatorBase):
             return hdbscan_model.probabilities_.tolist()
         return None
 
-    def _get_outlier_scores(self, hdbscan_model: SklearnHDBSCAN) -> Optional[List[float]]:
+    def _get_outlier_scores(self, hdbscan_model: hdbscan.HDBSCAN) -> Optional[List[float]]:
         """
         Extract outlier scores from HDBSCAN model.
 
         Parameters:
         -----------
-        hdbscan_model : SklearnHDBSCAN
+        hdbscan_model : hdbscan.HDBSCAN
             Fitted HDBSCAN model
 
         Returns:

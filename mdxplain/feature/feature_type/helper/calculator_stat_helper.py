@@ -28,6 +28,7 @@ instantiation across different calculators.
 
 from typing import Callable, Optional, Any
 import numpy as np
+from tqdm import tqdm
 
 from .feature_shape_helper import FeatureShapeHelper
 
@@ -152,7 +153,7 @@ class CalculatorStatHelper:
 
         # Process in chunks
         result_chunks = []
-        for i in range(0, n_features, chunk_size):
+        for i in tqdm(range(0, n_features, chunk_size), desc="Computing statistics per feature", unit="chunks"):
             end_idx = min(i + chunk_size, n_features)
             chunk_result = func(flat_array[:, i:end_idx], axis=0, **func_kwargs)
             result_chunks.append(chunk_result)
@@ -240,7 +241,7 @@ class CalculatorStatHelper:
             Statistical values per frame
         """
         result_chunks = []
-        for i in range(0, array.shape[0], chunk_size):
+        for i in tqdm(range(0, array.shape[0], chunk_size), desc="Computing statistics per frame", unit="chunks"):
             end_idx = min(i + chunk_size, array.shape[0])
             chunk_result = CalculatorStatHelper._process_frame_chunk(
                 array, func, i, end_idx
@@ -375,7 +376,7 @@ class CalculatorStatHelper:
             Statistical values per column
         """
         result_chunks = []
-        for i in range(0, array.shape[0], chunk_size):
+        for i in tqdm(range(0, array.shape[0], chunk_size), desc="Computing spatial statistics", unit="chunks"):
             end_idx = min(i + chunk_size, array.shape[0])
             chunk_result = func(array[i:end_idx], axis=(0, 2), **func_kwargs)
             result_chunks.append(chunk_result)
@@ -556,7 +557,7 @@ class CalculatorStatHelper:
             Modifies result array in-place
         """
         flat_result = result.flatten()
-        for i in range(0, array.shape[1], chunk_size):
+        for i in tqdm(range(0, array.shape[1], chunk_size), desc="Computing transitions", unit="chunks"):
             end_idx = min(i + chunk_size, array.shape[1])
             chunk = array[:, i:end_idx]
             CalculatorStatHelper._process_chunk_transitions(

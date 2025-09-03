@@ -27,6 +27,7 @@ Supports memory mapping for large datasets and provides statistical analysis cap
 
 from typing import Dict, Optional, Tuple, Any
 import numpy as np
+from tqdm import tqdm
 
 from ..helper.calculator_compute_helper import CalculatorComputeHelper
 from ..interfaces.calculator_base import CalculatorBase
@@ -127,7 +128,7 @@ class ContactCalculator(CalculatorBase):
         if self.chunk_size is None:
             self.chunk_size = distances.shape[0]
 
-        for i in range(0, distances.shape[0], self.chunk_size):
+        for i in tqdm(range(0, distances.shape[0], self.chunk_size), desc="Computing contacts", unit="chunks"):
             end_idx = min(i + self.chunk_size, distances.shape[0])
             contacts[i:end_idx] = distances[i:end_idx] <= cutoff
 

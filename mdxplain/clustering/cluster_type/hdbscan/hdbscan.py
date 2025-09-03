@@ -73,6 +73,10 @@ class HDBSCAN(ClusterTypeBase):
         min_samples: Optional[int] = None,
         cluster_selection_epsilon: float = 0.0,
         cluster_selection_method: str = "eom",
+        method: str = "standard",
+        sample_fraction: float = 0.1,
+        knn_neighbors: int = 5,
+        force: bool = False,
     ) -> None:
         """
         Initialize HDBSCAN cluster type.
@@ -88,6 +92,18 @@ class HDBSCAN(ClusterTypeBase):
             Distance threshold for cluster selection. Default is 0.0.
         cluster_selection_method : str, optional
             Method for cluster selection ('eom' or 'leaf'). Default is 'eom'.
+        method : str, default="standard"
+            Clustering method:
+            - "standard": Load all data into memory (default)
+            - "sampling_approximate": Sample data + approximate_predict for large datasets
+            - "sampling_knn": Sample data + k-NN classifier fallback
+        sample_fraction : float, default=0.1
+            Fraction of data to sample for sampling-based methods (10%)
+            Final sample size: max(50000, min(100000, sample_fraction * n_samples))
+        knn_neighbors : int, default=5
+            Number of neighbors for k-NN classifier in knn_sampling method
+        force : bool, default=False
+            Override memory and dimensionality checks (converts errors to warnings)
 
         Returned Metadata:
         ------------------
@@ -117,6 +133,10 @@ class HDBSCAN(ClusterTypeBase):
         self.min_samples = min_samples if min_samples is not None else min_cluster_size
         self.cluster_selection_epsilon = cluster_selection_epsilon
         self.cluster_selection_method = cluster_selection_method
+        self.method = method
+        self.sample_fraction = sample_fraction
+        self.knn_neighbors = knn_neighbors
+        self.force = force
         self._validate_parameters()
 
     @classmethod
@@ -131,7 +151,13 @@ class HDBSCAN(ClusterTypeBase):
         """
         return "hdbscan"
 
-    def init_calculator(self, cache_path: str = "./cache") -> None:
+    def init_calculator(
+        self, 
+        cache_path: str = "./cache", 
+        max_memory_gb: float = 2.0,
+        chunk_size: int = 1000,
+        use_memmap: bool = False
+    ) -> None:
         """
         Initialize the HDBSCAN calculator.
 
@@ -139,8 +165,19 @@ class HDBSCAN(ClusterTypeBase):
         -----------
         cache_path : str, optional
             Directory path for cache files. Default is './cache'.
+        max_memory_gb : float, optional
+            Maximum memory threshold in GB. Default is 2.0.
+        chunk_size : int, optional
+            Chunk size for processing large datasets. Default is 1000.
+        use_memmap : bool, optional
+            Whether to use memory mapping for large datasets. Default is False.
         """
-        self.calculator = HDBSCANCalculator(cache_path=cache_path)
+        self.calculator = HDBSCANCalculator(
+            cache_path=cache_path, 
+            max_memory_gb=max_memory_gb,
+            chunk_size=chunk_size,
+            use_memmap=use_memmap
+        )
 
     def compute(self, data: np.ndarray) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
@@ -174,6 +211,10 @@ class HDBSCAN(ClusterTypeBase):
             min_samples=self.min_samples,
             cluster_selection_epsilon=self.cluster_selection_epsilon,
             cluster_selection_method=self.cluster_selection_method,
+            method=self.method,
+            sample_fraction=self.sample_fraction,
+            knn_neighbors=self.knn_neighbors,
+            force=self.force,
         )
 
     def _validate_parameters(self):
@@ -199,3 +240,15 @@ class HDBSCAN(ClusterTypeBase):
 
         if self.cluster_selection_method not in ["eom", "leaf"]:
             raise ValueError("cluster_selection_method must be 'eom' or 'leaf'")
+
+        if self.method not in ["standard", "approximate_predict", "knn_sampling"]:
+            raise ValueError("method must be 'standard', 'approximate_predict', or 'knn_sampling'")
+
+        if not isinstance(self.sample_fraction, (int, float)) or not 0 < self.sample_fraction <= 1:
+            raise ValueError("sample_fraction must be a number between 0 and 1")
+
+        if not isinstance(self.knn_neighbors, int) or self.knn_neighbors < 1:
+            raise ValueError("knn_neighbors must be a positive integer")
+
+        if not isinstance(self.force, bool):
+            raise ValueError("force must be a boolean")
