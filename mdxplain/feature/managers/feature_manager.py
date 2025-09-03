@@ -248,6 +248,17 @@ class FeatureManager:
         self._create_feature_data_per_trajectory(
             pipeline_data, feature_type, feature_key, traj_indices, force_original
         )
+        
+        # Update memory estimate based on computed features
+        if feature_key in pipeline_data.feature_data:
+            max_features = 0
+            for traj_idx in pipeline_data.feature_data[feature_key]:
+                feature_data = pipeline_data.feature_data[feature_key][traj_idx]
+                if feature_data.data is not None:
+                    max_features = max(max_features, feature_data.data.shape[1])
+            
+            if max_features > 0:
+                pipeline_data.update_max_memory_from_features(max_features)
 
     def reset_reduction(self, pipeline_data: PipelineData, feature_type: FeatureTypeBase) -> None:
         """

@@ -27,6 +27,7 @@ Hamming distance-based kernel that is equivalent to RBF kernel for binary data.
 
 from typing import Dict, Tuple, Any
 import numpy as np
+from tqdm import tqdm
 
 from ..kernel_pca.kernel_pca_calculator import KernelPCACalculator
 
@@ -177,7 +178,7 @@ class ContactKernelPCACalculator(KernelPCACalculator):
                 )
         else:
             # Chunk-wise validation with early exit
-            for i in range(0, data.size, self.chunk_size):
+            for i in tqdm(range(0, data.size, self.chunk_size), desc="Validating binary data", unit="chunks"):
                 chunk = data.flat[i : i + self.chunk_size]
                 if not np.all((chunk == 0) | (chunk == 1)):
                     raise ValueError(

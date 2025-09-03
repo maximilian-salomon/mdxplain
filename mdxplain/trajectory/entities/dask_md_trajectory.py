@@ -35,6 +35,7 @@ import numpy as np
 import zarr
 import dask.array as da
 import mdtraj as md
+from tqdm import tqdm
 
 from zarr.codecs import BloscCodec
 
@@ -866,7 +867,7 @@ class DaskMDTrajectory:
         print(f"  📝 Copying {self.n_frames} frames in {n_chunks} chunks (offset: {frame_offset})")
         
         # Copy coordinate and time data chunk-wise
-        for i in range(n_chunks):
+        for i in tqdm(range(n_chunks), desc=f"Copying trajectory chunks", unit="chunks"):
             start_idx = i * chunk_size
             end_idx = min(start_idx + chunk_size, self.n_frames)
             

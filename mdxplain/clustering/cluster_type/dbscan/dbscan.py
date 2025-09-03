@@ -62,7 +62,14 @@ class DBSCAN(ClusterTypeBase):
     >>> labels, metadata = dbscan.compute(data)
     """
 
-    def __init__(self, eps: float = 0.5, min_samples: int = 5) -> None:
+    def __init__(
+        self, 
+        eps: float = 0.5, 
+        min_samples: int = 5,
+        method: str = "standard",
+        sample_fraction: float = 0.1,
+        force: bool = False,
+    ) -> None:
         """
         Initialize DBSCAN cluster type.
 
@@ -72,6 +79,16 @@ class DBSCAN(ClusterTypeBase):
             Maximum distance between samples in neighborhood. Default is 0.5.
         min_samples : int, optional
             Minimum samples in neighborhood for core point. Default is 5.
+        method : str, default="standard"
+            Clustering method:
+            - "standard": Load all data into memory (default)
+            - "sampling_approximate": Sample data + approximate_predict for large datasets
+            - "sampling_knn": Sample data + k-NN classifier fallback
+        sample_fraction : float, default=0.1
+            Fraction of data to sample for sampling-based methods (10%)
+            Final sample size: max(50000, min(100000, sample_fraction * n_samples))
+        force : bool, default=False
+            Override memory and dimensionality checks (converts errors to warnings)
 
         Returned Metadata:
         ------------------
@@ -97,6 +114,9 @@ class DBSCAN(ClusterTypeBase):
         super().__init__()
         self.eps = eps
         self.min_samples = min_samples
+        self.method = method
+        self.sample_fraction = sample_fraction
+        self.force = force
         self._validate_parameters()
 
     @classmethod
@@ -111,7 +131,13 @@ class DBSCAN(ClusterTypeBase):
         """
         return "dbscan"
 
-    def init_calculator(self, cache_path: str = "./cache") -> None:
+    def init_calculator(
+        self, 
+        cache_path: str = "./cache", 
+        max_memory_gb: float = 2.0,
+        chunk_size: int = 1000,
+        use_memmap: bool = False
+    ) -> None:
         """
         Initialize the DBSCAN calculator.
 
@@ -119,8 +145,19 @@ class DBSCAN(ClusterTypeBase):
         -----------
         cache_path : str, optional
             Directory path for cache files. Default is './cache'.
+        max_memory_gb : float, optional
+            Maximum memory threshold in GB. Default is 2.0.
+        chunk_size : int, optional
+            Chunk size for processing large datasets. Default is 1000.
+        use_memmap : bool, optional
+            Whether to use memory mapping for large datasets. Default is False.
         """
-        self.calculator = DBSCANCalculator(cache_path=cache_path)
+        self.calculator = DBSCANCalculator(
+            cache_path=cache_path, 
+            max_memory_gb=max_memory_gb,
+            chunk_size=chunk_size,
+            use_memmap=use_memmap
+        )
 
     def compute(self, data: np.ndarray) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
@@ -149,7 +186,10 @@ class DBSCAN(ClusterTypeBase):
         return self.calculator.compute(
             data, 
             eps=self.eps, 
-            min_samples=self.min_samples
+            min_samples=self.min_samples,
+            method=self.method,
+            sample_fraction=self.sample_fraction,
+            force=self.force,
         )
     
     def _validate_parameters(self):
@@ -166,3 +206,12 @@ class DBSCAN(ClusterTypeBase):
 
         if not isinstance(self.min_samples, int) or self.min_samples < 1:
             raise ValueError("min_samples must be a positive integer")
+
+        if self.method not in ["standard", "precomputed", "knn_sampling"]:
+            raise ValueError("method must be 'standard', 'precomputed', or 'knn_sampling'")
+
+        if not isinstance(self.sample_fraction, (int, float)) or not 0 < self.sample_fraction <= 1:
+            raise ValueError("sample_fraction must be a number between 0 and 1")
+
+        if not isinstance(self.force, bool):
+            raise ValueError("force must be a boolean")

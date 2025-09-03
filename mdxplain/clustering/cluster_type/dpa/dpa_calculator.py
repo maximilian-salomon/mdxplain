@@ -26,18 +26,12 @@ DPA clustering computation using the DPA package from conda environment.
 """
 
 import time
+import warnings
 from typing import Dict, Tuple, Any, Optional, List
 import numpy as np
+from Pipeline.DPA import DensityPeakAdvanced
 
 from ..interfaces.calculator_base import CalculatorBase
-
-try:
-    from Pipeline.DPA import DensityPeakAdvanced
-except ImportError:
-    raise ImportError(
-        "DPA package not found. Please install DPA package from conda environment. "
-        "See: https://github.com/mariaderrico/DPA"
-    )
 
 
 class DPACalculator(CalculatorBase):
@@ -59,7 +53,13 @@ class DPACalculator(CalculatorBase):
     >>> print(f"Found {metadata['n_clusters']} clusters")
     """
 
-    def __init__(self, cache_path: str = "./cache") -> None:
+    def __init__(
+        self, 
+        cache_path: str = "./cache", 
+        max_memory_gb: float = 2.0,
+        chunk_size: int = 1000,
+        use_memmap: bool = False
+    ) -> None:
         """
         Initialize DPA calculator.
 
@@ -67,8 +67,15 @@ class DPACalculator(CalculatorBase):
         -----------
         cache_path : str, optional
             Path for cache files. Default is './cache'.
+        max_memory_gb : float, optional
+            Maximum memory threshold in GB. Default is 2.0.
+        chunk_size : int, optional
+            Chunk size for processing large datasets in sampling methods.
+            Used for chunked k-NN prediction. Default is 1000.
+        use_memmap : bool, optional
+            Whether to use memory mapping for large datasets. Default is False.
         """
-        super().__init__(cache_path)
+        super().__init__(cache_path, max_memory_gb, chunk_size, use_memmap)
 
     def compute(self, data: np.ndarray, **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
@@ -91,6 +98,9 @@ class DPACalculator(CalculatorBase):
             - blockAn : bool, whether to use block analysis
             - frac : float, fraction parameter for sampling
             - halos : bool, whether to return halo points assigned to cluster 0
+            - method : str, clustering method ('standard', 'knn_sampling')
+            - sample_fraction : float, fraction of data to sample
+            - force : bool, override memory and dimensionality checks
 
         Returns:
         --------
@@ -107,9 +117,9 @@ class DPACalculator(CalculatorBase):
             If DPA package is not available
         """
         self._validate_input_data(data)
-
-        # Extract parameters and perform clustering
-        parameters = self._extract_parameters(kwargs)
+        parameters = self._extract_parameters(kwargs, data)
+        
+        self._validate_memory_and_dimensionality(data, parameters)
 
         cluster_labels, dpa_model, computation_time = self._perform_clustering(
             data, parameters
@@ -121,7 +131,7 @@ class DPACalculator(CalculatorBase):
         return cluster_labels, metadata
 
 
-    def _extract_parameters(self, kwargs: Dict[str, Any]) -> Dict[str, Any]:
+    def _extract_parameters(self, kwargs: Dict[str, Any], data: np.ndarray) -> Dict[str, Any]:
         """
         Extract and validate DPA parameters.
 
@@ -129,6 +139,8 @@ class DPACalculator(CalculatorBase):
         -----------
         kwargs : dict
             Keyword arguments containing DPA parameters
+        data : numpy.ndarray
+            Input data to calculate sample size
 
         Returns:
         --------
@@ -152,6 +164,13 @@ class DPACalculator(CalculatorBase):
             if param not in kwargs:
                 raise ValueError(f"Required parameter '{param}' is missing")
 
+        # Calculate sample size directly for DPA (smaller limits due to complexity)
+        sample_fraction = kwargs.get("sample_fraction", 0.1)
+        sample_size = self._calculate_sample_size(
+            data.shape[0], sample_fraction, 
+            min_samples=10000, max_samples=50000
+        )
+
         return {
             "Z": kwargs["Z"],
             "metric": kwargs["metric"],
@@ -164,6 +183,9 @@ class DPACalculator(CalculatorBase):
             "block_ratio": kwargs["block_ratio"],
             "frac": kwargs["frac"],
             "halos": kwargs.get("halos", False),
+            "method": kwargs.get("method", "standard"),
+            "sample_size": sample_size,
+            "force": kwargs.get("force", False),
         }
 
     def _perform_clustering(self, data: np.ndarray, parameters: Dict[str, Any]) -> Tuple[np.ndarray, Any, float]:
@@ -183,13 +205,80 @@ class DPACalculator(CalculatorBase):
             Cluster labels, DPA model, and computation time
         """
         start_time = time.time()
-
-        dpa_model = self._create_dpa_model(data, parameters)
-        cluster_labels = self._extract_labels(dpa_model, parameters["halos"])
+        
+        method = parameters.get("method", "standard")
+        
+        if method == "standard":
+            cluster_labels, dpa_model = self._perform_standard_clustering(data, parameters)
+        elif method == "knn_sampling":
+            cluster_labels, dpa_model = self._perform_knn_sampling(data, parameters)
+        else:
+            raise ValueError(f"Unknown method: {method}")
 
         computation_time = time.time() - start_time
-
         return cluster_labels, dpa_model, computation_time
+
+    def _perform_standard_clustering(self, data: np.ndarray, parameters: Dict[str, Any]) -> Tuple[np.ndarray, Any]:
+        """
+        Perform standard DPA clustering by loading all data.
+
+        Parameters:
+        -----------
+        data : numpy.ndarray
+            Full dataset to cluster
+        parameters : dict
+            DPA parameters
+
+        Returns:
+        --------
+        Tuple[numpy.ndarray, DensityPeakAdvanced]
+            Cluster labels and fitted model
+        """
+        dpa_model = self._create_dpa_model(data, parameters)
+        cluster_labels = self._extract_labels(dpa_model, parameters["halos"])
+        
+        # Apply memmap finalization
+        cluster_labels = self._finalize_labels(cluster_labels, "dpa", "standard")
+        
+        return cluster_labels, dpa_model
+
+    def _perform_knn_sampling(self, data: np.ndarray, parameters: Dict[str, Any]) -> Tuple[np.ndarray, Any]:
+        """
+        DPA Sampling + k-NN (only practical option for large data).
+
+        Parameters:
+        -----------
+        data : numpy.ndarray
+            Full dataset to cluster
+        parameters : dict
+            DPA parameters
+
+        Returns:
+        --------
+        Tuple[numpy.ndarray, DensityPeakAdvanced]
+            Cluster labels and fitted model
+        """
+        n_samples = data.shape[0]
+        sample_size = parameters["sample_size"]
+
+        print(f"Using knn_sampling with {sample_size:,} samples for DPA "
+              f"({sample_size/n_samples*100:.1f}% of {n_samples:,} total)")
+        
+        # Sample data randomly
+        sample_indices = np.random.choice(n_samples, size=sample_size, replace=False)
+        sample_data = data[sample_indices]
+        
+        # DPA on sample
+        dpa_model = self._create_dpa_model(sample_data, parameters)
+        sample_labels = self._extract_labels(dpa_model, parameters["halos"])
+        
+        # Use base class generic k-NN sampling with DPA-specific noise label
+        noise_label = -1
+        full_labels = super()._perform_knn_sampling(
+            data, parameters, sample_indices, sample_labels, "dpa", noise_label
+        )
+        
+        return full_labels, dpa_model
 
     def _create_dpa_model(self, data: np.ndarray, parameters: Dict[str, Any]) -> Any:
         """
@@ -287,7 +376,7 @@ class DPACalculator(CalculatorBase):
             {
                 "algorithm": "dpa",
                 "silhouette_score": self._compute_silhouette_score(
-                    data, cluster_labels
+                    data, cluster_labels, sample_size=parameters["sample_size"]
                 ),
                 "computation_time": computation_time,
                 "cluster_centers": self._get_cluster_centers(dpa_model),

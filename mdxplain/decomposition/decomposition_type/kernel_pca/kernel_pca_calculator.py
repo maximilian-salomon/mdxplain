@@ -33,6 +33,7 @@ from sklearn.kernel_approximation import Nystroem
 from sklearn.metrics.pairwise import rbf_kernel
 from scipy.sparse.linalg import LinearOperator, eigs
 from scipy.linalg import eigh
+from tqdm import tqdm
 
 from ..interfaces.calculator_base import CalculatorBase
 from ....utils.data_utils import DataUtils
@@ -253,11 +254,11 @@ class KernelPCACalculator(CalculatorBase):
         used_chunk_size = int(np.floor(self.chunk_size / 2))
 
         # Compute kernel matrix chunk-wise
-        for row_start in range(0, n_samples, used_chunk_size):
+        for row_start in tqdm(range(0, n_samples, used_chunk_size), desc="Computing kernel matrix rows", unit="chunks"):
             row_end = min(row_start + used_chunk_size, n_samples)
             chunk_i = data[row_start:row_end]
 
-            for col_start in range(0, n_samples, used_chunk_size):
+            for col_start in tqdm(range(0, n_samples, used_chunk_size), desc=f"Computing kernel row {row_start//used_chunk_size + 1}", unit="col_chunks", leave=False):
                 col_end = min(col_start + used_chunk_size, n_samples)
                 chunk_j = data[col_start:col_end]
 
@@ -286,12 +287,12 @@ class KernelPCACalculator(CalculatorBase):
         col_sums = np.zeros(n_samples, dtype=np.float64)
         
         # First pass: compute row sums
-        for i in range(0, n_samples, self.chunk_size):
+        for i in tqdm(range(0, n_samples, self.chunk_size), desc="Computing row sums", unit="chunks"):
             end = min(i + self.chunk_size, n_samples)
             row_sums[i:end] = kernel_matrix[i:end].sum(axis=1)
         
         # Second pass: compute column sums
-        for j in range(0, n_samples, self.chunk_size):
+        for j in tqdm(range(0, n_samples, self.chunk_size), desc="Computing col sums", unit="chunks"):
             end = min(j + self.chunk_size, n_samples)
             col_sums[j:end] = kernel_matrix[:, j:end].sum(axis=0)
         
@@ -323,7 +324,7 @@ class KernelPCACalculator(CalculatorBase):
         """
         n_samples = kernel_matrix.shape[0]
         
-        for i in range(0, n_samples, self.chunk_size):
+        for i in tqdm(range(0, n_samples, self.chunk_size), desc="Centering kernel matrix", unit="chunks"):
             i_end = min(i + self.chunk_size, n_samples)
             
             # Apply centering formula: K_centered = K - row_means - col_means + grand_mean
@@ -433,7 +434,7 @@ class KernelPCACalculator(CalculatorBase):
         n_samples = kernel_matrix.shape[0]
         result = np.zeros(n_samples, dtype=v.dtype)
         
-        for i in range(0, n_samples, chunk_size):
+        for i in tqdm(range(0, n_samples, chunk_size), desc="Computing eigendecomposition", unit="chunks"):
             end = min(i + chunk_size, n_samples)
             
             # Load only one chunk of rows into RAM
@@ -509,7 +510,7 @@ class KernelPCACalculator(CalculatorBase):
         )
         
         # Step 3: Chunk-wise transform and partial_fit
-        for start in range(0, n_samples, self.chunk_size):
+        for start in tqdm(range(0, n_samples, self.chunk_size), desc="Nystroem partial fitting", unit="chunks"):
             end = min(start + self.chunk_size, n_samples)
             data_chunk = data[start:end]
 
@@ -528,7 +529,7 @@ class KernelPCACalculator(CalculatorBase):
             )
         )
 
-        for start in range(0, n_samples, self.chunk_size):
+        for start in tqdm(range(0, n_samples, self.chunk_size), desc="Nystroem final transform", unit="chunks"):
             end = min(start + self.chunk_size, n_samples)
             data_chunk = data[start:end]
 

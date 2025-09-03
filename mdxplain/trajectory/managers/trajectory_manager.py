@@ -197,6 +197,11 @@ class TrajectoryManager:
         
         # Validate trajectory types match memmap setting
         TrajectoryValidationHelper.validate_trajectory_types(pipeline_data)
+        
+        # Update memory estimate based on max atoms
+        if pipeline_data.trajectory_data.trajectories:
+            max_atoms = max(traj.n_atoms for traj in pipeline_data.trajectory_data.trajectories)
+            pipeline_data.update_max_memory_from_trajectories(max_atoms)
 
     def add_trajectory(
         self,
@@ -281,6 +286,11 @@ class TrajectoryManager:
         pipeline_data.trajectory_data.trajectory_names.extend(new_names)
         
         TrajectoryValidationHelper.validate_trajectory_types(pipeline_data)
+        
+        # Update memory estimate based on max atoms
+        if pipeline_data.trajectory_data.trajectories:
+            max_atoms = max(traj.n_atoms for traj in pipeline_data.trajectory_data.trajectories)
+            pipeline_data.update_max_memory_from_trajectories(max_atoms)
 
     def remove_trajectory(
         self,

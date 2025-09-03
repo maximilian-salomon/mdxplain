@@ -286,7 +286,7 @@ class TrajectoryLoadHelper:
         subdirs = [
             d
             for d in os.listdir(directory_path)
-            if os.path.isdir(os.path.join(directory_path, d))
+            if os.path.isdir(os.path.join(directory_path, d)) and not d.startswith('.')
         ]
         return len(subdirs) > 0
 
@@ -335,7 +335,7 @@ class TrajectoryLoadHelper:
         subdirs = [
             d
             for d in os.listdir(directory_path)
-            if os.path.isdir(os.path.join(directory_path, d))
+            if os.path.isdir(os.path.join(directory_path, d)) and not d.startswith('.')
         ]
 
         # Load from subdirectories

@@ -32,6 +32,7 @@ import tempfile
 import numpy as np
 import zarr
 from zarr.codecs import BloscCodec
+from tqdm import tqdm
 from typing import TYPE_CHECKING
 
 from .zarr_cache_helper import ZarrCacheHelper
@@ -301,7 +302,7 @@ class DaskMDTrajectoryJoinStackHelper:
         
         print(f"  📝 Stacking {traj1.n_frames} frames in {n_chunks} chunks")
         
-        for i in range(n_chunks):
+        for i in tqdm(range(n_chunks), desc="Stacking trajectory chunks", unit="chunks"):
             start_idx = i * chunk_size
             end_idx = min(start_idx + chunk_size, traj1.n_frames)
             

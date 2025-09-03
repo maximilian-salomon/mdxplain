@@ -455,7 +455,12 @@ class ClusterManager:
         if override_cache:
             self._clear_cache_directory(cache_path)
 
-        cluster_type.init_calculator(cache_path=cache_path)
+        cluster_type.init_calculator(
+            cache_path=cache_path, 
+            max_memory_gb=pipeline_data.max_memory_gb,
+            chunk_size=pipeline_data.chunk_size,
+            use_memmap=pipeline_data.use_memmap
+        )
 
         self._check_cluster_existence(pipeline_data, cluster_name, force)
 

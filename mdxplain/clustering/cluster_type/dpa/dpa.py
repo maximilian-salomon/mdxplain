@@ -75,6 +75,9 @@ class DPA(ClusterTypeBase):
         block_ratio: int = 20,
         frac: float = 1.0,
         halos: bool = False,
+        method: str = "standard",
+        sample_fraction: float = 0.1,
+        force: bool = False,
     ) -> None:
         """
         Initialize DPA cluster type.
@@ -158,6 +161,19 @@ class DPA(ClusterTypeBase):
             So kind of a -1 in sklearn clustering algorithms.
             If false, each frame is assigned to its most probable cluster.
 
+        method : str, default="standard"
+            Clustering method:
+            - "standard": Load all data into memory (default)
+            - "sampling_approximate": Sample data + approximate_predict for large datasets
+            - "sampling_knn": Sample data + k-NN classifier fallback
+
+        sample_fraction : float, default=0.1
+            Fraction of data to sample for sampling-based methods (10%)
+            Final sample size: max(50000, min(100000, sample_fraction * n_samples))
+
+        force : bool, default=False
+            Override memory and dimensionality checks (converts errors to warnings)
+
         Returned Metadata:
         ------------------
         algorithm : str
@@ -211,6 +227,9 @@ class DPA(ClusterTypeBase):
         self.block_ratio = block_ratio
         self.frac = frac
         self.halos = halos
+        self.method = method
+        self.sample_fraction = sample_fraction
+        self.force = force
         self._validate_parameters()
 
     @classmethod
@@ -225,7 +244,13 @@ class DPA(ClusterTypeBase):
         """
         return "dpa"
 
-    def init_calculator(self, cache_path: str = "./cache") -> None:
+    def init_calculator(
+        self, 
+        cache_path: str = "./cache", 
+        max_memory_gb: float = 2.0,
+        chunk_size: int = 1000,
+        use_memmap: bool = False
+    ) -> None:
         """
         Initialize the DPA calculator.
 
@@ -233,8 +258,19 @@ class DPA(ClusterTypeBase):
         -----------
         cache_path : str, optional
             Directory path for cache files. Default is './cache'.
+        max_memory_gb : float, optional
+            Maximum memory threshold in GB. Default is 2.0.
+        chunk_size : int, optional
+            Chunk size for processing large datasets. Default is 1000.
+        use_memmap : bool, optional
+            Whether to use memory mapping for large datasets. Default is False.
         """
-        self.calculator = DPACalculator(cache_path=cache_path)
+        self.calculator = DPACalculator(
+            cache_path=cache_path, 
+            max_memory_gb=max_memory_gb,
+            chunk_size=chunk_size,
+            use_memmap=use_memmap
+        )
 
     def compute(self, data: np.ndarray) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
@@ -275,6 +311,9 @@ class DPA(ClusterTypeBase):
             block_ratio=self.block_ratio,
             frac=self.frac,
             halos=self.halos,
+            method=self.method,
+            sample_fraction=self.sample_fraction,
+            force=self.force,
         )
 
     def _validate_parameters(self):
@@ -346,3 +385,15 @@ class DPA(ClusterTypeBase):
         # Validate halos
         if not isinstance(self.halos, bool):
             raise ValueError("halos must be a boolean")
+
+        # Validate method
+        if self.method not in ["standard", "knn_sampling"]:
+            raise ValueError("method must be 'standard' or 'knn_sampling'")
+
+        # Validate sample_fraction
+        if not isinstance(self.sample_fraction, (int, float)) or not 0 < self.sample_fraction <= 1:
+            raise ValueError("sample_fraction must be a number between 0 and 1")
+
+        # Validate force
+        if not isinstance(self.force, bool):
+            raise ValueError("force must be a boolean")
