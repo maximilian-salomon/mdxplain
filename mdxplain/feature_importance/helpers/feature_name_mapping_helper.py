@@ -118,7 +118,7 @@ class FeatureNameMappingHelper:
         >>> print(name)  # "CA_distance_ALA_15_GLU_89" or "feature_42"
         """
         # Fallback if no metadata available
-        if not feature_metadata or feature_idx >= len(feature_metadata):
+        if feature_metadata is None or feature_idx >= len(feature_metadata):
             return f"feature_{feature_idx}"
         
         metadata_entry = feature_metadata[feature_idx]
@@ -126,9 +126,23 @@ class FeatureNameMappingHelper:
         # Extract feature name from features metadata
         features_data = metadata_entry.get("features", {})
         if isinstance(features_data, dict):
-            return features_data.get("name", f"feature_{feature_idx}")
-        else:
-            return f"feature_{feature_idx}"
+            # For pairwise features, combine partner full_names with "-"
+            if "partners" in features_data:
+                partners = features_data["partners"]
+                if isinstance(partners, list) and len(partners) > 0:
+                    partner_names = []
+                    for partner in partners:
+                        if isinstance(partner, dict) and "full_name" in partner:
+                            partner_names.append(partner["full_name"])
+                    if partner_names:
+                        return "-".join(partner_names)
+            
+            # Fallback for single features
+            if "full_name" in features_data:
+                return features_data["full_name"]
+            elif "name" in features_data:
+                return features_data["name"]
+        return f"feature_{feature_idx}"
 
     @staticmethod
     def get_feature_type(
@@ -161,7 +175,7 @@ class FeatureNameMappingHelper:
         >>> print(ftype)  # "distances" or "unknown"
         """
         # Fallback if no metadata available
-        if not feature_metadata or feature_idx >= len(feature_metadata):
+        if feature_metadata is None or feature_idx >= len(feature_metadata):
             return "unknown"
         
         metadata_entry = feature_metadata[feature_idx]

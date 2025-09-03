@@ -27,7 +27,7 @@ for efficient processing of large trajectory files.
 
 from __future__ import annotations
 
-from typing import Optional, Union, Tuple, Dict, Any
+from typing import Optional, Union, Tuple
 import os
 import pickle
 import shutil
@@ -613,7 +613,7 @@ class DaskMDTrajectory:
             
         return self._join_stack_helper.stack_trajectories(self, other)
     
-    def slice(self, key: Union[int, slice, np.ndarray], copy: bool = True) -> md.Trajectory:
+    def slice(self, key: Union[int, slice, np.ndarray], return_dask: bool = True) -> Union['DaskMDTrajectory', md.Trajectory]:
         """
         Extract specific frames.
         
@@ -621,30 +621,34 @@ class DaskMDTrajectory:
         -----------
         key : int, slice, or array_like
             Frame indices to extract
-        copy : bool, default=True
-            Create copy of data (kept for MDTraj interface compatibility, always True for DaskMDTrajectory)
+        return_dask : bool, default=True
+            If True, returns a new DaskMDTrajectory with sliced data
+            If False, returns an md.Trajectory (original behavior)
             
         Returns:
         --------
-        md.Trajectory
-            MDTraj trajectory with selected frames (always copied from Zarr store)
+        DaskMDTrajectory or md.Trajectory
+            DaskMDTrajectory with selected frames (if return_dask=True) or
+            MDTraj trajectory with selected frames (if return_dask=False)
         
         Examples:
         ---------
         >>> dask_traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
-        >>> # Extract first 100 frames
+        >>> # Extract first 100 frames as DaskMDTrajectory (default)
         >>> subset = dask_traj.slice(slice(0, 100))
-        >>> # Extract specific frames  
-        >>> frames = dask_traj.slice([10, 50, 100, 200])
+        >>> # Extract specific frames as md.Trajectory
+        >>> frames = dask_traj.slice([10, 50, 100, 200], return_dask=False)
         >>> print(f"Extracted {frames.n_frames} frames")
         
         Note:
         -----
-        The copy parameter is maintained for MDTraj interface compatibility but is
-        effectively ignored. DaskMDTrajectory always creates new md.Trajectory 
-        instances by copying data from the Zarr store.
+        When return_dask=True, uses lazy Dask array slicing to avoid memory issues.
+        The slicing operation is completely lazy until data is actually accessed.
         """
-        return self[key]
+        if return_dask:
+            return self._create_sliced_dask(key)
+        else:
+            return self[key]
     
     # ============================================================================
     # Indexing and Slicing Support
@@ -885,6 +889,84 @@ class DaskMDTrajectory:
                     self._dask_unitcell_lengths[start_idx:end_idx].compute()
                 target_store['unitcell_angles'][target_start:target_end] = \
                     self._dask_unitcell_angles[start_idx:end_idx].compute()
+    
+    def _create_sliced_dask(self, key: Union[int, slice, np.ndarray]) -> 'DaskMDTrajectory':
+        """
+        Create new DaskMDTrajectory with sliced arrays (lazy operation).
+        
+        Parameters:
+        -----------
+        key : int, slice, or array_like
+            Frame indices to extract
+            
+        Returns:
+        --------
+        DaskMDTrajectory
+            New DaskMDTrajectory with only selected frames
+            
+        Examples:
+        ---------
+        >>> sliced = dask_traj._create_sliced_dask(slice(0, 100))
+        >>> sliced = dask_traj._create_sliced_dask([10, 50, 100])
+        """
+        # Normalize indices to list
+        if isinstance(key, int):
+            indices = [key]
+        elif isinstance(key, slice):
+            indices = list(range(*key.indices(self.n_frames)))
+        else:
+            indices = list(np.asarray(key))
+        
+        if len(indices) == 0:
+            raise ValueError("Cannot create trajectory with 0 frames")
+        
+        # Create new instance by copying all attributes
+        new_instance = DaskMDTrajectory.__new__(DaskMDTrajectory)
+        
+        # Copy all basic attributes
+        new_instance._zarr_store = self._zarr_store  
+        new_instance._topology = self._topology
+        new_instance.chunk_size = self.chunk_size
+        new_instance.n_workers = self.n_workers
+        new_instance._cache_dir = self._cache_dir
+        new_instance._builder = self._builder
+        
+        # Slice the Dask arrays (lazy!)
+        new_instance._dask_coords = self._dask_coords[indices]
+        new_instance._dask_time = self._dask_time[indices]
+        
+        # Update metadata
+        new_instance.metadata = self.metadata.copy()
+        new_instance.metadata['n_frames'] = len(indices)
+        
+        # Handle unitcell data if present
+        new_instance._has_unitcell = self._has_unitcell
+        if self._has_unitcell:
+            new_instance._dask_unitcell_vectors = self._dask_unitcell_vectors[indices]
+            new_instance._dask_unitcell_lengths = self._dask_unitcell_lengths[indices]
+            new_instance._dask_unitcell_angles = self._dask_unitcell_angles[indices]
+        else:
+            new_instance._dask_unitcell_vectors = None
+            new_instance._dask_unitcell_lengths = None
+            new_instance._dask_unitcell_angles = None
+        
+        # Initialize cache attributes
+        new_instance._xyz_cache = None
+        new_instance._time_cache = None
+        new_instance._unitcell_lengths_cache = None
+        new_instance._unitcell_angles_cache = None
+        
+        # Share helpers (use existing configuration)
+        new_instance._parallel_ops = self._parallel_ops
+        new_instance._join_stack_helper = self._join_stack_helper
+        
+        # Temp tracking
+        new_instance._is_temp_store = False
+        new_instance._temp_zarr_path = None
+        
+        print(f"✅ Sliced DaskMDTrajectory created with {len(indices)} frames (lazy)")
+        
+        return new_instance
     
     def _create_from_zarr_store(self, zarr_store: zarr.Group) -> DaskMDTrajectory:
         """

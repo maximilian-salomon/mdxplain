@@ -66,7 +66,7 @@ class ContactKernelPCA(DecompositionTypeBase):
         n_components: Optional[int] = None,
         gamma: float = 1.0,
         use_nystrom: bool = False,
-        n_landmarks: int = 10000,
+        n_landmarks: int = 2000,
         random_state: Optional[int] = None,
     ) -> None:
         """
@@ -155,7 +155,7 @@ class ContactKernelPCA(DecompositionTypeBase):
         """
         return "contact_kernel_pca"
 
-    def init_calculator(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 10000) -> None:
+    def init_calculator(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000) -> None:
         """
         Initialize the ContactKernelPCA calculator with specified configuration.
 

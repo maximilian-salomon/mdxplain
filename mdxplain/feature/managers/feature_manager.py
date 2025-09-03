@@ -45,7 +45,7 @@ from ...utils.data_utils import DataUtils
 class FeatureManager:
     """Manager for feature data objects."""
 
-    def __init__(self, use_memmap: bool = False, chunk_size: int = 10000, cache_dir: str = "./cache") -> None:
+    def __init__(self, use_memmap: bool = False, chunk_size: int = 2000, cache_dir: str = "./cache") -> None:
         """
         Initialize feature manager.
 

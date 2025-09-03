@@ -31,6 +31,8 @@ import numpy as np
 from sklearn.decomposition import IncrementalPCA, KernelPCA
 from sklearn.kernel_approximation import Nystroem
 from sklearn.metrics.pairwise import rbf_kernel
+from scipy.sparse.linalg import LinearOperator, eigs
+from scipy.linalg import eigh
 
 from ..interfaces.calculator_base import CalculatorBase
 from ....utils.data_utils import DataUtils
@@ -57,7 +59,7 @@ class KernelPCACalculator(CalculatorBase):
     >>> transformed, metadata = calc.compute(large_data, n_components=50)
     """
 
-    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 10000) -> None:
+    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000) -> None:
         """
         Initialize KernelPCA calculator.
 
@@ -349,35 +351,45 @@ class KernelPCACalculator(CalculatorBase):
         kernel_matrix = self._compute_chunk_wise_rbf_kernel(
             data, hyperparameters["gamma"]
         )
+        n_samples = kernel_matrix.shape[0]
 
         row_means, col_means, grand_mean = self._compute_kernel_statistics_from_matrix(
             kernel_matrix
         )
-
         self._center_kernel_inplace(kernel_matrix, row_means, col_means, grand_mean)
-
-        ipca = IncrementalPCA(
-            n_components=hyperparameters["n_components"],
-            batch_size=self.chunk_size,
-            whiten=True,
-            copy=False,
+        
+        kernel_operator = LinearOperator(
+            shape=(n_samples, n_samples),
+            matvec=lambda v: self._chunked_matvec(v, kernel_matrix, self.chunk_size),
+            dtype=kernel_matrix.dtype
         )
 
-        # Get principal components from IncrementalPCA
-        principal_components = ipca.fit_transform(kernel_matrix)
-        
-        # Use the eigenvalues from IncrementalPCA, scaled by (n_samples-1)
-        # IncrementalPCA uses explained_variance = eigenvals / (n_samples - 1)
-        n_samples = kernel_matrix.shape[0]
-        kernel_eigenvals = ipca.explained_variance_ * (n_samples - 1)
-        
-        # Scale to match sklearn KernelPCA: eigenvector * sqrt(eigenvalue)
-        transformed_data = principal_components * np.sqrt(kernel_eigenvals)
+        eigenvals, eigenvecs = eigs(
+            kernel_operator,
+            k=hyperparameters["n_components"],
+            which='LM',  # Largest magnitude
+            tol=1e-6
+        )
+
+        # Sort eigenvalues and eigenvectors in descending order
+        # Take only real parts (should be real due to symmetry)
+        idx = np.argsort(eigenvals)[::-1]
+        eigenvals = eigenvals.real[idx]
+        eigenvecs = eigenvecs.real[:, idx]
+
+        # Filter positive eigenvalues for numerical stability
+        lambdas = np.abs(eigenvals)
+        positive_idx = lambdas > 1e-10
+        lambdas = lambdas[positive_idx]
+        eigenvecs = eigenvecs[:, positive_idx]
+
+        # Transform: scale eigenvectors by sqrt(eigenvalues) (sklearn KernelPCA style)
+        transformed_data = eigenvecs * np.sqrt(lambdas)
 
         # Store transformed_data as memmap when use_memmap=True
         if self.use_memmap:
             memmap_path = DataUtils.get_cache_file_path(
-                f"{self._cache_prefix}.dat", self.cache_path
+                f"{self._cache_prefix}_iterative.dat", self.cache_path
             )
             transformed_memmap = np.memmap(
                 memmap_path,
@@ -391,13 +403,47 @@ class KernelPCACalculator(CalculatorBase):
         metadata = self._prepare_metadata(hyperparameters, data.shape)
         metadata.update(
             {
-                "method": "incremental_kernel_pca",
+                "method": "iterative_kernel_pca",
+                "eigenvalues": lambdas,
+                "n_positive_eigenvalues": len(lambdas),
                 "n_chunks": int(np.ceil(data.shape[0] / self.chunk_size)),
             }
         )
 
         return transformed_data, metadata
 
+    def _chunked_matvec(self, v: np.ndarray, kernel_matrix: np.memmap, chunk_size: int) -> np.ndarray:
+        """
+        Performs matrix-vector product for a memmapped matrix in chunks.
+
+        Parameters:
+        -----------
+        v : numpy.ndarray
+            Input vector to multiply
+        kernel_matrix : numpy.memmap
+            Memory-mapped kernel matrix
+        chunk_size : int
+            Size of chunks to process at a time
+
+        Returns:
+        --------
+        numpy.ndarray
+            Resulting vector from the multiplication
+        """
+        n_samples = kernel_matrix.shape[0]
+        result = np.zeros(n_samples, dtype=v.dtype)
+        
+        for i in range(0, n_samples, chunk_size):
+            end = min(i + chunk_size, n_samples)
+            
+            # Load only one chunk of rows into RAM
+            matrix_chunk = kernel_matrix[i:end, :] 
+            
+            # Perform multiplication and add to the result vector
+            result[i:end] = matrix_chunk @ v
+            
+        return result
+    
     def _create_kernel_memmap(self, n_samples: int) -> np.ndarray:
         """
         Create memmap for kernel matrix storage.
@@ -425,7 +471,10 @@ class KernelPCACalculator(CalculatorBase):
 
     def _compute_nystrom_kernel_pca(self, data: np.ndarray, hyperparameters: Dict[str, Any]) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
-        Compute Nyström approximation KernelPCA with IncrementalPCA.
+        Compute Nyström approximation KernelPCA with chunk-wise processing.
+
+        Always uses chunk-wise processing for memory efficiency, regardless of data size.
+        Fits Nyström on a sample, then processes data in chunks using partial_fit.
 
         Parameters:
         -----------
@@ -439,57 +488,61 @@ class KernelPCACalculator(CalculatorBase):
         tuple
             Tuple of (transformed_data, metadata)
         """
-        # Nyström approximation
+        n_samples = data.shape[0]
+        n_landmarks = hyperparameters["n_landmarks"]
+        n_components = hyperparameters["n_components"]
+
         nystroem = Nystroem(
             kernel="rbf",
             gamma=hyperparameters["gamma"],
-            n_components=hyperparameters["n_landmarks"],
-            random_state=hyperparameters["random_state"],
+            n_components=n_landmarks,
+            random_state=hyperparameters["random_state"]
         )
-
-        # Transform data to approximate kernel features
-        kernel_features = nystroem.fit_transform(data)
-
-        # Incremental PCA on kernel features
+        nystroem.fit(data)  # Only fit, don't transform yet
+        
+        # Step 2: IncrementalPCA for features (this is correct - PCA on features!)
         ipca = IncrementalPCA(
-            n_components=hyperparameters["n_components"],
+            n_components=n_components,
             batch_size=self.chunk_size,
             whiten=True,
-            copy=False,
+            copy=False
+        )
+        
+        # Step 3: Chunk-wise transform and partial_fit
+        for start in range(0, n_samples, self.chunk_size):
+            end = min(start + self.chunk_size, n_samples)
+            data_chunk = data[start:end]
+
+            # Transform chunk to Kernel-Features (n_landmarks dimensional)
+            kernel_features_chunk = nystroem.transform(data_chunk)
+
+            # Partial fit PCA on features (not on kernel matrix!)
+            ipca.partial_fit(kernel_features_chunk)
+        
+        # Step 4: Final transform chunk-wise
+        result = self._create_array_or_memmap(
+            shape=(n_samples, n_components),
+            dtype=np.float32,
+            filename=DataUtils.get_cache_file_path(
+                f"{self._cache_prefix}_nystrom.dat", self.cache_path
+            )
         )
 
-        # Get principal components from IncrementalPCA
-        principal_components = ipca.fit_transform(kernel_features)
-        
-        # Use the eigenvalues from IncrementalPCA, scaled by (n_samples-1)
-        # IncrementalPCA uses explained_variance = eigenvals / (n_samples - 1)
-        n_samples = kernel_features.shape[0]
-        kernel_eigenvals = ipca.explained_variance_ * (n_samples - 1)
-        
-        # Scale to match sklearn KernelPCA: eigenvector * sqrt(eigenvalue)
-        transformed_data = principal_components * np.sqrt(kernel_eigenvals)
-        
-        # Store transformed_data as memmap when use_memmap=True
-        if self.use_memmap:
-            memmap_path = DataUtils.get_cache_file_path(
-                f"{self._cache_prefix}_nystrom_approximation.dat", self.cache_path
-            )
-            transformed_memmap = np.memmap(
-                memmap_path,
-                dtype=transformed_data.dtype,
-                mode="w+",
-                shape=transformed_data.shape,
-            )
-            transformed_memmap[:] = transformed_data
-            transformed_data = transformed_memmap
+        for start in range(0, n_samples, self.chunk_size):
+            end = min(start + self.chunk_size, n_samples)
+            data_chunk = data[start:end]
+
+            kernel_features_chunk = nystroem.transform(data_chunk)
+            result[start:end] = ipca.transform(kernel_features_chunk)
 
         metadata = self._prepare_metadata(hyperparameters, data.shape)
         metadata.update(
             {
                 "method": "nystrom_kernel_pca",
-                "n_landmarks": hyperparameters["n_landmarks"],
+                "n_landmarks": n_landmarks,
                 "approximation": "nystrom",
+                "explained_variance_ratio": ipca.explained_variance_ratio_.tolist() if hasattr(ipca, 'explained_variance_ratio_') else None,
             }
         )
 
-        return transformed_data, metadata
+        return result, metadata

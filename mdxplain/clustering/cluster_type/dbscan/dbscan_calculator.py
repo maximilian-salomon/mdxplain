@@ -88,32 +88,12 @@ class DBSCANCalculator(CalculatorBase):
         """
         self._validate_input_data(data)
 
-        # Use caching functionality
-        return self._compute_with_cache(
-            data, "dbscan", self._compute_without_cache, **kwargs
-        )
-
-    def _compute_without_cache(self, data: np.ndarray, **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
-        """
-        Perform DBSCAN clustering without caching.
-
-        Parameters:
-        -----------
-        data : numpy.ndarray
-            Input data matrix to cluster
-        **kwargs : dict
-            DBSCAN parameters
-
-        Returns:
-        --------
-        Tuple[numpy.ndarray, Dict]
-            Cluster labels and metadata
-        """
         eps, min_samples = self._extract_parameters(kwargs)
 
         cluster_labels, dbscan_model, computation_time = self._perform_clustering(
             data, eps, min_samples
         )
+
         metadata = self._build_metadata(
             data, cluster_labels, dbscan_model, eps, min_samples, computation_time
         )

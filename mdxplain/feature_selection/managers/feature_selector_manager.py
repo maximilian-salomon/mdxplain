@@ -204,7 +204,7 @@ class FeatureSelectorManager:
             f"traj_selection={traj_selection}, require_all_partners={require_all_partners})"
         )
 
-    def select(self, pipeline_data: PipelineData, name: str, reference_traj: Union[int, str] = 0) -> None:
+    def select(self, pipeline_data: PipelineData, name: str, reference_traj: Union[int, str] = None) -> None:
         """
         Apply a named selector configuration to create selected feature matrix.
 
@@ -236,8 +236,9 @@ class FeatureSelectorManager:
             Pipeline data object containing features and selector configurations
         name : str
             Name of the feature selector configuration to apply
-        reference_traj : Union[int, str], default=0
-            Trajectory index or name to use as reference for metadata extraction
+        reference_traj : Union[int, str], default=None
+            Trajectory index or name to use as reference for metadata extraction.
+            If None, uses the first trajectory from the selection.
 
         Returns:
         --------
@@ -269,13 +270,32 @@ class FeatureSelectorManager:
             print(f"Warning: No selections configured for selector '{name}'")
             return
 
-        reference_traj = pipeline_data.trajectory_data.get_trajectory_indices(reference_traj)[0]
-
-        # Store reference trajectory in selector data
-        selector_data.set_reference_trajectory(reference_traj)
 
         self._validate_features_exist(pipeline_data, selector_data)
         self._process_all_selections(pipeline_data, selector_data)
+        
+        # Get trajectories that have selected features to validate reference_traj
+        selected_trajectories = set()
+        for feature_key in selector_data.get_feature_keys():
+            results = selector_data.get_results(feature_key)
+            trajectory_indices_data = results.get("trajectory_indices", {})
+            selected_trajectories.update(trajectory_indices_data.keys())
+        
+        # Validate and set reference trajectory
+        if reference_traj is None:
+            if not selected_trajectories:
+                raise ValueError("No trajectories found in selection results")
+            reference_traj = min(selected_trajectories)
+        else:
+            reference_traj_indices = pipeline_data.trajectory_data.get_trajectory_indices(reference_traj)
+            if len(reference_traj_indices) != 1:
+                raise ValueError(f"reference_traj must resolve to exactly one trajectory, got {len(reference_traj_indices)}")
+            reference_traj = reference_traj_indices[0]
+            if reference_traj not in selected_trajectories:
+                raise ValueError(f"Reference trajectory {reference_traj} not found in selection results")
+        
+        # Store reference trajectory in selector data
+        selector_data.set_reference_trajectory(reference_traj)
 
         print(f"Applied feature selector '{name}' with reference trajectory {reference_traj} successfully")
 
@@ -938,7 +958,7 @@ class FeatureSelectorManager:
         ---------
         >>> manager.save(pipeline_data, 'feature_selector.npy')
         """
-        DataUtils.save_object(pipeline_data.feature_selector_data, save_path)
+        DataUtils.save_object(pipeline_data.selected_feature_data, save_path)
 
     def load(self, pipeline_data: PipelineData, load_path: str) -> None:
         """
@@ -976,7 +996,7 @@ class FeatureSelectorManager:
         """
         temp_dict = {}
         DataUtils.load_object(temp_dict, load_path)
-        pipeline_data.feature_selector_data = temp_dict
+        pipeline_data.selected_feature_data = temp_dict
 
     def print_info(self, pipeline_data: PipelineData) -> None:
         """
@@ -1009,14 +1029,14 @@ class FeatureSelectorManager:
         ---------
         >>> manager.print_info(pipeline_data)
         """
-        if len(pipeline_data.feature_selector_data) == 0:
+        if len(pipeline_data.selected_feature_data) == 0:
             print("No featureselectordata data available.")
             return
 
         print("=== FeatureSelectorData Information ===")
-        data_names = list(pipeline_data.feature_selector_data.keys())
+        data_names = list(pipeline_data.selected_feature_data.keys())
         print(f"FeatureSelectorData Names: {len(data_names)} ({", ".join(data_names)})")
         
-        for name, data in pipeline_data.feature_selector_data.items():
+        for name, data in pipeline_data.selected_feature_data.items():
             print(f"\n--- {name} ---")
             data.print_info()

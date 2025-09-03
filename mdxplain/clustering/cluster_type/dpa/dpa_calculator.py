@@ -108,30 +108,7 @@ class DPACalculator(CalculatorBase):
         """
         self._validate_input_data(data)
 
-        # Use caching functionality
-        return self._compute_with_cache(
-            data, 
-            "dpa", 
-            self._compute_without_cache, 
-            **kwargs
-        )
-
-    def _compute_without_cache(self, data: np.ndarray, **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
-        """
-        Perform DPA clustering without caching.
-
-        Parameters:
-        -----------
-        data : numpy.ndarray
-            Input data matrix to cluster
-        **kwargs : dict
-            DPA parameters
-
-        Returns:
-        --------
-        Tuple[numpy.ndarray, Dict]
-            Cluster labels and metadata
-        """
+        # Extract parameters and perform clustering
         parameters = self._extract_parameters(kwargs)
 
         cluster_labels, dpa_model, computation_time = self._perform_clustering(
@@ -143,7 +120,8 @@ class DPACalculator(CalculatorBase):
 
         return cluster_labels, metadata
 
-    def _extract_parameters(self, **kwargs) -> Dict[str, Any]:
+
+    def _extract_parameters(self, kwargs: Dict[str, Any]) -> Dict[str, Any]:
         """
         Extract and validate DPA parameters.
 

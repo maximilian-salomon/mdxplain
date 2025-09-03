@@ -231,6 +231,16 @@ class FrameSelectionHelper:
 
         for cluster_id in cluster_ids:
             if isinstance(cluster_id, int):
+                # Validate that numeric cluster ID exists
+                unique_labels = np.unique(cluster_data.get_labels())
+                # Remove -1 (noise) from available clusters if present
+                available_clusters = unique_labels[unique_labels >= 0]
+                
+                if cluster_id not in available_clusters:
+                    raise ValueError(
+                        f"Cluster ID {cluster_id} not found in clustering "
+                        f"'{clustering_name}'. Available cluster IDs: {available_clusters.tolist()}"
+                    )
                 resolved_ids.append(cluster_id)
             elif isinstance(cluster_id, str):
                 # Check if cluster has named clusters

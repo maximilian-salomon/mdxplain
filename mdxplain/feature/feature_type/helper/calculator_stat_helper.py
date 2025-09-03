@@ -47,7 +47,7 @@ class CalculatorStatHelper:
     def compute_differences(
         array1: np.ndarray,
         array2: np.ndarray,
-        chunk_size: int = 10000,
+        chunk_size: int = 2000,
         use_memmap: bool = False,
         preprocessing_func: Optional[callable] = None,
         **func_kwargs: Any
@@ -99,7 +99,7 @@ class CalculatorStatHelper:
     def compute_func_per_feature(
         array: np.ndarray, 
         func: callable, 
-        chunk_size: int = 10000, 
+        chunk_size: int = 2000, 
         use_memmap: bool = False, 
         **func_kwargs: Any
     ) -> np.ndarray:
@@ -162,7 +162,7 @@ class CalculatorStatHelper:
         return result.reshape(spatial_shape)
 
     @staticmethod
-    def compute_func_per_frame(array: np.ndarray, chunk_size: int = 10000, use_memmap: bool = False, func: Optional[Callable] = None) -> np.ndarray:
+    def compute_func_per_frame(array: np.ndarray, chunk_size: int = 2000, use_memmap: bool = False, func: Optional[Callable] = None) -> np.ndarray:
         """
         Apply statistical function per frame across all pairs.
 
@@ -277,7 +277,7 @@ class CalculatorStatHelper:
             return func(array[start_idx:end_idx], axis=1)
 
     @staticmethod
-    def _convert_2d_to_3d(array: np.ndarray, chunk_size: int = 10000) -> np.ndarray:
+    def _convert_2d_to_3d(array: np.ndarray, chunk_size: int = 2000) -> np.ndarray:
         """
         Convert 2D condensed array to 3D squareform array.
 
@@ -309,7 +309,7 @@ class CalculatorStatHelper:
     def compute_func_per_column(
         array: np.ndarray, 
         func: callable, 
-        chunk_size: int = 10000, 
+        chunk_size: int = 2000, 
         use_memmap: bool = False, 
         **func_kwargs: Any
     ) -> np.ndarray:
@@ -407,7 +407,7 @@ class CalculatorStatHelper:
         array: np.ndarray, 
         threshold: float = 1.0, 
         lag_time: int = 1, 
-        chunk_size: int = 10000, 
+        chunk_size: int = 2000, 
         use_memmap: bool = False
     ) -> np.ndarray:
         """
@@ -440,7 +440,7 @@ class CalculatorStatHelper:
         array: np.ndarray, 
         threshold: float = 1.0, 
         window_size: int = 10, 
-        chunk_size: int = 10000, 
+        chunk_size: int = 2000, 
         use_memmap: bool = False
     ) -> np.ndarray:
         """
@@ -703,7 +703,7 @@ class CalculatorStatHelper:
         array: np.ndarray,
         threshold: float = 2.0,
         window_size: int = 1,
-        chunk_size: int = 10000,
+        chunk_size: int = 2000,
         use_memmap: bool = False,
         mode: str = "lagtime",
     ) -> np.ndarray:

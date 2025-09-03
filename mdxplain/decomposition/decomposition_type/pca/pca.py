@@ -134,7 +134,7 @@ class PCA(DecompositionTypeBase):
         """
         return "pca"
 
-    def init_calculator(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 10000) -> None:
+    def init_calculator(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000) -> None:
         """
         Initialize the PCA calculator with specified configuration.
 

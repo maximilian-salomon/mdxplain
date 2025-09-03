@@ -74,7 +74,7 @@ class PipelineData:
         self,
         use_memmap: bool = False,
         cache_dir: str = "./cache",
-        chunk_size: int = 10000,
+        chunk_size: int = 2000,
     ):
         """
         Initialize the central pipeline data container.

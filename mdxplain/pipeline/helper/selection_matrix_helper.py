@@ -110,8 +110,19 @@ class SelectionMatrixHelper:
         
         # Calculate number of rows
         if data_selector_name is None:
-            # All frames - calculate from trajectory data
-            n_rows = pipeline_data.trajectory_data.n_frames_total
+            # Extract relevant trajectories from selector data
+            all_results = selector_data.get_all_results()
+            relevant_trajectories = set()
+            for feature_type, selection_info in all_results.items():
+                if "trajectory_indices" in selection_info:
+                    relevant_trajectories.update(selection_info["trajectory_indices"].keys())
+            
+            # Sum frames only from selected trajectories
+            n_rows = sum(
+                pipeline_data.trajectory_data.trajectories[idx].n_frames 
+                for idx in relevant_trajectories
+                if idx < len(pipeline_data.trajectory_data.trajectories)
+            )
         else:
             # Filtered frames - get from data selector
             data_selector = pipeline_data.data_selector_data[data_selector_name]
@@ -190,8 +201,14 @@ class SelectionMatrixHelper:
         else:
             frame_selection = pipeline_data.data_selector_data[data_selector_name]
         
-        # Fill matrix trajectory by trajectory
-        for traj_idx in range(len(pipeline_data.trajectory_data.trajectories)):
+        # Extract relevant trajectories from feature selections
+        relevant_trajectories = set()
+        for feature_type, selection_info in all_results.items():
+            if "trajectory_indices" in selection_info:
+                relevant_trajectories.update(selection_info["trajectory_indices"].keys())
+        
+        # Fill matrix trajectory by trajectory (only selected trajectories)
+        for traj_idx in sorted(relevant_trajectories):
             current_row = SelectionMatrixHelper._fill_trajectory_data(
                 matrix, pipeline_data, all_results, traj_idx, 
                 current_row, frame_selection, frame_mapping

@@ -711,7 +711,7 @@ class ClusterManager:
         ---------
         >>> manager.save(pipeline_data, 'clustering.npy')
         """
-        DataUtils.save_object(pipeline_data.clustering_data, save_path)
+        DataUtils.save_object(pipeline_data.cluster_data, save_path)
 
     def load(self, pipeline_data: PipelineData, load_path: str) -> None:
         """
@@ -749,7 +749,7 @@ class ClusterManager:
         """
         temp_dict = {}
         DataUtils.load_object(temp_dict, load_path)
-        pipeline_data.clustering_data = temp_dict
+        pipeline_data.cluster_data = temp_dict
 
     def print_info(self, pipeline_data: PipelineData) -> None:
         """
@@ -783,14 +783,14 @@ class ClusterManager:
         ---------
         >>> manager.print_info(pipeline_data)
         """
-        if len(pipeline_data.clustering_data) == 0:
+        if len(pipeline_data.cluster_data) == 0:
             print("No clusteringdata data available.")
             return
 
         print("=== ClusteringData Information ===")
-        data_names = list(pipeline_data.clustering_data.keys())
+        data_names = list(pipeline_data.cluster_data.keys())
         print(f"ClusteringData Names: {len(data_names)} ({", ".join(data_names)})")
         
-        for name, data in pipeline_data.clustering_data.items():
+        for name, data in pipeline_data.cluster_data.items():
             print(f"\n--- {name} ---")
             data.print_info()
