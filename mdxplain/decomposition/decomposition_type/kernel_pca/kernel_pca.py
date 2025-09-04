@@ -71,6 +71,9 @@ class KernelPCA(DecompositionTypeBase):
         use_nystrom: bool = False,
         n_landmarks: int = 10000,
         random_state: Optional[int] = None,
+        use_parallel: bool = False,
+        n_jobs: int = -1,
+        min_chunk_size: int = 1000,
     ) -> None:
         """
         Initialize KernelPCA decomposition type with RBF kernel.
@@ -90,6 +93,12 @@ class KernelPCA(DecompositionTypeBase):
             Number of landmarks for Nyström approximation
         random_state : int, optional
             Random state for reproducible results
+        use_parallel : bool, default=False
+            Whether to use parallel processing for matrix-vector multiplication
+        n_jobs : int, default=-1
+            Number of parallel jobs (-1 for all available CPU cores)
+        min_chunk_size : int, default=1000
+            Minimum chunk size per parallel process to avoid overhead
 
         Returned Metadata:
         ------------------
@@ -121,6 +130,9 @@ class KernelPCA(DecompositionTypeBase):
 
         >>> # Create KernelPCA with Nyström approximation
         >>> kpca = KernelPCA(n_components=50, use_nystrom=True, n_landmarks=5000)
+        
+        >>> # Create KernelPCA with parallel processing
+        >>> kpca = KernelPCA(n_components=10, use_parallel=True, n_jobs=8, min_chunk_size=500)
         """
         super().__init__()
         self.n_components = n_components
@@ -128,6 +140,9 @@ class KernelPCA(DecompositionTypeBase):
         self.use_nystrom = use_nystrom
         self.n_landmarks = n_landmarks
         self.random_state = random_state
+        self.use_parallel = use_parallel
+        self.n_jobs = n_jobs
+        self.min_chunk_size = min_chunk_size
 
     @classmethod
     def get_type_name(cls) -> str:
@@ -194,7 +209,12 @@ class KernelPCA(DecompositionTypeBase):
         ... )
         """
         self.calculator = KernelPCACalculator(
-            use_memmap=use_memmap, cache_path=cache_path, chunk_size=chunk_size
+            use_memmap=use_memmap, 
+            cache_path=cache_path, 
+            chunk_size=chunk_size,
+            use_parallel=self.use_parallel,
+            n_jobs=self.n_jobs,
+            min_chunk_size=self.min_chunk_size
         )
 
     def compute(self, data: np.ndarray) -> Tuple[np.ndarray, Dict[str, Any]]:

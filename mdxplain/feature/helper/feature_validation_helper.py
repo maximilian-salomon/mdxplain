@@ -220,9 +220,9 @@ class FeatureValidationHelper:
             raise ValueError("Trajectories must be loaded before computing features.")
 
     @staticmethod
-    def validate_reduction_state(pipeline_data: PipelineData, feature_key: str) -> None:
+    def validate_reduction_state(pipeline_data: PipelineData, feature_key: str, traj_indices: List[int]) -> None:
         """
-        Validate that feature is ready for reduction.
+        Validate that feature is ready for reduction for specified trajectories.
 
         Parameters:
         -----------
@@ -230,6 +230,8 @@ class FeatureValidationHelper:
             Pipeline data object to validate
         feature_key : str
             Feature key to validate
+        traj_indices : List[int]
+            List of trajectory indices to validate
 
         Returns:
         --------
@@ -239,20 +241,132 @@ class FeatureValidationHelper:
         Raises:
         -------
         ValueError
-            If feature has no data or reduction already performed
+            If feature has no data or reduction already performed for specified trajectories
 
         Examples:
         ---------
         >>> FeatureValidationHelper.validate_reduction_state(
-        ...     pipeline_data, "distances"
+        ...     pipeline_data, "distances", [0, 1, 2]
         ... )
         """
-        if pipeline_data.feature_data[feature_key].data is None:
+        # Check if feature exists and has trajectory data
+        if feature_key not in pipeline_data.feature_data:
             raise ValueError(
-                "No data available. Add the feature to the trajectory data first."
+                f"Feature '{feature_key}' not found. Add the feature to the trajectory data first."
+            )
+        
+        feature_traj_dict = pipeline_data.feature_data[feature_key]
+        if not isinstance(feature_traj_dict, dict) or not feature_traj_dict:
+            raise ValueError(
+                "No trajectory data available. Add the feature to the trajectory data first."
             )
 
-        if pipeline_data.feature_data[feature_key].reduced_data is not None:
+        # Validate using helper methods
+        FeatureValidationHelper._check_trajectories_exist(feature_key, feature_traj_dict, traj_indices)
+        FeatureValidationHelper._check_trajectories_have_data(feature_key, feature_traj_dict, traj_indices)
+        FeatureValidationHelper._check_no_existing_reduction(feature_key, feature_traj_dict, traj_indices)
+
+    @staticmethod
+    def _check_trajectories_exist(feature_key: str, feature_traj_dict: dict, traj_indices: List[int]) -> None:
+        """
+        Check if feature exists for all specified trajectories.
+
+        Parameters:
+        -----------
+        feature_key : str
+            Feature key for error messages
+        feature_traj_dict : dict
+            Feature trajectory dictionary
+        traj_indices : List[int]
+            List of trajectory indices to validate
+
+        Returns:
+        --------
+        None
+            Validates existence or raises ValueError
+
+        Raises:
+        -------
+        ValueError
+            If feature not computed for any of the specified trajectories
+        """
+        missing_trajectories = [
+            traj_idx for traj_idx in traj_indices 
+            if traj_idx not in feature_traj_dict
+        ]
+        
+        if missing_trajectories:
             raise ValueError(
-                "Reduction already performed. Reset the reduction first using reset_reduction()."
+                f"Feature '{feature_key}' not computed for trajectories {missing_trajectories}. "
+                f"Add the feature to these trajectories first."
+            )
+
+    @staticmethod
+    def _check_trajectories_have_data(feature_key: str, feature_traj_dict: dict, traj_indices: List[int]) -> None:
+        """
+        Check if trajectories have actual feature data.
+
+        Parameters:
+        -----------
+        feature_key : str
+            Feature key for error messages
+        feature_traj_dict : dict
+            Feature trajectory dictionary
+        traj_indices : List[int]
+            List of trajectory indices to validate
+
+        Returns:
+        --------
+        None
+            Validates data existence or raises ValueError
+
+        Raises:
+        -------
+        ValueError
+            If any trajectory has no computed feature data
+        """
+        trajectories_without_data = [
+            traj_idx for traj_idx in traj_indices
+            if traj_idx in feature_traj_dict and feature_traj_dict[traj_idx].data is None
+        ]
+        
+        if trajectories_without_data:
+            raise ValueError(
+                f"No data available for feature '{feature_key}' in trajectories {trajectories_without_data}. "
+                f"Compute the feature for these trajectories first."
+            )
+
+    @staticmethod
+    def _check_no_existing_reduction(feature_key: str, feature_traj_dict: dict, traj_indices: List[int]) -> None:
+        """
+        Check if reduction has already been performed.
+
+        Parameters:
+        -----------
+        feature_key : str
+            Feature key for error messages
+        feature_traj_dict : dict
+            Feature trajectory dictionary
+        traj_indices : List[int]
+            List of trajectory indices to validate
+
+        Returns:
+        --------
+        None
+            Validates no existing reduction or raises ValueError
+
+        Raises:
+        -------
+        ValueError
+            If reduction already performed for any of the specified trajectories
+        """
+        trajectories_with_reduced_data = [
+            traj_idx for traj_idx in traj_indices
+            if traj_idx in feature_traj_dict and feature_traj_dict[traj_idx].reduced_data is not None
+        ]
+        
+        if trajectories_with_reduced_data:
+            raise ValueError(
+                f"Reduction already performed for feature '{feature_key}' in trajectories {trajectories_with_reduced_data}. "
+                f"Reset the reduction first using reset_reduction()."
             )
