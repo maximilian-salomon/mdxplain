@@ -294,6 +294,34 @@ class DistanceCalculatorAnalysis:
             self.use_memmap,
         )
 
+    def compute_cv(self, distances: np.ndarray) -> np.ndarray:
+        """
+        Compute coefficient of variation for each distance pair.
+
+        The coefficient of variation (CV) is the ratio of standard deviation
+        to the mean, providing a normalized measure of variability that allows
+        comparison of variability across different scales.
+
+        Parameters:
+        -----------
+        distances : np.ndarray or np.memmap
+            Distance array with shape (n_frames, n_pairs)
+
+        Returns:
+        --------
+        np.ndarray
+            CV values per distance pair with shape (n_pairs,)
+
+        Examples:
+        ---------
+        >>> # Compute CV for all distance pairs
+        >>> cv_values = analysis.compute_cv(distance_data)
+        >>> highly_variable = cv_values > 0.5  # Pairs with high variability
+        """
+        mean_vals = self.compute_mean(distances)
+        std_vals = self.compute_std(distances)
+        return std_vals / (mean_vals + 1e-10)
+
     # === FRAME-BASED STATISTICS ===
     def distances_per_frame_mean(self, distances: np.ndarray) -> np.ndarray:
         """

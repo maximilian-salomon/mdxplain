@@ -577,13 +577,9 @@ class DistanceCalculator(CalculatorBase):
 
         # Handle complex metrics
         if metric == "cv":
-            mean_vals = self.analysis.compute_mean(distances)
-            std_vals = self.analysis.compute_std(distances)
-            return std_vals / (mean_vals + 1e-10)
+            return self.analysis.compute_cv(distances)
         if metric == "range":
-            max_vals = self.analysis.compute_max(distances)
-            min_vals = self.analysis.compute_min(distances)
-            return max_vals - min_vals
+            return self.analysis.compute_range(distances)
         if metric == "transitions":
             return self._compute_transitions_metric(
                 distances, threshold, window_size, transition_mode, lag_time
