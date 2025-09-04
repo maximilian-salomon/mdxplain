@@ -19,31 +19,12 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Statistical metrics for contact feature analysis and filtering.
+Coordinates feature type for molecular dynamics trajectory analysis.
 
-Provides metric identifiers for reducing contact data based on frequency
-and stability patterns in molecular dynamics trajectories.
+Extracts XYZ coordinates from molecular dynamics trajectories with flexible
+atom selection capabilities. Supports memory mapping for large datasets.
 """
 
+from .coordinates import Coordinates
 
-class ReduceContactMetrics:
-    """
-    Available statistical metrics for contact feature analysis and filtering.
-
-    Provides metric identifiers for reducing contact data.
-    So we can use them to filter the contact data.
-
-    Examples:
-    ---------
-    >>> print(ReduceContactMetrics.FREQUENCY)  # 'frequency'
-    >>> print(ReduceContactMetrics.STABILITY)  # 'stability'
-    """
-
-    FREQUENCY = "frequency"
-    """Contact frequency metric - fraction of frames where pair is in contact."""
-
-    STABILITY = "stability"
-    """Contact stability metric - measure of contact persistence over time."""
-
-    TRANSITIONS = "transitions"
-    """Number of contact formation/breaking transitions."""
+__all__ = ["Coordinates"]
