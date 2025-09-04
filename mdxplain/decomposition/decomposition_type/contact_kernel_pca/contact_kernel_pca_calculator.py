@@ -63,7 +63,7 @@ class ContactKernelPCACalculator(KernelPCACalculator):
     >>> transformed, metadata = calc.compute(very_large_binary, n_components=50, use_nystrom=True, n_landmarks=5000)
     """
 
-    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000) -> None:
+    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000, use_parallel: bool = False, n_jobs: int = -1, min_chunk_size: int = 1000) -> None:
         """
         Initialize ContactKernelPCA calculator.
 
@@ -75,6 +75,12 @@ class ContactKernelPCACalculator(KernelPCACalculator):
             Path for memory-mapped cache files
         chunk_size : int, optional
             Size of chunks for incremental kernel computation
+        use_parallel : bool, default=False
+            Whether to use parallel processing for matrix-vector multiplication
+        n_jobs : int, default=-1
+            Number of parallel jobs (-1 for all available CPU cores)
+        min_chunk_size : int, default=1000
+            Minimum chunk size per parallel process to avoid overhead
 
         Returns:
         --------
@@ -89,7 +95,7 @@ class ContactKernelPCACalculator(KernelPCACalculator):
         >>> # Incremental ContactKernelPCA for large datasets
         >>> calc = ContactKernelPCACalculator(use_memmap=True, chunk_size=1000)
         """
-        super().__init__(use_memmap, cache_path, chunk_size)
+        super().__init__(use_memmap, cache_path, chunk_size, use_parallel, n_jobs, min_chunk_size)
         self._cache_prefix = "contact_kernel_pca"
 
     def compute(self, data: np.ndarray, **kwargs) -> Tuple[np.ndarray, Dict]:

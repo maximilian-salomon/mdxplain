@@ -28,6 +28,7 @@ computation for large datasets using sklearn's KernelPCA.
 from typing import Dict, Tuple, Any
 
 import numpy as np
+from joblib import Parallel, delayed
 from sklearn.decomposition import IncrementalPCA, KernelPCA
 from sklearn.kernel_approximation import Nystroem
 from sklearn.metrics.pairwise import rbf_kernel
@@ -60,7 +61,7 @@ class KernelPCACalculator(CalculatorBase):
     >>> transformed, metadata = calc.compute(large_data, n_components=50)
     """
 
-    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000) -> None:
+    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000, use_parallel: bool = False, n_jobs: int = -1, min_chunk_size: int = 1000) -> None:
         """
         Initialize KernelPCA calculator.
 
@@ -72,6 +73,12 @@ class KernelPCACalculator(CalculatorBase):
             Path for memory-mapped cache files
         chunk_size : int, optional
             Size of chunks for incremental kernel computation
+        use_parallel : bool, default=False
+            Whether to use parallel processing for matrix-vector multiplication
+        n_jobs : int, default=-1
+            Number of parallel jobs (-1 for all available CPU cores)
+        min_chunk_size : int, default=1000
+            Minimum chunk size per parallel process to avoid overhead
 
         Returns:
         --------
@@ -88,6 +95,9 @@ class KernelPCACalculator(CalculatorBase):
         """
         super().__init__(use_memmap, cache_path, chunk_size)
         self._cache_prefix = "kernel_pca"
+        self.use_parallel = use_parallel
+        self.n_jobs = n_jobs
+        self.min_chunk_size = min_chunk_size
 
     def compute(self, data: np.ndarray, **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
@@ -359,18 +369,25 @@ class KernelPCACalculator(CalculatorBase):
         )
         self._center_kernel_inplace(kernel_matrix, row_means, col_means, grand_mean)
         
-        kernel_operator = LinearOperator(
-            shape=(n_samples, n_samples),
-            matvec=lambda v: self._chunked_matvec(v, kernel_matrix, self.chunk_size),
-            dtype=kernel_matrix.dtype
+        if self.use_parallel:
+            parallel_chunk_size = max(self.min_chunk_size, self.chunk_size // self.n_jobs)
+            matvec_func = lambda v: self._parallel_chunked_matvec(v, kernel_matrix, parallel_chunk_size)
+        else:
+            matvec_func = lambda v: self._chunked_matvec(v, kernel_matrix, self.chunk_size)
+        
+        # Create LinearOperator with progress tracking
+        kernel_operator = self._create_progress_linear_operator(
+            (n_samples, n_samples), matvec_func, kernel_matrix.dtype
         )
 
+        print(f"Starting eigendecomposition for {hyperparameters['n_components']} components...")
         eigenvals, eigenvecs = eigs(
             kernel_operator,
             k=hyperparameters["n_components"],
             which='LM',  # Largest magnitude
             tol=1e-6
         )
+        print(f"Eigendecomposition completed after {kernel_operator.call_count} matrix-vector products")
 
         # Sort eigenvalues and eigenvectors in descending order
         # Take only real parts (should be real due to symmetry)
@@ -434,7 +451,7 @@ class KernelPCACalculator(CalculatorBase):
         n_samples = kernel_matrix.shape[0]
         result = np.zeros(n_samples, dtype=v.dtype)
         
-        for i in tqdm(range(0, n_samples, chunk_size), desc="Computing eigendecomposition", unit="chunks"):
+        for i in range(0, n_samples, chunk_size):
             end = min(i + chunk_size, n_samples)
             
             # Load only one chunk of rows into RAM
@@ -444,6 +461,72 @@ class KernelPCACalculator(CalculatorBase):
             result[i:end] = matrix_chunk @ v
             
         return result
+
+    def _parallel_chunked_matvec(self, v: np.ndarray, kernel_matrix: np.memmap, parallel_chunk_size: int) -> np.ndarray:
+        """
+        Performs matrix-vector product in parallel for a memmapped matrix in chunks.
+
+        Parameters:
+        -----------
+        v : numpy.ndarray
+            Input vector to multiply
+        kernel_matrix : numpy.memmap
+            Memory-mapped kernel matrix
+        parallel_chunk_size : int
+            Size of chunks to process at a time for parallel processing
+
+        Returns:
+        --------
+        numpy.ndarray
+            Resulting vector from the multiplication
+        """
+        n_samples = kernel_matrix.shape[0]
+        
+        def process_chunk(start_index):
+            end_index = min(start_index + parallel_chunk_size, n_samples)
+            matrix_chunk = kernel_matrix[start_index:end_index, :]
+            return matrix_chunk @ v
+
+        chunk_starts = range(0, n_samples, parallel_chunk_size)
+        
+        chunk_results = Parallel(n_jobs=self.n_jobs)(
+            delayed(process_chunk)(i) for i in chunk_starts
+        )
+        
+        return np.concatenate(chunk_results)
+
+    def _create_progress_linear_operator(self, shape, matvec_func, dtype):
+        """
+        Create LinearOperator with progress tracking for eigendecomposition.
+
+        Parameters:
+        -----------
+        shape : tuple
+            Shape of the linear operator
+        matvec_func : callable
+            Matrix-vector multiplication function
+        dtype : numpy.dtype
+            Data type of the operator
+
+        Returns:
+        --------
+        LinearOperator
+            LinearOperator with call counting for progress tracking
+        """
+        class ProgressLinearOperator(LinearOperator):
+            def __init__(self, shape, dtype):
+                super().__init__(shape=shape, dtype=dtype)
+                self.call_count = 0
+                self.last_report = 0
+
+            def _matvec(self, v):
+                self.call_count += 1
+                if self.call_count - self.last_report >= 10:  # Report every 10 calls
+                    print(f"  Matrix-vector products: {self.call_count}")
+                    self.last_report = self.call_count
+                return matvec_func(v)
+
+        return ProgressLinearOperator(shape, dtype)
     
     def _create_kernel_memmap(self, n_samples: int) -> np.ndarray:
         """

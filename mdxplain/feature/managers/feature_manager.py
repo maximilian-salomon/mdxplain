@@ -385,13 +385,14 @@ class FeatureManager:
                                         metric="cv", threshold_min=0.1)
         """
         feature_key = DataUtils.get_type_key(feature_type)
-        FeatureValidationHelper.validate_reduction_state(pipeline_data, feature_key)
-        FeatureValidationHelper.validate_threshold_parameters(
-            threshold_min, threshold_max, metric
-        )
         
         # Get trajectory indices to process
         traj_indices = pipeline_data.trajectory_data.get_trajectory_indices(traj_selection)
+        
+        FeatureValidationHelper.validate_reduction_state(pipeline_data, feature_key, traj_indices)
+        FeatureValidationHelper.validate_threshold_parameters(
+            threshold_min, threshold_max, metric
+        )
         
         # Apply reduction to each selected trajectory
         for traj_idx in traj_indices:
