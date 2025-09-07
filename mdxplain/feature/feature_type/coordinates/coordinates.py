@@ -49,7 +49,7 @@ class Coordinates(FeatureTypeBase):
     Examples:
     ---------
     >>> # Extract alpha carbon coordinates
-    >>> coords = Coordinates(selection='ca')
+    >>> coords = Coordinates(selection='name CA')
     >>> pipeline.feature.add_feature(coords)
 
     >>> # Extract all heavy atoms
@@ -64,19 +64,19 @@ class Coordinates(FeatureTypeBase):
     ReduceMetrics = ReduceCoordinatesMetrics
     """Available reduce metrics for coordinates features."""
 
-    def __init__(self, selection: str = 'ca') -> None:
+    def __init__(self, selection: str = 'name CA') -> None:
         """
         Initialize coordinates feature type with atom selection.
 
         Parameters:
         -----------
-        selection : str, default='ca'
-            Atom selection string for coordinate extraction. Options:
+        selection : str, default='name CA'
+            Atom selection string using MDTraj syntax. Examples:
             - 'all': All atoms in trajectory
-            - 'ca': Alpha carbon atoms only  
+            - 'name CA': Alpha carbon atoms only  
             - 'backbone': Backbone atoms (N, CA, C, O)
-            - 'heavy': All heavy (non-hydrogen) atoms
-            - Custom MDTraj selection string (e.g., 'name CA and resid 1 to 100')
+            - 'not element H': All heavy (non-hydrogen) atoms
+            - 'name CA and resid 1 to 100': Custom selection
 
         Returns:
         --------
@@ -154,7 +154,7 @@ class Coordinates(FeatureTypeBase):
         Examples:
         ---------
         >>> # Extract coordinates for selected atoms
-        >>> coords = Coordinates(selection='ca')
+        >>> coords = Coordinates(selection='name CA')
         >>> coords.init_calculator()
         >>> data, metadata = coords.compute(trajectory, res_metadata)
         >>> print(f"Coordinate array shape: {data.shape}")

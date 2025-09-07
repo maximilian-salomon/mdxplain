@@ -167,7 +167,7 @@ class CoordinatesCalculator(CalculatorBase):
             except Exception as e:
                 raise ValueError(
                     f"Invalid selection string '{selection}': {e}. "
-                    f"Valid options: 'all', 'ca', 'backbone', 'heavy', or MDTraj selection syntax."
+                    f"Use MDTraj selection syntax (e.g., 'name CA', 'backbone', 'not element H')."
                 ) from e
 
         if len(indices) == 0:
@@ -295,6 +295,7 @@ class CoordinatesCalculator(CalculatorBase):
             "features": features,
             "selection_string": selection,
             "n_selected_atoms": len(indices),
+            "n_features": len(features),
             "coordinate_system": "cartesian_xyz",
             "units": "angstrom"
         }
