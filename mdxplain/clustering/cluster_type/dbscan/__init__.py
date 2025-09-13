@@ -24,3 +24,7 @@ DBSCAN clustering implementation for mdxplain.
 This module provides DBSCAN (Density-Based Spatial Clustering of Applications
 with Noise) clustering functionality for molecular dynamics trajectory analysis.
 """
+
+from .dbscan import DBSCAN
+
+__all__ = ['DBSCAN']

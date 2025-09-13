@@ -26,5 +26,6 @@ atom selection capabilities. Supports memory mapping for large datasets.
 """
 
 from .coordinates import Coordinates
+from .coordinates_reduce_service import CoordinatesReduceService
 
-__all__ = ["Coordinates"]
+__all__ = ["Coordinates", "CoordinatesReduceService"]

@@ -36,6 +36,7 @@ if TYPE_CHECKING:
 
 from ..cluster_type.interfaces.cluster_type_base import ClusterTypeBase
 from ..entities.cluster_data import ClusterData
+from ..services.cluster_add_service import ClusterAddService
 from ...utils.data_utils import DataUtils
 import shutil
 import os
@@ -360,7 +361,7 @@ class ClusterManager:
         else:
             return self._get_feature_selection_data(pipeline_data, name, data_selector_name)
 
-    def add(
+    def add_clustering(
         self,
         pipeline_data: PipelineData,
         selection_name: str,
@@ -385,12 +386,12 @@ class ClusterManager:
 
         Pipeline mode:
         >>> pipeline = PipelineManager()
-        >>> pipeline.clustering.add("selection", cluster_type.DBSCAN())  # NO pipeline_data parameter
+        >>> pipeline.clustering.add_clustering("selection", cluster_type.DBSCAN())  # NO pipeline_data parameter
 
         Standalone mode:
         >>> pipeline_data = PipelineData()
         >>> manager = ClusterManager()
-        >>> manager.add(pipeline_data, "selection", cluster_type.DBSCAN())  # pipeline_data required
+        >>> manager.add_clustering(pipeline_data, "selection", cluster_type.DBSCAN())  # pipeline_data required
 
         Parameters:
         -----------
@@ -799,3 +800,30 @@ class ClusterManager:
         for name, data in pipeline_data.cluster_data.items():
             print(f"\n--- {name} ---")
             data.print_info()
+    
+    @property
+    def add(self):
+        """
+        Service for adding clustering algorithms with simplified syntax.
+        
+        Provides an intuitive interface for adding clustering algorithms without
+        requiring explicit cluster type instantiation or imports.
+        
+        Returns:
+        --------
+        ClusterAddService
+            Service instance for adding clustering algorithms with combined parameters
+            
+        Examples:
+        ---------
+        >>> # Add different clustering algorithms
+        >>> pipeline.clustering.add.dbscan("my_features", eps=0.5, min_samples=5)
+        >>> pipeline.clustering.add.hdbscan("pca_features", min_cluster_size=10)
+        >>> pipeline.clustering.add.dpa("distance_features", Z=2.0)
+        
+        Notes:
+        -----
+        Pipeline data is automatically injected by AutoInjectProxy.
+        All cluster type parameters are combined with manager.add parameters.
+        """
+        return ClusterAddService(self, None)

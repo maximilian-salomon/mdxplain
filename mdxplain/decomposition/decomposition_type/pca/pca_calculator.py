@@ -183,7 +183,6 @@ class PCACalculator(CalculatorBase):
             n_components=hyperparameters["n_components"],
             random_state=hyperparameters["random_state"],
             copy=False,
-            n_jobs=-1,
             whiten=True,
         )
 

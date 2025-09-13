@@ -39,6 +39,9 @@ from ..helper.feature_reset_helper import FeatureResetHelper
 from ..helper.feature_reduction_helper import FeatureReductionHelper
 from ..helper.feature_computation_helper import FeatureComputationHelper
 from ..helper.feature_binding_helper import FeatureBindingHelper
+from ..services.feature_add_service import FeatureAddService
+from ..services.feature_reduce_service import FeatureReduceService
+from ..services.feature_analysis_service import FeatureAnalysisService
 from ...utils.data_utils import DataUtils
 
 
@@ -640,3 +643,81 @@ class FeatureManager:
         temp_dict = {}
         DataUtils.load_object(temp_dict, load_path)
         pipeline_data.feature_data = temp_dict
+    
+    @property
+    def add(self):
+        """
+        Service for adding features with simplified syntax.
+        
+        Provides an intuitive interface for adding features without requiring
+        explicit feature type instantiation or imports.
+        
+        Returns:
+        --------
+        FeatureAddService
+            Service instance for adding features with combined parameters
+            
+        Examples:
+        ---------
+        >>> # Add different feature types
+        >>> pipeline.feature.add.distances(excluded_neighbors=2)
+        >>> pipeline.feature.add.contacts(threshold=5.0, traj_selection=[0,1,2])
+        >>> pipeline.feature.add.torsions(calculate_chi=False, force=True)
+        >>> pipeline.feature.add.dssp(simplified=True)
+        >>> pipeline.feature.add.sasa(probe_radius=0.12)
+        >>> pipeline.feature.add.coordinates(atom_selection="backbone")
+        
+        Notes:
+        -----
+        Pipeline data is automatically injected by AutoInjectProxy.
+        All feature type parameters are combined with add_feature parameters.
+        """
+        return FeatureAddService(self, None)
+    
+    @property
+    def reduce(self):
+        """
+        Service for reducing features with type-specific metrics.
+        
+        Provides type-specific reduction metrics tailored to each feature type,
+        such as coefficient of variation for distances or frequency for contacts.
+        
+        Returns:
+        --------
+        FeatureReduceService
+            Service instance for feature reduction with type-specific metrics
+            
+        Examples:
+        ---------
+        >>> # Distance-specific metrics
+        >>> pipeline.feature.reduce.distances.cv(threshold_min=0.1)
+        >>> pipeline.feature.reduce.distances.transitions(window_size=20)
+        
+        >>> # Contact-specific metrics
+        >>> pipeline.feature.reduce.contacts.frequency(threshold_min=0.5)
+        >>> pipeline.feature.reduce.contacts.stability(threshold_max=0.8)
+        
+        >>> # Torsion-specific metrics (circular statistics)
+        >>> pipeline.feature.reduce.torsions.circular_std(threshold_max=30.0)
+        
+        Notes:
+        -----
+        Pipeline data is automatically injected by AutoInjectProxy.
+        Each feature type has its own specialized metrics.
+        """
+        return FeatureReduceService(self, None)
+    
+    @property
+    def analysis(self):
+        """
+        Service for analyzing features with type-specific methods.
+        
+        Provides analysis operations tailored to each feature type,
+        such as circular statistics for torsions or contact frequency analysis.
+        
+        Returns:
+        --------
+        FeatureAnalysisService
+            Service instance for feature analysis with type-specific methods
+        """
+        return FeatureAnalysisService(None) # PipelineData is injected automatically

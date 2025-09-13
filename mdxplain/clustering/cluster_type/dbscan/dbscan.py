@@ -69,6 +69,7 @@ class DBSCAN(ClusterTypeBase):
         method: str = "standard",
         sample_fraction: float = 0.1,
         force: bool = False,
+        knn_neighbors: int = 5
     ) -> None:
         """
         Initialize DBSCAN cluster type.
@@ -83,12 +84,14 @@ class DBSCAN(ClusterTypeBase):
             Clustering method:
             - "standard": Load all data into memory (default)
             - "sampling_approximate": Sample data + approximate_predict for large datasets
-            - "sampling_knn": Sample data + k-NN classifier fallback
+            - "precomputed": Use precomputed distance matrix (data must be square)
         sample_fraction : float, default=0.1
             Fraction of data to sample for sampling-based methods (10%)
             Final sample size: max(50000, min(100000, sample_fraction * n_samples))
         force : bool, default=False
             Override memory and dimensionality checks (converts errors to warnings)
+        knn_neighbors : int, default=5
+            Number of neighbors for k-NN sampling method.
 
         Returned Metadata:
         ------------------
@@ -117,6 +120,7 @@ class DBSCAN(ClusterTypeBase):
         self.method = method
         self.sample_fraction = sample_fraction
         self.force = force
+        self.knn_neighbors = knn_neighbors
         self._validate_parameters()
 
     @classmethod
@@ -190,6 +194,7 @@ class DBSCAN(ClusterTypeBase):
             method=self.method,
             sample_fraction=self.sample_fraction,
             force=self.force,
+            knn_neighbors=self.knn_neighbors
         )
     
     def _validate_parameters(self):
@@ -215,3 +220,6 @@ class DBSCAN(ClusterTypeBase):
 
         if not isinstance(self.force, bool):
             raise ValueError("force must be a boolean")
+
+        if not isinstance(self.knn_neighbors, int) or self.knn_neighbors < 1:
+            raise ValueError("knn_neighbors must be a positive integer")

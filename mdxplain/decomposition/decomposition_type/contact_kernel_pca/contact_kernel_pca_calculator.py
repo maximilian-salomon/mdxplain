@@ -212,7 +212,9 @@ class ContactKernelPCACalculator(KernelPCACalculator):
         hyperparameters = super()._extract_hyperparameters(data, kwargs)
 
         # Use RBF kernel (equivalent to Hamming for binary data)
-        hyperparameters["kernel"] = "rbf on binary data (Hamming distance)"
+        # Store descriptive name in metadata but use actual kernel name for sklearn
+        hyperparameters["kernel"] = "rbf"
+        hyperparameters["kernel_description"] = "rbf on binary data (Hamming distance)"
 
         # Set default gamma for binary data if not specified
         if "gamma" not in kwargs:

@@ -24,3 +24,7 @@ DPA (Density Peak Advanced) clustering implementation.
 This module provides DPA clustering functionality for molecular dynamics
 trajectory analysis using the DPA package.
 """
+
+from .dpa import DPA
+
+__all__ = ['DPA']

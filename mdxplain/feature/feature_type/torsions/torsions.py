@@ -31,7 +31,6 @@ import mdtraj as md
 
 from ..interfaces.feature_type_base import FeatureTypeBase
 from .torsions_calculator import TorsionsCalculator
-from .reduce_torsions_metrics import ReduceTorsionsMetrics
 
 
 class Torsions(FeatureTypeBase):
@@ -66,7 +65,6 @@ class Torsions(FeatureTypeBase):
     >>> pipeline.feature.add_feature(torsions)
     """
 
-    ReduceMetrics = ReduceTorsionsMetrics
     """Available reduce metrics for torsion features."""
 
     def __init__(self, calculate_phi: bool = True, calculate_psi: bool = True, 

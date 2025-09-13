@@ -147,7 +147,7 @@ class DSSPEncodingHelper:
         """
         class_to_idx = {cls: idx for idx, cls in enumerate(classes)}
         
-        cache_file = CalculatorComputeHelper.get_cache_file_path(
+        cache_file = DataUtils.get_cache_file_path(
             f'dssp_int_{id(dssp_data)}.dat', cache_path
         )
         encoded = np.memmap(

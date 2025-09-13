@@ -185,6 +185,7 @@ class DPACalculator(CalculatorBase):
             "halos": kwargs.get("halos", False),
             "method": kwargs.get("method", "standard"),
             "sample_size": sample_size,
+            "knn_neighbors": kwargs.get("knn_neighbors", 5),
             "force": kwargs.get("force", False),
         }
 

@@ -24,3 +24,8 @@ Distance analysis implementation.
 This module contains classes for computing and analyzing pairwise distances
 between atoms in molecular dynamics trajectories.
 """
+
+from .distances import Distances
+from .distances_reduce_service import DistancesReduceService
+
+__all__ = ["Distances", "DistancesReduceService"]

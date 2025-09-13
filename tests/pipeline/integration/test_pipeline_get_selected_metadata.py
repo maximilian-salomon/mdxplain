@@ -1,3 +1,23 @@
+# mdxplain - A Python toolkit for molecular dynamics trajectory analysis
+#
+# Author: Maximilian Salomon
+# Created with assistance from Claude Code (Claude Sonnet 4.0) and GitHub Copilot (Claude Sonnet 4.0).
+#
+# Copyright (C) 2025 Maximilian Salomon
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """Tests for PipelineData.get_selected_metadata() with comprehensive exact verification."""
 
 import numpy as np
@@ -12,7 +32,13 @@ class TestGetSelectedMetadataExactVerification:
     """Exact tests for get_selected_metadata() with complete content verification."""
     
     def setup_method(self):
-        """Create multi-trajectory setup for comprehensive metadata verification."""
+        """
+        Create multi-trajectory setup for comprehensive metadata verification.
+
+        Creates three synthetic trajectories with different residue sequences,
+        consensus labels, and seqids. Adds distance features and prepares for
+        metadata verification.
+        """
         # Setup pipeline
         self.pipeline = PipelineManager()
         
@@ -26,7 +52,22 @@ class TestGetSelectedMetadataExactVerification:
         self.pipeline.feature.add_feature(Distances(excluded_neighbors=0))
         
     def _create_trajectory_0(self):
-        """Create first trajectory with standard labels."""
+        """
+        Create first trajectory with standard labels for metadata testing.
+        
+        Sets up a trajectory with 5 residues (ALA-GLY-VAL-ALA-GLY) and 30 frames,
+        along with standard residue metadata including consensus labels (3.50-4.50 range),
+        seqids (1-5), and full names without suffixes.
+        
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        None
+            Modifies self.pipeline.data.trajectory_data in place
+        """
         # Create topology: ALA(1), GLY(2), VAL(3), ALA(4), GLY(5)
         topology = md.Topology()
         chain = topology.add_chain()
@@ -77,7 +118,11 @@ class TestGetSelectedMetadataExactVerification:
         self.pipeline.data.trajectory_data.res_label_data = {0: residue_metadata_0}
         
     def _create_trajectory_1(self):
-        """Create second trajectory with different consensus labels."""
+        """
+        Create second trajectory with different consensus labels.
+
+        Sets up a trajectory with the same residues as traj_0 but different consensus labels.
+        """
         # Reuse same topology as traj_0
         topology = self.pipeline.data.trajectory_data.trajectories[0].topology
         
@@ -117,7 +162,11 @@ class TestGetSelectedMetadataExactVerification:
         self.pipeline.data.trajectory_data.res_label_data[1] = residue_metadata_1
         
     def _create_trajectory_2(self):
-        """Create third trajectory with different seqids."""
+        """
+        Create third trajectory with different seqids.
+
+        Sets up a trajectory with the same residues as traj_0 but different seqids (10-14).
+        """
         # Reuse same topology as traj_0
         topology = self.pipeline.data.trajectory_data.trajectories[0].topology
         
@@ -158,7 +207,31 @@ class TestGetSelectedMetadataExactVerification:
         self.pipeline.data.trajectory_data.res_label_data[2] = residue_metadata_2
     
     def _create_and_select_selector(self, name: str, feature_type: str, selection: str, reference_traj: int = 0, **kwargs):
-        """Helper to create selector with correct structure (bypassing FeatureSelector bug)."""
+        """
+        Create and configure a feature selector bypassing FeatureSelector implementation issues.
+        
+        Manually constructs FeatureSelectorData with proper trajectory results structure
+        to work around bugs in the FeatureSelector.select() method. Creates mock results
+        that match expected selection patterns for reliable testing.
+        
+        Parameters
+        ----------
+        name : str
+            Name identifier for the feature selector
+        feature_type : str
+            Type of features to select (e.g., 'distances')
+        selection : str
+            Selection expression (e.g., 'res ALA', 'seqid 1-3')
+        reference_traj : int, default=0
+            Index of reference trajectory for metadata
+        **kwargs : dict
+            Additional selection parameters (e.g., use_reduced)
+            
+        Returns
+        -------
+        None
+            Stores configured selector in self.pipeline.data.selected_feature_data
+        """
         from mdxplain.feature_selection.entities.feature_selector_data import FeatureSelectorData
         
         selector_data = FeatureSelectorData(name)
@@ -184,7 +257,23 @@ class TestGetSelectedMetadataExactVerification:
         self.pipeline.data.selected_feature_data[name] = selector_data
     
     def _get_feature_indices_from_pairs(self, expected_pairs):
-        """Convert residue pair tuples to actual feature indices."""
+        """
+        Convert residue pair tuples to corresponding distance feature indices.
+        
+        Maps residue index pairs to their position in the distance feature array.
+        For 5 residues, distances are ordered as: (0,1), (0,2), (0,3), (0,4), 
+        (1,2), (1,3), (1,4), (2,3), (2,4), (3,4) at indices 0-9 respectively.
+        
+        Parameters
+        ----------
+        expected_pairs : list of tuple
+            List of (residue1_idx, residue2_idx) pairs
+            
+        Returns
+        -------
+        list of int
+            Feature indices corresponding to the residue pairs
+        """
         # All possible pairs for 5 residues: [(0,1), (0,2), (0,3), (0,4), (1,2), (1,3), (1,4), (2,3), (2,4), (3,4)]
         all_pairs = [(0,1), (0,2), (0,3), (0,4), (1,2), (1,3), (1,4), (2,3), (2,4), (3,4)]
         
@@ -196,7 +285,26 @@ class TestGetSelectedMetadataExactVerification:
         return indices
     
     def _get_expected_pairs(self, selection: str, reference_traj: int = 0):
-        """Get expected residue pairs for a given selection."""
+        """
+        Generate expected residue pairs for a selection expression.
+        
+        Parses selection expressions and returns the expected residue index pairs
+        that should be included in distance calculations. Handles various selection
+        types including residue names, sequence IDs, consensus labels, and Boolean
+        combinations.
+        
+        Parameters
+        ----------
+        selection : str
+            Selection expression (e.g., 'res ALA', 'seqid 1-3', 'res ALA and seqid 1-3')
+        reference_traj : int, default=0
+            Reference trajectory index for metadata lookup
+            
+        Returns
+        -------
+        list of tuple
+            List of (residue1_idx, residue2_idx) pairs that match the selection
+        """
         if selection == "all":
             return [(0,1), (0,2), (0,3), (0,4), (1,2), (1,3), (1,4), (2,3), (2,4), (3,4)]
         elif selection == "res ALA":
@@ -256,7 +364,24 @@ class TestGetSelectedMetadataExactVerification:
             raise ValueError(f"Unknown selection: {selection}")
     
     def _get_residue_info(self, reference_traj: int):
-        """Get residue info for specified reference trajectory."""
+        """
+        Retrieve residue information for the specified reference trajectory.
+        
+        Returns hardcoded residue metadata for test trajectories including names,
+        sequence IDs, consensus labels, and full names. Each trajectory has different
+        labeling schemes to test metadata handling across multiple systems.
+        
+        Parameters
+        ----------
+        reference_traj : int
+            Index of the reference trajectory (0, 1, or 2)
+            
+        Returns
+        -------
+        list of dict
+            List of residue information dictionaries with keys:
+            idx, name, seqid, consensus, resid, aaa_code, a_code, full_name
+        """
         if reference_traj == 0:
             return [
                 {"idx": 0, "name": "ALA", "seqid": 1, "consensus": "3.50", "resid": 1, "aaa_code": "ALA", "a_code": "A", "full_name": "ALA1"},
@@ -285,7 +410,25 @@ class TestGetSelectedMetadataExactVerification:
             raise ValueError(f"Unknown reference trajectory: {reference_traj}")
     
     def _build_expected_metadata(self, selection: str, reference_traj: int = 0):
-        """Build expected metadata structure for exact verification."""
+        """
+        Construct expected metadata structure for exact verification testing.
+        
+        Builds the complete expected metadata array structure that should be returned
+        by get_selected_metadata(). Creates properly formatted feature metadata with
+        residue information, special labels, and full names for each distance pair.
+        
+        Parameters
+        ----------
+        selection : str
+            Selection expression used to determine included pairs
+        reference_traj : int, default=0
+            Reference trajectory index for metadata source
+            
+        Returns
+        -------
+        numpy.ndarray
+            Array of metadata dictionaries with 'type' and 'features' fields
+        """
         # Get expected pairs for this selection
         expected_pairs = self._get_expected_pairs(selection, reference_traj)
         residue_info = self._get_residue_info(reference_traj)
@@ -339,7 +482,25 @@ class TestGetSelectedMetadataExactVerification:
         return np.array(expected_metadata, dtype=object)
     
     def _verify_metadata_exact(self, actual_metadata, expected_metadata):
-        """Verify metadata with exact equality check."""
+        """
+        Perform exact equality verification of metadata structures.
+        
+        Compares actual and expected metadata arrays field-by-field with detailed
+        error reporting. Validates array lengths, metadata entry structure, feature
+        arrays, and all residue information fields for complete accuracy.
+        
+        Parameters
+        ----------
+        actual_metadata : numpy.ndarray
+            Metadata array returned by get_selected_metadata()
+        expected_metadata : numpy.ndarray
+            Expected metadata array from _build_expected_metadata()
+            
+        Returns
+        -------
+        None
+            Prints success message or raises AssertionError with detailed mismatch info
+        """
         # Check array lengths
         assert len(actual_metadata) == len(expected_metadata), \
             f"Length mismatch: got {len(actual_metadata)}, expected {len(expected_metadata)}"
@@ -374,7 +535,12 @@ class TestGetSelectedMetadataExactVerification:
     # ========== CORE FEATURE SELECTOR TESTS ==========
     
     def test_all_features_metadata(self):
-        """Test metadata for all features selection with exact verification."""
+        """
+        Test metadata retrieval for complete feature selection.
+        
+        Validates that all distance features return correct residue pair metadata
+        with proper feature indices and trajectory information.
+        """
         # Manually create a working selector with correct structure since FeatureSelector has a bug
         from mdxplain.feature_selection.entities.feature_selector_data import FeatureSelectorData
         
@@ -405,7 +571,12 @@ class TestGetSelectedMetadataExactVerification:
         self._verify_metadata_exact(actual_metadata, expected_metadata)
     
     def test_ala_features_metadata(self):
-        """Test metadata for ALA features selection with exact verification."""
+        """
+        Test metadata for ALA residue-specific distance selection.
+        
+        Validates that only distance pairs involving ALA residues are included
+        with correct residue identification and labeling.
+        """
         self._create_and_select_selector("test", "distances", "res ALA")
         
         # Get actual metadata
@@ -418,7 +589,12 @@ class TestGetSelectedMetadataExactVerification:
         self._verify_metadata_exact(actual_metadata, expected_metadata)
     
     def test_gly_features_metadata(self):
-        """Test metadata for GLY features selection with exact verification."""
+        """
+        Test metadata for GLY residue-specific distance selection.
+        
+        Validates that only distance pairs involving GLY residues are included
+        with correct residue identification and labeling.
+        """
         self._create_and_select_selector("test", "distances", "res GLY")
         
         # Get actual metadata
@@ -431,7 +607,12 @@ class TestGetSelectedMetadataExactVerification:
         self._verify_metadata_exact(actual_metadata, expected_metadata)
     
     def test_val_features_metadata(self):
-        """Test metadata for VAL features selection with exact verification."""
+        """
+        Test metadata for VAL residue-specific distance selection.
+        
+        Validates that only distance pairs involving VAL residues are included
+        with correct residue identification and labeling.
+        """
         self._create_and_select_selector("test", "distances", "res VAL")
         
         # Get actual metadata
@@ -444,7 +625,12 @@ class TestGetSelectedMetadataExactVerification:
         self._verify_metadata_exact(actual_metadata, expected_metadata)
     
     def test_seqid_range_metadata(self):
-        """Test metadata for seqid range selection with exact verification."""
+        """
+        Test metadata for sequence ID range-based selection.
+        
+        Validates that only residues within seqid 1-3 range are selected
+        and metadata reflects correct sequence numbering.
+        """
         self._create_and_select_selector("test", "distances", "seqid 1-3")
         
         # Get actual metadata
@@ -457,7 +643,12 @@ class TestGetSelectedMetadataExactVerification:
         self._verify_metadata_exact(actual_metadata, expected_metadata)
     
     def test_multiple_residues_metadata(self):
-        """Test metadata for multiple residue selection with exact verification."""
+        """
+        Test metadata for multiple residue type selection.
+        
+        Validates that ALA+GLY selection returns all distance pairs
+        involving either residue type with correct metadata structure.
+        """
         self._create_and_select_selector("test", "distances", "res ALA GLY")
         
         # Get actual metadata
@@ -470,7 +661,12 @@ class TestGetSelectedMetadataExactVerification:
         self._verify_metadata_exact(actual_metadata, expected_metadata)
     
     def test_mixed_selection_metadata(self):
-        """Test metadata for mixed residue selection with exact verification."""
+        """
+        Test metadata for mixed residue selection (ALA+VAL).
+        
+        Validates that combined residue selection correctly assembles
+        distance pairs involving different amino acid types.
+        """
         self._create_and_select_selector("test", "distances", "res ALA VAL")
         
         # Get actual metadata
@@ -485,7 +681,12 @@ class TestGetSelectedMetadataExactVerification:
     # ========== REFERENCE TRAJECTORY TESTS ==========
     
     def test_ref_traj_0_metadata(self):
-        """Test metadata using reference trajectory 0."""
+        """
+        Test metadata using trajectory 0 as reference.
+        
+        Validates that reference trajectory selection returns correct
+        consensus labels, seqids, and residue naming conventions.
+        """
         self._create_and_select_selector("test", "distances", "res ALA", reference_traj=0)
         
         actual_metadata = self.pipeline.data.get_selected_metadata("test")
@@ -494,7 +695,12 @@ class TestGetSelectedMetadataExactVerification:
         self._verify_metadata_exact(actual_metadata, expected_metadata)
     
     def test_ref_traj_1_metadata(self):
-        """Test metadata using reference trajectory 1."""
+        """
+        Test metadata using trajectory 1 as reference.
+        
+        Validates that alternative trajectory returns different consensus labels
+        and full_name conventions while maintaining data consistency.
+        """
         self._create_and_select_selector("test", "distances", "res ALA", reference_traj=1)
         
         actual_metadata = self.pipeline.data.get_selected_metadata("test")
@@ -503,7 +709,12 @@ class TestGetSelectedMetadataExactVerification:
         self._verify_metadata_exact(actual_metadata, expected_metadata)
     
     def test_ref_traj_2_metadata(self):
-        """Test metadata using reference trajectory 2."""
+        """
+        Test metadata using trajectory 2 as reference.
+        
+        Validates that trajectory with different seqid numbering (10-14)
+        returns correct metadata with alternative sequence identifiers.
+        """
         self._create_and_select_selector("test", "distances", "res ALA", reference_traj=2)
         
         actual_metadata = self.pipeline.data.get_selected_metadata("test")
@@ -512,7 +723,12 @@ class TestGetSelectedMetadataExactVerification:
         self._verify_metadata_exact(actual_metadata, expected_metadata)
     
     def test_ref_traj_seqid_different_metadata(self):
-        """Test metadata with seqid selection using trajectory 2 (different seqids)."""
+        """
+        Test seqid selection with alternative trajectory numbering.
+        
+        Validates that seqid 10-12 selection works correctly when reference
+        trajectory uses different seqid ranges than default.
+        """
         self._create_and_select_selector("test", "distances", "seqid 10-12", reference_traj=2)
         
         actual_metadata = self.pipeline.data.get_selected_metadata("test")
@@ -521,7 +737,12 @@ class TestGetSelectedMetadataExactVerification:
         self._verify_metadata_exact(actual_metadata, expected_metadata)
     
     def test_ref_traj_consensus_different_metadata(self):
-        """Test metadata with consensus selection using trajectory 1 (different consensus)."""
+        """
+        Test consensus selection with alternative trajectory labels.
+        
+        Validates that consensus-based selection works correctly
+        when reference trajectory uses different consensus numbering (1.10 vs 3.50).
+        """
         self._create_and_select_selector("test", "distances", "consensus 1.10", reference_traj=1)
         
         actual_metadata = self.pipeline.data.get_selected_metadata("test")
@@ -532,7 +753,12 @@ class TestGetSelectedMetadataExactVerification:
     # ========== COMBINATION SELECTION TESTS ==========
     
     def test_and_combination_metadata(self):
-        """Test metadata for AND combination selection."""
+        """
+        Test metadata for Boolean AND combination selection.
+        
+        Validates that intersection logic (res ALA AND seqid 1-3)
+        returns correct metadata for residues meeting both conditions.
+        """
         self._create_and_select_selector("test", "distances", "res ALA and seqid 1-3", reference_traj=0)
         
         actual_metadata = self.pipeline.data.get_selected_metadata("test")
@@ -541,7 +767,12 @@ class TestGetSelectedMetadataExactVerification:
         self._verify_metadata_exact(actual_metadata, expected_metadata)
     
     def test_not_combination_metadata(self):
-        """Test metadata for NOT combination selection."""
+        """
+        Test metadata for Boolean NOT combination selection.
+        
+        Validates that exclusion logic (res ALA AND NOT seqid 4)
+        returns correct metadata for residues meeting positive condition only.
+        """
         self._create_and_select_selector("test", "distances", "res ALA and not seqid 4", reference_traj=0)
         
         actual_metadata = self.pipeline.data.get_selected_metadata("test")
@@ -550,7 +781,12 @@ class TestGetSelectedMetadataExactVerification:
         self._verify_metadata_exact(actual_metadata, expected_metadata)
     
     def test_complex_combination_metadata(self):
-        """Test metadata for complex combination selection."""
+        """
+        Test metadata for complex Boolean selection logic.
+        
+        Validates that nested conditions (seqid 1-4 AND NOT res GLY)
+        return correct metadata for sophisticated filtering expressions.
+        """
         self._create_and_select_selector("test", "distances", "seqid 1-4 and not res GLY", reference_traj=0)
         
         actual_metadata = self.pipeline.data.get_selected_metadata("test")
@@ -559,7 +795,12 @@ class TestGetSelectedMetadataExactVerification:
         self._verify_metadata_exact(actual_metadata, expected_metadata)
     
     def test_multi_and_combination_metadata(self):
-        """Test metadata for multiple AND conditions."""
+        """
+        Test metadata for multiple AND condition combinations.
+        
+        Validates that triple condition logic (res ALA VAL AND seqid 1-3)
+        correctly combines multiple criteria in metadata selection.
+        """
         self._create_and_select_selector("test", "distances", "res ALA VAL and seqid 1-3", reference_traj=0)
         
         actual_metadata = self.pipeline.data.get_selected_metadata("test")
@@ -570,7 +811,12 @@ class TestGetSelectedMetadataExactVerification:
     # ========== STRUCTURE AND CONSISTENCY TESTS ==========
     
     def test_metadata_array_structure(self):
-        """Test metadata array has correct structure and types."""
+        """
+        Test metadata array structure and field types.
+        
+        Validates that returned metadata has correct numpy array structure
+        with all required fields (type, features, residue info) present.
+        """
         self._create_and_select_selector("test", "distances", "res ALA", reference_traj=0)
         
         metadata = self.pipeline.data.get_selected_metadata("test")
@@ -599,7 +845,12 @@ class TestGetSelectedMetadataExactVerification:
                     assert field in feature['residue'], f"Entry {i}, feature {j}: missing residue.{field}"
             
     def test_required_fields_complete(self):
-        """Test all required metadata fields are present and correct."""
+        """
+        Test completeness of all required metadata fields.
+        
+        Validates that metadata contains resid, seqid, consensus labels, and indices
+        with correct data types and value ranges.
+        """
         self._create_and_select_selector("test", "distances", "res GLY VAL", reference_traj=0)
         
         metadata = self.pipeline.data.get_selected_metadata("test")
@@ -626,7 +877,12 @@ class TestGetSelectedMetadataExactVerification:
                 assert len(residue['a_code']) == 1, f"Entry {i}, feature {j}: a_code should be single char"
             
     def test_metadata_content_consistency(self):
-        """Test metadata content consistency across different selections."""
+        """
+        Test metadata reproducibility for identical selections.
+        
+        Validates that same feature selection produces identical metadata structure
+        and content across multiple calls for consistency verification.
+        """
         # Test same selection gives same metadata structure  
         self._create_and_select_selector("test1", "distances", "res ALA", reference_traj=0)
         self._create_and_select_selector("test2", "distances", "res ALA", reference_traj=0)
@@ -651,16 +907,31 @@ class TestGetSelectedMetadataErrorCases:
     """Test error conditions and edge cases."""
     
     def setup_method(self):
-        """Setup for error testing."""
+        """
+        Setup for error testing.
+        
+        Initializes a PipelineManager instance for testing error scenarios
+        related to get_selected_metadata() method.
+        """
         self.pipeline = PipelineManager()
     
     def test_nonexistent_feature_selector(self):
-        """Test error when feature selector doesn't exist."""
+        """
+        Test error handling for non-existent feature selector.
+        
+        Validates that get_selected_metadata() raises ValueError
+        when attempting to access undefined selector name.
+        """
         with pytest.raises(ValueError):
             self.pipeline.data.get_selected_metadata("nonexistent")
     
     def test_empty_selection_metadata(self):
-        """Test metadata error for empty feature selection."""
+        """
+        Test error handling for empty feature selection.
+        
+        Validates that selection with no matching residues raises ValueError
+        preventing metadata access for invalid selections.
+        """
         # Create setup with multiple residues to allow feature computation
         topology = md.Topology()
         chain = topology.add_chain()

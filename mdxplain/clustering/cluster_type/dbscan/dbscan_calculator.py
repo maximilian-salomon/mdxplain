@@ -150,6 +150,7 @@ class DBSCANCalculator(CalculatorBase):
             "method": kwargs.get("method", "standard"),
             "sample_size": sample_size,
             "force": kwargs.get("force", False),
+            "knn_neighbors": kwargs.get("knn_neighbors", 5),
         }
 
     def _perform_clustering(self, data: np.ndarray, parameters: Dict[str, Any]) -> Tuple[np.ndarray, Any, float]:

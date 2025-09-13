@@ -77,6 +77,7 @@ class DPA(ClusterTypeBase):
         halos: bool = False,
         method: str = "standard",
         sample_fraction: float = 0.1,
+        knn_neighbors: int = 5,
         force: bool = False,
     ) -> None:
         """
@@ -164,13 +165,15 @@ class DPA(ClusterTypeBase):
         method : str, default="standard"
             Clustering method:
             - "standard": Load all data into memory (default)
-            - "sampling_approximate": Sample data + approximate_predict for large datasets
             - "sampling_knn": Sample data + k-NN classifier fallback
 
         sample_fraction : float, default=0.1
             Fraction of data to sample for sampling-based methods (10%)
             Final sample size: max(50000, min(100000, sample_fraction * n_samples))
 
+        knn_neighbors : int, default=5
+            Number of nearest neighbors for k-NN classifier in sampling methods
+            
         force : bool, default=False
             Override memory and dimensionality checks (converts errors to warnings)
 
@@ -229,6 +232,7 @@ class DPA(ClusterTypeBase):
         self.halos = halos
         self.method = method
         self.sample_fraction = sample_fraction
+        self.knn_neighbors = knn_neighbors
         self.force = force
         self._validate_parameters()
 
@@ -313,6 +317,7 @@ class DPA(ClusterTypeBase):
             halos=self.halos,
             method=self.method,
             sample_fraction=self.sample_fraction,
+            knn_neighbors=self.knn_neighbors,
             force=self.force,
         )
 

@@ -370,9 +370,8 @@ class CoordinatesCalculatorAnalysis:
         np.ndarray
             Transition counts for each coordinate with shape (n_coordinates,)
         """
-        threshold_int = int(threshold)
         return CalculatorStatHelper.compute_transitions_within_lagtime(
-            coordinates, threshold_int, lag_time, self.chunk_size, self.use_memmap
+            coordinates, threshold, lag_time, self.chunk_size, self.use_memmap
         )
 
     def compute_transitions_window(self, coordinates: np.ndarray, threshold: float = 1.0, window_size: int = 10) -> np.ndarray:
@@ -393,9 +392,8 @@ class CoordinatesCalculatorAnalysis:
         np.ndarray
             Transition counts for each coordinate with shape (n_coordinates,)
         """
-        threshold_int = int(threshold)
         return CalculatorStatHelper.compute_transitions_within_window(
-            coordinates, threshold_int, window_size, self.chunk_size, self.use_memmap
+            coordinates, threshold, window_size, self.chunk_size, self.use_memmap
         )
 
     def compute_stability(self, coordinates: np.ndarray, threshold: float = 1.0, window_size: int = 10) -> np.ndarray:
@@ -416,9 +414,8 @@ class CoordinatesCalculatorAnalysis:
         np.ndarray
             Stability scores for each coordinate with shape (n_coordinates,)
         """
-        threshold_int = int(threshold)
         return CalculatorStatHelper.compute_stability(
-            coordinates, threshold_int, window_size, self.chunk_size, self.use_memmap
+            coordinates, threshold, window_size, self.chunk_size, self.use_memmap
         )
 
     # === COMPARISON METHODS ===

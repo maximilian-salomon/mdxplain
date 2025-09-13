@@ -24,3 +24,8 @@ Contact analysis implementation.
 This module contains classes for computing and analyzing contacts between
 atoms in molecular dynamics trajectories based on distance cutoffs.
 """
+
+from .contacts import Contacts
+from .contacts_reduce_service import ContactsReduceService
+
+__all__ = ["Contacts", "ContactsReduceService"]

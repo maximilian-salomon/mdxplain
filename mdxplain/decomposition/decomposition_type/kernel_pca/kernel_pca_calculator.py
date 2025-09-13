@@ -607,9 +607,7 @@ class KernelPCACalculator(CalculatorBase):
         result = self._create_array_or_memmap(
             shape=(n_samples, n_components),
             dtype=np.float32,
-            filename=DataUtils.get_cache_file_path(
-                f"{self._cache_prefix}_nystrom.dat", self.cache_path
-            )
+            filename=f"{self._cache_prefix}_nystrom.dat"
         )
 
         for start in tqdm(range(0, n_samples, self.chunk_size), desc="Nystroem final transform", unit="chunks"):

@@ -26,5 +26,6 @@ for both simplified (H/E/C) and full (8 classes) classifications.
 """
 
 from .dssp import DSSP
+from .dssp_reduce_service import DSSPReduceService
 
-__all__ = ["DSSP"]
+__all__ = ["DSSP", "DSSPReduceService"]

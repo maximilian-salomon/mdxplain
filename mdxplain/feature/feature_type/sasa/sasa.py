@@ -31,7 +31,6 @@ import mdtraj as md
 
 from ..interfaces.feature_type_base import FeatureTypeBase
 from .sasa_calculator import SASACalculator
-from .reduce_sasa_metrics import ReduceSASAMetrics
 
 
 class SASA(FeatureTypeBase):
@@ -61,7 +60,6 @@ class SASA(FeatureTypeBase):
     >>> pipeline.feature.add_feature(sasa)
     """
 
-    ReduceMetrics = ReduceSASAMetrics
     """Available reduce metrics for SASA features."""
 
     def __init__(self, mode: str = 'residue', probe_radius: float = 0.14) -> None:
