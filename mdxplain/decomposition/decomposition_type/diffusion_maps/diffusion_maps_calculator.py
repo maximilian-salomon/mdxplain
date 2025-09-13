@@ -208,6 +208,14 @@ class DiffusionMapsCalculator(CalculatorBase):
         if n_components is None:
             raise ValueError("n_components must be specified")
 
+        # Validate n_components against n_frames first
+        n_frames = data.shape[0]
+        max_components = n_frames - 1  # Skip first (trivial) eigenvector
+        if n_components > max_components:
+            raise ValueError(
+                f"n_components ({n_components}) cannot be larger than {max_components}"
+            )
+
         random_state = kwargs.get("random_state", None)
         
         epsilon = kwargs.get("epsilon")
@@ -218,14 +226,6 @@ class DiffusionMapsCalculator(CalculatorBase):
 
         use_nystrom = kwargs.get("use_nystrom", False)
         n_landmarks = kwargs.get("n_landmarks", 1000)
-
-        # Validate n_components against n_frames
-        n_frames = data.shape[0]
-        max_components = n_frames - 1  # Skip first (trivial) eigenvector
-        if n_components > max_components:
-            raise ValueError(
-                f"n_components ({n_components}) cannot be larger than {max_components}"
-            )
 
         # Validate n_landmarks for Nyström
         if use_nystrom and n_landmarks >= n_frames:
@@ -704,6 +704,9 @@ class DiffusionMapsCalculator(CalculatorBase):
         else:
             epsilon = np.median(k_distances) ** 2
 
+        if epsilon < 1e-12: # If epsilon is zero or very close to it
+            return 1e-5 # Return a small default value
+
         return epsilon
 
     def _compute_rmsd_flattened(self, coords1: np.ndarray, coords2: np.ndarray, n_atoms: int) -> float:
@@ -1012,8 +1015,10 @@ class DiffusionMapsCalculator(CalculatorBase):
         )
         
         # Identify valid eigenvalues (avoid division by near-zero values)
+        # For diffusion maps, we need at least n_components+1 eigenvalues (including stationary)
+        # Use 1e-10 threshold like standard method to maintain consistency
         mask = np.abs(eigvals_small) > 1e-10
-        valid_eigvals = np.where(mask, eigvals_small, 1)  # Avoid division by 0
+        valid_eigvals = np.where(mask, eigvals_small, 1e-10)
         
         # Extend eigenvectors chunk-wise for memory efficiency
         for chunk_start in tqdm(range(0, n_frames, self.chunk_size), desc="Nystroem extension", unit="chunks"):

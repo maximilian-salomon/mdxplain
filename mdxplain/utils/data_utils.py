@@ -29,6 +29,7 @@ Preserves memmap properties correctly.
 from typing import Any, Dict, Optional, Union
 import os
 import numpy as np
+import pickle
 
 
 class DataUtils:
@@ -75,7 +76,9 @@ class DataUtils:
         >>> DataUtils.save_object(my_analysis, 'outputs/analysis.pkl')
         """
         save_obj: Dict[str, Any] = DataUtils._prepare_save_object(obj)
-        np.save(save_path, save_obj, allow_pickle=True)
+        
+        with open(save_path, 'wb') as f:
+            pickle.dump(save_obj, f, protocol=4)
 
     @staticmethod
     def load_object(obj: Any, load_path: str) -> None:
@@ -103,8 +106,9 @@ class DataUtils:
         >>> # Load into custom object
         >>> my_obj = MyAnalysisClass()
         >>> DataUtils.load_object(my_obj, 'outputs/analysis.pkl')
-        """
-        loaded_obj: Dict[str, Any] = np.load(load_path, allow_pickle=True).item()
+        """       
+        with open(load_path, 'rb') as f:
+            loaded_obj: Dict[str, Any] = pickle.load(f)
         DataUtils._restore_object_attributes(obj, loaded_obj)
 
     @staticmethod

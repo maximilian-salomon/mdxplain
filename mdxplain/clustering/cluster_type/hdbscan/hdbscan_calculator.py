@@ -30,7 +30,6 @@ from typing import Dict, Tuple, Any, Optional, List
 
 import numpy as np
 import hdbscan
-from sklearn.neighbors import KNeighborsClassifier
 from tqdm import tqdm
 
 from ..interfaces.calculator_base import CalculatorBase

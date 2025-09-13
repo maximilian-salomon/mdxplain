@@ -508,7 +508,7 @@ class CalculatorStatHelper:
             output_shape = (array.shape[1],)
             flat_array = array
 
-        result = np.zeros(output_shape)
+        result = np.zeros(output_shape, dtype=float)
 
         # Intelligent chunking decision: use chunking if use_memmap=True OR input data is memmap
         should_use_chunking = use_memmap or FeatureShapeHelper.is_memmap(array)
@@ -563,6 +563,7 @@ class CalculatorStatHelper:
             CalculatorStatHelper._process_chunk_transitions(
                 chunk, threshold, window_size, mode, flat_result, i
             )
+        result[:] = flat_result.reshape(result.shape)
 
     @staticmethod
     def _process_chunk_transitions(
@@ -629,6 +630,7 @@ class CalculatorStatHelper:
         int
             Number of transitions
         """
+        data_column = data_column.astype(float)
         diff = np.abs(data_column[:-window_size] - data_column[window_size:])
         return np.sum(diff >= threshold)
 
@@ -651,6 +653,7 @@ class CalculatorStatHelper:
         int
             Number of transitions
         """
+        data_column = data_column.astype(float)
         transitions = 0
         for k in range(len(data_column) - window_size + 1):
             window_data = data_column[k : k + window_size]
@@ -683,6 +686,7 @@ class CalculatorStatHelper:
         None
             Modifies result array in-place
         """
+        array = array.astype(float)
         flat_result = result.flatten()
         for j in range(array.shape[1]):
             if mode == "lagtime":
@@ -698,6 +702,7 @@ class CalculatorStatHelper:
                     if (window_max - window_min) >= threshold:
                         transitions += 1
                 flat_result[j] = transitions
+        result[:] = flat_result.reshape(result.shape)
 
     @staticmethod
     def compute_stability(

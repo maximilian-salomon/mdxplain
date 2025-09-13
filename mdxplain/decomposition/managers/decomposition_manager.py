@@ -33,6 +33,7 @@ import numpy as np
 
 from ..entities.decomposition_data import DecompositionData
 from ..decomposition_type.interfaces.decomposition_type_base import DecompositionTypeBase
+from ..services.decomposition_add_service import DecompositionAddService
 from ...utils.data_utils import DataUtils
 
 if TYPE_CHECKING:
@@ -103,7 +104,7 @@ class DecompositionManager:
         if chunk_size <= 0 and not isinstance(chunk_size, int):
             raise ValueError("Chunk size must be a positive integer.")
 
-    def add(
+    def add_decomposition(
         self,
         pipeline_data: PipelineData,
         selection_name: str,
@@ -132,7 +133,7 @@ class DecompositionManager:
         Standalone mode:
         >>> pipeline_data = PipelineData()
         >>> manager = DecompositionManager()
-        >>> manager.add(pipeline_data, "selection", decomposition_type.PCA())  # pipeline_data required
+        >>> manager.add_decomposition(pipeline_data, "selection", decomposition_type.PCA())  # pipeline_data required
 
         Parameters:
         -----------
@@ -167,22 +168,22 @@ class DecompositionManager:
         >>> # Add PCA decomposition
         >>> from mdxplain.decomposition import decomposition_type
         >>> manager = DecompositionManager()
-        >>> manager.add(
+        >>> manager.add_decomposition(
         ...     pipeline_data, "feature_selection", decomposition_type.PCA(n_components=10)
         ... )
 
         >>> # Add KernelPCA with custom parameters
-        >>> manager.add(
+        >>> manager.add_decomposition(
         ...     pipeline_data, "any_selection", decomposition_type.KernelPCA(n_components=15, gamma=0.1)
         ... )
 
         >>> # Add ContactKernelPCA for contact features
-        >>> manager.add(
+        >>> manager.add_decomposition(
         ...     pipeline_data, "contact_selection", decomposition_type.ContactKernelPCA(n_components=20)
         ... )
 
         >>> # Force recomputation of existing decomposition
-        >>> manager.add(
+        >>> manager.add_decomposition(
         ...     pipeline_data, "feature_selection", decomposition_type.PCA(n_components=20), force=True
         ... )
         """
@@ -558,16 +559,14 @@ class DecompositionManager:
             return
             
         # Get feature metadata from the selection
-        if selection_name not in pipeline_data.feature_selector_data:
+        if selection_name not in pipeline_data.selected_feature_data:
             raise ValueError(f"Feature selection '{selection_name}' not found")
             
-        selection_data = pipeline_data.feature_selector_data[selection_name]
+        selection_data = pipeline_data.selected_feature_data[selection_name]
         
         # Check if all features in selection match required type
         incompatible_features = []
-        for feature_spec in selection_data.features:
-            feature_type = feature_spec.feature_type
-            
+        for feature_type, _ in selection_data.selections.items():
             if feature_type != required_type:
                 incompatible_features.append(f"{feature_type}")
         
@@ -578,3 +577,31 @@ class DecompositionManager:
                 f"{decomposition_name} requires features of type '{required_type}' only. "
                 f"Selection '{selection_name}' contains incompatible features: {incompatible_list}"
             )
+    
+    @property
+    def add(self):
+        """
+        Service for adding decomposition algorithms with simplified syntax.
+        
+        Provides an intuitive interface for adding decomposition algorithms without
+        requiring explicit decomposition type instantiation or imports.
+        
+        Returns:
+        --------
+        DecompositionAddService
+            Service instance for adding decomposition algorithms with combined parameters
+            
+        Examples:
+        ---------
+        >>> # Add different decomposition algorithms
+        >>> pipeline.decomposition.add.pca("my_features", n_components=10)
+        >>> pipeline.decomposition.add.kernel_pca("contact_features", kernel='rbf', n_components=20)
+        >>> pipeline.decomposition.add.contact_kernel_pca("contact_features", n_components=15)
+        >>> pipeline.decomposition.add.diffusion_maps("distance_features", n_components=12)
+        
+        Notes:
+        -----
+        Pipeline data is automatically injected by AutoInjectProxy.
+        All decomposition type parameters are combined with manager.add parameters.
+        """
+        return DecompositionAddService(self, None)

@@ -216,7 +216,7 @@ class CalculatorBase(ABC):
             else:
                 full_filename = filename
             
-            memmap_path = DataUtils.get_cache_file_path(self.cache_path, full_filename)
+            memmap_path = DataUtils.get_cache_file_path(full_filename, self.cache_path)
             return np.memmap(memmap_path, dtype=dtype, mode='w+', shape=shape)
         else:
             return np.zeros(shape, dtype=dtype)

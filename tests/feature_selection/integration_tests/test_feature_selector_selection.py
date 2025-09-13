@@ -1,3 +1,23 @@
+# mdxplain - A Python toolkit for molecular dynamics trajectory analysis
+#
+# Author: Maximilian Salomon
+# Created with assistance from Claude Code (Claude Sonnet 4.0) and GitHub Copilot (Claude Sonnet 4.0).
+#
+# Copyright (C) 2025 Maximilian Salomon
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """Comprehensive tests for FeatureSelector selection logic and parameters."""
 
 import numpy as np
@@ -13,7 +33,11 @@ class TestSelectionStrings:
     """Test various selection string patterns and categories."""
     
     def setup_method(self):
-        """Create synthetic trajectory with controlled properties."""
+        """
+        Create synthetic trajectory with controlled properties.
+        
+        Creates a simple synthetic trajectory with 7 residues and 20 frames.
+        """
         # Create topology: ALA(1), GLY(2), VAL(3), ALA(4), GLY(5), LEU(6), PHE(7)
         topology = md.Topology()
         chain = topology.add_chain()
@@ -67,7 +91,27 @@ class TestSelectionStrings:
         self.pipeline.feature.add_feature(Distances(excluded_neighbors=0))
     
     def _create_selector_and_add(self, name: str, selection: str, **kwargs):
-        """Helper to create selector and add selection."""
+        """
+        Create a feature selector and add a selection for selection string testing.
+        
+        This helper method is used in TestSelectionStrings to create selectors with
+        various selection string patterns and validate their parsing behavior.
+        
+        Parameters
+        ----------
+        name : str
+            Name of the feature selector to create.
+        selection : str
+            Selection string to parse and apply (e.g., 'seqid 3', 'res ALA', 'all').
+        **kwargs : dict
+            Additional parameters to pass to the add method (e.g., use_reduced, 
+            require_all_partners, common_denominator).
+            
+        Returns
+        -------
+        str
+            The name of the created selector.
+        """
         if name in self.pipeline.data.selected_feature_data:
             del self.pipeline.data.selected_feature_data[name]
         self.pipeline.feature_selector.create(name)
@@ -75,12 +119,33 @@ class TestSelectionStrings:
         return name
     
     def _get_selected_indices(self, selector_name: str):
-        """Helper to get selected indices from completed selection."""
+        """
+        Execute feature selection and retrieve selected feature indices.
+        
+        This helper method is used in TestSelectionStrings to perform the selection
+        operation and extract the resulting feature indices for validation.
+        
+        Parameters
+        ----------
+        selector_name : str
+            Name of the feature selector to execute and retrieve results from.
+            
+        Returns
+        -------
+        list of int
+            List of selected feature indices from trajectory 0 for the distances
+            feature type.
+        """
         self.pipeline.feature_selector.select(selector_name, reference_traj=0)
         return self.pipeline.data.selected_feature_data[selector_name].get_results("distances")["trajectory_indices"][0]["indices"]
     
     def test_explicit_seqid_single(self):
-        """Test explicit 'seqid 3' selection."""
+        """
+        Test explicit 'seqid 3' selection.
+
+        Validates that single seqid selection (seqid 3 = VAL)
+        returns all distance pairs with this residue.
+        """
         name = self._create_selector_and_add("test", "seqid 3")
         indices = self._get_selected_indices(name)
         
@@ -97,7 +162,12 @@ class TestSelectionStrings:
         assert sorted(indices) == sorted(expected)
     
     def test_explicit_seqid_range(self):
-        """Test explicit 'seqid 2-4' selection."""
+        """
+        Test explicit 'seqid 2-4' range selection.
+
+        Validates that seqid range (2-4 = GLY,VAL,ALA) returns
+        all distance pairs with these residues.
+        """
         name = self._create_selector_and_add("test", "seqid 2-4")
         indices = self._get_selected_indices(name)
         
@@ -114,7 +184,12 @@ class TestSelectionStrings:
         assert sorted(indices) == sorted(expected)
     
     def test_explicit_seqid_multiple(self):
-        """Test explicit 'seqid 1 3 5' selection."""
+        """
+        Test explicit multiple seqid selection 'seqid 1 3 5'.
+        
+        Validates that multiple seqid selection (1,3,5 = ALA,VAL,GLY)
+        returns all distance pairs containing any of these residues.
+        """
         name = self._create_selector_and_add("test", "seqid 1 3 5")
         indices = self._get_selected_indices(name)
         
@@ -130,7 +205,12 @@ class TestSelectionStrings:
         assert sorted(indices) == sorted(expected)
     
     def test_explicit_resid_single(self):
-        """Test explicit 'resid 3' selection."""
+        """
+        Test explicit resid selection 'resid 3'.
+        
+        Validates that resid selection (resid 3 = 4th residue ALA)
+        returns all distance pairs containing this residue.
+        """
         name = self._create_selector_and_add("test", "resid 3")
         indices = self._get_selected_indices(name)
         
@@ -145,7 +225,12 @@ class TestSelectionStrings:
         assert sorted(indices) == sorted(expected)
     
     def test_explicit_res_single(self):
-        """Test explicit 'res ALA' selection."""
+        """
+        Test explicit residue name selection 'res ALA'.
+        
+        Validates that residue name selection returns all distance
+        pairs containing ALA residues (indices 0 and 3).
+        """
         name = self._create_selector_and_add("test", "res ALA")
         indices = self._get_selected_indices(name)
         
@@ -161,7 +246,12 @@ class TestSelectionStrings:
         assert sorted(indices) == sorted(expected)
     
     def test_explicit_res_multiple(self):
-        """Test explicit 'res ALA GLY' selection."""
+        """
+        Test explicit multiple residue names 'res ALA GLY'.
+        
+        Validates that multiple residue name selection returns
+        all pairs containing either ALA or GLY residues.
+        """
         name = self._create_selector_and_add("test", "res ALA GLY")
         indices = self._get_selected_indices(name)
         
@@ -178,7 +268,12 @@ class TestSelectionStrings:
     
     
     def test_smart_detection_numeric(self):
-        """Test smart pattern detection for '3' → 'seqid 3'."""
+        """
+        Test smart pattern detection for numeric input '3'.
+        
+        Validates that bare number is auto-detected as 'seqid 3'
+        and returns same results as explicit seqid selection.
+        """
         name = self._create_selector_and_add("test", "3")
         indices = self._get_selected_indices(name)
         
@@ -194,7 +289,12 @@ class TestSelectionStrings:
         assert sorted(indices) == sorted(expected)
     
     def test_smart_detection_range(self):
-        """Test smart pattern detection for '2-4' → 'seqid 2-4'."""
+        """
+        Test smart pattern detection for range input '2-4'.
+        
+        Validates that numeric range is auto-detected as 'seqid 2-4'
+        and returns same results as explicit seqid range selection.
+        """
         name = self._create_selector_and_add("test", "2-4")
         indices = self._get_selected_indices(name)
         
@@ -210,7 +310,12 @@ class TestSelectionStrings:
         assert sorted(indices) == sorted(expected)
     
     def test_smart_detection_amino_acid(self):
-        """Test smart pattern detection for 'ALA' → 'res ALA'."""
+        """
+        Test smart pattern detection for amino acid codes.
+        
+        Validates that 3-letter amino acid code 'ALA' is auto-detected
+        as 'res ALA' and returns same results as explicit residue selection.
+        """
         name = self._create_selector_and_add("test", "ALA")
         indices = self._get_selected_indices(name)
         
@@ -226,7 +331,12 @@ class TestSelectionStrings:
         assert sorted(indices) == sorted(expected)
     
     def test_smart_detection_single_letter(self):
-        """Test smart pattern detection for 'A' → 'res A'."""
+        """
+        Test smart pattern detection for single letter amino acids.
+        
+        Validates that single letter 'A' is auto-detected as 'res A'
+        and matches ALA residues correctly.
+        """
         name = self._create_selector_and_add("test", "A")
         indices = self._get_selected_indices(name)
         
@@ -242,7 +352,12 @@ class TestSelectionStrings:
         assert sorted(indices) == sorted(expected)
     
     def test_special_keyword_all_lowercase(self):
-        """Test 'all' keyword."""
+        """
+        Test special keyword 'all' in lowercase.
+        
+        Validates that 'all' keyword returns all possible distance
+        pairs (21 pairs for 7 residues) regardless of case.
+        """
         name = self._create_selector_and_add("test", "all")
         indices = self._get_selected_indices(name)
         
@@ -253,7 +368,12 @@ class TestSelectionStrings:
         assert sorted(indices) == sorted(expected)
     
     def test_special_keyword_all_uppercase(self):
-        """Test 'ALL' keyword."""
+        """
+        Test special keyword 'ALL' in uppercase.
+        
+        Validates that case-insensitive matching works and 'ALL'
+        returns same results as lowercase 'all'.
+        """
         name = self._create_selector_and_add("test", "ALL")
         indices = self._get_selected_indices(name)
         
@@ -264,7 +384,12 @@ class TestSelectionStrings:
         assert sorted(indices) == sorted(expected)
     
     def test_special_keyword_all_mixed_case(self):
-        """Test 'All' keyword."""
+        """
+        Test special keyword 'All' in mixed case.
+        
+        Validates that mixed case 'All' is handled correctly
+        and returns all distance pairs like other case variants.
+        """
         name = self._create_selector_and_add("test", "All")
         indices = self._get_selected_indices(name)
         
@@ -275,7 +400,12 @@ class TestSelectionStrings:
         assert sorted(indices) == sorted(expected)
     
     def test_combination_and(self):
-        """Test 'res ALA and seqid 3-5' combination (UNION operation)."""
+        """
+        Test logical AND combination creating UNION operation.
+        
+        Validates that 'res ALA and seqid 3-5' combines both selections
+        using UNION logic to return pairs containing any matching residue.
+        """
         name = self._create_selector_and_add("test", "res ALA and seqid 3-5")
         indices = self._get_selected_indices(name)
         
@@ -294,7 +424,12 @@ class TestSelectionStrings:
         assert sorted(indices) == sorted(expected)
     
     def test_combination_not(self):
-        """Test 'not res VAL' selection."""
+        """
+        Test logical NOT negation operation.
+        
+        Validates that 'not res VAL' excludes VAL-containing pairs
+        and returns only pairs without VAL residues.
+        """
         name = self._create_selector_and_add("test", "not res VAL")
         indices = self._get_selected_indices(name)
         
@@ -314,7 +449,11 @@ class TestParameters:
     """Test different parameter combinations."""
     
     def setup_method(self):
-        """Setup with synthetic trajectory."""
+        """
+        Setup with synthetic trajectory.
+
+        Creates a simple synthetic trajectory with 7 residues and 20 frames.
+        """
         # Reuse setup from TestSelectionStrings
         test_instance = TestSelectionStrings()
         test_instance.setup_method()
@@ -322,7 +461,26 @@ class TestParameters:
         self.test_traj = test_instance.test_traj
     
     def _create_selector_and_add(self, name: str, selection: str, **kwargs):
-        """Helper to create selector and add selection."""
+        """
+        Create a feature selector and add a selection for parameter testing.
+        
+        This helper method is used in TestParameters to create selectors with
+        various parameter combinations and validate their behavior.
+        
+        Parameters
+        ----------
+        name : str
+            Name of the feature selector to create.
+        selection : str
+            Selection string to parse and apply.
+        **kwargs : dict
+            Additional parameters to test (e.g., use_reduced, require_all_partners).
+            
+        Returns
+        -------
+        str
+            The name of the created selector.
+        """
         if name in self.pipeline.data.selected_feature_data:
             del self.pipeline.data.selected_feature_data[name]
         self.pipeline.feature_selector.create(name)
@@ -330,12 +488,33 @@ class TestParameters:
         return name
     
     def _get_selected_indices(self, selector_name: str):
-        """Helper to get selected indices."""
+        """
+        Execute feature selection and retrieve selected feature indices.
+        
+        This helper method is used in TestParameters to perform the selection
+        operation and extract the resulting feature indices for parameter validation.
+        
+        Parameters
+        ----------
+        selector_name : str
+            Name of the feature selector to execute and retrieve results from.
+            
+        Returns
+        -------
+        list of int
+            List of selected feature indices from trajectory 0 for the distances
+            feature type.
+        """
         self.pipeline.feature_selector.select(selector_name, reference_traj=0)
         return self.pipeline.data.selected_feature_data[selector_name].get_results("distances")["trajectory_indices"][0]["indices"]
     
     def test_use_reduced_true_with_data(self):
-        """Test use_reduced=True when reduced data exists."""
+        """
+        Test use_reduced=True parameter when reduced data exists.
+        
+        Validates that selector uses reduced features instead of full data
+        and returns only indices from the reduced feature set.
+        """
         # First create reduced data
         feature_data_obj = self.pipeline.data.feature_data["distances"][0]
         
@@ -359,7 +538,12 @@ class TestParameters:
         assert sorted(indices) == sorted(expected)
     
     def test_use_reduced_false(self):
-        """Test use_reduced=False uses full data."""
+        """
+        Test use_reduced=False parameter uses full original data.
+        
+        Validates that selector ignores any reduced data and operates
+        on the complete feature set as intended.
+        """
         name = self._create_selector_and_add("test", "all", use_reduced=False)
         indices = self._get_selected_indices(name)
         
@@ -369,7 +553,12 @@ class TestParameters:
         assert sorted(indices) == sorted(expected)
     
     def test_require_all_partners_true(self):
-        """Test require_all_partners=True for pairwise features."""
+        """
+        Test require_all_partners=True for pairwise feature selection.
+        
+        Validates that only pairs where BOTH partners match the selection
+        criteria are included in the results.
+        """
         name = self._create_selector_and_add("test", "res ALA", require_all_partners=True)
         indices = self._get_selected_indices(name)
         
@@ -387,7 +576,12 @@ class TestParameters:
         assert sorted(indices) == sorted(expected)
     
     def test_require_all_partners_false(self):
-        """Test require_all_partners=False (default) for pairwise features."""
+        """
+        Test require_all_partners=False default behavior for pairwise features.
+        
+        Validates that pairs where ANY partner matches the selection
+        criteria are included in the results.
+        """
         name = self._create_selector_and_add("test", "res ALA", require_all_partners=False)
         indices = self._get_selected_indices(name)
         
@@ -408,7 +602,12 @@ class TestFeatureSelectorReferenceTrajectoryLabels:
     """Test that feature selector uses labels from the correct reference trajectory."""
     
     def setup_method(self):
-        """Setup with 2 trajectories having different residue labels."""
+        """
+        Setup with 2 trajectories having different residue labels.
+        
+        Creates two synthetic trajectories with different residue sequences
+        and distinct residue metadata to test trajectory-specific label handling.
+        """
         self.pipeline = PipelineManager()
         
         # Trajectory 0: ALA-GLY-VAL with consensus labels 1.50, 2.50, 3.50
@@ -445,7 +644,25 @@ class TestFeatureSelectorReferenceTrajectoryLabels:
         self.pipeline.feature.add_feature(Distances(excluded_neighbors=0))
     
     def _create_trajectory(self, residue_names, n_frames):
-        """Helper to create trajectory."""
+        """
+        Create a synthetic MDTraj trajectory for reference trajectory testing.
+        
+        This helper method is used in TestFeatureSelectorReferenceTrajectoryLabels
+        to create trajectories with specific residue compositions for testing
+        trajectory-specific label handling.
+        
+        Parameters
+        ----------
+        residue_names : list of str
+            List of residue names to include in the trajectory (e.g., ['ALA', 'GLY', 'VAL']).
+        n_frames : int
+            Number of frames to generate for the trajectory.
+            
+        Returns
+        -------
+        mdtraj.Trajectory
+            Synthetic trajectory with CA atoms and simple linear coordinates.
+        """
         topology = md.Topology()
         chain = topology.add_chain()
         
@@ -462,7 +679,12 @@ class TestFeatureSelectorReferenceTrajectoryLabels:
         return md.Trajectory(np.array(coordinates), topology)
     
     def test_seqid_1_with_reference_trajectory_0_gives_exact_ala_labels(self):
-        """Test: seqid 1 with reference trajectory 0 gives exactly ALA-based labels."""
+        """
+        Test seqid 1 selection using reference trajectory 0 labels.
+        
+        Validates that seqid 1 matches ALA residue using trajectory 0's
+        residue metadata and returns correct feature indices.
+        """
         self.pipeline.feature_selector.create("test")
         self.pipeline.feature_selector.add("test", "distances", "seqid 1", common_denominator=False)
         self.pipeline.feature_selector.select("test", reference_traj=0)
@@ -491,7 +713,12 @@ class TestFeatureSelectorReferenceTrajectoryLabels:
         assert feature1[1]["residue"]["consensus"] == "3.50"
     
     def test_seqid_1_with_reference_trajectory_1_gives_exact_val_labels(self):
-        """Test: seqid 1 with reference trajectory 1 gives exactly VAL-based labels."""  
+        """
+        Test: seqid 1 with reference trajectory 1 gives exactly VAL-based labels.
+
+        Validates that seqid 1 matches VAL residue using trajectory 1's
+        residue metadata and returns correct feature indices.
+        """
         self.pipeline.feature_selector.create("test")
         self.pipeline.feature_selector.add("test", "distances", "seqid 1", common_denominator=False)
         self.pipeline.feature_selector.select("test", reference_traj=1)
@@ -520,16 +747,21 @@ class TestFeatureSelectorReferenceTrajectoryLabels:
         assert feature1[1]["residue"]["consensus"] == "6.50"
     
     def test_consensus_4_50_with_reference_trajectory_0_finds_features_but_metadata_fails(self):
-        """Test that consensus 4.50 with reference trajectory 0 finds features but metadata access fails."""
+        """
+        Test consensus 4.50 selection with reference trajectory 0.
+
+        Validates that consensus exists in trajectory 1 but not trajectory 0.
+        This causes metadata lookup failures during feature selection.
+        """
         self.pipeline.feature_selector.create("test_wrong")
         
         # Select trajectory 1 consensus (4.50) but use trajectory 0 as reference
         self.pipeline.feature_selector.add("test_wrong", "distances", "consensus 4.50")
         
-        # Selection succeeds (finds features in trajectory 1)
+        # Selection succeeds (finds features in trajectory 1) - let it auto-select reference traj
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", UserWarning)  # Expected empty selection for traj 0
-            self.pipeline.feature_selector.select("test_wrong", reference_traj=0)
+            self.pipeline.feature_selector.select("test_wrong")
         
         # Features are found in trajectory 1 
         results = self.pipeline.data.selected_feature_data["test_wrong"].get_results("distances")
@@ -537,12 +769,17 @@ class TestFeatureSelectorReferenceTrajectoryLabels:
         assert 1 in results["trajectory_indices"]
         assert len(results["trajectory_indices"][1]["indices"]) == 2
         
-        # But metadata access fails because reference trajectory 0 has no features
-        with pytest.raises(ValueError, match="Reference trajectory 0 not found in selection"):
-            self.pipeline.data.get_selected_metadata("test_wrong")
+        # Metadata access should work since reference trajectory is auto-selected (trajectory 1)
+        metadata = self.pipeline.data.get_selected_metadata("test_wrong")
+        assert len(metadata) > 0  # Should have features from trajectory 1
     
     def test_consensus_1_50_with_reference_trajectory_0_finds_exact_ala_position(self):
-        """Test: consensus 1.50 with reference trajectory 0 finds exactly ALA position."""
+        """
+        Test consensus position 1.50 selection using reference trajectory 0.
+        
+        Validates that consensus 1.50 correctly identifies ALA residue
+        position and returns appropriate distance pair indices.
+        """
         self.pipeline.feature_selector.create("test")
         self.pipeline.feature_selector.add("test", "distances", "consensus 1.50", common_denominator=False)
         with warnings.catch_warnings():
@@ -569,14 +806,19 @@ class TestFeatureSelectorReferenceTrajectoryLabels:
         assert feature1[1]["residue"]["resname"] == "VAL"
     
     def test_consensus_1_50_with_reference_trajectory_1_finds_features_but_metadata_fails(self):
-        """Test: consensus 1.50 with reference trajectory 1 finds features but metadata access fails."""
+        """
+        Test consensus position 1.50 with reference trajectory 1.
+        
+        Validates that consensus exists in trajectory 0 but not trajectory 1,
+        causing metadata lookup failures during feature selection.
+        """
         self.pipeline.feature_selector.create("test")
         self.pipeline.feature_selector.add("test", "distances", "consensus 1.50", common_denominator=False)
         
-        # Selection succeeds (finds features in trajectory 0)
+        # Selection succeeds (finds features in trajectory 0) - let it auto-select reference traj
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", UserWarning)  # Expected empty selection for traj 1
-            self.pipeline.feature_selector.select("test", reference_traj=1)
+            self.pipeline.feature_selector.select("test")
         
         # Features are found in trajectory 0 
         results = self.pipeline.data.selected_feature_data["test"].get_results("distances")
@@ -584,16 +826,21 @@ class TestFeatureSelectorReferenceTrajectoryLabels:
         assert 0 in results["trajectory_indices"] 
         assert len(results["trajectory_indices"][0]["indices"]) == 2
         
-        # But metadata access fails because reference trajectory 1 has no features
-        with pytest.raises(ValueError, match="Reference trajectory 1 not found in selection"):
-            self.pipeline.data.get_selected_metadata("test")
+        # Metadata access should work since reference trajectory is auto-selected (trajectory 0)
+        metadata = self.pipeline.data.get_selected_metadata("test")
+        assert len(metadata) > 0  # Should have features from trajectory 0
 
 
 class TestFeatureSelectorMatrixConsistency:
     """Test matrix consistency warnings when feature counts differ between trajectories."""
     
     def setup_method(self):
-        """Setup with 2 trajectories having different residue counts."""
+        """
+        Setup with 2 trajectories having different residue counts.
+        
+        Creates two synthetic trajectories with different residue counts
+        to test matrix dimension consistency warnings during feature selection.
+        """
         self.pipeline = PipelineManager()
         
         # Trajectory 0: 3 residues (ALA-GLY-VAL) -> 3 pairs
@@ -625,7 +872,25 @@ class TestFeatureSelectorMatrixConsistency:
         self.pipeline.feature.add_feature(Distances(excluded_neighbors=0))
     
     def _create_trajectory(self, residue_names, n_frames):
-        """Helper to create trajectory."""
+        """
+        Create a synthetic MDTraj trajectory for matrix consistency testing.
+        
+        This helper method is used in TestFeatureSelectorMatrixConsistency
+        to create trajectories with different residue counts for testing
+        matrix dimension consistency warnings.
+        
+        Parameters
+        ----------
+        residue_names : list of str
+            List of residue names to include in the trajectory.
+        n_frames : int
+            Number of frames to generate for the trajectory.
+            
+        Returns
+        -------
+        mdtraj.Trajectory
+            Synthetic trajectory with CA atoms and simple linear coordinates.
+        """
         topology = md.Topology()
         chain = topology.add_chain()
         
@@ -641,7 +906,12 @@ class TestFeatureSelectorMatrixConsistency:
         return md.Trajectory(np.array(coordinates), topology)
     
     def test_matrix_consistency_warning_on_select(self):
-        """Test that inconsistent feature counts trigger warning during select()."""
+        """
+        Test matrix consistency validation during selection process.
+        
+        Validates that inconsistent feature counts between trajectories
+        trigger appropriate warnings during the select() operation.
+        """
         self.pipeline.feature_selector.create("inconsistent")
         
         # Select "all" features with common_denominator=False - this will have different counts per trajectory
@@ -654,7 +924,12 @@ class TestFeatureSelectorMatrixConsistency:
             self.pipeline.feature_selector.select("inconsistent", reference_traj=0)
     
     def test_matrix_consistency_with_common_denominator(self):
-        """Test that common_denominator=True resolves inconsistency."""
+        """
+        Test common_denominator=True parameter resolves matrix inconsistencies.
+        
+        Validates that enabling common denominator finds shared features
+        across trajectories and prevents inconsistency warnings.
+        """
         self.pipeline.feature_selector.create("consistent")
         
         # Use common_denominator=True to resolve inconsistency
@@ -672,40 +947,63 @@ class TestFeatureSelectorMatrixConsistency:
             assert len(w) == 0
     
     def test_matrix_consistency_specific_selection(self):
-        """Test that specific selections with common_denominator finds intersection."""
+        """
+        Test matrix consistency with trajectory-specific selections.
+        
+        Validates that selections yielding no common features across
+        trajectories raise ValueError during matrix validation.
+        """
         self.pipeline.feature_selector.create("specific")
         
-        # Select only ALA residues - both trajectories have ALA
+        # Select only ALA residues - but no common features between trajectories
         self.pipeline.feature_selector.add("specific", "distances", "res ALA")
         
-        # Selection processes but finds no common features
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
+        # Selection fails when no common features found
+        with pytest.raises(ValueError, match="Reference trajectory 0 not found in selection results"):
             self.pipeline.feature_selector.select("specific", reference_traj=0)
-            
-            # Warnings are expected when no common features found
-            assert len(w) == 2  # One warning per trajectory with no matches
-            for warning in w:
-                assert "Feature selection resulted in no matches" in str(warning.message)
 
 
 class TestMultipleFeatureTypes:
     """Test multiple feature types and multiple adds."""
     
     def setup_method(self):
-        """Setup with multiple feature types."""
+        """
+        Setup with multiple feature types.
+
+        This setup creates a pipeline with various feature types
+        to test the feature selection logic more comprehensively.
+        """
         test_instance = TestSelectionStrings()
         test_instance.setup_method()
         self.pipeline = test_instance.pipeline
     
     def _create_selector(self, name: str):
-        """Helper to create empty selector."""
+        """
+        Create an empty feature selector for multiple feature type testing.
+        
+        This helper method is used in TestMultipleFeatureTypes to create
+        empty selectors that can be populated with multiple feature selections.
+        
+        Parameters
+        ----------
+        name : str
+            Name of the feature selector to create.
+            
+        Returns
+        -------
+        None
+        """
         if name in self.pipeline.data.selected_feature_data:
             del self.pipeline.data.selected_feature_data[name]
         self.pipeline.feature_selector.create(name)
     
     def test_single_feature_type_multiple_selections(self):
-        """Test same feature type with multiple different selections."""
+        """
+        Test same feature type with multiple different selection strings.
+        
+        Validates that multiple selection strings for the same feature type
+        are properly combined using UNION logic to create comprehensive results.
+        """
         self._create_selector("test")
         
         # Add multiple selections for distances
@@ -734,7 +1032,12 @@ class TestTrajectorySelections:
     """Test trajectory selection parameters."""
     
     def setup_method(self):
-        """Setup with multiple trajectories."""
+        """
+        Setup with multiple trajectories.
+
+        This setup creates a pipeline with two synthetic trajectories
+        to test trajectory selection parameters in feature selection.
+        """
         test_instance = TestSelectionStrings()
         test_instance.setup_method()
         self.pipeline = test_instance.pipeline
@@ -756,7 +1059,26 @@ class TestTrajectorySelections:
         self.pipeline.feature.add_feature(Distances(excluded_neighbors=0), force=True)
     
     def _create_selector_and_add(self, name: str, selection: str, **kwargs):
-        """Helper to create selector and add selection."""
+        """
+        Create a feature selector and add a selection for trajectory selection testing.
+        
+        This helper method is used in TestTrajectorySelections to create selectors
+        with trajectory selection parameters and validate multi-trajectory behavior.
+        
+        Parameters
+        ----------
+        name : str
+            Name of the feature selector to create.
+        selection : str
+            Selection string to parse and apply.
+        **kwargs : dict
+            Additional parameters including traj_selection for multi-trajectory testing.
+            
+        Returns
+        -------
+        str
+            The name of the created selector.
+        """
         if name in self.pipeline.data.selected_feature_data:
             del self.pipeline.data.selected_feature_data[name]
         self.pipeline.feature_selector.create(name)
@@ -764,7 +1086,12 @@ class TestTrajectorySelections:
         return name
     
     def test_traj_selection_single_index(self):
-        """Test traj_selection=0 (single trajectory)."""
+        """
+        Test traj_selection parameter with single trajectory index.
+        
+        Validates that traj_selection=0 selects only the first trajectory
+        and returns features exclusively from that trajectory.
+        """
         name = self._create_selector_and_add("test", "all", traj_selection=0)
         self.pipeline.feature_selector.select(name, reference_traj=0)
         
@@ -780,7 +1107,12 @@ class TestTrajectorySelections:
         assert sorted(results["trajectory_indices"][0]["indices"]) == sorted(expected_indices)
     
     def test_traj_selection_multiple_indices(self):
-        """Test traj_selection=[0, 1] (multiple trajectories)."""
+        """
+        Test traj_selection parameter with multiple trajectory indices.
+        
+        Validates that traj_selection=[0,1] includes features from both
+        specified trajectories in the selection results.
+        """
         # Use common_denominator=False to avoid reduced metadata issues
         name = self._create_selector_and_add("test", "all", traj_selection=[0, 1], common_denominator=False)
         self.pipeline.feature_selector.select(name, reference_traj=0)
@@ -799,7 +1131,12 @@ class TestTrajectorySelections:
         assert sorted(results["trajectory_indices"][1]["indices"]) == sorted(expected_indices)
     
     def test_traj_selection_all(self):
-        """Test traj_selection="all"."""
+        """
+        Test traj_selection="all".
+
+        Validates that traj_selection="all" includes features from all
+        available trajectories in the selection results.
+        """
         # Use common_denominator=False to avoid reduced metadata issues
         name = self._create_selector_and_add("test", "all", traj_selection="all", common_denominator=False)
         self.pipeline.feature_selector.select(name, reference_traj=0)
@@ -818,7 +1155,12 @@ class TestTrajectorySelections:
         assert sorted(results["trajectory_indices"][1]["indices"]) == sorted(expected_indices)
     
     def test_traj_selection_by_index_system_a(self):
-        """Test traj_selection=[0] for single trajectory."""
+        """
+        Test traj_selection=[0] for single trajectory.
+
+        Validates that traj_selection=[0] selects only the trajectory
+        tagged with "system_A" and returns features exclusively from that trajectory.
+        """
         name = self._create_selector_and_add("test", "all", traj_selection=[0], common_denominator=False)
         self.pipeline.feature_selector.select(name, reference_traj=0)
         
@@ -834,7 +1176,12 @@ class TestTrajectorySelections:
         assert sorted(results["trajectory_indices"][0]["indices"]) == sorted(expected_indices)
     
     def test_mixed_feature_types_different_trajectories(self):
-        """Test ALA from distances for trajectory 0, GLY from contacts for trajectory 1."""
+        """
+        Test ALA from distances for trajectory 0, GLY from contacts for trajectory 1.
+
+        Validates that different feature types can be selected from
+        different trajectories using traj_selection parameter.
+        """
         # Add contacts feature
         self.pipeline.feature.add_feature(Contacts(cutoff=4.0))
         
@@ -888,20 +1235,35 @@ class TestNameManagement:
     """Test selector name management."""
     
     def setup_method(self):
-        """Setup with basic trajectory."""
+        """
+        Setup with basic trajectory.
+
+        This setup creates a pipeline with a basic trajectory
+        to test feature selector name management.
+        """
         test_instance = TestSelectionStrings()
         test_instance.setup_method()
         self.pipeline = test_instance.pipeline
     
     def test_create_selector_correct_name(self):
-        """Test selector is created with correct name."""
+        """
+        Test selector is created with correct name.
+
+        Validates that creating a feature selector with a specific name
+        correctly registers it in the pipeline's selected_feature_data.
+        """
         self.pipeline.feature_selector.create("my_selector")
         
         assert "my_selector" in self.pipeline.data.selected_feature_data
         assert self.pipeline.data.selected_feature_data["my_selector"].name == "my_selector"
     
     def test_multiple_selectors(self):
-        """Test multiple selectors can coexist."""
+        """
+        Test multiple selectors can coexist.
+
+        Validates that multiple feature selectors with different names
+        can be created and maintain independent selections and results.
+        """
         self.pipeline.feature_selector.create("selector_1")
         self.pipeline.feature_selector.create("selector_2")
         
@@ -942,7 +1304,12 @@ class TestNameManagement:
         assert results_1 != results_2  # Sanity check they're different
     
     def test_create_existing_selector_raises_error(self):
-        """Test creating selector with existing name raises ValueError."""
+        """
+        Test creating selector with existing name raises ValueError.
+
+        Validates that attempting to create a feature selector with a name
+        that already exists raises a ValueError to prevent overwriting.
+        """
         self.pipeline.feature_selector.create("test")
         
         # Create again - should raise ValueError
@@ -954,13 +1321,37 @@ class TestCornerCases:
     """Test corner cases and error handling."""
     
     def setup_method(self):
-        """Setup with basic trajectory."""
+        """
+        Setup with basic trajectory.
+        
+        This setup creates a pipeline with a basic trajectory
+        to test corner cases and error handling in feature selection.
+        """
         test_instance = TestSelectionStrings()
         test_instance.setup_method()
         self.pipeline = test_instance.pipeline
     
     def _create_selector_and_add(self, name: str, selection: str, **kwargs):
-        """Helper to create selector and add selection."""
+        """
+        Create a feature selector and add a selection for corner case testing.
+        
+        This helper method is used in TestCornerCases to create selectors
+        with various edge cases and error conditions for validation.
+        
+        Parameters
+        ----------
+        name : str
+            Name of the feature selector to create.
+        selection : str
+            Selection string to parse and apply (may include invalid patterns).
+        **kwargs : dict
+            Additional parameters to pass to the add method.
+            
+        Returns
+        -------
+        str
+            The name of the created selector.
+        """
         if name in self.pipeline.data.selected_feature_data:
             del self.pipeline.data.selected_feature_data[name]
         self.pipeline.feature_selector.create(name)
@@ -968,37 +1359,58 @@ class TestCornerCases:
         return name
     
     def test_empty_selection_string(self):
-        """Test empty selection string raises ValueError during select."""
+        """
+        Test empty selection string raises ValueError during select.
+
+        Validates that providing an empty selection string triggers
+        a ValueError indicating invalid instruction.
+        """
         name = self._create_selector_and_add("test", "")
         with pytest.raises(ValueError, match="Invalid instruction"):
             self.pipeline.feature_selector.select(name, reference_traj=0)
     
     def test_whitespace_only_selection(self):
-        """Test whitespace-only selection string raises ValueError during select."""
+        """
+        Test whitespace-only selection string raises ValueError during select.
+
+        Validates that providing a selection string with only whitespace
+        triggers a ValueError indicating invalid instruction.
+        """
         name = self._create_selector_and_add("test", "   ")
         with pytest.raises(ValueError, match="Invalid instruction"):
             self.pipeline.feature_selector.select(name, reference_traj=0)
     
     def test_unknown_residue_name(self):
-        """Test selection with unknown residue name raises UserWarning."""
+        """
+        Test selection with unknown residue name raises ValueError for empty selection.
+
+        Validates that selecting a non-existent residue name triggers
+        a ValueError indicating no matches found in the selection results.
+        """
         name = self._create_selector_and_add("test", "res XYZ")
-        with pytest.warns(UserWarning, match="Feature selection resulted in no matches"):
+        with pytest.raises(ValueError, match="Reference trajectory 0 not found in selection results"):
             self.pipeline.feature_selector.select(name, reference_traj=0)
-        
-        # Should result in empty trajectory_indices
-        results = self.pipeline.data.selected_feature_data[name].get_results("distances")
-        assert results["trajectory_indices"] == {}  # Empty dict for no matches
     
     def test_invalid_range_reverse(self):
-        """Test invalid range where start > end throws ValueError."""
+        """
+        Test invalid range where start > end throws ValueError.
+
+        Validates that specifying a seqid range with start greater than end
+        triggers a ValueError indicating the invalid range.
+        """
         name = self._create_selector_and_add("test", "seqid 5-2")
         with pytest.raises(ValueError, match="Invalid seqid range: 5-2. Start ID cannot be greater than End ID"):
             self.pipeline.feature_selector.select(name, reference_traj=0)
     
     def test_out_of_range_seqid(self):
-        """Test seqid beyond available range raises UserWarning."""
+        """
+        Test seqid beyond available range raises ValueError for empty selection.
+
+        Validates that selecting a seqid that exceeds the number of residues
+        triggers a ValueError indicating no matches found in the selection results.
+        """
         name = self._create_selector_and_add("test", "seqid 100")
-        with pytest.warns(UserWarning, match="Feature selection resulted in no matches"):
+        with pytest.raises(ValueError, match="Reference trajectory 0 not found in selection results"):
             self.pipeline.feature_selector.select(name, reference_traj=0)
         
         # Should result in empty trajectory_indices
@@ -1006,21 +1418,27 @@ class TestCornerCases:
         assert results["trajectory_indices"] == {}  # Empty dict for no matches
     
     def test_large_range(self):
-        """Test very large range that exceeds available residues raises UserWarning."""
+        """
+        Test very large range that exceeds available residues raises ValueError for empty selection.
+
+        Validates that specifying a seqid range that exceeds the number of residues
+        triggers a ValueError indicating no matches found in the selection results.
+        """
         name = self._create_selector_and_add("test", "seqid 1000-2000")
-        with pytest.warns(UserWarning, match="Feature selection resulted in no matches"):
+        with pytest.raises(ValueError, match="Reference trajectory 0 not found in selection results"):
             self.pipeline.feature_selector.select(name, reference_traj=0)
-        
-        # Should result in empty trajectory_indices
-        results = self.pipeline.data.selected_feature_data[name].get_results("distances")
-        assert results["trajectory_indices"] == {}  # Empty dict for no matches
 
 
 class TestConsensusSelection:
     """Test consensus-based feature selection."""
     
     def setup_method(self):
-        """Setup with consensus labels in residue metadata."""
+        """
+        Setup with consensus labels in residue metadata.
+
+        This setup creates a synthetic trajectory with consensus labels
+        in the residue metadata to test consensus-based feature selection.
+        """
         # Create topology: ALA(1), GLY(2), VAL(3), ALA(4), GLY(5), LEU(6), PHE(7)
         topology = md.Topology()
         chain = topology.add_chain()
@@ -1076,7 +1494,26 @@ class TestConsensusSelection:
         self.pipeline.feature.add_feature(Distances(excluded_neighbors=0))
     
     def _create_selector_and_add(self, name: str, selection: str, **kwargs):
-        """Helper to create selector and add selection."""
+        """
+        Create a feature selector and add a consensus-based selection.
+        
+        This helper method is used in TestConsensusSelection to create selectors
+        with consensus-based selection patterns and validate consensus parsing logic.
+        
+        Parameters
+        ----------
+        name : str
+            Name of the feature selector to create.
+        selection : str
+            Consensus selection string to parse (e.g., 'consensus 3.50', 'consensus *50').
+        **kwargs : dict
+            Additional parameters to pass to the add method.
+            
+        Returns
+        -------
+        str
+            The name of the created selector.
+        """
         if name in self.pipeline.data.selected_feature_data:
             del self.pipeline.data.selected_feature_data[name]
         self.pipeline.feature_selector.create(name)
@@ -1084,12 +1521,33 @@ class TestConsensusSelection:
         return name
     
     def _get_selected_indices(self, selector_name: str):
-        """Helper to get selected indices from completed selection."""
+        """
+        Execute consensus-based feature selection and retrieve selected indices.
+        
+        This helper method is used in TestConsensusSelection to perform consensus
+        selection operations and extract the resulting feature indices for validation.
+        
+        Parameters
+        ----------
+        selector_name : str
+            Name of the feature selector to execute and retrieve results from.
+            
+        Returns
+        -------
+        list of int
+            List of selected feature indices from trajectory 0 for the distances
+            feature type based on consensus criteria.
+        """
         self.pipeline.feature_selector.select(selector_name, reference_traj=0)
         return self.pipeline.data.selected_feature_data[selector_name].get_results("distances")["trajectory_indices"][0]["indices"]
     
     def test_consensus_exact_match(self):
-        """Test exact consensus match 'consensus 3.50'."""
+        """
+        Test exact consensus match 'consensus 3.50'.
+
+        Validates that selecting a specific consensus label correctly
+        identifies features involving residues with that label.
+        """
         name = self._create_selector_and_add("test", "consensus 3.50")
         indices = self._get_selected_indices(name)
         
@@ -1106,7 +1564,12 @@ class TestConsensusSelection:
         assert sorted(indices) == sorted(expected)
     
     def test_consensus_wildcard_match(self):
-        """Test wildcard consensus match 'consensus *50'."""
+        """
+        Test wildcard consensus match 'consensus *50'.
+
+        Validates that selecting a wildcard consensus pattern correctly
+        identifies features involving all residues matching that pattern.
+        """
         name = self._create_selector_and_add("test", "consensus *50")
         indices = self._get_selected_indices(name)
 
@@ -1123,7 +1586,12 @@ class TestConsensusSelection:
         assert sorted(indices) == sorted(expected)
     
     def test_consensus_range_exact(self):
-        """Test exact consensus range 'consensus 3.50-4.50'."""
+        """
+        Test exact consensus range 'consensus 3.50-4.50'.
+
+        Validates that selecting a specific consensus range correctly
+        identifies features involving residues within that range.
+        """
         name = self._create_selector_and_add("test", "consensus 3.50-4.50")
         indices = self._get_selected_indices(name)
         
@@ -1139,7 +1607,12 @@ class TestConsensusSelection:
         assert sorted(indices) == sorted(expected)
     
     def test_consensus_range_wildcard(self):
-        """Test wildcard consensus range 'consensus *51-*50'."""
+        """
+        Test wildcard consensus range 'consensus *51-*50'.
+
+        Validates that selecting a wildcard consensus range correctly
+        identifies features involving residues matching that range.
+        """
         name = self._create_selector_and_add("test", "consensus *51-*50")
         indices = self._get_selected_indices(name)
 
@@ -1158,8 +1631,13 @@ class TestConsensusSelection:
         assert sorted(indices) == sorted(expected)
     
     def test_consensus_all_prefix(self):
-        """Test 'consensus all 3.50-5.50' including None values."""
-        name = self._create_selector_and_add("test", "consensus all 3.50-5.50") 
+        """
+        Test 'consensus all 3.50-5.50' including None values.
+
+        Validates that using the "all" prefix includes residues with
+        consensus=None in the specified range.
+        """
+        name = self._create_selector_and_add("test", "consensus all 3.50-5.50")
         indices = self._get_selected_indices(name)
         
         # Should include residues with seqid 1-5 (indices 0-4), including None
@@ -1176,11 +1654,16 @@ class TestConsensusSelection:
         assert sorted(indices) == sorted(expected)
 
     def test_consensus_not_all_prefix(self):
-        """Test 'consensus 3.50-5.50' including None values."""
-        name = self._create_selector_and_add("test", "consensus 3.50-5.50") 
+        """
+        Test 'consensus 3.50-5.50' including None values.
+
+        Validates that omitting the "all" prefix excludes residues with
+        consensus=None in the specified range.
+        """
+        name = self._create_selector_and_add("test", "consensus 3.50-5.50")
         indices = self._get_selected_indices(name)
         
-        # wihtout "all" prefix excludes residues with consensus=None in seqid range
+        # without "all" prefix excludes residues with consensus=None in seqid range
         # Residues: "3.50"(0), "3x51"(1), "4.50"(2), "5.50"(4)
         expected = []
         pair_idx = 0
@@ -1193,7 +1676,13 @@ class TestConsensusSelection:
         assert sorted(indices) == sorted(expected)
     
     def test_consensus_and_combination(self):
-        """Test 'consensus 3.50 and res ALA' combination."""
+        """
+        Test 'consensus 3.50 and res ALA' combination.
+
+        Validates that combining consensus selection with residue name
+        selection using "and" logic correctly identifies features involving
+        residues matching either criterion.
+        """
         name = self._create_selector_and_add("test", "consensus 3.50 and res ALA")
         indices = self._get_selected_indices(name)
         
@@ -1216,7 +1705,13 @@ class TestCommonDenominator:
     """Test common_denominator functionality."""
     
     def setup_method(self):
-        """Setup with multiple trajectories having different features."""
+        """
+        Setup with multiple trajectories having different features.
+
+        This setup creates a pipeline with two synthetic trajectories
+        that have slightly different residue compositions to test the
+        common_denominator feature selection logic.
+        """
         # Create basic trajectory setup
         test_instance = TestSelectionStrings()
         test_instance.setup_method()
@@ -1256,7 +1751,27 @@ class TestCommonDenominator:
         self.pipeline.feature.add_feature(Distances(excluded_neighbors=0), force=True)
     
     def _create_selector_and_add(self, name: str, selection: str, **kwargs):
-        """Helper to create selector and add selection."""
+        """
+        Create a feature selector and add a selection for common denominator testing.
+        
+        This helper method is used in TestCommonDenominator to create selectors
+        with common_denominator parameter combinations and validate cross-trajectory
+        feature consistency.
+        
+        Parameters
+        ----------
+        name : str
+            Name of the feature selector to create.
+        selection : str
+            Selection string to parse and apply.
+        **kwargs : dict
+            Additional parameters including common_denominator and traj_selection.
+            
+        Returns
+        -------
+        str
+            The name of the created selector.
+        """
         if name in self.pipeline.data.selected_feature_data:
             del self.pipeline.data.selected_feature_data[name]
         self.pipeline.feature_selector.create(name)
@@ -1264,7 +1779,12 @@ class TestCommonDenominator:
         return name
     
     def test_common_denominator_single_trajectory(self):
-        """Test common_denominator=True with single trajectory has no effect."""
+        """
+        Test common_denominator=True with single trajectory has no effect.
+
+        Validates that common_denominator=True does not alter feature selection
+        when only a single trajectory is selected, returning all features as expected.
+        """
         name = self._create_selector_and_add("test", "all", traj_selection=0, common_denominator=True)
         self.pipeline.feature_selector.select(name, reference_traj=0)
         
@@ -1278,7 +1798,13 @@ class TestCommonDenominator:
         assert sorted(results["trajectory_indices"][0]["indices"]) == sorted(expected)
 
     def test_common_denominator_multiple_trajectories_true(self):
-        """Test common_denominator=True filters to common features only."""
+        """
+        Test common_denominator=True filters to common features only.
+
+        Validates that common_denominator=True correctly identifies and retains
+        only those features that are common across multiple trajectories,
+        filtering out any features that differ due to residue composition changes.
+        """
         name = self._create_selector_and_add("test", "all", traj_selection="all", common_denominator=True)
         self.pipeline.feature_selector.select(name, reference_traj=0)
         
@@ -1307,7 +1833,12 @@ class TestCommonDenominator:
         assert sorted(results["trajectory_indices"][1]["indices"]) == sorted(expected_common_indices)
     
     def test_common_denominator_multiple_trajectories_false(self):
-        """Test common_denominator=False keeps all features per trajectory."""
+        """
+        Test common_denominator=False parameter behavior with multiple trajectories.
+        
+        Validates that all features are kept per trajectory without filtering
+        for common features across different trajectory systems.
+        """
         name = self._create_selector_and_add("test", "all", traj_selection="all", common_denominator=False)
         self.pipeline.feature_selector.select(name, reference_traj=0)
         
@@ -1326,7 +1857,12 @@ class TestCommonDenominator:
         assert sorted(results["trajectory_indices"][1]["indices"]) == sorted(expected)
     
     def test_common_denominator_with_specific_selection(self):
-        """Test common_denominator with specific residue selection."""
+        """
+        Test common_denominator parameter with specific residue selections.
+        
+        Validates that specific residue selections combined with common
+        denominator filtering work correctly across multiple trajectories.
+        """
         # Select ALA residues with common_denominator=True
         name = self._create_selector_and_add("test", "res ALA", traj_selection="all", common_denominator=True)
         self.pipeline.feature_selector.select(name, reference_traj=0)
@@ -1353,7 +1889,12 @@ class TestCommonDenominator:
         assert sorted(results["trajectory_indices"][1]["indices"]) == sorted(expected_ala_indices)
     
     def test_common_denominator_consensus_selection(self):
-        """Test common_denominator=True with consensus selection filters properly."""
+        """
+        Test common_denominator=True with consensus position selections.
+        
+        Validates that consensus-based selections are properly filtered
+        to find common features across trajectories with different labels.
+        """
         # Select consensus positions that exist in both trajectories with common_denominator=True
         # Positions 1x50, 2x50, 4x50 are common; 3x50 vs 3x51 are different
         name = self._create_selector_and_add("test", "consensus 1x50-3x50", traj_selection="all", common_denominator=True)
@@ -1388,7 +1929,12 @@ class TestRequireAllPartners:
     """Test require_all_partners functionality with concrete feature verification."""
     
     def setup_method(self):
-        """Setup with trajectory having specific consensus labels."""
+        """
+        Setup with trajectory having specific consensus labels.
+        
+        This setup creates a synthetic trajectory with consensus labels
+        in the residue metadata to test require_all_partners feature selection logic.
+        """
         # Create topology: ALA(1), GLY(2), VAL(3), ALA(4), GLY(5)
         topology = md.Topology()
         chain = topology.add_chain()
@@ -1444,7 +1990,27 @@ class TestRequireAllPartners:
         self.pipeline.feature.add_feature(Distances(excluded_neighbors=0))
     
     def _create_selector_and_add(self, name: str, selection: str, **kwargs):
-        """Helper to create selector and add selection."""
+        """
+        Create a feature selector and add a selection for require_all_partners testing.
+        
+        This helper method is used in TestRequireAllPartners to create selectors
+        with require_all_partners parameter variations and validate pairwise feature
+        filtering logic.
+        
+        Parameters
+        ----------
+        name : str
+            Name of the feature selector to create.
+        selection : str
+            Selection string to parse and apply (typically consensus-based).
+        **kwargs : dict
+            Additional parameters including require_all_partners for pairwise testing.
+            
+        Returns
+        -------
+        str
+            The name of the created selector.
+        """
         if name in self.pipeline.data.selected_feature_data:
             del self.pipeline.data.selected_feature_data[name]
         self.pipeline.feature_selector.create(name)
@@ -1452,12 +2018,34 @@ class TestRequireAllPartners:
         return name
     
     def _get_selected_indices(self, selector_name: str):
-        """Helper to get selected indices from completed selection."""
+        """
+        Execute feature selection and retrieve indices for require_all_partners testing.
+        
+        This helper method is used in TestRequireAllPartners to perform the selection
+        operation and extract the resulting feature indices for validating pairwise
+        filtering behavior.
+        
+        Parameters
+        ----------
+        selector_name : str
+            Name of the feature selector to execute and retrieve results from.
+            
+        Returns
+        -------
+        list of int
+            List of selected feature indices from trajectory 0 for the distances
+            feature type, filtered by require_all_partners logic.
+        """
         self.pipeline.feature_selector.select(selector_name, reference_traj=0)
         return self.pipeline.data.selected_feature_data[selector_name].get_results("distances")["trajectory_indices"][0]["indices"]
     
     def test_consensus_range_require_all_partners_false(self):
-        """Test consensus range with require_all_partners=False (any partner in range)."""
+        """
+        Test consensus range with require_all_partners=False parameter.
+        
+        Validates that consensus range selections include pairs where ANY
+        partner falls within the specified consensus range.
+        """
         name = self._create_selector_and_add("test", "consensus 3.50-5.50", require_all_partners=False)
         indices = self._get_selected_indices(name)
         
@@ -1479,7 +2067,12 @@ class TestRequireAllPartners:
         assert len(indices) == 9
     
     def test_consensus_range_require_all_partners_true(self):
-        """Test consensus range with require_all_partners=True (both partners in range)."""
+        """
+        Test consensus range with require_all_partners=True parameter.
+        
+        Validates that consensus range selections include pairs where BOTH
+        partners fall within the specified consensus range.
+        """
         name = self._create_selector_and_add("test", "consensus 3.50-5.50", require_all_partners=True)
         indices = self._get_selected_indices(name)
         
@@ -1500,7 +2093,12 @@ class TestRequireAllPartners:
         assert len(indices) == 3
     
     def test_consensus_wildcard_require_all_partners_true(self):
-        """Test consensus wildcard with require_all_partners=True."""
+        """
+        Test consensus wildcard patterns with require_all_partners=True.
+        
+        Validates that wildcard consensus selections (e.g. 7.x) properly
+        enforce both partners matching when require_all_partners is enabled.
+        """
         # Update consensus labels to have different patterns
         # Change one to not match the wildcard pattern
         self.pipeline.data.trajectory_data.res_label_data[0][1]["consensus"] = "2x40"  # GLY2 now has 2x40 instead of 2.50
@@ -1524,7 +2122,12 @@ class TestRequireAllPartners:
         assert len(indices) == 6
     
     def test_consensus_single_require_all_partners_works(self):
-        """Test that single consensus patterns work correctly with require_all_partners."""
+        """
+        Test single consensus patterns with require_all_partners parameter.
+        
+        Validates that single consensus position selections behave correctly
+        with both require_all_partners=True and False settings.
+        """
         # Setup with duplicate consensus to test functionality
         self.pipeline.data.trajectory_data.res_label_data[0][3]["consensus"] = "3.50"  # Make position 4 also 3.50
         

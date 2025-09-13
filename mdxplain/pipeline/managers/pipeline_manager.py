@@ -40,6 +40,7 @@ from ...decomposition import DecompositionManager
 from ...data_selector.managers.data_selector_manager import DataSelectorManager
 from ...comparison.managers.comparison_manager import ComparisonManager
 from ...feature_importance.managers.feature_importance_manager import FeatureImportanceManager
+from ...analysis import AnalysisManager
 
 
 class PipelineManager:
@@ -151,6 +152,7 @@ class PipelineManager:
         self._feature_importance_manager = FeatureImportanceManager(
             use_memmap=use_memmap, chunk_size=chunk_size, cache_dir=cache_dir
         )
+        self._analysis_manager = AnalysisManager()
 
     @property
     def trajectory(self) -> TrajectoryManager:
@@ -272,6 +274,31 @@ class PipelineManager:
             FeatureImportanceManager,
             AutoInjectProxy(self._feature_importance_manager, self._data),
         )
+
+    @property
+    def analysis(self) -> AnalysisManager:
+        """
+        Access analysis operations with automatic PipelineData injection.
+        
+        The analysis manager receives current pipeline_data and provides
+        both direct service access (features) and manager methods with AutoInject.
+        Uses special handling due to mixed service/manager pattern.
+        
+        Note: Currently returns the manager directly since properties like 
+        'features' don't need AutoInject but methods would. This can be
+        enhanced later when manager methods are added.
+
+        Returns:
+        --------
+        AnalysisManager
+            Analysis manager with services configured
+        """
+        # Special handling: Set pipeline_data for services first
+        if hasattr(self._analysis_manager, '_set_pipeline_data'):
+            self._analysis_manager._set_pipeline_data(self._data)
+        
+        # Then wrap with AutoInjectProxy (now supports intelligent service detection)
+        return cast(AnalysisManager, AutoInjectProxy(self._analysis_manager, self._data))
 
     @property
     def data(self):

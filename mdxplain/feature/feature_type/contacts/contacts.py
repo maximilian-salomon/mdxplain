@@ -31,7 +31,6 @@ import numpy as np
 from ..distances.distances import Distances
 from ..interfaces.feature_type_base import FeatureTypeBase
 from .contact_calculator import ContactCalculator
-from .reduce_contact_metrics import ReduceContactMetrics
 
 
 class Contacts(FeatureTypeBase):
@@ -63,7 +62,6 @@ class Contacts(FeatureTypeBase):
     >>> contact_data, names = contacts.compute(distance_data, feature_names)
     """
 
-    ReduceMetrics = ReduceContactMetrics
     """Available reduce metrics for contact features."""
 
     def __init__(self, cutoff: float = 4.5) -> None:

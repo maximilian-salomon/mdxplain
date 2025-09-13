@@ -38,10 +38,28 @@ class SimpleTestObject:
     """Simple test object for DataUtils testing."""
     
     def __init__(self, **kwargs):
+        """
+        Initialize SimpleTestObject with arbitrary keyword arguments.
+        
+        Parameters
+        ----------
+        **kwargs : dict
+            Arbitrary keyword arguments to set as object attributes.
+            Each key-value pair becomes an attribute of the object.
+        """
         for key, value in kwargs.items():
             setattr(self, key, value)
     
     def __dir__(self):
+        """
+        Return list of public attributes for object introspection.
+        
+        Returns
+        -------
+        list of str
+            List of attribute names that don't start with underscore.
+            Used by dir() function to show only public attributes.
+        """
         return [attr for attr in self.__dict__.keys() if not attr.startswith('_')]
 
 
@@ -49,17 +67,44 @@ class MemmapTestObject:
     """Test object with memmap support."""
     
     def __init__(self, use_memmap=False, **kwargs):
+        """
+        Initialize MemmapTestObject with memmap support flag and attributes.
+        
+        Parameters
+        ----------
+        use_memmap : bool, default=False
+            Flag indicating whether this object supports memory-mapped arrays.
+            Used by DataUtils to determine memmap handling during save/load.
+        **kwargs : dict
+            Arbitrary keyword arguments to set as object attributes.
+            Each key-value pair becomes an attribute of the object.
+        """
         self.use_memmap = use_memmap
         for key, value in kwargs.items():
             setattr(self, key, value)
     
     def __dir__(self):
+        """
+        Return list of public attributes for object introspection.
+        
+        Returns
+        -------
+        list of str
+            List of attribute names that don't start with underscore.
+            Used by dir() function to show only public attributes.
+        """
         return [attr for attr in self.__dict__.keys() if not attr.startswith('_')]
 
 
 class TrajectoryContainer:
     """Container mimicking trajectory storage in PipelineData."""
     def __init__(self):
+        """
+        Initialize TrajectoryContainer with empty data structures.
+        
+        Creates empty lists and dictionaries for storing trajectory data,
+        metadata, and analysis results in a PipelineData-like structure.
+        """
         self.trajectories = []
         self.metadata = {}
         self.analysis_results = {}
@@ -68,6 +113,13 @@ class TrajectoryContainer:
 class ComplexAnalysis:
     """Complex analysis object with many nested levels."""
     def __init__(self):
+        """
+        Initialize ComplexAnalysis with deeply nested test data structures.
+        
+        Creates 4-level nested dictionaries with mixed data types including
+        numpy arrays, dicts, lists, and scalar values to test DataUtils
+        handling of complex nested structures.
+        """
         # 4-level nesting with mixed types
         self.experiment_data = {
             "systems": {
@@ -101,6 +153,16 @@ class ComplexAnalysis:
 class MockTopology:
     """Lightweight mock topology."""
     def __init__(self, n_atoms, n_residues):
+        """
+        Initialize MockTopology with atom and residue counts.
+        
+        Parameters
+        ----------
+        n_atoms : int
+            Number of atoms in the mock topology.
+        n_residues : int
+            Number of residues in the mock topology.
+        """
         self.n_atoms = n_atoms
         self.n_residues = n_residues
 
@@ -108,6 +170,21 @@ class MockTopology:
 class MockTrajectory:
     """Lightweight mock trajectory for testing without file dependencies."""
     def __init__(self, n_frames=10, n_atoms=5):
+        """
+        Initialize MockTrajectory with synthetic trajectory data.
+        
+        Parameters
+        ----------
+        n_frames : int, default=10
+            Number of frames in the mock trajectory.
+        n_atoms : int, default=5
+            Number of atoms in the mock trajectory.
+            
+        Notes
+        -----
+        Creates synthetic xyz coordinates and time arrays with deterministic
+        random data (seed=42) for reproducible testing.
+        """
         self.n_frames = n_frames
         self.n_atoms = n_atoms
         self.trajectory_file = "mock_trajectory.xtc"
@@ -124,13 +201,35 @@ class MockTrajectory:
         self.topology = MockTopology(n_atoms, max(1, n_atoms // 3))
         
     def cleanup(self):
-        """Mock cleanup method."""
+        """
+        Mock cleanup method for trajectory resources.
+        
+        This is a no-op method that mimics the cleanup behavior of real
+        trajectory objects. In actual trajectories, this would close files,
+        release memory, and clean up temporary resources.
+        """
         pass
 
 
 class MockMDTraj:
     """Mock MDTraj trajectory for testing DaskMDTrajectory.from_mdtraj()."""
     def __init__(self, n_frames=10, n_atoms=2):
+        """
+        Initialize MockMDTraj with MDTraj-compatible interface.
+        
+        Parameters
+        ----------
+        n_frames : int, default=10
+            Number of frames in the mock trajectory.
+        n_atoms : int, default=2
+            Number of atoms in the mock trajectory.
+            
+        Notes
+        -----
+        Creates a mock MDTraj trajectory with real MDTraj.Topology object
+        for compatibility with DaskMDTrajectory.from_mdtraj() method.
+        Uses deterministic random data (seed=42) for reproducible testing.
+        """
         self.n_frames = n_frames
         self.n_atoms = n_atoms
         
@@ -159,6 +258,14 @@ class MockMDTraj:
 class MockPipelineData:
     """Mock PipelineData with nested structure."""
     def __init__(self):
+        """
+        Initialize MockPipelineData with complex nested structure.
+        
+        Creates nested data structures mimicking real PipelineData including
+        trajectory_data, feature_data, cluster_data, data_selector_data,
+        and mixed_analysis_data with realistic shapes and types for testing
+        DataUtils save/load functionality with complex nested objects.
+        """
         # Nested dict structure like real PipelineData
         self.trajectory_data = {
             "trajectories": [],
@@ -205,14 +312,32 @@ class MockPipelineData:
 
 @pytest.fixture
 def temp_dir():
-    """Temporary directory for test files."""
+    """
+    Provide temporary directory for test files.
+    
+    Yields
+    ------
+    str
+        Path to a temporary directory that will be automatically
+        cleaned up after the test completes. Used for creating
+        test files without affecting the filesystem.
+    """
     with tempfile.TemporaryDirectory() as tmpdir:
         yield tmpdir
 
 
 @pytest.fixture
 def simple_object():
-    """Object with basic Python types."""
+    """
+    Provide SimpleTestObject with basic Python data types.
+    
+    Returns
+    -------
+    SimpleTestObject
+        Test object containing string, int, float, list, dict, None,
+        and bool attributes for testing DataUtils save/load functionality
+        with standard Python types.
+    """
     return SimpleTestObject(
         string_attr="test_string",
         int_attr=42,
@@ -226,7 +351,16 @@ def simple_object():
 
 @pytest.fixture
 def array_object():
-    """Object with numpy arrays."""
+    """
+    Provide SimpleTestObject with various numpy array types.
+    
+    Returns
+    -------
+    SimpleTestObject
+        Test object containing small_array, large_array, int_array,
+        and complex_array attributes for testing DataUtils save/load
+        functionality with different numpy array types and dtypes.
+    """
     np.random.seed(42)
     return SimpleTestObject(
         small_array=np.array([1, 2, 3, 4, 5]),
@@ -238,7 +372,21 @@ def array_object():
 
 @pytest.fixture
 def memmap_object(temp_dir):
-    """Object with memory-mapped arrays."""
+    """
+    Provide MemmapTestObject with memory-mapped arrays.
+    
+    Parameters
+    ----------
+    temp_dir : str
+        Temporary directory path from temp_dir fixture.
+        
+    Returns
+    -------
+    MemmapTestObject
+        Test object with use_memmap=True containing data1 and data2
+        memory-mapped arrays, plus data1_path and data2_path attributes
+        for testing DataUtils memmap save/load functionality.
+    """
     # Create memmap files
     file1 = os.path.join(temp_dir, "test1.dat")
     file2 = os.path.join(temp_dir, "test2.dat")
@@ -267,7 +415,12 @@ class TestDataUtilsSaveObject:
     """Test DataUtils.save_object() method."""
     
     def test_save_object_creates_file(self, simple_object, temp_dir):
-        """Test that saving creates the output file."""
+        """
+        Test that saving creates the output file.
+        
+        Validates that DataUtils.save_object() creates a valid .npy file
+        in the specified directory.
+        """
         save_path = os.path.join(temp_dir, "test.npy")
         DataUtils.save_object(simple_object, save_path)
         assert os.path.exists(save_path)
@@ -299,7 +452,12 @@ class TestDataUtilsSaveObject:
         assert not hasattr(loaded_obj, '__very_private')
     
     def test_save_memmap_without_filename_raises_error(self, temp_dir):
-        """Test that memmaps without filename raise ValueError."""
+        """
+        Test that memmaps without filename raise ValueError.
+        
+        Validates that memory-mapped arrays without filename attribute
+        cause a ValueError with appropriate message when saving.
+        """
         obj = SimpleTestObject()
         
         # Create mock memmap without filename
@@ -318,7 +476,12 @@ class TestDataUtilsLoadObject:
     """Test DataUtils.load_object() method."""
     
     def test_load_simple_object_preserves_all_attributes(self, simple_object, temp_dir):
-        """Test that loading preserves all simple data types."""
+        """
+        Test that loading preserves all simple data types.
+        
+        Validates that all basic Python types (str, int, float,
+        list, dict, bool, None) are correctly loaded and restored.
+        """
         save_path = os.path.join(temp_dir, "simple.npy")
         DataUtils.save_object(simple_object, save_path)
         
@@ -334,7 +497,12 @@ class TestDataUtilsLoadObject:
         assert loaded_obj.bool_attr is True
     
     def test_load_array_object_preserves_arrays(self, array_object, temp_dir):
-        """Test that loading preserves numpy arrays correctly."""
+        """
+        Test that loading preserves numpy arrays correctly.
+        
+        Validates that different numpy array types (small, large, int, complex)
+        are restored with correct values and data types.
+        """
         save_path = os.path.join(temp_dir, "arrays.npy")
         DataUtils.save_object(array_object, save_path)
         
@@ -347,7 +515,12 @@ class TestDataUtilsLoadObject:
         assert np.array_equal(loaded_obj.complex_array, array_object.complex_array)
     
     def test_load_memmap_object_preserves_memmaps(self, memmap_object, temp_dir):
-        """Test that loading preserves memmaps as memmaps with correct data."""
+        """
+        Test that loading preserves memmaps as memmaps with correct data.
+        
+        Validates that memory-mapped arrays after loading continue to exist as
+        np.memmap objects and contain identical data.
+        """
         save_path = os.path.join(temp_dir, "memmaps.npy")
         original_data1 = np.array(memmap_object.data1)
         original_data2 = np.array(memmap_object.data2)
@@ -371,7 +544,12 @@ class TestDataUtilsLoadObject:
         assert loaded_obj.regular_attr == "normal_value"
     
     def test_load_memmap_with_missing_file_returns_none(self, temp_dir):
-        """Test that memmaps with missing files are set to None."""
+        """
+        Test that memmaps with missing files are set to None.
+        
+        Validates that missing memmap files are gracefully handled as None
+        without causing the entire loading process to fail.
+        """
         # Create object with memmap info but no actual file
         obj = MemmapTestObject(use_memmap=True)
         fake_memmap_info = {
@@ -384,8 +562,9 @@ class TestDataUtilsLoadObject:
             }
         }
         
-        save_path = os.path.join(temp_dir, "missing.npy")
-        np.save(save_path, fake_memmap_info, allow_pickle=True)
+        save_path = os.path.join(temp_dir, "missing.pkl")
+        with open(save_path, 'wb') as f:
+            pickle.dump(fake_memmap_info, f)
         
         loaded_obj = MemmapTestObject(use_memmap=True)
         DataUtils.load_object(loaded_obj, save_path)
@@ -393,7 +572,12 @@ class TestDataUtilsLoadObject:
         assert loaded_obj.missing_data is None
     
     def test_load_memmap_with_fallback_path(self, temp_dir):
-        """Test that memmaps can use fallback paths when original is missing."""
+        """
+        Test that memmaps can use fallback paths.
+        
+        Validates that memmaps can use alternative _path attributes
+        for restoration when original paths are missing.
+        """
         # Create fallback file
         fallback_file = os.path.join(temp_dir, "fallback.dat")
         test_data = np.random.random((4, 5))
@@ -412,8 +596,9 @@ class TestDataUtilsLoadObject:
             }
         }
         
-        save_path = os.path.join(temp_dir, "fallback_test.npy")
-        np.save(save_path, memmap_info, allow_pickle=True)
+        save_path = os.path.join(temp_dir, "fallback_test.pkl")
+        with open(save_path, 'wb') as f:
+            pickle.dump(memmap_info, f)
         
         # Load with fallback path
         loaded_obj = MemmapTestObject(use_memmap=True)
@@ -424,7 +609,12 @@ class TestDataUtilsLoadObject:
         assert np.allclose(loaded_obj.test_data, test_data.astype(np.float32))
     
     def test_load_nested_object_structure(self, temp_dir):
-        """Test that loading preserves nested object structures."""
+        """
+        Test that loading preserves nested object structures.
+        
+        Validates that complex nested objects with inner objects,
+        nested dicts and nested lists are correctly reconstructed.
+        """
         inner_obj = SimpleTestObject(inner_attr="inner_value", inner_num=99)
         nested_obj = SimpleTestObject(
             outer_attr="outer_value",
@@ -446,7 +636,12 @@ class TestDataUtilsLoadObject:
         assert loaded_obj.nested_list == [{"a": 1}, {"b": 2}]
     
     def test_load_nonexistent_file_raises_error(self, temp_dir):
-        """Test that loading from nonexistent file raises FileNotFoundError."""
+        """
+        Test that loading non-existent file raises FileNotFoundError.
+        
+        Validates that attempting to load a non-existent file
+        causes an appropriate FileNotFoundError.
+        """
         obj = SimpleTestObject()
         nonexistent_path = os.path.join(temp_dir, "nonexistent.npy")
         
@@ -454,7 +649,12 @@ class TestDataUtilsLoadObject:
             DataUtils.load_object(obj, nonexistent_path)
     
     def test_load_corrupted_file_raises_error(self, temp_dir):
-        """Test that loading corrupted files raises appropriate error."""
+        """
+        Test that loading corrupted files raises appropriate error.
+        
+        Validates that corrupted or invalid .npy files when loading
+        cause appropriate errors (ValueError, OSError, UnpicklingError).
+        """
         obj = SimpleTestObject()
         corrupted_path = os.path.join(temp_dir, "corrupted.npy")
         
@@ -466,20 +666,31 @@ class TestDataUtilsLoadObject:
             DataUtils.load_object(obj, corrupted_path)
     
     def test_load_invalid_data_format_raises_error(self, temp_dir):
-        """Test that loading file with wrong data format raises error."""
+        """
+        Test that loading file with wrong format raises error.
+        
+        Validates that files with invalid pickle data when loading
+        cause corresponding unpickling errors.
+        """
         obj = SimpleTestObject()
-        invalid_path = os.path.join(temp_dir, "invalid.npy")
+        invalid_path = os.path.join(temp_dir, "invalid.pkl")
         
-        # Save array instead of dictionary
-        np.save(invalid_path, np.array([1, 2, 3]), allow_pickle=True)
+        # Save invalid data that causes unpickling issues
+        with open(invalid_path, 'wb') as f:
+            f.write(b"invalid pickle data")
         
-        with pytest.raises(ValueError):
+        with pytest.raises((ValueError, OSError, pickle.UnpicklingError)):
             DataUtils.load_object(obj, invalid_path)
     
     def test_load_memmap_creation_fails_gracefully(self, temp_dir):
-        """Test that memmap creation failure is handled gracefully."""
+        """
+        Test that memmap creation failure is handled gracefully.
+        
+        Validates that invalid memmap parameters (invalid dtype) do not
+        cause crashes but set the attribute to None.
+        """
         obj = MemmapTestObject(use_memmap=True)
-        invalid_memmap_path = os.path.join(temp_dir, "invalid_memmap.npy")
+        invalid_memmap_path = os.path.join(temp_dir, "invalid_memmap.pkl")
         
         # Create memmap info with invalid dtype
         invalid_memmap_info = {
@@ -492,20 +703,27 @@ class TestDataUtilsLoadObject:
             }
         }
         
-        np.save(invalid_memmap_path, invalid_memmap_info, allow_pickle=True)
+        with open(invalid_memmap_path, 'wb') as f:
+            pickle.dump(invalid_memmap_info, f)
         
         # Should not crash, but set attribute to None
         DataUtils.load_object(obj, invalid_memmap_path)
         assert obj.test_data is None
     
     def test_load_overwrites_existing_attributes(self, temp_dir):
-        """Test that loading overwrites existing object attributes."""
+        """
+        Test that loading overwrites existing object attributes.
+        
+        Validates that when loading into existing objects, existing
+        attributes are correctly overwritten and new ones added.
+        """
         obj_with_existing = SimpleTestObject(existing_attr="old_value", new_attr="will_be_overwritten")
         
         # Save different data
         save_data = {"existing_attr": "new_value", "additional_attr": "added"}
-        save_path = os.path.join(temp_dir, "overwrite.npy")
-        np.save(save_path, save_data, allow_pickle=True)
+        save_path = os.path.join(temp_dir, "overwrite.pkl")
+        with open(save_path, 'wb') as f:
+            pickle.dump(save_data, f)
         
         DataUtils.load_object(obj_with_existing, save_path)
         
@@ -518,7 +736,12 @@ class TestDataUtilsComplexObjects:
     """Test DataUtils with PipelineData-like complex nested structures."""
     
     def test_pipeline_data_like_nested_structure(self, temp_dir):
-        """Test DataUtils with complex nested structure like PipelineData."""
+        """
+        Test DataUtils with complex nested structure like PipelineData.
+        
+        Validates that pipeline-like nested structures with
+        trajectory_data, feature_data, cluster_data are correctly saved/loaded.
+        """
         
         # Create complex object
         original = MockPipelineData()
@@ -562,7 +785,12 @@ class TestDataUtilsComplexObjects:
         assert np.array_equal(loaded.mixed_analysis_data[2], original.mixed_analysis_data[2])
             
     def test_dask_trajectory_save_load(self, temp_dir):
-        """Test saving and loading DaskMDTrajectory objects created from MockMDTraj."""
+        """
+        Test saving and loading of DaskMDTrajectory objects.
+        
+        Validates that DaskMDTrajectory with zarr cache and metadata
+        is exactly reconstructed with identical xyz/time data.
+        """
         
         # Create mock MDTraj trajectory
         mock_traj = MockMDTraj(n_frames=10, n_atoms=2)
@@ -653,7 +881,12 @@ class TestDataUtilsComplexObjects:
         restored_traj.cleanup()
     
     def test_from_mdtraj_equivalence_with_direct_creation(self, temp_dir):
-        """Test that from_mdtraj produces same result as direct creation from files."""
+        """
+        Test that from_mdtraj delivers identical result to direct creation.
+        
+        Validates that DaskMDTrajectory.from_mdtraj() and direct file creation
+        produce equivalent trajectory objects with identical coordinates.
+        """
         
         # Create real MDTraj trajectory and save to files
         mock_traj = MockMDTraj(n_frames=15, n_atoms=3)
@@ -705,7 +938,12 @@ class TestDataUtilsComplexObjects:
         dask_traj_from_md.cleanup()
     
     def test_deeply_nested_mixed_types(self, temp_dir):
-        """Test with deeply nested mixed type structures."""
+        """
+        Test with deeply nested mixed-type structures.
+        
+        Validates that 4-level nested structures with numpy arrays,
+        dicts, lists and mixed types are correctly saved/loaded.
+        """
         
         # Create and save
         original = ComplexAnalysis()
@@ -747,7 +985,12 @@ class TestDataUtilsIntegration:
     """Integration tests for complete save/load workflows."""
     
     def test_round_trip_preserves_all_data(self, simple_object, temp_dir):
-        """Test that complete save/load cycle preserves all data perfectly."""
+        """
+        Test that complete save/load cycle preserves all data perfectly.
+        
+        Validates that round-trip (save → load) preserves every attribute value
+        exactly without data loss or changes.
+        """
         save_path = os.path.join(temp_dir, "roundtrip.npy")
         
         # Save
@@ -765,7 +1008,12 @@ class TestDataUtilsIntegration:
                 assert loaded_value == original_value
     
     def test_multiple_save_load_cycles_no_corruption(self, simple_object, temp_dir):
-        """Test that multiple save/load cycles don't corrupt data."""
+        """
+        Test that multiple save/load cycles do not corrupt data.
+        
+        Validates that 3 consecutive save/load cycles cause no
+        data corruption or drift.
+        """
         save_path = os.path.join(temp_dir, "multi_cycle.npy")
         current_obj = simple_object
         
@@ -785,7 +1033,12 @@ class TestDataUtilsIntegration:
             current_obj = loaded_obj
     
     def test_loaded_objects_are_independent_copies(self, temp_dir):
-        """Test that loaded objects are independent copies, not references."""
+        """
+        Test that loaded objects are independent copies.
+        
+        Validates that loaded objects do not exist as references
+        but as independent copies with separate memory space.
+        """
         obj1 = SimpleTestObject(mutable_list=[1, 2, 3])
         save_path = os.path.join(temp_dir, "independence.npy")
         

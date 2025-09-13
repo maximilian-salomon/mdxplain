@@ -31,7 +31,6 @@ import mdtraj as md
 
 from ..interfaces.feature_type_base import FeatureTypeBase
 from .dssp_calculator import DSSPCalculator
-from .reduce_dssp_metrics import ReduceDSSPMetrics
 
 
 class DSSP(FeatureTypeBase):
@@ -61,7 +60,6 @@ class DSSP(FeatureTypeBase):
     >>> pipeline.feature.add_feature(dssp)
     """
 
-    ReduceMetrics = ReduceDSSPMetrics
     """Available reduce metrics for DSSP features."""
 
     def __init__(self, simplified: bool = False, encoding: str = 'char') -> None:

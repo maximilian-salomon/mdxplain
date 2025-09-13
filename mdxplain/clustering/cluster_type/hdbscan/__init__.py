@@ -25,3 +25,7 @@ This module provides HDBSCAN (Hierarchical Density-Based Spatial Clustering
 of Applications with Noise) clustering functionality for molecular dynamics
 trajectory analysis.
 """
+
+from .hdbscan import HDBSCAN
+
+__all__ = ['HDBSCAN']

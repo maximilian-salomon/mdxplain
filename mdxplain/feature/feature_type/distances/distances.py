@@ -31,7 +31,6 @@ import mdtraj as md
 
 from ..interfaces.feature_type_base import FeatureTypeBase
 from .distance_calculator import DistanceCalculator
-from .reduce_distance_metrics import ReduceDistanceMetrics
 
 
 class Distances(FeatureTypeBase):
@@ -62,22 +61,12 @@ class Distances(FeatureTypeBase):
     >>> traj_data.add_feature(Distances(ref=ref_traj))
     """
 
-    ReduceMetrics = ReduceDistanceMetrics
-    """Available reduce metrics for distance features."""
-
-    def __init__(self, ref: Optional[Any] = None, excluded_neighbors: int = 1) -> None:
+    def __init__(self, excluded_neighbors: int = 1) -> None:
         """
         Initialize distance feature type with optional reference trajectory.
 
         Parameters:
         -----------
-        ref : mdtraj.Trajectory, optional
-            Reference trajectory that determines which atom pairs are computed and serves
-            as basis for feature name generation. When comparing trajectories with different
-            sequences (e.g., wildtype vs mutants), using a common reference ensures
-            consistent feature naming across trajectories. Without reference, feature names
-            depend on the specific trajectory topology, making cross-trajectory comparisons
-            impossible. If None, uses first trajectory as reference.
         excluded_neighbors : int, default=0
             Number of nearest neighbors to consider for distance calculation.
             Chain Breaks are automatically excluded. Meassured by jump in the seqid of a residue.
@@ -96,17 +85,10 @@ class Distances(FeatureTypeBase):
         >>> # Use first trajectory as reference (automatic)
         >>> distances = Distances()
 
-        >>> # Use specific reference trajectory for consistent naming
-        >>> traj_data = TrajectoryData()
-        >>> traj_data.load_trajectories('wildtype/')
-        >>> ref_traj = traj_data.trajectories[2]  # Second trajectory as reference
-        >>> traj_data.add_feature(Distances(ref=ref_traj))
-
         >>> # Use custom diagonal offset
         >>> distances = Distances(excluded_neighbors=2)
         """
         super().__init__()
-        self.ref = ref
         self.excluded_neighbors = excluded_neighbors
 
     def init_calculator(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000) -> None:

@@ -1,3 +1,23 @@
+# mdxplain - A Python toolkit for molecular dynamics trajectory analysis
+#
+# Author: Maximilian Salomon
+# Created with assistance from Claude Code (Claude Sonnet 4.0) and GitHub Copilot (Claude Sonnet 4.0).
+#
+# Copyright (C) 2025 Maximilian Salomon
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """Comprehensive tests for DataSelector functionality."""
 
 import numpy as np
@@ -11,7 +31,11 @@ class TestDataSelectorBasics:
     """Test basic DataSelector functionality."""
     
     def setup_method(self):
-        """Setup with synthetic trajectory."""
+        """
+        Setup with synthetic trajectory.
+
+        Creates a simple synthetic trajectory with 5 residues and 100 frames.
+        """
         # Create topology: ALA(1), GLY(2), VAL(3), ALA(4), GLY(5)
         topology = md.Topology()
         chain = topology.add_chain()
@@ -65,7 +89,11 @@ class TestDataSelectorBasics:
         self.pipeline.feature.add_feature(Distances(excluded_neighbors=0))
     
     def test_create_data_selector_basic(self):
-        """Test creating basic data selector."""
+        """
+        Test basic data selector creation and frame selection.
+        Validates that data selector is created correctly with proper name
+        and can select frame ranges from specific trajectories.
+        """
         self.pipeline.data_selector.create("test")
         
         assert "test" in self.pipeline.data.data_selector_data
@@ -78,7 +106,11 @@ class TestDataSelectorBasics:
         assert selector.trajectory_frames[0] == list(range(10, 20))
     
     def test_frame_range_selection(self):
-        """Test frame range selection."""
+        """
+        Test data selector frame range functionality.
+        Validates that frame ranges are correctly selected and counted
+        from trajectory data with proper bounds checking.
+        """
         self.pipeline.data_selector.create("test")
         self.pipeline.data_selector.select_by_indices("test", {0: list(range(20, 30))})
         
@@ -91,7 +123,11 @@ class TestDataSelectorBasics:
         assert selector.n_selected_frames == expected_frames
     
     def test_stride_selection(self):
-        """Test stride selection."""
+        """
+        Test data selector stride functionality.
+        Validates that every nth frame is correctly selected using stride
+        and total frame count matches expected stride calculation.
+        """
         self.pipeline.data_selector.create("test")
         
         # Create stride selection manually (every 5th frame)
@@ -106,7 +142,11 @@ class TestDataSelectorBasics:
         assert selector.n_selected_frames == expected_frames
     
     def test_combined_frame_range_and_stride(self):
-        """Test combination of frame range and stride."""
+        """
+        Test combined frame range and stride selection.
+        Validates that frame range combined with stride produces correct
+        subset of frames with proper counting and indexing.
+        """
         self.pipeline.data_selector.create("test")
         
         # Create combined range and stride selection manually (frames 10-50 with stride 4)
@@ -131,7 +171,11 @@ class TestMultipleDataSelectors:
         self.pipeline = test_instance.pipeline
     
     def test_multiple_selectors_coexist(self):
-        """Test multiple data selectors can coexist."""
+        """
+        Test that multiple data selectors can coexist independently.
+        Validates that different selectors maintain separate frame selections
+        and settings without interfering with each other.
+        """
         self.pipeline.data_selector.create("early")
         self.pipeline.data_selector.create("late")  
         self.pipeline.data_selector.create("sparse")
@@ -161,7 +205,11 @@ class TestMultipleDataSelectors:
         assert sparse.n_selected_frames == 10
     
     def test_selector_name_uniqueness(self):
-        """Test that data selector names must be unique."""
+        """
+        Test data selector name uniqueness enforcement.
+        Validates that attempting to create a selector with existing name
+        raises appropriate ValueError with informative message.
+        """
         self.pipeline.data_selector.create("test")
         
         # Creating selector with same name should raise error
@@ -204,7 +252,11 @@ class TestDataSelectorMultiTrajectory:
         self.pipeline.feature.add_feature(Distances(excluded_neighbors=0), force=True)
     
     def test_multi_trajectory_all_frames(self):
-        """Test data selector with all frames from multiple trajectories."""
+        """
+        Test data selector with all frames from multiple trajectories.
+        Validates that selector correctly handles different trajectory lengths
+        and counts total frames across all selected trajectories.
+        """
         self.pipeline.data_selector.create("all_frames")
         
         # Select all frames from both trajectories
@@ -223,7 +275,11 @@ class TestDataSelectorMultiTrajectory:
         assert selector.n_selected_frames == 150
     
     def test_multi_trajectory_partial_frames(self):
-        """Test data selector with partial frame ranges from multiple trajectories."""
+        """
+        Test data selector with partial frame ranges from multiple trajectories.
+        Validates that different frame ranges can be selected per trajectory
+        and total frame count reflects selected ranges only.
+        """
         self.pipeline.data_selector.create("partial_frames")
         
         # Select specific frame ranges from each trajectory
@@ -243,7 +299,11 @@ class TestDataSelectorMultiTrajectory:
         assert selector.n_selected_frames == 71
     
     def test_multi_trajectory_stride_frames(self):
-        """Test data selector with stride selection across multiple trajectories."""
+        """
+        Test data selector with stride selection across multiple trajectories.
+        Validates that stride is correctly applied per trajectory independently
+        and produces expected frame counts for each trajectory.
+        """
         self.pipeline.data_selector.create("stride_frames")
         
         # Apply stride=5 to both trajectories
@@ -269,13 +329,21 @@ class TestDataSelectorErrorHandling:
     """Test error handling in data selector."""
     
     def setup_method(self):
-        """Setup with synthetic trajectory."""
+        """
+        Setup with synthetic trajectory.
+        
+        Creates a simple synthetic trajectory with 5 residues and 100 frames.
+        """
         test_instance = TestDataSelectorBasics()
         test_instance.setup_method()
         self.pipeline = test_instance.pipeline
     
     def test_invalid_frame_indices(self):
-        """Test error handling for invalid frame indices."""
+        """
+        Test error handling for invalid frame indices.
+        Validates that out-of-bounds frame indices raise appropriate
+        ValueError or IndexError with clear error messages.
+        """
         self.pipeline.data_selector.create("test")
         
         # Out of bounds frame indices
@@ -283,7 +351,11 @@ class TestDataSelectorErrorHandling:
             self.pipeline.data_selector.select_by_indices("test", {0: [200]})
     
     def test_invalid_trajectory_index(self):
-        """Test error handling for invalid trajectory indices."""
+        """
+        Test error handling for invalid trajectory indices.
+        Validates that non-existent trajectory indices raise appropriate
+        ValueError, KeyError, or IndexError.
+        """
         self.pipeline.data_selector.create("test")
         
         # Non-existent trajectory index
@@ -291,7 +363,11 @@ class TestDataSelectorErrorHandling:
             self.pipeline.data_selector.select_by_indices("test", {999: [0, 1, 2]})
     
     def test_nonexistent_selector(self):
-        """Test accessing non-existent data selector."""
+        """
+        Test accessing non-existent data selector.
+        Validates that accessing undefined selector raises KeyError
+        for proper error handling in client code.
+        """
         with pytest.raises(KeyError):
             _ = self.pipeline.data.data_selector_data["nonexistent"]
 
@@ -300,7 +376,11 @@ class TestDataSelectorIndicesAdvanced:
     """Test advanced select_by_indices functionality."""
     
     def setup_method(self):
-        """Setup with multiple trajectories and tags."""
+        """
+        Setup with multiple trajectories and tags.
+
+        Creates two synthetic trajectories with tags for advanced selection testing.
+        """
         test_instance = TestDataSelectorBasics()
         test_instance.setup_method()
         self.pipeline = test_instance.pipeline
@@ -323,7 +403,11 @@ class TestDataSelectorIndicesAdvanced:
         self.pipeline.feature.add_feature(Distances(excluded_neighbors=0), force=True)
     
     def test_trajectory_selection_by_name(self):
-        """Test trajectory selection by name."""
+        """
+        Test trajectory selection by name string instead of index.
+        Validates that trajectory names are correctly resolved to indices
+        and proper frame selection is applied to the correct trajectory.
+        """
         self.pipeline.data_selector.create("test")
         
         # Select by trajectory name
@@ -334,7 +418,11 @@ class TestDataSelectorIndicesAdvanced:
         assert selector.trajectory_frames[0] == [10, 20, 30]
     
     def test_trajectory_selection_by_tag(self):
-        """Test trajectory selection by tag."""
+        """
+        Test trajectory selection using tag prefix "tag:tagname".
+        Validates that tag-based trajectory resolution works correctly
+        and applies frame selection to trajectories matching the specified tag.
+        """
         self.pipeline.data_selector.create("test")
         
         # Select by tag - should apply to trajectory 0 (has "folded" tag)
@@ -345,7 +433,11 @@ class TestDataSelectorIndicesAdvanced:
         assert selector.trajectory_frames[0] == [5, 15, 25]
     
     def test_frame_selection_single_int(self):
-        """Test frame selection with single integer."""
+        """
+        Test frame selection with single integer value.
+        Validates that a single integer is converted to a single-item list
+        and properly stored in trajectory frame selection.
+        """
         self.pipeline.data_selector.create("test")
         
         self.pipeline.data_selector.select_by_indices("test", {0: 42})
@@ -354,7 +446,11 @@ class TestDataSelectorIndicesAdvanced:
         assert selector.trajectory_frames[0] == [42]
     
     def test_frame_selection_string_single(self):
-        """Test frame selection with string single frame."""
+        """
+        Test frame selection with string representation of single frame.
+        Validates that string-to-integer conversion works correctly
+        and produces the same result as direct integer input.
+        """
         self.pipeline.data_selector.create("test")
         
         self.pipeline.data_selector.select_by_indices("test", {0: "42"})
@@ -363,7 +459,11 @@ class TestDataSelectorIndicesAdvanced:
         assert selector.trajectory_frames[0] == [42]
     
     def test_frame_selection_string_range(self):
-        """Test frame selection with string range."""
+        """
+        Test frame selection using "start-end" range string format.
+        Validates that hyphen-separated ranges are correctly parsed
+        and expanded into inclusive frame index lists.
+        """
         self.pipeline.data_selector.create("test")
         
         self.pipeline.data_selector.select_by_indices("test", {0: "10-15"})
@@ -372,7 +472,11 @@ class TestDataSelectorIndicesAdvanced:
         assert selector.trajectory_frames[0] == [10, 11, 12, 13, 14, 15]
     
     def test_frame_selection_string_comma_list(self):
-        """Test frame selection with comma-separated list."""
+        """
+        Test frame selection with comma-separated list of frame indices.
+        Validates that comma-delimited strings are correctly parsed
+        into individual frame indices with proper ordering.
+        """
         self.pipeline.data_selector.create("test")
         
         self.pipeline.data_selector.select_by_indices("test", {0: "10,20,30"})
@@ -381,7 +485,11 @@ class TestDataSelectorIndicesAdvanced:
         assert sorted(selector.trajectory_frames[0]) == [10, 20, 30]
     
     def test_frame_selection_string_combined(self):
-        """Test frame selection with combined ranges and singles."""
+        """
+        Test frame selection combining ranges and single values.
+        Validates that mixed "10-12,20,30-32" format is correctly parsed
+        and produces union of all specified ranges and individual frames.
+        """
         self.pipeline.data_selector.create("test")
         
         self.pipeline.data_selector.select_by_indices("test", {0: "10-12,20,30-32"})
@@ -391,7 +499,11 @@ class TestDataSelectorIndicesAdvanced:
         assert sorted(selector.trajectory_frames[0]) == expected
     
     def test_frame_selection_string_all(self):
-        """Test frame selection with 'all' keyword."""
+        """
+        Test frame selection using "all" keyword for complete trajectory.
+        Validates that "all" string expands to full frame range
+        and selects every frame from the specified trajectory.
+        """
         self.pipeline.data_selector.create("test")
         
         self.pipeline.data_selector.select_by_indices("test", {0: "all"})
@@ -400,7 +512,11 @@ class TestDataSelectorIndicesAdvanced:
         assert selector.trajectory_frames[0] == list(range(100))  # All 100 frames
     
     def test_frame_selection_dict_with_stride(self):
-        """Test frame selection with stride dictionary."""
+        """
+        Test frame selection using dictionary with frames and stride keys.
+        Validates that stride parameter correctly samples frames at regular intervals
+        from the specified frame range with proper step size.
+        """
         self.pipeline.data_selector.create("test")
         
         self.pipeline.data_selector.select_by_indices("test", {0: {"frames": "0-50", "stride": 10}})
@@ -410,7 +526,11 @@ class TestDataSelectorIndicesAdvanced:
         assert selector.trajectory_frames[0] == expected
     
     def test_stride_minimum_distance(self):
-        """Test stride as minimum distance filter on sparse frame selection."""
+        """
+        Test stride parameter as minimum distance filter on sparse selections.
+        Validates that stride enforces minimum frame separation on irregular
+        frame lists by filtering out frames that are too close together.
+        """
         self.pipeline.data_selector.create("test")
         
         # Select sparse frames with stride applied directly
@@ -425,7 +545,11 @@ class TestDataSelectorIndicesAdvanced:
         assert selector.trajectory_frames[0] == expected
     
     def test_stride_on_union_pattern(self):
-        """Test stride on frames that simulate union operation result."""
+        """
+        Test stride parameter applied to frame pattern simulating union results.
+        Validates that stride filtering works correctly on densely packed
+        frame sequences by maintaining minimum distance requirements.
+        """
         self.pipeline.data_selector.create("test")
         
         # Select frames that would result from union: [10, 15, 20, 25, 30, 35]
@@ -440,7 +564,11 @@ class TestDataSelectorIndicesAdvanced:
         assert selector.trajectory_frames[0] == expected
     
     def test_stride_on_intersection_pattern(self):
-        """Test stride on frames that simulate intersection operation result."""
+        """
+        Test stride parameter on frame pattern simulating intersection results.
+        Validates that stride effectively reduces frame density in closely spaced
+        sequences while preserving temporal distribution characteristics.
+        """
         self.pipeline.data_selector.create("test")
         
         # Select frames that would result from intersection: [20, 25, 30, 35, 40, 45]
@@ -459,13 +587,21 @@ class TestDataSelectorModes:
     """Test different selection modes (add, subtract, intersect)."""
     
     def setup_method(self):
-        """Setup with basic trajectory."""
+        """
+        Setup with basic trajectory.
+        
+        Creates a simple synthetic trajectory with 5 residues and 100 frames.
+        """
         test_instance = TestDataSelectorBasics()
         test_instance.setup_method()
         self.pipeline = test_instance.pipeline
     
     def test_mode_add_default(self):
-        """Test default add mode (union)."""
+        """
+        Test default selection mode which should be "add" (union operation).
+        Validates that multiple selections without explicit mode parameter
+        combine frames using union logic to expand the selection.
+        """
         self.pipeline.data_selector.create("test")
         
         # First selection
@@ -480,7 +616,11 @@ class TestDataSelectorModes:
         assert sorted(selector.trajectory_frames[0]) == expected
     
     def test_mode_add_explicit(self):
-        """Test explicit add mode (union)."""
+        """
+        Test explicitly specified "add" mode for union operations.
+        Validates that mode="add" produces identical results to default behavior
+        and correctly combines frame selections from multiple operations.
+        """
         self.pipeline.data_selector.create("test")
         
         self.pipeline.data_selector.select_by_indices("test", {0: [10, 20, 30]})
@@ -491,7 +631,11 @@ class TestDataSelectorModes:
         assert sorted(selector.trajectory_frames[0]) == expected
     
     def test_mode_subtract(self):
-        """Test subtract mode (difference)."""
+        """
+        Test "subtract" mode for difference operations on frame selections.
+        Validates that mode="subtract" removes specified frames from existing
+        selection and produces correct set difference results.
+        """
         self.pipeline.data_selector.create("test")
         
         # First selection: large range
@@ -508,7 +652,11 @@ class TestDataSelectorModes:
         assert sorted(selector.trajectory_frames[0]) == expected
     
     def test_mode_intersect(self):
-        """Test intersect mode (intersection)."""
+        """
+        Test "intersect" mode for intersection operations on frame selections.
+        Validates that mode="intersect" keeps only frames present in both
+        existing selection and new selection criteria.
+        """
         self.pipeline.data_selector.create("test")
         
         # First selection: range 10-30
@@ -523,7 +671,11 @@ class TestDataSelectorModes:
         assert sorted(selector.trajectory_frames[0]) == expected
     
     def test_multiple_mode_operations(self):
-        """Test multiple operations with different modes."""
+        """
+        Test sequential application of multiple selection modes.
+        Validates that complex sequences of add, subtract, and intersect operations
+        produce correct final frame selections through proper mode composition.
+        """
         self.pipeline.data_selector.create("test")
         
         # Start with base selection
@@ -557,7 +709,11 @@ class TestDataSelectorTags:
     """Test select_by_tags functionality."""
     
     def setup_method(self):
-        """Setup with multiple trajectories with different tags."""
+        """
+        Setup with multiple trajectories with different tags.
+        
+        Creates two synthetic trajectories with distinct tags for tag-based selection testing.
+        """
         test_instance = TestDataSelectorBasics()
         test_instance.setup_method()
         self.pipeline = test_instance.pipeline
@@ -593,7 +749,11 @@ class TestDataSelectorTags:
         self.pipeline.feature.add_feature(Distances(excluded_neighbors=0), force=True)
     
     def test_select_by_single_tag(self):
-        """Test selection by single tag."""
+        """
+        Test trajectory selection using single tag criterion.
+        Validates that trajectories with matching tag are selected completely
+        while trajectories without the tag are excluded from selection.
+        """
         self.pipeline.data_selector.create("test")
         
         self.pipeline.data_selector.select_by_tags("test", ["folded"])
@@ -606,7 +766,11 @@ class TestDataSelectorTags:
         assert 1 not in selector.trajectory_frames
     
     def test_select_by_multiple_tags_match_all_true(self):
-        """Test selection by multiple tags with match_all=True (AND)."""
+        """
+        Test multi-tag selection with match_all=True requiring AND logic.
+        Validates that only trajectories containing all specified tags
+        are selected when match_all=True is used for strict filtering.
+        """
         self.pipeline.data_selector.create("test")
         
         # Select trajectories that have BOTH "folded" AND "stable" tags
@@ -620,7 +784,11 @@ class TestDataSelectorTags:
         assert 1 not in selector.trajectory_frames
     
     def test_select_by_multiple_tags_match_all_false(self):
-        """Test selection by multiple tags with match_all=False (OR)."""
+        """
+        Test multi-tag selection with match_all=False using OR logic.
+        Validates that trajectories containing any of the specified tags
+        are selected when match_all=False allows inclusive filtering.
+        """
         self.pipeline.data_selector.create("test")
         
         # Select trajectories that have "folded" OR "unfolded" tags
@@ -633,7 +801,11 @@ class TestDataSelectorTags:
         assert sorted(selector.trajectory_frames[1]) == list(range(0, 80))
     
     def test_select_by_tags_with_stride(self):
-        """Test tag selection with stride parameter."""
+        """
+        Test tag-based selection combined with stride parameter.
+        Validates that stride is correctly applied to trajectories selected by tags
+        producing regular frame sampling from matched trajectories only.
+        """
         self.pipeline.data_selector.create("test")
         
         # Select trajectories with "stable" tag, with stride=5
@@ -647,7 +819,11 @@ class TestDataSelectorTags:
         assert 1 not in selector.trajectory_frames
     
     def test_select_by_tags_with_modes(self):
-        """Test tag selection with different modes."""
+        """
+        Test tag-based selection using different operation modes.
+        Validates that add, subtract modes work correctly when applied
+        to tag-based trajectory selection with proper frame handling.
+        """
         self.pipeline.data_selector.create("test")
         
         # First select trajectories with "folded" tag
@@ -670,7 +846,11 @@ class TestDataSelectorTags:
         assert 1 not in selector.trajectory_frames
     
     def test_select_by_nonexistent_tag(self):
-        """Test selection by tag that doesn't exist."""
+        """
+        Test selection behavior when using non-existent tag.
+        Validates that selecting by non-existent tag results in empty selection
+        without raising errors, providing graceful handling of missing tags.
+        """
         self.pipeline.data_selector.create("test")
         
         # This should result in empty selection
@@ -681,7 +861,11 @@ class TestDataSelectorTags:
         assert len(selector.trajectory_frames) == 0
     
     def test_contradictory_tags_stable_unstable(self):
-        """Test match_all=True with stable AND unstable tags."""
+        """
+        Test match_all=True with contradictory stable AND unstable tags.
+        Validates that trajectories can have contradictory tags simultaneously
+        and match_all=True correctly finds trajectories with both tags.
+        """
         # Add contradictory tag to trajectory 0
         self.pipeline.data.trajectory_data.trajectory_tags[0].extend(["unstable"])
         
@@ -695,7 +879,11 @@ class TestDataSelectorTags:
         assert 1 not in selector.trajectory_frames
     
     def test_contradictory_tags_folded_unfolded(self):
-        """Test match_all=True with folded AND unfolded tags."""
+        """
+        Test match_all=True with contradictory folded AND unfolded tags.
+        Validates that when no trajectories have both contradictory tags,
+        the selection results in empty frame sets as expected.
+        """
         # Add contradictory tags to trajectory 1
         self.pipeline.data_selector.create("test")
         self.pipeline.data_selector.select_by_tags("test", ["folded", "unfolded"], match_all=True)
@@ -705,7 +893,11 @@ class TestDataSelectorTags:
         assert selector.trajectory_frames == {}
     
     def test_impossible_tag_combination(self):
-        """Test match_all=True with impossible 4-tag combination."""
+        """
+        Test match_all=True with impossible 4-tag combination requirement.
+        Validates that when no trajectory can satisfy all contradictory tag requirements,
+        the selection correctly results in empty frame selection.
+        """
         # Add tags to make one trajectory have some but not all
         self.pipeline.data.trajectory_data.trajectory_tags[0].extend(["unstable"])
         self.pipeline.data.trajectory_data.trajectory_tags[1].extend(["folded", "stable"])
@@ -724,7 +916,16 @@ class TestDataSelectorCluster:
     """Test select_by_cluster functionality."""
     
     def setup_method(self):
-        """Setup with trajectory and mock clustering results."""
+        """
+        Setup with trajectory and mock clustering results.
+        
+        Creates a simple synthetic trajectory with 5 residues and 100 frames.
+        Create with mock clustering data for testing cluster-based selection.
+        3 clusters are simulated with different frame assignments.
+        1. Cluster 0: frames 0-30
+        2. Cluster 1: frames 31-70
+        3. Cluster 2: frames 71-99.
+        """
         test_instance = TestDataSelectorBasics()
         test_instance.setup_method()
         self.pipeline = test_instance.pipeline
@@ -757,7 +958,11 @@ class TestDataSelectorCluster:
         self.pipeline.data.cluster_data = {"test_clustering": cluster_data}
     
     def test_select_by_single_cluster(self):
-        """Test selection by single cluster ID."""
+        """
+        Test frame selection based on single cluster ID.
+        Validates that all frames assigned to specified cluster are selected
+        and cluster-to-frame mapping works correctly for data selection.
+        """
         self.pipeline.data_selector.create("test")
         
         self.pipeline.data_selector.select_by_cluster("test", "test_clustering", [0])
@@ -768,7 +973,11 @@ class TestDataSelectorCluster:
         assert sorted(selector.trajectory_frames[0]) == expected
     
     def test_select_by_multiple_clusters(self):
-        """Test selection by multiple cluster IDs."""
+        """
+        Test frame selection using multiple cluster IDs simultaneously.
+        Validates that frames from all specified clusters are combined
+        into unified selection with proper union of cluster memberships.
+        """
         self.pipeline.data_selector.create("test")
         
         self.pipeline.data_selector.select_by_cluster("test", "test_clustering", [0, 2])
@@ -779,7 +988,11 @@ class TestDataSelectorCluster:
         assert sorted(selector.trajectory_frames[0]) == sorted(expected)
     
     def test_select_by_cluster_with_stride(self):
-        """Test cluster selection with stride parameter."""
+        """
+        Test cluster-based selection combined with stride parameter.
+        Validates that stride is applied to frames within selected clusters
+        producing regular sampling from cluster-defined frame subsets.
+        """
         self.pipeline.data_selector.create("test")
         
         # Select cluster 1 with stride=5
@@ -792,7 +1005,11 @@ class TestDataSelectorCluster:
         assert sorted(selector.trajectory_frames[0]) == expected
     
     def test_select_by_cluster_with_modes(self):
-        """Test cluster selection with different modes."""
+        """
+        Test cluster-based selection using different operation modes.
+        Validates that add, subtract modes work correctly with cluster selections
+        and produce expected frame set operations on cluster memberships.
+        """
         self.pipeline.data_selector.create("test")
         
         # Start with cluster 0
@@ -810,19 +1027,23 @@ class TestDataSelectorCluster:
         assert sorted(selector.trajectory_frames[0]) == sorted(expected)
     
     def test_select_by_nonexistent_cluster(self):
-        """Test selection by cluster that doesn't exist."""
+        """
+        Test error handling when selecting non-existent cluster ID.
+        Validates that attempting to select undefined cluster raises appropriate
+        ValueError with informative message about missing cluster.
+        """
         self.pipeline.data_selector.create("test")
         
-        # Select cluster ID 999 which doesn't exist - should result in empty selection
-        self.pipeline.data_selector.select_by_cluster("test", "test_clustering", [999])
-        
-        selector = self.pipeline.data.data_selector_data["test"]
-        # No frames should be selected since cluster 999 doesn't exist
-        assert selector.n_selected_frames == 0
-        assert len(selector.trajectory_frames) == 0
+        # Select cluster ID 999 which doesn't exist - should raise ValueError
+        with pytest.raises(ValueError, match="Cluster ID 999 not found"):
+            self.pipeline.data_selector.select_by_cluster("test", "test_clustering", [999])
     
     def test_select_by_nonexistent_clustering(self):
-        """Test selection by clustering that doesn't exist."""
+        """
+        Test error handling when selecting from non-existent clustering.
+        Validates that attempting to use undefined clustering name raises
+        appropriate ValueError or KeyError with clear error indication.
+        """
         self.pipeline.data_selector.create("test")
         
         # Try to select from clustering that doesn't exist
@@ -834,7 +1055,11 @@ class TestDataSelectorMixedModes:
     """Test mixed mode operations with simplified setup."""
     
     def setup_method(self):
-        """Setup with 2 trajectories, basic tags and simple clustering."""
+        """
+        Setup with 2 trajectories, basic tags and simple clustering.
+
+        Creates two synthetic trajectories with tags and mock clustering for mixed mode testing.
+        """
         # Reuse existing basic setup
         test_instance = TestDataSelectorBasics()
         test_instance.setup_method()
@@ -869,7 +1094,11 @@ class TestDataSelectorMixedModes:
         self.pipeline.feature.add_feature(Distances(excluded_neighbors=0), force=True)
     
     def test_mixed_cluster_and_tags(self):
-        """Test combining cluster selection with tag selection."""
+        """
+        Test combination of cluster-based and tag-based selections.
+        Validates that cluster and tag selection criteria can be combined
+        using different modes to create complex frame selection patterns.
+        """
         self.pipeline.data_selector.create("test")
         
         # Start with cluster 0
@@ -883,7 +1112,11 @@ class TestDataSelectorMixedModes:
         assert sorted(selector.trajectory_frames[0]) == list(range(100))
     
     def test_mixed_modes_add_subtract(self):
-        """Test add and subtract modes with different selection types."""
+        """
+        Test add and subtract modes across different selection types.
+        Validates that index-based and cluster-based selections can be
+        combined using subtract mode to create refined frame selections.
+        """
         self.pipeline.data_selector.create("test")
         
         # Start with all frames from trajectory 0
@@ -896,7 +1129,11 @@ class TestDataSelectorMixedModes:
         assert sorted(selector.trajectory_frames[0]) == list(range(50))
     
     def test_mixed_modes_intersect(self):
-        """Test intersect mode with tag and index selections."""
+        """
+        Test intersect mode combining tag-based and index-based selections.
+        Validates that intersection of tag selection with specific frame ranges
+        produces correct overlap of criteria from different selection types.
+        """
         self.pipeline.data_selector.create("test")
         
         # Start with all "system_A" frames
@@ -910,7 +1147,11 @@ class TestDataSelectorMixedModes:
         assert 1 not in selector.trajectory_frames
     
     def test_three_way_combination(self):
-        """Test simple 3-operation combination."""
+        """
+        Test complex 3-operation combination using different selection types.
+        Validates that cluster, tag, and index selections can be sequentially
+        combined using different modes to produce sophisticated frame filtering.
+        """
         self.pipeline.data_selector.create("test")
         
         # 1. Start with cluster 1
@@ -930,3 +1171,4 @@ class TestDataSelectorMixedModes:
         assert sorted(selector.trajectory_frames[0]) == expected_traj_0
         assert sorted(selector.trajectory_frames[1]) == expected_traj_1
         assert selector.n_selected_frames == 52  # 11 + 41
+        

@@ -1,7 +1,7 @@
 # mdxplain - A Python toolkit for molecular dynamics trajectory analysis
 #
 # Author: Maximilian Salomon
-# Created with assistance from Claude Code (Claude Sonnet 4.0)
+# Created with assistance from Claude Code (Claude Sonnet 4.0) and GitHub Copilot (Claude Sonnet 4.0).
 #
 # Copyright (C) 2025 Maximilian Salomon
 #
@@ -58,7 +58,11 @@ class TestDaskMDTrajectorySaveLoad:
         return traj_file, top_file, n_frames, n_atoms
     
     def test_save_creates_directories(self, tmp_path, mock_trajectory):
-        """Test that save() creates parent directories if needed."""
+        """
+        Test that save() creates parent directories when needed.
+        Validates DaskMDTrajectory.save() automatically creates nested paths
+        and stores trajectory data correctly in nested directories.
+        """
         traj_file, top_file, n_frames, n_atoms = mock_trajectory
         
         # Create DaskMDTrajectory
@@ -79,7 +83,11 @@ class TestDaskMDTrajectorySaveLoad:
         assert save_path.exists()
     
     def test_save_load_roundtrip(self, tmp_path, mock_trajectory):
-        """Test complete save/load roundtrip."""
+        """
+        Test complete save/load roundtrip for DaskMDTrajectory.
+        Validates that saved and loaded trajectory has identical
+        properties and xyz coordinates (complete reconstruction).
+        """
         traj_file, top_file, n_frames, n_atoms = mock_trajectory
         
         # Create DaskMDTrajectory
@@ -108,14 +116,22 @@ class TestDaskMDTrajectorySaveLoad:
         assert np.allclose(loaded.xyz, original.xyz)
     
     def test_load_nonexistent_file(self, tmp_path):
-        """Test that load() raises FileNotFoundError for missing files."""
+        """
+        Test that load() raises FileNotFoundError for missing files.
+        Validates that DaskMDTrajectory.load() with non-existent
+        files raises appropriate exception with informative error message.
+        """
         nonexistent = str(tmp_path / "does_not_exist.pkl")
         
         with pytest.raises(FileNotFoundError, match="Trajectory file not found"):
             DaskMDTrajectory.load(nonexistent)
     
     def test_zarr_cache_independence_after_save(self, tmp_path, mock_trajectory):
-        """Test that saved trajectory works independently of zarr cache."""
+        """
+        Test that saved trajectory works independently of zarr cache.
+        Validates that pickle-saved DaskMDTrajectory can still be loaded
+        and used even after deletion of zarr cache directory.
+        """
         traj_file, top_file, n_frames, n_atoms = mock_trajectory
         
         # Create and save
@@ -149,7 +165,11 @@ class TestDaskMDTrajectorySaveLoad:
         assert not os.path.exists(loaded.zarr_cache_path)
     
     def test_save_load_from_mdtraj(self, tmp_path, mock_trajectory):
-        """Test save/load roundtrip for DaskMDTrajectory created from MDTraj."""
+        """
+        Test save/load roundtrip for DaskMDTrajectory created from MDTraj.
+        Validates that DaskMDTrajectory created via from_mdtraj() is correctly
+        saved/loaded with identical data and properties.
+        """
         traj_file, top_file, n_frames, n_atoms = mock_trajectory
         
         # Load as MDTraj first
@@ -178,7 +198,11 @@ class TestDaskMDTrajectorySaveLoad:
         assert np.allclose(loaded.xyz, original.xyz)
 
     def test_dask_vs_mdtraj_identical_results(self, tmp_path, mock_trajectory):
-        """Test that saved/loaded DaskMDTrajectory gives identical results to MDTraj."""
+        """
+        Test that saved/loaded DaskMDTrajectory delivers identical results to MDTraj.
+        Validates that save/load process causes no data changes
+        and DaskMDTrajectory remains bit-identical to MDTraj.
+        """
         traj_file, top_file, n_frames, n_atoms = mock_trajectory
         
         # Load reference MDTraj

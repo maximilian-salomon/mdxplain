@@ -25,10 +25,11 @@ This module provides utilities for binding analysis methods from calculators
 to feature data objects with automatic data selection based on reduction state.
 """
 
-import functools
 from typing import Set, Callable, Any
 
 from ..entities.feature_data import FeatureData
+from .bound_method import BoundMethod
+from .bound_stats import BoundStats
 
 
 class FeatureBindingHelper:
@@ -67,7 +68,7 @@ class FeatureBindingHelper:
             return
 
         # Create analysis object to hold bound methods
-        feature_data.analysis = type("BoundStats", (), {})()
+        feature_data.analysis = BoundStats()
 
         # Get methods that require full data
         requires_full_data = getattr(
@@ -141,7 +142,7 @@ class FeatureBindingHelper:
         original_method: Callable,
         method_name: str,
         requires_full_data: Set[str],
-    ) -> Callable:
+    ) -> BoundMethod:
         """
         Create bound method with automatic data selection.
 
@@ -158,24 +159,51 @@ class FeatureBindingHelper:
 
         Returns:
         --------
-        Callable
+        BoundMethod
             Bound method that automatically uses appropriate data
         """
+        return BoundMethod(feature_data, original_method, method_name, requires_full_data)
 
-        @functools.wraps(original_method)
-        def bound_method(*args: Any, **kwargs: Any) -> Any:
-            """Bound method that automatically uses current data."""
-            # Determine which data to use
-            if method_name in requires_full_data:
-                data = feature_data.data
-            else:
-                # Use reduced data if available, otherwise original
-                data = (
-                    feature_data.reduced_data
-                    if feature_data.reduced_data is not None
-                    else feature_data.data
-                )
-
-            return original_method(data, *args, **kwargs)
-
-        return bound_method
+    @staticmethod
+    def repair_bound_methods(feature_data: FeatureData) -> None:
+        """
+        Repair BoundMethod objects after unpickling.
+        
+        This method restores the feature_data and original_method references
+        that were removed during pickling.
+        
+        Parameters:
+        -----------
+        feature_data : FeatureData
+            Feature data object with analysis attribute to repair
+        
+        Returns:
+        --------
+        None
+            Repairs BoundMethod objects in-place
+        """
+        if not hasattr(feature_data, 'analysis'):
+            return
+            
+        if not hasattr(feature_data.feature_type.calculator, 'analysis'):
+            return
+            
+        calculator_analysis = feature_data.feature_type.calculator.analysis
+        
+        for method_name in dir(feature_data.analysis):
+            if method_name.startswith('_'):
+                continue
+                
+            bound_method = getattr(feature_data.analysis, method_name)
+            if isinstance(bound_method, BoundMethod):
+                # Restore missing references
+                bound_method.feature_data = feature_data
+                
+                # Find the original method
+                # Remove "compute_" prefix if present for method lookup
+                original_method_name = method_name
+                if not hasattr(calculator_analysis, original_method_name):
+                    original_method_name = f"compute_{method_name}"
+                
+                if hasattr(calculator_analysis, original_method_name):
+                    bound_method.original_method = getattr(calculator_analysis, original_method_name)

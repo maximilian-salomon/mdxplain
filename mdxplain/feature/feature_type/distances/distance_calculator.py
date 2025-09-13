@@ -569,6 +569,7 @@ class DistanceCalculator(CalculatorBase):
             "min": self.analysis.compute_min,
             "mad": self.analysis.compute_mad,
             "mean": self.analysis.compute_mean,
+            "max": self.analysis.compute_max,
         }
 
         # Handle simple metrics
@@ -594,6 +595,8 @@ class DistanceCalculator(CalculatorBase):
             "transitions",
             "min",
             "mad",
+            "mean",
+            "max",
         ]
         raise ValueError(f"Unknown metric: {metric}. Supported: {supported_metrics}")
 
@@ -668,6 +671,8 @@ class DistanceCalculator(CalculatorBase):
             - 'variance': Variance
             - 'range': Range (max - min)
             - 'transitions': Number of transitions
+            - 'mean': Mean distance
+            - 'max': Maximum distance
         threshold_min : float, optional
             Minimum threshold for filtering (metric_values >= threshold_min)
         threshold_max : float, optional

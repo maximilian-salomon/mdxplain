@@ -31,7 +31,6 @@ import mdtraj as md
 
 from ..interfaces.feature_type_base import FeatureTypeBase
 from .coordinates_calculator import CoordinatesCalculator
-from .reduce_coordinates_metrics import ReduceCoordinatesMetrics
 
 
 class Coordinates(FeatureTypeBase):
@@ -61,7 +60,6 @@ class Coordinates(FeatureTypeBase):
     >>> pipeline.feature.add_feature(coords)
     """
 
-    ReduceMetrics = ReduceCoordinatesMetrics
     """Available reduce metrics for coordinates features."""
 
     def __init__(self, selection: str = 'name CA') -> None:

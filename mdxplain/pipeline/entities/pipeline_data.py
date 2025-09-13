@@ -41,7 +41,7 @@ from ...utils.data_utils import DataUtils
 from ..helper.selection_matrix_helper import SelectionMatrixHelper
 from ..helper.selection_metadata_helper import SelectionMetadataHelper
 from ..helper.comparison_data_helper import ComparisonDataHelper
-
+from ...feature.helper.feature_binding_helper import FeatureBindingHelper
 
 class PipelineData:
     """
@@ -602,6 +602,7 @@ class PipelineData:
         - Complete pipeline state including configuration is restored
         """
         DataUtils.load_object(self, load_path)
+        self._repair_bound_methods_after_load()
 
     # =============================================================================
     # FEATURE SELECTION SYSTEM METHODS
@@ -811,3 +812,58 @@ class PipelineData:
         return ComparisonDataHelper.get_sub_comparison_data(
             self, comparison_data, sub_comparison_name
         )
+
+    def _repair_bound_methods_after_load(self) -> None:
+        """
+        Repair BoundMethod objects after loading from disk.
+        
+        This method recursively searches for FeatureData objects and repairs their
+        BoundMethod analysis objects that were unpickled without their
+        feature_data and original_method references.
+        
+        Returns:
+        --------
+        None
+            Repairs BoundMethod objects in-place throughout the pipeline data
+        """
+        self._repair_bound_methods_recursive(self, FeatureData, FeatureBindingHelper, set())
+        
+    def _repair_bound_methods_recursive(self, obj: Any, FeatureData: type, FeatureBindingHelper: type, visited: set) -> None:
+        """
+        Recursively repair BoundMethod objects.
+        
+        Parameters:
+        -----------
+        obj : Any
+            Object to search recursively
+        FeatureData : type
+            FeatureData class for isinstance checks
+        FeatureBindingHelper : type
+            FeatureBindingHelper class for repair method
+        visited : set
+            Set of already visited object IDs to prevent infinite recursion
+        """
+        # Prevent infinite recursion
+        obj_id = id(obj)
+        if obj_id in visited:
+            return
+        visited.add(obj_id)
+        
+        if isinstance(obj, FeatureData):
+            # Found a FeatureData object - repair its bound methods
+            FeatureBindingHelper.repair_bound_methods(obj)
+        elif isinstance(obj, dict):
+            # Search in dictionary values
+            for value in obj.values():
+                if not isinstance(value, (str, int, float, bool, type(None))):
+                    self._repair_bound_methods_recursive(value, FeatureData, FeatureBindingHelper, visited)
+        elif isinstance(obj, (list, tuple)):
+            # Search in list/tuple items
+            for item in obj:
+                if not isinstance(item, (str, int, float, bool, type(None))):
+                    self._repair_bound_methods_recursive(item, FeatureData, FeatureBindingHelper, visited)
+        elif hasattr(obj, '__dict__'):
+            # Search in object attributes
+            for attr_value in obj.__dict__.values():
+                if not isinstance(attr_value, (str, int, float, bool, type(None))):
+                    self._repair_bound_methods_recursive(attr_value, FeatureData, FeatureBindingHelper, visited)

@@ -38,6 +38,7 @@ from ..helpers.analysis_runner_helper import AnalysisRunnerHelper
 from ..helpers.feature_importance_validation_helper import FeatureImportanceValidationHelper
 from ..helpers.top_features_helper import TopFeaturesHelper
 from ...utils.data_utils import DataUtils
+from ..services.feature_importance_add_service import FeatureImportanceAddService
 
 
 class FeatureImportanceManager:
@@ -60,7 +61,7 @@ class FeatureImportanceManager:
 
     >>> pipeline = PipelineManager()
     >>> from mdxplain.feature_importance import analyzer_types
-    >>> pipeline.feature_importance.add(
+    >>> pipeline.feature_importance.add_analysis(
     ...     "my_comparison", analyzer_types.DecisionTree(max_depth=5), "tree_analysis"
     ... )
 
@@ -68,7 +69,7 @@ class FeatureImportanceManager:
 
     >>> pipeline_data = PipelineData()
     >>> manager = FeatureImportanceManager()
-    >>> manager.add(
+    >>> manager.add_analysis(
     ...     pipeline_data, "my_comparison",
     ...     analyzer_types.DecisionTree(max_depth=5), "tree_analysis"
     ... )
@@ -96,7 +97,7 @@ class FeatureImportanceManager:
         self.chunk_size = chunk_size
         self.cache_dir = cache_dir
 
-    def add(
+    def add_analysis(
         self,
         pipeline_data: PipelineData,
         comparison_name: str,
@@ -119,12 +120,12 @@ class FeatureImportanceManager:
         Pipeline mode:
         >>> pipeline = PipelineManager()
         >>> from mdxplain.feature_importance import analyzer_types
-        >>> pipeline.feature_importance.add("folded_vs_unfolded", analyzer_types.DecisionTree(), "tree_analysis")  # NO pipeline_data parameter
+        >>> pipeline.feature_importance.add_analysis("folded_vs_unfolded", analyzer_types.DecisionTree(), "tree_analysis")  # NO pipeline_data parameter
 
         Standalone mode:
         >>> pipeline_data = PipelineData()
         >>> manager = FeatureImportanceManager()
-        >>> manager.add(pipeline_data, "folded_vs_unfolded", analyzer_types.DecisionTree(), "tree_analysis")  # WITH pipeline_data parameter
+        >>> manager.add_analysis(pipeline_data, "folded_vs_unfolded", analyzer_types.DecisionTree(), "tree_analysis")  # WITH pipeline_data parameter
 
         Parameters:
         -----------
@@ -156,14 +157,14 @@ class FeatureImportanceManager:
         >>> manager = FeatureImportanceManager()
 
         >>> # Basic decision tree analysis
-        >>> manager.add(
+        >>> manager.add_analysis(
         ...     pipeline_data, "folded_vs_unfolded",
         ...     analyzer_types.DecisionTree(max_depth=5, random_state=42),
         ...     "tree_analysis"
         ... )
 
         >>> # Balanced tree for imbalanced data
-        >>> manager.add(
+        >>> manager.add_analysis(
         ...     pipeline_data, "conformations",
         ...     analyzer_types.DecisionTree(class_weight="balanced"),
         ...     "balanced_tree", force=True
@@ -536,3 +537,35 @@ class FeatureImportanceManager:
         for name, data in pipeline_data.feature_importance_data.items():
             print(f"\n--- {name} ---")
             data.print_info()
+
+    @property
+    def add(self):
+        """
+        Service for adding feature importance analyses with simplified syntax.
+        
+        Provides an intuitive interface for adding feature importance analyses without
+        requiring explicit analyzer type instantiation or imports.
+        
+        Returns:
+        --------
+        FeatureImportanceAddService
+            Service instance for adding feature importance analyses with combined parameters
+            
+        Examples:
+        ---------
+        >>> # Add different analyzer types
+        >>> pipeline.feature_importance.add.decision_tree("my_comparison", "tree_analysis", max_depth=5)
+        >>> pipeline.feature_importance.add.decision_tree(
+        ...     "folded_vs_unfolded", 
+        ...     "deep_tree",
+        ...     max_depth=10,
+        ...     criterion="entropy",
+        ...     random_state=42
+        ... )
+        
+        Notes:
+        -----
+        Pipeline data is automatically injected by AutoInjectProxy.
+        All analyzer type parameters are combined with add_analysis parameters.
+        """
+        return FeatureImportanceAddService(self, None)
