@@ -645,13 +645,13 @@ class FeatureManager:
         pipeline_data.feature_data = temp_dict
     
     @property
-    def add(self):
+    def add(self) -> FeatureAddService:
         """
         Service for adding features with simplified syntax.
-        
+
         Provides an intuitive interface for adding features without requiring
         explicit feature type instantiation or imports.
-        
+
         Returns:
         --------
         FeatureAddService
@@ -675,13 +675,13 @@ class FeatureManager:
         return FeatureAddService(self, None)
     
     @property
-    def reduce(self):
+    def reduce(self) -> FeatureReduceService:
         """
         Service for reducing features with type-specific metrics.
-        
+
         Provides type-specific reduction metrics tailored to each feature type,
         such as coefficient of variation for distances or frequency for contacts.
-        
+
         Returns:
         --------
         FeatureReduceService
@@ -708,13 +708,13 @@ class FeatureManager:
         return FeatureReduceService(self, None)
     
     @property
-    def analysis(self):
+    def analysis(self) -> FeatureAnalysisService:
         """
         Service for analyzing features with type-specific methods.
-        
+
         Provides analysis operations tailored to each feature type,
         such as circular statistics for torsions or contact frequency analysis.
-        
+
         Returns:
         --------
         FeatureAnalysisService

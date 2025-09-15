@@ -24,6 +24,7 @@ mdxplain - A Python toolkit for molecular dynamics trajectory analysis.
 This package provides tools for analyzing molecular dynamics trajectories with focus
 on feature extraction, dimensionality reduction, and machine learning applications.
 """
+from __future__ import annotations
 
 from . import trajectory
 from . import feature
@@ -31,10 +32,12 @@ from . import feature_selection
 from . import decomposition
 from . import clustering
 from . import pipeline
+from .pipeline import PipelineManager
 
 __all__ = [
+    "PipelineManager",
     "trajectory",
-    "feature", 
+    "feature",
     "feature_selection",
     "decomposition",
     "clustering",
