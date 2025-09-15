@@ -847,3 +847,50 @@ class TestFeatureAPIIntegration:
         
         # Results should be identical
         np.testing.assert_array_equal(results[0], results[1])
+
+    def test_reduce_stores_reduction_info_as_dict_and_prints_correctly(self, capsys):
+        """
+        Test reduction_info TypeError bug fix.
+
+        Validates that:
+        1. reduction_info is stored as dict (not float) after reduction
+        2. print_info() works without TypeError
+        3. Print output contains expected retention rate information
+        """
+        pipeline = self._setup_triangle_pipeline(n_frames=10)
+
+        # Add distances first
+        pipeline.feature.add.distances(excluded_neighbors=0, force=True)
+
+        # Reduce with mean and threshold filtering
+        pipeline.feature.reduce.distances.mean(
+            traj_selection="all",
+            threshold_min=35.0,
+            threshold_max=45.0
+        )
+
+        # Test 1: reduction_info should be a dictionary
+        reduction_info = pipeline._data.feature_data['distances'][0].reduction_info
+        assert isinstance(reduction_info, dict), f"reduction_info should be dict, got {type(reduction_info)}"
+
+        # Test 2: Dictionary should contain expected keys
+        expected_keys = {"reduction_method", "retention_rate", "threshold_min", "threshold_max", "n_dynamic", "total_pairs"}
+        assert all(key in reduction_info for key in expected_keys), f"Missing keys in reduction_info: {expected_keys - reduction_info.keys()}"
+
+        # Test 3: Values should be reasonable
+        assert reduction_info["reduction_method"] == "mean"
+        assert isinstance(reduction_info["retention_rate"], (int, float))
+        assert reduction_info["threshold_min"] == 35.0
+        assert reduction_info["threshold_max"] == 45.0
+
+        # Test 4: print_info() should work without TypeError
+        try:
+            pipeline.feature.print_info()
+        except TypeError as e:
+            pytest.fail(f"print_info() raised TypeError: {e}")
+
+        # Test 5: Capture and validate print output
+        captured = capsys.readouterr()
+        assert "Retention Rate:" in captured.out, "Print output should contain retention rate information"
+        assert "mean" in captured.out, "Print output should contain reduction method"
+        assert "%" in captured.out, "Print output should show retention rate as percentage"

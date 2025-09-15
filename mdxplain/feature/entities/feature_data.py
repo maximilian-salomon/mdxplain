@@ -323,9 +323,19 @@ class FeatureData:
         """
         if self.reduced_data is not None:
             reduction_method = "Unknown"
-            if self.reduction_info and "reduction_method" in self.reduction_info:
-                reduction_method = self.reduction_info["reduction_method"]
+            retention_rate = None
+
+            if self.reduction_info:
+                # New format: dictionary with detailed info
+                reduction_method = self.reduction_info.get("reduction_method", "Unknown")
+                retention_rate = self.reduction_info.get("retention_rate")
+
+            # Print basic info
             print(f"Reduced Data: {self.reduced_data.shape[0]} frames x {self.reduced_data.shape[1]} features ({reduction_method})")
+
+            # Print retention rate if available
+            if retention_rate is not None:
+                print(f"  Retention Rate: {retention_rate:.1%}")
             
         if self.reduced_feature_metadata is not None:
             n_reduced_features = len(self.reduced_feature_metadata.get("features", []))
