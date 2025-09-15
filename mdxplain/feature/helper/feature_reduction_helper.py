@@ -83,7 +83,14 @@ class FeatureReductionHelper:
 
         # Calculate and store retention info
         retention_rate = results["n_dynamic"] / results["total_pairs"]
-        feature_data.reduction_info = retention_rate
+        feature_data.reduction_info = {
+            "reduction_method": metric,
+            "retention_rate": retention_rate,
+            "threshold_min": threshold_min,
+            "threshold_max": threshold_max,
+            "n_dynamic": results["n_dynamic"],
+            "total_pairs": results["total_pairs"]
+        }
 
         # Check and warn about low retention
         FeatureReductionHelper._check_retention_warnings(
