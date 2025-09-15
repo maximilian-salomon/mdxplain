@@ -26,12 +26,15 @@ whether a method needs PipelineData and injects it as the first parameter
 when needed. This eliminates the need for manual wrapper methods while
 maintaining clean manager APIs.
 """
+from __future__ import annotations
 
 import inspect
-from typing import Any, Union, Tuple, Dict
+from functools import wraps
+from typing import Any, Union, Tuple, Dict, TYPE_CHECKING
 from inspect import Parameter
 
-from ..entities.pipeline_data import PipelineData
+if TYPE_CHECKING:
+    from ..entities.pipeline_data import PipelineData
 
 
 class AutoInjectProxy:
@@ -175,6 +178,18 @@ class AutoInjectProxy:
 
             # Call method as bound method - self is already included
             return method(*args, **kwargs)
+
+        # Copy all metadata from original method to preserve function introspection
+        injected_method.__name__ = getattr(method, '__name__', 'injected_method')
+        injected_method.__qualname__ = getattr(method, '__qualname__', 'injected_method')
+        injected_method.__module__ = getattr(method, '__module__', None)
+        injected_method.__doc__ = getattr(method, '__doc__', None)
+        injected_method.__annotations__ = getattr(method, '__annotations__', {})
+        injected_method.__signature__ = sig
+
+        # Copy any additional attributes from the original method
+        if hasattr(method, '__dict__'):
+            injected_method.__dict__.update(method.__dict__)
 
         return injected_method
 
@@ -361,7 +376,7 @@ class AutoInjectProxy:
 
         return args, kwargs
 
-    def __getattr__(self, name: str):
+    def __getattr__(self, name: str) -> Any:
         """
         Fallback method for dynamic attribute access.
 
@@ -372,7 +387,7 @@ class AutoInjectProxy:
 
         Returns:
         --------
-        callable or object
+        Any
             Method wrapper with auto-injection if needed, or original attribute
         """
         # Check if this is a stored service property first

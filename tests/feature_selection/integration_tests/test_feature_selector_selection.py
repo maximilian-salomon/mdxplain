@@ -1429,6 +1429,255 @@ class TestCornerCases:
             self.pipeline.feature_selector.select(name, reference_traj=0)
 
 
+class TestNotSelectionWithMissingSeqids:
+    """Test 'not X' selections when X doesn't exist in some or all trajectories."""
+
+    def setup_method(self):
+        """
+        Setup with two trajectories having different residue counts.
+
+        Creates two synthetic trajectories with different residue ranges
+        to test 'not X' selections when X doesn't exist in all trajectories.
+        """
+        self.pipeline = PipelineManager()
+
+        # Trajectory 0: 7 residues (seqids 1-7)
+        traj0 = self._create_trajectory(["ALA", "GLY", "VAL", "ALA", "GLY", "LEU", "PHE"], 20)
+        self.pipeline.data.trajectory_data.trajectories.append(traj0)
+        self.pipeline.data.trajectory_data.trajectory_names.append("traj_0")
+
+        # Trajectory 1: 5 residues (seqids 1-5, missing 6 and 7)
+        traj1 = self._create_trajectory(["ALA", "GLY", "VAL", "ALA", "GLY"], 20)
+        self.pipeline.data.trajectory_data.trajectories.append(traj1)
+        self.pipeline.data.trajectory_data.trajectory_names.append("traj_1")
+
+        # Create metadata for both trajectories
+        for traj_idx in range(2):
+            traj = self.pipeline.data.trajectory_data.trajectories[traj_idx]
+            residue_metadata = []
+            for i, res in enumerate(traj.topology.residues):
+                residue_metadata.append({
+                    "resid": res.resSeq + 1,
+                    "seqid": res.index + 1,
+                    "resname": res.name,
+                    "aaa_code": res.name,
+                    "a_code": res.name[0] if res.name else "X",
+                    "consensus": None,
+                    "full_name": f"{res.name}{res.index + 1}",
+                    "index": res.index
+                })
+            self.pipeline.data.trajectory_data.res_label_data[traj_idx] = residue_metadata
+
+        # Add features: distances with excluded_neighbors=0 (all pairs)
+        self.pipeline.feature.add_feature(Distances(excluded_neighbors=0))
+
+    def _create_trajectory(self, residue_names, n_frames):
+        """
+        Create a synthetic MDTraj trajectory for not selection testing.
+
+        Parameters
+        ----------
+        residue_names : list of str
+            List of residue names to include in the trajectory.
+        n_frames : int
+            Number of frames to generate for the trajectory.
+
+        Returns
+        -------
+        mdtraj.Trajectory
+            Synthetic trajectory with CA atoms and simple linear coordinates.
+        """
+        topology = md.Topology()
+        chain = topology.add_chain()
+
+        for name in residue_names:
+            residue = topology.add_residue(name, chain)
+            topology.add_atom("CA", md.element.carbon, residue)
+
+        coordinates = []
+        for frame in range(n_frames):
+            frame_coords = [[i * 2.0, frame * 0.1, 0.0] for i in range(len(residue_names))]
+            coordinates.append(frame_coords)
+
+        return md.Trajectory(np.array(coordinates), topology)
+
+    def _create_selector_and_add(self, name: str, selection: str, **kwargs):
+        """
+        Create a feature selector and add a selection for not selection testing.
+
+        Parameters
+        ----------
+        name : str
+            Name of the feature selector to create.
+        selection : str
+            Selection string to parse and apply (may include 'not' patterns).
+        **kwargs : dict
+            Additional parameters to pass to the add method.
+
+        Returns
+        -------
+        str
+            The name of the created selector.
+        """
+        if name in self.pipeline.data.selected_feature_data:
+            del self.pipeline.data.selected_feature_data[name]
+        self.pipeline.feature_selector.create(name)
+        self.pipeline.feature_selector.add(name, "distances", selection, **kwargs)
+        return name
+
+    def test_not_existing_seqid_single_trajectory(self):
+        """
+        Test 'not 3' where seqid 3 exists in the selected trajectory.
+
+        Validates that 'not 3' correctly excludes pairs containing seqid 3
+        when seqid 3 exists in the trajectory.
+        """
+        name = self._create_selector_and_add("test", "not 3", traj_selection=0, common_denominator=False)
+        self.pipeline.feature_selector.select(name, reference_traj=0)
+
+        results = self.pipeline.data.selected_feature_data[name].get_results("distances")
+        indices = results["trajectory_indices"][0]["indices"]
+
+        # Trajectory 0 has 7 residues (indices 0-6, seqids 1-7)
+        # 'not 3' should exclude pairs containing residue index 2 (seqid 3)
+        expected = []
+        pair_idx = 0
+        for i in range(7):
+            for j in range(i+1, 7):
+                if i != 2 and j != 2:  # Exclude residue index 2 (seqid 3)
+                    expected.append(pair_idx)
+                pair_idx += 1
+
+        assert sorted(indices) == sorted(expected)
+        assert len(results["trajectory_indices"]) == 1  # Only trajectory 0 selected
+
+    def test_not_missing_seqid_single_trajectory(self):
+        """
+        Test 'not 8' where seqid 8 doesn't exist in any trajectory.
+
+        Validates that 'not 8' returns all features when seqid 8 doesn't exist,
+        effectively behaving like 'all' selection.
+        """
+        name = self._create_selector_and_add("test", "not 8", traj_selection=0, common_denominator=False)
+        self.pipeline.feature_selector.select(name, reference_traj=0)
+
+        results = self.pipeline.data.selected_feature_data[name].get_results("distances")
+        indices = results["trajectory_indices"][0]["indices"]
+
+        # seqid 8 doesn't exist in trajectory 0 (only has seqids 1-7)
+        # 'not 8' should return all pairs
+        total_pairs = (7 * 6) // 2  # 21 pairs for 7 residues
+        expected = list(range(total_pairs))
+
+        assert sorted(indices) == sorted(expected)
+        assert len(indices) == total_pairs
+
+    def test_not_missing_seqid_multiple_trajectories(self):
+        """
+        Test 'not 66' with multiple trajectories where seqid 66 doesn't exist anywhere.
+
+        Validates that 'not 66' returns all features from all trajectories
+        when seqid 66 doesn't exist in any trajectory. This tests the exact
+        scenario reported by the colleague.
+        """
+        name = self._create_selector_and_add("test", "not 66", traj_selection="all", common_denominator=True)
+        self.pipeline.feature_selector.select(name, reference_traj=0)
+
+        results = self.pipeline.data.selected_feature_data[name].get_results("distances")
+
+        # Should have both trajectories
+        assert len(results["trajectory_indices"]) == 2
+        assert 0 in results["trajectory_indices"]
+        assert 1 in results["trajectory_indices"]
+
+        # With common_denominator=True, only common features are selected
+        # Common features are those that exist in both trajectories
+        # For trajectory 0 (7 residues): pairs involving residues 0-4 only
+        # For trajectory 1 (5 residues): all pairs (0-9)
+
+        # Calculate common pairs from trajectory 0 perspective (residues 0-4 only)
+        expected_traj0_pairs = []
+        pair_idx = 0
+        for i in range(7):
+            for j in range(i+1, 7):
+                # Only pairs where both residues exist in shorter trajectory (indices 0-4)
+                if i <= 4 and j <= 4:
+                    expected_traj0_pairs.append(pair_idx)
+                pair_idx += 1
+
+        # For trajectory 1, common features are all its pairs (since it only has residues 0-4)
+        expected_traj1_pairs = list(range(10))  # All 10 pairs from 5-residue trajectory
+
+        # Both trajectories should have their respective common features
+        assert sorted(results["trajectory_indices"][0]["indices"]) == sorted(expected_traj0_pairs)
+        assert sorted(results["trajectory_indices"][1]["indices"]) == sorted(expected_traj1_pairs)
+
+    def test_not_partially_missing_seqid(self):
+        """
+        Test 'not 6' where seqid 6 exists only in trajectory 0.
+
+        Validates that 'not 6' correctly handles the case where the target
+        seqid exists in some trajectories but not others.
+        """
+        name = self._create_selector_and_add("test", "not 6", traj_selection="all", common_denominator=True)
+        self.pipeline.feature_selector.select(name, reference_traj=0)
+
+        results = self.pipeline.data.selected_feature_data[name].get_results("distances")
+
+        # Should have both trajectories
+        assert len(results["trajectory_indices"]) == 2
+        assert 0 in results["trajectory_indices"]
+        assert 1 in results["trajectory_indices"]
+
+        # With common_denominator=True, we need common features excluding seqid 6
+        # Since seqid 6 (index 5) only exists in trajectory 0, common features are
+        # those involving residues 0-4, and we exclude none since seqid 6 doesn't exist in traj 1
+
+        # Calculate common pairs from trajectory 0 perspective (residues 0-4 only, seqid 6 excluded)
+        expected_traj0_pairs = []
+        pair_idx = 0
+        for i in range(7):
+            for j in range(i+1, 7):
+                # Only pairs where both residues exist in shorter trajectory (indices 0-4)
+                # Since 'not 6' and seqid 6 doesn't exist in traj 1, no exclusion needed for common features
+                if i <= 4 and j <= 4:
+                    expected_traj0_pairs.append(pair_idx)
+                pair_idx += 1
+
+        # For trajectory 1, common features are all its pairs (since seqid 6 doesn't exist)
+        expected_traj1_pairs = list(range(10))  # All 10 pairs from 5-residue trajectory
+
+        # Both trajectories should have their respective common features
+        assert sorted(results["trajectory_indices"][0]["indices"]) == sorted(expected_traj0_pairs)
+        assert sorted(results["trajectory_indices"][1]["indices"]) == sorted(expected_traj1_pairs)
+
+    def test_not_vs_all_and_not_consistency(self):
+        """
+        Test that 'not 66' produces same results as 'all and not seqid 66'.
+
+        Validates that both selection forms are equivalent when the target
+        seqid doesn't exist, ensuring consistency in behavior.
+        """
+        # Test 'not 66'
+        name1 = self._create_selector_and_add("test1", "not 66", traj_selection="all", common_denominator=True)
+        self.pipeline.feature_selector.select(name1, reference_traj=0)
+        results1 = self.pipeline.data.selected_feature_data[name1].get_results("distances")
+
+        # Test 'all and not seqid 66'
+        name2 = self._create_selector_and_add("test2", "all and not seqid 66", traj_selection="all", common_denominator=True)
+        self.pipeline.feature_selector.select(name2, reference_traj=0)
+        results2 = self.pipeline.data.selected_feature_data[name2].get_results("distances")
+
+        # Both should have same trajectory indices
+        assert set(results1["trajectory_indices"].keys()) == set(results2["trajectory_indices"].keys())
+
+        # Both should have same feature indices for each trajectory
+        for traj_idx in results1["trajectory_indices"]:
+            indices1 = sorted(results1["trajectory_indices"][traj_idx]["indices"])
+            indices2 = sorted(results2["trajectory_indices"][traj_idx]["indices"])
+            assert indices1 == indices2, f"Trajectory {traj_idx}: 'not 66' != 'all and not seqid 66'"
+
+
 class TestConsensusSelection:
     """Test consensus-based feature selection."""
     

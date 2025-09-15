@@ -39,7 +39,7 @@ setup-env:
 	@echo "Upgrading pip..."
 	mdxplain-venv/bin/pip install --upgrade pip
 	@echo "Installing production dependencies..."
-	mdxplain-venv/bin/pip install -e .
+	mdxplain-venv/bin/pip install .
 	@echo "Installing DPA with --no-deps..."
 	mdxplain-venv/bin/pip install --no-deps DPA
 	@echo "Setup complete! Activate with: source mdxplain-venv/bin/activate"
@@ -51,7 +51,7 @@ setup-jupyter-env:
 	@echo "Upgrading pip..."
 	mdxplain-venv/bin/pip install --upgrade pip
 	@echo "Installing production + jupyter dependencies..."
-	mdxplain-venv/bin/pip install -e .[jupyter]
+	mdxplain-venv/bin/pip install .[jupyter]
 	@echo "Installing DPA with --no-deps..."
 	mdxplain-venv/bin/pip install --no-deps DPA
 	@echo "Jupyter setup complete! Activate with: source mdxplain-venv/bin/activate"
@@ -63,7 +63,7 @@ setup-dev-env:
 	@echo "Upgrading pip..."
 	mdxplain-venv/bin/pip install --upgrade pip
 	@echo "Installing development dependencies..."
-	mdxplain-venv/bin/pip install -e .[dev]
+	mdxplain-venv/bin/pip install .[dev]
 	@echo "Installing DPA with --no-deps..."
 	mdxplain-venv/bin/pip install --no-deps DPA
 	@echo "Installing pre-commit hooks..."
@@ -77,7 +77,7 @@ setup-full-env:
 	@echo "Upgrading pip..."
 	mdxplain-venv/bin/pip install --upgrade pip
 	@echo "Installing development + jupyter dependencies..."
-	mdxplain-venv/bin/pip install -e .[dev,jupyter]
+	mdxplain-venv/bin/pip install .[dev,jupyter]
 	@echo "Installing DPA with --no-deps..."
 	mdxplain-venv/bin/pip install --no-deps DPA
 	@echo "Installing pre-commit hooks..."
@@ -86,23 +86,23 @@ setup-full-env:
 
 # Install package in current environment
 install:
-	pip install -e .
+	pip install .
 	pip install --no-deps DPA
 
 # Install package with development dependencies in current environment
 install-dev:
-	pip install -e .[dev]
+	pip install .[dev]
 	pip install --no-deps DPA
 	pre-commit install
 
 # Install package with jupyter dependencies in current environment
 install-jupyter:
-	pip install -e .[jupyter]
+	pip install .[jupyter]
 	pip install --no-deps DPA
 
 # Install package with development and jupyter dependencies in current environment
 install-full:
-	pip install -e .[dev, jupyter]
+	pip install .[dev,jupyter]
 	pip install --no-deps DPA
 
 # Create fresh conda environment with production dependencies only
@@ -112,7 +112,7 @@ setup-conda-env:
 	@echo "Installing pip in conda environment..."
 	conda run -n mdxplain conda install pip -y
 	@echo "Installing production dependencies..."
-	conda run -n mdxplain pip install -e .
+	conda run -n mdxplain pip install .
 	@echo "Installing DPA with --no-deps..."
 	conda run -n mdxplain pip install --no-deps DPA
 	@echo "Setup complete! Activate with: conda activate mdxplain"
@@ -124,7 +124,7 @@ setup-conda-jupyter-env:
 	@echo "Installing pip in conda environment..."
 	conda run -n mdxplain conda install pip -y
 	@echo "Installing production + jupyter dependencies..."
-	conda run -n mdxplain pip install -e .[jupyter]
+	conda run -n mdxplain pip install .[jupyter]
 	@echo "Installing DPA with --no-deps..."
 	conda run -n mdxplain pip install --no-deps DPA
 	@echo "Jupyter setup complete! Activate with: conda activate mdxplain"
@@ -136,7 +136,7 @@ setup-conda-dev-env:
 	@echo "Installing pip in conda environment..."
 	conda run -n mdxplain conda install pip -y
 	@echo "Installing development dependencies..."
-	conda run -n mdxplain pip install -e .[dev]
+	conda run -n mdxplain pip install .[dev]
 	@echo "Installing DPA with --no-deps..."
 	conda run -n mdxplain pip install --no-deps DPA
 	@echo "Installing pre-commit hooks..."
@@ -150,7 +150,7 @@ setup-conda-full-env:
 	@echo "Installing pip in conda environment..."
 	conda run -n mdxplain conda install pip -y
 	@echo "Installing development + jupyter dependencies..."
-	conda run -n mdxplain pip install -e .[dev,jupyter]
+	conda run -n mdxplain pip install .[dev,jupyter]
 	@echo "Installing DPA with --no-deps..."
 	conda run -n mdxplain pip install --no-deps DPA
 	@echo "Installing pre-commit hooks..."

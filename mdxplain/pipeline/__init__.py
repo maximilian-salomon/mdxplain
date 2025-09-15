@@ -26,6 +26,7 @@ workflows through a unified API. The PipelineManager serves as the single entry
 point for trajectory loading, feature computation, clustering, decomposition,
 and future analysis modules.
 """
+from __future__ import annotations
 
 from .entities.pipeline_data import PipelineData
 from .managers.pipeline_manager import PipelineManager

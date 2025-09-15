@@ -64,10 +64,10 @@ class FeatureSelectorParseCoreHelper:
             If the selection string is invalid
         """
         instructions = FeatureSelectorParseCoreHelper._split_instructions(selection_string)
-        positive, negative = FeatureSelectorParseCoreHelper._process_instructions(
+        positive, negative, had_negative_instructions = FeatureSelectorParseCoreHelper._process_instructions(
             instructions, features_list, require_all_partners
         )
-        return FeatureSelectorParseCoreHelper._combine_results(positive, negative, features_list)
+        return FeatureSelectorParseCoreHelper._combine_results(positive, negative, features_list, had_negative_instructions)
     
     @staticmethod
     def _split_instructions(selection_string: str) -> List[str]:
@@ -91,7 +91,7 @@ class FeatureSelectorParseCoreHelper:
         instructions: List[str], features_list: List[list], require_all_partners: bool = False
     ) -> tuple:
         """
-        Process all instructions and return positive and negative indices.
+        Process all instructions and return positive and negative indices, plus flag for negative instructions.
 
         Parameters:
         -----------
@@ -105,7 +105,7 @@ class FeatureSelectorParseCoreHelper:
         Returns:
         --------
         tuple
-            Tuple of (positive_indices, negative_indices)
+            Tuple of (positive_indices, negative_indices, had_negative_instructions)
 
         Raises:
         -------
@@ -114,15 +114,20 @@ class FeatureSelectorParseCoreHelper:
         """
         positive = []
         negative = []
+        had_negative_instructions = False
 
         for instr in instructions:
+            # Check if this instruction starts with "not"
+            if instr.strip().startswith("not "):
+                had_negative_instructions = True
+
             instr_positive, instr_negative = (
                 FeatureSelectorParseCoreHelper._process_single_instruction(instr, features_list, require_all_partners)
             )
             positive.extend(instr_positive)
             negative.extend(instr_negative)
 
-        return positive, negative
+        return positive, negative, had_negative_instructions
     
     @staticmethod
     def _process_single_instruction(
@@ -222,7 +227,7 @@ class FeatureSelectorParseCoreHelper:
     
     @staticmethod
     def _combine_results(
-        positive: List[int], negative: List[int], features_list: List[list]
+        positive: List[int], negative: List[int], features_list: List[list], had_negative_instructions: bool = False
     ) -> List[int]:
         """
         Combine positive and negative results into final selection.
@@ -235,25 +240,30 @@ class FeatureSelectorParseCoreHelper:
             List of feature indices to exclude
         features_list : List[list]
             List of features from metadata
+        had_negative_instructions : bool, default=False
+            Whether the selection contained any "not" instructions
 
         Returns:
         --------
         List[int]
             Final list of selected feature indices
         """
-        if not positive and negative:
+        # If we had negative instructions but no positive selections,
+        # assume "all" as the base (e.g., "not 66" means "all except 66")
+        if not positive and had_negative_instructions:
             positive = list(range(len(features_list)))
 
         result = sorted(set(positive) - set(negative))
-        
-        # Warning for empty selections
-        if not result:
+
+        # Warning for empty selections, but not if we had negative instructions
+        # (because "not nonexistent" should return all features, not trigger warning)
+        if not result and not had_negative_instructions:
             warnings.warn(
                 "Feature selection resulted in no matches. "
                 "Check your selection criteria.",
                 UserWarning
             )
-        
+
         return result
     
     @staticmethod
