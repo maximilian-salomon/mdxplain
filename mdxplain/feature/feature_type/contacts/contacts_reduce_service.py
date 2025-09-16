@@ -61,6 +61,7 @@ class ContactsReduceService:
         traj_selection: Union[str, int, List] = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
+        cross_trajectory: bool = False,
     ) -> None:
         """
         Reduce contacts by contact frequency.
@@ -76,7 +77,9 @@ class ContactsReduceService:
             Minimum contact frequency (0.0 to 1.0)
         threshold_max : float, optional
             Maximum contact frequency (0.0 to 1.0)
-            
+        cross_trajectory : bool, default=False
+            If True, find common features across all selected trajectories
+
         Returns:
         --------
         None
@@ -100,6 +103,7 @@ class ContactsReduceService:
             traj_selection=traj_selection,
             threshold_min=threshold_min,
             threshold_max=threshold_max,
+            cross_trajectory=cross_trajectory,
         )
     
     def stability(
@@ -107,6 +111,7 @@ class ContactsReduceService:
         traj_selection: Union[str, int, List] = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
+        cross_trajectory: bool = False,
     ) -> None:
         """
         Reduce contacts by stability.
@@ -122,7 +127,9 @@ class ContactsReduceService:
             Minimum stability threshold
         threshold_max : float, optional
             Maximum stability threshold
-            
+        cross_trajectory : bool, default=False
+            If True, find common features across all selected trajectories
+
         Returns:
         --------
         None
@@ -143,6 +150,7 @@ class ContactsReduceService:
             traj_selection=traj_selection,
             threshold_min=threshold_min,
             threshold_max=threshold_max,
+            cross_trajectory=cross_trajectory,
         )
     
     def transitions(
@@ -150,10 +158,11 @@ class ContactsReduceService:
         traj_selection: Union[str, int, List] = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
+        cross_trajectory: bool = False,
     ) -> None:
         """
         Reduce contacts by number of formation/breaking transitions.
-        
+
         Parameters:
         -----------
         traj_selection : str, int, list, default="all"
@@ -162,11 +171,27 @@ class ContactsReduceService:
             Minimum number of transitions
         threshold_max : float, optional
             Maximum number of transitions
-            
+        cross_trajectory : bool, default=False
+            If True, find common features across all selected trajectories
+
         Returns:
         --------
         None
             Updates reduced data in pipeline
+
+        Examples:
+        ---------
+        >>> # Keep dynamic contacts with many transitions
+        >>> pipeline.feature.reduce.contacts.transitions(threshold_min=10)
+
+        >>> # Keep stable contacts with few transitions
+        >>> pipeline.feature.reduce.contacts.transitions(threshold_max=5)
+
+        >>> # Focus on moderately dynamic contacts
+        >>> pipeline.feature.reduce.contacts.transitions(
+        ...     threshold_min=3,
+        ...     threshold_max=15
+        ... )
         """
         return self._manager.reduce_data(
             self._pipeline_data,
@@ -175,4 +200,5 @@ class ContactsReduceService:
             traj_selection=traj_selection,
             threshold_min=threshold_min,
             threshold_max=threshold_max,
+            cross_trajectory=cross_trajectory,
         )

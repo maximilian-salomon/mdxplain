@@ -62,6 +62,7 @@ class DSSPReduceService:
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
         transition_threshold: float = 1.0,
+        cross_trajectory: bool = False,
     ) -> None:
         """
         Reduce DSSP by secondary structure transitions.
@@ -76,11 +77,24 @@ class DSSPReduceService:
             Maximum number of transitions
         transition_threshold : float, default=1.0
             Threshold for transition detection
-            
+        cross_trajectory : bool, default=False
+            If True, find common features across all selected trajectories
+
         Returns:
         --------
         None
             Updates reduced data in pipeline
+
+        Examples:
+        ---------
+        >>> # Find residues with many secondary structure transitions
+        >>> pipeline.feature.reduce.dssp.transitions(threshold_min=5)
+
+        >>> # Keep residues with moderate transition activity
+        >>> pipeline.feature.reduce.dssp.transitions(
+        ...     threshold_min=2,
+        ...     threshold_max=10
+        ... )
         """
         return self._manager.reduce_data(
             self._pipeline_data,
@@ -90,6 +104,7 @@ class DSSPReduceService:
             threshold_min=threshold_min,
             threshold_max=threshold_max,
             transition_threshold=transition_threshold,
+            cross_trajectory=cross_trajectory,
         )
     
     def transition_frequency(
@@ -97,6 +112,7 @@ class DSSPReduceService:
         traj_selection: Union[str, int, List] = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
+        cross_trajectory: bool = False,
     ) -> None:
         """
         Reduce DSSP by transition frequency.
@@ -112,11 +128,24 @@ class DSSPReduceService:
             Minimum transition frequency
         threshold_max : float, optional
             Maximum transition frequency
-            
+        cross_trajectory : bool, default=False
+            If True, find common features across all selected trajectories
+
         Returns:
         --------
         None
             Updates reduced data in pipeline
+
+        Examples:
+        ---------
+        >>> # Keep residues with high transition frequency
+        >>> pipeline.feature.reduce.dssp.transition_frequency(threshold_min=0.1)
+
+        >>> # Keep residues with moderate transition rates
+        >>> pipeline.feature.reduce.dssp.transition_frequency(
+        ...     threshold_min=0.05,
+        ...     threshold_max=0.2
+        ... )
         """
         return self._manager.reduce_data(
             self._pipeline_data,
@@ -125,6 +154,7 @@ class DSSPReduceService:
             traj_selection=traj_selection,
             threshold_min=threshold_min,
             threshold_max=threshold_max,
+            cross_trajectory=cross_trajectory,
         )
     
     def stability(
@@ -132,6 +162,7 @@ class DSSPReduceService:
         traj_selection: Union[str, int, List] = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
+        cross_trajectory: bool = False,
     ) -> None:
         """
         Reduce DSSP by structural stability.
@@ -147,11 +178,24 @@ class DSSPReduceService:
             Minimum stability threshold (0-1)
         threshold_max : float, optional
             Maximum stability threshold (0-1)
-            
+        cross_trajectory : bool, default=False
+            If True, find common features across all selected trajectories
+
         Returns:
         --------
         None
             Updates reduced data in pipeline
+
+        Examples:
+        ---------
+        >>> # Keep highly stable residues (low transitions)
+        >>> pipeline.feature.reduce.dssp.stability(threshold_min=0.8)
+
+        >>> # Keep moderately stable residues
+        >>> pipeline.feature.reduce.dssp.stability(
+        ...     threshold_min=0.5,
+        ...     threshold_max=0.9
+        ... )
         """
         return self._manager.reduce_data(
             self._pipeline_data,
@@ -160,6 +204,7 @@ class DSSPReduceService:
             traj_selection=traj_selection,
             threshold_min=threshold_min,
             threshold_max=threshold_max,
+            cross_trajectory=cross_trajectory,
         )
     
     def class_frequencies(
@@ -167,6 +212,7 @@ class DSSPReduceService:
         traj_selection: Union[str, int, List] = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
+        cross_trajectory: bool = False,
     ) -> None:
         """
         Reduce DSSP by secondary structure class frequencies.
@@ -182,11 +228,24 @@ class DSSPReduceService:
             Minimum class frequency threshold
         threshold_max : float, optional
             Maximum class frequency threshold
-            
+        cross_trajectory : bool, default=False
+            If True, find common features across all selected trajectories
+
         Returns:
         --------
         None
             Updates reduced data in pipeline
+
+        Examples:
+        ---------
+        >>> # Keep residues with specific class frequency patterns
+        >>> pipeline.feature.reduce.dssp.class_frequencies(threshold_min=0.3)
+
+        >>> # Keep residues with balanced class distributions
+        >>> pipeline.feature.reduce.dssp.class_frequencies(
+        ...     threshold_min=0.1,
+        ...     threshold_max=0.7
+        ... )
         """
         return self._manager.reduce_data(
             self._pipeline_data,
@@ -195,4 +254,5 @@ class DSSPReduceService:
             traj_selection=traj_selection,
             threshold_min=threshold_min,
             threshold_max=threshold_max,
+            cross_trajectory=cross_trajectory,
         )

@@ -64,6 +64,7 @@ class CoordinatesReduceService:
         traj_selection: Union[str, int, List] = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
+        cross_trajectory: bool = False,
     ) -> None:
         """
         Reduce coordinates by standard deviation.
@@ -78,6 +79,21 @@ class CoordinatesReduceService:
             Minimum standard deviation threshold (Angstrom)
         threshold_max : float, optional
             Maximum standard deviation threshold (Angstrom)
+        cross_trajectory : bool, default=False
+            If True, find common features across all selected trajectories
+
+        Returns:
+        --------
+        None
+            Updates reduced data in pipeline
+
+        Examples:
+        ---------
+        >>> # Keep coordinates with significant variation
+        >>> pipeline.feature.reduce.coordinates.std(threshold_min=0.5)
+
+        >>> # Remove extremely variable coordinates
+        >>> pipeline.feature.reduce.coordinates.std(threshold_max=3.0)
         """
         return self._manager.reduce_data(
             self._pipeline_data,
@@ -86,6 +102,7 @@ class CoordinatesReduceService:
             traj_selection=traj_selection,
             threshold_min=threshold_min,
             threshold_max=threshold_max,
+            cross_trajectory=cross_trajectory,
         )
     
     def rmsf(
@@ -93,6 +110,7 @@ class CoordinatesReduceService:
         traj_selection: Union[str, int, List] = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
+        cross_trajectory: bool = False,
     ) -> None:
         """
         Reduce coordinates by root mean square fluctuation.
@@ -107,6 +125,21 @@ class CoordinatesReduceService:
             Minimum RMSF threshold (Angstrom)
         threshold_max : float, optional
             Maximum RMSF threshold (Angstrom)
+        cross_trajectory : bool, default=False
+            If True, find common features across all selected trajectories
+
+        Returns:
+        --------
+        None
+            Updates reduced data in pipeline
+
+        Examples:
+        ---------
+        >>> # Keep highly flexible coordinates
+        >>> pipeline.feature.reduce.coordinates.rmsf(threshold_min=1.0)
+
+        >>> # Keep stable coordinates only
+        >>> pipeline.feature.reduce.coordinates.rmsf(threshold_max=0.5)
         """
         return self._manager.reduce_data(
             self._pipeline_data,
@@ -115,6 +148,7 @@ class CoordinatesReduceService:
             traj_selection=traj_selection,
             threshold_min=threshold_min,
             threshold_max=threshold_max,
+            cross_trajectory=cross_trajectory,
         )
     
     def cv(
@@ -122,13 +156,14 @@ class CoordinatesReduceService:
         traj_selection: Union[str, int, List] = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
+        cross_trajectory: bool = False,
     ) -> None:
         """
         Reduce coordinates by coefficient of variation.
-        
+
         Filters coordinate features based on their relative variability.
         CV = std/mean, indicating positional flexibility.
-        
+
         Parameters:
         -----------
         traj_selection : str, int, list, default="all"
@@ -137,11 +172,27 @@ class CoordinatesReduceService:
             Minimum CV threshold
         threshold_max : float, optional
             Maximum CV threshold
-            
+        cross_trajectory : bool, default=False
+            If True, find common features across all selected trajectories
+
         Returns:
         --------
         None
             Updates reduced data in pipeline
+
+        Examples:
+        ---------
+        >>> # Keep highly flexible coordinates
+        >>> pipeline.feature.reduce.coordinates.cv(threshold_min=0.3)
+
+        >>> # Remove extremely variable coordinates
+        >>> pipeline.feature.reduce.coordinates.cv(threshold_max=1.0)
+
+        >>> # Focus on moderate flexibility
+        >>> pipeline.feature.reduce.coordinates.cv(
+        ...     threshold_min=0.1,
+        ...     threshold_max=0.8
+        ... )
         """
         return self._manager.reduce_data(
             self._pipeline_data,
@@ -150,6 +201,7 @@ class CoordinatesReduceService:
             traj_selection=traj_selection,
             threshold_min=threshold_min,
             threshold_max=threshold_max,
+            cross_trajectory=cross_trajectory,
         )
     
     def variance(
@@ -157,23 +209,43 @@ class CoordinatesReduceService:
         traj_selection: Union[str, int, List] = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
+        cross_trajectory: bool = False,
     ) -> None:
         """
         Reduce coordinates by variance.
-        
+
+        Filters coordinates based on positional variance (squared fluctuations).
+        Higher variance indicates larger positional deviations.
+
         Parameters:
         -----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
-            Minimum variance threshold
+            Minimum variance threshold (Ų)
         threshold_max : float, optional
-            Maximum variance threshold
-            
+            Maximum variance threshold (Ų)
+        cross_trajectory : bool, default=False
+            If True, find common features across all selected trajectories
+
         Returns:
         --------
         None
             Updates reduced data in pipeline
+
+        Examples:
+        ---------
+        >>> # Keep highly variable coordinates
+        >>> pipeline.feature.reduce.coordinates.variance(threshold_min=1.0)
+
+        >>> # Remove extremely variable coordinates
+        >>> pipeline.feature.reduce.coordinates.variance(threshold_max=5.0)
+
+        >>> # Focus on moderate positional variance
+        >>> pipeline.feature.reduce.coordinates.variance(
+        ...     threshold_min=0.5,
+        ...     threshold_max=3.0
+        ... )
         """
         return self._manager.reduce_data(
             self._pipeline_data,
@@ -182,6 +254,7 @@ class CoordinatesReduceService:
             traj_selection=traj_selection,
             threshold_min=threshold_min,
             threshold_max=threshold_max,
+            cross_trajectory=cross_trajectory,
         )
     
     def range(
@@ -189,10 +262,14 @@ class CoordinatesReduceService:
         traj_selection: Union[str, int, List] = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
+        cross_trajectory: bool = False,
     ) -> None:
         """
         Reduce coordinates by range (max - min).
-        
+
+        Filters coordinates based on their positional range of motion.
+        Larger range indicates greater conformational sampling.
+
         Parameters:
         -----------
         traj_selection : str, int, list, default="all"
@@ -201,11 +278,27 @@ class CoordinatesReduceService:
             Minimum range threshold (Angstrom)
         threshold_max : float, optional
             Maximum range threshold (Angstrom)
-            
+        cross_trajectory : bool, default=False
+            If True, find common features across all selected trajectories
+
         Returns:
         --------
         None
             Updates reduced data in pipeline
+
+        Examples:
+        ---------
+        >>> # Keep coordinates with large positional range
+        >>> pipeline.feature.reduce.coordinates.range(threshold_min=2.0)
+
+        >>> # Keep relatively stable coordinates
+        >>> pipeline.feature.reduce.coordinates.range(threshold_max=1.5)
+
+        >>> # Focus on moderate motion range
+        >>> pipeline.feature.reduce.coordinates.range(
+        ...     threshold_min=0.5,
+        ...     threshold_max=3.0
+        ... )
         """
         return self._manager.reduce_data(
             self._pipeline_data,
@@ -214,6 +307,7 @@ class CoordinatesReduceService:
             traj_selection=traj_selection,
             threshold_min=threshold_min,
             threshold_max=threshold_max,
+            cross_trajectory=cross_trajectory,
         )
     
     def mad(
@@ -221,23 +315,43 @@ class CoordinatesReduceService:
         traj_selection: Union[str, int, List] = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
+        cross_trajectory: bool = False,
     ) -> None:
         """
         Reduce coordinates by median absolute deviation.
-        
+
+        Robust measure of positional variability less sensitive to outliers.
+        MAD provides stable estimate of coordinate fluctuations.
+
         Parameters:
         -----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
-            Minimum MAD threshold
+            Minimum MAD threshold (Ų)
         threshold_max : float, optional
-            Maximum MAD threshold
-            
+            Maximum MAD threshold (Ų)
+        cross_trajectory : bool, default=False
+            If True, find common features across all selected trajectories
+
         Returns:
         --------
         None
             Updates reduced data in pipeline
+
+        Examples:
+        ---------
+        >>> # Keep robustly variable coordinates
+        >>> pipeline.feature.reduce.coordinates.mad(threshold_min=0.4)
+
+        >>> # Remove extreme outlier coordinates
+        >>> pipeline.feature.reduce.coordinates.mad(threshold_max=2.0)
+
+        >>> # MAD-based selection for stable analysis
+        >>> pipeline.feature.reduce.coordinates.mad(
+        ...     threshold_min=0.2,
+        ...     threshold_max=1.5
+        ... )
         """
         return self._manager.reduce_data(
             self._pipeline_data,
@@ -246,6 +360,7 @@ class CoordinatesReduceService:
             traj_selection=traj_selection,
             threshold_min=threshold_min,
             threshold_max=threshold_max,
+            cross_trajectory=cross_trajectory,
         )
     
     def mean(
@@ -253,6 +368,7 @@ class CoordinatesReduceService:
         traj_selection: Union[str, int, List] = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
+        cross_trajectory: bool = False,
     ) -> None:
         """
         Reduce coordinates by mean position.
@@ -265,11 +381,27 @@ class CoordinatesReduceService:
             Minimum mean position threshold (Angstrom)
         threshold_max : float, optional
             Maximum mean position threshold (Angstrom)
+        cross_trajectory : bool, default=False
+            If True, find common features across all selected trajectories
             
         Returns:
         --------
         None
             Updates reduced data in pipeline
+
+        Examples:
+        ---------
+        >>> # Keep coordinates near protein core
+        >>> pipeline.feature.reduce.coordinates.mean(threshold_max=10.0)
+
+        >>> # Select peripheral coordinates only
+        >>> pipeline.feature.reduce.coordinates.mean(threshold_min=15.0)
+
+        >>> # Focus on intermediate regions
+        >>> pipeline.feature.reduce.coordinates.mean(
+        ...     threshold_min=5.0,
+        ...     threshold_max=20.0
+        ... )
         """
         return self._manager.reduce_data(
             self._pipeline_data,
@@ -278,6 +410,7 @@ class CoordinatesReduceService:
             traj_selection=traj_selection,
             threshold_min=threshold_min,
             threshold_max=threshold_max,
+            cross_trajectory=cross_trajectory,
         )
     
     def min(
@@ -285,6 +418,7 @@ class CoordinatesReduceService:
         traj_selection: Union[str, int, List] = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
+        cross_trajectory: bool = False,
     ) -> None:
         """
         Reduce coordinates by minimum position.
@@ -297,11 +431,27 @@ class CoordinatesReduceService:
             Minimum position minimum threshold (Angstrom)
         threshold_max : float, optional
             Maximum position minimum threshold (Angstrom)
+        cross_trajectory : bool, default=False
+            If True, find common features across all selected trajectories
             
         Returns:
         --------
         None
             Updates reduced data in pipeline
+
+        Examples:
+        ---------
+        >>> # Keep coordinates that get close to origin
+        >>> pipeline.feature.reduce.coordinates.min(threshold_max=5.0)
+
+        >>> # Exclude coordinates that get too close
+        >>> pipeline.feature.reduce.coordinates.min(threshold_min=2.0)
+
+        >>> # Focus on specific minimum distance range
+        >>> pipeline.feature.reduce.coordinates.min(
+        ...     threshold_min=3.0,
+        ...     threshold_max=8.0
+        ... )
         """
         return self._manager.reduce_data(
             self._pipeline_data,
@@ -310,6 +460,7 @@ class CoordinatesReduceService:
             traj_selection=traj_selection,
             threshold_min=threshold_min,
             threshold_max=threshold_max,
+            cross_trajectory=cross_trajectory,
         )
     
     def max(
@@ -317,6 +468,7 @@ class CoordinatesReduceService:
         traj_selection: Union[str, int, List] = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
+        cross_trajectory: bool = False,
     ) -> None:
         """
         Reduce coordinates by maximum position.
@@ -329,11 +481,27 @@ class CoordinatesReduceService:
             Minimum position maximum threshold (Angstrom)
         threshold_max : float, optional
             Maximum position maximum threshold (Angstrom)
+        cross_trajectory : bool, default=False
+            If True, find common features across all selected trajectories
             
         Returns:
         --------
         None
             Updates reduced data in pipeline
+
+        Examples:
+        ---------
+        >>> # Keep coordinates with large excursions
+        >>> pipeline.feature.reduce.coordinates.max(threshold_min=20.0)
+
+        >>> # Keep relatively constrained coordinates
+        >>> pipeline.feature.reduce.coordinates.max(threshold_max=15.0)
+
+        >>> # Focus on specific maximum distance range
+        >>> pipeline.feature.reduce.coordinates.max(
+        ...     threshold_min=10.0,
+        ...     threshold_max=25.0
+        ... )
         """
         return self._manager.reduce_data(
             self._pipeline_data,
@@ -342,6 +510,7 @@ class CoordinatesReduceService:
             traj_selection=traj_selection,
             threshold_min=threshold_min,
             threshold_max=threshold_max,
+            cross_trajectory=cross_trajectory,
         )
     
     def transitions(
@@ -353,6 +522,7 @@ class CoordinatesReduceService:
         window_size: int = 10,
         transition_mode: str = "window",
         lag_time: int = 1,
+        cross_trajectory: bool = False,
     ) -> None:
         """
         Reduce coordinates by transition detection.
@@ -375,12 +545,35 @@ class CoordinatesReduceService:
         transition_mode : str, default="window"
             Transition analysis mode ('window' or 'lagtime')
         lag_time : int, default=1
-            Lag time for transition analysis
-            
+            Lag time for transition detection (if mode='lag')
+        cross_trajectory : bool, default=False
+            If True, find common features across all selected trajectories
+
         Returns:
         --------
         None
             Updates reduced data in pipeline
+
+        Examples:
+        ---------
+        >>> # Keep highly dynamic coordinates
+        >>> pipeline.feature.reduce.coordinates.transitions(
+        ...     threshold_min=5,
+        ...     transition_threshold=1.5
+        ... )
+
+        >>> # Keep stable coordinates with few transitions
+        >>> pipeline.feature.reduce.coordinates.transitions(
+        ...     threshold_max=3,
+        ...     window_size=20
+        ... )
+
+        >>> # Focus on moderate transition activity
+        >>> pipeline.feature.reduce.coordinates.transitions(
+        ...     threshold_min=2,
+        ...     threshold_max=8,
+        ...     transition_threshold=1.0
+        ... )
         """
         return self._manager.reduce_data(
             self._pipeline_data,
@@ -393,4 +586,5 @@ class CoordinatesReduceService:
             window_size=window_size,
             transition_mode=transition_mode,
             lag_time=lag_time,
+            cross_trajectory=cross_trajectory,
         )

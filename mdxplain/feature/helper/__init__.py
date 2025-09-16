@@ -23,9 +23,11 @@
 from .bound_method import BoundMethod
 from .bound_stats import BoundStats
 from .feature_binding_helper import FeatureBindingHelper
+from .feature_cross_trajectory_reduction_helper import FeatureCrossTrajectoryReductionHelper
 
 __all__ = [
     'BoundMethod',
-    'BoundStats', 
-    'FeatureBindingHelper'
+    'BoundStats',
+    'FeatureBindingHelper',
+    'FeatureCrossTrajectoryReductionHelper'
 ]

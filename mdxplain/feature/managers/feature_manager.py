@@ -37,6 +37,7 @@ from ..feature_type.interfaces.feature_type_base import FeatureTypeBase
 from ..helper.feature_validation_helper import FeatureValidationHelper
 from ..helper.feature_reset_helper import FeatureResetHelper
 from ..helper.feature_reduction_helper import FeatureReductionHelper
+from ..helper.feature_cross_trajectory_reduction_helper import FeatureCrossTrajectoryReductionHelper
 from ..helper.feature_computation_helper import FeatureComputationHelper
 from ..helper.feature_binding_helper import FeatureBindingHelper
 from ..services.feature_add_service import FeatureAddService
@@ -323,6 +324,7 @@ class FeatureManager:
         window_size: int = 10,
         transition_mode: str = "window",
         lag_time: int = 1,
+        cross_trajectory: bool = False,
     ) -> None:
         """
         Filter features based on statistical criteria.
@@ -367,6 +369,9 @@ class FeatureManager:
             Mode for transition detection ('window', 'lag')
         lag_time : int, default=1
             Lag time for transition detection
+        cross_trajectory : bool, default=False
+            If True, find common features across all selected trajectories.
+            If False, reduce each trajectory independently.
 
         Returns:
         --------
@@ -397,32 +402,65 @@ class FeatureManager:
             threshold_min, threshold_max, metric
         )
         
-        # Apply reduction to each selected trajectory
+        # Get valid feature data for selected trajectories
+        feature_data_dict = {}
         for traj_idx in traj_indices:
             if traj_idx not in pipeline_data.feature_data[feature_key]:
                 print(f"Warning: Trajectory {traj_idx} has no feature data for {feature_key}, skipping reduction.")
-                continue  # Skip if trajectory has no feature data
-                
-            feature_data = pipeline_data.feature_data[feature_key][traj_idx]
-            
-            # Get reduction results from calculator for this trajectory
-            results = feature_data.feature_type.calculator.compute_dynamic_values(
-                input_data=feature_data.data,
-                metric=metric,
-                threshold_min=threshold_min,
-                threshold_max=threshold_max,
+                continue
+            feature_data_dict[traj_idx] = pipeline_data.feature_data[feature_key][traj_idx]
+
+        if not feature_data_dict:
+            print(f"No valid feature data found for {feature_key} reduction.")
+            return
+
+        if cross_trajectory:
+            # Cross-trajectory reduction: find common features across all trajectories
+            common_indices = FeatureCrossTrajectoryReductionHelper.find_common_features(
+                feature_data_dict,
+                metric,
+                threshold_min,
+                threshold_max,
                 transition_threshold=transition_threshold,
                 window_size=window_size,
-                feature_metadata=feature_data.feature_metadata["features"],
-                output_path=feature_data.reduced_cache_path,
                 transition_mode=transition_mode,
                 lag_time=lag_time,
             )
 
-            # Process and store results for this trajectory
-            FeatureReductionHelper.process_reduction_results(
-                feature_data, results, threshold_min, threshold_max, metric
+            # Apply common reduction to all trajectories
+            FeatureCrossTrajectoryReductionHelper.apply_common_reduction(
+                feature_data_dict,
+                common_indices,
+                metric,
+                threshold_min,
+                threshold_max,
             )
+
+            # Print cross-trajectory summary
+            FeatureCrossTrajectoryReductionHelper.print_cross_trajectory_summary(
+                feature_data_dict, common_indices
+            )
+        else:
+            # Independent reduction: process each trajectory separately
+            for traj_idx, feature_data in feature_data_dict.items():
+                # Get reduction results from calculator for this trajectory
+                results = feature_data.feature_type.calculator.compute_dynamic_values(
+                    input_data=feature_data.data,
+                    metric=metric,
+                    threshold_min=threshold_min,
+                    threshold_max=threshold_max,
+                    transition_threshold=transition_threshold,
+                    window_size=window_size,
+                    feature_metadata=feature_data.feature_metadata["features"],
+                    output_path=feature_data.reduced_cache_path,
+                    transition_mode=transition_mode,
+                    lag_time=lag_time,
+                )
+
+                # Process and store results for this trajectory
+                FeatureReductionHelper.process_reduction_results(
+                    feature_data, results, threshold_min, threshold_max, metric
+                )
 
     def _create_feature_data_per_trajectory(
         self, 

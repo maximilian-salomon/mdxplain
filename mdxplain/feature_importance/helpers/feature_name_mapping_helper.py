@@ -125,23 +125,18 @@ class FeatureNameMappingHelper:
         
         # Extract feature name from features metadata
         features_data = metadata_entry.get("features", {})
-        if isinstance(features_data, dict):
-            # For pairwise features, combine partner full_names with "-"
-            if "partners" in features_data:
-                partners = features_data["partners"]
-                if isinstance(partners, list) and len(partners) > 0:
-                    partner_names = []
-                    for partner in partners:
-                        if isinstance(partner, dict) and "full_name" in partner:
-                            partner_names.append(partner["full_name"])
-                    if partner_names:
-                        return "-".join(partner_names)
-            
-            # Fallback for single features
-            if "full_name" in features_data:
-                return features_data["full_name"]
-            elif "name" in features_data:
-                return features_data["name"]
+
+        # Extract feature name from features metadata (all feature types use list format)
+        if isinstance(features_data, list) and len(features_data) > 0:
+            # Extract full_names from all elements in the list
+            partner_names = []
+            for element in features_data:
+                if isinstance(element, dict) and "full_name" in element:
+                    partner_names.append(element["full_name"])
+
+            if partner_names:
+                # Join with "-" for multiple partners (contacts/distances) or return single name
+                return "-".join(partner_names)
         return f"feature_{feature_idx}"
 
     @staticmethod

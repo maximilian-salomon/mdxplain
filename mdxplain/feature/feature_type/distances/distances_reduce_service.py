@@ -61,6 +61,7 @@ class DistancesReduceService:
         traj_selection: Union[str, int, List] = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
+        cross_trajectory: bool = False,
     ) -> None:
         """
         Reduce distances by coefficient of variation (CV = std/mean).
@@ -76,6 +77,8 @@ class DistancesReduceService:
             Minimum CV threshold (features below are removed)
         threshold_max : float, optional
             Maximum CV threshold (features above are removed)
+        cross_trajectory : bool, default=False
+            If True, find common features across all selected trajectories
             
         Returns:
         --------
@@ -97,6 +100,7 @@ class DistancesReduceService:
             traj_selection=traj_selection,
             threshold_min=threshold_min,
             threshold_max=threshold_max,
+            cross_trajectory=cross_trajectory,
         )
     
     def std(
@@ -104,6 +108,7 @@ class DistancesReduceService:
         traj_selection: Union[str, int, List] = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
+        cross_trajectory: bool = False,
     ) -> None:
         """
         Reduce distances by standard deviation.
@@ -118,6 +123,8 @@ class DistancesReduceService:
             Minimum std threshold in Angstroms
         threshold_max : float, optional
             Maximum std threshold in Angstroms
+        cross_trajectory : bool, default=False
+            If True, find common features across all selected trajectories
             
         Returns:
         --------
@@ -139,6 +146,7 @@ class DistancesReduceService:
             traj_selection=traj_selection,
             threshold_min=threshold_min,
             threshold_max=threshold_max,
+            cross_trajectory=cross_trajectory,
         )
     
     def variance(
@@ -146,23 +154,43 @@ class DistancesReduceService:
         traj_selection: Union[str, int, List] = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
+        cross_trajectory: bool = False,
     ) -> None:
         """
         Reduce distances by variance.
-        
+
+        Filters distance features based on their variance (squared standard deviation).
+        Higher variance indicates more dynamic distance fluctuations.
+
         Parameters:
         -----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
-            Minimum variance threshold
+            Minimum variance threshold (Ų)
         threshold_max : float, optional
-            Maximum variance threshold
-            
+            Maximum variance threshold (Ų)
+        cross_trajectory : bool, default=False
+            If True, find common features across all selected trajectories
+
         Returns:
         --------
         None
             Updates reduced data in pipeline
+
+        Examples:
+        ---------
+        >>> # Keep highly variable distances
+        >>> pipeline.feature.reduce.distances.variance(threshold_min=1.0)
+
+        >>> # Remove extremely variable distances
+        >>> pipeline.feature.reduce.distances.variance(threshold_max=10.0)
+
+        >>> # Focus on moderately variable pairs
+        >>> pipeline.feature.reduce.distances.variance(
+        ...     threshold_min=0.5,
+        ...     threshold_max=5.0
+        ... )
         """
         return self._manager.reduce_data(
             self._pipeline_data,
@@ -171,6 +199,7 @@ class DistancesReduceService:
             traj_selection=traj_selection,
             threshold_min=threshold_min,
             threshold_max=threshold_max,
+            cross_trajectory=cross_trajectory,
         )
     
     def range(
@@ -178,10 +207,14 @@ class DistancesReduceService:
         traj_selection: Union[str, int, List] = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
+        cross_trajectory: bool = False,
     ) -> None:
         """
         Reduce distances by range (max - min).
-        
+
+        Filters distance features based on their range of motion.
+        Higher range indicates larger conformational changes.
+
         Parameters:
         -----------
         traj_selection : str, int, list, default="all"
@@ -190,11 +223,27 @@ class DistancesReduceService:
             Minimum range threshold in Angstroms
         threshold_max : float, optional
             Maximum range threshold in Angstroms
-            
+        cross_trajectory : bool, default=False
+            If True, find common features across all selected trajectories
+
         Returns:
         --------
         None
             Updates reduced data in pipeline
+
+        Examples:
+        ---------
+        >>> # Keep distances with large conformational changes
+        >>> pipeline.feature.reduce.distances.range(threshold_min=3.0)
+
+        >>> # Keep relatively stable distances
+        >>> pipeline.feature.reduce.distances.range(threshold_max=2.0)
+
+        >>> # Focus on moderate flexibility
+        >>> pipeline.feature.reduce.distances.range(
+        ...     threshold_min=1.0,
+        ...     threshold_max=5.0
+        ... )
         """
         return self._manager.reduce_data(
             self._pipeline_data,
@@ -203,6 +252,7 @@ class DistancesReduceService:
             traj_selection=traj_selection,
             threshold_min=threshold_min,
             threshold_max=threshold_max,
+            cross_trajectory=cross_trajectory,
         )
     
     def transitions(
@@ -214,6 +264,7 @@ class DistancesReduceService:
         window_size: int = 10,
         transition_mode: str = "window",
         lag_time: int = 1,
+        cross_trajectory: bool = False,
     ) -> None:
         """
         Reduce distances by transition detection.
@@ -237,7 +288,9 @@ class DistancesReduceService:
             Mode for transition detection ('window' or 'lag')
         lag_time : int, default=1
             Lag time for transition detection (if mode='lag')
-            
+        cross_trajectory : bool, default=False
+            If True, find common features across all selected trajectories
+
         Returns:
         --------
         None
@@ -268,6 +321,7 @@ class DistancesReduceService:
             window_size=window_size,
             transition_mode=transition_mode,
             lag_time=lag_time,
+            cross_trajectory=cross_trajectory,
         )
     
     def min(
@@ -275,10 +329,14 @@ class DistancesReduceService:
         traj_selection: Union[str, int, List] = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
+        cross_trajectory: bool = False,
     ) -> None:
         """
         Reduce distances by minimum value.
-        
+
+        Filters distance features based on their closest approach.
+        Useful for identifying pairs that can form close contacts.
+
         Parameters:
         -----------
         traj_selection : str, int, list, default="all"
@@ -287,11 +345,27 @@ class DistancesReduceService:
             Minimum distance minimum in Angstroms
         threshold_max : float, optional
             Maximum distance minimum in Angstroms
-            
+        cross_trajectory : bool, default=False
+            If True, find common features across all selected trajectories
+
         Returns:
         --------
         None
             Updates reduced data in pipeline
+
+        Examples:
+        ---------
+        >>> # Keep pairs that can get very close
+        >>> pipeline.feature.reduce.distances.min(threshold_max=3.0)
+
+        >>> # Remove pairs that get too close (clashes)
+        >>> pipeline.feature.reduce.distances.min(threshold_min=1.5)
+
+        >>> # Focus on potential contacts
+        >>> pipeline.feature.reduce.distances.min(
+        ...     threshold_min=2.0,
+        ...     threshold_max=5.0
+        ... )
         """
         return self._manager.reduce_data(
             self._pipeline_data,
@@ -300,6 +374,7 @@ class DistancesReduceService:
             traj_selection=traj_selection,
             threshold_min=threshold_min,
             threshold_max=threshold_max,
+            cross_trajectory=cross_trajectory,
         )
     
     def mad(
@@ -307,23 +382,43 @@ class DistancesReduceService:
         traj_selection: Union[str, int, List] = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
+        cross_trajectory: bool = False,
     ) -> None:
         """
         Reduce distances by median absolute deviation.
-        
+
+        Filters distances using MAD, a robust measure of variability.
+        Less sensitive to outliers than standard deviation.
+
         Parameters:
         -----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
-            Minimum MAD threshold
+            Minimum MAD threshold (Ų)
         threshold_max : float, optional
-            Maximum MAD threshold
-            
+            Maximum MAD threshold (Ų)
+        cross_trajectory : bool, default=False
+            If True, find common features across all selected trajectories
+
         Returns:
         --------
         None
             Updates reduced data in pipeline
+
+        Examples:
+        ---------
+        >>> # Keep robustly variable distances
+        >>> pipeline.feature.reduce.distances.mad(threshold_min=0.5)
+
+        >>> # Remove extremely variable distances (robust)
+        >>> pipeline.feature.reduce.distances.mad(threshold_max=3.0)
+
+        >>> # MAD-based selection for outlier-resistant analysis
+        >>> pipeline.feature.reduce.distances.mad(
+        ...     threshold_min=0.2,
+        ...     threshold_max=2.0
+        ... )
         """
         return self._manager.reduce_data(
             self._pipeline_data,
@@ -332,6 +427,7 @@ class DistancesReduceService:
             traj_selection=traj_selection,
             threshold_min=threshold_min,
             threshold_max=threshold_max,
+            cross_trajectory=cross_trajectory,
         )
     
     def mean(
@@ -339,6 +435,7 @@ class DistancesReduceService:
         traj_selection: Union[str, int, List] = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
+        cross_trajectory: bool = False,
     ) -> None:
         """
         Reduce distances by mean value.
@@ -354,6 +451,8 @@ class DistancesReduceService:
             Minimum mean distance threshold (features below are removed)
         threshold_max : float, optional
             Maximum mean distance threshold (features above are removed)
+        cross_trajectory : bool, default=False
+            If True, find common features across all selected trajectories
             
         Returns:
         --------
@@ -375,6 +474,7 @@ class DistancesReduceService:
             traj_selection=traj_selection,
             threshold_min=threshold_min,
             threshold_max=threshold_max,
+            cross_trajectory=cross_trajectory,
         )
     
     def max(
@@ -382,6 +482,7 @@ class DistancesReduceService:
         traj_selection: Union[str, int, List] = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
+        cross_trajectory: bool = False,
     ) -> None:
         """
         Reduce distances by maximum value.
@@ -397,6 +498,8 @@ class DistancesReduceService:
             Minimum maximum distance threshold (features below are removed)
         threshold_max : float, optional
             Maximum maximum distance threshold (features above are removed)
+        cross_trajectory : bool, default=False
+            If True, find common features across all selected trajectories
             
         Returns:
         --------
@@ -418,4 +521,5 @@ class DistancesReduceService:
             traj_selection=traj_selection,
             threshold_min=threshold_min,
             threshold_max=threshold_max,
+            cross_trajectory=cross_trajectory,
         )

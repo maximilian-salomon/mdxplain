@@ -219,26 +219,21 @@ class FeatureReductionHelper:
         >>> FeatureReductionHelper.reset_reduction(pipeline_data, "distances")
         Reset reduction: Now using full data (1000, 500). (Data was reduced to (1000, 45), 9.0%)
         """
-        feature_data = pipeline_data.feature_data[feature_key]
+        feature_data_dict = pipeline_data.feature_data[feature_key]
 
-        if feature_data.reduced_data is None:
+        any_reduced = False
+        for _, feature_data in feature_data_dict.items():
+            if feature_data.reduced_data is not None:
+                any_reduced = True
+                # Clear reduced data for this trajectory
+                feature_data.reduced_data = None
+                feature_data.reduced_feature_metadata = None
+                feature_data.reduction_info = None
+
+        if any_reduced:
+            print(f"Reset reduction for all trajectories in {feature_key}.")
+        else:
             print("No reduction to reset - already using full data.")
-            return
-
-        # Get shapes before clearing
-        original_shape = feature_data.data.shape
-        reduced_shape = feature_data.reduced_data.shape
-        old_info = feature_data.reduction_info
-
-        # Clear reduced data
-        feature_data.reduced_data = None
-        feature_data.reduced_feature_metadata = None
-        feature_data.reduction_info = None
-
-        print(
-            f"Reset reduction: Now using full data {original_shape}. "
-            f"(Data was reduced to {reduced_shape}, {old_info:.1%})"
-        )
 
     @staticmethod
     def check_reduction_state(pipeline_data, feature_key: str) -> bool:
