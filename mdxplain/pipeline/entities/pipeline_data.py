@@ -828,6 +828,33 @@ class PipelineData:
         """
         self._repair_bound_methods_recursive(self, FeatureData, FeatureBindingHelper, set())
         
+    def get_config(self) -> dict:
+        """
+        Get current configuration parameters.
+
+        Returns the current configuration settings for chunk_size,
+        cache_dir, and use_memmap that are used across the pipeline.
+
+        Returns:
+        --------
+        dict
+            Dictionary containing current configuration values
+
+        Examples:
+        ---------
+        Check current configuration:
+
+        >>> pipeline_data = PipelineData(chunk_size=1000, use_memmap=True)
+        >>> config = pipeline_data.get_config()
+        >>> print(config['chunk_size'])  # 1000
+        >>> print(config['use_memmap'])   # True
+        """
+        return {
+            "chunk_size": self.chunk_size,
+            "cache_dir": self.cache_dir,
+            "use_memmap": self.use_memmap
+        }
+
     def _repair_bound_methods_recursive(self, obj: Any, FeatureData: type, FeatureBindingHelper: type, visited: set) -> None:
         """
         Recursively repair BoundMethod objects.

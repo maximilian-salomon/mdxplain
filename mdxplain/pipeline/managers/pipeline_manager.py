@@ -474,3 +474,140 @@ class PipelineManager:
         print(f"\nPipeline Summary: {summary['trajectories_loaded']} trajectories, "
               f"{summary['features_computed']} feature types, "
               f"{summary['clusterings_performed']} clusterings")
+
+    def update_config(
+        self,
+        chunk_size: int = None,
+        cache_dir: str = None,
+        use_memmap: bool = None
+    ):
+        """
+        Update pipeline configuration parameters at runtime.
+
+        Allows modification of key configuration parameters after pipeline
+        initialization. Changes are propagated to all managers and the
+        central PipelineData container.
+
+        Parameters:
+        -----------
+        chunk_size : int, optional
+            New chunk size for processing operations. Must be positive integer.
+        cache_dir : str, optional
+            New cache directory path. Directory will be created if it doesn't exist.
+        use_memmap : bool, optional
+            Whether to use memory mapping for data storage operations.
+
+        Returns:
+        --------
+        None
+            Updates configuration in all components
+
+        Raises:
+        -------
+        ValueError
+            If chunk_size is not a positive integer
+        OSError
+            If cache_dir cannot be created
+
+        Examples:
+        ---------
+        Update chunk size for better memory management:
+
+        >>> pipeline.update_config(chunk_size=5000)
+
+        Change cache directory and enable memory mapping:
+
+        >>> pipeline.update_config(cache_dir="/tmp/mdx_cache", use_memmap=True)
+        """
+        # Validate parameters
+        if chunk_size is not None:
+            if not isinstance(chunk_size, int) or chunk_size <= 0:
+                raise ValueError("chunk_size must be a positive integer")
+
+        if cache_dir is not None:
+            if not isinstance(cache_dir, str):
+                raise ValueError("cache_dir must be a string")
+            # Create directory if it doesn't exist
+            try:
+                os.makedirs(cache_dir, exist_ok=True)
+            except OSError as e:
+                raise OSError(f"Cannot create cache directory '{cache_dir}': {e}")
+
+        if use_memmap is not None:
+            if not isinstance(use_memmap, bool):
+                raise ValueError("use_memmap must be a boolean")
+
+        # Update PipelineData
+        if chunk_size is not None:
+            self._data.chunk_size = chunk_size
+        if cache_dir is not None:
+            self._data.cache_dir = cache_dir
+        if use_memmap is not None:
+            self._data.use_memmap = use_memmap
+
+        # Update TrajectoryManager
+        if chunk_size is not None:
+            self._trajectory_manager.chunk_size = chunk_size
+        if cache_dir is not None:
+            self._trajectory_manager.cache_dir = cache_dir
+        if use_memmap is not None:
+            self._trajectory_manager.use_memmap = use_memmap
+
+        # Update FeatureManager
+        if chunk_size is not None:
+            self._feature_manager.chunk_size = chunk_size
+        if cache_dir is not None:
+            self._feature_manager.cache_dir = cache_dir
+        if use_memmap is not None:
+            self._feature_manager.use_memmap = use_memmap
+
+        # Update DecompositionManager
+        if chunk_size is not None:
+            self._decomposition_manager.chunk_size = chunk_size
+        if cache_dir is not None:
+            self._decomposition_manager.cache_dir = cache_dir
+        if use_memmap is not None:
+            self._decomposition_manager.use_memmap = use_memmap
+
+        # Update ClusterManager (only cache_dir)
+        if cache_dir is not None:
+            self._cluster_manager.cache_dir = cache_dir
+
+        # Update FeatureImportanceManager
+        if chunk_size is not None:
+            self._feature_importance_manager.chunk_size = chunk_size
+        if cache_dir is not None:
+            self._feature_importance_manager.cache_dir = cache_dir
+        if use_memmap is not None:
+            self._feature_importance_manager.use_memmap = use_memmap
+
+        print("Configuration updated successfully:")
+        if chunk_size is not None:
+            print(f"  chunk_size: {chunk_size}")
+        if cache_dir is not None:
+            print(f"  cache_dir: {cache_dir}")
+        if use_memmap is not None:
+            print(f"  use_memmap: {use_memmap}")
+
+    def get_config(self) -> dict:
+        """
+        Get current pipeline configuration parameters.
+
+        Returns the current configuration settings that are active
+        across all pipeline components.
+
+        Returns:
+        --------
+        dict
+            Dictionary containing current configuration values
+
+        Examples:
+        ---------
+        Check current configuration:
+
+        >>> pipeline = PipelineManager(chunk_size=1000, use_memmap=True)
+        >>> config = pipeline.get_config()
+        >>> print(f"Using chunk size: {config['chunk_size']}")
+        >>> print(f"Memory mapping: {config['use_memmap']}")
+        """
+        return self._data.get_config()
