@@ -71,6 +71,10 @@ class MockFeatureData:
             elif metric == "frequency":
                 # For binary data, frequency is just the mean
                 metric_values = np.mean(input_data, axis=0)
+            elif metric == "max":
+                metric_values = np.max(input_data, axis=0)
+            elif metric == "min":
+                metric_values = np.min(input_data, axis=0)
             else:
                 raise ValueError(f"Unsupported metric: {metric}")
 
@@ -133,20 +137,20 @@ class TestCrossTrajectoryReduction:
 
     def _create_test_data_with_known_metrics(self):
         """
-        Create test data with documented CV metrics for predictable results.
+        Create test data with documented max/min metrics for predictable results.
 
         Returns:
         --------
-        tuple: (traj1_data, traj2_data) with known CV values
+        tuple: (traj1_data, traj2_data) with known max values
 
-        CV values:
-        - Feature 0: CV=0.05 (traj1), CV=0.04 (traj2) → LOW in both → threshold > 0.1: OUT
-        - Feature 1: CV=0.8 (traj1), CV=0.9 (traj2) → HIGH in both → threshold > 0.5: IN
-        - Feature 2: CV=0.6 (traj1), CV=0.1 (traj2) → HIGH only in traj1 → cross: OUT
-        - Feature 3: CV=0.1 (traj1), CV=0.7 (traj2) → HIGH only in traj2 → cross: OUT
-        - Feature 4: CV=0.9 (traj1), CV=0.8 (traj2) → HIGH in both → threshold > 0.5: IN
+        Max values:
+        - Feature 0: max=10.1 (traj1), max=5.1 (traj2) → threshold > 7.0: Only traj1
+        - Feature 1: max=8.0 (traj1), max=9.0 (traj2) → threshold > 7.0: Both pass
+        - Feature 2: max=8.0 (traj1), max=2.1 (traj2) → threshold > 7.0: Only traj1
+        - Feature 3: max=3.1 (traj1), max=14.0 (traj2) → threshold > 7.0: Only traj2
+        - Feature 4: max=5.0 (traj1), max=4.0 (traj2) → threshold > 7.0: Neither pass
         """
-        # Trajectory 1 data: columns [1,4] have high CV
+        # Trajectory 1 data: columns [0,1,2] have max > 7.0
         traj1_data = np.array([
             [10.0, 2.0, 5.0, 3.0, 1.0],   # frame 0
             [10.1, 4.0, 8.0, 3.0, 5.0],   # frame 1
@@ -155,7 +159,7 @@ class TestCrossTrajectoryReduction:
             [10.1, 2.0, 5.0, 3.0, 1.0],   # frame 4
         ])
 
-        # Trajectory 2 data: columns [1,4] have high CV
+        # Trajectory 2 data: columns [1,3] have max > 7.0
         traj2_data = np.array([
             [5.0, 3.0, 2.0, 7.0, 2.0],    # frame 0
             [5.1, 5.0, 2.0, 14.0, 4.0],   # frame 1
@@ -182,17 +186,17 @@ class TestCrossTrajectoryReduction:
             }
         }
 
-        # Apply independent CV reduction with threshold_min=0.5
-        # Traj1: features [1,4] pass (high CV)
-        # Traj2: features [1,4] pass (high CV)
-        self.pipeline.feature.reduce.distances.cv(
-            threshold_min=0.5,
+        # Apply independent max reduction with threshold_min=7.0
+        # Traj1: features [0,1,2] pass (max > 7.0)
+        # Traj2: features [1,3] pass (max > 7.0)
+        self.pipeline.feature.reduce.distances.max(
+            threshold_min=7.0,
             cross_trajectory=False
         )
 
-        # EXPECTED: Each trajectory keeps columns [1,4]
-        expected_traj1_reduced = traj1_data[:, [1, 4]]  # Columns 1,4
-        expected_traj2_reduced = traj2_data[:, [1, 4]]  # Columns 1,4
+        # EXPECTED: Each trajectory keeps different columns based on max values
+        expected_traj1_reduced = traj1_data[:, [0, 1, 2]]  # Columns 0,1,2 (max > 7.0)
+        expected_traj2_reduced = traj2_data[:, [1, 3]]  # Columns 1,3 (max > 7.0)
 
         # Get actual reduced data
         actual_traj1_reduced = self.pipeline.data.feature_data["distances"][0].reduced_data
@@ -213,9 +217,9 @@ class TestCrossTrajectoryReduction:
             err_msg="Trajectory 2 independent reduction does not match expected values exactly"
         )
 
-    def test_cross_trajectory_cv_exact_intersection(self):
+    def test_cross_trajectory_max_exact_intersection(self):
         """
-        Test cross-trajectory CV reduction with EXACT expected arrays.
+        Test cross-trajectory max reduction with EXACT expected arrays.
 
         Only features that pass threshold in ALL trajectories are retained.
         """
@@ -229,16 +233,17 @@ class TestCrossTrajectoryReduction:
             }
         }
 
-        # Apply cross-trajectory CV reduction with threshold_min=0.5
-        # Only features [1,4] pass in BOTH trajectories (intersection)
-        self.pipeline.feature.reduce.distances.cv(
-            threshold_min=0.5,
+        # Apply cross-trajectory max reduction with threshold_min=7.0
+        # Only feature [1] passes in BOTH trajectories (intersection)
+        # Traj1: [0,1,2] pass, Traj2: [1,3] pass → Intersection: [1]
+        self.pipeline.feature.reduce.distances.max(
+            threshold_min=7.0,
             cross_trajectory=True
         )
 
-        # EXPECTED: Only features [1,4] remain (columns 1,4 from original arrays)
-        expected_traj1_reduced = traj1_data[:, [1, 4]]  # Columns 1,4
-        expected_traj2_reduced = traj2_data[:, [1, 4]]  # Columns 1,4
+        # EXPECTED: Only feature [1] remains (column 1 from original arrays)
+        expected_traj1_reduced = traj1_data[:, [1]]  # Column 1 only
+        expected_traj2_reduced = traj2_data[:, [1]]  # Column 1 only
 
         # Get actual reduced data
         actual_traj1_reduced = self.pipeline.data.feature_data["distances"][0].reduced_data
@@ -263,27 +268,27 @@ class TestCrossTrajectoryReduction:
         """
         Test exact difference between independent and cross-trajectory reduction.
 
-        Uses data where trajectories have different high-CV features to show the difference.
+        Uses data where trajectories have different low-min features to show the difference.
         """
-        # Create data where trajectories have DIFFERENT high-CV features
-        # Traj1: Feature 1 high CV, feature 2 high CV
-        # Traj2: Feature 1 high CV, feature 3 high CV
+        # Create data where trajectories have DIFFERENT low-min features
+        # Traj1: Features [1,2] have min < 3.0
+        # Traj2: Features [1,3] have min < 3.0
         # Cross-trajectory intersection: only feature 1
 
         traj1_data = np.array([
-            [10.0, 2.0, 5.0, 3.0, 1.0],   # Feature 1,2 will have high CV
-            [10.1, 4.0, 8.0, 3.0, 1.0],
-            [9.9, 6.0, 5.0, 3.1, 1.1],
-            [10.0, 8.0, 8.0, 2.9, 0.9],
-            [10.1, 2.0, 5.0, 3.0, 1.0],
+            [10.0, 1.0, 2.0, 5.0, 8.0],   # Features 1,2 have low min values
+            [10.1, 2.5, 1.5, 5.1, 8.1],
+            [9.9, 1.5, 2.5, 4.9, 7.9],
+            [10.0, 2.0, 1.0, 5.0, 8.0],
+            [10.1, 1.2, 2.2, 5.1, 8.1],
         ])
 
         traj2_data = np.array([
-            [10.0, 3.0, 2.0, 7.0, 1.0],   # Feature 1,3 will have high CV
-            [10.1, 5.0, 2.0, 14.0, 1.0],
-            [9.9, 7.0, 2.1, 7.0, 1.1],
-            [10.0, 9.0, 1.9, 14.0, 0.9],
-            [10.1, 3.0, 2.0, 7.0, 1.0],
+            [10.0, 1.5, 8.0, 2.0, 8.0],   # Features 1,3 have low min values
+            [10.1, 2.5, 8.1, 1.0, 8.1],
+            [9.9, 1.0, 7.9, 2.5, 7.9],
+            [10.0, 2.0, 8.0, 1.5, 8.0],
+            [10.1, 1.8, 8.1, 2.2, 8.1],
         ])
 
         # Mock data
@@ -295,14 +300,14 @@ class TestCrossTrajectoryReduction:
         }
 
         # Test independent reduction first
-        self.pipeline.feature.reduce.distances.cv(
-            threshold_min=0.5,
+        self.pipeline.feature.reduce.distances.min(
+            threshold_max=2.8,
             cross_trajectory=False
         )
 
         # EXPECTED for independent:
-        # Traj1: features [1,2] (high CV)
-        # Traj2: features [1,3] (high CV)
+        # Traj1: features [1,2] (min < 2.8)
+        # Traj2: features [1,3] (min < 2.8)
         expected_independent_traj1 = traj1_data[:, [1, 2]]
         expected_independent_traj2 = traj2_data[:, [1, 3]]
 
@@ -332,8 +337,8 @@ class TestCrossTrajectoryReduction:
         }
 
         # Apply cross-trajectory reduction
-        self.pipeline.feature.reduce.distances.cv(
-            threshold_min=0.5,
+        self.pipeline.feature.reduce.distances.min(
+            threshold_max=2.8,
             cross_trajectory=True
         )
 
@@ -434,25 +439,25 @@ class TestCrossTrajectoryReduction:
 
         Creates data where no feature meets the threshold in ALL trajectories.
         """
-        # Create data where no overlap exists for high threshold
-        # Traj1: Feature 1 high CV, others low
-        # Traj2: Feature 0 high CV, others low
+        # Create data where no overlap exists for high max threshold
+        # Traj1: Feature 1 has high max, others low
+        # Traj2: Feature 0 has high max, others low
         # No intersection for high threshold
 
         traj1_data = np.array([
-            [1.0, 10.0, 2.0, 3.0, 1.0],  # Feature 1: high CV, rest: low CV
-            [1.0, 20.0, 2.0, 3.0, 1.0],
-            [1.1, 30.0, 2.1, 3.1, 1.1],
-            [0.9, 10.0, 1.9, 2.9, 0.9],
-            [1.0, 20.0, 2.0, 3.0, 1.0],
+            [1.0, 15.0, 2.0, 3.0, 1.0],  # Feature 1: max=15, rest: max<5
+            [1.0, 10.0, 2.0, 3.0, 1.0],
+            [1.1, 8.0, 2.1, 3.1, 1.1],
+            [0.9, 12.0, 1.9, 2.9, 0.9],
+            [1.0, 9.0, 2.0, 3.0, 1.0],
         ])
 
         traj2_data = np.array([
-            [10.0, 2.0, 2.0, 3.0, 1.0],  # Feature 0: high CV, rest: low CV
-            [20.0, 2.0, 2.0, 3.0, 1.0],
-            [30.0, 2.1, 2.1, 3.1, 1.1],
-            [10.0, 1.9, 1.9, 2.9, 0.9],
-            [20.0, 2.0, 2.0, 3.0, 1.0],
+            [15.0, 2.0, 2.0, 3.0, 1.0],  # Feature 0: max=15, rest: max<5
+            [10.0, 2.0, 2.0, 3.0, 1.0],
+            [12.0, 2.1, 2.1, 3.1, 1.1],
+            [8.0, 1.9, 1.9, 2.9, 0.9],
+            [9.0, 2.0, 2.0, 3.0, 1.0],
         ])
 
         # Mock data
@@ -463,10 +468,10 @@ class TestCrossTrajectoryReduction:
             }
         }
 
-        # Apply high CV threshold - no feature passes in both trajectories
-        # Traj1 feature 1 high CV, Traj2 feature 0 high CV → empty intersection
-        self.pipeline.feature.reduce.distances.cv(
-            threshold_min=0.8,
+        # Apply high max threshold - no feature passes in both trajectories
+        # Traj1 feature 1 max=15, Traj2 feature 0 max=15 → empty intersection
+        self.pipeline.feature.reduce.distances.max(
+            threshold_min=10.0,
             cross_trajectory=True
         )
 
@@ -485,9 +490,33 @@ class TestCrossTrajectoryReduction:
 
         When only one trajectory exists, cross-trajectory should behave like independent.
         """
-        # Create single trajectory data with known CV values
+        # Create minimal topology and trajectory
+        topology = md.Topology()
+        chain = topology.add_chain()
+        for i in range(5):
+            residue = topology.add_residue(f"RES{i}", chain)
+            topology.add_atom("CA", md.element.carbon, residue)
+
+        # Create dummy trajectory
+        coords = np.zeros((5, 5, 3))  # 5 frames, 5 atoms
+        traj = md.Trajectory(coords, topology)
+
+        # Set up pipeline data structure with SINGLE trajectory
+        self.pipeline.data.trajectory_data.trajectories = [traj]  # Only one trajectory
+        self.pipeline.data.trajectory_data.trajectory_names = ["traj1"]
+
+        # Create residue metadata for single trajectory
+        self.pipeline.data.trajectory_data.res_label_data[0] = [
+            {"name": "RES0", "resid": 1, "resname": "RES", "chain": "A"},
+            {"name": "RES1", "resid": 2, "resname": "RES", "chain": "A"},
+            {"name": "RES2", "resid": 3, "resname": "RES", "chain": "A"},
+            {"name": "RES3", "resid": 4, "resname": "RES", "chain": "A"},
+            {"name": "RES4", "resid": 5, "resname": "RES", "chain": "A"},
+        ]
+
+        # Create single trajectory data with known max values
         single_traj_data = np.array([
-            [1.0, 5.0, 2.0, 3.0, 1.0],  # Features: low CV, high CV, low CV, low CV, low CV
+            [1.0, 5.0, 2.0, 3.0, 1.0],  # Features: max=1.1, max=15.0, max=2.1, max=3.1, max=1.1
             [1.0, 10.0, 2.0, 3.0, 1.0],
             [1.1, 15.0, 2.1, 3.1, 1.1],
             [0.9, 5.0, 1.9, 2.9, 0.9],
@@ -502,12 +531,12 @@ class TestCrossTrajectoryReduction:
         }
 
         # Apply cross-trajectory reduction
-        self.pipeline.feature.reduce.distances.cv(
-            threshold_min=0.5,
+        self.pipeline.feature.reduce.distances.max(
+            threshold_min=10.0,
             cross_trajectory=True
         )
 
-        # EXPECTED: Feature 1 should be retained (high CV), column 1
+        # EXPECTED: Feature 1 should be retained (max=15.0 > 10.0), column 1
         expected_reduced = single_traj_data[:, [1]]
 
         # Get actual result

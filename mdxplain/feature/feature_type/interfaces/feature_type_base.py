@@ -26,10 +26,12 @@ must implement for consistency across different molecular dynamics features.
 """
 
 from abc import ABC, abstractmethod
-from typing import List, Tuple, Dict, Any, Union
+from typing import TYPE_CHECKING, List, Tuple, Dict, Any
 import numpy as np
 
 from .feature_type_meta import FeatureTypeMeta
+if TYPE_CHECKING:
+    from .calculator_base import CalculatorBase
 
 
 class FeatureTypeBase(ABC, metaclass=FeatureTypeMeta):
@@ -68,7 +70,7 @@ class FeatureTypeBase(ABC, metaclass=FeatureTypeMeta):
         --------
         None
         """
-        self.calculator = None
+        self.calculator: CalculatorBase = None
 
     def __str__(self):
         """

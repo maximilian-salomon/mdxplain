@@ -115,7 +115,7 @@ class TestSelectionStrings:
         if name in self.pipeline.data.selected_feature_data:
             del self.pipeline.data.selected_feature_data[name]
         self.pipeline.feature_selector.create(name)
-        self.pipeline.feature_selector.add(name, "distances", selection, **kwargs)
+        self.pipeline.feature_selector.add_selection(name, "distances", selection, **kwargs)
         return name
     
     def _get_selected_indices(self, selector_name: str):
@@ -484,7 +484,7 @@ class TestParameters:
         if name in self.pipeline.data.selected_feature_data:
             del self.pipeline.data.selected_feature_data[name]
         self.pipeline.feature_selector.create(name)
-        self.pipeline.feature_selector.add(name, "distances", selection, **kwargs)
+        self.pipeline.feature_selector.add_selection(name, "distances", selection, **kwargs)
         return name
     
     def _get_selected_indices(self, selector_name: str):
@@ -686,7 +686,7 @@ class TestFeatureSelectorReferenceTrajectoryLabels:
         residue metadata and returns correct feature indices.
         """
         self.pipeline.feature_selector.create("test")
-        self.pipeline.feature_selector.add("test", "distances", "seqid 1", common_denominator=False)
+        self.pipeline.feature_selector.add_selection("test", "distances", "seqid 1", common_denominator=False)
         self.pipeline.feature_selector.select("test", reference_traj=0)
         
         metadata = self.pipeline.data.get_selected_metadata("test")
@@ -720,7 +720,7 @@ class TestFeatureSelectorReferenceTrajectoryLabels:
         residue metadata and returns correct feature indices.
         """
         self.pipeline.feature_selector.create("test")
-        self.pipeline.feature_selector.add("test", "distances", "seqid 1", common_denominator=False)
+        self.pipeline.feature_selector.add_selection("test", "distances", "seqid 1", common_denominator=False)
         self.pipeline.feature_selector.select("test", reference_traj=1)
         
         metadata = self.pipeline.data.get_selected_metadata("test")
@@ -756,7 +756,7 @@ class TestFeatureSelectorReferenceTrajectoryLabels:
         self.pipeline.feature_selector.create("test_wrong")
         
         # Select trajectory 1 consensus (4.50) but use trajectory 0 as reference
-        self.pipeline.feature_selector.add("test_wrong", "distances", "consensus 4.50")
+        self.pipeline.feature_selector.add_selection("test_wrong", "distances", "consensus 4.50")
         
         # Selection succeeds (finds features in trajectory 1) - let it auto-select reference traj
         with warnings.catch_warnings():
@@ -781,7 +781,7 @@ class TestFeatureSelectorReferenceTrajectoryLabels:
         position and returns appropriate distance pair indices.
         """
         self.pipeline.feature_selector.create("test")
-        self.pipeline.feature_selector.add("test", "distances", "consensus 1.50", common_denominator=False)
+        self.pipeline.feature_selector.add_selection("test", "distances", "consensus 1.50", common_denominator=False)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", UserWarning)  # Expected empty selection in some trajectories
             self.pipeline.feature_selector.select("test", reference_traj=0)
@@ -813,7 +813,7 @@ class TestFeatureSelectorReferenceTrajectoryLabels:
         causing metadata lookup failures during feature selection.
         """
         self.pipeline.feature_selector.create("test")
-        self.pipeline.feature_selector.add("test", "distances", "consensus 1.50", common_denominator=False)
+        self.pipeline.feature_selector.add_selection("test", "distances", "consensus 1.50", common_denominator=False)
         
         # Selection succeeds (finds features in trajectory 0) - let it auto-select reference traj
         with warnings.catch_warnings():
@@ -917,7 +917,7 @@ class TestFeatureSelectorMatrixConsistency:
         # Select "all" features with common_denominator=False - this will have different counts per trajectory
         # Trajectory 0: 3 residues -> 3 pairs
         # Trajectory 1: 5 residues -> 10 pairs
-        self.pipeline.feature_selector.add("inconsistent", "distances", "all", common_denominator=False)
+        self.pipeline.feature_selector.add_selection("inconsistent", "distances", "all", common_denominator=False)
         
         # Should trigger ValueError about inconsistent matrix dimensions
         with pytest.raises(ValueError, match="Feature 'distances' has inconsistent column counts"):
@@ -933,7 +933,7 @@ class TestFeatureSelectorMatrixConsistency:
         self.pipeline.feature_selector.create("consistent")
         
         # Use common_denominator=True to resolve inconsistency
-        self.pipeline.feature_selector.add(
+        self.pipeline.feature_selector.add_selection(
             "consistent", "distances", "all", 
             common_denominator=True
         )
@@ -956,7 +956,7 @@ class TestFeatureSelectorMatrixConsistency:
         self.pipeline.feature_selector.create("specific")
         
         # Select only ALA residues - but no common features between trajectories
-        self.pipeline.feature_selector.add("specific", "distances", "res ALA")
+        self.pipeline.feature_selector.add_selection("specific", "distances", "res ALA")
         
         # Selection fails when no common features found
         with pytest.raises(ValueError, match="Reference trajectory 0 not found in selection results"):
@@ -1007,8 +1007,8 @@ class TestMultipleFeatureTypes:
         self._create_selector("test")
         
         # Add multiple selections for distances
-        self.pipeline.feature_selector.add("test", "distances", "res ALA")
-        self.pipeline.feature_selector.add("test", "distances", "res GLY")
+        self.pipeline.feature_selector.add_selection("test", "distances", "res ALA")
+        self.pipeline.feature_selector.add_selection("test", "distances", "res GLY")
         
         self.pipeline.feature_selector.select("test", reference_traj=0)
         indices = self.pipeline.data.selected_feature_data["test"].get_results("distances")["trajectory_indices"][0]["indices"]
@@ -1082,7 +1082,7 @@ class TestTrajectorySelections:
         if name in self.pipeline.data.selected_feature_data:
             del self.pipeline.data.selected_feature_data[name]
         self.pipeline.feature_selector.create(name)
-        self.pipeline.feature_selector.add(name, "distances", selection, **kwargs)
+        self.pipeline.feature_selector.add_selection(name, "distances", selection, **kwargs)
         return name
     
     def test_traj_selection_single_index(self):
@@ -1189,11 +1189,11 @@ class TestTrajectorySelections:
         self.pipeline.feature_selector.create("mixed_test")
         
         # ALA from distances for trajectory 0
-        self.pipeline.feature_selector.add("mixed_test", "distances", "res ALA", 
+        self.pipeline.feature_selector.add_selection("mixed_test", "distances", "res ALA", 
                                          traj_selection=[0], common_denominator=False)
         
         # GLY from contacts for trajectory 1  
-        self.pipeline.feature_selector.add("mixed_test", "contacts", "res GLY",
+        self.pipeline.feature_selector.add_selection("mixed_test", "contacts", "res GLY",
                                          traj_selection=[1], common_denominator=False)
         
         self.pipeline.feature_selector.select("mixed_test", reference_traj=0)
@@ -1267,8 +1267,8 @@ class TestNameManagement:
         self.pipeline.feature_selector.create("selector_1")
         self.pipeline.feature_selector.create("selector_2")
         
-        self.pipeline.feature_selector.add("selector_1", "distances", "res ALA")
-        self.pipeline.feature_selector.add("selector_2", "distances", "res GLY")
+        self.pipeline.feature_selector.add_selection("selector_1", "distances", "res ALA")
+        self.pipeline.feature_selector.add_selection("selector_2", "distances", "res GLY")
         
         assert "selector_1" in self.pipeline.data.selected_feature_data
         assert "selector_2" in self.pipeline.data.selected_feature_data
@@ -1355,7 +1355,7 @@ class TestCornerCases:
         if name in self.pipeline.data.selected_feature_data:
             del self.pipeline.data.selected_feature_data[name]
         self.pipeline.feature_selector.create(name)
-        self.pipeline.feature_selector.add(name, "distances", selection, **kwargs)
+        self.pipeline.feature_selector.add_selection(name, "distances", selection, **kwargs)
         return name
     
     def test_empty_selection_string(self):
@@ -1522,7 +1522,7 @@ class TestNotSelectionWithMissingSeqids:
         if name in self.pipeline.data.selected_feature_data:
             del self.pipeline.data.selected_feature_data[name]
         self.pipeline.feature_selector.create(name)
-        self.pipeline.feature_selector.add(name, "distances", selection, **kwargs)
+        self.pipeline.feature_selector.add_selection(name, "distances", selection, **kwargs)
         return name
 
     def test_not_existing_seqid_single_trajectory(self):
@@ -1766,7 +1766,7 @@ class TestConsensusSelection:
         if name in self.pipeline.data.selected_feature_data:
             del self.pipeline.data.selected_feature_data[name]
         self.pipeline.feature_selector.create(name)
-        self.pipeline.feature_selector.add(name, "distances", selection, **kwargs)
+        self.pipeline.feature_selector.add_selection(name, "distances", selection, **kwargs)
         return name
     
     def _get_selected_indices(self, selector_name: str):
@@ -2024,7 +2024,7 @@ class TestCommonDenominator:
         if name in self.pipeline.data.selected_feature_data:
             del self.pipeline.data.selected_feature_data[name]
         self.pipeline.feature_selector.create(name)
-        self.pipeline.feature_selector.add(name, "distances", selection, **kwargs)
+        self.pipeline.feature_selector.add_selection(name, "distances", selection, **kwargs)
         return name
     
     def test_common_denominator_single_trajectory(self):
@@ -2263,7 +2263,7 @@ class TestRequireAllPartners:
         if name in self.pipeline.data.selected_feature_data:
             del self.pipeline.data.selected_feature_data[name]
         self.pipeline.feature_selector.create(name)
-        self.pipeline.feature_selector.add(name, "distances", selection, **kwargs)
+        self.pipeline.feature_selector.add_selection(name, "distances", selection, **kwargs)
         return name
     
     def _get_selected_indices(self, selector_name: str):

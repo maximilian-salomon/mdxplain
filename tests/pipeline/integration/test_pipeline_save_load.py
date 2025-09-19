@@ -179,7 +179,7 @@ class TestPipelineSaveLoad:
         
         # Create feature selection
         pipeline.feature_selector.create("test_selection")
-        pipeline.feature_selector.add( "test_selection", "distances", "all")
+        pipeline.feature_selector.add_selection( "test_selection", "distances", "all")
         pipeline.feature_selector.select("test_selection")
         
         # Add clustering
@@ -234,7 +234,7 @@ class TestPipelineSaveLoad:
         
         # Create feature selection
         pipeline.feature_selector.create("decomp_selection")
-        pipeline.feature_selector.add( "decomp_selection", "distances", "all")
+        pipeline.feature_selector.add_selection( "decomp_selection", "distances", "all")
         pipeline.feature_selector.select("decomp_selection")
         
         # Add PCA decomposition
@@ -295,8 +295,8 @@ class TestPipelineSaveLoad:
         
         # Create feature selections
         pipeline.feature_selector.create("all_features")
-        pipeline.feature_selector.add( "all_features", "distances", "all", use_reduced=True)
-        pipeline.feature_selector.add( "all_features", "contacts", "all", use_reduced=False)
+        pipeline.feature_selector.add_selection( "all_features", "distances", "all", use_reduced=True)
+        pipeline.feature_selector.add_selection( "all_features", "contacts", "all", use_reduced=False)
         pipeline.feature_selector.select("all_features")
         
         # Add clustering and decomposition

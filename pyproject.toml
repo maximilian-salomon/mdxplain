@@ -108,6 +108,11 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+filterwarnings = [
+    "ignore::DeprecationWarning:importlib.*",
+    "ignore::RuntimeWarning:sklearn.*",
+    "ignore::UserWarning:mdxplain.*"
+]
 
 [tool.coverage.run]
 source = ["mdxplain"]

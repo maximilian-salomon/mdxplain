@@ -113,7 +113,7 @@ class PipelineData:
         self.trajectory_data: TrajectoryData = TrajectoryData()
 
         # Analysis data containers
-        self.feature_data: Dict[str, FeatureData] = {}
+        self.feature_data: Dict[str, Dict[int, FeatureData]] = {}
         self.selected_feature_data: Dict[str, FeatureSelectorData] = {}
         self.decomposition_data: Dict[str, DecompositionData] = {}
         self.cluster_data: Dict[str, ClusterData] = {}
