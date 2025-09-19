@@ -21,15 +21,15 @@
 """Factory for SASA-specific analysis operations."""
 
 from __future__ import annotations
-from typing import Union, List, Optional, TYPE_CHECKING, Callable
+from typing import Union, List, Optional, TYPE_CHECKING
 import numpy as np
 
-from ...services.helpers.analysis_data_helper import AnalysisDataHelper
-from .sasa_calculator_analysis import SASACalculatorAnalysis
-from ..interfaces.analysis_service_base import AnalysisServiceBase
+from ....services.helpers.analysis_data_helper import AnalysisDataHelper
+from ..sasa_calculator_analysis import SASACalculatorAnalysis
+from ...interfaces.analysis_service_base import AnalysisServiceBase
 
 if TYPE_CHECKING:
-    from ....pipeline.entities.pipeline_data import PipelineData
+    from .....pipeline.entities.pipeline_data import PipelineData
 
 
 class SASAAnalysisService(AnalysisServiceBase):

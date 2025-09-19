@@ -1,7 +1,7 @@
 # mdxplain - A Python toolkit for molecular dynamics trajectory analysis
 #
 # Author: Maximilian Salomon
-# Created with assistance from Cursor IDE (Claude Sonnet 4.0, occasional Claude Sonnet 3.7 and Gemini 2.5 Pro).
+# Created with assistance from Claude Code (Claude Sonnet 4.0) and GitHub Copilot (Claude Sonnet 4.0).
 #
 # Copyright (C) 2025 Maximilian Salomon
 #
@@ -19,12 +19,17 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Torsions feature type for molecular dynamics trajectory analysis.
+Services for DSSP feature type.
 
-Computes dihedral torsion angles including backbone angles (phi, psi, omega)
-and side chain angles (chi1-4) with flexible selection and output formats.
+This submodule provides three specialized services for DSSP features:
+
+- DSSPSelectionService: Manages feature selection with optional post-selection
+  reduction based on secondary structure transition and stability metrics
+- DSSPReduceService: Provides cross-trajectory reduction methods for
+  DSSP feature dimensionality reduction
+- DSSPAnalysisService: Offers statistical analysis operations on
+  DSSP feature data
+
+Each service provides DSSP-specific methods tailored to the
+characteristics and requirements of secondary structure data.
 """
-
-from .torsions import Torsions
-
-__all__ = ["Torsions"]

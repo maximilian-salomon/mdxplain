@@ -23,11 +23,13 @@ from __future__ import annotations
 from typing import Optional, Union, List, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ....feature_selection.managers.feature_selector_manager import FeatureSelectorManager
-    from ....pipeline.entities.pipeline_data import PipelineData
+    from .....feature_selection.managers.feature_selector_manager import FeatureSelectorManager
+    from .....pipeline.entities.pipeline_data import PipelineData
+
+from ...interfaces.selection_service_base import SelectionServiceBase
 
 
-class SasaSelectionService:
+class SasaSelectionService(SelectionServiceBase):
     """
     Service for selecting SASA features with SASA-specific reduction methods.
 
@@ -78,8 +80,8 @@ class SasaSelectionService:
         >>> service = pipeline.feature_selector.add.sasa
         >>> # Service is now ready to add SASA selections
         """
-        self._manager = manager
-        self._pipeline_data = pipeline_data
+        super().__init__(manager, pipeline_data)
+        self._feature_type = "sasa"
 
     def __call__(
         self,
@@ -123,7 +125,7 @@ class SasaSelectionService:
         >>> service("analysis", "resid 120-140", use_reduced=True)
         """
         self._manager.add_selection(
-            self._pipeline_data, selector_name, "sasa", selection,
+            self._pipeline_data, selector_name, self._feature_type, selection,
             use_reduced, common_denominator, traj_selection, require_all_partners
         )
 
@@ -594,40 +596,3 @@ class SasaSelectionService:
         extra_params = {"transition_threshold": transition_threshold, "window_size": window_size, "transition_mode": transition_mode, "lag_time": lag_time}
         self._add_reduction_config(selector_name, "transitions", threshold_min, threshold_max, cross_trajectory, extra_params)
 
-    def _add_reduction_config(self, selector_name: str, metric: str, threshold_min: Optional[float], threshold_max: Optional[float], cross_trajectory: bool = True, extra_params: Optional[dict] = None) -> None:
-        """
-        Store reduction config in the LAST selection of this type.
-
-        This private method stores the reduction configuration parameters
-        in the most recently added selection of the SASA feature type.
-        It creates a configuration dictionary with all reduction parameters
-        and attaches it to the selection for later processing.
-
-        Parameters:
-        -----------
-        selector_name : str
-            Name of the feature selector configuration
-        metric : str
-            Statistical metric for reduction (e.g., 'cv', 'burial_fraction')
-        threshold_min : float, optional
-            Minimum threshold value for the metric
-        threshold_max : float, optional
-            Maximum threshold value for the metric
-        cross_trajectory : bool, default=True
-            Whether to apply reduction across all trajectories
-        extra_params : dict, optional
-            Additional parameters specific to the reduction metric
-
-        Returns:
-        --------
-        None
-            Modifies the last SASA selection in-place
-        """
-        selector_data = self._pipeline_data.selected_feature_data[selector_name]
-        if "sasa" not in selector_data.selections:
-            raise ValueError(f"No sasa selections for selector '{selector_name}'")
-        last_selection = selector_data.selections["sasa"][-1]
-        config = {"metric": metric, "threshold_min": threshold_min, "threshold_max": threshold_max, "cross_trajectory": cross_trajectory}
-        if extra_params:
-            config.update(extra_params)
-        last_selection["reduction"] = config

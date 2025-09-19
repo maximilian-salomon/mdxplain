@@ -18,45 +18,45 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""Service for coordinates-specific analysis operations."""
+"""Factory for torsions-specific analysis operations."""
 
 from __future__ import annotations
-from typing import Union, List, Optional, TYPE_CHECKING, Callable
+from typing import Union, List, Optional, TYPE_CHECKING
 import numpy as np
 
-from ...services.helpers.analysis_data_helper import AnalysisDataHelper
-from .coordinates_calculator_analysis import CoordinatesCalculatorAnalysis
-from ..interfaces.analysis_service_base import AnalysisServiceBase
+from ....services.helpers.analysis_data_helper import AnalysisDataHelper
+from ..torsions_calculator_analysis import TorsionsCalculatorAnalysis
+from ...interfaces.analysis_service_base import AnalysisServiceBase
 
 if TYPE_CHECKING:
-    from ....pipeline.entities.pipeline_data import PipelineData
+    from .....pipeline.entities.pipeline_data import PipelineData
 
 
-class CoordinatesAnalysisService(AnalysisServiceBase):
+class TorsionsAnalysisService(AnalysisServiceBase):
     """
-    Service for coordinates-specific analysis operations.
+    Service for torsions-specific analysis operations.
     
-    Provides a simplified interface for coordinate analysis methods by automatically
+    Provides a simplified interface for torsion analysis methods by automatically
     handling data selection and forwarding method calls to the underlying
-    calculator_analysis class. All methods from CoordinatesCalculatorAnalysis
+    calculator_analysis class. All methods from TorsionsCalculatorAnalysis
     are automatically available with additional feature_selector and 
     traj_selection parameters.
     """
     
     def __init__(self, pipeline_data: PipelineData) -> None:
-        """Initialize coordinates analysis service."""
+        """Initialize torsions analysis service."""
         super().__init__(pipeline_data)
-        self._feature_type = "coordinates"
-        self._calculator = CoordinatesCalculatorAnalysis(
+        self._feature_type = "torsions"
+        self._calculator = TorsionsCalculatorAnalysis(
             use_memmap=pipeline_data.use_memmap,
             chunk_size=pipeline_data.chunk_size
         )
     
-    # === PER-FEATURE METHODS (per atom coordinate) ===
+    # === PER-FEATURE METHODS (per angle) ===
     
     def mean(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
         """
-        Compute mean coordinates for each atom.
+        Compute circular mean for each torsion angle.
         
         Parameters:
         -----------
@@ -68,15 +68,15 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         Returns:
         --------
         np.ndarray
-            Mean coordinates for each atom (average structure)
+            Circular mean angle for each torsion in degrees
             
         Examples:
         ---------
-        >>> # Compute average structure coordinates
-        >>> pipeline.analysis.features.coordinates.mean()
+        >>> # Compute circular mean for all torsion angles
+        >>> pipeline.analysis.features.torsions.mean()
         
-        >>> # Average structure for selected atoms
-        >>> pipeline.analysis.features.coordinates.mean(feature_selector="ca_atoms")
+        >>> # Compute mean for selected angles
+        >>> pipeline.analysis.features.torsions.mean(feature_selector="phi_psi_angles")
         """
         data = AnalysisDataHelper.get_selected_data(
             self._pipeline_data, self._feature_type,
@@ -86,7 +86,7 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
     
     def std(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
         """
-        Compute standard deviation of coordinates for each atom.
+        Compute circular standard deviation for each torsion angle.
         
         Parameters:
         -----------
@@ -98,15 +98,15 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         Returns:
         --------
         np.ndarray
-            Standard deviation for each coordinate dimension
+            Circular standard deviation for each torsion angle in degrees
             
         Examples:
         ---------
-        >>> # Find most flexible atoms (high std)
-        >>> pipeline.analysis.features.coordinates.std()
+        >>> # Compute std for all torsion angles
+        >>> pipeline.analysis.features.torsions.std()
         
-        >>> # Flexibility of backbone atoms
-        >>> pipeline.analysis.features.coordinates.std(feature_selector="backbone")
+        >>> # Find most flexible angles (high std)
+        >>> pipeline.analysis.features.torsions.std(feature_selector="backbone_angles")
         """
         data = AnalysisDataHelper.get_selected_data(
             self._pipeline_data, self._feature_type,
@@ -114,9 +114,9 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         )
         return self._calculator.compute_std(data)
     
-    def min(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
+    def variance(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
         """
-        Compute minimum coordinates for each atom.
+        Compute circular variance for each torsion angle.
         
         Parameters:
         -----------
@@ -128,12 +128,39 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         Returns:
         --------
         np.ndarray
-            Minimum coordinate values for each dimension
+            Circular variance for each torsion angle (0-1 scale)
             
         Examples:
         ---------
-        >>> # Find coordinate bounds (minimum)
-        >>> pipeline.analysis.features.coordinates.min()
+        >>> # Compute variance for all torsion angles
+        >>> pipeline.analysis.features.torsions.variance()
+        """
+        data = AnalysisDataHelper.get_selected_data(
+            self._pipeline_data, self._feature_type,
+            feature_selector, traj_selection
+        )
+        return self._calculator.compute_variance(data)
+    
+    def min(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
+        """
+        Compute minimum angle for each torsion.
+        
+        Parameters:
+        -----------
+        feature_selector : str, optional
+            Name of feature selector for column selection
+        traj_selection : str, int, list, optional
+            Trajectory selection criteria for row selection
+            
+        Returns:
+        --------
+        np.ndarray
+            Minimum angle for each torsion
+            
+        Examples:
+        ---------
+        >>> # Find minimum angles observed
+        >>> pipeline.analysis.features.torsions.min()
         """
         data = AnalysisDataHelper.get_selected_data(
             self._pipeline_data, self._feature_type,
@@ -143,7 +170,7 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
     
     def max(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
         """
-        Compute maximum coordinates for each atom.
+        Compute maximum angle for each torsion.
         
         Parameters:
         -----------
@@ -155,12 +182,12 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         Returns:
         --------
         np.ndarray
-            Maximum coordinate values for each dimension
+            Maximum angle for each torsion
             
         Examples:
         ---------
-        >>> # Find coordinate bounds (maximum)
-        >>> pipeline.analysis.features.coordinates.max()
+        >>> # Find maximum angles observed
+        >>> pipeline.analysis.features.torsions.max()
         """
         data = AnalysisDataHelper.get_selected_data(
             self._pipeline_data, self._feature_type,
@@ -168,90 +195,9 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         )
         return self._calculator.compute_max(data)
     
-    def median(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
-        """
-        Compute median coordinates for each atom.
-        
-        Parameters:
-        -----------
-        feature_selector : str, optional
-            Name of feature selector for column selection
-        traj_selection : str, int, list, optional
-            Trajectory selection criteria for row selection
-            
-        Returns:
-        --------
-        np.ndarray
-            Median coordinates for each atom
-            
-        Examples:
-        ---------
-        >>> # Robust average structure (median)
-        >>> pipeline.analysis.features.coordinates.median()
-        """
-        data = AnalysisDataHelper.get_selected_data(
-            self._pipeline_data, self._feature_type,
-            feature_selector, traj_selection
-        )
-        return self._calculator.compute_median(data)
-    
-    def variance(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
-        """
-        Compute variance of coordinates for each atom.
-        
-        Parameters:
-        -----------
-        feature_selector : str, optional
-            Name of feature selector for column selection
-        traj_selection : str, int, list, optional
-            Trajectory selection criteria for row selection
-            
-        Returns:
-        --------
-        np.ndarray
-            Variance for each coordinate dimension
-            
-        Examples:
-        ---------
-        >>> # Coordinate variance per atom
-        >>> pipeline.analysis.features.coordinates.variance()
-        """
-        data = AnalysisDataHelper.get_selected_data(
-            self._pipeline_data, self._feature_type,
-            feature_selector, traj_selection
-        )
-        return self._calculator.compute_variance(data)
-    
-    def range(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
-        """
-        Compute coordinate range for each atom.
-        
-        Parameters:
-        -----------
-        feature_selector : str, optional
-            Name of feature selector for column selection
-        traj_selection : str, int, list, optional
-            Trajectory selection criteria for row selection
-            
-        Returns:
-        --------
-        np.ndarray
-            Coordinate range (max - min) for each dimension
-            
-        Examples:
-        ---------
-        >>> # Find atoms with largest coordinate changes
-        >>> pipeline.analysis.features.coordinates.range()
-        """
-        data = AnalysisDataHelper.get_selected_data(
-            self._pipeline_data, self._feature_type,
-            feature_selector, traj_selection
-        )
-        return self._calculator.compute_range(data)
-    
     def mad(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
         """
-        Compute median absolute deviation of coordinates for each atom.
+        Compute median absolute deviation for each torsion angle.
         
         Parameters:
         -----------
@@ -263,12 +209,12 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         Returns:
         --------
         np.ndarray
-            Median absolute deviation for each coordinate dimension
+            Median absolute deviation for each torsion angle
             
         Examples:
         ---------
-        >>> # Robust measure of coordinate variability
-        >>> pipeline.analysis.features.coordinates.mad()
+        >>> # Robust measure of angle variability
+        >>> pipeline.analysis.features.torsions.mad()
         """
         data = AnalysisDataHelper.get_selected_data(
             self._pipeline_data, self._feature_type,
@@ -276,9 +222,9 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         )
         return self._calculator.compute_mad(data)
     
-    def cv(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
+    def range(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
         """
-        Compute coefficient of variation for each coordinate dimension.
+        Compute angular range for each torsion considering periodicity.
         
         Parameters:
         -----------
@@ -290,12 +236,39 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         Returns:
         --------
         np.ndarray
-            Coefficient of variation for each coordinate dimension
+            Angular range for each torsion (0-180 degrees)
             
         Examples:
         ---------
-        >>> # Find most variable coordinates (high CV)
-        >>> pipeline.analysis.features.coordinates.cv()
+        >>> # Find angular range with periodic boundary handling
+        >>> pipeline.analysis.features.torsions.range()
+        """
+        data = AnalysisDataHelper.get_selected_data(
+            self._pipeline_data, self._feature_type,
+            feature_selector, traj_selection
+        )
+        return self._calculator.compute_range(data)
+    
+    def cv(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
+        """
+        Compute coefficient of variation for each torsion angle.
+        
+        Parameters:
+        -----------
+        feature_selector : str, optional
+            Name of feature selector for column selection
+        traj_selection : str, int, list, optional
+            Trajectory selection criteria for row selection
+            
+        Returns:
+        --------
+        np.ndarray
+            Coefficient of variation for each torsion angle
+            
+        Examples:
+        ---------
+        >>> # Find most variable torsions (high CV)
+        >>> pipeline.analysis.features.torsions.cv()
         """
         data = AnalysisDataHelper.get_selected_data(
             self._pipeline_data, self._feature_type,
@@ -303,11 +276,11 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         )
         return self._calculator.compute_cv(data)
     
-    # === PER-FRAME ANALYSIS METHODS ===
+    # === PER-FRAME METHODS (per time step) ===
     
-    def coordinates_per_frame_mean(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
+    def mean_per_frame(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
         """
-        Compute mean coordinates per frame.
+        Compute circular mean angle per frame across all torsions.
         
         Parameters:
         -----------
@@ -319,22 +292,22 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         Returns:
         --------
         np.ndarray
-            Mean coordinate across all coordinates for each frame with shape (n_frames,)
+            Circular mean angle per frame in degrees
             
         Examples:
         ---------
-        >>> # Track average coordinate values over trajectory
-        >>> pipeline.analysis.features.coordinates.coordinates_per_frame_mean()
+        >>> # Overall conformational state per frame
+        >>> pipeline.analysis.features.torsions.mean_per_frame()
         """
         data = AnalysisDataHelper.get_selected_data(
             self._pipeline_data, self._feature_type,
             feature_selector, traj_selection
         )
-        return self._calculator.coordinates_per_frame_mean(data)
+        return self._calculator.compute_mean_per_frame(data)
     
-    def coordinates_per_frame_std(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
+    def std_per_frame(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
         """
-        Compute standard deviation of coordinates per frame.
+        Compute circular standard deviation per frame across all torsions.
         
         Parameters:
         -----------
@@ -346,22 +319,22 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         Returns:
         --------
         np.ndarray
-            Standard deviation across all coordinates for each frame with shape (n_frames,)
+            Circular standard deviation per frame in degrees
             
         Examples:
         ---------
-        >>> # Track coordinate variability over trajectory
-        >>> pipeline.analysis.features.coordinates.coordinates_per_frame_std()
+        >>> # Conformational disorder per frame
+        >>> pipeline.analysis.features.torsions.std_per_frame()
         """
         data = AnalysisDataHelper.get_selected_data(
             self._pipeline_data, self._feature_type,
             feature_selector, traj_selection
         )
-        return self._calculator.coordinates_per_frame_std(data)
+        return self._calculator.compute_std_per_frame(data)
     
-    def coordinates_per_frame_min(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
+    def variance_per_frame(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
         """
-        Compute minimum coordinates per frame.
+        Compute circular variance per frame across all torsions.
         
         Parameters:
         -----------
@@ -373,22 +346,22 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         Returns:
         --------
         np.ndarray
-            Minimum coordinate across all coordinates for each frame with shape (n_frames,)
+            Circular variance per frame (0-1 scale)
             
         Examples:
         ---------
-        >>> # Track minimum coordinate values over trajectory
-        >>> pipeline.analysis.features.coordinates.coordinates_per_frame_min()
+        >>> # Conformational variance per frame
+        >>> pipeline.analysis.features.torsions.variance_per_frame()
         """
         data = AnalysisDataHelper.get_selected_data(
             self._pipeline_data, self._feature_type,
             feature_selector, traj_selection
         )
-        return self._calculator.coordinates_per_frame_min(data)
+        return self._calculator.compute_variance_per_frame(data)
     
-    def coordinates_per_frame_max(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
+    def min_per_frame(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
         """
-        Compute maximum coordinates per frame.
+        Compute minimum angle per frame across all torsions.
         
         Parameters:
         -----------
@@ -400,22 +373,22 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         Returns:
         --------
         np.ndarray
-            Maximum coordinate across all coordinates for each frame with shape (n_frames,)
+            Minimum angle per frame
             
         Examples:
         ---------
-        >>> # Track maximum coordinate values over trajectory
-        >>> pipeline.analysis.features.coordinates.coordinates_per_frame_max()
+        >>> # Most negative angle per frame
+        >>> pipeline.analysis.features.torsions.min_per_frame()
         """
         data = AnalysisDataHelper.get_selected_data(
             self._pipeline_data, self._feature_type,
             feature_selector, traj_selection
         )
-        return self._calculator.coordinates_per_frame_max(data)
+        return self._calculator.compute_min_per_frame(data)
     
-    def coordinates_per_frame_range(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
+    def max_per_frame(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
         """
-        Compute range of coordinates per frame.
+        Compute maximum angle per frame across all torsions.
         
         Parameters:
         -----------
@@ -427,22 +400,22 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         Returns:
         --------
         np.ndarray
-            Range (max - min) across all coordinates for each frame with shape (n_frames,)
+            Maximum angle per frame
             
         Examples:
         ---------
-        >>> # Track coordinate spread over trajectory
-        >>> pipeline.analysis.features.coordinates.coordinates_per_frame_range()
+        >>> # Most positive angle per frame
+        >>> pipeline.analysis.features.torsions.max_per_frame()
         """
         data = AnalysisDataHelper.get_selected_data(
             self._pipeline_data, self._feature_type,
             feature_selector, traj_selection
         )
-        return self._calculator.coordinates_per_frame_range(data)
+        return self._calculator.compute_max_per_frame(data)
     
-    def rmsf(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
+    def mad_per_frame(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
         """
-        Compute root mean square fluctuation (RMSF) for each atom.
+        Compute median absolute deviation per frame across all torsions.
         
         Parameters:
         -----------
@@ -454,35 +427,59 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         Returns:
         --------
         np.ndarray
-            RMSF values for each atom
+            Median absolute deviation per frame
             
         Examples:
         ---------
-        >>> # Compute atomic flexibility (RMSF)
-        >>> pipeline.analysis.features.coordinates.rmsf()
-        
-        >>> # RMSF for CA atoms only
-        >>> pipeline.analysis.features.coordinates.rmsf(feature_selector="ca_atoms")
+        >>> # Robust measure of conformational spread per frame
+        >>> pipeline.analysis.features.torsions.mad_per_frame()
         """
         data = AnalysisDataHelper.get_selected_data(
             self._pipeline_data, self._feature_type,
             feature_selector, traj_selection
         )
-        return self._calculator.compute_rmsf(data)
+        return self._calculator.compute_mad_per_frame(data)
+    
+    def range_per_frame(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
+        """
+        Compute angular range per frame across all torsions with periodicity.
+        
+        Parameters:
+        -----------
+        feature_selector : str, optional
+            Name of feature selector for column selection
+        traj_selection : str, int, list, optional
+            Trajectory selection criteria for row selection
+            
+        Returns:
+        --------
+        np.ndarray
+            Angular range per frame
+            
+        Examples:
+        ---------
+        >>> # Conformational spread per frame
+        >>> pipeline.analysis.features.torsions.range_per_frame()
+        """
+        data = AnalysisDataHelper.get_selected_data(
+            self._pipeline_data, self._feature_type,
+            feature_selector, traj_selection
+        )
+        return self._calculator.compute_range_per_frame(data)
     
     # === TRANSITIONS/DYNAMICS METHODS ===
     
-    def transitions_lagtime(self, threshold: float = 1.0, lag_time: int = 10,
+    def transitions_lagtime(self, threshold: float = 30.0, lag_time: int = 1,
                            feature_selector: Optional[str] = None, 
                            traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
         """
-        Compute coordinate transitions with lag time for each atom.
+        Compute transitions with lag time for each torsion angle with periodic boundaries.
         
         Parameters:
         -----------
-        threshold : float, default=1.0
-            Distance threshold for detecting transitions (in Ångstroms)
-        lag_time : int, default=10
+        threshold : float, default=30.0
+            Threshold for detecting transitions (in degrees)
+        lag_time : int, default=1
             Number of frames to look ahead
         feature_selector : str, optional
             Name of feature selector for column selection
@@ -492,16 +489,16 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         Returns:
         --------
         np.ndarray
-            Transition counts per atom
+            Transition counts per torsion angle
             
         Examples:
         ---------
-        >>> # Find dynamic atoms with 1.0 Å threshold
-        >>> pipeline.analysis.features.coordinates.transitions_lagtime(threshold=1.0)
+        >>> # Find dynamic torsions with 30° threshold
+        >>> pipeline.analysis.features.torsions.transitions_lagtime(threshold=30.0)
         
         >>> # Slower dynamics with longer lag time
-        >>> pipeline.analysis.features.coordinates.transitions_lagtime(
-        ...     threshold=2.0, lag_time=50
+        >>> pipeline.analysis.features.torsions.transitions_lagtime(
+        ...     threshold=45.0, lag_time=10
         ... )
         """
         data = AnalysisDataHelper.get_selected_data(
@@ -510,16 +507,16 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         )
         return self._calculator.compute_transitions_lagtime(data, threshold, lag_time)
     
-    def transitions_window(self, threshold: float = 1.0, window_size: int = 10,
+    def transitions_window(self, threshold: float = 30.0, window_size: int = 10,
                           feature_selector: Optional[str] = None, 
                           traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
         """
-        Compute coordinate transitions within sliding window for each atom.
+        Compute transitions within sliding window for each torsion angle with periodic boundaries.
         
         Parameters:
         -----------
-        threshold : float, default=1.0
-            Distance threshold for detecting transitions (in Ångstroms)
+        threshold : float, default=30.0
+            Threshold for detecting transitions (in degrees)
         window_size : int, default=10
             Size of sliding window
         feature_selector : str, optional
@@ -530,13 +527,13 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         Returns:
         --------
         np.ndarray
-            Transition counts per atom
+            Transition counts per torsion angle
             
         Examples:
         ---------
         >>> # Window-based transition detection
-        >>> pipeline.analysis.features.coordinates.transitions_window(
-        ...     threshold=1.0, window_size=10
+        >>> pipeline.analysis.features.torsions.transitions_window(
+        ...     threshold=30.0, window_size=10
         ... )
         """
         data = AnalysisDataHelper.get_selected_data(
@@ -545,18 +542,20 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         )
         return self._calculator.compute_transitions_window(data, threshold, window_size)
     
-    def stability(self, threshold: float = 1.0, window_size: int = 10,
+    def stability(self, threshold: float = 30.0, window_size: int = 10, mode: str = "lagtime",
                  feature_selector: Optional[str] = None, 
                  traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
         """
-        Compute coordinate stability (inverse of transition rate) for each atom.
+        Compute stability (inverse of transition rate) for each torsion angle with periodic boundaries.
         
         Parameters:
         -----------
-        threshold : float, default=1.0
-            Distance threshold for stability detection (in Ångstroms)
+        threshold : float, default=30.0
+            Threshold for stability detection (in degrees)
         window_size : int, default=10
             Window size for calculation
+        mode : str, default='lagtime'
+            Calculation mode ('lagtime' or 'window')
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
@@ -565,30 +564,65 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         Returns:
         --------
         np.ndarray
-            Stability values per atom (0=unstable, 1=stable)
+            Stability values per torsion angle (0=unstable, 1=stable)
             
         Examples:
         ---------
-        >>> # Find most stable atoms
-        >>> pipeline.analysis.features.coordinates.stability(
-        ...     threshold=1.0, window_size=10
+        >>> # Find most stable torsions
+        >>> pipeline.analysis.features.torsions.stability(
+        ...     threshold=30.0, window_size=10, mode='window'
         ... )
         """
         data = AnalysisDataHelper.get_selected_data(
             self._pipeline_data, self._feature_type,
             feature_selector, traj_selection
         )
-        return self._calculator.compute_stability(data, threshold, window_size)
+        return self._calculator.compute_stability(data, threshold, window_size, mode)
     
     # === COMPARISON METHODS ===
     
-    def differences(self, feature_selector2: Optional[str] = None, 
-                   traj_selection2: Optional[Union[str, int, List]] = None,
-                   preprocessing_func: Optional[Callable] = None,
+    def differences(self, frame_1: int = 0, frame_2: int = -1,
                    feature_selector: Optional[str] = None, 
                    traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
         """
-        Compute differences between two coordinate datasets.
+        Compute angle differences between two frames with periodic boundary handling.
+        
+        Parameters:
+        -----------
+        frame_1 : int, default=0
+            First frame index
+        frame_2 : int, default=-1
+            Second frame index (-1 for last frame)
+        feature_selector : str, optional
+            Name of feature selector for column selection
+        traj_selection : str, int, list, optional
+            Trajectory selection criteria for row selection
+            
+        Returns:
+        --------
+        np.ndarray
+            Angle differences between frames with proper periodic handling
+            
+        Examples:
+        ---------
+        >>> # Compare first and last frames
+        >>> pipeline.analysis.features.torsions.differences(frame_1=0, frame_2=-1)
+        
+        >>> # Compare specific frames
+        >>> pipeline.analysis.features.torsions.differences(frame_1=100, frame_2=200)
+        """
+        data = AnalysisDataHelper.get_selected_data(
+            self._pipeline_data, self._feature_type,
+            feature_selector, traj_selection
+        )
+        return self._calculator.compute_differences(data, frame_1, frame_2)
+    
+    def differences_mean(self, feature_selector2: Optional[str] = None, 
+                        traj_selection2: Optional[Union[str, int, List]] = None,
+                        feature_selector: Optional[str] = None, 
+                        traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
+        """
+        Compute differences between circular means of two datasets.
         
         Parameters:
         -----------
@@ -596,8 +630,6 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
             Second feature selector for comparison
         traj_selection2 : str, int, list, optional
             Second trajectory selection for comparison
-        preprocessing_func : callable, optional
-            Function to preprocess data before comparison
         feature_selector : str, optional
             First feature selector for column selection
         traj_selection : str, int, list, optional
@@ -606,21 +638,14 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         Returns:
         --------
         np.ndarray
-            Coordinate differences between datasets
+            Circular mean angle differences between datasets
             
         Examples:
         ---------
-        >>> # Compare structures between conditions
-        >>> pipeline.analysis.features.coordinates.differences(
+        >>> # Compare mean conformations between conditions
+        >>> pipeline.analysis.features.torsions.differences_mean(
         ...     traj_selection=[0, 1],      # Native state
         ...     traj_selection2=[2, 3]      # Denatured state
-        ... )
-        
-        >>> # Compare different atom selections
-        >>> pipeline.analysis.features.coordinates.differences(
-        ...     feature_selector="ca_atoms",
-        ...     feature_selector2="ca_atoms",
-        ...     preprocessing_func=lambda x: np.mean(x, axis=0)  # Compare mean structures
         ... )
         """
         data1 = AnalysisDataHelper.get_selected_data(
@@ -631,5 +656,5 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
             self._pipeline_data, self._feature_type,
             feature_selector2, traj_selection2
         )
-        return self._calculator.compute_differences(data1, data2, preprocessing_func)
+        return self._calculator.compute_differences_mean(data1, data2)
     

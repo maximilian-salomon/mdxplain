@@ -27,12 +27,12 @@ if TYPE_CHECKING:
     from ..managers.feature_manager import FeatureManager
     from ...pipeline.entities.pipeline_data import PipelineData
 
-from ..feature_type.distances.distances_reduce_service import DistancesReduceService
-from ..feature_type.contacts.contacts_reduce_service import ContactsReduceService
-from ..feature_type.torsions.torsions_reduce_service import TorsionsReduceService
-from ..feature_type.dssp.dssp_reduce_service import DSSPReduceService
-from ..feature_type.sasa.sasa_reduce_service import SASAReduceService
-from ..feature_type.coordinates.coordinates_reduce_service import CoordinatesReduceService
+from ..feature_type.distances.services.distances_reduce_service import DistancesReduceService
+from ..feature_type.contacts.services.contacts_reduce_service import ContactsReduceService
+from ..feature_type.torsions.services.torsions_reduce_service import TorsionsReduceService
+from ..feature_type.dssp.services.dssp_reduce_service import DSSPReduceService
+from ..feature_type.sasa.services.sasa_reduce_service import SASAReduceService
+from ..feature_type.coordinates.services.coordinates_reduce_service import CoordinatesReduceService
 
 
 class FeatureReduceService:
