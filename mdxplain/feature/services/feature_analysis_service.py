@@ -37,11 +37,11 @@ from ..feature_type.coordinates.coordinates_analysis_service import CoordinatesA
 
 class FeatureAnalysisService:
     """Main service for accessing analysis operations on feature types."""
-    
+
     def __init__(self, pipeline_data: PipelineData) -> None:
         """
         Initialize feature analysis service.
-        
+
         Parameters:
         -----------
         pipeline_data : PipelineData

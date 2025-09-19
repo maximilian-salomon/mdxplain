@@ -27,16 +27,19 @@ feature data matrices from computed features.
 """
 from __future__ import annotations
 
-from typing import List, Union, Dict, Any, Tuple, TYPE_CHECKING
+from typing import List, Union, Dict, Any, Tuple, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ...pipeline.entities.pipeline_data import PipelineData
+    from ...feature.services.feature_selector_add_service import FeatureSelectorAddService
 
 from ...feature.entities.feature_data import FeatureData
 from ..entities.feature_selector_data import FeatureSelectorData
 from ..helpers.feature_selector_parse_core_helper import FeatureSelectorParseCoreHelper
 from ..helpers.common_denominator_helper import CommonDenominatorHelper
+from ..helpers.post_selection_reduction_helper import PostSelectionReductionHelper
 from ...utils.data_utils import DataUtils
+from ...feature.services.feature_selector_add_service import FeatureSelectorAddService
 
 
 class FeatureSelectorManager:
@@ -52,16 +55,27 @@ class FeatureSelectorManager:
     methods to create, configure, and apply them.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, use_memmap: bool = False, chunk_size: int = 2000, cache_dir: str = "./cache") -> None:
         """
         Initialize feature selector manager.
+
+        Parameters:
+        -----------
+        use_memmap : bool, default=False
+            Whether to use memory mapping for large datasets
+        chunk_size : int, default=2000
+            Chunk size for processing large datasets
+        cache_dir : str, default="./cache"
+            Directory for caching temporary files
 
         Returns:
         --------
         None
-            Initializes FeatureSelectorManager with empty configuration
+            Initializes FeatureSelectorManager with configuration parameters
         """
-        pass
+        self.use_memmap = use_memmap
+        self.chunk_size = chunk_size
+        self.cache_dir = cache_dir
 
     def create(self, pipeline_data: PipelineData, name: str) -> None:
         """
@@ -115,7 +129,45 @@ class FeatureSelectorManager:
         pipeline_data.selected_feature_data[name] = FeatureSelectorData(name)
         print(f"Created feature selector: '{name}'")
 
-    def add(
+    @property
+    def add(self) -> FeatureSelectorAddService:
+        """
+        Property for IDE-supported feature selector add operations.
+
+        Returns a service object that provides feature-type-specific add methods
+        with reduction options. This follows the consistent pattern where the
+        manager is passed explicitly and AutoInjectProxy handles pipeline_data.
+
+        Technical Note on AutoInjectProxy:
+        ----------------------------------
+        The AutoInjectProxy mechanism in PipelineManager automatically intercepts
+        method and property accesses on managers. When this property is accessed:
+
+        1. AutoInjectProxy detects the property access
+        2. Calls this property to get the service class and parameters
+        3. Automatically injects pipeline_data as the second parameter
+        4. Returns FeatureSelectorAddService(self, pipeline_data) to the user
+
+        This design provides:
+        - Clean API without users needing to pass pipeline_data
+        - Proper type hints for IDE autocomplete support
+        - Consistent parameter passing across all manager services
+
+        Pattern used: manager explicitly passed, pipeline_data injected by AutoInjectProxy
+
+        Returns:
+        --------
+        FeatureSelectorAddService
+            Service with feature-type properties (distances, contacts, etc.)
+
+        Examples:
+        ---------
+        >>> pipeline.feature_selector.add.distances("test", "res ALA")
+        >>> pipeline.feature_selector.add.distances.with_cv_reduction("test", "res ALA", threshold_min=0.1)
+        """
+        return FeatureSelectorAddService(self, None)  # Manager explicit, pipeline_data injected by AutoInjectProxy
+
+    def add_selection(
         self,
         pipeline_data: PipelineData,
         name: str,
@@ -125,6 +177,7 @@ class FeatureSelectorManager:
         common_denominator: bool = True,
         traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all",
         require_all_partners: bool = False,
+        reduction: Optional[Dict[str, Any]] = None,
     ) -> None:
         """
         Add a feature selection to a named selector configuration.
@@ -140,12 +193,16 @@ class FeatureSelectorManager:
 
         Pipeline mode:
         >>> pipeline = PipelineManager()
-        >>> pipeline.feature_selector.add("analysis", "distances", "res ALA")  # NO pipeline_data
+        >>> pipeline.feature_selector.add_selection("analysis", "distances", "res ALA")  # NO pipeline_data
+        >>> pipeline.feature_selector.add_selection("analysis", "distances", "all",
+        ...     reduction={"metric": "max", "threshold_min": 10.0})
 
         Standalone mode:
         >>> pipeline_data = PipelineData()
         >>> manager = FeatureSelectorManager()
-        >>> manager.add(pipeline_data, "analysis", "distances", "res ALA")  # pipeline_data required
+        >>> manager.add_selection(pipeline_data, "analysis", "distances", "res ALA")  # pipeline_data required
+        >>> manager.add_selection(pipeline_data, "analysis", "distances", "all",
+        ...     reduction={"metric": "mean", "threshold_min": 7.0, "cross_trajectory": False})
 
         Parameters:
         -----------
@@ -171,6 +228,13 @@ class FeatureSelectorManager:
             - "all": all trajectories (default)
         require_all_partners : bool, default=False
             For pairwise features, require all partners to be present in selection
+        reduction : dict, optional
+            Post-selection reduction configuration with keys:
+            - metric : str - Reduction metric (e.g., "max", "min", "mean", "std")
+            - threshold_min : float, optional - Minimum threshold
+            - threshold_max : float, optional - Maximum threshold
+            - cross_trajectory : bool, default=True - Apply common denominator
+            - Additional metric-specific parameters (e.g., transition_threshold)
 
         Returns:
         --------
@@ -195,13 +259,21 @@ class FeatureSelectorManager:
         feature_key = DataUtils.get_type_key(feature_type)
         selector_data = pipeline_data.selected_feature_data[name]
 
-        selector_data.add_selection(feature_key, selection, use_reduced, 
+        # Add the selection with optional reduction config
+        selector_data.add_selection(feature_key, selection, use_reduced,
                                    common_denominator, traj_selection, require_all_partners)
+
+        # Apply reduction config if provided
+        if reduction is not None:
+            # Get the last added selection for this feature type
+            last_selection = selector_data.selections[feature_key][-1]
+            last_selection["reduction"] = reduction
 
         print(
             f"Added to selector '{name}': {feature_key} -> '{selection}' "
             f"(use_reduced={use_reduced}, common_denominator={common_denominator}, "
-            f"traj_selection={traj_selection}, require_all_partners={require_all_partners})"
+            f"traj_selection={traj_selection}, require_all_partners={require_all_partners}"
+            f"{', reduction=' + str(reduction) if reduction else ''})"
         )
 
     def select(self, pipeline_data: PipelineData, name: str, reference_traj: Union[int, str] = None) -> None:
@@ -733,7 +805,20 @@ class FeatureSelectorManager:
             trajectory_results = CommonDenominatorHelper.apply_common_denominator(
                 pipeline_data, feature_key, trajectory_results
             )
-        
+
+        # Apply post-selection reduction if configured
+        if "reduction" in selection_dict:
+            trajectory_results = PostSelectionReductionHelper.apply_reduction(
+                pipeline_data,
+                feature_key,
+                selection_dict,
+                trajectory_results,
+                selected_traj_indices,
+                use_memmap=self.use_memmap,
+                chunk_size=self.chunk_size,
+                cache_dir=self.cache_dir
+            )
+
         return trajectory_results
     
     def _calculate_total_columns(self, selector_data: FeatureSelectorData) -> int:

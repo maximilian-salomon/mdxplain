@@ -153,7 +153,8 @@ class FeatureCrossTrajectoryReductionHelper:
         for _, feature_data in feature_data_dict.items():
             # Create boolean mask from indices for memmap-compatible processing
             mask = np.zeros(len(feature_data.feature_metadata["features"]), dtype=bool)
-            mask[common_indices_array] = True
+            if len(common_indices_array) > 0:
+                mask[common_indices_array] = True
 
             # Use CalculatorComputeHelper for memmap-compatible data extraction
             dynamic_data = CalculatorComputeHelper._extract_dynamic_data(
@@ -165,9 +166,14 @@ class FeatureCrossTrajectoryReductionHelper:
             )
 
             # Create results dictionary compatible with FeatureReductionHelper
+            if len(common_indices_array) > 0:
+                feature_names = feature_data.feature_metadata["features"][common_indices_array]
+            else:
+                feature_names = np.array([])
+
             results = {
                 "dynamic_data": dynamic_data,
-                "feature_names": feature_data.feature_metadata["features"][common_indices_array],
+                "feature_names": feature_names,
                 "n_dynamic": len(common_indices),
                 "total_pairs": len(feature_data.feature_metadata["features"]),
             }
