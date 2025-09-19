@@ -1,7 +1,7 @@
 # mdxplain - A Python toolkit for molecular dynamics trajectory analysis
 #
 # Author: Maximilian Salomon
-# Created with assistance from Cursor IDE (Claude Sonnet 4.0, occasional Claude Sonnet 3.7 and Gemini 2.5 Pro).
+# Created with assistance from Claude Code (Claude Sonnet 4.0) and GitHub Copilot (Claude Sonnet 4.0).
 #
 # Copyright (C) 2025 Maximilian Salomon
 #
@@ -19,12 +19,17 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Torsions feature type for molecular dynamics trajectory analysis.
+Services for contacts feature type.
 
-Computes dihedral torsion angles including backbone angles (phi, psi, omega)
-and side chain angles (chi1-4) with flexible selection and output formats.
+This submodule provides three specialized services for contact features:
+
+- ContactsSelectionService: Manages feature selection with optional post-selection
+  reduction based on contact-specific metrics like frequency, stability, and transitions
+- ContactsReduceService: Provides cross-trajectory reduction methods for
+  contact feature dimensionality reduction
+- ContactsAnalysisService: Offers statistical analysis operations on
+  contact feature data
+
+Each service provides contact-specific methods tailored to the
+characteristics and requirements of binary contact data.
 """
-
-from .torsions import Torsions
-
-__all__ = ["Torsions"]

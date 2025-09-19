@@ -29,11 +29,13 @@ from __future__ import annotations
 from typing import Optional, Union, List, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ....feature_selection.managers.feature_selector_manager import FeatureSelectorManager
-    from ....pipeline.entities.pipeline_data import PipelineData
+    from .....feature_selection.managers.feature_selector_manager import FeatureSelectorManager
+    from .....pipeline.entities.pipeline_data import PipelineData
+
+from ...interfaces.selection_service_base import SelectionServiceBase
 
 
-class ContactsSelectionService:
+class ContactsSelectionService(SelectionServiceBase):
     """
     Service for selecting contacts features with contacts-specific reduction methods.
 
@@ -83,8 +85,8 @@ class ContactsSelectionService:
         >>> service = pipeline.feature_selector.add.contacts
         >>> # Service is now ready to add contact selections
         """
-        self._manager = manager
-        self._pipeline_data = pipeline_data
+        super().__init__(manager, pipeline_data)
+        self._feature_type = "contacts"
 
     def __call__(
         self,
@@ -126,7 +128,7 @@ class ContactsSelectionService:
         self._manager.add_selection(
             self._pipeline_data,
             selector_name,
-            "contacts",
+            self._feature_type,
             selection,
             use_reduced,
             common_denominator,
@@ -323,58 +325,3 @@ class ContactsSelectionService:
             cross_trajectory, extra_params
         )
 
-    def _add_reduction_config(
-        self,
-        selector_name: str,
-        metric: str,
-        threshold_min: Optional[float],
-        threshold_max: Optional[float],
-        cross_trajectory: bool = True,
-        extra_params: Optional[dict] = None
-    ) -> None:
-        """
-        Store reduction config in the LAST selection of this type.
-
-        Parameters:
-        -----------
-        selector_name : str
-            Name of the feature selector configuration
-        metric : str
-            Reduction metric name (frequency, stability, transitions)
-        threshold_min : float, optional
-            Minimum threshold value
-        threshold_max : float, optional
-            Maximum threshold value
-        cross_trajectory : bool, default=True
-            Whether to apply cross-trajectory common denominator
-        extra_params : dict, optional
-            Additional metric-specific parameters
-
-        Returns:
-        --------
-        None
-            Stores reduction configuration in pipeline data
-
-        Raises:
-        -------
-        ValueError
-            If no contacts selections exist for the selector
-        """
-        selector_data = self._pipeline_data.selected_feature_data[selector_name]
-
-        if "contacts" not in selector_data.selections:
-            raise ValueError(f"No contacts selections for selector '{selector_name}'")
-
-        last_selection = selector_data.selections["contacts"][-1]
-
-        config = {
-            "metric": metric,
-            "threshold_min": threshold_min,
-            "threshold_max": threshold_max,
-            "cross_trajectory": cross_trajectory
-        }
-
-        if extra_params:
-            config.update(extra_params)
-
-        last_selection["reduction"] = config

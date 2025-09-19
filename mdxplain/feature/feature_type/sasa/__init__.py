@@ -26,6 +26,5 @@ with support for both residue-level and atom-level calculations.
 """
 
 from .sasa import SASA
-from .sasa_reduce_service import SASAReduceService
 
-__all__ = ["SASA", "SASAReduceService"]
+__all__ = ["SASA"]

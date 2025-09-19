@@ -19,37 +19,52 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Service for adding coordinates selections with coordinates-specific reduction methods.
+Service for adding distances selections with distances-specific reduction methods.
 
-This module provides the CoordinatesAddService class that offers methods for
-adding coordinate feature selections with optional post-selection reduction
-based on structural flexibility metrics.
+This module provides the DistancesAddService class that offers methods for
+adding distance feature selections with optional post-selection reduction
+based on statistical metrics from the DistancesReduceService.
 """
 from __future__ import annotations
 from typing import Optional, Union, List, TYPE_CHECKING
 
+from ...interfaces.selection_service_base import SelectionServiceBase
+
 if TYPE_CHECKING:
-    from ....feature_selection.managers.feature_selector_manager import FeatureSelectorManager
-    from ....pipeline.entities.pipeline_data import PipelineData
+    from .....feature_selection.managers.feature_selector_manager import FeatureSelectorManager
+    from .....pipeline.entities.pipeline_data import PipelineData
 
 
-class CoordinatesSelectionService:
+class DistancesSelectionService(SelectionServiceBase):
     """
-    Service for selecting coordinates features with coordinates-specific reduction methods.
+    Service for selecting distances features with distances-specific reduction methods.
 
-    Knows ALL reduction metrics from CoordinatesReduceService:
-    - std, rmsf, cv, variance, range, mad, mean, min, max
+    Knows ALL reduction metrics from DistancesReduceService:
+    - cv, std, variance, range, transitions, min, mad, mean, max
 
-    This service provides methods to add coordinate feature selections with
-    optional post-selection reduction based on structural flexibility metrics.
+    This service provides methods to add distance feature selections with
+    optional post-selection reduction. Each reduction method applies filtering
+    ONLY to the specific selection where it's defined.
+
+    Examples:
+    ---------
+    Basic selection without reduction:
+    >>> service("test", "res ALA")
+
+    With coefficient of variation reduction:
+    >>> service.with_cv_reduction("test", "res ALA", threshold_min=0.1)
+
+    With transitions reduction and custom parameters:
+    >>> service.with_transitions_reduction("test", "res ALA",
+    ...     threshold_min=5, transition_threshold=2.0, window_size=10)
     """
 
     def __init__(self, manager: FeatureSelectorManager, pipeline_data: PipelineData):
         """
-        Initialize coordinates selection service.
+        Initialize distances selection service.
 
-        Creates a service for adding coordinate feature selections with optional
-        post-selection reduction based on structural flexibility metrics.
+        Creates a service for adding distance feature selections with optional
+        post-selection reduction based on statistical metrics.
 
         Parameters:
         -----------
@@ -67,11 +82,11 @@ class CoordinatesSelectionService:
         ---------
         >>> from mdxplain.pipeline.managers.pipeline_manager import PipelineManager
         >>> pipeline = PipelineManager()
-        >>> service = pipeline.feature_selector.add.coordinates
-        >>> # Service is now ready to add coordinate selections
+        >>> service = pipeline.feature_selector.add.distances
+        >>> # Service is now ready to add distance selections
         """
-        self._manager = manager
-        self._pipeline_data = pipeline_data
+        super().__init__(manager, pipeline_data)
+        self._feature_type = "distances"
 
     def __call__(
         self,
@@ -83,147 +98,42 @@ class CoordinatesSelectionService:
         require_all_partners: bool = False,
     ) -> None:
         """
-        Add coordinates selection without reduction.
+        Add distances selection without reduction.
 
         Parameters:
         -----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
-            Selection criteria string
+            Selection criteria string (e.g., "res ALA", "resid 123-140", "7x50-8x50", "all")
         use_reduced : bool, default=False
-            Whether to use reduced data
+            Whether to use reduced data (True) or original data (False)
         common_denominator : bool, default=True
-            Whether to find common features across trajectories
+            Whether to find common features across trajectories in traj_selection
         traj_selection : int, str, list, or "all", default="all"
             Selection of trajectories to process
         require_all_partners : bool, default=False
-            For pairwise features, require all partners present
+            For pairwise features, require all partners to be present in selection
 
         Returns:
         --------
         None
-            Adds coordinates selection to the named selector
+            Adds distances selection to the named selector
+
+        Examples:
+        ---------
+        >>> service("analysis", "res ALA")
+        >>> service("analysis", "resid 120-140", use_reduced=True)
         """
         self._manager.add_selection(
             self._pipeline_data,
             selector_name,
-            "coordinates",
+            self._feature_type,
             selection,
             use_reduced,
             common_denominator,
             traj_selection,
             require_all_partners
-        )
-
-    def with_rmsf_reduction(
-        self,
-        selector_name: str,
-        selection: str = "all",
-        threshold_min: Optional[float] = None,
-        threshold_max: Optional[float] = None,
-        cross_trajectory: bool = True,
-        use_reduced: bool = False,
-        common_denominator: bool = True,
-        traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all",
-        require_all_partners: bool = False,
-    ) -> None:
-        """
-        Add coordinates with RMSF (Root Mean Square Fluctuation) reduction.
-
-        Filters coordinate features based on atomic positional fluctuations.
-        Higher RMSF values indicate more mobile atoms/residues.
-
-        Parameters:
-        -----------
-        selector_name : str
-            Name of the feature selector configuration
-        selection : str, default="all"
-            Selection criteria string
-        threshold_min : float, optional
-            Minimum RMSF threshold (Ångströms)
-        threshold_max : float, optional
-            Maximum RMSF threshold (Ångströms)
-        cross_trajectory : bool, default=True
-            If True, only keep features that pass threshold in ALL trajectories
-        use_reduced : bool, default=False
-            Whether to use reduced data
-        common_denominator : bool, default=True
-            Whether to find common features across trajectories
-        traj_selection : int, str, list, or "all", default="all"
-            Selection of trajectories to process
-        require_all_partners : bool, default=False
-            For pairwise features, require all partners present
-
-        Returns:
-        --------
-        None
-            Adds coordinates selection with RMSF reduction
-
-        Examples:
-        ---------
-        >>> service.with_rmsf_reduction("test", "res ALA", threshold_min=2.0)
-        >>> service.with_rmsf_reduction("test", "mobile_loops", threshold_min=3.0)
-        """
-        self(selector_name, selection, use_reduced, common_denominator,
-             traj_selection, require_all_partners)
-        self._add_reduction_config(
-            selector_name, "rmsf", threshold_min, threshold_max, cross_trajectory
-        )
-
-    def with_std_reduction(
-        self,
-        selector_name: str,
-        selection: str = "all",
-        threshold_min: Optional[float] = None,
-        threshold_max: Optional[float] = None,
-        cross_trajectory: bool = True,
-        use_reduced: bool = False,
-        common_denominator: bool = True,
-        traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all",
-        require_all_partners: bool = False,
-    ) -> None:
-        """
-        Add coordinates with standard deviation reduction.
-
-        Filters coordinate features based on standard deviation of atomic
-        positions. Higher values indicate more mobile atoms/residues.
-
-        Parameters:
-        -----------
-        selector_name : str
-            Name of the feature selector configuration
-        selection : str, default="all"
-            Selection criteria string
-        threshold_min : float, optional
-            Minimum standard deviation threshold (Ångströms)
-        threshold_max : float, optional
-            Maximum standard deviation threshold (Ångströms)
-        cross_trajectory : bool, default=True
-            If True, only keep features that pass threshold in ALL trajectories
-        use_reduced : bool, default=False
-            Whether to use reduced data
-        common_denominator : bool, default=True
-            Whether to find common features across trajectories
-        traj_selection : int, str, list, or "all", default="all"
-            Selection of trajectories to process
-        require_all_partners : bool, default=False
-            For pairwise features, require all partners present
-
-        Returns:
-        --------
-        None
-            Adds coordinates selection with standard deviation reduction
-
-        Examples:
-        ---------
-        >>> service.with_std_reduction("test", "res ALA", threshold_min=1.5)
-        >>> service.with_std_reduction("test", "flexible_regions", threshold_min=2.0)
-        """
-        self(selector_name, selection, use_reduced, common_denominator,
-             traj_selection, require_all_partners)
-        self._add_reduction_config(
-            selector_name, "std", threshold_min, threshold_max, cross_trajectory
         )
 
     def with_cv_reduction(
@@ -239,11 +149,10 @@ class CoordinatesSelectionService:
         require_all_partners: bool = False,
     ) -> None:
         """
-        Add coordinates with CV (coefficient of variation) reduction.
+        Add distances with CV (coefficient of variation) reduction.
 
-        Filters coordinate features based on coefficient of variation (std/mean)
-        of atomic positions. Higher CV values indicate more variable atoms/residues
-        relative to their mean position.
+        Filters distance features based on coefficient of variation (std/mean).
+        Features with CV outside the specified thresholds are removed.
 
         Parameters:
         -----------
@@ -252,9 +161,9 @@ class CoordinatesSelectionService:
         selection : str, default="all"
             Selection criteria string
         threshold_min : float, optional
-            Minimum CV threshold
+            Minimum CV threshold (features with CV below this are removed)
         threshold_max : float, optional
-            Maximum CV threshold
+            Maximum CV threshold (features with CV above this are removed)
         cross_trajectory : bool, default=True
             If True, only keep features that pass threshold in ALL trajectories
         use_reduced : bool, default=False
@@ -269,17 +178,75 @@ class CoordinatesSelectionService:
         Returns:
         --------
         None
-            Adds coordinates selection with CV reduction
+            Adds distances selection with CV reduction
 
         Examples:
         ---------
         >>> service.with_cv_reduction("test", "res ALA", threshold_min=0.1)
-        >>> service.with_cv_reduction("test", "variable_loops", threshold_min=0.2)
+        >>> service.with_cv_reduction("test", "res ALA", threshold_min=0.05, threshold_max=0.8)
+        """
+        # 1. Add selection
+        self(selector_name, selection, use_reduced, common_denominator,
+             traj_selection, require_all_partners)
+
+        # 2. Add reduction config to LAST selection
+        self._add_reduction_config(
+            selector_name, "cv", threshold_min, threshold_max, cross_trajectory
+        )
+
+    def with_std_reduction(
+        self,
+        selector_name: str,
+        selection: str = "all",
+        threshold_min: Optional[float] = None,
+        threshold_max: Optional[float] = None,
+        cross_trajectory: bool = True,
+        use_reduced: bool = False,
+        common_denominator: bool = True,
+        traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all",
+        require_all_partners: bool = False,
+    ) -> None:
+        """
+        Add distances with standard deviation reduction.
+
+        Filters distance features based on standard deviation.
+        Features with standard deviation outside the specified thresholds are removed.
+
+        Parameters:
+        -----------
+        selector_name : str
+            Name of the feature selector configuration
+        selection : str, default="all"
+            Selection criteria string
+        threshold_min : float, optional
+            Minimum standard deviation threshold
+        threshold_max : float, optional
+            Maximum standard deviation threshold
+        cross_trajectory : bool, default=True
+            If True, only keep features that pass threshold in ALL trajectories
+        use_reduced : bool, default=False
+            Whether to use reduced data
+        common_denominator : bool, default=True
+            Whether to find common features across trajectories
+        traj_selection : int, str, list, or "all", default="all"
+            Selection of trajectories to process
+        require_all_partners : bool, default=False
+            For pairwise features, require all partners present
+
+        Returns:
+        --------
+        None
+            Adds distances selection with standard deviation reduction
+
+        Examples:
+        ---------
+        >>> service.with_std_reduction("test", "res ALA", threshold_min=0.5)
+        >>> service.with_std_reduction("test", "backbone", threshold_max=2.0)
         """
         self(selector_name, selection, use_reduced, common_denominator,
              traj_selection, require_all_partners)
         self._add_reduction_config(
-            selector_name, "cv", threshold_min, threshold_max, cross_trajectory
+            selector_name, "std", threshold_min, threshold_max, cross_trajectory
         )
 
     def with_variance_reduction(
@@ -295,11 +262,10 @@ class CoordinatesSelectionService:
         require_all_partners: bool = False,
     ) -> None:
         """
-        Add coordinates with variance reduction.
+        Add distances with variance reduction.
 
-        Filters coordinate features based on variance of atomic positions.
-        Higher variance values indicate more mobile atoms/residues with
-        broader positional distributions.
+        Filters distance features based on variance.
+        Features with variance outside the specified thresholds are removed.
 
         Parameters:
         -----------
@@ -308,9 +274,9 @@ class CoordinatesSelectionService:
         selection : str, default="all"
             Selection criteria string
         threshold_min : float, optional
-            Minimum variance threshold (Ångströms²)
+            Minimum variance threshold
         threshold_max : float, optional
-            Maximum variance threshold (Ångströms²)
+            Maximum variance threshold
         cross_trajectory : bool, default=True
             If True, only keep features that pass threshold in ALL trajectories
         use_reduced : bool, default=False
@@ -325,12 +291,12 @@ class CoordinatesSelectionService:
         Returns:
         --------
         None
-            Adds coordinates selection with variance reduction
+            Adds distances selection with variance reduction
 
         Examples:
         ---------
-        >>> service.with_variance_reduction("test", "res ALA", threshold_min=2.25)
-        >>> service.with_variance_reduction("test", "flexible_regions", threshold_min=4.0)
+        >>> service.with_variance_reduction("test", "res ALA", threshold_min=0.1)
+        >>> service.with_variance_reduction("test", "sidechain", threshold_max=5.0)
         """
         self(selector_name, selection, use_reduced, common_denominator,
              traj_selection, require_all_partners)
@@ -351,11 +317,10 @@ class CoordinatesSelectionService:
         require_all_partners: bool = False,
     ) -> None:
         """
-        Add coordinates with range reduction.
+        Add distances with range reduction.
 
-        Filters coordinate features based on range (max - min) of atomic
-        positions. Higher range values indicate atoms with larger amplitude
-        of motion.
+        Filters distance features based on range (max - min).
+        Features with range outside the specified thresholds are removed.
 
         Parameters:
         -----------
@@ -364,9 +329,9 @@ class CoordinatesSelectionService:
         selection : str, default="all"
             Selection criteria string
         threshold_min : float, optional
-            Minimum range threshold (Ångströms)
+            Minimum range threshold
         threshold_max : float, optional
-            Maximum range threshold (Ångströms)
+            Maximum range threshold
         cross_trajectory : bool, default=True
             If True, only keep features that pass threshold in ALL trajectories
         use_reduced : bool, default=False
@@ -381,17 +346,148 @@ class CoordinatesSelectionService:
         Returns:
         --------
         None
-            Adds coordinates selection with range reduction
+            Adds distances selection with range reduction
 
         Examples:
         ---------
-        >>> service.with_range_reduction("test", "res ALA", threshold_min=3.0)
-        >>> service.with_range_reduction("test", "mobile_loops", threshold_min=5.0)
+        >>> service.with_range_reduction("test", "res ALA", threshold_min=1.0)
+        >>> service.with_range_reduction("test", "flexible_loops", threshold_max=10.0)
         """
         self(selector_name, selection, use_reduced, common_denominator,
              traj_selection, require_all_partners)
         self._add_reduction_config(
             selector_name, "range", threshold_min, threshold_max, cross_trajectory
+        )
+
+    def with_transitions_reduction(
+        self,
+        selector_name: str,
+        selection: str = "all",
+        threshold_min: Optional[float] = None,
+        threshold_max: Optional[float] = None,
+        transition_threshold: float = 2.0,
+        window_size: int = 10,
+        transition_mode: str = 'window',
+        lag_time: int = 1,
+        cross_trajectory: bool = True,
+        use_reduced: bool = False,
+        common_denominator: bool = True,
+        traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all",
+        require_all_partners: bool = False,
+    ) -> None:
+        """
+        Add distances with transitions reduction.
+
+        Filters distance features based on transition frequency or counts.
+        Features with transitions outside the specified thresholds are removed.
+
+        Parameters:
+        -----------
+        selector_name : str
+            Name of the feature selector configuration
+        selection : str, default="all"
+            Selection criteria string
+        threshold_min : float, optional
+            Minimum transitions threshold
+        threshold_max : float, optional
+            Maximum transitions threshold
+        transition_threshold : float, default=2.0
+            Distance change threshold to count as transition (Angstroms)
+        window_size : int, default=10
+            Size of sliding window for transition detection
+        transition_mode : str, default='window'
+            Mode for transition detection ('window', 'direct', 'cumulative')
+        lag_time : int, default=1
+            Lag time for transition detection (frames)
+        cross_trajectory : bool, default=True
+            If True, only keep features that pass threshold in ALL trajectories
+        use_reduced : bool, default=False
+            Whether to use reduced data
+        common_denominator : bool, default=True
+            Whether to find common features across trajectories
+        traj_selection : int, str, list, or "all", default="all"
+            Selection of trajectories to process
+        require_all_partners : bool, default=False
+            For pairwise features, require all partners present
+
+        Returns:
+        --------
+        None
+            Adds distances selection with transitions reduction
+
+        Examples:
+        ---------
+        >>> service.with_transitions_reduction("test", "res ALA", threshold_min=5)
+        >>> service.with_transitions_reduction("test", "binding_site",
+        ...     threshold_min=10, transition_threshold=1.5, window_size=20)
+        """
+        self(selector_name, selection, use_reduced, common_denominator,
+             traj_selection, require_all_partners)
+
+        extra_params = {
+            "transition_threshold": transition_threshold,
+            "window_size": window_size,
+            "transition_mode": transition_mode,
+            "lag_time": lag_time
+        }
+        self._add_reduction_config(
+            selector_name, "transitions", threshold_min, threshold_max,
+            cross_trajectory, extra_params
+        )
+
+    def with_min_reduction(
+        self,
+        selector_name: str,
+        selection: str = "all",
+        threshold_min: Optional[float] = None,
+        threshold_max: Optional[float] = None,
+        cross_trajectory: bool = True,
+        use_reduced: bool = False,
+        common_denominator: bool = True,
+        traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all",
+        require_all_partners: bool = False,
+    ) -> None:
+        """
+        Add distances with minimum value reduction.
+
+        Filters distance features based on minimum values.
+        Features with minimum values outside the specified thresholds are removed.
+
+        Parameters:
+        -----------
+        selector_name : str
+            Name of the feature selector configuration
+        selection : str, default="all"
+            Selection criteria string
+        threshold_min : float, optional
+            Minimum value threshold for minimum distances
+        threshold_max : float, optional
+            Maximum value threshold for minimum distances
+        cross_trajectory : bool, default=True
+            If True, only keep features that pass threshold in ALL trajectories
+        use_reduced : bool, default=False
+            Whether to use reduced data
+        common_denominator : bool, default=True
+            Whether to find common features across trajectories
+        traj_selection : int, str, list, or "all", default="all"
+            Selection of trajectories to process
+        require_all_partners : bool, default=False
+            For pairwise features, require all partners present
+
+        Returns:
+        --------
+        None
+            Adds distances selection with minimum value reduction
+
+        Examples:
+        ---------
+        >>> service.with_min_reduction("test", "res ALA", threshold_min=2.0)
+        >>> service.with_min_reduction("test", "close_contacts", threshold_max=5.0)
+        """
+        self(selector_name, selection, use_reduced, common_denominator,
+             traj_selection, require_all_partners)
+        self._add_reduction_config(
+            selector_name, "min", threshold_min, threshold_max, cross_trajectory
         )
 
     def with_mad_reduction(
@@ -407,11 +503,10 @@ class CoordinatesSelectionService:
         require_all_partners: bool = False,
     ) -> None:
         """
-        Add coordinates with MAD (median absolute deviation) reduction.
+        Add distances with MAD (median absolute deviation) reduction.
 
-        Filters coordinate features based on median absolute deviation of
-        atomic positions. MAD is more robust to outliers than standard
-        deviation while still indicating positional variability.
+        Filters distance features based on median absolute deviation.
+        Features with MAD outside the specified thresholds are removed.
 
         Parameters:
         -----------
@@ -420,9 +515,9 @@ class CoordinatesSelectionService:
         selection : str, default="all"
             Selection criteria string
         threshold_min : float, optional
-            Minimum MAD threshold (Ångströms)
+            Minimum MAD threshold
         threshold_max : float, optional
-            Maximum MAD threshold (Ångströms)
+            Maximum MAD threshold
         cross_trajectory : bool, default=True
             If True, only keep features that pass threshold in ALL trajectories
         use_reduced : bool, default=False
@@ -437,12 +532,12 @@ class CoordinatesSelectionService:
         Returns:
         --------
         None
-            Adds coordinates selection with MAD reduction
+            Adds distances selection with MAD reduction
 
         Examples:
         ---------
-        >>> service.with_mad_reduction("test", "res ALA", threshold_min=1.0)
-        >>> service.with_mad_reduction("test", "robust_flexible", threshold_min=1.5)
+        >>> service.with_mad_reduction("test", "res ALA", threshold_min=0.3)
+        >>> service.with_mad_reduction("test", "dynamic_region", threshold_max=1.5)
         """
         self(selector_name, selection, use_reduced, common_denominator,
              traj_selection, require_all_partners)
@@ -463,11 +558,10 @@ class CoordinatesSelectionService:
         require_all_partners: bool = False,
     ) -> None:
         """
-        Add coordinates with mean reduction.
+        Add distances with mean value reduction.
 
-        Filters coordinate features based on mean position values.
-        This can be used to select atoms based on their average
-        position along specific coordinate axes.
+        Filters distance features based on mean values.
+        Features with mean values outside the specified thresholds are removed.
 
         Parameters:
         -----------
@@ -476,9 +570,9 @@ class CoordinatesSelectionService:
         selection : str, default="all"
             Selection criteria string
         threshold_min : float, optional
-            Minimum mean threshold (Ångströms)
+            Minimum mean value threshold
         threshold_max : float, optional
-            Maximum mean threshold (Ångströms)
+            Maximum mean value threshold
         cross_trajectory : bool, default=True
             If True, only keep features that pass threshold in ALL trajectories
         use_reduced : bool, default=False
@@ -493,73 +587,17 @@ class CoordinatesSelectionService:
         Returns:
         --------
         None
-            Adds coordinates selection with mean reduction
+            Adds distances selection with mean value reduction
 
         Examples:
         ---------
-        >>> service.with_mean_reduction("test", "res ALA", threshold_min=10.0)
-        >>> service.with_mean_reduction("test", "central_atoms", threshold_min=5.0, threshold_max=15.0)
+        >>> service.with_mean_reduction("test", "res ALA", threshold_min=5.0)
+        >>> service.with_mean_reduction("test", "long_range", threshold_max=20.0)
         """
         self(selector_name, selection, use_reduced, common_denominator,
              traj_selection, require_all_partners)
         self._add_reduction_config(
             selector_name, "mean", threshold_min, threshold_max, cross_trajectory
-        )
-
-    def with_min_reduction(
-        self,
-        selector_name: str,
-        selection: str = "all",
-        threshold_min: Optional[float] = None,
-        threshold_max: Optional[float] = None,
-        cross_trajectory: bool = True,
-        use_reduced: bool = False,
-        common_denominator: bool = True,
-        traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all",
-        require_all_partners: bool = False,
-    ) -> None:
-        """
-        Add coordinates with minimum value reduction.
-
-        Filters coordinate features based on minimum position values
-        across the trajectory. This can identify atoms that reach
-        specific minimum positions during dynamics.
-
-        Parameters:
-        -----------
-        selector_name : str
-            Name of the feature selector configuration
-        selection : str, default="all"
-            Selection criteria string
-        threshold_min : float, optional
-            Minimum threshold for minimum values (Ångströms)
-        threshold_max : float, optional
-            Maximum threshold for minimum values (Ångströms)
-        cross_trajectory : bool, default=True
-            If True, only keep features that pass threshold in ALL trajectories
-        use_reduced : bool, default=False
-            Whether to use reduced data
-        common_denominator : bool, default=True
-            Whether to find common features across trajectories
-        traj_selection : int, str, list, or "all", default="all"
-            Selection of trajectories to process
-        require_all_partners : bool, default=False
-            For pairwise features, require all partners present
-
-        Returns:
-        --------
-        None
-            Adds coordinates selection with minimum reduction
-
-        Examples:
-        ---------
-        >>> service.with_min_reduction("test", "res ALA", threshold_min=0.0)
-        >>> service.with_min_reduction("test", "lower_bound", threshold_max=5.0)
-        """
-        self(selector_name, selection, use_reduced, common_denominator,
-             traj_selection, require_all_partners)
-        self._add_reduction_config(
-            selector_name, "min", threshold_min, threshold_max, cross_trajectory
         )
 
     def with_max_reduction(
@@ -575,11 +613,10 @@ class CoordinatesSelectionService:
         require_all_partners: bool = False,
     ) -> None:
         """
-        Add coordinates with maximum value reduction.
+        Add distances with maximum value reduction.
 
-        Filters coordinate features based on maximum position values
-        across the trajectory. This can identify atoms that reach
-        specific maximum positions during dynamics.
+        Filters distance features based on maximum values.
+        Features with maximum values outside the specified thresholds are removed.
 
         Parameters:
         -----------
@@ -588,9 +625,9 @@ class CoordinatesSelectionService:
         selection : str, default="all"
             Selection criteria string
         threshold_min : float, optional
-            Minimum threshold for maximum values (Ångströms)
+            Minimum value threshold for maximum distances
         threshold_max : float, optional
-            Maximum threshold for maximum values (Ångströms)
+            Maximum value threshold for maximum distances
         cross_trajectory : bool, default=True
             If True, only keep features that pass threshold in ALL trajectories
         use_reduced : bool, default=False
@@ -605,12 +642,12 @@ class CoordinatesSelectionService:
         Returns:
         --------
         None
-            Adds coordinates selection with maximum reduction
+            Adds distances selection with maximum value reduction
 
         Examples:
         ---------
-        >>> service.with_max_reduction("test", "res ALA", threshold_min=20.0)
-        >>> service.with_max_reduction("test", "upper_bound", threshold_min=15.0, threshold_max=25.0)
+        >>> service.with_max_reduction("test", "res ALA", threshold_min=10.0)
+        >>> service.with_max_reduction("test", "constrained_bonds", threshold_max=15.0)
         """
         self(selector_name, selection, use_reduced, common_denominator,
              traj_selection, require_all_partners)
@@ -618,135 +655,3 @@ class CoordinatesSelectionService:
             selector_name, "max", threshold_min, threshold_max, cross_trajectory
         )
 
-    def with_transitions_reduction(
-        self,
-        selector_name: str,
-        selection: str = "all",
-        threshold_min: Optional[float] = None,
-        threshold_max: Optional[float] = None,
-        transition_threshold: float = 2.0,
-        window_size: int = 10,
-        transition_mode: str = 'window',
-        lag_time: int = 1,
-        cross_trajectory: bool = True,
-        use_reduced: bool = False,
-        common_denominator: bool = True,
-        traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all",
-        require_all_partners: bool = False,
-    ) -> None:
-        """
-        Add coordinates with transitions reduction.
-
-        Filters coordinate features based on the number of positional
-        transitions. Higher values indicate more dynamic atoms that
-        frequently change their position by more than the threshold.
-
-        Parameters:
-        -----------
-        selector_name : str
-            Name of the feature selector configuration
-        selection : str, default="all"
-            Selection criteria string
-        threshold_min : float, optional
-            Minimum number of transitions
-        threshold_max : float, optional
-            Maximum number of transitions
-        transition_threshold : float, default=2.0
-            Position change threshold (Ångströms) for defining transitions
-        window_size : int, default=10
-            Window size for transition detection
-        transition_mode : str, default='window'
-            Mode for transition calculation ('window' or 'direct')
-        lag_time : int, default=1
-            Lag time for transition detection
-        cross_trajectory : bool, default=True
-            If True, only keep features that pass threshold in ALL trajectories
-        use_reduced : bool, default=False
-            Whether to use reduced data
-        common_denominator : bool, default=True
-            Whether to find common features across trajectories
-        traj_selection : int, str, list, or "all", default="all"
-            Selection of trajectories to process
-        require_all_partners : bool, default=False
-            For pairwise features, require all partners present
-
-        Returns:
-        --------
-        None
-            Adds coordinates selection with transitions reduction
-
-        Examples:
-        ---------
-        >>> service.with_transitions_reduction("test", "res ALA", threshold_min=10)
-        >>> service.with_transitions_reduction("test", "dynamic_loops",
-        ...     threshold_min=20, transition_threshold=3.0, window_size=20)
-        """
-        self(selector_name, selection, use_reduced, common_denominator,
-             traj_selection, require_all_partners)
-
-        extra_params = {
-            "transition_threshold": transition_threshold,
-            "window_size": window_size,
-            "transition_mode": transition_mode,
-            "lag_time": lag_time
-        }
-        self._add_reduction_config(
-            selector_name, "transitions", threshold_min, threshold_max,
-            cross_trajectory, extra_params
-        )
-
-    def _add_reduction_config(
-        self,
-        selector_name: str,
-        metric: str,
-        threshold_min: Optional[float],
-        threshold_max: Optional[float],
-        cross_trajectory: bool = True,
-        extra_params: Optional[dict] = None
-    ) -> None:
-        """
-        Store reduction config in the LAST selection of this type.
-
-        This private method stores the reduction configuration parameters
-        in the most recently added selection of the coordinates feature type.
-        It creates a configuration dictionary with all reduction parameters
-        and attaches it to the selection for later processing.
-
-        Parameters:
-        -----------
-        selector_name : str
-            Name of the feature selector configuration
-        metric : str
-            Statistical metric for reduction (e.g., 'rmsf', 'std', 'max')
-        threshold_min : float, optional
-            Minimum threshold value for the metric
-        threshold_max : float, optional
-            Maximum threshold value for the metric
-        cross_trajectory : bool, default=True
-            Whether to apply reduction across all trajectories
-        extra_params : dict, optional
-            Additional parameters specific to the reduction metric
-
-        Returns:
-        --------
-        None
-            Modifies the last coordinates selection in-place
-        """
-        selector_data = self._pipeline_data.selected_feature_data[selector_name]
-
-        if "coordinates" not in selector_data.selections:
-            raise ValueError(f"No coordinates selections for selector '{selector_name}'")
-
-        last_selection = selector_data.selections["coordinates"][-1]
-
-        config = {
-            "metric": metric,
-            "threshold_min": threshold_min,
-            "threshold_max": threshold_max,
-            "cross_trajectory": cross_trajectory
-        }
-
-        if extra_params:
-            config.update(extra_params)
-
-        last_selection["reduction"] = config

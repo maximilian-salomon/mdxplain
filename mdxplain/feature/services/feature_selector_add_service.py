@@ -28,13 +28,12 @@ Each property returns a type-specific service with reduction methods.
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-# ALLE Imports am Anfang! Keine lazy imports!
-from ..feature_type.distances.distances_selection_service import DistancesSelectionService
-from ..feature_type.contacts.contacts_selection_service import ContactsSelectionService
-from ..feature_type.coordinates.coordinates_selection_service import CoordinatesSelectionService
-from ..feature_type.torsions.torsions_selection_service import TorsionsSelectionService
-from ..feature_type.dssp.dssp_selection_service import DsspSelectionService
-from ..feature_type.sasa.sasa_selection_service import SasaSelectionService
+from ..feature_type.distances.services.distances_selection_service import DistancesSelectionService
+from ..feature_type.contacts.services.contacts_selection_service import ContactsSelectionService
+from ..feature_type.coordinates.services.coordinates_selection_service import CoordinatesSelectionService
+from ..feature_type.torsions.services.torsions_selection_service import TorsionsSelectionService
+from ..feature_type.dssp.services.dssp_selection_service import DSSPSelectionService
+from ..feature_type.sasa.services.sasa_selection_service import SasaSelectionService
 
 if TYPE_CHECKING:
     from ...feature_selection.managers.feature_selector_manager import FeatureSelectorManager
@@ -207,7 +206,7 @@ class FeatureSelectorAddService:
         return TorsionsSelectionService(self._manager, self._pipeline_data)
 
     @property
-    def dssp(self) -> DsspSelectionService:
+    def dssp(self) -> DSSPSelectionService:
         """
         Get DSSP add service with DSSP-specific reduction methods.
 
@@ -231,7 +230,7 @@ class FeatureSelectorAddService:
         >>> pipeline.feature_selector.add.dssp("test", "resid 50-100")
         >>> pipeline.feature_selector.add.dssp.with_stability_reduction("test", "resid 50-100", threshold_min=0.7)
         """
-        return DsspSelectionService(self._manager, self._pipeline_data)
+        return DSSPSelectionService(self._manager, self._pipeline_data)
 
     @property
     def sasa(self) -> SasaSelectionService:

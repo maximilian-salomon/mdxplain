@@ -1,7 +1,7 @@
 # mdxplain - A Python toolkit for molecular dynamics trajectory analysis
 #
 # Author: Maximilian Salomon
-# Created with assistance from Cursor IDE (Claude Sonnet 4.0, occasional Claude Sonnet 3.7 and Gemini 2.5 Pro).
+# Created with assistance from Claude Code (Claude Sonnet 4.0) and GitHub Copilot (Claude Sonnet 4.0).
 #
 # Copyright (C) 2025 Maximilian Salomon
 #
@@ -19,12 +19,17 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Torsions feature type for molecular dynamics trajectory analysis.
+Services for coordinates feature type.
 
-Computes dihedral torsion angles including backbone angles (phi, psi, omega)
-and side chain angles (chi1-4) with flexible selection and output formats.
+This submodule provides three specialized services for coordinate features:
+
+- CoordinatesSelectionService: Manages feature selection with optional post-selection
+  reduction based on structural flexibility metrics like RMSF, standard deviation, and variance
+- CoordinatesReduceService: Provides cross-trajectory reduction methods for
+  coordinate feature dimensionality reduction
+- CoordinatesAnalysisService: Offers statistical analysis operations on
+  coordinate feature data
+
+Each service provides coordinate-specific methods tailored to the
+characteristics and requirements of 3D coordinate data.
 """
-
-from .torsions import Torsions
-
-__all__ = ["Torsions"]

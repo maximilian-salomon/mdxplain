@@ -24,13 +24,14 @@ from __future__ import annotations
 from typing import Union, List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ...managers.feature_manager import FeatureManager
-    from ....pipeline.entities.pipeline_data import PipelineData
+    from ....managers.feature_manager import FeatureManager
+    from .....pipeline.entities.pipeline_data import PipelineData
 
-from . import Contacts
+from ..contacts import Contacts
+from ...interfaces.reduce_service_base import ReduceServiceBase
 
 
-class ContactsReduceService:
+class ContactsReduceService(ReduceServiceBase):
     """
     Service for contact-specific reduce metrics.
     
@@ -53,8 +54,8 @@ class ContactsReduceService:
         --------
         None
         """
-        self._manager = manager
-        self._pipeline_data = pipeline_data
+        super().__init__(manager, pipeline_data)
+        self._feature_type = "contacts"
     
     def frequency(
         self,
