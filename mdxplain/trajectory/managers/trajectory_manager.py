@@ -1291,3 +1291,131 @@ class TrajectoryManager:
         
         print(f"Created {len(new_trajectories)} trajectories from DataSelector '{data_selector}'")
         return new_trajectories
+
+    def superpose(
+        self,
+        pipeline_data: PipelineData,
+        reference_traj: int = 0,
+        reference_frame: int = 0,
+        traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all",
+        atom_selection: str = "backbone",
+    ) -> None:
+        """
+        Superpose selected trajectories to a reference frame (always in-place).
+
+        This method aligns all frames of selected trajectories to a specific reference
+        frame using MDTraj's superpose functionality. The operation is performed
+        in-place, modifying the original trajectories. For memory-mapped trajectories,
+        the alignment is performed chunk-wise to manage memory usage efficiently.
+
+        Warning:
+        --------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.trajectory.superpose(reference_traj=0, reference_frame=0)  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = TrajectoryManager()
+        >>> manager.superpose(pipeline_data, reference_traj=0, reference_frame=0)  # pipeline_data required
+
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data container with trajectory data
+        reference_traj : int, default=0
+            Index of trajectory containing the reference frame
+        reference_frame : int, default=0
+            Frame index within reference trajectory to use as alignment reference
+        traj_selection : int, str, list, or "all", default="all"
+            Selection of trajectories to align:
+            - int: single trajectory by index
+            - str: trajectory name, tag, or pattern (e.g., "tag:system_A", "traj_*")
+            - list: multiple indices/names/tags
+            - "all": all loaded trajectories
+        atom_selection : str, default="backbone"
+            MDTraj selection string for atoms to use in alignment calculation.
+            Common selections: "backbone", "name CA", "protein", "resid 10 to 50"
+            See: https://mdtraj.org/1.9.4/atom_selection.html
+
+        Returns:
+        --------
+        None
+            Modifies trajectories in-place. No return value.
+
+        Examples:
+        ---------
+        Basic alignment:
+        >>> pipeline.trajectory.superpose()  # Align all to first frame of first trajectory
+
+        Specific reference:
+        >>> pipeline.trajectory.superpose(
+        ...     reference_traj=2,
+        ...     reference_frame=100,
+        ...     atom_selection="name CA"
+        ... )
+
+        Selective alignment:
+        >>> pipeline.trajectory.superpose(
+        ...     traj_selection=[0, 1, 3],
+        ...     atom_selection="backbone and resid 50:150"
+        ... )
+
+        Tag-based selection:
+        >>> pipeline.trajectory.superpose(
+        ...     traj_selection="tag:wild_type",
+        ...     reference_traj=0,
+        ...     reference_frame=0
+        ... )
+
+        Notes:
+        -----
+        - Dask trajectories (use_memmap=True) handle memory management automatically
+        - The reference trajectory itself is also aligned to the reference frame
+        - All trajectories must have compatible topology for alignment
+        - Large trajectories may take significant time to align
+
+        Raises:
+        ------
+        ValueError
+            If no trajectories are loaded
+        ValueError
+            If reference_traj index is invalid
+        ValueError
+            If reference_frame index is invalid for reference trajectory
+        ValueError
+            If traj_selection contains invalid indices/names
+        ValueError
+            If atom_selection produces no atoms or incompatible atom counts
+        """
+        # Validate all parameters using TrajectoryValidationHelper
+        reference_trajectory, traj_indices, ref_frame, ref_atom_indices = (
+            TrajectoryValidationHelper.validate_superpose_parameters(
+                pipeline_data, reference_traj, reference_frame, atom_selection, traj_selection
+            )
+        )
+
+        print(f"Superposing {len(traj_indices)} trajectories to reference frame "
+              f"(traj {reference_traj}, frame {reference_frame}) using {len(ref_atom_indices)} atoms")
+
+        # Align each selected trajectory
+        for idx in traj_indices:
+            trajectory = pipeline_data.trajectory_data.trajectories[idx]
+
+            print(f"  Aligning trajectory {idx} ({trajectory.n_frames} frames)...")
+
+            # Validate atom selection for this trajectory
+            traj_atom_indices = trajectory.topology.select(atom_selection)
+            if len(traj_atom_indices) != len(ref_atom_indices):
+                raise ValueError(f"Atom count mismatch: trajectory {idx} has {len(traj_atom_indices)} atoms "
+                                f"but reference has {len(ref_atom_indices)} atoms for selection '{atom_selection}'")
+
+            # Standard in-memory trajectory: direct alignment
+            trajectory.superpose(reference=ref_frame, atom_indices=traj_atom_indices)
+
+            print(f"    ✓ Trajectory {idx} aligned successfully")
+
+        print(f"Superposition completed successfully for {len(traj_indices)} trajectories")
