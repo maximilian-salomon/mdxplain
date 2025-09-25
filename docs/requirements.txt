@@ -1,0 +1,11 @@
+numpy>=2.2.1
+scipy>=1.14.1
+mdtraj>=1.10.2
+mdciao>=1.0.0
+matplotlib>=3.10.0
+scikit-learn>=1.6.0
+tqdm>=4.67.1
+zarr>=3.0.0
+dask[array]>=2024.1.0
+hdbscan>=0.8.33
+numba
