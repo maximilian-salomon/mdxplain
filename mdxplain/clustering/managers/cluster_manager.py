@@ -795,7 +795,7 @@ class ClusterManager:
 
         print("=== ClusteringData Information ===")
         data_names = list(pipeline_data.cluster_data.keys())
-        print(f"ClusteringData Names: {len(data_names)} ({", ".join(data_names)})")
+        print(f"ClusteringData Names: {len(data_names)} ({', '.join(data_names)})")
         
         for name, data in pipeline_data.cluster_data.items():
             print(f"\n--- {name} ---")

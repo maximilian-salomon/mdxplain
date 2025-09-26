@@ -18,13 +18,20 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""High-level analysis entry points for mdxplain.
+"""Support helpers for structure analysis.
 
-The package exposes the central :class:`AnalysisManager` coordinating feature,
-structure, and future analysis types. Subpackages provide the concrete services
-and helper utilities for each analysis domain.
+The helper subpackage contains streaming utilities, reference-structure
+builders, and memory estimation helpers used by the structure analysis
+services and calculators.
 """
 
-from .managers.analysis_manager import AnalysisManager
+from .reference_structure_helper import ReferenceStructureHelper
+from .structure_calculation_helper import StructureCalculationHelper
+from .residue_aggregation_helper import aggregate_residues_jit, AGGREGATOR_CODES
 
-__all__ = ["AnalysisManager"]
+__all__ = [
+    "ReferenceStructureHelper",
+    "StructureCalculationHelper",
+    "aggregate_residues_jit",
+    "AGGREGATOR_CODES",
+]
