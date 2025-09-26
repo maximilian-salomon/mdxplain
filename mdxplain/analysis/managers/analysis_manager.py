@@ -40,13 +40,9 @@ class AnalysisManager:
     >>> pipeline.analysis.features.distances.mean()
     >>> pipeline.analysis.features.contacts.std()
 
-    >>> # Future manager methods (AutoInject)
-    >>> pipeline.analysis.compare_features("distances", [0, 1], [2, 3])
-
     >>> # Future extensions
     >>> pipeline.analysis.structure.rmsd(reference_traj=0, reference_frame=0)
     >>> pipeline.analysis.structure.rmsd.median.to_reference()
-    >>> pipeline.analysis.importance.feature_ranking()
     """
 
     def __init__(self) -> None:
