@@ -23,6 +23,7 @@
 from __future__ import annotations
 
 from ...feature.services.feature_analysis_service import FeatureAnalysisService
+from ..structure import StructureAnalysisService
 
 
 class AnalysisManager:
@@ -43,31 +44,59 @@ class AnalysisManager:
     >>> pipeline.analysis.compare_features("distances", [0, 1], [2, 3])
 
     >>> # Future extensions
-    >>> pipeline.analysis.structure.rmsd()
+    >>> pipeline.analysis.structure.rmsd(reference_traj=0, reference_frame=0)
+    >>> pipeline.analysis.structure.rmsd.median.to_reference()
     >>> pipeline.analysis.importance.feature_ranking()
     """
 
     def __init__(self) -> None:
-        """
-        Initialize analysis manager.
+        """Initialize analysis manager.
 
-        Uses minimal initialization consistent with other managers.
-        PipelineData is injected automatically by AutoInjectProxy.
+        Parameters
+        ----------
+        None
+            The initializer does not accept parameters.
+
+        Returns
+        -------
+        None
+            The initializer does not return anything.
+
+        Notes
+        -----
+        Pipeline data is injected automatically by :class:`AutoInjectProxy`.
         """
         pass
 
     @property
     def features(self) -> FeatureAnalysisService:
-        """
-        Get feature analysis service.
+        """Get feature analysis service.
 
-        Provides direct access to all feature analysis operations
-        with full VS Code autocompletion support. Uses AutoInjectProxy
-        pattern for consistent pipeline_data access.
+        Parameters
+        ----------
+        None
+            The property does not accept parameters.
 
-        Returns:
-        --------
+        Returns
+        -------
         FeatureAnalysisService
-            Service providing access to feature analysis operations
+            Service providing access to feature analysis operations.
         """
         return FeatureAnalysisService(None)
+
+    @property
+    def structure(self) -> StructureAnalysisService:
+        """Get structure analysis service.
+
+        Parameters
+        ----------
+        None
+            The property does not accept parameters.
+
+        Returns
+        -------
+        StructureAnalysisService
+            Service providing access to structure analysis operations.
+        """
+
+        return StructureAnalysisService(None)

@@ -37,6 +37,7 @@ dependencies = [
     "zarr>=3.0.0",
     "dask[array]>=2024.1.0",
     "hdbscan>=0.8.33",
+    "numba>=0.60.0",
 ]
 
 [project.optional-dependencies]

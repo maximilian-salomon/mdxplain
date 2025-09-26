@@ -18,13 +18,14 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""High-level analysis entry points for mdxplain.
+"""Calculator entry points for structure analysis.
 
-The package exposes the central :class:`AnalysisManager` coordinating feature,
-structure, and future analysis types. Subpackages provide the concrete services
-and helper utilities for each analysis domain.
+This subpackage exposes the concrete calculator implementations used by the
+structure analysis services, currently including RMSD and (future) RMSF
+calculators.
 """
 
-from .managers.analysis_manager import AnalysisManager
+from .rmsd_calculator import RMSDCalculator
+from .rmsf_calculator import RMSFCalculator
 
-__all__ = ["AnalysisManager"]
+__all__ = ["RMSDCalculator", "RMSFCalculator"]

@@ -18,13 +18,14 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""High-level analysis entry points for mdxplain.
+"""Structure analysis utilities.
 
-The package exposes the central :class:`AnalysisManager` coordinating feature,
-structure, and future analysis types. Subpackages provide the concrete services
-and helper utilities for each analysis domain.
+The :mod:`mdxplain.analysis.structure` package bundles services, calculators,
+and helpers for structure-driven analyses such as RMSD and RMSF. All
+components integrate with the PipelineData system and work with MDTraj and
+Dask-backed trajectories.
 """
 
-from .managers.analysis_manager import AnalysisManager
+from .services.structure_analysis_service import StructureAnalysisService
 
-__all__ = ["AnalysisManager"]
+__all__ = ["StructureAnalysisService"]

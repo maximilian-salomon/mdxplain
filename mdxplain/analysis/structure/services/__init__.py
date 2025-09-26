@@ -18,13 +18,27 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""High-level analysis entry points for mdxplain.
+"""Public structure analysis services.
 
-The package exposes the central :class:`AnalysisManager` coordinating feature,
-structure, and future analysis types. Subpackages provide the concrete services
-and helper utilities for each analysis domain.
+The :mod:`mdxplain.analysis.structure.services` package exposes the lazily
+loaded structure analysis facade together with the concrete RMSD and RMSF
+services. All services expect a pipeline context injected via AutoInject.
 """
 
-from .managers.analysis_manager import AnalysisManager
+from .structure_analysis_service import StructureAnalysisService
+from .rmsd_facade import RMSDFacade
+from .rmsd_variant_service import RMSDVariantService
+from .rmsf_facade import RMSFFacade
+from .rmsf_variant_facade import RMSFVariantFacade
+from .rmsf_per_atom_service import RMSFPerAtomService
+from .rmsf_per_residue_service import RMSFPerResidueService
 
-__all__ = ["AnalysisManager"]
+__all__ = [
+    "StructureAnalysisService",
+    "RMSDFacade",
+    "RMSDVariantService",
+    "RMSFFacade",
+    "RMSFVariantFacade",
+    "RMSFPerAtomService",
+    "RMSFPerResidueService",
+]
