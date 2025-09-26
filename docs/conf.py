@@ -1,20 +1,20 @@
-# Configuration file for the Sphinx documentation builder.
-#
-# For the full list of built-in configuration values, see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
-
-# -- Project information -----------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
+import os
+import sys
 
 project = 'mdxplain'
 copyright = '2025, Max'
 author = 'Max'
 release = '01.11.2025'
 
-# -- General configuration ---------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
+sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('../mdxplain'))
 
-extensions = []
+extensions = [
+    'sphinx.ext.autodoc',
+]
+
+autodoc_member_order = 'bysource'
+autodoc_mock_imports = ['Pipeline']  #findet beim Build nicht 'Pipeline' aus mdxplain/clustering/cluster_type/dpa/dpa_calculator.py
 
 templates_path = ['_templates']
 exclude_patterns = []
