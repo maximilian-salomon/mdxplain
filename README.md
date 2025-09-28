@@ -96,7 +96,7 @@ During package development, AI tools were used to assist in the following tasks,
 - **Refactoring**: Improving code structure, readability, and maintainability according to author-specified patterns and guidelines.
 - **Bug fixing**: Providing suggested solutions for issues identified by the author.
 - **Code optimization**: Assisting in identifying potential performance improvements based on author-defined benchmarks and criteria.
-- **Documentation**: Generating docstrings and inline documentation following author-provided templates to ensure clarity and consistency.
+- **Code-Documentation**: Generating docstrings and inline documentation following author-provided templates to ensure clarity and consistency.
 - **Interactive method exploration**: Acting as a discussion partner to propose alternative approaches, explain potential implementations, and provide illustrative code examples. All decisions regarding method selection, workflow design, and implementation were made by the author.
 - **Information gathering**: Assisting in identifying relevant existing packages, algorithms, or workflows, analogous to a literature or software survey, with final evaluation and selection performed by the author.
 
@@ -110,7 +110,7 @@ All architectural design, scientific methodology, algorithm selection, and API s
 
 The author conducted all prompt engineering, including crafting detailed technical specifications, providing domain-specific molecular dynamics context, and guiding iterative refinement through multi-session interactions. Comprehensive code review, testing, and validation of all generated code were also performed solely by the author.
 
-Responsibility for scientific validity, methodological rigor, code quality, and overall project integrity rests entirely with the human author. The development process involved tens of thousands of prompts and over 1000 hours of hands-on coding and methodological refinement, highlighting the central role of human expertise in shaping the final package.
+Responsibility for scientific validity, methodological rigor, code quality, and overall project integrity rests entirely with the human author. The development process involved tens of thousands of prompts and over 2000 hours of hands-on development, code-reviews and methodological refinement, highlighting the central role of human expertise in shaping the final package.
 
 ## License
 
