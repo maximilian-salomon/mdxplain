@@ -279,25 +279,13 @@ class PipelineManager:
     def analysis(self) -> AnalysisManager:
         """
         Access analysis operations with automatic PipelineData injection.
-        
-        The analysis manager receives current pipeline_data and provides
-        both direct service access (features) and manager methods with AutoInject.
-        Uses special handling due to mixed service/manager pattern.
-        
-        Note: Currently returns the manager directly since properties like 
-        'features' don't need AutoInject but methods would. This can be
-        enhanced later when manager methods are added.
 
         Returns:
         --------
         AnalysisManager
-            Analysis manager with services configured
+            Analysis manager with automatic PipelineData injection.
+            All methods that expect pipeline_data parameter will receive it automatically.
         """
-        # Special handling: Set pipeline_data for services first
-        if hasattr(self._analysis_manager, '_set_pipeline_data'):
-            self._analysis_manager._set_pipeline_data(self._data)
-        
-        # Then wrap with AutoInjectProxy (now supports intelligent service detection)
         return cast(AnalysisManager, AutoInjectProxy(self._analysis_manager, self._data))
 
     @property

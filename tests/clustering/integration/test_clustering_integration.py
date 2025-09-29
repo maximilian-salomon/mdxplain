@@ -66,7 +66,7 @@ class TestClusteringIntegration:
 
         pipeline.feature.add.coordinates(atom_selection="all", force=True)
         pipeline.feature_selector.create("input_selection")
-        pipeline.feature_selector.add("input_selection", "coordinates", "all", use_reduced=False)
+        pipeline.feature_selector.add_selection("input_selection", "coordinates", "all", use_reduced=False)
         pipeline.feature_selector.select("input_selection")
         
         return pipeline

@@ -26,6 +26,5 @@ atoms in molecular dynamics trajectories based on distance cutoffs.
 """
 
 from .contacts import Contacts
-from .contacts_reduce_service import ContactsReduceService
 
-__all__ = ["Contacts", "ContactsReduceService"]
+__all__ = ["Contacts"]

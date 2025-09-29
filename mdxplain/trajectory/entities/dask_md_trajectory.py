@@ -383,82 +383,98 @@ class DaskMDTrajectory:
     # ============================================================================
     
     def atom_slice(
-            self, 
-            atom_indices: Union[np.ndarray, list]
+            self,
+            atom_indices: Union[np.ndarray, list],
+            inplace: bool = False
     ) -> DaskMDTrajectory:
         """
         Create trajectory from subset of atoms.
-        
+
         Parameters:
         -----------
         atom_indices : array_like
             Indices of atoms to keep
         inplace : bool, default=False
-            Modify trajectory in place (creates new instance regardless)
-            
+            If True, modify trajectory in place and return self.
+            If False, return new trajectory instance.
+
         Returns:
         --------
         DaskMDTrajectory
-            New trajectory with selected atoms
-        
+            Self if inplace=True, otherwise new trajectory with selected atoms
+
         Examples:
         ---------
         >>> dask_traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
-        >>> # Select first 100 atoms
+        >>> # Select first 100 atoms (new trajectory)
         >>> small_traj = dask_traj.atom_slice(range(100))
         >>> print(f"Original: {dask_traj.n_atoms} atoms, Sliced: {small_traj.n_atoms} atoms")
-        >>> # Select specific atom indices
+        >>> # Select specific atom indices in-place
         >>> ca_indices = dask_traj.topology.select('name CA')
-        >>> ca_traj = dask_traj.atom_slice(ca_indices)
+        >>> dask_traj.atom_slice(ca_indices, inplace=True)  # Modifies dask_traj
         """
         # Clean up current temp store before creating new one (chained cleanup)
         if self._is_temp_store:
             self.cleanup()
-            
         atom_indices = np.asarray(atom_indices)
         new_zarr_store = self._parallel_ops.atom_slice(atom_indices)
-        
-        # Create new DaskMDTrajectory from processed store
-        return self._create_from_zarr_store(new_zarr_store)
+        new_traj = self._create_from_zarr_store(new_zarr_store)
+
+        if inplace:
+            return self._replace_self_with_new(new_traj)
+        return new_traj
     
-    def center_coordinates(self, mass_weighted: bool = False) -> DaskMDTrajectory:
+    def center_coordinates(self, mass_weighted: bool = False, inplace: bool = True) -> DaskMDTrajectory:
         """
-        Center trajectory frames at origin.
-        
+        Center trajectory frames at origin (in-place operation by default).
+
+        This method acts in-place on the trajectory by default, similar to MDTraj behavior.
+
         Parameters:
         -----------
         mass_weighted : bool, default=False
             Use mass-weighted centering
-            
+        inplace : bool, default=True
+            If True, modify trajectory in place and return self.
+            If False, return new trajectory instance.
+
         Returns:
         --------
         DaskMDTrajectory
-            New trajectory with centered coordinates
-        
+            Self if inplace=True, otherwise new trajectory with centered coordinates
+
         Examples:
         ---------
         >>> dask_traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
-        >>> # Center coordinates (geometric center)
-        >>> centered = dask_traj.center_coordinates()
-        >>> # Center coordinates using mass weighting
-        >>> mass_centered = dask_traj.center_coordinates(mass_weighted=True)
+        >>> # Center coordinates in-place (geometric center) - modifies dask_traj
+        >>> dask_traj.center_coordinates()
+        >>> # Center coordinates using mass weighting, create new trajectory
+        >>> mass_centered = dask_traj.center_coordinates(mass_weighted=True, inplace=False)
         """
         # Clean up current temp store before creating new one (chained cleanup)
         if self._is_temp_store:
             self.cleanup()
-            
         new_zarr_store = self._parallel_ops.center_coordinates(mass_weighted)
-        return self._create_from_zarr_store(new_zarr_store)
+        new_traj = self._create_from_zarr_store(new_zarr_store)
+
+        if inplace:
+            return self._replace_self_with_new(new_traj)
+        return new_traj
     
     def superpose(
-            self, 
-            reference: Optional[Union[DaskMDTrajectory, md.Trajectory]] = None,
-            frame: int = 0, 
-            atom_indices: Optional[np.ndarray] = None
-    ) -> DaskMDTrajectory:
+            self,
+            reference: Optional[Union['DaskMDTrajectory', md.Trajectory]] = None,
+            frame: int = 0,
+            atom_indices: Optional[np.ndarray] = None,
+            ref_atom_indices: Optional[np.ndarray] = None,
+            parallel: bool = True,
+            inplace: bool = True
+    ) -> 'DaskMDTrajectory':
         """
-        Align trajectory to reference structure.
-        
+        Align trajectory to reference structure (in-place operation by default).
+
+        This method acts in-place on the trajectory by default, similar to MDTraj behavior.
+
         Parameters:
         -----------
         reference : DaskMDTrajectory, md.Trajectory, optional
@@ -466,27 +482,35 @@ class DaskMDTrajectory:
         frame : int, default=0
             Frame index from reference trajectory to use for alignment
         atom_indices : np.ndarray, optional
-            Atoms to use for alignment
-            
+            Atoms to use for alignment on this trajectory
+        ref_atom_indices : np.ndarray, optional
+            Atoms to use for alignment on reference trajectory
+            If None, uses same as atom_indices
+        parallel : bool, default=True
+            Use parallel processing (for MDTraj compatibility)
+        inplace : bool, default=True
+            If True, modify trajectory in place and return self.
+            If False, return new trajectory instance.
+
         Returns:
         --------
         DaskMDTrajectory
-            New trajectory aligned to reference
-        
+            Self if inplace=True, otherwise new trajectory aligned to reference
+
         Examples:
         ---------
         >>> dask_traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
-        >>> # Align to own first frame
-        >>> aligned = dask_traj.superpose()
-        >>> # Align to own frame 10
-        >>> aligned = dask_traj.superpose(frame=10)
+        >>> # Align to own first frame in-place - modifies dask_traj
+        >>> dask_traj.superpose()
+        >>> # Align to own frame 10, create new trajectory
+        >>> aligned = dask_traj.superpose(frame=10, inplace=False)
         >>> # Align to external trajectory frame 0
         >>> other_traj = DaskMDTrajectory('other.xtc', 'topology.pdb')
-        >>> aligned = dask_traj.superpose(reference=other_traj, frame=0)
+        >>> dask_traj.superpose(reference=other_traj, frame=0)
         >>> # Align using only CA atoms
         >>> ca_indices = dask_traj.topology.select('name CA')
-        >>> ca_aligned = dask_traj.superpose(atom_indices=ca_indices)
-        
+        >>> dask_traj.superpose(atom_indices=ca_indices)
+
         Raises:
         -------
         ValueError
@@ -497,7 +521,7 @@ class DaskMDTrajectory:
             ref_trajectory = self
         else:
             ref_trajectory = reference
-        
+
         # Extract reference frame as md.Trajectory
         ref_traj = ref_trajectory[frame]
         
@@ -505,19 +529,36 @@ class DaskMDTrajectory:
         if self._is_temp_store:
             self.cleanup()
             
+        # Handle ref_atom_indices for MDTraj compatibility
+        if ref_atom_indices is not None and atom_indices is not None:
+            if len(ref_atom_indices) != len(atom_indices):
+                raise ValueError(f"atom_indices ({len(atom_indices)}) and ref_atom_indices ({len(ref_atom_indices)}) must have same length")
+
+        # Use ref_atom_indices for reference frame selection if provided
+        if ref_atom_indices is not None:
+            # Extract reference frame with specific atoms for alignment calculation
+            ref_frame_for_alignment = ref_traj.atom_slice(ref_atom_indices)
+        else:
+            ref_frame_for_alignment = ref_traj
+
         # Pass reference trajectory to parallel operations
-        new_zarr_store = self._parallel_ops.superpose(ref_traj, atom_indices)
-        return self._create_from_zarr_store(new_zarr_store)
+        new_zarr_store = self._parallel_ops.superpose(ref_frame_for_alignment, atom_indices)
+        new_traj = self._create_from_zarr_store(new_zarr_store)
+
+        if inplace:
+            return self._replace_self_with_new(new_traj)
+        return new_traj
     
     def smooth(
-            self, 
-            width: int, 
-            order: Optional[int] = None, 
-            atom_indices: Optional[np.ndarray] = None
+            self,
+            width: int,
+            order: Optional[int] = None,
+            atom_indices: Optional[np.ndarray] = None,
+            inplace: bool = False
     ) -> DaskMDTrajectory:
         """
         Apply smoothing filter to trajectory.
-        
+
         Parameters:
         -----------
         width : int
@@ -526,27 +567,34 @@ class DaskMDTrajectory:
             Polynomial order for Savitzky-Golay filter
         atom_indices : np.ndarray, optional
             Atoms to smooth (default: all)
-            
+        inplace : bool, default=False
+            If True, modify trajectory in place and return self.
+            If False, return new trajectory instance.
+
         Returns:
         --------
         DaskMDTrajectory
-            New trajectory with smoothed coordinates
-        
+            Self if inplace=True, otherwise new trajectory with smoothed coordinates
+
         Examples:
         ---------
         >>> dask_traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
-        >>> # Apply smoothing with window width 5
+        >>> # Apply smoothing with window width 5 (new trajectory)
         >>> smoothed = dask_traj.smooth(width=5)
-        >>> # Smooth only backbone atoms
+        >>> # Smooth only backbone atoms in-place
         >>> backbone = dask_traj.topology.select('backbone')
-        >>> backbone_smoothed = dask_traj.smooth(width=3, atom_indices=backbone)
+        >>> dask_traj.smooth(width=3, atom_indices=backbone, inplace=True)
         """
         # Clean up current temp store before creating new one (chained cleanup)
         if self._is_temp_store:
             self.cleanup()
-            
+
         new_zarr_store = self._parallel_ops.smooth(width, order, atom_indices)
-        return self._create_from_zarr_store(new_zarr_store)
+        new_traj = self._create_from_zarr_store(new_zarr_store)
+
+        if inplace:
+            return self._replace_self_with_new(new_traj)
+        return new_traj
     
     def join(self, other: DaskMDTrajectory, check_topology: bool = True) -> DaskMDTrajectory:
         """
@@ -614,7 +662,7 @@ class DaskMDTrajectory:
             
         return self._join_stack_helper.stack_trajectories(self, other)
     
-    def slice(self, key: Union[int, slice, np.ndarray], return_dask: bool = True) -> Union['DaskMDTrajectory', md.Trajectory]:
+    def slice(self, key: Union[int, slice, np.ndarray], return_dask: bool = True) -> Union[DaskMDTrajectory, md.Trajectory]:
         """
         Extract specific frames.
         
@@ -891,7 +939,7 @@ class DaskMDTrajectory:
                 target_store['unitcell_angles'][target_start:target_end] = \
                     self._dask_unitcell_angles[start_idx:end_idx].compute()
     
-    def _create_sliced_dask(self, key: Union[int, slice, np.ndarray]) -> 'DaskMDTrajectory':
+    def _create_sliced_dask(self, key: Union[int, slice, np.ndarray]) -> DaskMDTrajectory:
         """
         Create new DaskMDTrajectory with sliced arrays (lazy operation).
         
@@ -1030,7 +1078,40 @@ class DaskMDTrajectory:
         new_instance._temp_zarr_path = config['zarr_path']
         
         return new_instance
-    
+
+    def _replace_self_with_new(self, new_trajectory: DaskMDTrajectory) -> DaskMDTrajectory:
+        """
+        Replace all attributes of self with those from new trajectory.
+
+        Parameters:
+        -----------
+        new_trajectory : DaskMDTrajectory
+            New trajectory to replace self with
+
+        Returns:
+        --------
+        DaskMDTrajectory
+            Returns self for method chaining
+
+        Examples:
+        ---------
+        >>> dask_traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
+        >>> new_traj = dask_traj._create_from_zarr_store(zarr_store)
+        >>> dask_traj._replace_self_with_new(new_traj)  # dask_traj is now updated
+        """
+        # Clean up current resources FIRST
+        if self._is_temp_store:
+            self.cleanup()
+
+        # Prevent new trajectory from cleaning up (we're taking ownership)
+        new_trajectory._is_temp_store = False
+        new_trajectory._temp_zarr_path = None
+
+        # Update self with all attributes from new trajectory
+        self.__dict__.update(new_trajectory.__dict__)
+
+        return self
+
     def _create_slice(self, key: Union[slice, np.ndarray]) -> DaskMDTrajectory:
         """
         Create new DaskMDTrajectory from slice.

@@ -295,3 +295,80 @@ class TrajectoryValidationHelper:
             f"Affected feature types: {affected_features}. "
             f"These features must be recalculated."
         )
+
+    @staticmethod
+    def validate_superpose_parameters(
+        pipeline_data: PipelineData,
+        reference_traj: int,
+        reference_frame: int,
+        atom_selection: str,
+        traj_selection: Union[int, str, List[Union[int, str]], str]
+    ) -> tuple:
+        """
+        Validate all parameters for superpose operation.
+
+        Parameters:
+        -----------
+        pipeline_data : PipelineData
+            Pipeline data container with trajectory data
+        reference_traj : int
+            Index of trajectory containing the reference frame
+        reference_frame : int
+            Frame index within reference trajectory
+        atom_selection : str
+            MDTraj selection string for alignment atoms
+        traj_selection : various
+            Selection of trajectories to align
+
+        Returns:
+        --------
+        tuple
+            (reference_trajectory, traj_indices, ref_frame, ref_atom_indices)
+
+        Raises:
+        ------
+        ValueError
+            If any parameter is invalid
+
+        Examples:
+        ---------
+        >>> ref_traj, indices, ref_frame, atom_indices = \\
+        ...     TrajectoryValidationHelper.validate_superpose_parameters(
+        ...         pipeline_data, 0, 0, "backbone", "all"
+        ...     )
+        """
+        # Check trajectories are loaded
+        if not pipeline_data.trajectory_data.trajectories:
+            raise ValueError("No trajectories loaded for superposition.")
+
+        # Validate reference trajectory index
+        if reference_traj < 0 or reference_traj >= len(pipeline_data.trajectory_data.trajectories):
+            raise ValueError(
+                f"Reference trajectory index {reference_traj} is invalid. "
+                f"Valid range: 0 to {len(pipeline_data.trajectory_data.trajectories) - 1}"
+            )
+
+        reference_trajectory = pipeline_data.trajectory_data.trajectories[reference_traj]
+
+        # Validate reference frame index
+        if reference_frame < 0 or reference_frame >= reference_trajectory.n_frames:
+            raise ValueError(
+                f"Reference frame index {reference_frame} is invalid for trajectory {reference_traj}. "
+                f"Valid range: 0 to {reference_trajectory.n_frames - 1}"
+            )
+
+        # Get and validate trajectory selection
+        traj_indices = pipeline_data.trajectory_data.get_trajectory_indices(traj_selection)
+        if not traj_indices:
+            raise ValueError("No trajectories found matching the selection criteria.")
+
+        # Get reference frame and validate atom selection
+        ref_frame = reference_trajectory[reference_frame]
+        try:
+            ref_atom_indices = ref_frame.topology.select(atom_selection)
+            if len(ref_atom_indices) == 0:
+                raise ValueError(f"Atom selection '{atom_selection}' produced no atoms in reference frame.")
+        except Exception as e:
+            raise ValueError(f"Invalid atom selection '{atom_selection}': {e}")
+
+        return reference_trajectory, traj_indices, ref_frame, ref_atom_indices

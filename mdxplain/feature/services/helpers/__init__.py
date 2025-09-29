@@ -18,8 +18,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""Helper utilities for analysis factories."""
+"""
+Helper utilities for feature services.
 
-from .analysis_data_helper import AnalysisDataHelper
+This submodule contains helper classes that provide common functionality
+for feature services:
 
-__all__ = ["AnalysisDataHelper"]
+- AnalysisDataHelper: Manages data selection for analysis operations,
+  handling both trajectory and feature selection with temporary selector
+  creation and cleanup
+"""

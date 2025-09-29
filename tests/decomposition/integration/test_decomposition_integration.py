@@ -66,7 +66,7 @@ class TestDecompositionIntegration:
         
         # Create feature selector
         pipeline.feature_selector.create("pca_input")
-        pipeline.feature_selector.add("pca_input", "coordinates", "all", use_reduced=False)
+        pipeline.feature_selector.add_selection("pca_input", "coordinates", "all", use_reduced=False)
         pipeline.feature_selector.select("pca_input")
         
         # Apply PCA with specific parameters
@@ -132,7 +132,7 @@ class TestDecompositionIntegration:
         
         # Create feature selector
         pipeline.feature_selector.create("kpca_input")
-        pipeline.feature_selector.add("kpca_input", "coordinates", "all", use_reduced=False)
+        pipeline.feature_selector.add_selection("kpca_input", "coordinates", "all", use_reduced=False)
         pipeline.feature_selector.select("kpca_input")
         
         # Apply Kernel PCA with specific parameters
@@ -202,7 +202,7 @@ class TestDecompositionIntegration:
         
         # Create feature selector
         pipeline.feature_selector.create("diffmap_input")
-        pipeline.feature_selector.add("diffmap_input", "coordinates", "all", use_reduced=False)
+        pipeline.feature_selector.add_selection("diffmap_input", "coordinates", "all", use_reduced=False)
         pipeline.feature_selector.select("diffmap_input")
         
         # Apply Diffusion Maps with specific parameters
@@ -270,7 +270,7 @@ class TestDecompositionIntegration:
         
         # Create feature selector
         pipeline.feature_selector.create("validation_input")
-        pipeline.feature_selector.add("validation_input", "coordinates", "all", use_reduced=False)
+        pipeline.feature_selector.add_selection("validation_input", "coordinates", "all", use_reduced=False)
         pipeline.feature_selector.select("validation_input")
         
         # Test different n_components values with concrete validation
@@ -338,7 +338,7 @@ class TestDecompositionIntegration:
         
         # Create feature selector
         pipeline.feature_selector.create("variance_test")
-        pipeline.feature_selector.add("variance_test", "coordinates", "all", use_reduced=False)
+        pipeline.feature_selector.add_selection("variance_test", "coordinates", "all", use_reduced=False)
         pipeline.feature_selector.select("variance_test")
         
         # Apply PCA with 3 components
@@ -399,7 +399,7 @@ class TestDecompositionIntegration:
         
         # Create feature selector
         pipeline.feature_selector.create("metadata_test")
-        pipeline.feature_selector.add("metadata_test", "coordinates", "all", use_reduced=False)
+        pipeline.feature_selector.add_selection("metadata_test", "coordinates", "all", use_reduced=False)
         pipeline.feature_selector.select("metadata_test")
         
         # Test PCA metadata
@@ -486,7 +486,7 @@ class TestDecompositionIntegration:
         # Add features and create selector
         pipeline.feature.add.coordinates(atom_selection="all", force=True)
         pipeline.feature_selector.create("pca_method_test")
-        pipeline.feature_selector.add("pca_method_test", "coordinates", "all", use_reduced=False)
+        pipeline.feature_selector.add_selection("pca_method_test", "coordinates", "all", use_reduced=False)
         pipeline.feature_selector.select("pca_method_test")
         
         # Use pipeline API to trigger standard method
@@ -547,7 +547,7 @@ class TestDecompositionIntegration:
         # Add features and create selector
         pipeline.feature.add.coordinates(atom_selection="all", force=True)
         pipeline.feature_selector.create("pca_incremental_test")
-        pipeline.feature_selector.add("pca_incremental_test", "coordinates", "all", use_reduced=False)
+        pipeline.feature_selector.add_selection("pca_incremental_test", "coordinates", "all", use_reduced=False)
         pipeline.feature_selector.select("pca_incremental_test")
         
         # Enable memmap to trigger incremental method
@@ -609,7 +609,7 @@ class TestDecompositionIntegration:
         # Add features and create selector
         pipeline.feature.add.coordinates(atom_selection="all", force=True)
         pipeline.feature_selector.create("kpca_method_test")
-        pipeline.feature_selector.add("kpca_method_test", "coordinates", "all", use_reduced=False)
+        pipeline.feature_selector.add_selection("kpca_method_test", "coordinates", "all", use_reduced=False)
         pipeline.feature_selector.select("kpca_method_test")
         
         # Use pipeline API to trigger standard method
@@ -678,7 +678,7 @@ class TestDecompositionIntegration:
         # Add features and create selector
         pipeline.feature.add.coordinates(atom_selection="all", force=True)
         pipeline.feature_selector.create("kpca_incremental_test")
-        pipeline.feature_selector.add("kpca_incremental_test", "coordinates", "all", use_reduced=False)
+        pipeline.feature_selector.add_selection("kpca_incremental_test", "coordinates", "all", use_reduced=False)
         pipeline.feature_selector.select("kpca_incremental_test")
         
         # Use pipeline API to trigger incremental method
@@ -743,7 +743,7 @@ class TestDecompositionIntegration:
         # Add features and create selector
         pipeline.feature.add.coordinates(atom_selection="all", force=True)
         pipeline.feature_selector.create("kpca_nystrom_test")
-        pipeline.feature_selector.add("kpca_nystrom_test", "coordinates", "all", use_reduced=False)
+        pipeline.feature_selector.add_selection("kpca_nystrom_test", "coordinates", "all", use_reduced=False)
         pipeline.feature_selector.select("kpca_nystrom_test")
         
         # Use pipeline API to trigger Nyström method
@@ -803,7 +803,7 @@ class TestDecompositionIntegration:
         # Add features and create selector
         pipeline.feature.add.coordinates(atom_selection="all", force=True)
         pipeline.feature_selector.create("diffmap_standard_test")
-        pipeline.feature_selector.add("diffmap_standard_test", "coordinates", "all", use_reduced=False)
+        pipeline.feature_selector.add_selection("diffmap_standard_test", "coordinates", "all", use_reduced=False)
         pipeline.feature_selector.select("diffmap_standard_test")
         
         # Use pipeline API to trigger standard method
@@ -850,7 +850,7 @@ class TestDecompositionIntegration:
         # Add features and create selector
         pipeline.feature.add.coordinates(atom_selection="all", force=True)
         pipeline.feature_selector.create("diffmap_iterative_test")
-        pipeline.feature_selector.add("diffmap_iterative_test", "coordinates", "all", use_reduced=False)
+        pipeline.feature_selector.add_selection("diffmap_iterative_test", "coordinates", "all", use_reduced=False)
         pipeline.feature_selector.select("diffmap_iterative_test")
         
         # Use pipeline API to trigger iterative method
@@ -896,7 +896,7 @@ class TestDecompositionIntegration:
         # Add features and create selector
         pipeline.feature.add.coordinates(atom_selection="all", force=True)
         pipeline.feature_selector.create("diffmap_nystrom_test")
-        pipeline.feature_selector.add("diffmap_nystrom_test", "coordinates", "all", use_reduced=False)
+        pipeline.feature_selector.add_selection("diffmap_nystrom_test", "coordinates", "all", use_reduced=False)
         pipeline.feature_selector.select("diffmap_nystrom_test")
         
         # Use pipeline API to trigger Nyström method
@@ -951,7 +951,7 @@ class TestDecompositionIntegration:
         
         # Create feature selector
         pipeline.feature_selector.create("contact_kpca_standard_test")
-        pipeline.feature_selector.add("contact_kpca_standard_test", "contacts", "all", use_reduced=False)
+        pipeline.feature_selector.add_selection("contact_kpca_standard_test", "contacts", "all", use_reduced=False)
         pipeline.feature_selector.select("contact_kpca_standard_test")
         
         # Use pipeline API to trigger standard method
@@ -1002,7 +1002,7 @@ class TestDecompositionIntegration:
         
         # Create feature selector
         pipeline.feature_selector.create("contact_kpca_incremental_test")
-        pipeline.feature_selector.add("contact_kpca_incremental_test", "contacts", "all", use_reduced=False)
+        pipeline.feature_selector.add_selection("contact_kpca_incremental_test", "contacts", "all", use_reduced=False)
         pipeline.feature_selector.select("contact_kpca_incremental_test")
         
         # Use pipeline API to trigger incremental method
@@ -1052,7 +1052,7 @@ class TestDecompositionIntegration:
         
         # Create feature selector
         pipeline.feature_selector.create("contact_kpca_nystrom_test")
-        pipeline.feature_selector.add("contact_kpca_nystrom_test", "contacts", "all", use_reduced=False)
+        pipeline.feature_selector.add_selection("contact_kpca_nystrom_test", "contacts", "all", use_reduced=False)
         pipeline.feature_selector.select("contact_kpca_nystrom_test")
         
         # Use pipeline API to trigger Nyström method

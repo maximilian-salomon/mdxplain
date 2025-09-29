@@ -18,7 +18,12 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""Analysis module for mdxplain."""
+"""High-level analysis entry points for mdxplain.
+
+The package exposes the central :class:`AnalysisManager` coordinating feature,
+structure, and future analysis types. Subpackages provide the concrete services
+and helper utilities for each analysis domain.
+"""
 
 from .managers.analysis_manager import AnalysisManager
 

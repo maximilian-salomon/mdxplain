@@ -26,10 +26,13 @@ associated calculator. Stores per-trajectory feature data enabling mixed
 systems with different proteins in a single pipeline.
 """
 
-from typing import Dict, Optional, Any, List
+from __future__ import annotations
+from typing import Dict, Optional, Any, List, TYPE_CHECKING
 import numpy as np
 from ...utils.data_utils import DataUtils
-from ..feature_type.interfaces.feature_type_base import FeatureTypeBase
+
+if TYPE_CHECKING:
+    from ..feature_type.interfaces.feature_type_base import FeatureTypeBase
 
 
 class FeatureData:
@@ -79,7 +82,7 @@ class FeatureData:
         None
             Initializes feature data container
         """
-        self.feature_type = feature_type
+        self.feature_type: FeatureTypeBase = feature_type
         self.use_memmap = use_memmap
         self.chunk_size = chunk_size
         

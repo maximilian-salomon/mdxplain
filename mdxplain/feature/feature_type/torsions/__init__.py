@@ -26,6 +26,5 @@ and side chain angles (chi1-4) with flexible selection and output formats.
 """
 
 from .torsions import Torsions
-from .torsions_reduce_service import TorsionsReduceService
 
-__all__ = ["Torsions", "TorsionsReduceService"]
+__all__ = ["Torsions"]

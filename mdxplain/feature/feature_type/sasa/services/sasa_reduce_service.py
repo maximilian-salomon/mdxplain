@@ -18,138 +18,39 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""Factory for coordinates-specific reduce operations."""
+"""Factory for SASA-specific reduce operations."""
 
 from __future__ import annotations
 from typing import Union, List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ...managers.feature_manager import FeatureManager
-    from ....pipeline.entities.pipeline_data import PipelineData
+    from ....managers.feature_manager import FeatureManager
+    from .....pipeline.entities.pipeline_data import PipelineData
 
-from . import Coordinates
+from ..sasa import SASA
+from ...interfaces.reduce_service_base import ReduceServiceBase
 
 
-class CoordinatesReduceService:
-    """
-    Service for coordinates-specific reduce metrics.
-    
-    Provides methods to reduce coordinate features based on various statistical metrics.
-    Each method applies a different reduction criterion, such as standard deviation,
-    root mean square fluctuation, coefficient of variation, variance, range, median absolute deviation,
-    mean, min, max, and transitions.
-    """
+class SASAReduceService(ReduceServiceBase):
+    """Service for SASA-specific reduce metrics."""
     
     def __init__(self, manager: FeatureManager, pipeline_data: PipelineData) -> None:
         """
-        Initialize coordinates reduce factory.
-        
+        Initialize SASA reduce factory.
+
         Parameters:
         -----------
         manager : FeatureManager
-            The feature manager instance
+            Feature manager instance
         pipeline_data : PipelineData
-            The pipeline data instance
+            Pipeline data container
 
         Returns:
         --------
         None
-            Initializes the coordinates reduce service
         """
-        self._manager = manager
-        self._pipeline_data = pipeline_data
-    
-    def std(
-        self,
-        traj_selection: Union[str, int, List] = "all",
-        threshold_min: Optional[float] = None,
-        threshold_max: Optional[float] = None,
-        cross_trajectory: bool = False,
-    ) -> None:
-        """
-        Reduce coordinates by standard deviation.
-
-        Standard deviation measures the amount of variation or dispersion in a set of values.
-
-        Parameters:
-        -----------
-        traj_selection : str, int, list, default="all"
-            Which trajectories to analyze for reduction
-        threshold_min : float, optional
-            Minimum standard deviation threshold (Angstrom)
-        threshold_max : float, optional
-            Maximum standard deviation threshold (Angstrom)
-        cross_trajectory : bool, default=False
-            If True, find common features across all selected trajectories
-
-        Returns:
-        --------
-        None
-            Updates reduced data in pipeline
-
-        Examples:
-        ---------
-        >>> # Keep coordinates with significant variation
-        >>> pipeline.feature.reduce.coordinates.std(threshold_min=0.5)
-
-        >>> # Remove extremely variable coordinates
-        >>> pipeline.feature.reduce.coordinates.std(threshold_max=3.0)
-        """
-        return self._manager.reduce_data(
-            self._pipeline_data,
-            Coordinates,
-            metric="std",
-            traj_selection=traj_selection,
-            threshold_min=threshold_min,
-            threshold_max=threshold_max,
-            cross_trajectory=cross_trajectory,
-        )
-    
-    def rmsf(
-        self,
-        traj_selection: Union[str, int, List] = "all",
-        threshold_min: Optional[float] = None,
-        threshold_max: Optional[float] = None,
-        cross_trajectory: bool = False,
-    ) -> None:
-        """
-        Reduce coordinates by root mean square fluctuation.
-
-        RMSF measures average positional deviation from mean position.
-        
-        Parameters:
-        -----------
-        traj_selection : str, int, list, default="all"
-            Which trajectories to analyze for reduction
-        threshold_min : float, optional
-            Minimum RMSF threshold (Angstrom)
-        threshold_max : float, optional
-            Maximum RMSF threshold (Angstrom)
-        cross_trajectory : bool, default=False
-            If True, find common features across all selected trajectories
-
-        Returns:
-        --------
-        None
-            Updates reduced data in pipeline
-
-        Examples:
-        ---------
-        >>> # Keep highly flexible coordinates
-        >>> pipeline.feature.reduce.coordinates.rmsf(threshold_min=1.0)
-
-        >>> # Keep stable coordinates only
-        >>> pipeline.feature.reduce.coordinates.rmsf(threshold_max=0.5)
-        """
-        return self._manager.reduce_data(
-            self._pipeline_data,
-            Coordinates,
-            metric="rmsf",
-            traj_selection=traj_selection,
-            threshold_min=threshold_min,
-            threshold_max=threshold_max,
-            cross_trajectory=cross_trajectory,
-        )
+        super().__init__(manager, pipeline_data)
+        self._feature_type = "sasa"
     
     def cv(
         self,
@@ -159,10 +60,10 @@ class CoordinatesReduceService:
         cross_trajectory: bool = False,
     ) -> None:
         """
-        Reduce coordinates by coefficient of variation.
-
-        Filters coordinate features based on their relative variability.
-        CV = std/mean, indicating positional flexibility.
+        Reduce SASA by coefficient of variation.
+        
+        Filters SASA features based on their relative variability.
+        Higher CV indicates more dynamic surface accessibility.
 
         Parameters:
         -----------
@@ -182,75 +83,22 @@ class CoordinatesReduceService:
 
         Examples:
         ---------
-        >>> # Keep highly flexible coordinates
-        >>> pipeline.feature.reduce.coordinates.cv(threshold_min=0.3)
+        >>> # Keep highly dynamic surface accessibility
+        >>> pipeline.feature.reduce.sasa.cv(threshold_min=0.3)
 
-        >>> # Remove extremely variable coordinates
-        >>> pipeline.feature.reduce.coordinates.cv(threshold_max=1.0)
+        >>> # Remove extremely variable SASA
+        >>> pipeline.feature.reduce.sasa.cv(threshold_max=0.8)
 
-        >>> # Focus on moderate flexibility
-        >>> pipeline.feature.reduce.coordinates.cv(
+        >>> # Focus on moderately dynamic surface exposure
+        >>> pipeline.feature.reduce.sasa.cv(
         ...     threshold_min=0.1,
-        ...     threshold_max=0.8
+        ...     threshold_max=0.6
         ... )
         """
         return self._manager.reduce_data(
             self._pipeline_data,
-            Coordinates,
+            SASA,
             metric="cv",
-            traj_selection=traj_selection,
-            threshold_min=threshold_min,
-            threshold_max=threshold_max,
-            cross_trajectory=cross_trajectory,
-        )
-    
-    def variance(
-        self,
-        traj_selection: Union[str, int, List] = "all",
-        threshold_min: Optional[float] = None,
-        threshold_max: Optional[float] = None,
-        cross_trajectory: bool = False,
-    ) -> None:
-        """
-        Reduce coordinates by variance.
-
-        Filters coordinates based on positional variance (squared fluctuations).
-        Higher variance indicates larger positional deviations.
-
-        Parameters:
-        -----------
-        traj_selection : str, int, list, default="all"
-            Which trajectories to analyze for reduction
-        threshold_min : float, optional
-            Minimum variance threshold (Ų)
-        threshold_max : float, optional
-            Maximum variance threshold (Ų)
-        cross_trajectory : bool, default=False
-            If True, find common features across all selected trajectories
-
-        Returns:
-        --------
-        None
-            Updates reduced data in pipeline
-
-        Examples:
-        ---------
-        >>> # Keep highly variable coordinates
-        >>> pipeline.feature.reduce.coordinates.variance(threshold_min=1.0)
-
-        >>> # Remove extremely variable coordinates
-        >>> pipeline.feature.reduce.coordinates.variance(threshold_max=5.0)
-
-        >>> # Focus on moderate positional variance
-        >>> pipeline.feature.reduce.coordinates.variance(
-        ...     threshold_min=0.5,
-        ...     threshold_max=3.0
-        ... )
-        """
-        return self._manager.reduce_data(
-            self._pipeline_data,
-            Coordinates,
-            metric="variance",
             traj_selection=traj_selection,
             threshold_min=threshold_min,
             threshold_max=threshold_max,
@@ -265,19 +113,19 @@ class CoordinatesReduceService:
         cross_trajectory: bool = False,
     ) -> None:
         """
-        Reduce coordinates by range (max - min).
+        Reduce SASA by range (max - min).
 
-        Filters coordinates based on their positional range of motion.
-        Larger range indicates greater conformational sampling.
+        Filters SASA features based on their dynamic range.
+        Higher range indicates more variability in surface accessibility.
 
         Parameters:
         -----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
-            Minimum range threshold (Angstrom)
+            Minimum range threshold (nm²)
         threshold_max : float, optional
-            Maximum range threshold (Angstrom)
+            Maximum range threshold (nm²)
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
 
@@ -288,22 +136,125 @@ class CoordinatesReduceService:
 
         Examples:
         ---------
-        >>> # Keep coordinates with large positional range
-        >>> pipeline.feature.reduce.coordinates.range(threshold_min=2.0)
+        >>> # Keep residues with large SASA changes
+        >>> pipeline.feature.reduce.sasa.range(threshold_min=1.0)
 
-        >>> # Keep relatively stable coordinates
-        >>> pipeline.feature.reduce.coordinates.range(threshold_max=1.5)
+        >>> # Keep relatively stable surface areas
+        >>> pipeline.feature.reduce.sasa.range(threshold_max=0.5)
 
-        >>> # Focus on moderate motion range
-        >>> pipeline.feature.reduce.coordinates.range(
-        ...     threshold_min=0.5,
-        ...     threshold_max=3.0
+        >>> # Focus on moderate surface accessibility changes
+        >>> pipeline.feature.reduce.sasa.range(
+        ...     threshold_min=0.3,
+        ...     threshold_max=1.5
         ... )
         """
         return self._manager.reduce_data(
             self._pipeline_data,
-            Coordinates,
+            SASA,
             metric="range",
+            traj_selection=traj_selection,
+            threshold_min=threshold_min,
+            threshold_max=threshold_max,
+            cross_trajectory=cross_trajectory,
+        )
+    
+    def std(
+        self,
+        traj_selection: Union[str, int, List] = "all",
+        threshold_min: Optional[float] = None,
+        threshold_max: Optional[float] = None,
+        cross_trajectory: bool = False,
+    ) -> None:
+        """
+        Reduce SASA by standard deviation.
+        
+        Filters SASA features based on their variability.
+        Higher std indicates more dynamic surface accessibility.
+        
+        Parameters:
+        -----------
+        traj_selection : str, int, list, default="all"
+            Which trajectories to analyze for reduction
+        threshold_min : float, optional
+            Minimum std threshold (nm²)
+        threshold_max : float, optional
+            Maximum std threshold (nm²)
+        cross_trajectory : bool, default=False
+            If True, find common features across all selected trajectories
+
+        Returns:
+        --------
+        None
+            Updates reduced data in pipeline
+
+        Examples:
+        ---------
+        >>> # Keep residues with significant SASA fluctuations
+        >>> pipeline.feature.reduce.sasa.std(threshold_min=0.4)
+
+        >>> # Remove extremely variable surface areas
+        >>> pipeline.feature.reduce.sasa.std(threshold_max=1.2)
+
+        >>> # Focus on moderate surface accessibility dynamics
+        >>> pipeline.feature.reduce.sasa.std(
+        ...     threshold_min=0.2,
+        ...     threshold_max=0.8
+        ... )
+        """
+        return self._manager.reduce_data(
+            self._pipeline_data,
+            SASA,
+            metric="std",
+            traj_selection=traj_selection,
+            threshold_min=threshold_min,
+            threshold_max=threshold_max,
+            cross_trajectory=cross_trajectory,
+        )
+    
+    def variance(
+        self,
+        traj_selection: Union[str, int, List] = "all",
+        threshold_min: Optional[float] = None,
+        threshold_max: Optional[float] = None,
+        cross_trajectory: bool = False,
+    ) -> None:
+        """
+        Reduce SASA by variance.
+        
+        Parameters:
+        -----------
+        traj_selection : str, int, list, default="all"
+            Which trajectories to analyze for reduction
+        threshold_min : float, optional
+            Minimum variance threshold
+        threshold_max : float, optional
+            Maximum variance threshold
+        cross_trajectory : bool, default=False
+            If True, find common features across all selected trajectories
+
+        Returns:
+        --------
+        None
+            Updates reduced data in pipeline
+
+        Examples:
+        ---------
+        >>> # Keep residues with high SASA variance
+        >>> pipeline.feature.reduce.sasa.variance(threshold_min=0.5)
+
+        >>> # Remove extremely variable surface areas
+        >>> pipeline.feature.reduce.sasa.variance(threshold_max=2.0)
+
+        >>> # Focus on moderate surface area variance
+        >>> pipeline.feature.reduce.sasa.variance(
+        ...     threshold_min=0.2,
+        ...     threshold_max=1.5
+        ... )
+        """
+        return self._manager.reduce_data(
+            self._pipeline_data,
+            SASA,
+            metric="variance",
             traj_selection=traj_selection,
             threshold_min=threshold_min,
             threshold_max=threshold_max,
@@ -318,22 +269,19 @@ class CoordinatesReduceService:
         cross_trajectory: bool = False,
     ) -> None:
         """
-        Reduce coordinates by median absolute deviation.
-
-        Robust measure of positional variability less sensitive to outliers.
-        MAD provides stable estimate of coordinate fluctuations.
-
+        Reduce SASA by median absolute deviation.
+        
         Parameters:
         -----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
-            Minimum MAD threshold (Ų)
+            Minimum MAD threshold
         threshold_max : float, optional
-            Maximum MAD threshold (Ų)
+            Maximum MAD threshold
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
-
+            
         Returns:
         --------
         None
@@ -341,21 +289,21 @@ class CoordinatesReduceService:
 
         Examples:
         ---------
-        >>> # Keep robustly variable coordinates
-        >>> pipeline.feature.reduce.coordinates.mad(threshold_min=0.4)
+        >>> # Keep robustly variable SASA (outlier-resistant)
+        >>> pipeline.feature.reduce.sasa.mad(threshold_min=0.3)
 
-        >>> # Remove extreme outlier coordinates
-        >>> pipeline.feature.reduce.coordinates.mad(threshold_max=2.0)
+        >>> # Remove extreme SASA outliers
+        >>> pipeline.feature.reduce.sasa.mad(threshold_max=1.0)
 
-        >>> # MAD-based selection for stable analysis
-        >>> pipeline.feature.reduce.coordinates.mad(
-        ...     threshold_min=0.2,
-        ...     threshold_max=1.5
+        >>> # MAD-based selection for robust analysis
+        >>> pipeline.feature.reduce.sasa.mad(
+        ...     threshold_min=0.15,
+        ...     threshold_max=0.8
         ... )
         """
         return self._manager.reduce_data(
             self._pipeline_data,
-            Coordinates,
+            SASA,
             metric="mad",
             traj_selection=traj_selection,
             threshold_min=threshold_min,
@@ -371,16 +319,16 @@ class CoordinatesReduceService:
         cross_trajectory: bool = False,
     ) -> None:
         """
-        Reduce coordinates by mean position.
+        Reduce SASA by mean value.
         
         Parameters:
         -----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
-            Minimum mean position threshold (Angstrom)
+            Minimum mean SASA in nm²
         threshold_max : float, optional
-            Maximum mean position threshold (Angstrom)
+            Maximum mean SASA in nm²
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
             
@@ -391,21 +339,21 @@ class CoordinatesReduceService:
 
         Examples:
         ---------
-        >>> # Keep coordinates near protein core
-        >>> pipeline.feature.reduce.coordinates.mean(threshold_max=10.0)
+        >>> # Keep highly exposed residues
+        >>> pipeline.feature.reduce.sasa.mean(threshold_min=2.0)
 
-        >>> # Select peripheral coordinates only
-        >>> pipeline.feature.reduce.coordinates.mean(threshold_min=15.0)
+        >>> # Keep buried/partially exposed residues
+        >>> pipeline.feature.reduce.sasa.mean(threshold_max=1.5)
 
-        >>> # Focus on intermediate regions
-        >>> pipeline.feature.reduce.coordinates.mean(
-        ...     threshold_min=5.0,
-        ...     threshold_max=20.0
+        >>> # Focus on moderately exposed surface areas
+        >>> pipeline.feature.reduce.sasa.mean(
+        ...     threshold_min=0.5,
+        ...     threshold_max=3.0
         ... )
         """
         return self._manager.reduce_data(
             self._pipeline_data,
-            Coordinates,
+            SASA,
             metric="mean",
             traj_selection=traj_selection,
             threshold_min=threshold_min,
@@ -421,16 +369,16 @@ class CoordinatesReduceService:
         cross_trajectory: bool = False,
     ) -> None:
         """
-        Reduce coordinates by minimum position.
+        Reduce SASA by minimum value.
         
         Parameters:
         -----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
-            Minimum position minimum threshold (Angstrom)
+            Minimum SASA minimum in nm²
         threshold_max : float, optional
-            Maximum position minimum threshold (Angstrom)
+            Maximum SASA minimum in nm²
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
             
@@ -441,21 +389,21 @@ class CoordinatesReduceService:
 
         Examples:
         ---------
-        >>> # Keep coordinates that get close to origin
-        >>> pipeline.feature.reduce.coordinates.min(threshold_max=5.0)
+        >>> # Keep residues that can become buried
+        >>> pipeline.feature.reduce.sasa.min(threshold_max=0.5)
 
-        >>> # Exclude coordinates that get too close
-        >>> pipeline.feature.reduce.coordinates.min(threshold_min=2.0)
+        >>> # Exclude completely buried residues
+        >>> pipeline.feature.reduce.sasa.min(threshold_min=0.2)
 
-        >>> # Focus on specific minimum distance range
-        >>> pipeline.feature.reduce.coordinates.min(
-        ...     threshold_min=3.0,
-        ...     threshold_max=8.0
+        >>> # Focus on specific minimum accessibility range
+        >>> pipeline.feature.reduce.sasa.min(
+        ...     threshold_min=0.1,
+        ...     threshold_max=1.0
         ... )
         """
         return self._manager.reduce_data(
             self._pipeline_data,
-            Coordinates,
+            SASA,
             metric="min",
             traj_selection=traj_selection,
             threshold_min=threshold_min,
@@ -471,16 +419,16 @@ class CoordinatesReduceService:
         cross_trajectory: bool = False,
     ) -> None:
         """
-        Reduce coordinates by maximum position.
+        Reduce SASA by maximum value.
         
         Parameters:
         -----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
-            Minimum position maximum threshold (Angstrom)
+            Minimum SASA maximum in nm²
         threshold_max : float, optional
-            Maximum position maximum threshold (Angstrom)
+            Maximum SASA maximum in nm²
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
             
@@ -491,22 +439,140 @@ class CoordinatesReduceService:
 
         Examples:
         ---------
-        >>> # Keep coordinates with large excursions
-        >>> pipeline.feature.reduce.coordinates.max(threshold_min=20.0)
+        >>> # Keep residues that can become highly exposed
+        >>> pipeline.feature.reduce.sasa.max(threshold_min=3.0)
 
-        >>> # Keep relatively constrained coordinates
-        >>> pipeline.feature.reduce.coordinates.max(threshold_max=15.0)
+        >>> # Keep relatively constrained surface areas
+        >>> pipeline.feature.reduce.sasa.max(threshold_max=2.5)
 
-        >>> # Focus on specific maximum distance range
-        >>> pipeline.feature.reduce.coordinates.max(
-        ...     threshold_min=10.0,
-        ...     threshold_max=25.0
+        >>> # Focus on specific maximum accessibility range
+        >>> pipeline.feature.reduce.sasa.max(
+        ...     threshold_min=1.5,
+        ...     threshold_max=4.0
         ... )
         """
         return self._manager.reduce_data(
             self._pipeline_data,
-            Coordinates,
+            SASA,
             metric="max",
+            traj_selection=traj_selection,
+            threshold_min=threshold_min,
+            threshold_max=threshold_max,
+            cross_trajectory=cross_trajectory,
+        )
+    
+    def burial_fraction(
+        self,
+        traj_selection: Union[str, int, List] = "all",
+        threshold_min: Optional[float] = None,
+        threshold_max: Optional[float] = None,
+        cross_trajectory: bool = False,
+    ) -> None:
+        """
+        Reduce SASA by burial fraction.
+        
+        Filters residues based on fraction of time they are buried.
+        Uses threshold_max as burial cutoff (SASA below this = buried).
+        
+        Parameters:
+        -----------
+        traj_selection : str, int, list, default="all"
+            Which trajectories to analyze for reduction
+        threshold_min : float, optional
+            Minimum burial fraction (0-1)
+        threshold_max : float, optional
+            SASA cutoff for buried state (nm²)
+        cross_trajectory : bool, default=False
+            If True, find common features across all selected trajectories
+            
+        Returns:
+        --------
+        None
+            Updates reduced data in pipeline
+
+        Examples:
+        ---------
+        >>> # Keep frequently buried residues
+        >>> pipeline.feature.reduce.sasa.burial_fraction(
+        ...     threshold_min=0.7,
+        ...     threshold_max=0.5  # SASA cutoff for buried state
+        ... )
+
+        >>> # Keep occasionally buried residues
+        >>> pipeline.feature.reduce.sasa.burial_fraction(
+        ...     threshold_min=0.2,
+        ...     threshold_max=1.0
+        ... )
+
+        >>> # Focus on intermediate burial patterns
+        >>> pipeline.feature.reduce.sasa.burial_fraction(
+        ...     threshold_min=0.3,
+        ...     threshold_max=0.8
+        ... )
+        """
+        return self._manager.reduce_data(
+            self._pipeline_data,
+            SASA,
+            metric="burial_fraction",
+            traj_selection=traj_selection,
+            threshold_min=threshold_min,
+            threshold_max=threshold_max,
+            cross_trajectory=cross_trajectory,
+        )
+    
+    def exposure_fraction(
+        self,
+        traj_selection: Union[str, int, List] = "all",
+        threshold_min: Optional[float] = None,
+        threshold_max: Optional[float] = None,
+        cross_trajectory: bool = False,
+    ) -> None:
+        """
+        Reduce SASA by exposure fraction.
+        
+        Filters residues based on fraction of time they are exposed.
+        Uses threshold_max as exposure cutoff (SASA above this = exposed).
+        
+        Parameters:
+        -----------
+        traj_selection : str, int, list, default="all"
+            Which trajectories to analyze for reduction
+        threshold_min : float, optional
+            Minimum exposure fraction (0-1)
+        threshold_max : float, optional
+            SASA cutoff for exposed state (nm²)
+        cross_trajectory : bool, default=False
+            If True, find common features across all selected trajectories
+            
+        Returns:
+        --------
+        None
+            Updates reduced data in pipeline
+
+        Examples:
+        ---------
+        >>> # Keep frequently exposed residues
+        >>> pipeline.feature.reduce.sasa.exposure_fraction(
+        ...     threshold_min=0.6,
+        ...     threshold_max=2.0  # SASA cutoff for exposed state
+        ... )
+
+        >>> # Keep occasionally exposed residues
+        >>> pipeline.feature.reduce.sasa.exposure_fraction(
+        ...     threshold_min=0.1,
+        ...     threshold_max=3.0
+        ... )
+
+        >>> # Focus on intermediate exposure patterns
+        >>> pipeline.feature.reduce.sasa.exposure_fraction(
+        ...     threshold_min=0.3,
+        ...     threshold_max=0.9
+        ... )
+        """
+        return self._manager.reduce_data(
+            self._pipeline_data,
+            SASA,
+            metric="exposure_fraction",
             traj_selection=traj_selection,
             threshold_min=threshold_min,
             threshold_max=threshold_max,
@@ -518,17 +584,17 @@ class CoordinatesReduceService:
         traj_selection: Union[str, int, List] = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
-        transition_threshold: float = 1.0,
+        transition_threshold: float = 0.5,
         window_size: int = 10,
         transition_mode: str = "window",
         lag_time: int = 1,
         cross_trajectory: bool = False,
     ) -> None:
         """
-        Reduce coordinates by transition detection.
+        Reduce SASA by transition detection.
         
-        Filters coordinate features based on number of positional transitions.
-        Detects significant changes in atomic positions.
+        Filters SASA features based on number of transitions.
+        Detects changes in surface accessibility patterns.
         
         Parameters:
         -----------
@@ -538,14 +604,14 @@ class CoordinatesReduceService:
             Minimum number of transitions
         threshold_max : float, optional
             Maximum number of transitions
-        transition_threshold : float, default=1.0
-            Position threshold for detecting transitions (Angstrom)
+        transition_threshold : float, default=0.5
+            SASA threshold for detecting transitions (nm²)
         window_size : int, default=10
             Window size for transition analysis
         transition_mode : str, default="window"
             Transition analysis mode ('window' or 'lagtime')
         lag_time : int, default=1
-            Lag time for transition detection (if mode='lag')
+            Lag time for transition analysis
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
 
@@ -556,28 +622,28 @@ class CoordinatesReduceService:
 
         Examples:
         ---------
-        >>> # Keep highly dynamic coordinates
-        >>> pipeline.feature.reduce.coordinates.transitions(
-        ...     threshold_min=5,
-        ...     transition_threshold=1.5
+        >>> # Keep residues with many burial/exposure transitions
+        >>> pipeline.feature.reduce.sasa.transitions(
+        ...     threshold_min=6,
+        ...     transition_threshold=0.8
         ... )
 
-        >>> # Keep stable coordinates with few transitions
-        >>> pipeline.feature.reduce.coordinates.transitions(
-        ...     threshold_max=3,
-        ...     window_size=20
+        >>> # Keep stable surface accessibility
+        >>> pipeline.feature.reduce.sasa.transitions(
+        ...     threshold_max=4,
+        ...     window_size=15
         ... )
 
-        >>> # Focus on moderate transition activity
-        >>> pipeline.feature.reduce.coordinates.transitions(
-        ...     threshold_min=2,
-        ...     threshold_max=8,
-        ...     transition_threshold=1.0
+        >>> # Focus on moderate SASA dynamics
+        >>> pipeline.feature.reduce.sasa.transitions(
+        ...     threshold_min=3,
+        ...     threshold_max=10,
+        ...     transition_threshold=0.5
         ... )
         """
         return self._manager.reduce_data(
             self._pipeline_data,
-            Coordinates,
+            SASA,
             metric="transitions",
             traj_selection=traj_selection,
             threshold_min=threshold_min,

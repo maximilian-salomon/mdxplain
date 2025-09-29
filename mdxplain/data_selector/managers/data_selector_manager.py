@@ -761,7 +761,7 @@ class DataSelectorManager:
 
         print("=== DataSelectorData Information ===")
         data_names = list(pipeline_data.data_selector_data.keys())
-        print(f"DataSelectorData Names: {len(data_names)} ({", ".join(data_names)})")
+        print(f"DataSelectorData Names: {len(data_names)} ({', '.join(data_names)})")
         
         for name, data in pipeline_data.data_selector_data.items():
             print(f"\n--- {name} ---")

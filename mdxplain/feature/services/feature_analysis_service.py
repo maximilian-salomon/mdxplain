@@ -27,21 +27,21 @@ if TYPE_CHECKING:
     from ...pipeline.entities.pipeline_data import PipelineData
 
 # Feature type service imports
-from ..feature_type.distances.distances_analysis_service import DistancesAnalysisService
-from ..feature_type.contacts.contacts_analysis_service import ContactsAnalysisService
-from ..feature_type.torsions.torsions_analysis_service import TorsionsAnalysisService
-from ..feature_type.dssp.dssp_analysis_service import DSSPAnalysisService
-from ..feature_type.sasa.sasa_analysis_service import SASAAnalysisService
-from ..feature_type.coordinates.coordinates_analysis_service import CoordinatesAnalysisService
+from ..feature_type.distances.services.distances_analysis_service import DistancesAnalysisService
+from ..feature_type.contacts.services.contacts_analysis_service import ContactsAnalysisService
+from ..feature_type.torsions.services.torsions_analysis_service import TorsionsAnalysisService
+from ..feature_type.dssp.services.dssp_analysis_service import DSSPAnalysisService
+from ..feature_type.sasa.services.sasa_analysis_service import SASAAnalysisService
+from ..feature_type.coordinates.services.coordinates_analysis_service import CoordinatesAnalysisService
 
 
 class FeatureAnalysisService:
     """Main service for accessing analysis operations on feature types."""
-    
+
     def __init__(self, pipeline_data: PipelineData) -> None:
         """
         Initialize feature analysis service.
-        
+
         Parameters:
         -----------
         pipeline_data : PipelineData
@@ -51,30 +51,42 @@ class FeatureAnalysisService:
     
     @property
     def distances(self) -> DistancesAnalysisService:
-        """Access distance-specific analysis operations."""
+        """
+        Access distance-specific analysis operations.
+        """
         return DistancesAnalysisService(self._pipeline_data)
     
     @property
     def contacts(self) -> ContactsAnalysisService:
-        """Access contact-specific analysis operations."""
+        """
+        Access contact-specific analysis operations.
+        """
         return ContactsAnalysisService(self._pipeline_data)
     
     @property
     def torsions(self) -> TorsionsAnalysisService:
-        """Access torsion-specific analysis operations."""
+        """
+        Access torsion-specific analysis operations.
+        """
         return TorsionsAnalysisService(self._pipeline_data)
     
     @property
     def dssp(self) -> DSSPAnalysisService:
-        """Access DSSP-specific analysis operations."""
+        """
+        Access DSSP-specific analysis operations.
+        """
         return DSSPAnalysisService(self._pipeline_data)
     
     @property
     def sasa(self) -> SASAAnalysisService:
-        """Access SASA-specific analysis operations."""
+        """
+        Access SASA-specific analysis operations.
+        """
         return SASAAnalysisService(self._pipeline_data)
     
     @property
     def coordinates(self) -> CoordinatesAnalysisService:
-        """Access coordinate-specific analysis operations."""
+        """
+        Access coordinate-specific analysis operations.
+        """
         return CoordinatesAnalysisService(self._pipeline_data)
