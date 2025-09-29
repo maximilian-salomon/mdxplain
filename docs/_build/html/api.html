@@ -47,6 +47,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#module-mdxplain.analysis.managers.analysis_manager">main</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#mdxplain.analysis.managers.analysis_manager.AnalysisManager"><code class="docutils literal notranslate"><span class="pre">AnalysisManager</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#mdxplain.analysis.managers.analysis_manager.AnalysisManager.features"><code class="docutils literal notranslate"><span class="pre">AnalysisManager.features</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mdxplain.analysis.managers.analysis_manager.AnalysisManager.structure"><code class="docutils literal notranslate"><span class="pre">AnalysisManager.structure</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -91,9 +92,6 @@
 <p>Provides access to different analysis types through properties.
 Currently supports feature analysis, with plans to extend to
 structure analysis, importance analysis, and more.</p>
-<p>The AnalysisManager uses a special pattern where services (like features)
-receive PipelineData directly, while manager methods use AutoInject.
-This maintains the clean API while supporting both patterns.</p>
 <section id="examples">
 <h3>Examples:<a class="headerlink" href="#examples" title="Link to this heading"></a></h3>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Feature analysis (services)</span>
@@ -101,33 +99,46 @@ This maintains the clean API while supporting both patterns.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">analysis</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">contacts</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
 </pre></div>
 </div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Future manager methods (AutoInject)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">analysis</span><span class="o">.</span><span class="n">compare_features</span><span class="p">(</span><span class="s2">&quot;distances&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
-</pre></div>
-</div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Future extensions</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">analysis</span><span class="o">.</span><span class="n">structure</span><span class="o">.</span><span class="n">rmsd</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">analysis</span><span class="o">.</span><span class="n">importance</span><span class="o">.</span><span class="n">feature_ranking</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">analysis</span><span class="o">.</span><span class="n">structure</span><span class="o">.</span><span class="n">rmsd</span><span class="p">(</span><span class="n">reference_traj</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">reference_frame</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">analysis</span><span class="o">.</span><span class="n">structure</span><span class="o">.</span><span class="n">rmsd</span><span class="o">.</span><span class="n">median</span><span class="o">.</span><span class="n">to_reference</span><span class="p">()</span>
 </pre></div>
 </div>
 <dl class="py property">
 <dt class="sig sig-object py" id="mdxplain.analysis.managers.analysis_manager.AnalysisManager.features">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">features</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">FeatureAnalysisService</span></em><a class="headerlink" href="#mdxplain.analysis.managers.analysis_manager.AnalysisManager.features" title="Link to this definition"></a></dt>
 <dd><p>Get feature analysis service.</p>
-<p>Provides direct access to all feature analysis operations
-with full VS Code autocompletion support. Uses lazy initialization
-and caching for performance.</p>
-<section id="returns">
-<h4>Returns:<a class="headerlink" href="#returns" title="Link to this heading"></a></h4>
+<section id="parameters">
+<h4>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h4>
 <dl class="simple">
-<dt>FeatureAnalysisService</dt><dd><p>Service providing access to feature analysis operations</p>
+<dt>None</dt><dd><p>The property does not accept parameters.</p>
 </dd>
 </dl>
 </section>
-<section id="raises">
-<h4>Raises:<a class="headerlink" href="#raises" title="Link to this heading"></a></h4>
+<section id="returns">
+<h4>Returns<a class="headerlink" href="#returns" title="Link to this heading"></a></h4>
 <dl class="simple">
-<dt>RuntimeError</dt><dd><p>If pipeline data has not been set</p>
+<dt>FeatureAnalysisService</dt><dd><p>Service providing access to feature analysis operations.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.analysis.managers.analysis_manager.AnalysisManager.structure">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">structure</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">StructureAnalysisService</span></em><a class="headerlink" href="#mdxplain.analysis.managers.analysis_manager.AnalysisManager.structure" title="Link to this definition"></a></dt>
+<dd><p>Get structure analysis service.</p>
+<section id="id1">
+<h4>Parameters<a class="headerlink" href="#id1" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>The property does not accept parameters.</p>
+</dd>
+</dl>
+</section>
+<section id="id2">
+<h4>Returns<a class="headerlink" href="#id2" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>StructureAnalysisService</dt><dd><p>Service providing access to structure analysis operations.</p>
 </dd>
 </dl>
 </section>

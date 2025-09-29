@@ -69,6 +69,9 @@ dev = [
     # Profiling and performance
     "memory-profiler",
     "snakeviz",
+    # docs
+    "sphinx",
+    "sphinx-rtd-theme",
 ]
 jupyter = [
     # Jupyter ecosystem for end-user analysis
