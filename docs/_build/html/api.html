@@ -44,10 +44,14 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">API documentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#module-mdxplain.analysis.managers.analysis_manager">main</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#mdxplain.analysis.managers.analysis_manager.AnalysisManager"><code class="docutils literal notranslate"><span class="pre">AnalysisManager</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#mdxplain.analysis.managers.analysis_manager.AnalysisManager.features"><code class="docutils literal notranslate"><span class="pre">AnalysisManager.features</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#mdxplain.analysis.managers.analysis_manager.AnalysisManager.structure"><code class="docutils literal notranslate"><span class="pre">AnalysisManager.structure</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#main">main</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mdxplain.clustering.managers.cluster_manager.ClusterManager"><code class="docutils literal notranslate"><span class="pre">ClusterManager</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#mdxplain.clustering.managers.cluster_manager.ClusterManager.reset_clusters"><code class="docutils literal notranslate"><span class="pre">ClusterManager.reset_clusters()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mdxplain.clustering.managers.cluster_manager.ClusterManager.add_clustering"><code class="docutils literal notranslate"><span class="pre">ClusterManager.add_clustering()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mdxplain.clustering.managers.cluster_manager.ClusterManager.save"><code class="docutils literal notranslate"><span class="pre">ClusterManager.save()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mdxplain.clustering.managers.cluster_manager.ClusterManager.load"><code class="docutils literal notranslate"><span class="pre">ClusterManager.load()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mdxplain.clustering.managers.cluster_manager.ClusterManager.print_info"><code class="docutils literal notranslate"><span class="pre">ClusterManager.print_info()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mdxplain.clustering.managers.cluster_manager.ClusterManager.add"><code class="docutils literal notranslate"><span class="pre">ClusterManager.add</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -82,65 +86,306 @@
              
   <section id="api-documentation">
 <h1>API documentation<a class="headerlink" href="#api-documentation" title="Link to this heading"></a></h1>
-<section id="module-mdxplain.analysis.managers.analysis_manager">
-<span id="main"></span><h2>main<a class="headerlink" href="#module-mdxplain.analysis.managers.analysis_manager" title="Link to this heading"></a></h2>
-<p>Analysis manager for coordinating different types of analysis.</p>
+<section id="main">
+<h2>main<a class="headerlink" href="#main" title="Link to this heading"></a></h2>
 <dl class="py class">
-<dt class="sig sig-object py" id="mdxplain.analysis.managers.analysis_manager.AnalysisManager">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mdxplain.analysis.managers.analysis_manager.</span></span><span class="sig-name descname"><span class="pre">AnalysisManager</span></span><a class="headerlink" href="#mdxplain.analysis.managers.analysis_manager.AnalysisManager" title="Link to this definition"></a></dt>
-<dd><p>Main manager for all analysis operations.</p>
-<p>Provides access to different analysis types through properties.
-Currently supports feature analysis, with plans to extend to
-structure analysis, importance analysis, and more.</p>
+<dt class="sig sig-object py" id="mdxplain.clustering.managers.cluster_manager.ClusterManager">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mdxplain.clustering.managers.cluster_manager.</span></span><span class="sig-name descname"><span class="pre">ClusterManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'./cache'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.clustering.managers.cluster_manager.ClusterManager" title="Link to this definition"></a></dt>
+<dd><p>Manager for clustering data objects.</p>
+<p>Manages the creation and storage of clustering results from feature
+matrices or decomposition results. Works with TrajectoryData objects
+to perform clustering analysis using various clustering methods
+(DBSCAN, HDBSCAN, DPA).</p>
 <section id="examples">
 <h3>Examples:<a class="headerlink" href="#examples" title="Link to this heading"></a></h3>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Feature analysis (services)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">analysis</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">distances</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">analysis</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">contacts</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Create manager and add DBSCAN clustering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">mdxplain.clustering</span><span class="w"> </span><span class="kn">import</span> <span class="n">cluster_type</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span> <span class="o">=</span> <span class="n">ClusterManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;feature_selection&quot;</span><span class="p">,</span> <span class="n">cluster_type</span><span class="o">.</span><span class="n">DBSCAN</span><span class="p">(</span><span class="n">eps</span><span class="o">=</span><span class="mf">0.5</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">use_decomposed</span><span class="o">=</span><span class="kc">False</span>
+<span class="gp">... </span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Future extensions</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">analysis</span><span class="o">.</span><span class="n">structure</span><span class="o">.</span><span class="n">rmsd</span><span class="p">(</span><span class="n">reference_traj</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">reference_frame</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">analysis</span><span class="o">.</span><span class="n">structure</span><span class="o">.</span><span class="n">rmsd</span><span class="o">.</span><span class="n">median</span><span class="o">.</span><span class="n">to_reference</span><span class="p">()</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Manager with custom cache directory</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span> <span class="o">=</span> <span class="n">ClusterManager</span><span class="p">(</span><span class="n">cache_dir</span><span class="o">=</span><span class="s2">&quot;./cache/clustering&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;pca_decomposition&quot;</span><span class="p">,</span> <span class="n">cluster_type</span><span class="o">.</span><span class="n">HDBSCAN</span><span class="p">(</span><span class="n">min_cluster_size</span><span class="o">=</span><span class="mi">10</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">use_decomposed</span><span class="o">=</span><span class="kc">True</span>
+<span class="gp">... </span><span class="p">)</span>
 </pre></div>
 </div>
-<dl class="py property">
-<dt class="sig sig-object py" id="mdxplain.analysis.managers.analysis_manager.AnalysisManager.features">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">features</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">FeatureAnalysisService</span></em><a class="headerlink" href="#mdxplain.analysis.managers.analysis_manager.AnalysisManager.features" title="Link to this definition"></a></dt>
-<dd><p>Get feature analysis service.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.clustering.managers.cluster_manager.ClusterManager.reset_clusters">
+<span class="sig-name descname"><span class="pre">reset_clusters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PipelineData</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.clustering.managers.cluster_manager.ClusterManager.reset_clusters" title="Link to this definition"></a></dt>
+<dd><p>Reset all computed clustering results and clear clustering data.</p>
+<p>This method removes all computed clustering results and their associated data,
+requiring clustering to be recalculated from scratch.</p>
+<section id="warning">
+<h4>Warning:<a class="headerlink" href="#warning" title="Link to this heading"></a></h4>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.clustering.reset_clusters()  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = ClusterManager()
+&gt;&gt;&gt; manager.reset_clusters(pipeline_data)  # pipeline_data required</p>
+</section>
 <section id="parameters">
-<h4>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h4>
+<h4>Parameters:<a class="headerlink" href="#parameters" title="Link to this heading"></a></h4>
 <dl class="simple">
-<dt>None</dt><dd><p>The property does not accept parameters.</p>
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data object</p>
 </dd>
 </dl>
 </section>
 <section id="returns">
-<h4>Returns<a class="headerlink" href="#returns" title="Link to this heading"></a></h4>
+<h4>Returns:<a class="headerlink" href="#returns" title="Link to this heading"></a></h4>
 <dl class="simple">
-<dt>FeatureAnalysisService</dt><dd><p>Service providing access to feature analysis operations.</p>
+<dt>None</dt><dd><p>Clears all clustering data from pipeline_data.cluster_data</p>
+</dd>
+</dl>
+</section>
+<section id="id1">
+<h4>Examples:<a class="headerlink" href="#id1" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span> <span class="o">=</span> <span class="n">ClusterManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">reset_clusters</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.clustering.managers.cluster_manager.ClusterManager.add_clustering">
+<span class="sig-name descname"><span class="pre">add_clustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PipelineData</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selection_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ClusterTypeBase</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_decomposed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_selector_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">override_cache</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.clustering.managers.cluster_manager.ClusterManager.add_clustering" title="Link to this definition"></a></dt>
+<dd><p>Add clustering analysis to trajectory data.</p>
+<p>This method performs clustering analysis on the specified data selection
+using the provided cluster type. Results are stored in the PipelineData
+object’s cluster_data dictionary with the specified or default cluster name.</p>
+<section id="id2">
+<h4>Warning:<a class="headerlink" href="#id2" title="Link to this heading"></a></h4>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.clustering.add_clustering(“selection”, cluster_type.DBSCAN())  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = ClusterManager()
+&gt;&gt;&gt; manager.add_clustering(pipeline_data, “selection”, cluster_type.DBSCAN())  # pipeline_data required</p>
+</section>
+<section id="id3">
+<h4>Parameters:<a class="headerlink" href="#id3" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data object containing feature selections or decomposition results</p>
+</dd>
+<dt>selection_name<span class="classifier">str</span></dt><dd><p>Name of the feature selection (if use_decomposed=False) or
+decomposition result (if use_decomposed=True) to cluster</p>
+</dd>
+<dt>cluster_type<span class="classifier">ClusterTypeBase instance</span></dt><dd><p>Cluster type instance with parameters (e.g., DBSCAN(eps=0.5))</p>
+</dd>
+<dt>use_decomposed<span class="classifier">bool, optional</span></dt><dd><p>Whether to use decomposition results (True) or feature selections (False),
+default=True</p>
+</dd>
+<dt>cluster_name<span class="classifier">str, optional</span></dt><dd><p>Custom name for storing clustering results. If None, defaults to str(cluster_type)</p>
+</dd>
+<dt>data_selector_name<span class="classifier">str, optional</span></dt><dd><p>Name of DataSelector to apply frame filtering before clustering.
+If None, uses all frames from the selection.
+Only applies if use_decomposed=False</p>
+</dd>
+<dt>force<span class="classifier">bool, optional</span></dt><dd><p>Whether to force recomputation if clustering already exists, default=False</p>
+</dd>
+<dt>override_cache<span class="classifier">bool, optional</span></dt><dd><p>Whether to clear entire cluster_name subdirectory before computation, default=False</p>
+</dd>
+</dl>
+</section>
+<section id="id4">
+<h4>Returns:<a class="headerlink" href="#id4" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Stores ClusterData object in pipeline_data.cluster_data dictionary</p>
+</dd>
+</dl>
+</section>
+<section id="id5">
+<h4>Examples:<a class="headerlink" href="#id5" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Cluster decomposition results with custom name</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">mdxplain.clustering</span><span class="w"> </span><span class="kn">import</span> <span class="n">cluster_type</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span> <span class="o">=</span> <span class="n">ClusterManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;pca_selection&quot;</span><span class="p">,</span> <span class="n">cluster_type</span><span class="o">.</span><span class="n">DBSCAN</span><span class="p">(</span><span class="n">eps</span><span class="o">=</span><span class="mf">0.5</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">use_decomposed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cluster_name</span><span class="o">=</span><span class="s2">&quot;my_dbscan&quot;</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Cluster feature selection with default name  </span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;distance_selection&quot;</span><span class="p">,</span> <span class="n">cluster_type</span><span class="o">.</span><span class="n">HDBSCAN</span><span class="p">(</span><span class="n">min_cluster_size</span><span class="o">=</span><span class="mi">10</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">use_decomposed</span><span class="o">=</span><span class="kc">False</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Cluster with data selector (only specific frames)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;distance_selection&quot;</span><span class="p">,</span> <span class="n">cluster_type</span><span class="o">.</span><span class="n">DBSCAN</span><span class="p">(</span><span class="n">eps</span><span class="o">=</span><span class="mf">0.3</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">data_selector_name</span><span class="o">=</span><span class="s2">&quot;folded_frames&quot;</span><span class="p">,</span> <span class="n">use_decomposed</span><span class="o">=</span><span class="kc">False</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="raises">
+<h4>Raises:<a class="headerlink" href="#raises" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If selection not found, cluster type invalid, or clustering computation fails</p>
 </dd>
 </dl>
 </section>
 </dd></dl>
 
-<dl class="py property">
-<dt class="sig sig-object py" id="mdxplain.analysis.managers.analysis_manager.AnalysisManager.structure">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">structure</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">StructureAnalysisService</span></em><a class="headerlink" href="#mdxplain.analysis.managers.analysis_manager.AnalysisManager.structure" title="Link to this definition"></a></dt>
-<dd><p>Get structure analysis service.</p>
-<section id="id1">
-<h4>Parameters<a class="headerlink" href="#id1" title="Link to this heading"></a></h4>
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.clustering.managers.cluster_manager.ClusterManager.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PipelineData</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.clustering.managers.cluster_manager.ClusterManager.save" title="Link to this definition"></a></dt>
+<dd><p>Save all clustering data to single file.</p>
+<section id="id6">
+<h4>Warning:<a class="headerlink" href="#id6" title="Link to this heading"></a></h4>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.clustering.save(‘clustering.npy’)  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = ClusterManager()
+&gt;&gt;&gt; manager.save(pipeline_data, ‘clustering.npy’)  # pipeline_data required</p>
+</section>
+<section id="id7">
+<h4>Parameters:<a class="headerlink" href="#id7" title="Link to this heading"></a></h4>
 <dl class="simple">
-<dt>None</dt><dd><p>The property does not accept parameters.</p>
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data container with clustering data</p>
+</dd>
+<dt>save_path<span class="classifier">str</span></dt><dd><p>Path where to save all clustering data in one file</p>
 </dd>
 </dl>
 </section>
-<section id="id2">
-<h4>Returns<a class="headerlink" href="#id2" title="Link to this heading"></a></h4>
+<section id="id8">
+<h4>Returns:<a class="headerlink" href="#id8" title="Link to this heading"></a></h4>
 <dl class="simple">
-<dt>StructureAnalysisService</dt><dd><p>Service providing access to structure analysis operations.</p>
+<dt>None</dt><dd><p>Saves all clustering data to the specified file</p>
 </dd>
 </dl>
+</section>
+<section id="id9">
+<h4>Examples:<a class="headerlink" href="#id9" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s1">&#39;clustering.npy&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.clustering.managers.cluster_manager.ClusterManager.load">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PipelineData</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.clustering.managers.cluster_manager.ClusterManager.load" title="Link to this definition"></a></dt>
+<dd><p>Load all clustering data from single file.</p>
+<section id="id10">
+<h4>Warning:<a class="headerlink" href="#id10" title="Link to this heading"></a></h4>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.clustering.load(‘clustering.npy’)  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = ClusterManager()
+&gt;&gt;&gt; manager.load(pipeline_data, ‘clustering.npy’)  # pipeline_data required</p>
+</section>
+<section id="id11">
+<h4>Parameters:<a class="headerlink" href="#id11" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data container to load clustering data into</p>
+</dd>
+<dt>load_path<span class="classifier">str</span></dt><dd><p>Path to saved clustering data file</p>
+</dd>
+</dl>
+</section>
+<section id="id12">
+<h4>Returns:<a class="headerlink" href="#id12" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Loads all clustering data from the specified file</p>
+</dd>
+</dl>
+</section>
+<section id="id13">
+<h4>Examples:<a class="headerlink" href="#id13" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s1">&#39;clustering.npy&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.clustering.managers.cluster_manager.ClusterManager.print_info">
+<span class="sig-name descname"><span class="pre">print_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PipelineData</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.clustering.managers.cluster_manager.ClusterManager.print_info" title="Link to this definition"></a></dt>
+<dd><p>Print clustering data information.</p>
+<section id="id14">
+<h4>Warning:<a class="headerlink" href="#id14" title="Link to this heading"></a></h4>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.clustering.print_info()  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = ClusterManager()
+&gt;&gt;&gt; manager.print_info(pipeline_data)  # pipeline_data required</p>
+</section>
+<section id="id15">
+<h4>Parameters:<a class="headerlink" href="#id15" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data container with clustering data</p>
+</dd>
+</dl>
+</section>
+<section id="id16">
+<h4>Returns:<a class="headerlink" href="#id16" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Prints clustering data information to console</p>
+</dd>
+</dl>
+</section>
+<section id="id17">
+<h4>Examples:<a class="headerlink" href="#id17" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">print_info</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.clustering.managers.cluster_manager.ClusterManager.add">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">add</span></span><a class="headerlink" href="#mdxplain.clustering.managers.cluster_manager.ClusterManager.add" title="Link to this definition"></a></dt>
+<dd><p>Service for adding clustering algorithms with simplified syntax.</p>
+<p>Provides an intuitive interface for adding clustering algorithms without
+requiring explicit cluster type instantiation or imports.</p>
+<section id="id18">
+<h4>Returns:<a class="headerlink" href="#id18" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>ClusterAddService</dt><dd><p>Service instance for adding clustering algorithms with combined parameters</p>
+</dd>
+</dl>
+</section>
+<section id="id19">
+<h4>Examples:<a class="headerlink" href="#id19" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Add different clustering algorithms</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">clustering</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">dbscan</span><span class="p">(</span><span class="s2">&quot;my_features&quot;</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">min_samples</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">clustering</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">hdbscan</span><span class="p">(</span><span class="s2">&quot;pca_features&quot;</span><span class="p">,</span> <span class="n">min_cluster_size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">clustering</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">dpa</span><span class="p">(</span><span class="s2">&quot;distance_features&quot;</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="notes">
+<h4>Notes:<a class="headerlink" href="#notes" title="Link to this heading"></a></h4>
+<p>Pipeline data is automatically injected by AutoInjectProxy.
+All cluster type parameters are combined with manager.add parameters.</p>
 </section>
 </dd></dl>
 
