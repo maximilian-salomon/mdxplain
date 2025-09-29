@@ -13,6 +13,7 @@ extensions = [
     'sphinx.ext.autodoc',
 ]
 
+autoclass_content = 'both'
 autodoc_member_order = 'bysource'
 autodoc_mock_imports = ['Pipeline']  #findet beim Build nicht 'Pipeline' aus mdxplain/clustering/cluster_type/dpa/dpa_calculator.py
 
