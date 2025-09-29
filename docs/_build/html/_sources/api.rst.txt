@@ -4,6 +4,7 @@ API documentation
 main
 ----
 
-.. automodule:: mdxplain.analysis.managers.analysis_manager
-   :members:
+.. autoclass:: mdxplain.clustering.managers.cluster_manager.ClusterManager
+   :members: __init__
    :undoc-members:
+   :inherited-members:
