@@ -10,7 +10,8 @@ Welcome to mdxplain's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   api
+   clustering_manager
+   dbscan
 
 
 
