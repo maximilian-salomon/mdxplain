@@ -960,7 +960,7 @@ class TestGetSelectedMetadataErrorCases:
         # Try to select non-existent residue
         with pytest.raises(ValueError, match="Reference trajectory 0 not found in selection"):
             self.pipeline.feature_selector.create("test")
-            self.pipeline.feature_selector.add("test", "distances", "res XYZ")
+            self.pipeline.feature_selector.add_selection("test", "distances", "res XYZ")
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", UserWarning)
                 self.pipeline.feature_selector.select("test", reference_traj=0)

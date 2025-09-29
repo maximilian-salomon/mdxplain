@@ -129,7 +129,7 @@ class AnalysisDataHelper:
         # Create temporary feature selector if needed
         if not feature_selector:
             feature_selector_manager.create(pipeline_data, temp_feature_selector)
-            feature_selector_manager.add(
+            feature_selector_manager.add_selection(
                 pipeline_data, temp_feature_selector, feature_type, "all", common_denominator=False
             )
             

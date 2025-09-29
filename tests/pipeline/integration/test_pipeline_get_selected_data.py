@@ -117,7 +117,7 @@ class TestGetSelectedDataVerification:
         if name in self.pipeline.data.selected_feature_data:
             del self.pipeline.data.selected_feature_data[name]
         self.pipeline.feature_selector.create(name)
-        self.pipeline.feature_selector.add(name, feature_type, selection, **kwargs)
+        self.pipeline.feature_selector.add_selection(name, feature_type, selection, **kwargs)
         self.pipeline.feature_selector.select(name, reference_traj=0)
     
     def _get_expected_feature_indices(self, selection: str):
@@ -659,28 +659,28 @@ class TestGetSelectedDataComplexScenarios:
         
         # 1. ALA residues with require_all_partners=False
         # For all Trajs there is a common ALA at pos 2
-        self.pipeline.feature_selector.add(
+        self.pipeline.feature_selector.add_selection(
             "complex_features", "distances", "res ALA2",
             use_reduced=False, common_denominator=False, require_all_partners=False, traj_selection=[0]
         )
         
         # 2. Consensus selection with specific range
         # Traj 0: 2,3,4, Traj 1: 2,3,4 Traj 2: none
-        self.pipeline.feature_selector.add(
+        self.pipeline.feature_selector.add_selection(
             "complex_features", "distances", "consensus 3.50-5.50",
             use_reduced=False, common_denominator=False, require_all_partners=True
         )
         
         # 3. Seqid range with trajectory selection
         # Traj 2 -> positions 3,4
-        self.pipeline.feature_selector.add(
+        self.pipeline.feature_selector.add_selection(
             "complex_features", "distances", "seqid 3-4",
             use_reduced=False, common_denominator=False, traj_selection=[2]
         )
         
         # 4. VAL residues with require_all_partners=True for traj 2 only
         # For all Trajs there is a common VAL at pos 0
-        self.pipeline.feature_selector.add(
+        self.pipeline.feature_selector.add_selection(
             "complex_features", "distances", "res VAL0",
             use_reduced=False, common_denominator=False, require_all_partners=False, traj_selection=[1]
         )

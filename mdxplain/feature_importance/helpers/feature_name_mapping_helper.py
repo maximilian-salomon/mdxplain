@@ -28,6 +28,7 @@ human-readable feature names using pipeline metadata.
 from __future__ import annotations
 
 from typing import Dict, Any, Optional, List, TYPE_CHECKING
+import numpy as np
 
 if TYPE_CHECKING:
     from ...pipeline.entities.pipeline_data import PipelineData
@@ -126,9 +127,9 @@ class FeatureNameMappingHelper:
         # Extract feature name from features metadata
         features_data = metadata_entry.get("features", {})
 
-        # Extract feature name from features metadata (all feature types use list format)
-        if isinstance(features_data, list) and len(features_data) > 0:
-            # Extract full_names from all elements in the list
+        # Extract feature name from features metadata (numpy array of partner residues)
+        if isinstance(features_data, np.ndarray):
+            # features_data contains the partner information for this specific feature
             partner_names = []
             for element in features_data:
                 if isinstance(element, dict) and "full_name" in element:

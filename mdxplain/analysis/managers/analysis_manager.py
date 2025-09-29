@@ -21,90 +21,78 @@
 """Analysis manager for coordinating different types of analysis."""
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
 
 from ...feature.services.feature_analysis_service import FeatureAnalysisService
-
-if TYPE_CHECKING:
-    from ...pipeline.entities.pipeline_data import PipelineData
+from ..structure import StructureAnalysisService
 
 
 class AnalysisManager:
     """
     Main manager for all analysis operations.
-    
+
     Provides access to different analysis types through properties.
     Currently supports feature analysis, with plans to extend to
     structure analysis, importance analysis, and more.
-    
-    The AnalysisManager uses a special pattern where services (like features)
-    receive PipelineData directly, while manager methods use AutoInject.
-    This maintains the clean API while supporting both patterns.
-    
+
     Examples:
     ---------
     >>> # Feature analysis (services)
     >>> pipeline.analysis.features.distances.mean()
     >>> pipeline.analysis.features.contacts.std()
-    
-    >>> # Future manager methods (AutoInject)
-    >>> pipeline.analysis.compare_features("distances", [0, 1], [2, 3])
-    
+
     >>> # Future extensions
-    >>> pipeline.analysis.structure.rmsd()
-    >>> pipeline.analysis.importance.feature_ranking()
+    >>> pipeline.analysis.structure.rmsd(reference_traj=0, reference_frame=0)
+    >>> pipeline.analysis.structure.rmsd.median.to_reference()
     """
-    
+
     def __init__(self) -> None:
+        """Initialize analysis manager.
+
+        Parameters
+        ----------
+        None
+            The initializer does not accept parameters.
+
+        Returns
+        -------
+        None
+            The initializer does not return anything.
+
+        Notes
+        -----
+        Pipeline data is injected automatically by :class:`AutoInjectProxy`.
         """
-        Initialize analysis manager.
-        
-        Uses minimal initialization consistent with other managers.
-        PipelineData is set via _set_pipeline_data() by PipelineManager.
-        """
-        self._pipeline_data = None
-        self._services_cache = {}
-    
-    def _set_pipeline_data(self, pipeline_data: 'PipelineData') -> None:
-        """
-        Set pipeline data for services.
-        
-        Called by PipelineManager to provide current pipeline data.
-        Invalidates service cache when pipeline data changes.
-        
-        Parameters:
-        -----------
-        pipeline_data : PipelineData
-            Current pipeline data container
-        """
-        if self._pipeline_data != pipeline_data:
-            self._pipeline_data = pipeline_data
-            self._services_cache.clear()  # Invalidate cache
-    
+        pass
+
     @property
     def features(self) -> FeatureAnalysisService:
-        """
-        Get feature analysis service.
-        
-        Provides direct access to all feature analysis operations
-        with full VS Code autocompletion support. Uses lazy initialization
-        and caching for performance.
-        
-        Returns:
-        --------
-        FeatureAnalysisService
-            Service providing access to feature analysis operations
-        
-        Raises:
+        """Get feature analysis service.
+
+        Parameters
+        ----------
+        None
+            The property does not accept parameters.
+
+        Returns
         -------
-        RuntimeError
-            If pipeline data has not been set
+        FeatureAnalysisService
+            Service providing access to feature analysis operations.
         """
-        if 'features' not in self._services_cache:
-            if self._pipeline_data is None:
-                raise RuntimeError(
-                    "Pipeline data not set. Make sure to use AnalysisManager "
-                    "through PipelineManager or call _set_pipeline_data() first."
-                )
-            self._services_cache['features'] = FeatureAnalysisService(pipeline_data=self._pipeline_data)
-        return self._services_cache['features']
+        return FeatureAnalysisService(None)
+
+    @property
+    def structure(self) -> StructureAnalysisService:
+        """Get structure analysis service.
+
+        Parameters
+        ----------
+        None
+            The property does not accept parameters.
+
+        Returns
+        -------
+        StructureAnalysisService
+            Service providing access to structure analysis operations.
+        """
+
+        return StructureAnalysisService(None)
