@@ -822,7 +822,7 @@ class ClusterManager:
         >>> pipeline.clustering.add.dpa("distance_features", Z=2.0)
         
         Notes:
-        -----
+        ------
         Pipeline data is automatically injected by AutoInjectProxy.
         All cluster type parameters are combined with manager.add parameters.
         """
