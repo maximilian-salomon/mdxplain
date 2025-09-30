@@ -41,21 +41,10 @@ class HDBSCAN(ClusterTypeBase):
     of clusters. It's particularly useful for identifying conformational states
     in molecular dynamics trajectories with varying densities.
 
-    Parameters:
-    -----------
-    min_cluster_size : int, optional
-        The minimum size of clusters. Default is 5.
-    min_samples : int, optional
-        The number of samples in a neighborhood for a point to be considered
-        as a core point. If not specified, defaults to min_cluster_size.
-    cluster_selection_epsilon : float, optional
-        A distance threshold for cluster selection. Default is 0.0.
-    cluster_selection_method : str, optional
-        The method used to select clusters from the condensed tree.
-        Options are 'eom' (Excess of Mass) or 'leaf'. Default is 'eom'.
+    Uses sklearn's HDBSCAN and NearestNeighbors under the hood.
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> # Create HDBSCAN with default parameters
     >>> hdbscan = HDBSCAN()
 
@@ -81,8 +70,8 @@ class HDBSCAN(ClusterTypeBase):
         """
         Initialize HDBSCAN cluster type.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         min_cluster_size : int, optional
             Minimum size of clusters. Default is 5.
         min_samples : int, optional
@@ -105,8 +94,8 @@ class HDBSCAN(ClusterTypeBase):
         force : bool, default=False
             Override memory and dimensionality checks (converts errors to warnings)
 
-        Returned Metadata:
-        ------------------
+        Returned Metadata
+        -----------------
         algorithm : str
             Always "hdbscan"
         hyperparameters : dict
@@ -144,8 +133,8 @@ class HDBSCAN(ClusterTypeBase):
         """
         Return unique string identifier for HDBSCAN cluster type.
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             The string 'hdbscan'
         """
@@ -161,8 +150,8 @@ class HDBSCAN(ClusterTypeBase):
         """
         Initialize the HDBSCAN calculator.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cache_path : str, optional
             Directory path for cache files. Default is './cache'.
         max_memory_gb : float, optional
@@ -183,20 +172,20 @@ class HDBSCAN(ClusterTypeBase):
         """
         Compute HDBSCAN clustering.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input data matrix to cluster, shape (n_samples, n_features)
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
             - cluster_labels: Cluster labels for each sample (-1 for noise)
             - metadata: Dictionary with clustering information
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If calculator is not initialized
         """
@@ -221,8 +210,8 @@ class HDBSCAN(ClusterTypeBase):
         """
         Validate HDBSCAN parameters.
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If parameters are invalid
         """

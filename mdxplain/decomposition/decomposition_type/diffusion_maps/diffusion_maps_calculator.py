@@ -52,8 +52,34 @@ class DiffusionMapsCalculator(CalculatorBase):
     2. Normalize to transition matrix: M = D^(-1) * K (Random Walk normalization)
     3. Compute eigenvectors of M, skip first (stationary distribution)
 
-    Examples:
-    ---------
+    It also supports Nyström approximation for very large datasets.
+    This method approximates the kernel matrix using a subset of the data,
+    significantly reducing memory usage and computation time.
+    See Fowlkes et al. (2004) for details.
+
+    References
+    ----------
+    .. [1] Coifman, R. R.; Lafon, S. Diffusion maps.
+           Appl. Comput. Harmon. Anal. 2006, 21 (1), 5–30.
+           (See Section 3, "The Diffusion Map," for the reasoning on
+           discarding the first eigenvector).
+    .. [2] Michaud-Agrawal, N.; Denning, E. J.; Woolf, T. B.; Beckstein, O.
+           MDAnalysis: A Toolkit for the Analysis of Molecular Dynamics
+           Simulations. J. Comput. Chem. 2011, 32, 2319–2327.
+    .. [3] de la Porte, J.; Herbst, B. M.; Hereman, W.; van der Walt, S. J.
+           An introduction to diffusion maps. In The 19th Symposium of the
+           Pattern Recognition Association of South Africa. 2008.
+    .. [4] Ferguson, A. L.; Panagiotopoulos, A. Z.; Debenedetti, P. G.;
+           Kevrekidis, I. G. Nonlinear dimensionality reduction in molecular
+           simulation: The diffusion map approach. Chem. Phys. Lett. 2011,
+           509 (1-3), 1–11.
+    .. [5] Fowlkes, C., Belongie, S., Chung, F., & Malik, J. (2004). 
+           Spectral grouping using the nystrom method. 
+           IEEE transactions on pattern analysis and 
+           machine intelligence, 26(2), 214-225.
+           
+    Examples
+    --------
     >>> # Standard Diffusion Maps for small trajectories
     >>> import mdtraj as md
     >>> calc = DiffusionMapsCalculator()
@@ -70,8 +96,8 @@ class DiffusionMapsCalculator(CalculatorBase):
         """
         Initialize Diffusion Maps calculator.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use memory mapping and iterative computation for large datasets
         cache_path : str, optional
@@ -79,13 +105,13 @@ class DiffusionMapsCalculator(CalculatorBase):
         chunk_size : int, optional
             Size of chunks for iterative computation (number of frames per chunk)
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes Diffusion Maps calculator with specified configuration
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Standard Diffusion Maps (small trajectories)
         >>> calc = DiffusionMapsCalculator()
 
@@ -103,8 +129,8 @@ class DiffusionMapsCalculator(CalculatorBase):
         standard in-memory computation or iterative memory-mapped computation
         based on configuration settings.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input coordinate matrix (n_frames, n_features) where n_features = n_atoms * 3
         **kwargs : dict
@@ -120,15 +146,15 @@ class DiffusionMapsCalculator(CalculatorBase):
             - random_state : int, optional
                 Random state for reproducible results
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
             - diffusion_coords: Diffusion coordinates (n_frames, n_components)
             - metadata: Dictionary with computation information and eigenvalues
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compute Diffusion Maps
         >>> calc = DiffusionMapsCalculator()
         >>> coords, metadata = calc.compute(
@@ -137,8 +163,8 @@ class DiffusionMapsCalculator(CalculatorBase):
         >>> print(f"Method: {metadata['method']}")
         >>> print(f"Eigenvalues: {metadata['eigenvalues']}")
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If input is not numpy array or parameters are invalid
         """
@@ -156,18 +182,18 @@ class DiffusionMapsCalculator(CalculatorBase):
         """
         Validate input coordinate matrix.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input coordinate matrix to validate
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Validates input, raises ValueError if invalid
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If input is not numpy array or has invalid shape
         """
@@ -187,20 +213,20 @@ class DiffusionMapsCalculator(CalculatorBase):
         """
         Extract and validate Diffusion Maps hyperparameters.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input coordinate matrix for parameter validation
         kwargs : dict
             Input parameters to extract and validate
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Validated hyperparameters
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If required parameters are missing or invalid
         """
@@ -256,15 +282,15 @@ class DiffusionMapsCalculator(CalculatorBase):
         4. Eigendecomposition of M
         5. Skip first eigenvector (stationary distribution)
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input coordinate matrix (n_frames, n_features)
         hyperparameters : dict
             Diffusion Maps hyperparameters
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             Tuple of (diffusion_coordinates, metadata)
         """
@@ -314,15 +340,15 @@ class DiffusionMapsCalculator(CalculatorBase):
         for iterative eigenvalue computation. Follows Coifman & Lafon (2006) but 
         with memory-efficient implementation for large datasets.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input coordinate matrix (n_frames, n_features)
         hyperparameters : dict
             Diffusion Maps hyperparameters
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             Tuple of (diffusion_coordinates, metadata)
         """
@@ -389,15 +415,15 @@ class DiffusionMapsCalculator(CalculatorBase):
         This implementation uses asymmetric normalization to avoid the d_hat 
         approximation problem that arises with symmetric normalization.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input coordinate matrix (n_frames, n_features)
         hyperparameters : dict
             Diffusion Maps hyperparameters
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             Tuple of (diffusion_coordinates, metadata)
         """
@@ -474,8 +500,8 @@ class DiffusionMapsCalculator(CalculatorBase):
         Uses memmap if self.use_memmap is True, otherwise regular numpy array.
         Automatically handles cache path combination with cache_prefix.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input coordinate matrix (n_frames, n_features)
         n_atoms : int
@@ -483,8 +509,8 @@ class DiffusionMapsCalculator(CalculatorBase):
         filename : str, default="rmsd_matrix.dat"
             Filename for memmap (automatically combined with cache_path and prefix)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             RMSD distance matrix (n_frames, n_frames) - memmap or regular array
         """
@@ -512,8 +538,8 @@ class DiffusionMapsCalculator(CalculatorBase):
         Uses memmap if self.use_memmap is True, otherwise regular numpy array.
         Automatically handles cache path combination with cache_prefix.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         rmsd_matrix : numpy.ndarray
             RMSD distance matrix (can be memmap or regular array)
         epsilon : float
@@ -521,8 +547,8 @@ class DiffusionMapsCalculator(CalculatorBase):
         filename : str, default="kernel_matrix.dat"
             Filename for memmap (automatically combined with cache_path and prefix)
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             (kernel_matrix, inv_row_sums) where kernel_matrix follows memmap setting
             and inv_row_sums is array of inverse row sums for normalization
@@ -555,15 +581,15 @@ class DiffusionMapsCalculator(CalculatorBase):
 
         Implements M*v = D^(-1) * K * v without materializing M.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         kernel_matrix : numpy.ndarray
             Gaussian kernel matrix (can be memmap)
         inv_row_sums : numpy.ndarray
             Inverse row sums of kernel matrix for normalization
 
-        Returns:
-        --------
+        Returns
+        -------
         scipy.sparse.linalg.LinearOperator
             LinearOperator that computes transition matrix operations
         """
@@ -585,13 +611,13 @@ class DiffusionMapsCalculator(CalculatorBase):
 
         Implements M = D^(-1) * K where D_ii = sum_j K_ij.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         kernel : numpy.ndarray
             Gaussian kernel matrix
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Transition matrix M
         """
@@ -607,8 +633,8 @@ class DiffusionMapsCalculator(CalculatorBase):
 
         Skips the first (trivial) eigenvector and returns the requested components.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         eigenvals : numpy.ndarray
             Eigenvalues from transition matrix
         eigenvecs : numpy.ndarray
@@ -616,8 +642,8 @@ class DiffusionMapsCalculator(CalculatorBase):
         n_components : int
             Number of diffusion coordinates to return
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             (diffusion_eigenvalues, diffusion_coordinates)
         """
@@ -638,8 +664,8 @@ class DiffusionMapsCalculator(CalculatorBase):
         """
         Clean up temporary memory-mapped files.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         memmap_paths : list
             List of paths to memory-mapped files to remove
         """
@@ -654,15 +680,15 @@ class DiffusionMapsCalculator(CalculatorBase):
         """
         Estimate epsilon using k-nearest neighbors heuristic.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input coordinate matrix (n_frames, n_features)
         random_state : int, optional
             Random state for reproducible sampling
 
-        Returns:
-        --------
+        Returns
+        -------
         float
             Estimated epsilon value
         """
@@ -713,8 +739,8 @@ class DiffusionMapsCalculator(CalculatorBase):
         """
         Compute RMSD between two flattened coordinate vectors.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         coords1 : numpy.ndarray
             First flattened coordinate vector (n_atoms * 3,)
         coords2 : numpy.ndarray  
@@ -722,8 +748,8 @@ class DiffusionMapsCalculator(CalculatorBase):
         n_atoms : int
             Number of atoms
 
-        Returns:
-        --------
+        Returns
+        -------
         float
             RMSD value between the two structures
         """
@@ -742,8 +768,8 @@ class DiffusionMapsCalculator(CalculatorBase):
         """
         Compute RMSD from chunk of frames to single frame (vectorized).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         chunk_coords : numpy.ndarray
             Chunk coordinate matrix (n_chunk_frames, n_features)
         single_coord : numpy.ndarray
@@ -751,8 +777,8 @@ class DiffusionMapsCalculator(CalculatorBase):
         n_atoms : int
             Number of atoms
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Array of RMSD values (n_chunk_frames,)
         """
@@ -778,8 +804,8 @@ class DiffusionMapsCalculator(CalculatorBase):
         """
         Select landmark frames using MiniBatchKMeans clustering (chunk-konform).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input coordinate matrix (n_frames, n_features)
         n_landmarks : int
@@ -787,8 +813,8 @@ class DiffusionMapsCalculator(CalculatorBase):
         random_state : int, optional
             Random state for reproducible results
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Array of landmark frame indices
         """
@@ -844,8 +870,8 @@ class DiffusionMapsCalculator(CalculatorBase):
         """
         Compute kernel matrix between landmark frames (n_landmarks × n_landmarks).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input coordinate matrix (n_frames, n_features)
         landmark_idx : numpy.ndarray
@@ -855,8 +881,8 @@ class DiffusionMapsCalculator(CalculatorBase):
         n_atoms : int
             Number of atoms (n_features // 3)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Kernel matrix between landmarks
         """
@@ -876,8 +902,8 @@ class DiffusionMapsCalculator(CalculatorBase):
         """
         Compute kernel matrix from all frames to landmarks (n_frames × n_landmarks).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input coordinate matrix (n_frames, n_features)
         landmark_idx : numpy.ndarray
@@ -891,8 +917,8 @@ class DiffusionMapsCalculator(CalculatorBase):
         n_landmarks : int
             Number of landmarks
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Kernel matrix from all frames to landmarks
         """
@@ -926,13 +952,13 @@ class DiffusionMapsCalculator(CalculatorBase):
         This creates a row-stochastic matrix (rows sum to 1).
         Avoids the d_hat problem from symmetric normalization.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         K_landmarks : numpy.ndarray
             Kernel matrix between landmarks
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             (M_small, inv_row_sums) where M_small is row-stochastic matrix
         """
@@ -953,13 +979,13 @@ class DiffusionMapsCalculator(CalculatorBase):
         Perron-Frobenius theorem: eigenvalues are real for stochastic matrices.
         Use eig (not eigh) as M_small is not symmetric after row normalization.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         M_small : numpy.ndarray
             Row-stochastic matrix from landmarks
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             (eigenvalues, eigenvectors) sorted by eigenvalue magnitude (descending)
         """
@@ -989,8 +1015,8 @@ class DiffusionMapsCalculator(CalculatorBase):
         Small eigenvalues (< 1e-10) correspond to numerically unreliable modes
         and are set to zero for physical consistency.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         K_all_to_landmarks : numpy.ndarray
             Kernel matrix from all frames to landmarks
         eigvecs_small : numpy.ndarray
@@ -1000,8 +1026,8 @@ class DiffusionMapsCalculator(CalculatorBase):
         n_frames : int
             Number of frames
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Extended eigenvectors for all frames
         """
@@ -1048,8 +1074,8 @@ class DiffusionMapsCalculator(CalculatorBase):
         Coifman & Lafon (2006): Skip first eigenvector (stationary distribution).
         First eigenvalue λ₁ = 1 with constant eigenvector for connected graphs.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         eigenvectors_full : numpy.ndarray
             Extended eigenvectors for all frames
         eigvals_small : numpy.ndarray
@@ -1057,8 +1083,8 @@ class DiffusionMapsCalculator(CalculatorBase):
         n_components : int
             Number of diffusion coordinates to extract
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             (diffusion_coordinates, diffusion_eigenvalues)
         """

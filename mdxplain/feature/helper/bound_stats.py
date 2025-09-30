@@ -33,9 +33,11 @@ class BoundStats:
     which are created by the FeatureBindingHelper. Analysis methods are bound
     to feature data at runtime and automatically use the appropriate data
     (original or reduced) based on the feature state.
+
+    It is more like a namespace for methods than a traditional class.
     
-    Examples:
-    ---------
+    Examples
+    --------
     >>> # BoundStats is typically created automatically
     >>> feature_data.analysis.compute_mean()  # Uses bound method
     >>> feature_data.analysis.compute_std()   # Uses bound method

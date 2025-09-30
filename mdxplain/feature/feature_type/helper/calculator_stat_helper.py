@@ -56,8 +56,8 @@ class CalculatorStatHelper:
         """
         Compute differences between two feature arrays with optional preprocessing.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         array1 : np.ndarray
             First feature array
         array2 : np.ndarray
@@ -71,13 +71,13 @@ class CalculatorStatHelper:
         **func_kwargs : dict
             Additional arguments for preprocessing function
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Element-wise differences between preprocessed arrays
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> array1 = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
         >>> array2 = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
         >>> CalculatorStatHelper.compute_differences(array1, array2)
@@ -107,8 +107,8 @@ class CalculatorStatHelper:
         """
         Apply statistical function per feature across all frames (2D format).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         array : np.ndarray
             Feature array (NxMxM square or NxP condensed format)
         func : callable
@@ -120,13 +120,13 @@ class CalculatorStatHelper:
         **func_kwargs : dict
             Additional arguments for the function
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Statistical values per feature (preserves spatial dimensions)
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> array = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
         >>> CalculatorStatHelper.compute_func_per_feature(array, np.mean)
         array([3.0, 5.0, 7.0])
@@ -167,8 +167,8 @@ class CalculatorStatHelper:
         """
         Apply statistical function per frame across all pairs.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         array : np.ndarray
             Feature array to process
         chunk_size : int, optional
@@ -178,13 +178,13 @@ class CalculatorStatHelper:
         func : callable, optional
             Function to apply (default: np.mean)
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Statistical values per frame
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> array = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
         >>> CalculatorStatHelper.compute_func_per_frame(array, np.mean)
         """
@@ -204,15 +204,15 @@ class CalculatorStatHelper:
         """
         Compute function per frame without chunking.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         array : np.ndarray
             Feature array to process
         func : callable, optional
             Function to apply (default: np.mean)
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Statistical values per frame
         """
@@ -226,8 +226,8 @@ class CalculatorStatHelper:
         """
         Compute function per frame with chunking.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         array : np.ndarray
             Feature array to process
         func : callable, optional
@@ -235,8 +235,8 @@ class CalculatorStatHelper:
         chunk_size : int, optional
             Number of frames to process per chunk
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Statistical values per frame
         """
@@ -254,8 +254,8 @@ class CalculatorStatHelper:
         """
         Process a single frame chunk.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         array : np.ndarray
             Feature array to process
         func : callable, optional
@@ -265,8 +265,8 @@ class CalculatorStatHelper:
         end_idx : int
             End index of the chunk
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Statistical values per frame
         """
@@ -282,15 +282,15 @@ class CalculatorStatHelper:
         """
         Convert 2D condensed array to 3D squareform array.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         array : np.ndarray
             Feature array to process
         chunk_size : int, optional
             Chunk size for processing
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Squareform array (NxMxM)
         """
@@ -317,8 +317,8 @@ class CalculatorStatHelper:
         """
         Apply statistical function per column (3D format required, auto-converts 2D).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         array : np.ndarray
             Feature array - if 2D (condensed), automatically converts to 3D (squareform)
         func : callable
@@ -330,8 +330,8 @@ class CalculatorStatHelper:
         **func_kwargs : dict
             Additional arguments for the function
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Statistical values per column
         """
@@ -359,8 +359,8 @@ class CalculatorStatHelper:
         """
         Compute function per column with chunking.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         array : np.ndarray
             Feature array to process
         func : callable, optional
@@ -370,8 +370,8 @@ class CalculatorStatHelper:
         **func_kwargs : dict
             Additional arguments for the function
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Statistical values per column
         """
@@ -388,13 +388,13 @@ class CalculatorStatHelper:
         """
         Combine results from chunked processing.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         result_chunks : list
             List of chunk results
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Combined results
         """
@@ -414,8 +414,8 @@ class CalculatorStatHelper:
         """
         Count transitions using lag time analysis.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         array : np.ndarray
             Feature array to analyze
         threshold : float, default=1.0
@@ -427,8 +427,8 @@ class CalculatorStatHelper:
         use_memmap : bool, default=False
             Whether output is for memory-mapped arrays (enables intelligent chunking)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Transition counts per pair
         """
@@ -447,8 +447,8 @@ class CalculatorStatHelper:
         """
         Count transitions using sliding window analysis.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         array : np.ndarray
             Feature array to analyze
         threshold : float, default=1.0
@@ -460,8 +460,8 @@ class CalculatorStatHelper:
         use_memmap : bool, default=False
             Whether output is for memory-mapped arrays (enables intelligent chunking)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Transition counts per pair
         """
@@ -481,8 +481,8 @@ class CalculatorStatHelper:
         """
         Compute transitions using unified internal method.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         array : np.ndarray
             Feature array
         threshold : float
@@ -496,8 +496,8 @@ class CalculatorStatHelper:
         mode : str
             Computation mode ('lagtime' or 'window')
 
-        Returns:
-        --------
+        Returns
+        -------
         numpyp.ndarray
             Transition counts per pair
         """
@@ -536,8 +536,8 @@ class CalculatorStatHelper:
         """
         Compute transitions with chunked processing.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         array : np.ndarray
             Flattened feature array
         threshold : float
@@ -551,8 +551,8 @@ class CalculatorStatHelper:
         result : np.ndarray
             Output array to fill
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Modifies result array in-place
         """
@@ -577,8 +577,8 @@ class CalculatorStatHelper:
         """
         Process transitions for a single chunk.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         chunk : np.ndarray
             Chunk of feature array
         threshold : float
@@ -592,8 +592,8 @@ class CalculatorStatHelper:
         start_idx : int
             Start index of the chunk
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Modifies flat_result array in-place
         """
@@ -616,8 +616,8 @@ class CalculatorStatHelper:
         """
         Compute lagtime transitions for a single data column.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data_column : np.ndarray
             Data column to process
         threshold : float
@@ -625,8 +625,8 @@ class CalculatorStatHelper:
         window_size : int
             Window or lag size
 
-        Returns:
-        --------
+        Returns
+        -------
         int
             Number of transitions
         """
@@ -639,8 +639,8 @@ class CalculatorStatHelper:
         """
         Compute window transitions for a single data column.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data_column : np.ndarray
             Data column to process
         threshold : float
@@ -648,8 +648,8 @@ class CalculatorStatHelper:
         window_size : int
             Window or lag size
 
-        Returns:
-        --------
+        Returns
+        -------
         int
             Number of transitions
         """
@@ -668,8 +668,8 @@ class CalculatorStatHelper:
         """
         Compute transitions without chunking.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         array : np.ndarray
             Flattened feature array
         threshold : float
@@ -681,8 +681,8 @@ class CalculatorStatHelper:
         result : np.ndarray
             Output array to fill
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Modifies result array in-place
         """
@@ -716,8 +716,8 @@ class CalculatorStatHelper:
         """
         Calculate stability (inverse of transition rate) per pair.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         array : np.ndarray
             Feature array to analyze
         threshold : float, default=2.0
@@ -731,8 +731,8 @@ class CalculatorStatHelper:
         mode : str, default='lagtime'
             Calculation mode ('lagtime' or 'window')
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Stability values per pair (0=unstable, 1=stable)
         """

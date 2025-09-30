@@ -45,8 +45,10 @@ class Distances(FeatureTypeBase):
     This is a base feature type with no dependencies - other features like
     contacts use distance data as input.
 
-    Examples:
-    ---------
+    Use mdtraj's distance functions under the hood.
+
+    Examples
+    --------
     >>> # Basic distance calculation via TrajectoryData
     >>> traj_data = TrajectoryData()
     >>> traj_data.load_trajectories('simulation/')
@@ -65,8 +67,8 @@ class Distances(FeatureTypeBase):
         """
         Initialize distance feature type with optional reference trajectory.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         excluded_neighbors : int, default=0
             Number of nearest neighbors to consider for distance calculation.
             Chain Breaks are automatically excluded. Meassured by jump in the seqid of a residue.
@@ -76,12 +78,12 @@ class Distances(FeatureTypeBase):
             If 3, only nearest neighbors and their neighbors and their neighbors are computed.
             etc.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Use first trajectory as reference (automatic)
         >>> distances = Distances()
 
@@ -95,8 +97,8 @@ class Distances(FeatureTypeBase):
         """
         Initialize the distance calculator with specified configuration.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for large datasets
         cache_path : str, optional
@@ -104,12 +106,12 @@ class Distances(FeatureTypeBase):
         chunk_size : int, optional
             Number of frames to process per chunk (None for automatic sizing)
 
-        Returns:
-        --------
+        Returns
+        -------
         None
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic initialization
         >>> distances.init_calculator()
 
@@ -127,22 +129,22 @@ class Distances(FeatureTypeBase):
         """
         Compute pairwise distances from molecular dynamics trajectories.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         input_data : mdtraj.Trajectory
             MD trajectory to compute distances from
         feature_metadata : dict, optional
             Not used for distances (base feature type)
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple[numpy.ndarray, dict]
             Tuple containing (distance_matrix, feature_metadata) where distance_matrix
             is shape (n_frames, n_pairs) and feature_metadata is structured metadata
             with features in same order as data columns
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compute distances from trajectories
         >>> distances = Distances()
         >>> distances.init_calculator()
@@ -154,8 +156,8 @@ class Distances(FeatureTypeBase):
         >>> distances.init_calculator(use_memmap=True, cache_path='./cache/')
         >>> data, names = distances.compute(input_data=large_trajectories)
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If trajectories have different numbers of residues
             If calculator is not initialized
@@ -175,17 +177,17 @@ class Distances(FeatureTypeBase):
         """
         Get list of feature type dependencies for distance calculations.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         List[str]
             Empty list as distances are a base feature with no dependencies
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> distances = Distances()
         >>> print(distances.get_dependencies())
         []
@@ -197,17 +199,17 @@ class Distances(FeatureTypeBase):
         """
         Get the type name as class method.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             String identifier 'distances'
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> print(Distances.get_type_name())
         'distances'
         """
@@ -217,17 +219,17 @@ class Distances(FeatureTypeBase):
         """
         Get the input feature type that distances depend on.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             None since distances are a base feature with no input dependencies
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> distances = Distances()
         >>> print(distances.get_input())
         None

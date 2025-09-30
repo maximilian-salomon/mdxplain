@@ -54,12 +54,12 @@ class DaskMDTrajectoryBuildHelper:
         """
         Initialize DaskMDTrajectoryBuildHelper.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
         
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes builder instance
         """
@@ -73,8 +73,8 @@ class DaskMDTrajectoryBuildHelper:
         """
         Initialize a DaskMDTrajectory instance with all required components.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         instance : DaskMDTrajectory
             Instance to initialize
         trajectory_file : str
@@ -88,13 +88,13 @@ class DaskMDTrajectoryBuildHelper:
         n_workers : int, optional
             Number of parallel workers (defaults to CPU count)
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes instance in-place
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> builder = DaskMDTrajectoryBuildHelper()
         >>> instance = DaskMDTrajectory.__new__(DaskMDTrajectory)
         >>> builder.initialize_instance(instance, 'traj.xtc', 'topology.pdb')
@@ -155,8 +155,8 @@ class DaskMDTrajectoryBuildHelper:
         """
         Initialize DaskMDTrajectory instance from MDTraj trajectory object.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         instance : DaskMDTrajectory
             Instance to initialize
         mdtraj : md.Trajectory
@@ -167,6 +167,11 @@ class DaskMDTrajectoryBuildHelper:
             Number of frames per chunk
         n_workers : int, optional
             Number of parallel workers
+
+        Returns
+        -------
+        None
+            Initializes instance in-place
         """
         # Set basic trajectory info (no actual files)
         instance.trajectory_file = f"<mdtraj_object_{id(mdtraj)}>"
@@ -232,8 +237,8 @@ class DaskMDTrajectoryBuildHelper:
         """
         Prepare configuration data from existing Zarr store.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         zarr_store : zarr.Group
             Zarr group containing trajectory data
         chunk_size : int, default=1000
@@ -241,13 +246,13 @@ class DaskMDTrajectoryBuildHelper:
         n_workers : int, optional
             Number of workers for parallel operations
             
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Configuration dictionary for DaskMDTrajectory creation
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> builder = DaskMDTrajectoryBuildHelper()
         >>> config = builder.create_from_zarr_store(zarr_store)
         >>> # Use config to create instance in DaskMDTrajectory
@@ -277,18 +282,18 @@ class DaskMDTrajectoryBuildHelper:
         """
         Extract usable path from zarr store.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         zarr_store : zarr.Group
             Zarr group to extract path from
             
-        Returns:
-        --------
+        Returns
+        -------
         str
             File system path for da.from_zarr
             
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If store has no extractable file system path
         """

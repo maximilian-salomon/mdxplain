@@ -38,8 +38,8 @@ class DecompositionAddService:
     without requiring users to import and instantiate decomposition types directly.
     All decomposition type parameters are combined with manager.add parameters.
     
-    Examples:
-    ---------
+    Examples
+    --------
     >>> pipeline.decomposition.add.pca("my_features", n_components=10)
     >>> pipeline.decomposition.add.kernel_pca("contact_features", kernel='rbf', n_components=20)
     >>> pipeline.decomposition.add.diffusion_maps("distance_features", n_components=15)
@@ -49,15 +49,15 @@ class DecompositionAddService:
         """
         Initialize factory with manager and pipeline data.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         manager : DecompositionManager
             Decomposition manager instance
         pipeline_data : PipelineData
             Pipeline data container (injected by AutoInjectProxy)
             
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         self._manager = manager
@@ -78,8 +78,8 @@ class DecompositionAddService:
         PCA reduces dimensionality by finding the directions of maximum variance
         in the data and projecting the data onto these principal components.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selection_name : str
             Name of feature selection to decompose
         n_components : int, optional
@@ -93,13 +93,13 @@ class DecompositionAddService:
         force : bool, default=False
             Force recalculation even if decomposition already exists
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds PCA decomposition results to pipeline data
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic PCA decomposition
         >>> pipeline.decomposition.add.pca("my_features", n_components=10)
         
@@ -121,8 +121,8 @@ class DecompositionAddService:
         ...     force=True
         ... )
         
-        Notes:
-        ------
+        Notes
+        -----
         PCA is a linear dimensionality reduction technique that preserves
         the maximum amount of variance in the reduced representation.
         Components are ordered by explained variance ratio.
@@ -159,8 +159,8 @@ class DecompositionAddService:
         to project data into higher-dimensional spaces where linear PCA can
         capture nonlinear relationships in the original space.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selection_name : str
             Name of feature selection to decompose
         n_components : int, optional
@@ -186,13 +186,13 @@ class DecompositionAddService:
         force : bool, default=False
             Force recalculation even if decomposition already exists
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds Kernel PCA decomposition results to pipeline data
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic RBF Kernel PCA
         >>> pipeline.decomposition.add.kernel_pca("my_features", n_components=15)
         
@@ -215,11 +215,10 @@ class DecompositionAddService:
         ...     data_selector_name="folded_conformations"
         ... )
         
-        Notes:
-        ------
+        Notes
+        -----
         Kernel PCA uses RBF kernel to capture complex nonlinear patterns in data.
         Nyström approximation is recommended for datasets with >10,000 samples.
-        Parallel processing can significantly speed up large-scale computations.
         """
         decomposition_type = KernelPCA(
             n_components=n_components,
@@ -261,8 +260,8 @@ class DecompositionAddService:
         Specialized Kernel PCA implementation optimized for contact matrix data
         with contact-specific kernel functions and regularization.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selection_name : str
             Name of contact feature selection to decompose
         n_components : int, optional
@@ -288,13 +287,13 @@ class DecompositionAddService:
         force : bool, default=False
             Force recalculation even if decomposition already exists
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds Contact Kernel PCA decomposition results to pipeline data
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic Contact Kernel PCA
         >>> pipeline.decomposition.add.contact_kernel_pca("contact_features", n_components=12)
         
@@ -316,11 +315,10 @@ class DecompositionAddService:
         ...     data_selector_name="folded_states"
         ... )
         
-        Notes:
-        ------
+        Notes
+        -----
         Contact Kernel PCA uses specialized kernels that account for the
         binary nature of contact data and contact pattern correlations.
-        Particularly effective for analyzing protein folding pathways.
         """
         decomposition_type = ContactKernelPCA(
             n_components=n_components,
@@ -360,8 +358,8 @@ class DecompositionAddService:
         captures the intrinsic geometry of data manifolds. It's particularly
         effective for analyzing conformational transitions in MD trajectories.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selection_name : str
             Name of feature selection to decompose
         n_components : int, required
@@ -381,13 +379,13 @@ class DecompositionAddService:
         force : bool, default=False
             Force recalculation even if decomposition already exists
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds Diffusion Maps decomposition results to pipeline data
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic Diffusion Maps
         >>> pipeline.decomposition.add.diffusion_maps("my_features", n_components=12)
         
@@ -408,8 +406,8 @@ class DecompositionAddService:
         ...     data_selector_name="equilibrated_frames"
         ... )
         
-        Notes:
-        ------
+        Notes
+        -----
         Diffusion Maps preserves diffusion distances and is excellent for
         identifying slow conformational coordinates and transition pathways.
         Uses RMSD-based distances to construct the diffusion process.

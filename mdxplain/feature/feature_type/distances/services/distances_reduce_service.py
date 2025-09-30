@@ -43,15 +43,15 @@ class DistancesReduceService(ReduceServiceBase):
         """
         Initialize distance reduce factory.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         manager : FeatureManager
             Feature manager instance
         pipeline_data : PipelineData
             Pipeline data container
             
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         super().__init__(manager, pipeline_data)
@@ -70,8 +70,8 @@ class DistancesReduceService(ReduceServiceBase):
         Filters distance features based on their relative variability.
         Higher CV indicates more dynamic/flexible distance pairs.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -81,13 +81,13 @@ class DistancesReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep moderately variable distances
         >>> pipeline.feature.reduce.distances.cv(threshold_min=0.1, threshold_max=0.5)
         
@@ -116,8 +116,8 @@ class DistancesReduceService(ReduceServiceBase):
         
         Filters distance features based on their absolute variability.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -127,13 +127,13 @@ class DistancesReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep distances with significant variation
         >>> pipeline.feature.reduce.distances.std(threshold_min=0.5)
         
@@ -163,8 +163,8 @@ class DistancesReduceService(ReduceServiceBase):
         Filters distance features based on their variance (squared standard deviation).
         Higher variance indicates more dynamic distance fluctuations.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -174,13 +174,13 @@ class DistancesReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep highly variable distances
         >>> pipeline.feature.reduce.distances.variance(threshold_min=1.0)
 
@@ -216,8 +216,8 @@ class DistancesReduceService(ReduceServiceBase):
         Filters distance features based on their range of motion.
         Higher range indicates larger conformational changes.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -227,13 +227,13 @@ class DistancesReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep distances with large conformational changes
         >>> pipeline.feature.reduce.distances.range(threshold_min=3.0)
 
@@ -273,8 +273,8 @@ class DistancesReduceService(ReduceServiceBase):
         Identifies distance features that show conformational transitions
         based on their temporal patterns.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -292,13 +292,13 @@ class DistancesReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find distances with clear transitions
         >>> pipeline.feature.reduce.distances.transitions(
         ...     transition_threshold=3.0, 
@@ -338,8 +338,8 @@ class DistancesReduceService(ReduceServiceBase):
         Filters distance features based on their closest approach.
         Useful for identifying pairs that can form close contacts.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -349,13 +349,13 @@ class DistancesReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep pairs that can get very close
         >>> pipeline.feature.reduce.distances.min(threshold_max=3.0)
 
@@ -391,8 +391,8 @@ class DistancesReduceService(ReduceServiceBase):
         Filters distances using MAD, a robust measure of variability.
         Less sensitive to outliers than standard deviation.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -402,13 +402,13 @@ class DistancesReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep robustly variable distances
         >>> pipeline.feature.reduce.distances.mad(threshold_min=0.5)
 
@@ -444,8 +444,8 @@ class DistancesReduceService(ReduceServiceBase):
         Filters distance features based on their average values over time.
         Useful for identifying consistently close or distant pairs.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -455,13 +455,13 @@ class DistancesReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep distances with moderate average values
         >>> pipeline.feature.reduce.distances.mean(threshold_min=2.0, threshold_max=8.0)
         
@@ -491,8 +491,8 @@ class DistancesReduceService(ReduceServiceBase):
         Filters distance features based on their maximum observed values.
         Useful for identifying pairs that never exceed certain distances.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -502,13 +502,13 @@ class DistancesReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep only pairs that stay within 10 Å
         >>> pipeline.feature.reduce.distances.max(threshold_max=10.0)
         

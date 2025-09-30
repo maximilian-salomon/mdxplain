@@ -48,6 +48,9 @@ class NomenclatureHelper:
 
     This class provides a unified interface to use different mdciao labelers
     (GPCR, CGN, KLIFS) and generate label lists for molecular dynamics analysis.
+
+    Uses mdciao nomenclature systems:
+    https://proteinformatics.uni-leipzig.de/mdciao/api/generated/mdciao.nomenclature.html
     """
     # TODO: Use guess_fragments and guess_nomenclature methods from mdciao to automatically detect fragments and nomenclature types.
     def __init__(
@@ -109,13 +112,13 @@ class NomenclatureHelper:
         **labeler_kwargs
             Additional keyword arguments passed to the mdciao labelers
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes the NomenclatureHelper object
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If fragment_definition is required when consensus=True
         ValueError
@@ -207,8 +210,8 @@ class NomenclatureHelper:
         """
         Parse fragment configuration into unified format.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         fragment_definition : Union[str, Dict[str, Tuple[int, int]]]
             Fragment definition input (string or dictionary)
         fragment_type : Union[str, Dict[str, str]]
@@ -216,8 +219,8 @@ class NomenclatureHelper:
         fragment_molecule_name : Union[str, Dict[str, str]]
             Fragment molecule name input (string or dictionary)
 
-        Returns:
-        --------
+        Returns
+        -------
         Dict[str, Dict[str, Union[Tuple[int, int], str]]]
             Unified fragment configuration dictionary
         """
@@ -377,14 +380,15 @@ class NomenclatureHelper:
         based on its nomenclature type. Each labeler is configured with the
         molecule identifier and the common parameters (verbose, web lookup, etc.).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes the labelers
+        
         Notes
         -----
         - GPCR and CGN labelers use UniProt_name parameter
@@ -410,12 +414,12 @@ class NomenclatureHelper:
         """
         Build common parameters for all labelers.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Dictionary of common parameters for mdciao labelers
         """
@@ -439,8 +443,8 @@ class NomenclatureHelper:
         """
         Create appropriate labeler based on nomenclature type.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         nomenclature_type : str
             Type of nomenclature labeler to create
         molecule_name : str
@@ -450,13 +454,13 @@ class NomenclatureHelper:
         fragment_name : str
             Fragment name for error messages
 
-        Returns:
-        --------
+        Returns
+        -------
         object
             Initialized mdciao labeler instance
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If unknown nomenclature type is provided
         """
@@ -484,8 +488,8 @@ class NomenclatureHelper:
         """
         Create structured label dictionaries for the trajectory.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
         Returns
@@ -500,12 +504,12 @@ class NomenclatureHelper:
         """
         Create structured label dictionaries from topology residues.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         List[Dict]
             List of label dictionaries for each residue in the topology.
             Each dict contains: aaa_code, a_code, index, seqid, consensus, full_name
@@ -534,12 +538,12 @@ class NomenclatureHelper:
         """
         Compute and cache consensus labels for all residues.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         List[Optional[str]]
             List of consensus labels for all residues
         """
@@ -560,8 +564,8 @@ class NomenclatureHelper:
         """
         Process labels for a single fragment.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cached_labels : List[Optional[str]]
             List of cached consensus labels to update
         fragment_name : str
@@ -569,8 +573,8 @@ class NomenclatureHelper:
         fragment_config : dict
             Fragment configuration dictionary
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates cached_labels in-place
         """
@@ -595,8 +599,8 @@ class NomenclatureHelper:
         """
         Apply fragment labels to cache with overlap detection.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cached_labels : List[Optional[str]]
             List of cached consensus labels to update
         fragment_labels : List[str]
@@ -608,8 +612,8 @@ class NomenclatureHelper:
         fragment_name : str
             Name of the fragment for error messages
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates cached_labels in-place
         """
@@ -629,8 +633,8 @@ class NomenclatureHelper:
         """
         Check for overlap and set label if valid.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cached_labels : List[Optional[str]]
             List of cached consensus labels
         idx : int
@@ -640,13 +644,13 @@ class NomenclatureHelper:
         fragment_name : str
             Fragment name for error messages
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates cached_labels[idx] in-place
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If overlap is detected at the same index
         """
@@ -664,8 +668,8 @@ class NomenclatureHelper:
         """
         Generate full name based on aa_short setting and consensus label.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         aaa_code : str
             Three-letter amino acid code
         a_code : str
@@ -675,8 +679,8 @@ class NomenclatureHelper:
         consensus : Optional[str]
             Consensus label from nomenclature system
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             Full residue name with optional consensus label
         """
@@ -693,20 +697,20 @@ class NomenclatureHelper:
         """
         Validate range tuple and extract start/end indices.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         fragment_config : dict
             Fragment configuration dictionary
         fragment_name : str
             Fragment name for error messages
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[int, int]
             Tuple of (start_idx, end_idx) for the fragment range
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If range is not a tuple
         """
@@ -719,18 +723,18 @@ class NomenclatureHelper:
         """
         Get labeler for fragment, ensuring it exists.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         fragment_name : str
             Name of the fragment to get labeler for
 
-        Returns:
-        --------
+        Returns
+        -------
         object
             mdciao labeler instance for the fragment
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If no labeler is configured for the fragment
         """

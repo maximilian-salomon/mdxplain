@@ -44,7 +44,18 @@ class ContactsAnalysisService(AnalysisServiceBase):
     """
     
     def __init__(self, pipeline_data: PipelineData) -> None:
-        """Initialize contacts analysis service."""
+        """
+        Initialize contacts analysis service.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data containing features and trajectory information
+
+        Returns
+        -------
+        None
+        """
         super().__init__(pipeline_data)
         self._feature_type = "contacts"
         self._calculator = ContactCalculatorAnalysis(
@@ -58,20 +69,20 @@ class ContactsAnalysisService(AnalysisServiceBase):
         """
         Compute contact frequency per pair.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Contact frequency for each pair (0.0 to 1.0) with shape (n_pairs,)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compute frequency for all contact pairs
         >>> pipeline.analysis.features.contacts.frequency()
         
@@ -90,20 +101,20 @@ class ContactsAnalysisService(AnalysisServiceBase):
         """
         Compute absolute number of contacts per frame.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Total contact count per frame with shape (n_frames,)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Count total contacts per frame
         >>> pipeline.analysis.features.contacts.contacts_per_frame_abs()
         """
@@ -117,20 +128,20 @@ class ContactsAnalysisService(AnalysisServiceBase):
         """
         Compute percentage of contacts per frame.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Fraction of pairs in contact per frame (0.0 to 1.0) with shape (n_frames,)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Get contact percentage per frame
         >>> pipeline.analysis.features.contacts.contacts_per_frame_percentage()
         """
@@ -146,20 +157,20 @@ class ContactsAnalysisService(AnalysisServiceBase):
         """
         Compute mean contact frequency per residue.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Mean contact frequency per residue
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find most connected residues
         >>> pipeline.analysis.features.contacts.per_residue_mean()
         """
@@ -173,20 +184,20 @@ class ContactsAnalysisService(AnalysisServiceBase):
         """
         Compute standard deviation of contacts per residue. Auto-converts condensed to squareform.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Standard deviation of contacts per residue
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find residues with variable contact patterns
         >>> pipeline.analysis.features.contacts.per_residue_std()
         """
@@ -200,20 +211,20 @@ class ContactsAnalysisService(AnalysisServiceBase):
         """
         Compute total contact count per residue. Auto-converts condensed to squareform.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Total contact count per residue
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find most connected residues (total contacts)
         >>> pipeline.analysis.features.contacts.per_residue_sum()
         """
@@ -231,8 +242,8 @@ class ContactsAnalysisService(AnalysisServiceBase):
         """
         Compute contact transitions using lag time analysis.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         threshold : int, default=1
             Threshold for detecting transitions (contact changes)
         lag_time : int, default=1
@@ -242,13 +253,13 @@ class ContactsAnalysisService(AnalysisServiceBase):
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Transition counts per contact pair
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find dynamic contacts (frequent breaking/forming)
         >>> pipeline.analysis.features.contacts.transitions_lagtime()
         """
@@ -264,8 +275,8 @@ class ContactsAnalysisService(AnalysisServiceBase):
         """
         Compute contact transitions within sliding window for each contact pair.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         threshold : int, default=1
             Threshold for detecting transitions (contact changes)
         window_size : int, default=10
@@ -275,13 +286,13 @@ class ContactsAnalysisService(AnalysisServiceBase):
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Transition counts per contact pair
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Window-based transition detection for contacts
         >>> pipeline.analysis.features.contacts.transitions_window(
         ...     threshold=1, window_size=20
@@ -299,8 +310,8 @@ class ContactsAnalysisService(AnalysisServiceBase):
         """
         Compute contact stability (inverse of transition rate) for each contact pair.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         threshold : int, default=1
             Threshold for detecting stability
         window_size : int, default=1
@@ -310,13 +321,13 @@ class ContactsAnalysisService(AnalysisServiceBase):
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Stability values per contact pair (higher = more stable)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find most stable contacts
         >>> pipeline.analysis.features.contacts.stability(threshold=1, window_size=5)
         """
@@ -334,8 +345,8 @@ class ContactsAnalysisService(AnalysisServiceBase):
         """
         Compute differences between two contact data selections.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector2 : str, optional
             Second feature selector for comparison
         traj_selection2 : str, int, list, optional
@@ -347,13 +358,13 @@ class ContactsAnalysisService(AnalysisServiceBase):
         traj_selection : str, int, list, optional
             First trajectory selection for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Differences between the two selections
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compare contacts between conditions
         >>> pipeline.analysis.features.contacts.differences(
         ...     traj_selection=[0, 1],      # Native state

@@ -35,18 +35,6 @@ class CriteriaBuilderHelper:
     Provides static methods for creating standardized criteria dictionaries
     that describe how frame selections were created. These dictionaries are
     stored in DataSelectorData objects for documentation and debugging.
-    
-    Examples:
-    ---------
-    >>> # Build tag criteria
-    >>> criteria = CriteriaBuilderHelper.build_tag_criteria(
-    ...     ["system_A", "biased"], True, 150
-    ... )
-    
-    >>> # Build cluster criteria
-    >>> criteria = CriteriaBuilderHelper.build_cluster_criteria(
-    ...     "conformations", [0, 1], [0, 1], 300
-    ... )
     """
     
     @staticmethod
@@ -59,8 +47,8 @@ class CriteriaBuilderHelper:
         Creates a standardized criteria dictionary that documents how
         a tag-based frame selection was performed.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         tags : List[str]
             List of tags used for selection
         match_all : bool
@@ -68,13 +56,13 @@ class CriteriaBuilderHelper:
         n_matches : int
             Number of frames that matched the criteria
             
-        Returns:
-        --------
+        Returns
+        -------
         Dict[str, Any]
             Criteria dictionary with selection documentation
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> criteria = CriteriaBuilderHelper.build_tag_criteria(
         ...     ["system_A", "biased"], True, 150
         ... )
@@ -102,8 +90,8 @@ class CriteriaBuilderHelper:
         a cluster-based frame selection was performed, including both
         original and resolved cluster IDs.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         clustering_name : str
             Name of the clustering used for selection
         cluster_ids : List[Union[int, str]]
@@ -113,13 +101,13 @@ class CriteriaBuilderHelper:
         n_matches : int
             Number of frames that matched the criteria
             
-        Returns:
-        --------
+        Returns
+        -------
         Dict[str, Any]
             Criteria dictionary with selection documentation
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> criteria = CriteriaBuilderHelper.build_cluster_criteria(
         ...     "conformations", ["folded", 1], [0, 1], 300
         ... )
@@ -142,20 +130,20 @@ class CriteriaBuilderHelper:
         Creates a standardized criteria dictionary that documents how
         a trajectory-specific explicit indices-based frame selection was performed.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory_frames : Dict[int, List[int]]
             Dictionary mapping trajectory indices to their selected frame indices
         n_matches : int
             Number of frames selected
             
-        Returns:
-        --------
+        Returns
+        -------
         Dict[str, Any]
             Criteria dictionary with selection documentation
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> trajectory_frames = {0: [0, 10, 20], 1: [100, 200]}
         >>> criteria = CriteriaBuilderHelper.build_indices_criteria(trajectory_frames, 5)
         >>> print(criteria["type"])  # "indices"
@@ -179,8 +167,8 @@ class CriteriaBuilderHelper:
         Creates a standardized criteria dictionary that documents how
         a combination of multiple selectors was performed.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         source_selectors : List[str]
             Names of the source selectors that were combined
         combination_mode : str
@@ -188,13 +176,13 @@ class CriteriaBuilderHelper:
         n_matches : int
             Number of frames in the final combined selection
             
-        Returns:
-        --------
+        Returns
+        -------
         Dict[str, Any]
             Criteria dictionary with selection documentation
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> criteria = CriteriaBuilderHelper.build_combination_criteria(
         ...     ["folded_frames", "biased_frames"], "intersection", 75
         ... )

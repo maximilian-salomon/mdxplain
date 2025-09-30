@@ -44,8 +44,10 @@ class DSSPCalculator(CalculatorBase):
     with support for both simplified and full DSSP schemes. Multiple encoding
     formats support different downstream analysis requirements.
 
-    Examples:
-    ---------
+    Uses mdtraj for dssp calculations under the hood.
+
+    Examples
+    --------
     >>> # Basic DSSP calculation
     >>> calculator = DSSPCalculator()
     >>> dssp, metadata = calculator.compute(trajectory, simplified=True)
@@ -65,8 +67,8 @@ class DSSPCalculator(CalculatorBase):
         """
         Initialize DSSP calculator with configuration parameters.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for large datasets
         cache_path : str, optional
@@ -74,12 +76,12 @@ class DSSPCalculator(CalculatorBase):
         chunk_size : int, optional
             Number of frames to process per chunk
 
-        Returns:
-        --------
+        Returns
+        -------
         None
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic initialization
         >>> calculator = DSSPCalculator()
 
@@ -98,8 +100,8 @@ class DSSPCalculator(CalculatorBase):
         """
         Compute DSSP secondary structure assignments from trajectory.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         input_data : mdtraj.Trajectory
             MDTraj trajectory object to process
         **kwargs : dict
@@ -108,14 +110,14 @@ class DSSPCalculator(CalculatorBase):
             - encoding : str - Output encoding ('onehot', 'integer', 'char')
             - res_metadata : dict - Residue metadata for naming
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple[numpy.ndarray, dict]
             Tuple containing (dssp_array, feature_metadata) where dssp_array
             format depends on encoding and classification level
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Simplified DSSP with one-hot encoding
         >>> dssp, metadata = calculator.compute(trajectory, simplified=True, encoding='onehot')
 
@@ -148,8 +150,8 @@ class DSSPCalculator(CalculatorBase):
         """
         Create output array for DSSP storage based on encoding type.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory : mdtraj.Trajectory
             Trajectory object for size information
         n_residues : int
@@ -159,8 +161,8 @@ class DSSPCalculator(CalculatorBase):
         encoding : str
             Encoding type ('onehot', 'integer', 'char')
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray or numpy.memmap
             Output array for DSSP storage
         """
@@ -191,8 +193,8 @@ class DSSPCalculator(CalculatorBase):
         """
         Compute DSSP assignments using MDTraj and encode according to specified format.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory : mdtraj.Trajectory
             Source trajectory
         dssp_array : numpy.ndarray or numpy.memmap
@@ -204,8 +206,8 @@ class DSSPCalculator(CalculatorBase):
         classes : list
             List of class labels
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Filled DSSP array
         """
@@ -236,8 +238,8 @@ class DSSPCalculator(CalculatorBase):
         """
         Encode DSSP assignments according to specified format.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dssp_data : numpy.ndarray
             Raw DSSP assignments (n_frames, n_residues)
         encoding : str
@@ -247,13 +249,13 @@ class DSSPCalculator(CalculatorBase):
         simplified : bool
             Whether using simplified classification
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Encoded DSSP assignments
 
-        Notes:
-        ------
+        Notes
+        -----
         Delegates to DSSPEncodingHelper for clean separation of concerns.
         Only converts space to C for char encoding when simplified=False.
         """
@@ -288,8 +290,8 @@ class DSSPCalculator(CalculatorBase):
         """
         Generate feature metadata for DSSP calculations.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory : mdtraj.Trajectory
             Source trajectory for topology information
         simplified : bool
@@ -301,13 +303,13 @@ class DSSPCalculator(CalculatorBase):
         res_metadata : dict or None
             Residue metadata for naming
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Feature metadata dictionary with DSSP calculation details
             
-        Notes:
-        ------
+        Notes
+        -----
         Delegates to helper methods for clean separation of concerns.
         """
         if encoding == 'onehot':
@@ -330,8 +332,8 @@ class DSSPCalculator(CalculatorBase):
         """
         Create feature metadata for one-hot encoding.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory : mdtraj.Trajectory
             Source trajectory for topology information
         classes : list
@@ -339,13 +341,13 @@ class DSSPCalculator(CalculatorBase):
         res_metadata : dict or None
             Residue metadata for naming
             
-        Returns:
-        --------
+        Returns
+        -------
         list
             List of feature metadata for each residue-class combination
             
-        Notes:
-        ------
+        Notes
+        -----
         Creates one feature per residue per DSSP class.
         """
         features = []
@@ -365,20 +367,20 @@ class DSSPCalculator(CalculatorBase):
         """
         Create feature metadata for standard encoding.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory : mdtraj.Trajectory
             Source trajectory for topology information
         res_metadata : dict or None
             Residue metadata for naming
             
-        Returns:
-        --------
+        Returns
+        -------
         list
             List of feature metadata for each residue
             
-        Notes:
-        ------
+        Notes
+        -----
         Creates one feature per residue for char/integer encoding.
         """
         features = []
@@ -396,8 +398,8 @@ class DSSPCalculator(CalculatorBase):
         """
         Get residue information from metadata or create default.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         res_idx : int
             Residue index
         residue : mdtraj.Residue
@@ -405,13 +407,13 @@ class DSSPCalculator(CalculatorBase):
         res_metadata : dict or None
             Existing residue metadata
             
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Residue information dictionary
             
-        Notes:
-        ------
+        Notes
+        -----
         Uses existing metadata if available, otherwise creates default info.
         """
         if res_metadata and res_idx < len(res_metadata):
@@ -440,8 +442,8 @@ class DSSPCalculator(CalculatorBase):
         """
         Filter and select dynamic secondary structure features based on statistical criteria.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         input_data : numpy.ndarray
             DSSP array (n_frames, n_residues) with encoded secondary structure classes
         metric : str, default='transitions'
@@ -467,14 +469,14 @@ class DSSPCalculator(CalculatorBase):
         lag_time : int, default=1
             Lag time for transition analysis
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Dictionary with keys: 'indices', 'values', 'dynamic_data', 'feature_metadata',
             'metric_used', 'n_dynamic', 'total_residues', 'threshold_min', 'threshold_max'
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Select highly dynamic residues (>= 5 transitions)
         >>> result = calculator.compute_dynamic_values(dssp, metric='transitions', threshold_min=5)
         >>> dynamic_residues = result['dynamic_data']
@@ -520,8 +522,8 @@ class DSSPCalculator(CalculatorBase):
         """
         Compute metric values for DSSP based on specified metric type.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dssp_data : numpy.ndarray
             DSSP array (n_frames, n_residues) with encoded secondary structure
         metric : str
@@ -541,8 +543,8 @@ class DSSPCalculator(CalculatorBase):
         lag_time : int, default=1
             Lag time for transitions metric
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Computed metric values per residue
         """

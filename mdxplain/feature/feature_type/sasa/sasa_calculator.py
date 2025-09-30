@@ -31,7 +31,6 @@ import numpy as np
 from tqdm import tqdm
 
 from ..helper.calculator_compute_helper import CalculatorComputeHelper
-from ..helper.calculator_stat_helper import CalculatorStatHelper
 from ..interfaces.calculator_base import CalculatorBase
 from .sasa_calculator_analysis import SASACalculatorAnalysis
 
@@ -44,8 +43,10 @@ class SASACalculator(CalculatorBase):
     The algorithm places points on the surface of each atom and counts how many
     are accessible to a spherical probe of specified radius.
 
-    Examples:
-    ---------
+    Uses mdtraj for SASA calculation under the hood.
+
+    Examples
+    --------
     >>> # Basic SASA calculation
     >>> calculator = SASACalculator()
     >>> sasa, metadata = calculator.compute(trajectory, mode='residue')
@@ -59,8 +60,8 @@ class SASACalculator(CalculatorBase):
         """
         Initialize SASA calculator with configuration parameters.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for large datasets
         cache_path : str, optional
@@ -68,12 +69,12 @@ class SASACalculator(CalculatorBase):
         chunk_size : int, optional
             Number of frames to process per chunk
 
-        Returns:
-        --------
+        Returns
+        -------
         None
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic initialization
         >>> calculator = SASACalculator()
 
@@ -91,8 +92,8 @@ class SASACalculator(CalculatorBase):
         """
         Compute SASA using Shrake-Rupley algorithm from trajectory.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         input_data : mdtraj.Trajectory
             MDTraj trajectory object to process
         **kwargs : dict
@@ -101,15 +102,15 @@ class SASACalculator(CalculatorBase):
             - probe_radius : float - Probe sphere radius in nm
             - res_metadata : dict - Residue metadata for naming
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple[numpy.ndarray, dict]
             Tuple containing (sasa_array, feature_metadata) where sasa_array
             has shape (n_frames, n_residues) or (n_frames, n_atoms) with
             SASA values in nm²
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Residue-level SASA
         >>> sasa, metadata = calculator.compute(trajectory, mode='residue', probe_radius=0.14)
 
@@ -140,15 +141,15 @@ class SASACalculator(CalculatorBase):
         """
         Create output array for SASA storage.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory : mdtraj.Trajectory
             Trajectory object for size information
         n_features : int
             Number of SASA features (residues or atoms)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray or numpy.memmap
             Output array for SASA storage
         """
@@ -165,8 +166,8 @@ class SASACalculator(CalculatorBase):
         """
         Compute SASA using MDTraj's Shrake-Rupley implementation.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory : mdtraj.Trajectory
             Source trajectory
         sasa_array : numpy.ndarray or numpy.memmap
@@ -176,8 +177,8 @@ class SASACalculator(CalculatorBase):
         probe_radius : float
             Probe radius in nanometers
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Filled SASA array
         """
@@ -211,8 +212,8 @@ class SASACalculator(CalculatorBase):
         """
         Generate feature metadata for SASA calculations.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory : mdtraj.Trajectory
             Source trajectory for topology information
         mode : str
@@ -222,8 +223,8 @@ class SASACalculator(CalculatorBase):
         res_metadata : dict or None
             Residue metadata for naming
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Feature metadata dictionary with SASA calculation details
         """
@@ -254,8 +255,8 @@ class SASACalculator(CalculatorBase):
         """
         Generate feature metadata for a single residue.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         res_idx : int
             Residue index
         residue : mdtraj residue object
@@ -263,8 +264,8 @@ class SASACalculator(CalculatorBase):
         res_metadata : dict or None
             Existing residue metadata
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Residue feature metadata
         """
@@ -291,13 +292,13 @@ class SASACalculator(CalculatorBase):
         """
         Generate feature metadata for a single atom.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         atom : mdtraj atom object
             Atom topology information
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Atom feature metadata
         """
@@ -332,8 +333,8 @@ class SASACalculator(CalculatorBase):
         """
         Filter and select variable/dynamic SASA values based on statistical criteria.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         input_data : numpy.ndarray
             SASA array (n_frames, n_features)
         metric : str, default='cv'
@@ -366,14 +367,14 @@ class SASACalculator(CalculatorBase):
         lag_time : int, default=1
             Lag time for transition analysis
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Dictionary with keys: 'indices', 'values', 'dynamic_data', 'feature_metadata',
             'metric_used', 'n_dynamic', 'total_features', 'threshold_min', 'threshold_max'
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Select highly variable SASA (CV >= 0.5)
         >>> result = calculator.compute_dynamic_values(sasa, metric='cv', threshold_min=0.5)
         >>> variable_sasa = result['dynamic_data']
@@ -428,8 +429,8 @@ class SASACalculator(CalculatorBase):
         """
         Compute metric values for SASA based on specified metric type.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         sasa_data : numpy.ndarray
             SASA array (n_frames, n_features)
         metric : str
@@ -447,8 +448,8 @@ class SASACalculator(CalculatorBase):
         threshold_max : float, optional
             Used as burial/exposure cutoff
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Computed metric values per SASA feature
         """

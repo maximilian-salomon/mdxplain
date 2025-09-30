@@ -28,7 +28,6 @@ chunk-wise processing for large datasets.
 """
 
 import numpy as np
-from ...helper.calculator_compute_helper import CalculatorComputeHelper
 from .....utils import DataUtils
 
 
@@ -40,8 +39,8 @@ class DSSPEncodingHelper:
     encoding formats with support for memory mapping and chunk-wise processing
     for large trajectory datasets.
     
-    Examples:
-    ---------
+    Examples
+    --------
     >>> # Character encoding with space conversion
     >>> char_data = DSSPEncodingHelper.encode_char_chunked(
     ...     dssp_data, False, 1000, "./cache"
@@ -58,8 +57,8 @@ class DSSPEncodingHelper:
         """
         Encode DSSP to character format with chunk-wise processing.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dssp_data : numpy.ndarray
             Input DSSP data with shape (n_frames, n_residues)
         chunk_size : int
@@ -67,13 +66,13 @@ class DSSPEncodingHelper:
         cache_path : str
             Directory path for cache files
             
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Character-encoded DSSP data
             
-        Notes:
-        ------
+        Notes
+        -----
         For non-simplified data, converts space characters '' to 'C'.
         Uses memory mapping for efficient processing of large datasets.
         """
@@ -96,20 +95,20 @@ class DSSPEncodingHelper:
         """
         Encode DSSP to integer format in-memory.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dssp_data : numpy.ndarray
             Input DSSP data with shape (n_frames, n_residues)
         classes : list
             List of class labels for integer mapping
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Integer-encoded DSSP data
             
-        Notes:
-        ------
+        Notes
+        -----
         For small datasets that fit in memory. Uses vectorized operations
         for efficient conversion.
         """
@@ -124,8 +123,8 @@ class DSSPEncodingHelper:
         """
         Encode DSSP to integer format with chunk-wise processing.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dssp_data : numpy.ndarray
             Input DSSP data with shape (n_frames, n_residues)
         classes : list
@@ -135,13 +134,13 @@ class DSSPEncodingHelper:
         cache_path : str
             Directory path for cache files
             
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Integer-encoded DSSP data
             
-        Notes:
-        ------
+        Notes
+        -----
         Uses memory mapping for efficient processing of large datasets.
         Processes data in chunks to avoid memory overflow.
         """
@@ -172,8 +171,8 @@ class DSSPEncodingHelper:
         """
         Encode DSSP to one-hot format with intelligent processing.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dssp_data : numpy.ndarray
             Input DSSP data with shape (n_frames, n_residues)
         classes : list
@@ -185,13 +184,13 @@ class DSSPEncodingHelper:
         use_memmap : bool, default=True
             Whether to use memory mapping for output array
             
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             One-hot encoded DSSP data with shape (n_frames, n_residues * n_classes)
             
-        Notes:
-        ------
+        Notes
+        -----
         Uses chunk-wise processing for large datasets or when use_memmap=True.
         For small datasets with use_memmap=False, uses direct vectorized operations.
         """
@@ -221,15 +220,15 @@ class DSSPEncodingHelper:
         """
         Encode dssp_data from mdtraj output to one-hot format directly.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dssp_data : numpy.ndarray
             Input DSSP data with shape (n_frames, n_residues)
         classes : list
             List of class labels
             
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             One-hot encoded DSSP data with shape (n_frames, n_residues * n_classes)
         """

@@ -45,18 +45,18 @@ class FeatureShapeHelper:
         """
         Check if array is memory-mapped.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         array : np.ndarray
             Array to check
 
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if array is memory-mapped
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> array = np.memmap("array.npy", mode="w+", shape=(100, 100))
         >>> FeatureShapeHelper.is_memmap(array)
         True
@@ -72,8 +72,8 @@ class FeatureShapeHelper:
         """
         Convert square format to condensed format.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         square_array : np.ndarray
             Square format array (NxMxM)
         k : int, default=0
@@ -83,13 +83,13 @@ class FeatureShapeHelper:
         chunk_size : int, optional
             Chunk size for processing
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Condensed format array (NxP)
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> array = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
         >>> FeatureShapeHelper.squareform_to_condensed(array)
         array([1, 2, 3, 4, 5, 6, 7, 8, 9])
@@ -102,8 +102,8 @@ class FeatureShapeHelper:
         >>> FeatureShapeHelper.squareform_to_condensed(array, chunk_size=10)
         array([1, 2, 3, 4, 5, 6, 7, 8, 9])
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If square_array is not 3D
         """
@@ -127,8 +127,8 @@ class FeatureShapeHelper:
         """
         Convert 3D square array to condensed format.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         square_array : np.ndarray
             Square format array (NxMxM)
         i_indices : np.ndarray
@@ -140,8 +140,8 @@ class FeatureShapeHelper:
         chunk_size : int, optional
             Chunk size for processing
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Condensed format array (NxP)
         """
@@ -168,8 +168,8 @@ class FeatureShapeHelper:
         """
         Create output array for condensed format.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         output_path : str, optional
             Path for memory-mapped output
         dtype : dtype
@@ -179,8 +179,8 @@ class FeatureShapeHelper:
         n_contacts : int
             Number of contacts in the input array
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Output array for condensed format
         """
@@ -206,8 +206,8 @@ class FeatureShapeHelper:
         """
         Fill condensed array using chunked processing.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         square_array : np.ndarray
             Square format array (NxMxM)
         result : np.ndarray
@@ -221,8 +221,8 @@ class FeatureShapeHelper:
         n_frames : int
             Number of frames in the input array
 
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         for i in tqdm(range(0, n_frames, chunk_size), desc="Converting to condensed format", unit="chunks"):
@@ -241,8 +241,8 @@ class FeatureShapeHelper:
         """
         Convert condensed format to square format using MDTraj.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         condensed_array : np.ndarray
             Condensed format array (NxP)
         residue_pairs : np.ndarray
@@ -254,13 +254,13 @@ class FeatureShapeHelper:
         output_path : str, optional
             Path for memory-mapped output
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Square format array (NxMxM)
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If condensed_array is not 1D or 2D
         """
@@ -282,15 +282,15 @@ class FeatureShapeHelper:
         """
         Convert 1D condensed array to square format.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         condensed_array : np.ndarray
             Condensed format array (NxP)
         residue_pairs : np.ndarray
             Residue pair indices
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Square format array (NxMxM)
         """
@@ -307,8 +307,8 @@ class FeatureShapeHelper:
         """
         Convert 2D condensed array to square format.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         condensed_array : np.ndarray
             Condensed format array (NxP)
         residue_pairs : np.ndarray
@@ -320,8 +320,8 @@ class FeatureShapeHelper:
         output_path : str, optional
             Path for memory-mapped output
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Square format array (NxMxM)
         """
@@ -345,8 +345,8 @@ class FeatureShapeHelper:
         """
         Convert 2D condensed array to square format using chunked processing.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         condensed_array : np.ndarray
             Condensed format array (NxP)
         residue_pairs : np.ndarray
@@ -358,8 +358,8 @@ class FeatureShapeHelper:
         output_path : str, optional
             Path for memory-mapped output
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Square format array (NxMxM)
         """

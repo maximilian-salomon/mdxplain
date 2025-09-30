@@ -46,8 +46,10 @@ class DistanceCalculator(CalculatorBase):
     formats. Includes statistical analysis capabilities for variability analysis,
     transition detection, and comparative studies.
 
-    Examples:
-    ---------
+    Uses mdtraj for distance calculations under the hood.
+    
+    Examples
+    --------
     >>> # Basic distance calculation
     >>> calculator = DistanceCalculator()
     >>> distances, pairs = calculator.compute(trajectory)
@@ -61,8 +63,8 @@ class DistanceCalculator(CalculatorBase):
         """
         Initialize distance calculator with configuration parameters.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for large datasets
         cache_path : str, optional
@@ -70,12 +72,12 @@ class DistanceCalculator(CalculatorBase):
         chunk_size : int, optional
             Number of frames to process per chunk
 
-        Returns:
-        --------
+        Returns
+        -------
         None
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic initialization
         >>> calculator = DistanceCalculator()
 
@@ -98,8 +100,8 @@ class DistanceCalculator(CalculatorBase):
         """
         Compute pairwise distances between all atoms/residues for all frames.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         input_data : mdtraj.Trajectory
             MDTraj trajectory object to process
         **kwargs : dict
@@ -109,14 +111,14 @@ class DistanceCalculator(CalculatorBase):
               Chain Breaks are automatically excluded. Meassured by jump in the seqid of a residue.
             - res_metadata : dict - Residue metadata for feature naming
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple[numpy.ndarray, dict]
             Tuple containing (distances, feature_metadata) where distances is the
             distance matrix in Angstrom and feature_metadata contains structured metadata
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic distance calculation (excludes diagonal)
         >>> distances, metadata = calculator.compute(trajectory)
         >>> print(f"Distance matrix shape: {distances.shape}")
@@ -155,8 +157,8 @@ class DistanceCalculator(CalculatorBase):
         """
         Set up computation parameters and create output arrays.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory : mdtraj.Trajectory
             MDTraj trajectory object to process
         excluded_neighbors : int
@@ -164,8 +166,8 @@ class DistanceCalculator(CalculatorBase):
         res_metadata : dict
             Residue metadata containing seqid information
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             (total_frames, distances_array)
         """
@@ -195,15 +197,15 @@ class DistanceCalculator(CalculatorBase):
         """
         Convert units, format output, and cleanup temporary files.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : np.ndarray or np.memmap
             Distance array in condensed format
         total_frames : int
             Total number of frames processed
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Distance array in condensed format
         """
@@ -216,17 +218,17 @@ class DistanceCalculator(CalculatorBase):
         """
         Validate that res_list from MDTraj matches our generated pairs.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         res_list : list
             List of residue pair indices from MDTraj
 
-        Returns:
-        --------
+        Returns
+        -------
         None
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If res_list and self.pairs are inconsistent
         """
@@ -240,17 +242,17 @@ class DistanceCalculator(CalculatorBase):
         """
         Validate that the number of pairs matches.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         res_list : list
             List of residue pair indices from MDTraj
 
-        Returns:
-        --------
+        Returns
+        -------
         None
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If the number of pairs does not match
         """
@@ -265,17 +267,17 @@ class DistanceCalculator(CalculatorBase):
         """
         Validate that individual pairs match between res_list and self.pairs.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         res_list : list
             List of residue pair indices from MDTraj
 
-        Returns:
-        --------
+        Returns
+        -------
         None
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If the number of pairs does not match
         """
@@ -288,13 +290,13 @@ class DistanceCalculator(CalculatorBase):
         """
         Convert MDTraj pair to comparable format.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         mdtraj_pair : tuple or str
             MDTraj pair to convert
 
-        Returns:
-        --------
+        Returns
+        -------
         list
             List of residue pair indices
         """
@@ -308,8 +310,8 @@ class DistanceCalculator(CalculatorBase):
         """
         Check if converted pair equals our generated pair.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         converted_pair : list
             Converted pair from MDTraj
         our_pair : list
@@ -319,12 +321,12 @@ class DistanceCalculator(CalculatorBase):
         original_pair : tuple or str
             Original pair from MDTraj
 
-        Returns:
-        --------
+        Returns
+        -------
         None
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If the pair does not match
         """
@@ -341,8 +343,8 @@ class DistanceCalculator(CalculatorBase):
         """
         Generate residue pairs using chain-aware metadata-based neighbor exclusion.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         n_residues : int
             Number of residues
         excluded_neighbors : int
@@ -350,13 +352,13 @@ class DistanceCalculator(CalculatorBase):
         res_metadata : dict
             Residue metadata containing seqid information for chain detection
 
-        Returns:
-        --------
+        Returns
+        -------
         list
             List of [i, j] pairs where i < j, excluding consecutive residues in same chain
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If res_metadata is None
         """
@@ -393,8 +395,8 @@ class DistanceCalculator(CalculatorBase):
         """
         Check if residues i and j are consecutive within same chain sequence.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         i : int
             First residue index
         j : int
@@ -404,8 +406,8 @@ class DistanceCalculator(CalculatorBase):
         excluded_neighbors : int
             Maximum sequential seqid distance for exclusion
 
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if residues are consecutive in same chain with distance <= excluded_neighbors
         """
@@ -426,15 +428,15 @@ class DistanceCalculator(CalculatorBase):
         """
         Convert distances from nm to Angstrom.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : np.ndarray or np.memmap
             Distance array in nanometers
         total_frames : int
             Total number of frames for chunked processing
 
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         if FeatureShapeHelper.is_memmap(distances) or self.use_memmap:
@@ -449,18 +451,18 @@ class DistanceCalculator(CalculatorBase):
         """
         Generate feature metadata for residue pairs using structured labels.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_metadata : dict, optional
             Structured trajectory labels from res_label_data
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Feature metadata dictionary with 'is_pair' and 'features' keys
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If res_list and self.pairs are inconsistent
         """
@@ -494,15 +496,15 @@ class DistanceCalculator(CalculatorBase):
         """
         Process a single trajectory in batches.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj : mdtraj.Trajectory
             Trajectory object to process
         distances : np.ndarray or np.memmap
             Output array for distance values
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             (distances_array, residue_list)
         """
@@ -542,8 +544,8 @@ class DistanceCalculator(CalculatorBase):
         """
         Compute metric values for distances based on specified metric type.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : numpy.ndarray
             Distance array
         metric : str
@@ -557,8 +559,8 @@ class DistanceCalculator(CalculatorBase):
         lag_time : int, default=1
             Lag time for transitions metric
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Computed metric values
         """
@@ -611,8 +613,8 @@ class DistanceCalculator(CalculatorBase):
         """
         Compute transitions metric based on specified mode and parameters.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : numpy.ndarray
             Distance array
         threshold : float
@@ -624,8 +626,8 @@ class DistanceCalculator(CalculatorBase):
         lag_time : int, default=1
             Lag time for transitions metric
 
-        Returns:
-        --------
+        Returns
+        -------
         int
             Number of transitions
         """
@@ -658,8 +660,8 @@ class DistanceCalculator(CalculatorBase):
         """
         Filter and select variable/dynamic distances based on specified criteria.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         input_data : numpy.ndarray
             Distance array (square or condensed format)
         metric : str, default='cv'
@@ -691,12 +693,12 @@ class DistanceCalculator(CalculatorBase):
         lag_time : int, default=1
             Lag time for transitions metric
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Dictionary containing filtered data and metadata
 
-        Examples:
+        Examples
         --------
         # Select highly variable distances (CV >= 0.5)
         result = calculator.compute_dynamic_values(distances, metric='cv', threshold_min=0.5)

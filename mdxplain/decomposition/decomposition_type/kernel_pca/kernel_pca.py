@@ -44,8 +44,8 @@ class KernelPCA(DecompositionTypeBase):
     to a higher-dimensional space via a kernel function and then applies
     PCA in that space.
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> # Basic KernelPCA decomposition via DecompositionManager
     >>> from mdxplain.decomposition import decomposition_type
     >>> decomp_manager = DecompositionManager()
@@ -81,8 +81,8 @@ class KernelPCA(DecompositionTypeBase):
         Creates a KernelPCA instance that always uses RBF kernel with
         specified parameters.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         n_components : int, optional
             Number of components to keep. If None, keeps min(n_samples, n_features)
         gamma : float, optional
@@ -100,7 +100,7 @@ class KernelPCA(DecompositionTypeBase):
         min_chunk_size : int, default=1000
             Minimum chunk size per parallel process to avoid overhead
 
-        Returned Metadata:
+        Returns
         ------------------
         hyperparameters : dict
             Dictionary containing all Kernel PCA parameters used
@@ -121,8 +121,8 @@ class KernelPCA(DecompositionTypeBase):
         n_landmarks : int
             Number of landmarks used for Nyström approximation (when applicable)
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Create KernelPCA instance with RBF kernel
         >>> kpca = KernelPCA(n_components=10, gamma=0.1)
         >>> print(f"Type: {kpca.get_type_name()}")
@@ -152,18 +152,18 @@ class KernelPCA(DecompositionTypeBase):
         Returns the unique string identifier for KernelPCA decomposition type
         used for storing results and type identification.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cls : type
             The KernelPCA class
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             String identifier 'kernel_pca'
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> print(KernelPCA.get_type_name())
         'kernel_pca'
         >>> # Can also be used via class directly
@@ -179,8 +179,8 @@ class KernelPCA(DecompositionTypeBase):
         Sets up the KernelPCA calculator with options for memory mapping and
         incremental kernel computation for large datasets.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use incremental kernel computation for large datasets
         cache_path : str, optional
@@ -188,13 +188,13 @@ class KernelPCA(DecompositionTypeBase):
         chunk_size : int, optional
             Number of samples to process per chunk for incremental computation
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Sets self.calculator to initialized KernelPCACalculator instance
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic initialization
         >>> kpca = KernelPCA()
         >>> kpca.init_calculator()
@@ -225,13 +225,13 @@ class KernelPCA(DecompositionTypeBase):
         using the initialized calculator with RBF kernel and the parameters
         provided during initialization.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input feature matrix to decompose, shape (n_samples, n_features)
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
             - transformed_data: KernelPCA-transformed data matrix (n_samples, n_components)
@@ -241,8 +241,8 @@ class KernelPCA(DecompositionTypeBase):
               * optional: n_landmarks: Number of landmarks used in Nyström approximation
 
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compute KernelPCA with RBF kernel
         >>> kpca = KernelPCA(n_components=10, gamma=0.1)
         >>> kpca.init_calculator()
@@ -258,8 +258,8 @@ class KernelPCA(DecompositionTypeBase):
         >>> large_data = np.random.rand(10000, 500)
         >>> transformed, metadata = kpca.compute(large_data)
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If calculator is not initialized, input data is invalid,
             or n_components is too large

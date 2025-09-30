@@ -44,7 +44,18 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
     """
     
     def __init__(self, pipeline_data: PipelineData) -> None:
-        """Initialize coordinates analysis service."""
+        """
+        Initialize coordinates analysis service.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            The pipeline data containing trajectory and feature information.
+
+        Returns
+        -------
+        None
+        """
         super().__init__(pipeline_data)
         self._feature_type = "coordinates"
         self._calculator = CoordinatesCalculatorAnalysis(
@@ -58,20 +69,20 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         """
         Compute mean coordinates for each atom.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Mean coordinates for each atom (average structure)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compute average structure coordinates
         >>> pipeline.analysis.features.coordinates.mean()
         
@@ -88,20 +99,20 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         """
         Compute standard deviation of coordinates for each atom.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Standard deviation for each coordinate dimension
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find most flexible atoms (high std)
         >>> pipeline.analysis.features.coordinates.std()
         
@@ -118,20 +129,20 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         """
         Compute minimum coordinates for each atom.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Minimum coordinate values for each dimension
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find coordinate bounds (minimum)
         >>> pipeline.analysis.features.coordinates.min()
         """
@@ -145,20 +156,20 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         """
         Compute maximum coordinates for each atom.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Maximum coordinate values for each dimension
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find coordinate bounds (maximum)
         >>> pipeline.analysis.features.coordinates.max()
         """
@@ -172,20 +183,20 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         """
         Compute median coordinates for each atom.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Median coordinates for each atom
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Robust average structure (median)
         >>> pipeline.analysis.features.coordinates.median()
         """
@@ -199,20 +210,20 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         """
         Compute variance of coordinates for each atom.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Variance for each coordinate dimension
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Coordinate variance per atom
         >>> pipeline.analysis.features.coordinates.variance()
         """
@@ -226,20 +237,20 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         """
         Compute coordinate range for each atom.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Coordinate range (max - min) for each dimension
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find atoms with largest coordinate changes
         >>> pipeline.analysis.features.coordinates.range()
         """
@@ -253,20 +264,20 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         """
         Compute median absolute deviation of coordinates for each atom.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Median absolute deviation for each coordinate dimension
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Robust measure of coordinate variability
         >>> pipeline.analysis.features.coordinates.mad()
         """
@@ -280,20 +291,20 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         """
         Compute coefficient of variation for each coordinate dimension.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Coefficient of variation for each coordinate dimension
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find most variable coordinates (high CV)
         >>> pipeline.analysis.features.coordinates.cv()
         """
@@ -309,20 +320,20 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         """
         Compute mean coordinates per frame.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Mean coordinate across all coordinates for each frame with shape (n_frames,)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Track average coordinate values over trajectory
         >>> pipeline.analysis.features.coordinates.coordinates_per_frame_mean()
         """
@@ -336,20 +347,20 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         """
         Compute standard deviation of coordinates per frame.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Standard deviation across all coordinates for each frame with shape (n_frames,)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Track coordinate variability over trajectory
         >>> pipeline.analysis.features.coordinates.coordinates_per_frame_std()
         """
@@ -363,20 +374,20 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         """
         Compute minimum coordinates per frame.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Minimum coordinate across all coordinates for each frame with shape (n_frames,)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Track minimum coordinate values over trajectory
         >>> pipeline.analysis.features.coordinates.coordinates_per_frame_min()
         """
@@ -390,20 +401,20 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         """
         Compute maximum coordinates per frame.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Maximum coordinate across all coordinates for each frame with shape (n_frames,)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Track maximum coordinate values over trajectory
         >>> pipeline.analysis.features.coordinates.coordinates_per_frame_max()
         """
@@ -417,20 +428,20 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         """
         Compute range of coordinates per frame.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Range (max - min) across all coordinates for each frame with shape (n_frames,)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Track coordinate spread over trajectory
         >>> pipeline.analysis.features.coordinates.coordinates_per_frame_range()
         """
@@ -444,20 +455,20 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         """
         Compute root mean square fluctuation (RMSF) for each atom.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             RMSF values for each atom
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compute atomic flexibility (RMSF)
         >>> pipeline.analysis.features.coordinates.rmsf()
         
@@ -478,8 +489,8 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         """
         Compute coordinate transitions with lag time for each atom.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         threshold : float, default=1.0
             Distance threshold for detecting transitions (in Ångstroms)
         lag_time : int, default=10
@@ -489,13 +500,13 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Transition counts per atom
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find dynamic atoms with 1.0 Å threshold
         >>> pipeline.analysis.features.coordinates.transitions_lagtime(threshold=1.0)
         
@@ -516,8 +527,8 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         """
         Compute coordinate transitions within sliding window for each atom.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         threshold : float, default=1.0
             Distance threshold for detecting transitions (in Ångstroms)
         window_size : int, default=10
@@ -527,13 +538,13 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Transition counts per atom
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Window-based transition detection
         >>> pipeline.analysis.features.coordinates.transitions_window(
         ...     threshold=1.0, window_size=10
@@ -551,8 +562,8 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         """
         Compute coordinate stability (inverse of transition rate) for each atom.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         threshold : float, default=1.0
             Distance threshold for stability detection (in Ångstroms)
         window_size : int, default=10
@@ -562,13 +573,13 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Stability values per atom (0=unstable, 1=stable)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find most stable atoms
         >>> pipeline.analysis.features.coordinates.stability(
         ...     threshold=1.0, window_size=10
@@ -590,8 +601,8 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         """
         Compute differences between two coordinate datasets.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector2 : str, optional
             Second feature selector for comparison
         traj_selection2 : str, int, list, optional
@@ -603,13 +614,13 @@ class CoordinatesAnalysisService(AnalysisServiceBase):
         traj_selection : str, int, list, optional
             First trajectory selection for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Coordinate differences between datasets
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compare structures between conditions
         >>> pipeline.analysis.features.coordinates.differences(
         ...     traj_selection=[0, 1],      # Native state

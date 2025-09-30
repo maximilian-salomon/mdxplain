@@ -45,15 +45,15 @@ class CoordinatesReduceService(ReduceServiceBase):
         """
         Initialize coordinates reduce factory.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         manager : FeatureManager
             The feature manager instance
         pipeline_data : PipelineData
             The pipeline data instance
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes the coordinates reduce service
         """
@@ -72,8 +72,8 @@ class CoordinatesReduceService(ReduceServiceBase):
 
         Standard deviation measures the amount of variation or dispersion in a set of values.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -83,13 +83,13 @@ class CoordinatesReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep coordinates with significant variation
         >>> pipeline.feature.reduce.coordinates.std(threshold_min=0.5)
 
@@ -118,8 +118,8 @@ class CoordinatesReduceService(ReduceServiceBase):
 
         RMSF measures average positional deviation from mean position.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -129,13 +129,13 @@ class CoordinatesReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep highly flexible coordinates
         >>> pipeline.feature.reduce.coordinates.rmsf(threshold_min=1.0)
 
@@ -165,8 +165,8 @@ class CoordinatesReduceService(ReduceServiceBase):
         Filters coordinate features based on their relative variability.
         CV = std/mean, indicating positional flexibility.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -176,13 +176,13 @@ class CoordinatesReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep highly flexible coordinates
         >>> pipeline.feature.reduce.coordinates.cv(threshold_min=0.3)
 
@@ -218,8 +218,8 @@ class CoordinatesReduceService(ReduceServiceBase):
         Filters coordinates based on positional variance (squared fluctuations).
         Higher variance indicates larger positional deviations.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -229,13 +229,13 @@ class CoordinatesReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep highly variable coordinates
         >>> pipeline.feature.reduce.coordinates.variance(threshold_min=1.0)
 
@@ -271,8 +271,8 @@ class CoordinatesReduceService(ReduceServiceBase):
         Filters coordinates based on their positional range of motion.
         Larger range indicates greater conformational sampling.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -282,13 +282,13 @@ class CoordinatesReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep coordinates with large positional range
         >>> pipeline.feature.reduce.coordinates.range(threshold_min=2.0)
 
@@ -324,8 +324,8 @@ class CoordinatesReduceService(ReduceServiceBase):
         Robust measure of positional variability less sensitive to outliers.
         MAD provides stable estimate of coordinate fluctuations.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -335,13 +335,13 @@ class CoordinatesReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep robustly variable coordinates
         >>> pipeline.feature.reduce.coordinates.mad(threshold_min=0.4)
 
@@ -374,8 +374,8 @@ class CoordinatesReduceService(ReduceServiceBase):
         """
         Reduce coordinates by mean position.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -385,13 +385,13 @@ class CoordinatesReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep coordinates near protein core
         >>> pipeline.feature.reduce.coordinates.mean(threshold_max=10.0)
 
@@ -424,8 +424,8 @@ class CoordinatesReduceService(ReduceServiceBase):
         """
         Reduce coordinates by minimum position.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -435,13 +435,13 @@ class CoordinatesReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep coordinates that get close to origin
         >>> pipeline.feature.reduce.coordinates.min(threshold_max=5.0)
 
@@ -474,8 +474,8 @@ class CoordinatesReduceService(ReduceServiceBase):
         """
         Reduce coordinates by maximum position.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -485,13 +485,13 @@ class CoordinatesReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep coordinates with large excursions
         >>> pipeline.feature.reduce.coordinates.max(threshold_min=20.0)
 
@@ -531,8 +531,8 @@ class CoordinatesReduceService(ReduceServiceBase):
         Filters coordinate features based on number of positional transitions.
         Detects significant changes in atomic positions.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -550,13 +550,13 @@ class CoordinatesReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep highly dynamic coordinates
         >>> pipeline.feature.reduce.coordinates.transitions(
         ...     threshold_min=5,

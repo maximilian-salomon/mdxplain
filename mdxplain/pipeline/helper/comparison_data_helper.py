@@ -45,8 +45,8 @@ class ComparisonDataHelper:
     ComparisonData metadata with PipelineData's get_selected_data() method.
     Avoids circular dependencies by being part of the pipeline module.
     
-    Examples:
-    ---------
+    Examples
+    --------
     >>> # Used internally by PipelineData
     >>> X, y = ComparisonDataHelper.get_sub_comparison_data(
     ...     pipeline_data, comparison_data, "folded_vs_rest"
@@ -63,8 +63,8 @@ class ComparisonDataHelper:
         This method combines ComparisonData metadata with PipelineData's
         data processing capabilities to create ML-ready datasets.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object containing feature and data selections
         comparison_data : ComparisonData
@@ -72,18 +72,18 @@ class ComparisonDataHelper:
         sub_comparison_name : str
             Name of the sub-comparison to process
             
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[np.ndarray, np.ndarray]
             Tuple of (X, y) where X is feature matrix and y is label array
             
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If sub-comparison not found or required data missing
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> X, y = ComparisonDataHelper.get_sub_comparison_data(
         ...     pipeline_data, comp_data, "folded_vs_rest"
         ... )
@@ -126,8 +126,8 @@ class ComparisonDataHelper:
         Uses pre-computed feature matrix and frame_mapping for trajectory-to-global
         index conversion. Supports memmap-safe processing for large datasets.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
         comparison_data : ComparisonData
@@ -139,8 +139,8 @@ class ComparisonDataHelper:
         frame_mapping : Dict[int, Tuple[int, int]]
             Mapping from global frame index to (traj_idx, local_frame_idx)
             
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[np.ndarray, np.ndarray]
             Tuple of (X, y) where X is feature matrix and y is label array
         """
@@ -179,8 +179,8 @@ class ComparisonDataHelper:
         Uses pre-computed feature matrix and frame_mapping for trajectory-to-global
         index conversion. Supports memmap-safe processing for large datasets.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
         comparison_data : ComparisonData
@@ -192,8 +192,8 @@ class ComparisonDataHelper:
         frame_mapping : Dict[int, Tuple[int, int]]
             Mapping from global frame index to (traj_idx, local_frame_idx)
             
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[np.ndarray, np.ndarray]
             Tuple of (X, y) where X is feature matrix and y contains class labels
         """
@@ -225,8 +225,8 @@ class ComparisonDataHelper:
         Combines frame indices from multiple data selectors into a single
         sorted list with duplicates removed.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object containing data selector data
         selector_names : List[str]
@@ -234,8 +234,8 @@ class ComparisonDataHelper:
         frame_mapping : Dict[int, Tuple[int, int]]
             Mapping from global frame index to (traj_idx, local_frame_idx)
 
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             Combined list of unique global frame indices sorted in ascending order
         """
@@ -276,8 +276,8 @@ class ComparisonDataHelper:
         supporting overlapping frames that cannot be handled by DataSelector (which works as a set).
         Uses pre-computed feature matrix to avoid duplicate get_selected_data() calls.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
         comparison_data : ComparisonData
@@ -291,13 +291,13 @@ class ComparisonDataHelper:
         full_matrix : np.ndarray
             Pre-computed feature matrix from get_selected_data()
             
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[np.ndarray, np.ndarray]
             Tuple of (X, y) where X is feature matrix and y is label array
             
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If no frames found for comparison
         """
@@ -327,8 +327,8 @@ class ComparisonDataHelper:
         without loading entire datasets into RAM. Uses pre-computed feature matrix
         to avoid duplicate get_selected_data() calls.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
         comparison_data : ComparisonData
@@ -338,8 +338,8 @@ class ComparisonDataHelper:
         full_matrix : np.ndarray
             Pre-computed feature matrix from get_selected_data()
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Feature matrix for the specified frames
         """

@@ -31,8 +31,13 @@ from typing import List
 
 
 class FeatureSelectorNumericParseHelper:
-    """Base helper class for numeric category parsing - array index and sequence ID based operations."""
-    
+    """
+    Base helper class for numeric category parsing - array index and sequence ID based operations.
+
+    Provides static methods to parse numeric categories like "123", "123-140"
+    to identify matching feature indices based on trajectory metadata.
+    """
+
     @staticmethod
     def parse_numeric_category(
         param_parts: List[str], 
@@ -45,8 +50,8 @@ class FeatureSelectorNumericParseHelper:
         Parse numeric category and return matching feature indices.
         Uses configurable metadata field (e.g., residue.index or residue.seqid).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         param_parts : List[str]
             List of parameter parts for numeric selection
         features_list : List[list]
@@ -58,13 +63,13 @@ class FeatureSelectorNumericParseHelper:
         require_all_partners : bool, default=False
             For pairwise features, require all partners to be present in selection
 
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             List of feature indices matching the numeric criteria
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If the numeric specification is invalid
         """
@@ -98,8 +103,8 @@ class FeatureSelectorNumericParseHelper:
         Find features with numeric values in the specified range.
         Uses configurable metadata field (e.g., residue.index or residue.seqid).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         numeric_spec : str
             Numeric range specification (e.g., "123-140")
         features_list : List[list]
@@ -111,13 +116,13 @@ class FeatureSelectorNumericParseHelper:
         require_all_partners : bool, default=False
             For pairwise features, require all partners to be present in selection
 
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             List of feature indices with values in the specified range
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If the range specification is invalid
         """
@@ -146,8 +151,8 @@ class FeatureSelectorNumericParseHelper:
         Find features containing the specified single numeric value.
         Uses configurable metadata field (e.g., residue.index or residue.seqid).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         numeric_spec : str
             Numeric specification (e.g., "123")
         features_list : List[list]
@@ -159,13 +164,13 @@ class FeatureSelectorNumericParseHelper:
         require_all_partners : bool, default=False
             For pairwise features, require all partners to be present in selection
 
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             List of feature indices with the specified single numeric value
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If the numeric specification is invalid
         """
@@ -206,20 +211,20 @@ class FeatureSelectorNumericParseHelper:
         """
         Parse and validate numeric range specification.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         numeric_spec : str
             Numeric range specification
         category_name : str
             Category name for error messages ("resid" or "seqid")
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             Tuple of (start_id, end_id) as integers
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If the range specification is invalid
         """
@@ -244,8 +249,8 @@ class FeatureSelectorNumericParseHelper:
         Find features with numeric values in the specified range.
         Uses configurable metadata field (e.g., residue.index or residue.seqid).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         features_list : List[list]
             List of features from metadata
         start_id : int
@@ -257,8 +262,8 @@ class FeatureSelectorNumericParseHelper:
         require_all_partners : bool, default=False
             For pairwise features, require all partners to be present in selection
 
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             List of feature indices with values in the specified range
         """
@@ -284,8 +289,8 @@ class FeatureSelectorNumericParseHelper:
         Check if feature has any value in the specified numeric range.
         Uses configurable metadata field (e.g., residue.index or residue.seqid).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature : list
             Feature from metadata
         start_id : int
@@ -297,8 +302,8 @@ class FeatureSelectorNumericParseHelper:
         require_all_partners : bool, default=False
             For pairwise features, require all partners to be present in selection
 
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if feature has any value in the specified range, False otherwise
         """

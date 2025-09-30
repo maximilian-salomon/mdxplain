@@ -38,21 +38,21 @@ class ComparisonData:
     datasets from different data selections. A single ComparisonData
     can contain multiple sub-comparisons (e.g., in one-vs-rest mode).
 
-    Attributes:
-    -----------
+    Attributes
+    ----------
     name : str
         Name identifier for this comparison
     mode : str
         Comparison mode: "binary", "pairwise", "one_vs_rest", "multiclass"
     feature_selector : str
-        Name of the feature selector to use (defines columns)
+        Name of the feature selector to use for columns
     data_selectors : List[str]
         Names of data selectors involved in the comparison
-    sub_comparisons : List[Dict]
-        List of individual sub-comparisons
+    sub_comparisons : List[Dict[str, Any]]
+        List of sub-comparisons with their configurations
 
-    Examples:
-    ---------
+    Examples
+    --------
     Binary comparison:
     >>> comp_data = ComparisonData("folded_vs_unfolded", "binary", "key_features")
     >>> comp_data.add_sub_comparison("folded_vs_unfolded", ["folded"], ["unfolded"])
@@ -76,8 +76,8 @@ class ComparisonData:
         for ML comparisons without processing actual data. Data processing
         is handled by ComparisonManager.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         name : str
             Name identifier for this comparison
         mode : str
@@ -87,13 +87,13 @@ class ComparisonData:
         data_selectors : List[str], optional
             Names of data selectors involved in the comparison
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes ComparisonData with given configuration
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> comp_data = ComparisonData(
         ...     "systems_comparison", "pairwise", "important_features",
         ...     ["system_A", "system_B", "system_C"]
@@ -121,8 +121,8 @@ class ComparisonData:
         """
         Add a sub-comparison to this comparison.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         sub_name : str
             Name of the sub-comparison
         group1_selectors : List[str]
@@ -132,13 +132,13 @@ class ComparisonData:
         labels : Tuple[int, int], optional
             Label values for (group1, group2). Defaults to (0, 1)
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds sub-comparison to the list
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> comp_data.add_sub_comparison(
         ...     "folded_vs_unfolded", ["folded"], ["unfolded"], (0, 1)
         ... )
@@ -159,18 +159,18 @@ class ComparisonData:
         """
         Get a specific sub-comparison by name.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         sub_name : str
             Name of the sub-comparison to retrieve
 
-        Returns:
-        --------
+        Returns
+        -------
         Dict[str, Any] or None
             Sub-comparison dictionary or None if not found
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> sub_comp = comp_data.get_sub_comparison("folded_vs_rest")
         >>> if sub_comp:
         ...     print(f"Group 1: {sub_comp['group1_selectors']}")
@@ -184,13 +184,13 @@ class ComparisonData:
         """
         List names of all sub-comparisons.
 
-        Returns:
-        --------
+        Returns
+        -------
         List[str]
             List of sub-comparison names
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> names = comp_data.list_sub_comparisons()
         >>> print(f"Available sub-comparisons: {names}")
         """
@@ -200,13 +200,13 @@ class ComparisonData:
         """
         Get summary information about this comparison.
 
-        Returns:
-        --------
+        Returns
+        -------
         Dict[str, Any]
             Dictionary with comparison summary information
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> info = comp_data.get_comparison_info()
         >>> print(f"Mode: {info['mode']}")
         >>> print(f"Sub-comparisons: {info['n_sub_comparisons']}")
@@ -224,13 +224,13 @@ class ComparisonData:
         """
         Get number of sub-comparisons.
 
-        Returns:
-        --------
+        Returns
+        -------
         int
             Number of sub-comparisons
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> print(f"Number of sub-comparisons: {len(comp_data)}")
         """
         return len(self.sub_comparisons)
@@ -239,18 +239,18 @@ class ComparisonData:
         """
         Check if a sub-comparison exists.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         sub_name : str
             Name of the sub-comparison to check
 
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if sub-comparison exists, False otherwise
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> if "folded_vs_rest" in comp_data:
         ...     print("Sub-comparison exists")
         """
@@ -260,13 +260,13 @@ class ComparisonData:
         """
         String representation of the ComparisonData.
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             String representation
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> print(repr(comp_data))
         ComparisonData(name='folded_analysis', mode='one_vs_rest', n_sub=4)
         """
@@ -279,18 +279,18 @@ class ComparisonData:
         """
         Save ComparisonData object to disk.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         save_path : str
             Path where to save the ComparisonData object
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Saves the ComparisonData object to the specified path
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> comparison_data.save('analysis_results/folded_analysis.pkl')
         """
         DataUtils.save_object(self, save_path)
@@ -299,18 +299,18 @@ class ComparisonData:
         """
         Load ComparisonData object from disk.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         load_path : str
             Path to the saved ComparisonData file
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Loads the ComparisonData object from the specified path
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> comparison_data.load('analysis_results/folded_analysis.pkl')
         """
         DataUtils.load_object(self, load_path)
@@ -319,17 +319,17 @@ class ComparisonData:
         """
         Print comprehensive comparison information.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Prints comparison information to console
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> comparison_data.print_info()
         === ComparisonData ===
         Name: folded_analysis
@@ -350,8 +350,8 @@ class ComparisonData:
         """
         Check if no comparisons are configured.
 
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if no comparisons are available, False otherwise
         """
@@ -361,8 +361,8 @@ class ComparisonData:
         """
         Print header with comparison name.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         print("=== ComparisonData ===")
@@ -372,8 +372,8 @@ class ComparisonData:
         """
         Print detailed comparison configuration.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         print(f"Comparison Mode: {self.mode}")
@@ -389,8 +389,8 @@ class ComparisonData:
         """
         Print information about sub-comparisons.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         sub_names = self.list_sub_comparisons()

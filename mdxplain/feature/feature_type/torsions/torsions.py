@@ -44,8 +44,10 @@ class Torsions(FeatureTypeBase):
     This is a base feature type with no dependencies that provides conformational
     information for protein flexibility and dynamics analysis.
 
-    Examples:
-    ---------
+    Uses mdtraj for torsion angle calculation under the hood.
+
+    Examples
+    --------
     >>> # All angles (default)
     >>> torsions = Torsions()
     >>> pipeline.feature.add_feature(torsions)
@@ -72,8 +74,8 @@ class Torsions(FeatureTypeBase):
         """
         Initialize torsions feature type with angle selection parameters.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         calculate_phi : bool, default=True
             Whether to compute phi backbone angles
         calculate_psi : bool, default=True
@@ -83,12 +85,12 @@ class Torsions(FeatureTypeBase):
         calculate_chi : bool, default=True
             Whether to compute side chain chi angles (chi1, chi2, chi3, chi4)
 
-        Returns:
-        --------
+        Returns
+        -------
         None
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # All angles (default)
         >>> torsions = Torsions()
 
@@ -103,7 +105,7 @@ class Torsions(FeatureTypeBase):
         >>> torsions = Torsions(calculate_phi=False, calculate_psi=False, 
         ...                     calculate_omega=False, calculate_chi=True)
 
-        Notes:
+        Notes
         -----
         All angles are computed and returned in degrees (-180 to +180).
         """
@@ -118,8 +120,8 @@ class Torsions(FeatureTypeBase):
         """
         Initialize the torsions calculator with specified configuration.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for large datasets
         cache_path : str, optional
@@ -127,12 +129,12 @@ class Torsions(FeatureTypeBase):
         chunk_size : int, optional
             Number of frames to process per chunk for memory-efficient processing
 
-        Returns:
-        --------
+        Returns
+        -------
         None
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic initialization
         >>> torsions.init_calculator()
 
@@ -152,22 +154,22 @@ class Torsions(FeatureTypeBase):
         """
         Compute torsion angles from molecular dynamics trajectory.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         input_data : mdtraj.Trajectory
             MD trajectory to compute torsion angles from
         feature_metadata : dict
             Residue metadata (passed through for residue-level analysis)
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple[numpy.ndarray, dict]
             Tuple containing (torsions_array, feature_metadata) where torsions_array
             has shape (n_frames, n_residues * n_angle_types) with torsion angles
             in degrees (-180 to +180). Missing angles are filled with 0.0.
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compute only phi and psi backbone angles
         >>> torsions = Torsions(calculate_phi=True, calculate_psi=True, 
         ...                     calculate_omega=False, calculate_chi=False)
@@ -180,8 +182,8 @@ class Torsions(FeatureTypeBase):
         >>> torsions.init_calculator(use_memmap=True)
         >>> data, metadata = torsions.compute(trajectory, res_metadata)
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If calculator is not initialized
         """
@@ -203,17 +205,17 @@ class Torsions(FeatureTypeBase):
         """
         Get list of feature type dependencies for torsions calculations.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         List[str]
             Empty list as torsions are a base feature with no dependencies
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> torsions = Torsions()
         >>> print(torsions.get_dependencies())
         []
@@ -225,17 +227,17 @@ class Torsions(FeatureTypeBase):
         """
         Return unique string identifier for the torsions feature type.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             String identifier 'torsions' used as key in feature dictionaries
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> print(Torsions.get_type_name())
         'torsions'
         """
@@ -245,17 +247,17 @@ class Torsions(FeatureTypeBase):
         """
         Get the input feature type that torsions depend on.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             None since torsions are a base feature with no input dependencies
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> torsions = Torsions()
         >>> print(torsions.get_input())
         None

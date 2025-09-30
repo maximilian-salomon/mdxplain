@@ -38,8 +38,8 @@ class TorsionsCalculatorAnalysis:
     conformational dynamics, circular statistics, and angular distributions
     with complete per-feature and per-frame metrics.
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> analysis = TorsionsCalculatorAnalysis()
     >>> circular_mean = analysis.compute_circular_mean(torsion_data)
     >>> transitions = analysis.compute_transitions_lagtime(torsion_data, threshold=30.0)
@@ -49,19 +49,19 @@ class TorsionsCalculatorAnalysis:
         """
         Initialize torsion analysis with configuration parameters.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for large datasets
         chunk_size : int, optional
             Number of frames to process per chunk
 
-        Returns:
-        --------
+        Returns
+        -------
         None
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic initialization
         >>> analysis = TorsionsCalculatorAnalysis()
 
@@ -77,18 +77,18 @@ class TorsionsCalculatorAnalysis:
         """
         Compute circular mean for each torsion angle.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         torsion_data : numpy.ndarray
             Torsion angles array with shape (n_frames, n_angles) in degrees
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Circular mean angle for each torsion in degrees
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> mean_angles = analysis.compute_mean(torsion_data)
         """
         sin_mean = CalculatorStatHelper.compute_func_per_feature(
@@ -107,18 +107,18 @@ class TorsionsCalculatorAnalysis:
         """
         Compute circular standard deviation for each torsion angle.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         torsion_data : numpy.ndarray
             Torsion angles array with shape (n_frames, n_angles) in degrees
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Circular standard deviation for each torsion angle in degrees
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> std_angles = analysis.compute_std(torsion_data)
         """
         circular_var = self.compute_variance(torsion_data)
@@ -128,18 +128,18 @@ class TorsionsCalculatorAnalysis:
         """
         Compute circular variance for each torsion angle.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         torsion_data : numpy.ndarray
             Torsion angles array with shape (n_frames, n_angles) in degrees
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Circular variance for each torsion angle (0-1 scale)
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> var_angles = analysis.compute_variance(torsion_data)
         """
         sin_mean = CalculatorStatHelper.compute_func_per_feature(
@@ -160,18 +160,18 @@ class TorsionsCalculatorAnalysis:
         """
         Compute minimum angle for each torsion.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         torsion_data : numpy.ndarray
             Torsion angles array with shape (n_frames, n_angles)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Minimum angle for each torsion
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> min_angles = analysis.compute_min(torsion_data)
         """
         return CalculatorStatHelper.compute_func_per_feature(
@@ -184,18 +184,18 @@ class TorsionsCalculatorAnalysis:
         """
         Compute maximum angle for each torsion.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         torsion_data : numpy.ndarray
             Torsion angles array with shape (n_frames, n_angles)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Maximum angle for each torsion
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> max_angles = analysis.compute_max(torsion_data)
         """
         return CalculatorStatHelper.compute_func_per_feature(
@@ -208,18 +208,18 @@ class TorsionsCalculatorAnalysis:
         """
         Compute median absolute deviation for each torsion angle.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         torsion_data : numpy.ndarray
             Torsion angles array with shape (n_frames, n_angles)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Median absolute deviation for each torsion angle
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> mad_angles = analysis.compute_mad(torsion_data)
         """
         def mad_func(data, axis=0):
@@ -235,22 +235,22 @@ class TorsionsCalculatorAnalysis:
         """
         Compute angular range for each torsion considering periodicity.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         torsion_data : numpy.ndarray
             Torsion angles array with shape (n_frames, n_angles) in degrees
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Angular range for each torsion (0-180 degrees)
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> range_angles = analysis.compute_range(torsion_data)
 
-        Notes:
-        ------
+        Notes
+        -----
         Uses circular statistics to handle periodicity (-180° to 180°).
         Range is computed as the minimum angular distance that contains all data points.
         """
@@ -280,18 +280,18 @@ class TorsionsCalculatorAnalysis:
         """
         Compute circular mean angle per frame across all torsions.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         torsion_data : numpy.ndarray
             Torsion angles array with shape (n_frames, n_angles) in degrees
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Circular mean angle per frame in degrees
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> mean_per_frame = analysis.compute_mean_per_frame(torsion_data)
         """
         def circular_mean_frame(data, axis=1):
@@ -312,18 +312,18 @@ class TorsionsCalculatorAnalysis:
         """
         Compute circular standard deviation per frame across all torsions.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         torsion_data : numpy.ndarray
             Torsion angles array with shape (n_frames, n_angles) in degrees
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Circular standard deviation per frame in degrees
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> std_per_frame = analysis.compute_std_per_frame(torsion_data)
         """
         def circular_std_frame(data, axis=1):
@@ -347,18 +347,18 @@ class TorsionsCalculatorAnalysis:
         """
         Compute circular variance per frame across all torsions.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         torsion_data : numpy.ndarray
             Torsion angles array with shape (n_frames, n_angles) in degrees
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Circular variance per frame (0-1 scale)
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> var_per_frame = analysis.compute_variance_per_frame(torsion_data)
         """
         def circular_var_frame(data, axis=1):
@@ -381,18 +381,18 @@ class TorsionsCalculatorAnalysis:
         """
         Compute minimum angle per frame across all torsions.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         torsion_data : numpy.ndarray
             Torsion angles array with shape (n_frames, n_angles)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Minimum angle per frame
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> min_per_frame = analysis.compute_min_per_frame(torsion_data)
         """
         return CalculatorStatHelper.compute_func_per_frame(
@@ -406,18 +406,18 @@ class TorsionsCalculatorAnalysis:
         """
         Compute maximum angle per frame across all torsions.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         torsion_data : numpy.ndarray
             Torsion angles array with shape (n_frames, n_angles)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Maximum angle per frame
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> max_per_frame = analysis.compute_max_per_frame(torsion_data)
         """
         return CalculatorStatHelper.compute_func_per_frame(
@@ -431,18 +431,18 @@ class TorsionsCalculatorAnalysis:
         """
         Compute median absolute deviation per frame across all torsions.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         torsion_data : numpy.ndarray
             Torsion angles array with shape (n_frames, n_angles)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Median absolute deviation per frame
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> mad_per_frame = analysis.compute_mad_per_frame(torsion_data)
         """
         def mad_per_frame(data, axis=1):
@@ -460,22 +460,22 @@ class TorsionsCalculatorAnalysis:
         """
         Compute angular range per frame across all torsions with periodicity.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         torsion_data : numpy.ndarray
             Torsion angles array with shape (n_frames, n_angles) in degrees
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Angular range per frame
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> range_per_frame = analysis.compute_range_per_frame(torsion_data)
 
-        Notes:
-        ------
+        Notes
+        -----
         Uses circular statistics for proper angular range calculation.
         """
         def circular_range_frame(angles, axis=1):
@@ -505,8 +505,8 @@ class TorsionsCalculatorAnalysis:
         """
         Compute angle differences between two frames with periodic boundary handling.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         torsion_data : numpy.ndarray
             Torsion angles array with shape (n_frames, n_angles)
         frame_1 : int, default=0
@@ -514,17 +514,17 @@ class TorsionsCalculatorAnalysis:
         frame_2 : int, default=-1
             Second frame index (-1 for last frame)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Angle differences between frames with proper periodic handling
 
-        Notes:
-        ------
+        Notes
+        -----
         Handles periodic boundary conditions for angles (-180 to 180 degrees).
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> differences = analysis.compute_differences(torsion_data, 0, -1)
         """
         if frame_2 == -1:
@@ -542,20 +542,20 @@ class TorsionsCalculatorAnalysis:
         """
         Compute differences between circular means of two datasets.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         torsion_data_1 : numpy.ndarray
             First torsion dataset
         torsion_data_2 : numpy.ndarray
             Second torsion dataset
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Circular mean angle differences between datasets
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> diff_means = analysis.compute_differences_mean(torsion_1, torsion_2)
         """
         def circular_mean_preprocessing(data, **kwargs):
@@ -580,8 +580,8 @@ class TorsionsCalculatorAnalysis:
         """
         Compute transitions with lag time for each torsion angle with periodic boundaries.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         torsion_data : numpy.ndarray
             Torsion angles array with shape (n_frames, n_angles) in degrees
         threshold : float, default=30.0
@@ -589,13 +589,13 @@ class TorsionsCalculatorAnalysis:
         lag_time : int, default=1
             Number of frames to look ahead
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Transition counts per torsion angle
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> transitions = analysis.compute_transitions_lagtime(torsion_data, 30.0, 10)
         """
         def angular_difference_check(data, **kwargs):
@@ -623,8 +623,8 @@ class TorsionsCalculatorAnalysis:
         """
         Compute transitions within sliding window for each torsion angle with periodic boundaries.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         torsion_data : numpy.ndarray
             Torsion angles array with shape (n_frames, n_angles) in degrees
         threshold : float, default=30.0
@@ -632,13 +632,13 @@ class TorsionsCalculatorAnalysis:
         window_size : int, default=10
             Size of sliding window
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Transition counts per torsion angle
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> transitions = analysis.compute_transitions_window(torsion_data, 30.0, 10)
         """
         def angular_window_transitions(data, **kwargs):
@@ -669,8 +669,8 @@ class TorsionsCalculatorAnalysis:
         """
         Compute stability (inverse of transition rate) for each torsion angle with periodic boundaries.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         torsion_data : numpy.ndarray
             Torsion angles array with shape (n_frames, n_angles) in degrees
         threshold : float, default=30.0
@@ -680,13 +680,13 @@ class TorsionsCalculatorAnalysis:
         mode : str, default='lagtime'
             Calculation mode ('lagtime' or 'window')
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Stability values per torsion angle (0=unstable, 1=stable)
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> stability = analysis.compute_stability(torsion_data, 30.0, 10, 'window')
         """
         if mode == "lagtime":
@@ -705,23 +705,23 @@ class TorsionsCalculatorAnalysis:
         """
         Compute coefficient of variation for each torsion angle.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         torsion_data : numpy.ndarray
             Torsion angles array with shape (n_frames, n_angles) in degrees
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Coefficient of variation for each torsion angle
 
-        Notes:
-        ------
+        Notes
+        -----
         CV = circular_standard_deviation / abs(circular_mean)
         Uses circular statistics for proper angular data handling.
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> cv_angles = analysis.compute_cv(torsion_data)
         """
         circular_mean = self.compute_mean(torsion_data)

@@ -59,8 +59,8 @@ class CalculatorComputeHelper:
         """
         Filter feature data based on statistical metric thresholds.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : np.ndarray
             Feature data array to filter
         metric_values : np.ndarray
@@ -80,13 +80,13 @@ class CalculatorComputeHelper:
         chunk_size : int, default=1000
             Chunk size for processing
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Dictionary with keys: 'indices', 'values', 'dynamic_data',
             'feature_names', 'metric_used', 'n_dynamic', 'total_pairs'
 
-        Examples:
+        Examples
         --------
         # High values only (> 0.5)
         result = compute_dynamic_values(data, values, 'cv', threshold_min=0.5)
@@ -132,8 +132,8 @@ class CalculatorComputeHelper:
         """
         Create boolean mask based on threshold conditions.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         metric_values : np.ndarray
             Pre-computed statistical values for filtering
         threshold_min : float, optional
@@ -141,8 +141,8 @@ class CalculatorComputeHelper:
         threshold_max : float, optional
             Maximum threshold (metric_values <= threshold_max)
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Boolean mask
         """
@@ -171,8 +171,8 @@ class CalculatorComputeHelper:
         """
         Validate that selection found some results.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         n_selected : int
             Number of selected values
         metric_name : str
@@ -182,8 +182,8 @@ class CalculatorComputeHelper:
         threshold_max : float, optional
             Maximum threshold (metric_values <= threshold_max)
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Raises warning if no values found within thresholds
         """
@@ -199,15 +199,15 @@ class CalculatorComputeHelper:
         """
         Extract feature names based on filter mask.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_metadata : list or None
             Original feature metadata
         mask : np.ndarray
             Boolean filter mask
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray or np.ndarray
             Filtered feature names or mask if names invalid
         """
@@ -227,8 +227,8 @@ class CalculatorComputeHelper:
         """
         Extract filtered data using boolean mask.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : np.ndarray
             Original feature data
         mask : np.ndarray
@@ -240,8 +240,8 @@ class CalculatorComputeHelper:
         chunk_size : int
             Chunk size for processing
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Filtered data array
         """
@@ -275,8 +275,8 @@ class CalculatorComputeHelper:
         """
         Fill memory-mapped array with filtered data.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : np.ndarray
             Original feature data
         dynamic_data : np.memmap
@@ -286,8 +286,8 @@ class CalculatorComputeHelper:
         chunk_size : int
             Chunk size for processing
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Fills dynamic_data array in-place
         """
@@ -308,8 +308,8 @@ class CalculatorComputeHelper:
         """
         Fill memory-mapped data in chunks.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : np.ndarray
             Original feature data
         dynamic_data : np.memmap
@@ -321,8 +321,8 @@ class CalculatorComputeHelper:
         is_square_format : bool
             Whether the data is in square format
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Fills dynamic_data array in-place
         """
@@ -339,8 +339,8 @@ class CalculatorComputeHelper:
         """
         Fill regular data in chunks.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : np.ndarray
             Original feature data
         dynamic_data : np.ndarray
@@ -352,8 +352,8 @@ class CalculatorComputeHelper:
         is_square_format : bool
             Whether the data is in square format
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Fills dynamic_data array in-place
         """
@@ -375,8 +375,8 @@ class CalculatorComputeHelper:
         """
         Process a single chunk of data.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         chunk : np.ndarray
             Chunk of feature data
         dynamic_data : np.ndarray
@@ -390,8 +390,8 @@ class CalculatorComputeHelper:
         is_square_format : bool
             Whether the data is in square format
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Fills dynamic_data array in-place
         """
@@ -407,8 +407,8 @@ class CalculatorComputeHelper:
         """
         Calculate output array dimensions after format conversion.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         input_shape : tuple
             Shape of input array
         squareform : bool
@@ -416,8 +416,8 @@ class CalculatorComputeHelper:
         k : int
             Diagonal offset parameter
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple[tuple, int or None]
             Output shape and number of residues
         """
@@ -437,15 +437,15 @@ class CalculatorComputeHelper:
         """
         Check if format conversion is needed.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         is_square_input : bool
             Whether the input is in square format
         squareform : bool
             Whether output should be square format
 
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if format conversion is needed
         """
@@ -458,8 +458,8 @@ class CalculatorComputeHelper:
         """
         Convert dimensions based on input and output format.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         input_shape : tuple
             Shape of input array
         is_square_input : bool
@@ -469,8 +469,8 @@ class CalculatorComputeHelper:
         k : int
             Diagonal offset parameter
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple[tuple, int or None]
             Output shape and number of residues
         """
@@ -484,15 +484,15 @@ class CalculatorComputeHelper:
         """
         Convert square format dimensions to condensed format.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         input_shape : tuple
             Shape of input array
         k : int
             Diagonal offset parameter
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple[tuple, int]
             Output shape and number of residues
         """
@@ -508,15 +508,15 @@ class CalculatorComputeHelper:
         """
         Convert condensed format dimensions to square format.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         input_shape : tuple
             Shape of input array
         k : int
             Diagonal offset parameter
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple[tuple, int]
             Output shape and number of residues
         """
@@ -529,8 +529,8 @@ class CalculatorComputeHelper:
         """
         Create output array (regular or memory-mapped).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool
             Whether to use memory mapping
         path : str or None
@@ -540,8 +540,8 @@ class CalculatorComputeHelper:
         dtype : np.dtype
             Data type of array
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray or numpy.memmap
             Created output array
         """

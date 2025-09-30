@@ -48,8 +48,8 @@ class KernelPCACalculator(CalculatorBase):
     incremental kernel computation for large datasets. Uses sklearn's KernelPCA
     with precomputed kernels for memory-efficient processing.
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> # Standard KernelPCA with RBF kernel
     >>> calc = KernelPCACalculator()
     >>> data = np.random.rand(1000, 100)
@@ -65,8 +65,8 @@ class KernelPCACalculator(CalculatorBase):
         """
         Initialize KernelPCA calculator.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use memory mapping and incremental kernel computation
         cache_path : str, optional
@@ -80,13 +80,13 @@ class KernelPCACalculator(CalculatorBase):
         min_chunk_size : int, default=1000
             Minimum chunk size per parallel process to avoid overhead
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes KernelPCA calculator with specified configuration
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Standard KernelPCA
         >>> calc = KernelPCACalculator()
 
@@ -107,8 +107,8 @@ class KernelPCACalculator(CalculatorBase):
         using either standard or incremental kernel computation based on the
         configuration settings.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input data matrix to decompose, shape (n_samples, n_features)
         **kwargs : dict
@@ -124,24 +124,24 @@ class KernelPCACalculator(CalculatorBase):
             - random_state : int, optional
                 Random state for reproducible results
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
             - transformed_data: KernelPCA-transformed data (n_samples, n_components)
             - metadata: Dictionary with KernelPCA information including kernel
               parameters and hyperparameters
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compute KernelPCA with RBF kernel
         >>> calc = KernelPCACalculator()
         >>> data = np.random.rand(500, 100)
         >>> transformed, metadata = calc.compute(data, n_components=10, kernel='rbf')
         >>> print(f"Kernel: {metadata['hyperparameters']['kernel']}")
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If input data is invalid or n_components is too large
         """
@@ -159,15 +159,15 @@ class KernelPCACalculator(CalculatorBase):
         """
         Extract and validate KernelPCA hyperparameters.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input data for parameter validation
         kwargs : dict
             Input parameters to extract and validate
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Validated hyperparameters
         """
@@ -207,15 +207,15 @@ class KernelPCACalculator(CalculatorBase):
         """
         Compute standard KernelPCA using sklearn.decomposition.KernelPCA.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input data matrix
         hyperparameters : dict
             KernelPCA hyperparameters
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             Tuple of (transformed_data, metadata)
         """
@@ -243,15 +243,15 @@ class KernelPCACalculator(CalculatorBase):
         """
         Compute RBF kernel matrix chunk-wise without loading all data into RAM.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input data matrix
         gamma : float
             RBF kernel coefficient
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Complete RBF kernel matrix computed chunk-wise
         """
@@ -282,13 +282,13 @@ class KernelPCACalculator(CalculatorBase):
         """
         Compute kernel statistics from precomputed kernel matrix for centering.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         kernel_matrix : numpy.ndarray
             Precomputed kernel matrix
         
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             Tuple containing (row_means, col_means, grand_mean) for kernel centering
         """
@@ -316,8 +316,8 @@ class KernelPCACalculator(CalculatorBase):
         """
         Center kernel matrix in-place using precomputed statistics.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         kernel_matrix : numpy.ndarray
             Kernel matrix to center (modified in-place)
         row_means : numpy.ndarray
@@ -327,8 +327,8 @@ class KernelPCACalculator(CalculatorBase):
         grand_mean : float
             Grand mean for centering
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Modifies kernel_matrix in-place
         """
@@ -347,15 +347,15 @@ class KernelPCACalculator(CalculatorBase):
         """
         Compute incremental KernelPCA with chunk-wise centered kernel matrix.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input data matrix
         hyperparameters : dict
             KernelPCA hyperparameters
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             Tuple of (transformed_data, metadata)
         """
@@ -434,8 +434,8 @@ class KernelPCACalculator(CalculatorBase):
         """
         Performs matrix-vector product for a memmapped matrix in chunks.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         v : numpy.ndarray
             Input vector to multiply
         kernel_matrix : numpy.memmap
@@ -443,8 +443,8 @@ class KernelPCACalculator(CalculatorBase):
         chunk_size : int
             Size of chunks to process at a time
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Resulting vector from the multiplication
         """
@@ -466,8 +466,8 @@ class KernelPCACalculator(CalculatorBase):
         """
         Performs matrix-vector product in parallel for a memmapped matrix in chunks.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         v : numpy.ndarray
             Input vector to multiply
         kernel_matrix : numpy.memmap
@@ -475,8 +475,8 @@ class KernelPCACalculator(CalculatorBase):
         parallel_chunk_size : int
             Size of chunks to process at a time for parallel processing
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Resulting vector from the multiplication
         """
@@ -499,8 +499,8 @@ class KernelPCACalculator(CalculatorBase):
         """
         Create LinearOperator with progress tracking for eigendecomposition.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         shape : tuple
             Shape of the linear operator
         matvec_func : callable
@@ -508,8 +508,8 @@ class KernelPCACalculator(CalculatorBase):
         dtype : numpy.dtype
             Data type of the operator
 
-        Returns:
-        --------
+        Returns
+        -------
         LinearOperator
             LinearOperator with call counting for progress tracking
         """
@@ -532,13 +532,13 @@ class KernelPCACalculator(CalculatorBase):
         """
         Create memmap for kernel matrix storage.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         n_samples : int
             Number of samples (kernel matrix is n_samples x n_samples)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.memmap
             Memory-mapped kernel matrix
         """
@@ -560,15 +560,15 @@ class KernelPCACalculator(CalculatorBase):
         Always uses chunk-wise processing for memory efficiency, regardless of data size.
         Fits Nyström on a sample, then processes data in chunks using partial_fit.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input data matrix
         hyperparameters : dict
             KernelPCA hyperparameters
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             Tuple of (transformed_data, metadata)
         """
