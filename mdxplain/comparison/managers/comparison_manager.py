@@ -55,8 +55,8 @@ class ComparisonManager:
     - One-vs-rest: Each selector vs all others combined
     - Multiclass: All selectors as separate classes
 
-    Examples:
-    ---------
+    Examples
+    --------
     Pipeline mode (automatic injection):
 
     >>> pipeline = PipelineManager()
@@ -83,8 +83,13 @@ class ComparisonManager:
         Actual data processing is done via get_comparison_data() method
         which uses PipelineData for memmap-safe operations.
 
-        Returns:
-        --------
+        Parameters
+        ----------
+        None
+            No parameters required for initialization
+
+        Returns
+        -------
         None
             Initializes ComparisonManager instance
         """
@@ -101,8 +106,8 @@ class ComparisonManager:
         """
         Create a new comparison with specified mode and selectors.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -115,8 +120,8 @@ class ComparisonManager:
         >>> manager = ComparisonManager()
         >>> manager.create_comparison(pipeline_data, "folded_vs_unfolded", "binary", "key_features", ["folded_frames", "unfolded_frames"])  # WITH pipeline_data parameter
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object to store the comparison
         name : str
@@ -128,18 +133,18 @@ class ComparisonManager:
         data_selectors : List[str]
             Names of data selectors to compare
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Creates ComparisonData in pipeline_data
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If comparison already exists, invalid mode, or selectors not found
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Binary comparison
         >>> manager.create_comparison(
         ...     pipeline_data, "folded_vs_unfolded", "binary", "key_features",
@@ -181,18 +186,18 @@ class ComparisonManager:
         """
         List all available comparisons.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
 
-        Returns:
-        --------
+        Returns
+        -------
         List[str]
             List of comparison names
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> comparisons = manager.list_comparisons(pipeline_data)
         >>> print(f"Available comparisons: {comparisons}")
         """
@@ -202,20 +207,20 @@ class ComparisonManager:
         """
         Get information about a comparison.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
         name : str
             Name of the comparison
 
-        Returns:
-        --------
+        Returns
+        -------
         Dict[str, Any]
             Dictionary with comparison information
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> info = manager.get_comparison_info(pipeline_data, "conformations")
         >>> print(f"Mode: {info['mode']}")
         >>> print(f"Sub-comparisons: {info['sub_comparison_names']}")
@@ -228,20 +233,20 @@ class ComparisonManager:
         """
         Remove a comparison.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
         name : str
             Name of the comparison to remove
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Removes the comparison from pipeline_data
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> manager.remove_comparison(pipeline_data, "old_comparison")
         """
         ComparisonValidationHelper.validate_comparison_exists(pipeline_data, name)
@@ -251,8 +256,8 @@ class ComparisonManager:
         """
         Save all comparison data to single file.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -265,20 +270,20 @@ class ComparisonManager:
         >>> manager = ComparisonManager()
         >>> manager.save(pipeline_data, 'comparison.npy')  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data container with comparison data
         save_path : str
             Path where to save all comparison data in one file
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Saves all comparison data to the specified file
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> manager.save(pipeline_data, 'comparison.npy')
         """
         DataUtils.save_object(pipeline_data.comparison_data, save_path)
@@ -287,8 +292,8 @@ class ComparisonManager:
         """
         Load all comparison data from single file.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -301,20 +306,20 @@ class ComparisonManager:
         >>> manager = ComparisonManager()
         >>> manager.load(pipeline_data, 'comparison.npy')  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data container to load comparison data into
         load_path : str
             Path to saved comparison data file
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Loads all comparison data from the specified file
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> manager.load(pipeline_data, 'comparison.npy')
         """
         temp_dict = {}
@@ -325,8 +330,8 @@ class ComparisonManager:
         """
         Print comparison information.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -339,18 +344,18 @@ class ComparisonManager:
         >>> manager = ComparisonManager()
         >>> manager.print_info(pipeline_data)  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data container with comparison data
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Prints comparison information to console
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> manager.print_info(pipeline_data)
         """
         if len(pipeline_data.comparison_data) == 0:

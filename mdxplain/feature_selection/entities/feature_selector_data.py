@@ -38,11 +38,11 @@ class FeatureSelectorData:
     selections per feature type with different data preferences (original vs reduced).
 
     This entity follows the same pattern as ClusterData and DecompositionData,
-    providing a container for feature selector configurations that can be
+    providing a container for feature selector configurations and results that can be
     stored and retrieved by name.
 
-    Attributes:
-    -----------
+    Attributes
+    ----------
     name : str
         Name identifier for this feature selector configuration
     selections : Dict[str, List[dict]]
@@ -58,8 +58,8 @@ class FeatureSelectorData:
     reference_trajectory : int, optional
         Trajectory index to use as reference for metadata extraction
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> selector_data = FeatureSelectorData("my_analysis")
     >>> selector_data.add_selection("distances", "res ALA", use_reduced=False)
     >>> selector_data.add_selection("contacts", "resid 120-140", use_reduced=True)
@@ -69,18 +69,18 @@ class FeatureSelectorData:
         """
         Initialize feature selector data with given name.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         name : str
             Name identifier for this feature selector configuration
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes empty FeatureSelectorData with given name
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> selector_data = FeatureSelectorData("protein_analysis")
         >>> print(selector_data.name)
         'protein_analysis'
@@ -98,8 +98,8 @@ class FeatureSelectorData:
         """
         Add a selection configuration for a feature type.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_key : str
             Feature type key (e.g., "distances", "contacts")
         selection : str
@@ -113,13 +113,13 @@ class FeatureSelectorData:
         require_all_partners : bool, default=False
             For pairwise features, require all partners to be present in selection
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds selection configuration to the selections dictionary
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> selector_data = FeatureSelectorData("analysis")
         >>> selector_data.add_selection("distances", "res ALA")
         >>> selector_data.add_selection("contacts", "resid 120-140", use_reduced=True)
@@ -141,19 +141,19 @@ class FeatureSelectorData:
         """
         Get all selection configurations for a feature type.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_key : str
             Feature type key to get selections for
 
-        Returns:
-        --------
+        Returns
+        -------
         List[dict]
             List of selection dictionaries for the feature type.
             Returns empty list if feature_key not found.
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> selector_data = FeatureSelectorData("analysis")
         >>> selector_data.add_selection("distances", "res ALA")
         >>> selector_data.add_selection("distances", "res HIS")
@@ -167,18 +167,18 @@ class FeatureSelectorData:
         """
         Check if feature type has any selections configured.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_key : str
             Feature type key to check
 
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if feature type has selections, False otherwise
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> selector_data = FeatureSelectorData("analysis")
         >>> selector_data.add_selection("distances", "res ALA")
         >>> print(selector_data.has_feature("distances"))
@@ -192,13 +192,13 @@ class FeatureSelectorData:
         """
         Get list of all configured feature type keys.
 
-        Returns:
-        --------
+        Returns
+        -------
         List[str]
             List of feature type keys that have selections configured
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> selector_data = FeatureSelectorData("analysis")
         >>> selector_data.add_selection("distances", "res ALA")
         >>> selector_data.add_selection("contacts", "resid 120")
@@ -212,19 +212,19 @@ class FeatureSelectorData:
         """
         Clear selections for a feature type or all selections.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_key : str, optional
             Feature type key to clear selections for.
             If None, clears all selections.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Clears specified or all selections
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> selector_data = FeatureSelectorData("analysis")
         >>> selector_data.add_selection("distances", "res ALA")
         >>> selector_data.add_selection("contacts", "resid 120")
@@ -244,13 +244,13 @@ class FeatureSelectorData:
         """
         Get summary information about the selector configuration.
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Summary dictionary with configuration statistics
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> selector_data = FeatureSelectorData("analysis")
         >>> selector_data.add_selection("distances", "res ALA")
         >>> selector_data.add_selection("contacts", "resid 120", use_reduced=True)
@@ -283,8 +283,8 @@ class FeatureSelectorData:
         Stores the computed indices and metadata for a feature type selection.
         This method is called by FeatureSelectorManager after processing selections.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_key : str
             Feature type key to store results for
         result_data : dict
@@ -292,13 +292,13 @@ class FeatureSelectorData:
             - 'indices': List of selected column indices
             - 'use_reduced': List of boolean flags for reduced data usage
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Stores results in selection_results dictionary
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> selector_data = FeatureSelectorData("analysis")
         >>> results = {"trajectory_indices": {traj_idx: {"indices": [...], "use_reduced": [...]}}}
         >>> selector_data.store_results("distances", results)
@@ -314,19 +314,19 @@ class FeatureSelectorData:
         Retrieves the stored selection results (indices and flags) for a
         specific feature type. Returns empty dict if no results found.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_key : str
             Feature type key to get results for
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Result dictionary with 'indices' and 'use_reduced' keys,
             or empty dict if no results stored
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> selector_data = FeatureSelectorData("analysis")
         >>> results = selector_data.get_results("distances")
         >>> if results:
@@ -341,13 +341,13 @@ class FeatureSelectorData:
         Returns the complete selection_results dictionary containing
         results for all feature types.
 
-        Returns:
-        --------
+        Returns
+        -------
         Dict[str, dict]
             Dictionary mapping feature keys to their result dictionaries
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> selector_data = FeatureSelectorData("analysis")
         >>> all_results = selector_data.get_all_results()
         >>> for feature_key, results in all_results.items():
@@ -359,18 +359,18 @@ class FeatureSelectorData:
         """
         Check if selection results are available.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_key : str, optional
             Feature type key to check. If None, checks if any results exist.
 
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if results are available, False otherwise
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> selector_data = FeatureSelectorData("analysis")
         >>> print(selector_data.has_results())  # Any results?
         False
@@ -385,19 +385,19 @@ class FeatureSelectorData:
         """
         Clear stored selection results.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_key : str, optional
             Feature type key to clear results for.
             If None, clears all results.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Clears specified or all selection results
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> selector_data = FeatureSelectorData("analysis")
         >>> selector_data.clear_results("distances")  # Clear only distances
         >>> selector_data.clear_results()  # Clear all results
@@ -411,13 +411,13 @@ class FeatureSelectorData:
         """
         String representation of FeatureSelectorData.
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             String representation showing name and selection count
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> selector_data = FeatureSelectorData("analysis")
         >>> selector_data.add_selection("distances", "res ALA")
         >>> print(repr(selector_data))
@@ -436,13 +436,13 @@ class FeatureSelectorData:
         """
         Set reference trajectory for metadata extraction.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         reference_traj : int
             Trajectory index to use as reference for metadata
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Sets reference trajectory in the selector data
         """
@@ -452,8 +452,8 @@ class FeatureSelectorData:
         """
         Get reference trajectory for metadata extraction.
 
-        Returns:
-        --------
+        Returns
+        -------
         Optional[int]
             Reference trajectory index, or None if not set
         """
@@ -463,13 +463,13 @@ class FeatureSelectorData:
         """
         Set total number of columns in the final selection matrix.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         n_columns : int
             Total number of columns across all features and trajectories
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Sets the n_columns attribute
         """
@@ -479,8 +479,8 @@ class FeatureSelectorData:
         """
         Get total number of columns in the final selection matrix.
         
-        Returns:
-        --------
+        Returns
+        -------
         Optional[int]
             Total number of columns, or None if not calculated yet
         """
@@ -490,18 +490,18 @@ class FeatureSelectorData:
         """
         Save FeatureSelectorData object to disk.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         save_path : str
             Path where to save the FeatureSelectorData object
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Saves the FeatureSelectorData object to the specified path
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> feature_selector_data.save('analysis_results/feature_selection.pkl')
         """
         DataUtils.save_object(self, save_path)
@@ -510,18 +510,18 @@ class FeatureSelectorData:
         """
         Load FeatureSelectorData object from disk.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         load_path : str
             Path to the saved FeatureSelectorData file
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Loads the FeatureSelectorData object from the specified path
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> feature_selector_data.load('analysis_results/feature_selection.pkl')
         """
         DataUtils.load_object(self, load_path)
@@ -530,17 +530,17 @@ class FeatureSelectorData:
         """
         Print comprehensive feature selector information.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Prints feature selector information to console
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> feature_selector_data.print_info()
         === FeatureSelectorData ===
         Name: analysis
@@ -560,8 +560,8 @@ class FeatureSelectorData:
         """
         Check if no feature selections are configured.
 
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if no selections are available, False otherwise
         """
@@ -571,8 +571,8 @@ class FeatureSelectorData:
         """
         Print header with selector name.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         print("=== FeatureSelectorData ===")
@@ -582,8 +582,8 @@ class FeatureSelectorData:
         """
         Print detailed selection information.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         summary = self.get_summary()
@@ -608,8 +608,8 @@ class FeatureSelectorData:
         """
         Print information about stored results.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         if len(self.selection_results) > 0:

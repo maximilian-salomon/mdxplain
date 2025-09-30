@@ -43,15 +43,15 @@ class DSSPReduceService(ReduceServiceBase):
         """
         Initialize DSSP reduce factory.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         manager : FeatureManager
             Feature manager instance
         pipeline_data : PipelineData
             Pipeline data container
 
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         super().__init__(manager, pipeline_data)
@@ -68,8 +68,8 @@ class DSSPReduceService(ReduceServiceBase):
         """
         Reduce DSSP by secondary structure transitions.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -81,13 +81,13 @@ class DSSPReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find residues with many secondary structure transitions
         >>> pipeline.feature.reduce.dssp.transitions(threshold_min=5)
 
@@ -121,8 +121,8 @@ class DSSPReduceService(ReduceServiceBase):
         Filters residues based on frequency of secondary structure transitions.
         Same as transitions but normalized by trajectory length.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -132,13 +132,13 @@ class DSSPReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep residues with high transition frequency
         >>> pipeline.feature.reduce.dssp.transition_frequency(threshold_min=0.1)
 
@@ -171,8 +171,8 @@ class DSSPReduceService(ReduceServiceBase):
         Filters residues based on secondary structure stability.
         Stability = 1 - transition_frequency, higher values = more stable.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -182,13 +182,13 @@ class DSSPReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep highly stable residues (low transitions)
         >>> pipeline.feature.reduce.dssp.stability(threshold_min=0.8)
 
@@ -221,8 +221,8 @@ class DSSPReduceService(ReduceServiceBase):
         Filters residues based on frequency distribution of structural classes.
         Analyzes how often each residue adopts different secondary structures.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -232,13 +232,13 @@ class DSSPReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep residues with specific class frequency patterns
         >>> pipeline.feature.reduce.dssp.class_frequencies(threshold_min=0.3)
 

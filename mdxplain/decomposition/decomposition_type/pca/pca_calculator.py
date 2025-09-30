@@ -40,10 +40,10 @@ class PCACalculator(CalculatorBase):
 
     Implements PCA computation with support for both standard and incremental
     processing for large datasets. Uses sklearn's PCA for standard computation
-    and IncrementalPCA for chunk-wise processing when memory mapping is enabled.
+    and sklearn's IncrementalPCA for chunk-wise processing when memory mapping is enabled.
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> # Standard PCA computation
     >>> calc = PCACalculator()
     >>> data = np.random.rand(1000, 100)
@@ -59,8 +59,8 @@ class PCACalculator(CalculatorBase):
         """
         Initialize PCA calculator.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use memory mapping and incremental computation
         cache_path : str, optional
@@ -68,13 +68,13 @@ class PCACalculator(CalculatorBase):
         chunk_size : int, optional
             Size of chunks for incremental PCA processing
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes PCA calculator with specified configuration
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Standard PCA
         >>> calc = PCACalculator()
 
@@ -92,8 +92,8 @@ class PCACalculator(CalculatorBase):
         using either standard PCA or incremental PCA based on the
         configuration settings.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input data matrix to decompose, shape (n_samples, n_features)
         **kwargs : dict
@@ -103,24 +103,24 @@ class PCACalculator(CalculatorBase):
             - random_state : int, optional
                 Random state for reproducible results
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
             - transformed_data: PCA-transformed data (n_samples, n_components)
             - metadata: Dictionary with PCA information including components,
               explained variance ratio, and hyperparameters
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compute PCA with 10 components
         >>> calc = PCACalculator()
         >>> data = np.random.rand(500, 100)
         >>> transformed, metadata = calc.compute(data, n_components=10)
         >>> print(f"Explained variance: {metadata['explained_variance_ratio']}")
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If input data is invalid or n_components is too large
         """
@@ -136,15 +136,15 @@ class PCACalculator(CalculatorBase):
         """
         Extract and validate PCA hyperparameters.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input data for parameter validation
         kwargs : dict
             Input parameters to extract and validate
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Validated hyperparameters
         """
@@ -167,15 +167,15 @@ class PCACalculator(CalculatorBase):
         """
         Compute standard PCA using sklearn.decomposition.PCA.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input data matrix
         hyperparameters : dict
             PCA hyperparameters
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             Tuple of (transformed_data, metadata)
         """
@@ -203,15 +203,15 @@ class PCACalculator(CalculatorBase):
         """
         Compute incremental PCA using sklearn.decomposition.IncrementalPCA.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input data matrix
         hyperparameters : dict
             PCA hyperparameters
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             Tuple of (transformed_data, metadata)
         """

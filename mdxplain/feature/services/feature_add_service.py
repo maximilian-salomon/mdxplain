@@ -43,8 +43,8 @@ class FeatureAddService:
     pipeline without requiring users to import and instantiate feature types
     directly. All feature type parameters are combined with add_feature parameters.
     
-    Examples:
-    ---------
+    Examples
+    --------
     >>> pipeline.feature.add.distances(excluded_neighbors=2)
     >>> pipeline.feature.add.contacts(threshold=5.0, traj_selection=[0,1,2])
     >>> pipeline.feature.add.torsions(calculate_chi=False, force=True)
@@ -54,15 +54,15 @@ class FeatureAddService:
         """
         Initialize factory with manager and pipeline data.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         manager : FeatureManager
             Feature manager instance
         pipeline_data : PipelineData
             Pipeline data container (injected by AutoInjectProxy)
             
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         self._manager = manager
@@ -81,8 +81,8 @@ class FeatureAddService:
         Computes all pairwise distances from molecular dynamics trajectories.
         This is a base feature type with no dependencies.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         excluded_neighbors : int, default=1
             Number of nearest neighbors to exclude from distance calculation.
             Chain breaks are automatically excluded based on sequence ID jumps.
@@ -94,13 +94,13 @@ class FeatureAddService:
         force_original : bool, default=True
             Whether to force using original trajectory data instead of reduced data
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds distance features to pipeline data
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic distance calculation
         >>> pipeline.feature.add.distances()
         
@@ -110,8 +110,8 @@ class FeatureAddService:
         >>> # For specific trajectories only
         >>> pipeline.feature.add.distances(traj_selection=[0,1,2], force=True)
         
-        Notes:
-        ------
+        Notes
+        -----
         Distance features are computed using MDTraj and returned in Angstroms.
         Missing pairs (due to chain breaks) are handled automatically.
         """
@@ -137,8 +137,8 @@ class FeatureAddService:
         Computes binary contact matrices from distance data using a distance threshold.
         Requires distances feature to be computed first as input dependency.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cutoff : float, default=4.5
             Distance cutoff in Angstroms for contact determination
         traj_selection : str, int, list, default="all"
@@ -148,13 +148,13 @@ class FeatureAddService:
         force_original : bool, default=True
             Whether to force using original trajectory data
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds contact features to pipeline data
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Standard contacts with 4.5Å threshold
         >>> pipeline.feature.add.contacts()
         
@@ -164,8 +164,8 @@ class FeatureAddService:
         >>> # Force recalculation for specific trajectories
         >>> pipeline.feature.add.contacts(cutoff=5.0, traj_selection="all", force=True)
         
-        Notes:
-        ------
+        Notes
+        -----
         Contacts are binary (0 or 1) indicating whether atom pairs are within threshold distance.
         This feature depends on distances - ensure distances are computed first.
         """
@@ -194,8 +194,8 @@ class FeatureAddService:
         Computes dihedral torsion angles including backbone (phi, psi, omega)
         and side chain angles (chi1-4). All angles are returned in degrees (-180 to +180).
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         calculate_phi : bool, default=True
             Whether to compute phi backbone angles
         calculate_psi : bool, default=True
@@ -211,13 +211,13 @@ class FeatureAddService:
         force_original : bool, default=True
             Whether to force using original trajectory data
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds torsion features to pipeline data
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # All angles (default)
         >>> pipeline.feature.add.torsions()
         
@@ -240,10 +240,10 @@ class FeatureAddService:
         ...     calculate_chi=True
         ... )
         
-        Notes:
-        ------
-        All angles are computed and returned in degrees. Missing angles 
-        (e.g., chi angles for residues without side chains) are filled with 0.0.
+        Notes
+        -----
+        All angles are computed and returned in degrees.
+        Uses the MDTraj library for angle calculations.
         Circular statistics should be used for analysis of torsion angles.
         """
         feature_type = Torsions(
@@ -274,8 +274,8 @@ class FeatureAddService:
         Computes secondary structure classification using DSSP algorithm.
         Provides either 8-class (H, B, E, G, I, T, S, C) or simplified 3-class (H, E, C) output.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         simplified : bool, default=False
             Use simplified 3-state classification (H=helix, E=sheet, C=coil)
             If False, uses full 8-state DSSP classification
@@ -291,13 +291,13 @@ class FeatureAddService:
         force_original : bool, default=True
             Whether to force using original trajectory data
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds DSSP features to pipeline data
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Full 8-state DSSP classification
         >>> pipeline.feature.add.dssp()
         
@@ -313,8 +313,9 @@ class FeatureAddService:
         >>> # Force recalculation for specific trajectories
         >>> pipeline.feature.add.dssp(simplified=False, traj_selection=[0,1], force=True)
         
-        Notes:
-        ------
+        Notes
+        -----
+        Uses MDTraj's DSSP implementation. The full 8-state codes are:
         DSSP classification: H (α-helix), B (β-bridge), E (β-sheet), 
         G (3-10 helix), I (π-helix), T (turn), S (bend), C (coil).
         Simplified mode maps: H,G,I → H; B,E → E; T,S,C → C.
@@ -342,8 +343,8 @@ class FeatureAddService:
         Computes solvent accessible surface area for each residue using 
         the Shrake-Rupley algorithm implemented in MDTraj.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         mode : str, default='residue'
             Level of SASA calculation:
             - 'residue': SASA per residue (sum of constituent atoms)
@@ -358,13 +359,13 @@ class FeatureAddService:
         force_original : bool, default=True
             Whether to force using original trajectory data
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds SASA features to pipeline data
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Standard SASA with water probe
         >>> pipeline.feature.add.sasa()
         
@@ -380,9 +381,10 @@ class FeatureAddService:
         >>> # For specific trajectories
         >>> pipeline.feature.add.sasa(probe_radius=0.14, traj_selection="all", force=True)
         
-        Notes:
-        ------
-        SASA values are returned in nm². Higher values indicate more solvent exposure.\n        Mode 'residue' provides per-residue values, 'atom' provides per-atom values.
+        Notes
+        -----
+        SASA values are returned in nm². Higher values indicate more solvent exposure.
+        Mode 'residue' provides per-residue values, 'atom' provides per-atom values.
         Useful for identifying buried vs. exposed residues and conformational changes
         affecting protein-solvent interactions.
         """
@@ -408,8 +410,8 @@ class FeatureAddService:
         Extracts 3D coordinates (x, y, z) for selected atoms from trajectories.
         Useful for structural analysis and dimensionality reduction.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         atom_selection : str, default="name CA"
             MDTraj atom selection string specifying which atoms to extract
             Examples: "name CA", "backbone", "protein", "resid 10 to 50 and name CA"
@@ -420,13 +422,13 @@ class FeatureAddService:
         force_original : bool, default=True
             Whether to force using original trajectory data
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds coordinate features to pipeline data
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # CA atoms only (default)
         >>> pipeline.feature.add.coordinates()
         
@@ -442,8 +444,8 @@ class FeatureAddService:
         >>> # All protein atoms
         >>> pipeline.feature.add.coordinates(atom_selection="protein")
         
-        Notes:
-        ------
+        Notes
+        -----
         Coordinates are returned in nanometers as (x, y, z) triplets for each selected atom.
         The resulting feature matrix has shape (n_frames, n_atoms * 3).
         Consider alignment/centering for meaningful coordinate-based analysis.

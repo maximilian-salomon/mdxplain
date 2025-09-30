@@ -54,8 +54,8 @@ class FeatureValidationHelper:
         """
         Validate threshold parameters for data reduction.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         threshold_min : float or None
             Minimum threshold value to validate
         threshold_max : float or None
@@ -63,18 +63,18 @@ class FeatureValidationHelper:
         metric : str
             Metric name for context in error messages
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Validates parameters or raises ValueError
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If threshold parameters are invalid (wrong type or invalid range)
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> FeatureValidationHelper.validate_threshold_parameters(0.1, 0.9, "cv")
         >>> # No error - valid parameters
 
@@ -111,20 +111,20 @@ class FeatureValidationHelper:
         """
         Check if feature exists and has computed data.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object to check
         feature_key : str
             Feature key to validate
 
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if feature exists and has data, False otherwise
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> exists = FeatureValidationHelper.validate_feature_exists(
         ...     pipeline_data, "distances"
         ... )
@@ -139,8 +139,8 @@ class FeatureValidationHelper:
         """
         Validate that all feature dependencies are available.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object to check
         feature_type : FeatureTypeBase
@@ -148,18 +148,18 @@ class FeatureValidationHelper:
         feature_key : str
             Feature key for error messages
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Validates dependencies or raises ValueError
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If required dependency is missing
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> FeatureValidationHelper.validate_dependencies(
         ...     pipeline_data, contacts_feature, "contacts"
         ... )
@@ -187,25 +187,25 @@ class FeatureValidationHelper:
         """
         Validate that all requirements for feature computation are met.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object to validate
         feature_type : FeatureTypeBase
             Feature type object to validate
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Validates requirements or raises ValueError
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If trajectory labels are not set or trajectories are not loaded
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> FeatureValidationHelper.validate_computation_requirements(
         ...     pipeline_data, distances_feature
         ... )
@@ -224,8 +224,8 @@ class FeatureValidationHelper:
         """
         Validate that feature is ready for reduction for specified trajectories.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object to validate
         feature_key : str
@@ -233,18 +233,18 @@ class FeatureValidationHelper:
         traj_indices : List[int]
             List of trajectory indices to validate
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Validates state or raises ValueError
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If feature has no data or reduction already performed for specified trajectories
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> FeatureValidationHelper.validate_reduction_state(
         ...     pipeline_data, "distances", [0, 1, 2]
         ... )
@@ -271,8 +271,8 @@ class FeatureValidationHelper:
         """
         Check if feature exists for all specified trajectories.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_key : str
             Feature key for error messages
         feature_traj_dict : dict
@@ -280,13 +280,13 @@ class FeatureValidationHelper:
         traj_indices : List[int]
             List of trajectory indices to validate
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Validates existence or raises ValueError
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If feature not computed for any of the specified trajectories
         """
@@ -306,8 +306,8 @@ class FeatureValidationHelper:
         """
         Check if trajectories have actual feature data.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_key : str
             Feature key for error messages
         feature_traj_dict : dict
@@ -315,13 +315,13 @@ class FeatureValidationHelper:
         traj_indices : List[int]
             List of trajectory indices to validate
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Validates data existence or raises ValueError
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If any trajectory has no computed feature data
         """
@@ -341,8 +341,8 @@ class FeatureValidationHelper:
         """
         Check if reduction has already been performed.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_key : str
             Feature key for error messages
         feature_traj_dict : dict
@@ -350,13 +350,13 @@ class FeatureValidationHelper:
         traj_indices : List[int]
             List of trajectory indices to validate
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Validates no existing reduction or raises ValueError
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If reduction already performed for any of the specified trajectories
         """

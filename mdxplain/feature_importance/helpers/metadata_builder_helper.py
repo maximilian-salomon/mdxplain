@@ -40,8 +40,8 @@ class MetadataBuilderHelper:
     that describe feature importance analyses. These dictionaries are stored
     alongside analysis results for documentation and debugging.
     
-    Examples:
-    ---------
+    Examples
+    --------
     >>> # Build analysis metadata
     >>> metadata = MetadataBuilderHelper.build_analysis_metadata(
     ...     sub_comp, analyzer_type, X, y, result
@@ -66,8 +66,8 @@ class MetadataBuilderHelper:
         aspects of a feature importance analysis including data dimensions,
         analyzer type, and model-specific metadata.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         sub_comp : Dict[str, Any]
             Sub-comparison dictionary containing comparison metadata
         analyzer_type : AnalyzerTypeBase
@@ -79,13 +79,13 @@ class MetadataBuilderHelper:
         result : Dict[str, Any]
             Analysis result from the analyzer
             
-        Returns:
-        --------
+        Returns
+        -------
         Dict[str, Any]
             Complete metadata dictionary for the analysis
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> metadata = MetadataBuilderHelper.build_analysis_metadata(
         ...     sub_comp_dict, decision_tree, X, y, analysis_result
         ... )
@@ -118,20 +118,20 @@ class MetadataBuilderHelper:
         comparison to the metadata dictionary. Handles both binary
         and multiclass comparison modes.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         metadata : Dict[str, Any]
             Metadata dictionary to add group information to (modified in-place)
         sub_comp : Dict[str, Any]
             Sub-comparison dictionary containing group information
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Modifies metadata dictionary in-place
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> metadata = {"comparison": "test"}
         >>> MetadataBuilderHelper.add_group_information(metadata, sub_comp)
         >>> print("group1" in metadata or "selectors" in metadata)  # True
@@ -159,8 +159,8 @@ class MetadataBuilderHelper:
         Creates a basic metadata dictionary with essential information
         about the analysis. This can be extended with additional information.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         comparison_name : str
             Name of the comparison being analyzed
         analyzer_type : AnalyzerTypeBase
@@ -170,13 +170,13 @@ class MetadataBuilderHelper:
         n_features : int
             Number of features in the analysis
             
-        Returns:
-        --------
+        Returns
+        -------
         Dict[str, Any]
             Basic metadata dictionary
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> metadata = MetadataBuilderHelper.build_base_metadata(
         ...     "folded_vs_unfolded", decision_tree, 150, 50
         ... )
@@ -200,20 +200,20 @@ class MetadataBuilderHelper:
         Extracts and adds model-specific metadata from the analysis result
         to the main metadata dictionary.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         metadata : Dict[str, Any]
             Metadata dictionary to add model metadata to (modified in-place)
         result : Dict[str, Any]
             Analysis result containing model metadata
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Modifies metadata dictionary in-place
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> metadata = {"comparison": "test"}
         >>> MetadataBuilderHelper.add_model_metadata(metadata, analysis_result)
         >>> print("model_metadata" in metadata)  # True

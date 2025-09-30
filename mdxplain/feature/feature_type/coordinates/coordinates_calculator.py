@@ -43,8 +43,8 @@ class CoordinatesCalculator(CalculatorBase):
     strings. Supports memory-mapped arrays for large datasets, chunked
     processing for memory efficiency, and various atom selection modes.
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> # Basic coordinate extraction
     >>> calculator = CoordinatesCalculator()
     >>> coords, metadata = calculator.compute(trajectory, selection='ca')
@@ -58,8 +58,8 @@ class CoordinatesCalculator(CalculatorBase):
         """
         Initialize coordinates calculator with configuration parameters.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for large datasets
         cache_path : str, optional
@@ -67,12 +67,12 @@ class CoordinatesCalculator(CalculatorBase):
         chunk_size : int, optional
             Number of frames to process per chunk
 
-        Returns:
-        --------
+        Returns
+        -------
         None
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic initialization
         >>> calculator = CoordinatesCalculator()
 
@@ -90,8 +90,8 @@ class CoordinatesCalculator(CalculatorBase):
         """
         Extract coordinates for selected atoms from trajectory.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         input_data : mdtraj.Trajectory
             MDTraj trajectory object to process
         **kwargs : dict
@@ -99,15 +99,15 @@ class CoordinatesCalculator(CalculatorBase):
             - selection : str, default='ca' - Atom selection string
             - res_metadata : dict - Residue metadata for naming
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple[numpy.ndarray, dict]
             Tuple containing (coordinates_array, feature_metadata) where coordinates_array
             has shape (n_frames, n_selected_atoms * 3) and feature_metadata contains
             atom information and selection details
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Extract alpha carbon coordinates
         >>> coords, metadata = calculator.compute(trajectory, selection='ca')
         >>> print(f"Shape: {coords.shape}")  # (n_frames, n_residues * 3)
@@ -142,20 +142,20 @@ class CoordinatesCalculator(CalculatorBase):
         """
         Perform atom selection using MDTraj selection strings.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory : mdtraj.Trajectory
             Trajectory to select atoms from
         selection : str
             Selection string ('all', 'ca', 'backbone', 'heavy', or MDTraj syntax)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Array of selected atom indices
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If selection string is invalid or selects no atoms
         """
@@ -183,15 +183,15 @@ class CoordinatesCalculator(CalculatorBase):
         """
         Create output array for coordinates storage.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory : mdtraj.Trajectory
             Trajectory object for size information
         n_features : int
             Number of coordinate features (n_atoms * 3)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray or numpy.memmap
             Output array for coordinates storage
         """
@@ -208,8 +208,8 @@ class CoordinatesCalculator(CalculatorBase):
         """
         Extract coordinates for selected atoms from trajectory.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory : mdtraj.Trajectory
             Source trajectory
         indices : numpy.ndarray
@@ -217,8 +217,8 @@ class CoordinatesCalculator(CalculatorBase):
         coordinates : numpy.ndarray or numpy.memmap
             Output array for coordinates
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Filled coordinates array
         """
@@ -251,8 +251,8 @@ class CoordinatesCalculator(CalculatorBase):
         """
         Generate feature metadata for selected atoms.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         indices : numpy.ndarray
             Selected atom indices
         topology : mdtraj.Topology
@@ -260,8 +260,8 @@ class CoordinatesCalculator(CalculatorBase):
         selection : str
             Original selection string
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Feature metadata dictionary with atom information
         """
@@ -316,8 +316,8 @@ class CoordinatesCalculator(CalculatorBase):
         """
         Filter and select variable/dynamic coordinates based on statistical criteria.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         input_data : numpy.ndarray
             Coordinate array (n_frames, n_coordinates)
         metric : str, default='cv'
@@ -349,14 +349,14 @@ class CoordinatesCalculator(CalculatorBase):
         lag_time : int, default=1
             Lag time for transition analysis
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Dictionary with keys: 'indices', 'values', 'dynamic_data', 'feature_metadata',
             'metric_used', 'n_dynamic', 'total_coordinates', 'threshold_min', 'threshold_max'
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Select highly variable coordinates (CV >= 0.5)
         >>> result = calculator.compute_dynamic_values(coords, metric='cv', threshold_min=0.5)
         >>> variable_coords = result['dynamic_data']
@@ -405,8 +405,8 @@ class CoordinatesCalculator(CalculatorBase):
         """
         Compute metric values for coordinates based on specified metric type.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         coordinates : numpy.ndarray
             Coordinate array (n_frames, n_coordinates)
         metric : str
@@ -420,8 +420,8 @@ class CoordinatesCalculator(CalculatorBase):
         lag_time : int, default=1
             Lag time for transitions metric
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Computed metric values per coordinate
         """
@@ -469,8 +469,8 @@ class CoordinatesCalculator(CalculatorBase):
         """
         Compute transitions metric based on specified mode and parameters.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         coordinates : numpy.ndarray
             Coordinate array (n_frames, n_coordinates)
         threshold : float
@@ -482,8 +482,8 @@ class CoordinatesCalculator(CalculatorBase):
         lag_time : int, default=1
             Lag time for transitions metric
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Number of transitions per coordinate
         """

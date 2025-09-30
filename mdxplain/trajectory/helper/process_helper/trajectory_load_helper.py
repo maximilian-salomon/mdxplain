@@ -57,8 +57,8 @@ class TrajectoryLoadHelper:
         """
         Load trajectories from various input types.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data_input : list or str
             List of trajectory objects or path to directory
         concat : bool, default=False
@@ -74,14 +74,14 @@ class TrajectoryLoadHelper:
         cache_dir : str, default="./cache"
             Cache directory for DaskMDTrajectory (only used when use_memmap=True)
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Dictionary with 'trajectories' and 'names' keys containing
             list of loaded trajectory objects and their corresponding names
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Load from trajectory list
         >>> trajs = [traj1, traj2, traj3]
         >>> result = TrajectoryLoadHelper.load_trajectories(trajs, concat=True)
@@ -115,8 +115,8 @@ class TrajectoryLoadHelper:
         """
         Handle trajectory list input with optional concatenation.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory_list : list
             List of MDTraj trajectory objects
         concat : bool
@@ -130,8 +130,8 @@ class TrajectoryLoadHelper:
         cache_dir : str, default="./cache"
             Cache directory for DaskMDTrajectory (only used when use_memmap=True)
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Dictionary with 'trajectories' and 'names' keys
         """
@@ -144,13 +144,13 @@ class TrajectoryLoadHelper:
         """
         Create initial result structure from trajectory list.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory_list : List[Any]
             List of trajectory objects
             
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Dictionary with 'trajectories' and 'names' keys
         """
@@ -164,15 +164,15 @@ class TrajectoryLoadHelper:
         """
         Apply selection to trajectories if specified.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         result : dict
             Dictionary with 'trajectories' and 'names' keys
         selection : str, optional
             MDTraj selection string
             
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Dictionary with selected trajectories
         """
@@ -187,15 +187,15 @@ class TrajectoryLoadHelper:
         """
         Handle trajectory concatenation if requested.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         result : dict
             Dictionary with 'trajectories' and 'names' keys
         concat : bool
             Whether to concatenate trajectories
             
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Dictionary with potentially concatenated trajectories
         """
@@ -208,13 +208,13 @@ class TrajectoryLoadHelper:
         """
         Concatenate multiple trajectories into single trajectory.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         result : dict
             Dictionary with 'trajectories' and 'names' keys
             
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Dictionary with single concatenated trajectory
         """
@@ -236,8 +236,8 @@ class TrajectoryLoadHelper:
         """
         Load trajectories from directory (flat or nested structure).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         directory_path : str
             Path to directory containing trajectory files
         concat : bool
@@ -253,8 +253,8 @@ class TrajectoryLoadHelper:
         cache_dir : str, default="./cache"
             Cache directory for DaskMDTrajectory (only used when use_memmap=True)
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Dictionary with 'trajectories' and 'names' keys
         """
@@ -273,13 +273,13 @@ class TrajectoryLoadHelper:
         """
         Check if directory contains subdirectories.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         directory_path : str
             Path to directory to check
 
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if subdirectories exist, False otherwise
         """
@@ -305,8 +305,8 @@ class TrajectoryLoadHelper:
 
         Also handles files in root directory as separate system.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         directory_path : str
             Path to directory containing trajectory files
         concat : bool
@@ -322,8 +322,8 @@ class TrajectoryLoadHelper:
         cache_dir : str, default="./cache"
             Cache directory for DaskMDTrajectory (only used when use_memmap=True)
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Dictionary with 'trajectories' and 'names' keys
         """
@@ -365,8 +365,8 @@ class TrajectoryLoadHelper:
         """
         Load from flat directory structure (single system).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         directory_path : str
             Path to directory containing trajectory files
         concat : bool
@@ -382,8 +382,8 @@ class TrajectoryLoadHelper:
         cache_dir : str, default="./cache"
             Cache directory for DaskMDTrajectory (only used when use_memmap=True)
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Dictionary with 'trajectories' and 'names' keys
         """
@@ -403,15 +403,15 @@ class TrajectoryLoadHelper:
         """
         Print summary of loaded trajectories.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         system_summary : list
             List of (system_name, trajectory_count) tuples
         concat : bool
             Whether concatenation was used
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Prints loading summary to console
         """
@@ -431,8 +431,8 @@ class TrajectoryLoadHelper:
         """
         Print the header line of the loading summary.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         num_systems : int
             Number of systems loaded
         total_trajectories : int
@@ -440,8 +440,8 @@ class TrajectoryLoadHelper:
         concat : bool
             Whether concatenation was used
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Prints header line to console
         """
@@ -460,8 +460,8 @@ class TrajectoryLoadHelper:
         """
         Print information for a single system.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         system : str
             System name
         count : int
@@ -469,8 +469,8 @@ class TrajectoryLoadHelper:
         concat : bool
             Whether concatenation was used
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Prints system information to console
         """
@@ -485,8 +485,8 @@ class TrajectoryLoadHelper:
         """
         Load all trajectories for a single system.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         subdir_path : str
             Path to directory containing trajectory files
         subdir_name : str
@@ -504,8 +504,8 @@ class TrajectoryLoadHelper:
         cache_dir : str, default="./cache"
             Cache directory for DaskMDTrajectory (only used when use_memmap=True)
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Dictionary with 'trajectories' and 'names' keys
         """
@@ -550,13 +550,13 @@ class TrajectoryLoadHelper:
         """
         Get list of PDB files in directory.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         subdir_path : str
             Path to directory to search
 
-        Returns:
-        --------
+        Returns
+        -------
         list
             List of PDB filenames (not full paths)
         """
@@ -567,13 +567,13 @@ class TrajectoryLoadHelper:
         """
         Get list of XTC files in directory.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         subdir_path : str
             Path to directory to search
 
-        Returns:
-        --------
+        Returns
+        -------
         list
             List of XTC filenames (not full paths)
         """
@@ -587,8 +587,8 @@ class TrajectoryLoadHelper:
         """
         Load XTC files with PDB topology.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         xtc_files : list
             List of XTC filenames (not full paths)
         pdb_path : str
@@ -606,8 +606,8 @@ class TrajectoryLoadHelper:
         cache_dir : str, default="./cache"
             Cache directory for DaskMDTrajectory (only used when use_memmap=True)
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Dictionary with 'trajectories' and 'names' keys
         """
@@ -638,8 +638,8 @@ class TrajectoryLoadHelper:
         """
         Load PDB files as separate trajectories.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pdb_files : list
             List of PDB filenames (not full paths)
         subdir_path : str
@@ -655,8 +655,8 @@ class TrajectoryLoadHelper:
         cache_dir : str, default="./cache"
             Cache directory for DaskMDTrajectory (only used when use_memmap=True)
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Dictionary with 'trajectories' and 'names' keys
         """
@@ -683,8 +683,8 @@ class TrajectoryLoadHelper:
         """
         Handle trajectory concatenation if requested.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         system_trajs : list
             List of loaded MDTraj trajectory objects
         names : list
@@ -694,8 +694,8 @@ class TrajectoryLoadHelper:
         subdir_name : str
             Name of the system
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Dictionary with 'trajectories' and 'names' keys
         """
@@ -721,8 +721,8 @@ class TrajectoryLoadHelper:
         """
         Load root directory files as separate system if present.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         directory_path : str
             Path to directory containing trajectory files
         concat : bool
@@ -744,8 +744,8 @@ class TrajectoryLoadHelper:
         cache_dir : str, default="./cache"
             Cache directory for DaskMDTrajectory (only used when use_memmap=True)
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Loads root directory files as separate system if present
         """
@@ -768,20 +768,20 @@ class TrajectoryLoadHelper:
         """
         Apply atom selection to trajectories in result.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         result : dict
             Dictionary with 'trajectories' and 'names' keys
         selection : str
             MDTraj selection string to apply
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Dictionary with selected trajectories
 
-        Notes:
-        ------
+        Notes
+        -----
         Selection is applied to each trajectory individually to ensure
         compatible atom counts for concatenation.
         """
@@ -818,8 +818,8 @@ class TrajectoryLoadHelper:
         """
         Load a single trajectory file using either md.load or DaskMDTrajectory.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory_file : str
             Path to trajectory file
         topology_file : str, optional
@@ -833,8 +833,8 @@ class TrajectoryLoadHelper:
         cache_dir : str, default="./cache"
             Cache directory for DaskMDTrajectory
             
-        Returns:
-        --------
+        Returns
+        -------
         Union[DaskMDTrajectory, md.Trajectory]
             Either md.Trajectory or DaskMDTrajectory object
         """

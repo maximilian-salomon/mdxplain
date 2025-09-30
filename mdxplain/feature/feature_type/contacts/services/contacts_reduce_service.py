@@ -43,15 +43,15 @@ class ContactsReduceService(ReduceServiceBase):
         """
         Initialize contact reduce factory.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         manager : FeatureManager
             Feature manager instance
         pipeline_data : PipelineData
             Pipeline data container
             
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         super().__init__(manager, pipeline_data)
@@ -70,8 +70,8 @@ class ContactsReduceService(ReduceServiceBase):
         Filters contact features based on how frequently they occur
         (fraction of frames where pair is in contact).
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -81,13 +81,13 @@ class ContactsReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep persistent contacts (>50% of time)
         >>> pipeline.feature.reduce.contacts.frequency(threshold_min=0.5)
         
@@ -120,8 +120,8 @@ class ContactsReduceService(ReduceServiceBase):
         Filters contact features based on their stability over time
         (measure of contact persistence patterns).
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -131,13 +131,13 @@ class ContactsReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep stable contacts
         >>> pipeline.feature.reduce.contacts.stability(threshold_min=0.7)
         
@@ -164,8 +164,8 @@ class ContactsReduceService(ReduceServiceBase):
         """
         Reduce contacts by number of formation/breaking transitions.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -175,13 +175,13 @@ class ContactsReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep dynamic contacts with many transitions
         >>> pipeline.feature.reduce.contacts.transitions(threshold_min=10)
 

@@ -45,8 +45,10 @@ class SASA(FeatureTypeBase):
     This is a base feature type with no dependencies that provides insights
     into protein-solvent interactions and buried surface areas.
 
-    Examples:
-    ---------
+    Uses mdtraj for SASA calculation under the hood.
+
+    Examples
+    --------
     >>> # Residue-level SASA with default water probe
     >>> sasa = SASA(mode='residue')
     >>> pipeline.feature.add_feature(sasa)
@@ -66,8 +68,8 @@ class SASA(FeatureTypeBase):
         """
         Initialize SASA feature type with calculation parameters.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         mode : str, default='residue'
             Level of SASA calculation:
             - 'residue': SASA per residue (sum of constituent atoms)
@@ -78,12 +80,12 @@ class SASA(FeatureTypeBase):
             - 0.12 nm: Small probe for tight cavities  
             - 0.20 nm: Large probe for detecting large cavities
 
-        Returns:
-        --------
+        Returns
+        -------
         None
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Residue-level SASA (default)
         >>> sasa = SASA()
 
@@ -111,8 +113,8 @@ class SASA(FeatureTypeBase):
         """
         Initialize the SASA calculator with specified configuration.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for large datasets
         cache_path : str, optional
@@ -120,12 +122,12 @@ class SASA(FeatureTypeBase):
         chunk_size : int, optional
             Number of frames to process per chunk for memory-efficient processing
 
-        Returns:
-        --------
+        Returns
+        -------
         None
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic initialization
         >>> sasa.init_calculator()
 
@@ -145,22 +147,22 @@ class SASA(FeatureTypeBase):
         """
         Compute SASA from molecular dynamics trajectory.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         input_data : mdtraj.Trajectory
             MD trajectory to compute SASA from
         feature_metadata : dict
             Residue metadata (passed through for residue-level analysis)
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple[numpy.ndarray, dict]
             Tuple containing (sasa_array, feature_metadata) where sasa_array
             has shape (n_frames, n_residues) or (n_frames, n_atoms) depending
             on mode, with SASA values in nm²
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compute residue-level SASA
         >>> sasa = SASA(mode='residue')
         >>> sasa.init_calculator()
@@ -173,8 +175,8 @@ class SASA(FeatureTypeBase):
         >>> sasa.init_calculator(use_memmap=True)
         >>> data, metadata = sasa.compute(trajectory, res_metadata)
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If calculator is not initialized
         """
@@ -194,17 +196,17 @@ class SASA(FeatureTypeBase):
         """
         Get list of feature type dependencies for SASA calculations.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         List[str]
             Empty list as SASA is a base feature with no dependencies
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> sasa = SASA()
         >>> print(sasa.get_dependencies())
         []
@@ -216,17 +218,17 @@ class SASA(FeatureTypeBase):
         """
         Return unique string identifier for the SASA feature type.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             String identifier 'sasa' used as key in feature dictionaries
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> print(SASA.get_type_name())
         'sasa'
         """
@@ -236,17 +238,17 @@ class SASA(FeatureTypeBase):
         """
         Get the input feature type that SASA depends on.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             None since SASA is a base feature with no input dependencies
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> sasa = SASA()
         >>> print(sasa.get_input())
         None

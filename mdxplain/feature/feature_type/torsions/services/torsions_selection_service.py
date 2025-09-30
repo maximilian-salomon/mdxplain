@@ -40,8 +40,8 @@ class TorsionsSelectionService(SelectionServiceBase):
     selections with optional post-selection reduction. Each reduction method
     applies filtering ONLY to the specific selection where it's defined.
 
-    Examples:
-    ---------
+    Examples
+    --------
     Basic selection without reduction:
     >>> service("test", "res ALA")
 
@@ -60,20 +60,20 @@ class TorsionsSelectionService(SelectionServiceBase):
         selections with optional post-selection reduction based on
         angular motion metrics.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         manager : FeatureSelectorManager
             Manager instance for executing add operations
         pipeline_data : PipelineData
             Pipeline data container with trajectory and feature data
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes service with manager and pipeline_data references
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> from mdxplain.pipeline.managers.pipeline_manager import PipelineManager
         >>> pipeline = PipelineManager()
         >>> service = pipeline.feature_selector.add.torsions
@@ -98,8 +98,8 @@ class TorsionsSelectionService(SelectionServiceBase):
         selector without applying any statistical filtering. All torsions
         features matching the selection criteria will be included.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -113,13 +113,13 @@ class TorsionsSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners to be present in selection
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds torsions selection to the named selector
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service("analysis", "res ALA")
         >>> service("analysis", "resid 120-140", use_reduced=True)
         """
@@ -135,8 +135,8 @@ class TorsionsSelectionService(SelectionServiceBase):
         Filters torsion features based on the number of angular transitions.
         Higher values indicate more flexible dihedral angles.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -164,13 +164,13 @@ class TorsionsSelectionService(SelectionServiceBase):
         lag_time : int, default=1
             Lag time for transition detection
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds torsions selection with transitions reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_transitions_reduction("test", "res ALA", threshold_min=10)
         >>> service.with_transitions_reduction("test", "flexible_backbone",
         ...     threshold_min=20, transition_threshold=45.0)
@@ -186,8 +186,8 @@ class TorsionsSelectionService(SelectionServiceBase):
         Filters torsion features based on standard deviation of angular
         motion. Higher values indicate more flexible dihedral angles.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -207,13 +207,13 @@ class TorsionsSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds torsions selection with standard deviation reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_std_reduction("test", "res ALA", threshold_min=20.0)
         >>> service.with_std_reduction("test", "flexible_loops", threshold_min=30.0)
         """
@@ -228,8 +228,8 @@ class TorsionsSelectionService(SelectionServiceBase):
         angular motion. MAD is more robust to outliers than standard
         deviation while still indicating angular flexibility.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -249,13 +249,13 @@ class TorsionsSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds torsions selection with MAD reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_mad_reduction("test", "res ALA", threshold_min=15.0)
         >>> service.with_mad_reduction("test", "robust_flexible", threshold_min=25.0)
         """
@@ -270,8 +270,8 @@ class TorsionsSelectionService(SelectionServiceBase):
         This can be used to select dihedral angles based on their
         average values over the trajectory.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -291,13 +291,13 @@ class TorsionsSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds torsions selection with mean reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_mean_reduction("test", "res ALA", threshold_min=-90.0, threshold_max=90.0)
         >>> service.with_mean_reduction("test", "alpha_helical", threshold_min=-70.0, threshold_max=-50.0)
         """
@@ -312,8 +312,8 @@ class TorsionsSelectionService(SelectionServiceBase):
         dihedral motion. Higher range values indicate more flexible
         dihedral angles with larger amplitude of motion.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -333,13 +333,13 @@ class TorsionsSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds torsions selection with range reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_range_reduction("test", "res ALA", threshold_min=60.0)
         >>> service.with_range_reduction("test", "flexible_sidechains", threshold_min=120.0)
         """
@@ -354,8 +354,8 @@ class TorsionsSelectionService(SelectionServiceBase):
         across the trajectory. This can identify dihedral angles
         that reach specific minimum values during dynamics.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -375,13 +375,13 @@ class TorsionsSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds torsions selection with minimum reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_min_reduction("test", "res ALA", threshold_min=-180.0)
         >>> service.with_min_reduction("test", "negative_angles", threshold_max=-90.0)
         """
@@ -396,8 +396,8 @@ class TorsionsSelectionService(SelectionServiceBase):
         across the trajectory. This can identify dihedral angles
         that reach specific maximum values during dynamics.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -417,13 +417,13 @@ class TorsionsSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds torsions selection with maximum reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_max_reduction("test", "res ALA", threshold_min=90.0)
         >>> service.with_max_reduction("test", "positive_angles", threshold_min=120.0, threshold_max=180.0)
         """
@@ -438,8 +438,8 @@ class TorsionsSelectionService(SelectionServiceBase):
         of angular motion. Higher CV values indicate more variable dihedral
         angles relative to their mean angular position.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -459,13 +459,13 @@ class TorsionsSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds torsions selection with CV reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_cv_reduction("test", "res ALA", threshold_min=0.2)
         >>> service.with_cv_reduction("test", "variable_angles", threshold_min=0.3)
         """
@@ -480,8 +480,8 @@ class TorsionsSelectionService(SelectionServiceBase):
         Higher values indicate more flexible dihedral angles with
         broader angular distributions.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -501,13 +501,13 @@ class TorsionsSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds torsions selection with variance reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_variance_reduction("test", "res ALA", threshold_min=400.0)
         >>> service.with_variance_reduction("test", "dynamic_sidechains", threshold_min=600.0)
         """

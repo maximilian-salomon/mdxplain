@@ -45,8 +45,10 @@ class DSSP(FeatureTypeBase):
     This is a base feature type with no dependencies that provides structural
     classification information for protein analysis.
 
-    Examples:
-    ---------
+    Uses mdtraj for dssp calculations under the hood.
+
+    Examples
+    --------
     >>> # Simplified DSSP with one-hot encoding
     >>> dssp = DSSP(simplified=True, encoding='onehot')
     >>> pipeline.feature.add_feature(dssp)
@@ -66,8 +68,8 @@ class DSSP(FeatureTypeBase):
         """
         Initialize DSSP feature type with classification and encoding parameters.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         simplified : bool, default=False
             Secondary structure classification level:
             - True: Simplified 3-class (H=helix, E=sheet, C=coil/other)
@@ -78,12 +80,12 @@ class DSSP(FeatureTypeBase):
             - 'integer': Integer class indices (0, 1, 2, ...)
             - 'char': Character codes ('H', 'E', 'C', etc.)
 
-        Returns:
-        --------
+        Returns
+        -------
         None
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Default: Full classification with one-hot encoding
         >>> dssp = DSSP()
 
@@ -96,8 +98,8 @@ class DSSP(FeatureTypeBase):
         >>> # Character codes for visualization
         >>> dssp = DSSP(simplified=True, encoding='char')
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If encoding is not one of 'onehot', 'integer', or 'char'
         """
@@ -113,8 +115,8 @@ class DSSP(FeatureTypeBase):
         """
         Initialize the DSSP calculator with specified configuration.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for large datasets
         cache_path : str, optional
@@ -122,12 +124,12 @@ class DSSP(FeatureTypeBase):
         chunk_size : int, optional
             Number of frames to process per chunk for memory-efficient processing
 
-        Returns:
-        --------
+        Returns
+        -------
         None
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic initialization
         >>> dssp.init_calculator()
 
@@ -147,15 +149,15 @@ class DSSP(FeatureTypeBase):
         """
         Compute DSSP secondary structure assignments from trajectory.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         input_data : mdtraj.Trajectory
             MD trajectory to compute DSSP from
         feature_metadata : dict
             Residue metadata (passed through for residue-level analysis)
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple[numpy.ndarray, dict]
             Tuple containing (dssp_array, feature_metadata) where dssp_array
             format depends on encoding:
@@ -163,8 +165,8 @@ class DSSP(FeatureTypeBase):
             - 'integer': (n_frames, n_residues)
             - 'char': (n_frames, n_residues) with string dtype
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compute simplified DSSP with one-hot encoding
         >>> dssp = DSSP(simplified=True, encoding='onehot')
         >>> dssp.init_calculator()
@@ -177,8 +179,8 @@ class DSSP(FeatureTypeBase):
         >>> data, metadata = dssp.compute(trajectory, res_metadata)
         >>> print(f"Secondary structure codes: {data[0]}")  # ['H', 'H', 'E', 'C', ...]
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If calculator is not initialized
         """
@@ -198,17 +200,17 @@ class DSSP(FeatureTypeBase):
         """
         Get list of feature type dependencies for DSSP calculations.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         List[str]
             Empty list as DSSP is a base feature with no dependencies
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> dssp = DSSP()
         >>> print(dssp.get_dependencies())
         []
@@ -220,17 +222,17 @@ class DSSP(FeatureTypeBase):
         """
         Return unique string identifier for the DSSP feature type.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             String identifier 'dssp' used as key in feature dictionaries
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> print(DSSP.get_type_name())
         'dssp'
         """
@@ -240,17 +242,17 @@ class DSSP(FeatureTypeBase):
         """
         Get the input feature type that DSSP depends on.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             None since DSSP is a base feature with no input dependencies
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> dssp = DSSP()
         >>> print(dssp.get_input())
         None

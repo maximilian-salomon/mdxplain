@@ -56,8 +56,8 @@ class ParallelOperationsHelper:
         """
         Initialize parallel operations.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         zarr_path : str
             Path to Zarr store containing trajectory data
         topology : md.Topology
@@ -68,6 +68,11 @@ class ParallelOperationsHelper:
             Number of frames per chunk for memory management
         cache_dir : str, default='./cache'
             Directory for temporary files during operations
+
+        Returns
+        -------
+        None
+            Initializes parallel operations
         """
         
         self.zarr_path = zarr_path
@@ -94,18 +99,18 @@ class ParallelOperationsHelper:
         """
         Center coordinates at origin using real MDTraj method chunkwise.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         mass_weighted : bool, default=False
             Use mass-weighted centering
             
-        Returns:
-        --------
+        Returns
+        -------
         zarr.Group
             New Zarr store with centered coordinates
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> parallel_ops = ParallelOperationsHelper('trajectory.zarr', topology, chunk_size=500)
         >>> centered_store = parallel_ops.center_coordinates(mass_weighted=True)
         >>> print(f"Centered trajectory stored at {centered_store.path}")
@@ -133,14 +138,19 @@ class ParallelOperationsHelper:
         """
         Sub-helper: Frame-wise chunking for operations like center_coordinates, superpose, atom_slice.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         operation_func : callable
             Function to apply to each frame chunk
         result_store : zarr.Group
             Pre-configured zarr store to write results to
         **operation_kwargs
             Additional arguments for operation_func
+
+        Returns
+        -------
+        None
+            Applies operation_func to each frame chunk and writes results to result_store
         """
         chunk_size = self._calculate_chunk_size()
         n_chunks = (self.n_frames + chunk_size - 1) // chunk_size
@@ -172,8 +182,8 @@ class ParallelOperationsHelper:
         """
         Sub-helper: Atom-wise chunking for operations like smooth.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         operation_func : callable
             Function to apply to each atom chunk 
         result_store : zarr.Group
@@ -182,6 +192,11 @@ class ParallelOperationsHelper:
             Indices of atoms to process (operation decides what to do with them)
         **operation_kwargs
             Additional arguments for operation_func
+
+        Returns
+        -------
+        None
+            Applies operation_func to each atom chunk and writes results to result_store
         """
         # Process ALL atoms in chunks (no copying phase)
         atom_chunk_size = self._calculate_atom_chunk_size()
@@ -213,8 +228,8 @@ class ParallelOperationsHelper:
         """
         Create zarr store with coordinate and time arrays.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         result_path : str
             Path for result zarr store
         result_shape : tuple
@@ -222,8 +237,8 @@ class ParallelOperationsHelper:
         chunk_size : int
             Chunk size for zarr arrays
             
-        Returns:
-        --------
+        Returns
+        -------
         zarr.Group
             Configured zarr store with empty arrays
         """
@@ -255,8 +270,8 @@ class ParallelOperationsHelper:
         """
         Flexible helper for memory-efficient chunk processing directly to Zarr.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         operation_func : callable
             Function to apply to each chunk
         result_path : str
@@ -270,8 +285,8 @@ class ParallelOperationsHelper:
         **operation_kwargs
             Additional arguments for operation_func
             
-        Returns:
-        --------
+        Returns
+        -------
         zarr.Group
             Result zarr store with processed coordinates
         """
@@ -304,27 +319,27 @@ class ParallelOperationsHelper:
         """
         Superpose trajectory to reference trajectory using real MDTraj method chunkwise.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         reference_traj : md.Trajectory
             Reference trajectory (single frame) to align to
         atom_indices : np.ndarray, optional
             Atoms to use for alignment
             
-        Returns:
-        --------
+        Returns
+        -------
         zarr.Group
             New Zarr store with superposed coordinates
             
-        Raises:
+        Raises
         ------
         ValueError
             If reference trajectory has wrong number of atoms or frames
         OSError
             If cache directory is not writable
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> parallel_ops = ParallelOperationsHelper('trajectory.zarr', topology)
         >>> # Create reference trajectory (single frame)
         >>> ref_traj = md.load_frame('reference.pdb', 0)
@@ -361,8 +376,8 @@ class ParallelOperationsHelper:
         Processes atoms in chunks to reduce memory usage while applying smooth
         across all frames for each atom (as per MDTraj's algorithm).
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         width : int
             Smoothing window width
         order : int, optional
@@ -370,20 +385,20 @@ class ParallelOperationsHelper:
         atom_indices : np.ndarray, optional
             Atoms to smooth (default: all)
             
-        Returns:
-        --------
+        Returns
+        -------
         zarr.Group
             New Zarr store with smoothed coordinates
             
-        Raises:
+        Raises
         ------
         ValueError
             If width is invalid for smoothing algorithm
         OSError
             If cache directory is not writable
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> parallel_ops = ParallelOperationsHelper('trajectory.zarr', topology)
         >>> # Apply smoothing with width 5 to all atoms
         >>> smoothed_store = parallel_ops.smooth(width=5)
@@ -433,25 +448,25 @@ class ParallelOperationsHelper:
         """
         Create atom slice using real MDTraj method chunkwise.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         atom_indices : np.ndarray
             Indices of atoms to keep
             
-        Returns:
-        --------
+        Returns
+        -------
         zarr.Group
             New Zarr store with selected atoms
             
-        Raises:
+        Raises
         ------
         IndexError
             If atom_indices contains invalid atom indices
         OSError
             If cache directory is not writable
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> parallel_ops = ParallelOperationsHelper('trajectory.zarr', topology)
         >>> # Select only first 100 atoms
         >>> atom_indices = np.arange(100)
@@ -493,8 +508,8 @@ class ParallelOperationsHelper:
         """
         Create coordinate array in zarr store.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         store : zarr.Group
             Target zarr store to create array in
         coords : np.ndarray
@@ -504,8 +519,8 @@ class ParallelOperationsHelper:
         compressor : object
             Compression codec for the array
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Creates coordinate array in-place in store
         """
@@ -520,8 +535,8 @@ class ParallelOperationsHelper:
         """
         Create time array in zarr store.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         store : zarr.Group
             Target zarr store to create array in
         n_frames : int
@@ -529,8 +544,8 @@ class ParallelOperationsHelper:
         compressor : object
             Compression codec for the array
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Creates time array in-place in store
         """
@@ -555,15 +570,15 @@ class ParallelOperationsHelper:
         """
         Create all unitcell arrays in zarr store.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         store : zarr.Group
             Target zarr store to create arrays in
         compressor : object
             Compression codec for the arrays
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Creates unitcell_vectors, unitcell_lengths, unitcell_angles arrays
         """
@@ -586,8 +601,8 @@ class ParallelOperationsHelper:
         """
         Store metadata and topology in zarr store.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         store : zarr.Group
             Target zarr store to store metadata and topology in
         n_frames : int
@@ -599,8 +614,8 @@ class ParallelOperationsHelper:
         compressor : object
             Compression codec for topology storage
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Stores metadata attributes and topology in store
         """
@@ -621,12 +636,12 @@ class ParallelOperationsHelper:
         """
         Calculate optimal frame chunk size.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
         
-        Returns:
-        --------
+        Returns
+        -------
         int
             User-defined chunk size with reasonable bounds
         """
@@ -637,12 +652,12 @@ class ParallelOperationsHelper:
         """
         Calculate optimal atom chunk size based on frame chunk size memory footprint.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
         
-        Returns:
-        --------
+        Returns
+        -------
         int
             Optimal atom chunk size between 10 and 200 atoms
         """
@@ -663,20 +678,20 @@ class ParallelOperationsHelper:
         """
         Create new Zarr store with processed coordinates.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         new_coords : np.ndarray
             Processed coordinate data to store
         new_topology : md.Topology, optional
             New topology if different from original (e.g., for atom slicing)
             
-        Returns:
-        --------
+        Returns
+        -------
         zarr.Group
             New temporary zarr store with processed data
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> coords = np.random.rand(100, 50, 3)
         >>> store = parallel_ops._create_new_zarr_store(coords)
         >>> print(f"Created store with {coords.shape[0]} frames")

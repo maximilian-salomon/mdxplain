@@ -38,8 +38,8 @@ class SASACalculatorAnalysis:
     burial/exposure analysis, surface area dynamics, and solvent
     accessibility patterns with complete per-feature and per-frame metrics.
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> analysis = SASACalculatorAnalysis()
     >>> mean_sasa = analysis.compute_mean(sasa_data)
     >>> burial_fraction = analysis.compute_burial_fraction(sasa_data, threshold=0.1)
@@ -49,19 +49,19 @@ class SASACalculatorAnalysis:
         """
         Initialize SASA analysis with configuration parameters.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for large datasets
         chunk_size : int, optional
             Number of frames to process per chunk
 
-        Returns:
-        --------
+        Returns
+        -------
         None
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic initialization
         >>> analysis = SASACalculatorAnalysis()
 
@@ -77,18 +77,18 @@ class SASACalculatorAnalysis:
         """
         Compute mean SASA for each residue/atom.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         sasa_data : numpy.ndarray
             SASA array with shape (n_frames, n_residues/atoms)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Mean SASA for each residue/atom
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> mean_sasa = analysis.compute_mean(sasa_data)
         """
         return CalculatorStatHelper.compute_func_per_feature(
@@ -101,18 +101,18 @@ class SASACalculatorAnalysis:
         """
         Compute standard deviation for each residue/atom SASA.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         sasa_data : numpy.ndarray
             SASA array with shape (n_frames, n_residues/atoms)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Standard deviation for each residue/atom
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> std_sasa = analysis.compute_std(sasa_data)
         """
         return CalculatorStatHelper.compute_func_per_feature(
@@ -125,18 +125,18 @@ class SASACalculatorAnalysis:
         """
         Compute variance for each residue/atom SASA.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         sasa_data : numpy.ndarray
             SASA array with shape (n_frames, n_residues/atoms)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Variance for each residue/atom
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> var_sasa = analysis.compute_variance(sasa_data)
         """
         return CalculatorStatHelper.compute_func_per_feature(
@@ -149,18 +149,18 @@ class SASACalculatorAnalysis:
         """
         Compute minimum SASA for each residue/atom.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         sasa_data : numpy.ndarray
             SASA array with shape (n_frames, n_residues/atoms)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Minimum SASA for each residue/atom
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> min_sasa = analysis.compute_min(sasa_data)
         """
         return CalculatorStatHelper.compute_func_per_feature(
@@ -173,18 +173,18 @@ class SASACalculatorAnalysis:
         """
         Compute maximum SASA for each residue/atom.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         sasa_data : numpy.ndarray
             SASA array with shape (n_frames, n_residues/atoms)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Maximum SASA for each residue/atom
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> max_sasa = analysis.compute_max(sasa_data)
         """
         return CalculatorStatHelper.compute_func_per_feature(
@@ -197,18 +197,18 @@ class SASACalculatorAnalysis:
         """
         Compute median absolute deviation for each residue/atom SASA.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         sasa_data : numpy.ndarray
             SASA array with shape (n_frames, n_residues/atoms)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Median absolute deviation for each residue/atom
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> mad_sasa = analysis.compute_mad(sasa_data)
         """
         def mad_func(data, axis=0):
@@ -225,18 +225,18 @@ class SASACalculatorAnalysis:
         """
         Compute range (max - min) for each residue/atom SASA.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         sasa_data : numpy.ndarray
             SASA array with shape (n_frames, n_residues/atoms)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Range for each residue/atom
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> range_sasa = analysis.compute_range(sasa_data)
         """
         return CalculatorStatHelper.compute_func_per_feature(
@@ -251,18 +251,18 @@ class SASACalculatorAnalysis:
         """
         Compute mean SASA per frame across all residues/atoms.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         sasa_data : numpy.ndarray
             SASA array with shape (n_frames, n_residues/atoms)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Mean SASA per frame
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> mean_per_frame = analysis.compute_mean_per_frame(sasa_data)
         """
         return CalculatorStatHelper.compute_func_per_frame(
@@ -276,18 +276,18 @@ class SASACalculatorAnalysis:
         """
         Compute standard deviation per frame across all residues/atoms.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         sasa_data : numpy.ndarray
             SASA array with shape (n_frames, n_residues/atoms)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Standard deviation per frame
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> std_per_frame = analysis.compute_std_per_frame(sasa_data)
         """
         return CalculatorStatHelper.compute_func_per_frame(
@@ -301,18 +301,18 @@ class SASACalculatorAnalysis:
         """
         Compute variance per frame across all residues/atoms.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         sasa_data : numpy.ndarray
             SASA array with shape (n_frames, n_residues/atoms)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Variance per frame
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> var_per_frame = analysis.compute_variance_per_frame(sasa_data)
         """
         return CalculatorStatHelper.compute_func_per_frame(
@@ -326,18 +326,18 @@ class SASACalculatorAnalysis:
         """
         Compute minimum SASA per frame across all residues/atoms.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         sasa_data : numpy.ndarray
             SASA array with shape (n_frames, n_residues/atoms)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Minimum SASA per frame
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> min_per_frame = analysis.compute_min_per_frame(sasa_data)
         """
         return CalculatorStatHelper.compute_func_per_frame(
@@ -351,18 +351,18 @@ class SASACalculatorAnalysis:
         """
         Compute maximum SASA per frame across all residues/atoms.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         sasa_data : numpy.ndarray
             SASA array with shape (n_frames, n_residues/atoms)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Maximum SASA per frame
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> max_per_frame = analysis.compute_max_per_frame(sasa_data)
         """
         return CalculatorStatHelper.compute_func_per_frame(
@@ -376,18 +376,18 @@ class SASACalculatorAnalysis:
         """
         Compute median absolute deviation per frame across all residues/atoms.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         sasa_data : numpy.ndarray
             SASA array with shape (n_frames, n_residues/atoms)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Median absolute deviation per frame
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> mad_per_frame = analysis.compute_mad_per_frame(sasa_data)
         """
         def mad_per_frame(data, axis=1):
@@ -405,18 +405,18 @@ class SASACalculatorAnalysis:
         """
         Compute range (max - min) per frame across all residues/atoms.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         sasa_data : numpy.ndarray
             SASA array with shape (n_frames, n_residues/atoms)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Range per frame
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> range_per_frame = analysis.compute_range_per_frame(sasa_data)
         """
         return CalculatorStatHelper.compute_func_per_frame(
@@ -432,8 +432,8 @@ class SASACalculatorAnalysis:
         """
         Compute differences between two frames.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         sasa_data : numpy.ndarray
             SASA array with shape (n_frames, n_residues/atoms)
         frame_1 : int, default=0
@@ -441,13 +441,13 @@ class SASACalculatorAnalysis:
         frame_2 : int, default=-1
             Second frame index (-1 for last frame)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             SASA differences between frames
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> differences = analysis.compute_differences(sasa_data, 0, -1)
         """
         return CalculatorStatHelper.compute_differences(
@@ -460,20 +460,20 @@ class SASACalculatorAnalysis:
         """
         Compute differences between mean SASA of two datasets.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         sasa_data_1 : numpy.ndarray
             First SASA dataset
         sasa_data_2 : numpy.ndarray
             Second SASA dataset
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Mean SASA differences between datasets
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> diff_means = analysis.compute_differences_mean(sasa_1, sasa_2)
         """
         return CalculatorStatHelper.compute_differences(
@@ -488,8 +488,8 @@ class SASACalculatorAnalysis:
         """
         Compute transitions with lag time for each residue/atom.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         sasa_data : numpy.ndarray
             SASA array with shape (n_frames, n_residues/atoms)
         threshold : float, default=0.5
@@ -497,13 +497,13 @@ class SASACalculatorAnalysis:
         lag_time : int, default=1
             Number of frames to look ahead
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Transition counts per residue/atom
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> transitions = analysis.compute_transitions_lagtime(sasa_data, 0.5, 10)
         """
         return CalculatorStatHelper.compute_transitions_within_lagtime(
@@ -518,8 +518,8 @@ class SASACalculatorAnalysis:
         """
         Compute transitions within sliding window for each residue/atom.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         sasa_data : numpy.ndarray
             SASA array with shape (n_frames, n_residues/atoms)
         threshold : float, default=0.5
@@ -527,13 +527,13 @@ class SASACalculatorAnalysis:
         window_size : int, default=10
             Size of sliding window
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Transition counts per residue/atom
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> transitions = analysis.compute_transitions_window(sasa_data, 0.5, 10)
         """
         return CalculatorStatHelper.compute_transitions_within_window(
@@ -548,8 +548,8 @@ class SASACalculatorAnalysis:
         """
         Compute stability (inverse of transition rate) for each residue/atom.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         sasa_data : numpy.ndarray
             SASA array with shape (n_frames, n_residues/atoms)
         threshold : float, default=0.5
@@ -559,13 +559,13 @@ class SASACalculatorAnalysis:
         mode : str, default='lagtime'
             Calculation mode ('lagtime' or 'window')
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Stability values per residue/atom (0=unstable, 1=stable)
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> stability = analysis.compute_stability(sasa_data, 0.5, 10, 'window')
         """
         return CalculatorStatHelper.compute_stability(
@@ -583,25 +583,25 @@ class SASACalculatorAnalysis:
         """
         Compute fraction of time each residue/atom is buried below threshold.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         sasa_data : numpy.ndarray
             SASA array with shape (n_frames, n_residues/atoms)
         threshold : float, default=0.1
             SASA threshold in nm² below which residue/atom is considered buried
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Burial fraction for each residue/atom (0-1)
 
-        Notes:
-        ------
+        Notes
+        -----
         A burial fraction of 1.0 means the residue/atom is always buried,
         while 0.0 means it is never buried below the threshold.
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> burial = analysis.compute_burial_fraction(sasa_data, 0.1)
         """
         if self.use_memmap:
@@ -630,23 +630,23 @@ class SASACalculatorAnalysis:
         """
         Compute coefficient of variation for each residue/atom SASA.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         sasa_data : numpy.ndarray
             SASA array with shape (n_frames, n_residues/atoms)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Coefficient of variation for each residue/atom
 
-        Notes:
-        ------
+        Notes
+        -----
         CV = standard_deviation / mean
         Higher CV indicates more variable SASA over time.
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> cv_sasa = analysis.compute_cv(sasa_data)
         """
         mean_vals = self.compute_mean(sasa_data)
@@ -657,25 +657,25 @@ class SASACalculatorAnalysis:
         """
         Compute fraction of time each residue/atom is exposed above threshold.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         sasa_data : numpy.ndarray
             SASA array with shape (n_frames, n_residues/atoms)
         threshold : float, default=1.0
             SASA threshold in nm² above which residue/atom is considered exposed
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Exposure fraction for each residue/atom (0-1)
 
-        Notes:
-        ------
+        Notes
+        -----
         A exposure fraction of 1.0 means the residue/atom is always exposed,
         while 0.0 means it is never exposed above the threshold.
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> exposure = analysis.compute_exposure_fraction(sasa_data, 1.0)
         """
         if self.use_memmap:

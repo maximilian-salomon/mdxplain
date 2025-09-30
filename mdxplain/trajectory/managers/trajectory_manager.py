@@ -41,7 +41,23 @@ from ..helper.validation_helper.trajectory_validation_helper import TrajectoryVa
 
 
 class TrajectoryManager:
-    """Manager for pure trajectory data objects without feature dependencies."""
+    """
+    Manager for pure trajectory data objects without feature dependencies.
+
+    Provides methods to load, add, remove, slice, and select atoms in MD trajectories.
+    This manager operates on TrajectoryData objects and does not depend on
+    any feature data. It is designed to be used both standalone and within
+    a pipeline context.
+
+    It handles various trajectory formats, automatic format detection, and
+    provides a consistent interface for working with trajectory data.
+
+    It can load multiple trajectories, apply selections, and manage
+    memory-efficient representations using DaskMDTrajectory.
+
+    It can load trajectories from directories and nested directories or lists of files,
+    handle topology files, and apply MDTraj selection strings.
+    """
 
     def __init__(
         self,
@@ -55,8 +71,8 @@ class TrajectoryManager:
         """
         Initialize trajectory manager.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         stride : int, default=1
             Load every stride-th frame from trajectories. Use values > 1 to
             reduce memory usage and computation time by subsampling frames.
@@ -76,13 +92,13 @@ class TrajectoryManager:
         cache_dir : str, default="./cache"
             Directory for caching intermediate results and Zarr files.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes TrajectoryManager instance with default parameters
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> traj_data = TrajectoryData()
         >>> traj_manager = TrajectoryManager()
         >>> traj_manager.load_trajectories(traj_data, '../data')
@@ -115,8 +131,8 @@ class TrajectoryManager:
         is performed using the TrajectoryLoadHelper class which supports automatic
         format detection and multiple trajectory handling.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -129,8 +145,8 @@ class TrajectoryManager:
         >>> manager = TrajectoryManager()
         >>> manager.load_trajectories(pipeline_data, '../data')  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data container where trajectories will be stored
         data_input : str or list
@@ -149,13 +165,13 @@ class TrajectoryManager:
             Whether to force loading even when features have been calculated. When True,
             existing features become invalid and should be recalculated.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Loads trajectories into pipeline_data.trajectory_data and sets up topology/names
 
-        Examples:
-        ---------
+        Examples
+        --------
         Pipeline mode (automatic injection):
         >>> pipeline = PipelineManager()
         >>> pipeline.trajectory.load_trajectories('../data')
@@ -170,7 +186,7 @@ class TrajectoryManager:
         ...     pipeline_data, '../data', tags_file='tags.json'
         ... )
 
-        Notes:
+        Notes
         -----
         - Supported formats depend on MDTraj capabilities
         - Topology files (.pdb, .gro, .psf) should be in the same directory
@@ -218,8 +234,8 @@ class TrajectoryManager:
         instead of replacing existing ones. Useful for loading additional
         trajectory data without losing previously loaded trajectories.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -232,8 +248,8 @@ class TrajectoryManager:
         >>> manager = TrajectoryManager()
         >>> manager.add_trajectory(pipeline_data, '../data2')  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
         data_input : str or list
@@ -248,24 +264,24 @@ class TrajectoryManager:
         selection : str, optional
             MDTraj selection string to apply to all newly loaded trajectories.
             If None, uses manager default.
-        Returns:
-        --------
+        Returns
+        -------
         None
             Appends new trajectories to existing trajectory list in pipeline_data
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> traj_data = TrajectoryData()
         >>> traj_manager = TrajectoryManager()
         >>> traj_manager.load_trajectories(traj_data, '../data')
         >>> traj_manager.add_trajectory(traj_data, '../data2')
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If no trajectories are currently loaded
 
-        Notes:
+        Notes
         -----
         - New trajectories are appended to existing ones
         - Trajectory names are also appended to maintain consistency
@@ -301,8 +317,8 @@ class TrajectoryManager:
         """
         Remove specified trajectories from the loaded trajectory list.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -315,8 +331,8 @@ class TrajectoryManager:
         >>> manager = TrajectoryManager()
         >>> manager.remove_trajectory(pipeline_data, [0, 1])  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
         traj_selection : int, str, list, or "all"
@@ -329,20 +345,20 @@ class TrajectoryManager:
             Whether to force removal even when features have been calculated. When True,
             existing features become invalid and should be recalculated.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Removes trajectories from pipeline_data
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> pipeline_data = PipelineData()
         >>> traj_manager = TrajectoryManager()
         >>> traj_manager.load_trajectories(pipeline_data, '../data')
         >>> traj_manager.remove_trajectory(pipeline_data, [0, 1])
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If trajectories are not loaded, if trajs contains invalid indices/names
         """
@@ -374,8 +390,8 @@ class TrajectoryManager:
         """
         Slice trajectories using frame ranges, stride, OR DataSelector.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -389,8 +405,8 @@ class TrajectoryManager:
         >>> manager = TrajectoryManager()
         >>> manager.slice_traj(pipeline_data, frames=1000, traj_selection="all")  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
         traj_selection : int, str, list, or "all", default="all"
@@ -419,13 +435,13 @@ class TrajectoryManager:
             Whether to force slicing even when features have been calculated. When True,
             existing features become invalid and should be recalculated.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Modifies trajectories in-place
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> pipeline_data = PipelineData()
         >>> traj_manager = TrajectoryManager()
         >>> traj_manager.load_trajectories(pipeline_data, '../data')
@@ -449,8 +465,8 @@ class TrajectoryManager:
         >>> # Use DataSelector to slice trajectories to folded frames only
         >>> traj_manager.slice_traj(pipeline_data, data_selector="folded_frames")
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If trajectories are not loaded or if selection contains invalid indices/names
             or if DataSelector does not exist
@@ -485,8 +501,8 @@ class TrajectoryManager:
         """
         Apply atom selection to trajectories using MDTraj selection syntax.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -499,8 +515,8 @@ class TrajectoryManager:
         >>> manager = TrajectoryManager()
         >>> manager.select_atoms(pipeline_data, "protein", "all")  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
         traj_selection : int, str, list, or "all"
@@ -515,13 +531,13 @@ class TrajectoryManager:
             Whether to force atom selection even when features have been calculated. When True,
             existing features become invalid and should be recalculated.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Applies atom selection to trajectories in-place
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> pipeline_data = PipelineData()
         >>> traj_manager = TrajectoryManager()
         >>> traj_manager.load_trajectories(pipeline_data, '../data')
@@ -530,8 +546,8 @@ class TrajectoryManager:
         >>> # Select atoms from specific trajectories
         >>> traj_manager.select_atoms(pipeline_data, "protein", [0, 1, 2])
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If trajectories are not loaded or if selection/trajs contain invalid values
         """
@@ -600,8 +616,8 @@ class TrajectoryManager:
         mdciao nomenclature systems (GPCR, CGN, KLIFS). Different systems can have
         different nomenclatures by applying labels to specific trajectory selections.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -614,8 +630,8 @@ class TrajectoryManager:
         >>> manager = TrajectoryManager()
         >>> manager.add_labels(pipeline_data, [0, 1], fragment_definition="receptor")  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
         traj_selection : int, str, list, or "all"
@@ -664,12 +680,12 @@ class TrajectoryManager:
         **nomenclature_kwargs
             Additional keyword arguments passed to the mdciao labelers
 
-        Returns:
-        --------
+        Returns
+        -------
         None
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If trajectories are not loaded
         ValueError
@@ -691,7 +707,7 @@ class TrajectoryManager:
 
         Notes
         -----
-        This class uses mdciao consensus nomenclature systems:
+        This method wraps mdciao consensus nomenclature systems:
         https://proteinformatics.uni-leipzig.de/mdciao/api/generated/mdciao.nomenclature.html
 
         Supported fragment types:
@@ -699,8 +715,8 @@ class TrajectoryManager:
         - cgn: https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerCGN.html#mdciao.nomenclature.LabelerCGN
         - klifs: https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerKLIFS.html#mdciao.nomenclature.LabelerKLIFS
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> pipeline_data = PipelineData()
         >>> traj_manager = TrajectoryManager()
         >>> traj_manager.load_trajectories(pipeline_data, '../data')
@@ -772,8 +788,8 @@ class TrajectoryManager:
         and bulk assignment using dictionaries. It provides a powerful interface for
         managing trajectory tags in complex scenarios.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -786,8 +802,8 @@ class TrajectoryManager:
         >>> manager = TrajectoryManager()
         >>> manager.add_tags(pipeline_data, 0, ["system_A"])  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
         trajectory_selector : int, str, list, range, dict
@@ -806,13 +822,13 @@ class TrajectoryManager:
             List of tag strings to add. Required when trajectory_selector is not dict.
             Ignored when trajectory_selector is dict.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds tags to selected trajectories and rebuilds frame mapping
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Single trajectory
         >>> traj_manager.add_tags(pipeline_data, 0, ["system_A", "biased"])
         >>> traj_manager.add_tags(pipeline_data, "traj1", ["system_B"])
@@ -834,8 +850,8 @@ class TrajectoryManager:
         ...     "system_2_*": ["system_B", "production"]
         ... })
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If tags is None when trajectory_selector is not dict
         ValueError
@@ -869,8 +885,8 @@ class TrajectoryManager:
         replacement semantics for tag management scenarios where you need to 
         reset or completely change trajectory tags.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -883,8 +899,8 @@ class TrajectoryManager:
         >>> manager = TrajectoryManager()
         >>> manager.set_tags(pipeline_data, 0, ["system_A"])  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
         trajectory_selector : int, str, list, range, dict
@@ -903,13 +919,13 @@ class TrajectoryManager:
             List of tag strings to set. Required when trajectory_selector is not dict.
             Ignored when trajectory_selector is dict.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Sets tags for selected trajectories and rebuilds frame mapping
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Replace tags for single trajectory
         >>> traj_manager.add_tags(pipeline_data, 0, ["old_tag", "other"])
         >>> traj_manager.set_tags(pipeline_data, 0, ["new_tag"])  # Replaces both old tags
@@ -927,8 +943,8 @@ class TrajectoryManager:
         ...     "control_*": ["control"]
         ... })
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If tags is None when trajectory_selector is not dict
         ValueError
@@ -951,15 +967,15 @@ class TrajectoryManager:
         """
         Merge new tags with existing tags, avoiding duplicates.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         existing_tags : List[str]
             Current list of tags
         new_tags : List[str]
             New tags to add
         
-        Returns:
-        --------
+        Returns
+        -------
         list
             Merged list of tags without duplicates
         """
@@ -980,8 +996,8 @@ class TrajectoryManager:
         and more descriptive identification. Supports both dictionary-based
         mapping and positional list assignment.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -994,8 +1010,8 @@ class TrajectoryManager:
         >>> manager = TrajectoryManager()
         >>> manager.rename_trajectories(pipeline_data, {0: "new_name"})  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
         name_mapping : dict or list
@@ -1003,13 +1019,13 @@ class TrajectoryManager:
             - dict: {old_name_or_index: new_name, ...} for selective renaming
             - list: [new_name1, new_name2, ...] for positional assignment
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Renames trajectories and rebuilds frame tag mapping
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Dictionary-based renaming
         >>> traj_manager.rename_trajectories(pipeline_data, {
         ...     0: "system_A_replicate_1",
@@ -1025,8 +1041,8 @@ class TrajectoryManager:
         ...     "control"
         ... ])
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If no trajectories are loaded, mapping is invalid, or references invalid trajectories
         """
@@ -1052,8 +1068,8 @@ class TrajectoryManager:
         """
         Reset the trajectory data object to empty state.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -1066,18 +1082,18 @@ class TrajectoryManager:
         >>> manager = TrajectoryManager()
         >>> manager.reset_trajectory_data(pipeline_data)  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Resets trajectory data to empty state
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> traj_manager.reset_trajectory_data(pipeline_data)
         """
         pipeline_data.trajectory_data.reset()
@@ -1091,8 +1107,8 @@ class TrajectoryManager:
         """
         Prepare and validate parameters with defaults.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selection : str or None
             Selection parameter to validate
         concat : bool or None
@@ -1100,8 +1116,8 @@ class TrajectoryManager:
         stride : int or None
             Stride parameter to validate
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[Optional[str], bool, int]
             Tuple of (selection, concat, stride) with defaults applied
         """
@@ -1118,8 +1134,8 @@ class TrajectoryManager:
         """
         Save trajectory data to disk.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -1132,20 +1148,20 @@ class TrajectoryManager:
         >>> manager = TrajectoryManager()
         >>> manager.save(pipeline_data, 'trajectory_backup.pkl')  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data container with trajectory data
         save_path : str
             Path where to save the trajectory data
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Saves the trajectory data to the specified path
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> trajectory_manager.save(pipeline_data, 'trajectory_backup.pkl')
         """
         pipeline_data.trajectory_data.save(save_path)
@@ -1154,8 +1170,8 @@ class TrajectoryManager:
         """
         Load trajectory data from disk.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -1168,20 +1184,20 @@ class TrajectoryManager:
         >>> manager = TrajectoryManager()
         >>> manager.load(pipeline_data, 'trajectory_backup.pkl')  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data container to load trajectory data into
         load_path : str
             Path to the saved trajectory data file
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Loads the trajectory data from the specified path
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> trajectory_manager.load(pipeline_data, 'trajectory_backup.pkl')
         """
         pipeline_data.trajectory_data.load(load_path)
@@ -1190,8 +1206,8 @@ class TrajectoryManager:
         """
         Print trajectory information.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -1204,18 +1220,18 @@ class TrajectoryManager:
         >>> manager = TrajectoryManager()
         >>> manager.print_info(pipeline_data)  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data container with trajectory data
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Prints trajectory information to console
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> trajectory_manager.print_info(pipeline_data)
         === TrajectoryData ===
         Loaded 3 trajectories:
@@ -1229,8 +1245,8 @@ class TrajectoryManager:
         """
         Create new trajectory objects from DataSelector frames.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -1243,20 +1259,20 @@ class TrajectoryManager:
         >>> manager = TrajectoryManager()
         >>> selected = manager.select_trajs(pipeline_data, "folded_frames")  # pipeline_data required
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data with trajectories and DataSelector
         data_selector : str
             Name of DataSelector to use
             
-        Returns:
-        --------
+        Returns
+        -------
         List[Union[DaskMDTrajectory, md.Trajectory]]
             List of new trajectory objects with selected frames
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Create new trajectories from DataSelector
         >>> selected = pipeline.trajectory.select_trajs("folded_frames")
         >>> print(f"Created {len(selected)} new trajectories")
@@ -1308,8 +1324,8 @@ class TrajectoryManager:
         in-place, modifying the original trajectories. For memory-mapped trajectories,
         the alignment is performed chunk-wise to manage memory usage efficiently.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -1322,8 +1338,8 @@ class TrajectoryManager:
         >>> manager = TrajectoryManager()
         >>> manager.superpose(pipeline_data, reference_traj=0, reference_frame=0)  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data container with trajectory data
         reference_traj : int, default=0
@@ -1341,13 +1357,13 @@ class TrajectoryManager:
             Common selections: "backbone", "name CA", "protein", "resid 10 to 50"
             See: https://mdtraj.org/1.9.4/atom_selection.html
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Modifies trajectories in-place. No return value.
 
-        Examples:
-        ---------
+        Examples
+        --------
         Basic alignment:
         >>> pipeline.trajectory.superpose()  # Align all to first frame of first trajectory
 
@@ -1371,14 +1387,14 @@ class TrajectoryManager:
         ...     reference_frame=0
         ... )
 
-        Notes:
+        Notes
         -----
         - Dask trajectories (use_memmap=True) handle memory management automatically
         - The reference trajectory itself is also aligned to the reference frame
         - All trajectories must have compatible topology for alignment
         - Large trajectories may take significant time to align
 
-        Raises:
+        Raises
         ------
         ValueError
             If no trajectories are loaded

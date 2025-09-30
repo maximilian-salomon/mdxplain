@@ -47,8 +47,8 @@ class FrameSelectionHelper:
     methods extract common logic from DataSelectorManager to improve
     code organization and reusability.
     
-    Examples:
-    ---------
+    Examples
+    --------
     >>> # Select frames by tags
     >>> indices = FrameSelectionHelper.select_frames_by_tags(
     ...     trajectory_data, ["system_A", "biased"], match_all=True
@@ -70,8 +70,8 @@ class FrameSelectionHelper:
         Returns all frames from trajectories whose tags match the criteria,
         optionally applying stride for sparse sampling.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory_data : TrajectoryData
             Trajectory data object containing trajectory tags
         tags : List[str]
@@ -82,13 +82,13 @@ class FrameSelectionHelper:
             Minimum distance between consecutive frames (per trajectory).
             stride=1 returns all frames, stride=10 returns every 10th frame.
             
-        Returns:
-        --------
+        Returns
+        -------
         Dict[int, List[int]]
             Dictionary mapping trajectory indices to their frame indices
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Select every 10th frame from matching trajectories
         >>> frames = select_frames_by_tags(
         ...     trajectory_data, ["system_A"], match_all=False, stride=10
@@ -110,7 +110,25 @@ class FrameSelectionHelper:
     
     @staticmethod
     def _trajectory_matches_tags(trajectory_data: TrajectoryData, traj_idx: int, tags: List[str], match_all: bool) -> bool:
-        """Check if trajectory tags match criteria."""
+        """
+        Check if trajectory tags match criteria.
+
+        Parameters
+        ----------
+        trajectory_data : TrajectoryData
+            Trajectory data object containing trajectory tags
+        traj_idx : int
+            Index of the trajectory to check
+        tags : List[str]
+            List of tags to search for
+        match_all : bool
+            If True, trajectory must have ALL tags. If False, ANY tag matches.
+
+        Returns
+        -------
+        bool
+            True if trajectory matches tag criteria, False otherwise
+        """
         if traj_idx not in trajectory_data.trajectory_tags:
             return False
         
@@ -131,8 +149,8 @@ class FrameSelectionHelper:
         Requires frame_mapping for trajectory-specific selection.
         Optionally applies stride for sparse sampling per trajectory.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         labels : List[int]
             List of cluster labels for each frame
         cluster_ids : List[int]
@@ -143,13 +161,13 @@ class FrameSelectionHelper:
             Minimum distance between consecutive frames (per trajectory).
             Applied after cluster selection to maintain cluster representation.
             
-        Returns:
-        --------
+        Returns
+        -------
         Dict[int, List[int]]
             Dictionary mapping trajectory indices to their selected frame indices
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Select every 5th frame from clusters (per trajectory)
         >>> frames = select_frames_by_cluster(
         ...     labels, [0, 1], frame_mapping, stride=5
@@ -168,7 +186,23 @@ class FrameSelectionHelper:
     
     @staticmethod
     def _collect_cluster_frames(labels: np.ndarray, cluster_ids: List[int], frame_mapping: Dict[int, int]) -> Dict[int, List[int]]:
-        """Collect frames belonging to specified clusters."""
+        """
+        Collect frames belonging to specified clusters.
+
+        Parameters
+        ----------
+        labels : np.ndarray
+            Array of cluster labels for each frame
+        cluster_ids : List[int]
+            List of cluster IDs to select frames from
+        frame_mapping : Dict[int, tuple]
+            Mapping from global frame index to (traj_idx, local_frame_idx)
+
+        Returns
+        -------
+        Dict[int, List[int]]
+            Dictionary mapping trajectory indices to their selected frame indices
+        """
         trajectory_frames = {}
         
         for global_idx, label in enumerate(labels):
@@ -186,7 +220,21 @@ class FrameSelectionHelper:
     
     @staticmethod
     def _apply_stride_per_trajectory(trajectory_frames: Dict[int, List[int]], stride: int) -> Dict[int, List[int]]:
-        """Sort and apply stride to frames per trajectory."""
+        """
+        Sort and apply stride to frames per trajectory.
+
+        Parameters
+        ----------
+        trajectory_frames : Dict[int, List[int]]
+            Dictionary mapping trajectory indices to their selected frame indices
+        stride : int
+            Minimum distance between consecutive frames (per trajectory)
+
+        Returns
+        -------
+        Dict[int, List[int]]
+            Dictionary with stride applied to frame indices per trajectory
+        """
         result = {}
         for traj_idx, frames in trajectory_frames.items():
             sorted_frames = sorted(frames)
@@ -206,8 +254,8 @@ class FrameSelectionHelper:
         to their corresponding numeric IDs using the cluster's name mappings.
         Numeric IDs are passed through unchanged.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cluster_data : ClusterData
             Cluster data object containing labels and optional cluster names
         cluster_ids : List[Union[int, str]]
@@ -215,13 +263,13 @@ class FrameSelectionHelper:
         clustering_name : str
             Name of the clustering (used for error messages)
             
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             List of numeric cluster IDs corresponding to input identifiers
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Convert mixed IDs and names
         >>> resolved = FrameSelectionHelper.resolve_cluster_ids(
         ...     cluster_data, [0, "folded", 2], "conformations"
@@ -298,20 +346,20 @@ class FrameSelectionHelper:
                 * stride = minimum distance between consecutive frames
                 * Example: {"frames": "0-100", "stride": 10} → [0, 10, 20, ..., 100]
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         input_data : dict
             Dictionary with trajectory keys and frame specifications
         trajectory_data : TrajectoryData
             Trajectory data object for validation and resolution
             
-        Returns:
-        --------
+        Returns
+        -------
         Dict[int, List[int]]
             Dictionary mapping trajectory indices to frame indices
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Combined ranges
         >>> frames = select_frames_by_indices({0: "10-20,30-40,50"}, trajectory_data)
         
@@ -360,8 +408,8 @@ class FrameSelectionHelper:
         Validates that frame indices are within bounds for the trajectory
         and adds them to the trajectory_frames dictionary.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory_frames : Dict[int, List[int]]
             Dictionary mapping trajectory indices to frame lists to update
         traj_idx : int
@@ -371,8 +419,8 @@ class FrameSelectionHelper:
         trajectory_data : TrajectoryData
             Trajectory data object for validation
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates trajectory_frames dictionary in-place
         """
@@ -390,13 +438,13 @@ class FrameSelectionHelper:
         Takes a dictionary of trajectory frames and returns a cleaned version
         with duplicates removed and frames sorted in ascending order.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory_frames : Dict[int, List[int]]
             Dictionary mapping trajectory indices to lists of frame indices
             
-        Returns:
-        --------
+        Returns
+        -------
         Dict[int, List[int]]
             Dictionary with deduplicated and sorted frame indices per trajectory
         """
@@ -413,8 +461,8 @@ class FrameSelectionHelper:
         Converts various trajectory selection formats to a list of trajectory indices.
         Handles single integers, strings (names, tags, patterns), and lists.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_key : Union[int, str, List]
             Trajectory selection key to resolve:
             - int: single trajectory index
@@ -423,8 +471,8 @@ class FrameSelectionHelper:
         trajectory_data : TrajectoryData
             Trajectory data object for index resolution
             
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             List of resolved trajectory indices
         """
@@ -436,7 +484,23 @@ class FrameSelectionHelper:
     
     @staticmethod
     def _parse_frame_value(frame_value: Union[str, dict, List[int]], trajectory_data: Optional[TrajectoryData] = None, traj_idx: Optional[int] = None) -> List[int]:
-        """Parse frame specification from various formats including stride support."""
+        """
+        Parse frame specification from various formats including stride support.
+
+        Parameters
+        ----------
+        frame_value : Union[str, dict, List[int]]
+            Frame specification to parse
+        trajectory_data : Optional[TrajectoryData]
+            Trajectory data object for validation
+        traj_idx : Optional[int]
+            Index of the trajectory for validation
+
+        Returns
+        -------
+        List[int]
+            List of parsed frame indices
+        """
         # Handle dict with stride
         if isinstance(frame_value, dict):
             return FrameSelectionHelper._parse_dict_frame_value(
@@ -459,7 +523,23 @@ class FrameSelectionHelper:
     
     @staticmethod
     def _parse_dict_frame_value(frame_dict: dict, trajectory_data: TrajectoryData, traj_idx: int) -> List[int]:
-        """Parse dict format with optional stride."""
+        """
+        Parse dict format with optional stride.
+
+        Parameters
+        ----------
+        frame_dict : dict
+            Dictionary containing frame specifications
+        trajectory_data : TrajectoryData
+            Trajectory data object for validation
+        traj_idx : int
+            Index of the trajectory for validation
+
+        Returns
+        -------
+        List[int]
+            List of parsed frame indices
+        """
         if "frames" not in frame_dict:
             raise ValueError("Dict format requires 'frames' key")
         
@@ -485,7 +565,23 @@ class FrameSelectionHelper:
     
     @staticmethod
     def _parse_string_frame_value(frame_str: str, trajectory_data: TrajectoryData, traj_idx: int) -> List[int]:
-        """Parse string frame value, handling 'all' keyword."""
+        """
+        Parse string frame value, handling 'all' keyword.
+
+        Parameters
+        ----------
+        frame_str : str
+            Frame specification string
+        trajectory_data : TrajectoryData
+            Trajectory data object for validation
+        traj_idx : int
+            Index of the trajectory for validation
+
+        Returns
+        -------
+        List[int]
+            List of parsed frame indices
+        """
         parsed = FrameSelectionHelper._parse_frame_string(frame_str)
         if parsed == "all":
             return FrameSelectionHelper._get_all_frames(trajectory_data, traj_idx)
@@ -493,7 +589,21 @@ class FrameSelectionHelper:
     
     @staticmethod
     def _get_all_frames(trajectory_data: TrajectoryData, traj_idx: int) -> List[int]:
-        """Get all frame indices for a trajectory."""
+        """
+        Get all frame indices for a trajectory.
+
+        Parameters
+        ----------
+        trajectory_data : TrajectoryData
+            Trajectory data object for validation
+        traj_idx : int
+            Index of the trajectory for validation
+
+        Returns
+        -------
+        List[int]
+            List of all frame indices for the specified trajectory
+        """
         if trajectory_data is None or traj_idx is None:
             raise ValueError("'all' keyword requires trajectory_data and traj_idx")
         n_frames = trajectory_data.trajectories[traj_idx].n_frames
@@ -501,7 +611,19 @@ class FrameSelectionHelper:
     
     @staticmethod
     def _parse_frame_string(frame_str: str) -> List[int]:
-        """Parse frame string: ranges, comma lists, combined formats, or 'all'."""
+        """
+        Parse frame string: ranges, comma lists, combined formats, or 'all'.
+
+        Parameters
+        ----------
+        frame_str : str
+            Frame specification string
+        
+        Returns
+        -------
+        List[int]
+            List of parsed frame indices or "all" keyword
+        """
         frame_str = frame_str.strip()
         
         # Check for "all" keyword
@@ -521,7 +643,19 @@ class FrameSelectionHelper:
     
     @staticmethod
     def _parse_combined_frames(frame_str: str) -> List[int]:
-        """Parse comma-separated frame specifications."""
+        """
+        Parse comma-separated frame specifications.
+
+        Parameters
+        ----------
+        frame_str : str
+            Comma-separated frame specifications (e.g., "10-20,30,40-50")
+        
+        Returns
+        -------
+        List[int]
+            List of parsed frame indices
+        """
         frames = []
         for part in frame_str.split(","):
             part = part.strip()
@@ -533,7 +667,19 @@ class FrameSelectionHelper:
     
     @staticmethod
     def _parse_range(range_str: str) -> List[int]:
-        """Parse a single range like '10-20'."""
+        """
+        Parse a single range like '10-20'.
+
+        Parameters
+        ----------
+        range_str : str
+            Range string in the format "start-end"
+
+        Returns
+        -------
+        List[int]
+            List of frame indices in the specified range
+        """
         parts = range_str.split("-")
         if len(parts) != 2:
             raise ValueError(f"Invalid range format: {range_str}")
@@ -548,15 +694,15 @@ class FrameSelectionHelper:
         """
         Apply stride to frame list (minimum distance between consecutive frames).
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         frames : List[int]
             Sorted list of frame indices
         stride : int
             Minimum distance between consecutive frames
             
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             Filtered frame indices with stride applied
         """
@@ -574,7 +720,28 @@ class FrameSelectionHelper:
     
     @staticmethod
     def _validate_frame_indices(frames: List[int], traj_idx: int, trajectory_data: TrajectoryData) -> None:
-        """Validate that frame indices are within trajectory bounds."""
+        """
+        Validate that frame indices are within trajectory bounds.
+
+        Parameters
+        ----------
+        frames : List[int]
+            List of frame indices to validate
+        traj_idx : int
+            Index of the trajectory
+        trajectory_data : TrajectoryData
+            Trajectory data object for validation
+
+        Returns
+        -------
+        None
+            Method returns nothing, raises ValueError if indices are out of bounds
+        
+        Raises
+        ------
+        ValueError
+            If any frame index is out of range for the trajectory
+        """
         n_frames = len(trajectory_data.trajectories[traj_idx])
         invalid = [f for f in frames if f < 0 or f >= n_frames]
         if invalid:
@@ -587,15 +754,15 @@ class FrameSelectionHelper:
         """
         Validate that a data selector with given name exists.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object containing data selectors
         name : str
             Name of the data selector to validate
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Method returns nothing, raises ValueError if selector not found
         """
@@ -610,13 +777,13 @@ class FrameSelectionHelper:
         """
         Validate that trajectory data is available for frame selection.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object to check for trajectory data
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Method returns nothing, raises ValueError if no trajectories loaded
         """
@@ -628,15 +795,15 @@ class FrameSelectionHelper:
         """
         Validate that a clustering result with given name exists.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object containing cluster data
         clustering_name : str
             Name of the clustering result to validate
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Method returns nothing, raises ValueError if clustering not found
         """
