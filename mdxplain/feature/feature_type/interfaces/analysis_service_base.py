@@ -42,8 +42,8 @@ class AnalysisServiceBase:
     - self._feature_type: String identifier for the feature type
     - self._calculator: Calculator instance with analysis methods
     
-    Examples:
-    ---------
+    Examples
+    --------
     >>> class DistancesAnalysisService(AnalysisServiceBase):
     ...     def __init__(self, pipeline_data):
     ...         super().__init__(pipeline_data)
@@ -60,13 +60,13 @@ class AnalysisServiceBase:
         """
         Initialize base analysis service.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data container with all necessary data
             
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         self._pipeline_data = pipeline_data
@@ -85,18 +85,18 @@ class AnalysisServiceBase:
         parameters to all calculator methods, handling the common pattern
         of data selection before method execution.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         name : str
             Name of the method being accessed
             
-        Returns:
-        --------
+        Returns
+        -------
         function
             Wrapped method that handles data selection and calls calculator
             
-        Raises:
-        -------
+        Raises
+        ------
         AttributeError
             If the method doesn't exist in the calculator
         """
@@ -112,8 +112,8 @@ class AnalysisServiceBase:
                 """
                 Wrapped calculator method with automatic data selection.
                 
-                Parameters:
-                -----------
+                Parameters
+                ----------
                 feature_selector : str, optional
                     Name of feature selector for column selection
                 traj_selection : str, int, list, optional
@@ -121,8 +121,8 @@ class AnalysisServiceBase:
                 **kwargs
                     Additional arguments passed to the calculator method
                     
-                Returns:
-                --------
+                Returns
+                -------
                 Any
                     Result from the calculator method
                 """

@@ -39,20 +39,19 @@ class CoordinatesCalculatorAnalysis:
     with memory-mapped array support.
     """
 
-
     def __init__(self, use_memmap: bool = False, chunk_size: int = 2000) -> None:
         """
         Initialize coordinates analysis with chunking configuration.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for large datasets
         chunk_size : int, default=2000
             Number of frames to process per chunk for memory-mapped arrays
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Default chunking
         >>> analysis = CoordinatesCalculatorAnalysis()
 
@@ -67,13 +66,13 @@ class CoordinatesCalculatorAnalysis:
         """
         Compute mean coordinates per coordinate.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         coordinates : numpy.ndarray
             Coordinate array with shape (n_frames, n_coordinates)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Mean coordinate for each coordinate with shape (n_coordinates,)
         """
@@ -85,13 +84,13 @@ class CoordinatesCalculatorAnalysis:
         """
         Compute standard deviation of coordinates per coordinate.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         coordinates : numpy.ndarray
             Coordinate array with shape (n_frames, n_coordinates)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Standard deviation for each coordinate with shape (n_coordinates,)
         """
@@ -103,13 +102,13 @@ class CoordinatesCalculatorAnalysis:
         """
         Compute minimum coordinates per coordinate.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         coordinates : numpy.ndarray
             Coordinate array with shape (n_frames, n_coordinates)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Minimum coordinate for each coordinate with shape (n_coordinates,)
         """
@@ -121,13 +120,13 @@ class CoordinatesCalculatorAnalysis:
         """
         Compute maximum coordinates per coordinate.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         coordinates : numpy.ndarray
             Coordinate array with shape (n_frames, n_coordinates)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Maximum coordinate for each coordinate with shape (n_coordinates,)
         """
@@ -139,13 +138,13 @@ class CoordinatesCalculatorAnalysis:
         """
         Compute median coordinates per coordinate.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         coordinates : numpy.ndarray
             Coordinate array with shape (n_frames, n_coordinates)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Median coordinate for each coordinate with shape (n_coordinates,)
         """
@@ -157,13 +156,13 @@ class CoordinatesCalculatorAnalysis:
         """
         Compute variance of coordinates per coordinate.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         coordinates : numpy.ndarray
             Coordinate array with shape (n_frames, n_coordinates)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Variance for each coordinate with shape (n_coordinates,)
         """
@@ -175,13 +174,13 @@ class CoordinatesCalculatorAnalysis:
         """
         Compute range (peak-to-peak) of coordinates per coordinate.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         coordinates : numpy.ndarray
             Coordinate array with shape (n_frames, n_coordinates)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Range (max - min) for each coordinate with shape (n_coordinates,)
         """
@@ -193,13 +192,13 @@ class CoordinatesCalculatorAnalysis:
         """
         Compute median absolute deviation for each coordinate.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         coordinates : numpy.ndarray
             Coordinate array with shape (n_frames, n_coordinates)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             MAD values per coordinate with shape (n_coordinates,)
         """
@@ -217,13 +216,13 @@ class CoordinatesCalculatorAnalysis:
         """
         Compute mean coordinates per frame.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         coordinates : numpy.ndarray
             Coordinate array with shape (n_frames, n_coordinates)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Mean coordinate across all coordinates for each frame with shape (n_frames,)
         """
@@ -235,13 +234,13 @@ class CoordinatesCalculatorAnalysis:
         """
         Compute standard deviation of coordinates per frame.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         coordinates : numpy.ndarray
             Coordinate array with shape (n_frames, n_coordinates)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Standard deviation across all coordinates for each frame with shape (n_frames,)
         """
@@ -253,13 +252,13 @@ class CoordinatesCalculatorAnalysis:
         """
         Compute minimum coordinates per frame.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         coordinates : numpy.ndarray
             Coordinate array with shape (n_frames, n_coordinates)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Minimum coordinate across all coordinates for each frame with shape (n_frames,)
         """
@@ -271,13 +270,13 @@ class CoordinatesCalculatorAnalysis:
         """
         Compute maximum coordinates per frame.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         coordinates : numpy.ndarray
             Coordinate array with shape (n_frames, n_coordinates)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Maximum coordinate across all coordinates for each frame with shape (n_frames,)
         """
@@ -289,13 +288,13 @@ class CoordinatesCalculatorAnalysis:
         """
         Compute range of coordinates per frame.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         coordinates : numpy.ndarray
             Coordinate array with shape (n_frames, n_coordinates)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Range (max - min) across all coordinates for each frame with shape (n_frames,)
         """
@@ -307,13 +306,13 @@ class CoordinatesCalculatorAnalysis:
         """
         Compute coefficient of variation for each coordinate.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         coordinates : numpy.ndarray
             Coordinate array with shape (n_frames, n_coordinates)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             CV values per coordinate with shape (n_coordinates,)
         """
@@ -325,13 +324,13 @@ class CoordinatesCalculatorAnalysis:
         """
         Compute root mean square fluctuation per atom.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         coordinates : numpy.ndarray
             Coordinate array with shape (n_frames, n_coordinates)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             RMSF values expanded to coordinate format with shape (n_coordinates,)
         """
@@ -356,8 +355,8 @@ class CoordinatesCalculatorAnalysis:
         """
         Compute transitions within lag time for coordinates.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         coordinates : np.ndarray or np.memmap
             Coordinate array with shape (n_frames, n_coordinates)
         threshold : float, default=1.0
@@ -365,8 +364,8 @@ class CoordinatesCalculatorAnalysis:
         lag_time : int, default=10
             Number of frames to look ahead for transitions
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Transition counts for each coordinate with shape (n_coordinates,)
         """
@@ -378,8 +377,8 @@ class CoordinatesCalculatorAnalysis:
         """
         Compute transitions within window for coordinates.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         coordinates : np.ndarray or np.memmap
             Coordinate array with shape (n_frames, n_coordinates)
         threshold : float, default=1.0
@@ -387,8 +386,8 @@ class CoordinatesCalculatorAnalysis:
         window_size : int, default=10
             Size of sliding window for transition analysis
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Transition counts for each coordinate with shape (n_coordinates,)
         """
@@ -400,8 +399,8 @@ class CoordinatesCalculatorAnalysis:
         """
         Compute stability analysis for coordinates.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         coordinates : np.ndarray or np.memmap
             Coordinate array with shape (n_frames, n_coordinates)
         threshold : float, default=1.0
@@ -409,8 +408,8 @@ class CoordinatesCalculatorAnalysis:
         window_size : int, default=10
             Size of analysis window
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Stability scores for each coordinate with shape (n_coordinates,)
         """
@@ -423,8 +422,8 @@ class CoordinatesCalculatorAnalysis:
         """
         Compute differences between two coordinate datasets.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         coordinates1 : np.ndarray or np.memmap
             First coordinate array with shape (n_frames, n_coordinates)
         coordinates2 : np.ndarray or np.memmap
@@ -432,8 +431,8 @@ class CoordinatesCalculatorAnalysis:
         preprocessing_func : callable, optional
             Function to apply to each dataset before comparison
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Difference values with shape (n_frames, n_coordinates)
         """

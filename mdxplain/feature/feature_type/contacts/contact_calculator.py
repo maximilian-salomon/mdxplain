@@ -43,8 +43,8 @@ class ContactCalculator(CalculatorBase):
     output formats (square/condensed). Includes statistical analysis capabilities
     for contact frequency, stability, and transition analysis.
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> # Basic contact calculation
     >>> calculator = ContactCalculator()
     >>> contacts = calculator.compute(distance_data, cutoff=4.0)
@@ -58,8 +58,8 @@ class ContactCalculator(CalculatorBase):
         """
         Initialize contact calculator with configuration parameters.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for large datasets
         cache_path : str, optional
@@ -67,12 +67,12 @@ class ContactCalculator(CalculatorBase):
         chunk_size : int, optional
             Number of frames to process per chunk
 
-        Returns:
-        --------
+        Returns
+        -------
         None
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic initialization
         >>> calculator = ContactCalculator()
 
@@ -94,21 +94,21 @@ class ContactCalculator(CalculatorBase):
         """
         Compute binary contact maps from distance arrays using distance cutoff.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         input_data : numpy.ndarray
             Distance array in condensed format (NxP) in Angstrom
         **kwargs : dict
             Additional parameters:
             - cutoff : float, default=4.5 - Distance cutoff for contact determination
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Binary contact array where True/1 indicates contact (distance <= cutoff)
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic contact calculation
         >>> contacts = calculator.compute(distance_data, cutoff=4.0)
 
@@ -146,8 +146,8 @@ class ContactCalculator(CalculatorBase):
         """
         Compute statistical metric values for contact filtering.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         contacts : numpy.ndarray
             Binary contact array
         metric : str
@@ -161,13 +161,13 @@ class ContactCalculator(CalculatorBase):
         lag_time : int, default=1
             Lag time for analysis
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Computed metric values per contact pair
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If the metric is not supported
         """
@@ -193,8 +193,8 @@ class ContactCalculator(CalculatorBase):
         """
         Compute transitions metric based on specified mode and parameters.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         contacts : numpy.ndarray
             Binary contact array
         threshold : float
@@ -206,8 +206,8 @@ class ContactCalculator(CalculatorBase):
         lag_time : int, default=1
             Lag time for analysis
 
-        Returns:
-        --------
+        Returns
+        -------
         int
             Number of transitions
         """
@@ -239,8 +239,8 @@ class ContactCalculator(CalculatorBase):
         """
         Filter and select dynamic contact pairs based on statistical criteria.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         input_data : numpy.ndarray
             Binary contact array to analyze (n_frames x n_pairs)
         metric : str, default='frequency'
@@ -265,14 +265,14 @@ class ContactCalculator(CalculatorBase):
         lag_time : int, default=1
             Lag time for transition analysis (when transition_mode='lagtime')
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Dictionary with keys: 'indices', 'values', 'dynamic_data', 'feature_metadata',
             'metric_used', 'n_dynamic', 'total_pairs', 'threshold_min', 'threshold_max'
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Select frequently formed contacts (> 50% frequency)
         >>> result = calculator.compute_dynamic_values(
         ...     contact_data, metric='frequency', threshold_min=0.5

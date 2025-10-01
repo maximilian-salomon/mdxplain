@@ -32,7 +32,13 @@ from ...utils.data_utils import DataUtils
 
 
 class SelectionMemmapHelper:
-    """Helper class for memory mapping operations in feature selection system."""
+    """
+    Helper class for memory mapping operations in feature selection system.
+
+    Provides static methods for creating memory-mapped selections,
+    horizontally stacking matrices while preserving memmap nature,
+    and creating frame selections efficiently.
+    """
 
     @staticmethod
     def create_memmap_selection(
@@ -50,8 +56,8 @@ class SelectionMemmapHelper:
         This method avoids loading entire columns into RAM by processing
         data in chunks and writing directly to a memmap output file.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray or memmap
             Source data to select from
         indices : list
@@ -67,8 +73,8 @@ class SelectionMemmapHelper:
         chunk_size : int
             Chunk size for processing
 
-        Returns:
-        --------
+        Returns
+        -------
         list
             List containing the memmap-selected data matrix
         """
@@ -99,8 +105,8 @@ class SelectionMemmapHelper:
         """
         Horizontally stack matrices while preserving memmap nature.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         matrices : list
             List of matrices to stack (all are memmap)
         name : str
@@ -110,8 +116,8 @@ class SelectionMemmapHelper:
         chunk_size : int
             Chunk size for processing
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Stacked matrix stored as memmap
         """
@@ -165,8 +171,8 @@ class SelectionMemmapHelper:
         data in chunks and writing directly to a memmap output file.
         Handles frame selection (row-wise) efficiently for large datasets.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray or memmap
             Source data to select from
         frame_indices : list
@@ -178,8 +184,8 @@ class SelectionMemmapHelper:
         chunk_size : int
             Chunk size for processing
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Memmap array with selected frames
         """

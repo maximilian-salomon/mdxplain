@@ -38,12 +38,12 @@ class DecisionTreeCalculator(CalculatorBase):
     """
     Calculator for Decision Tree feature importance analysis.
 
-    Implements the actual Decision Tree classifier using scikit-learn
+    Implements the actual Decision Tree classifier using scikit-learn,
     to compute feature importance scores. Handles training, prediction,
     and importance extraction.
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> calculator = DecisionTreeCalculator()
     >>> X = np.random.rand(1000, 50)
     >>> y = np.random.choice([0, 1], 1000)
@@ -56,8 +56,8 @@ class DecisionTreeCalculator(CalculatorBase):
         """
         Initialize Decision Tree calculator.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for large datasets
         cache_path : str, default="./cache"
@@ -65,8 +65,8 @@ class DecisionTreeCalculator(CalculatorBase):
         chunk_size : int, default=10000
             Chunk size for processing large datasets (reserved for future use)
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes DecisionTreeCalculator instance
         """
@@ -80,25 +80,25 @@ class DecisionTreeCalculator(CalculatorBase):
         Checks data dimensions, shapes, and presence of NaN values.
         Raises clear error messages for invalid data.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         X : np.ndarray
             Feature matrix to validate
         y : np.ndarray
             Target labels to validate
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Validation passed
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If input data has invalid shape or contains NaN values
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> X = np.random.rand(100, 10)
         >>> y = np.random.choice([0, 1], 100)
         >>> DecisionTreeCalculator._validate_input_data(X, y)  # Passes
@@ -125,8 +125,8 @@ class DecisionTreeCalculator(CalculatorBase):
         Calculates training accuracy, classification report, and collects
         model statistics for comprehensive analysis metadata.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dt_classifier : DecisionTreeClassifier
             Trained Decision Tree classifier
         X : np.ndarray
@@ -136,13 +136,13 @@ class DecisionTreeCalculator(CalculatorBase):
         dt_params : Dict[str, Any]
             Dictionary of Decision Tree hyperparameters
 
-        Returns:
-        --------
+        Returns
+        -------
         Dict[str, Any]
             Metadata dictionary with training metrics and model info
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> metadata = DecisionTreeCalculator._build_training_metadata(
         ...     classifier, X, y, params
         ... )
@@ -180,8 +180,8 @@ class DecisionTreeCalculator(CalculatorBase):
         Trains a Decision Tree classifier on the provided data and extracts
         feature importance scores based on impurity reduction at each split.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         X : np.ndarray
             Feature matrix with shape (n_samples, n_features)
         y : np.ndarray
@@ -189,21 +189,21 @@ class DecisionTreeCalculator(CalculatorBase):
         **kwargs : dict
             Decision Tree parameters (criterion, max_depth, random_state, etc.)
 
-        Returns:
-        --------
+        Returns
+        -------
         Dict[str, Any]
             Dictionary containing:
             - 'importances': np.ndarray of feature importance scores
             - 'model': Trained DecisionTreeClassifier instance
             - 'metadata': Dict with training metrics and parameters
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If input data has invalid shape or contains NaN values
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> result = calculator.compute(X, y, max_depth=5, random_state=42)
         >>> importance_scores = result['importances']
         >>> accuracy = result['metadata']['train_accuracy']

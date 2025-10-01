@@ -59,8 +59,8 @@ class FeatureSelectorManager:
         """
         Initialize feature selector manager.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for large datasets
         chunk_size : int, default=2000
@@ -68,8 +68,8 @@ class FeatureSelectorManager:
         cache_dir : str, default="./cache"
             Directory for caching temporary files
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes FeatureSelectorManager with configuration parameters
         """
@@ -84,8 +84,8 @@ class FeatureSelectorManager:
         Creates a new FeatureSelectorData instance with the given name and stores
         it in the pipeline data for later configuration and use.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -98,25 +98,25 @@ class FeatureSelectorManager:
         >>> manager = FeatureSelectorManager()
         >>> manager.create(pipeline_data, "my_analysis")  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object to store the selector configuration
         name : str
             Name identifier for the feature selector configuration
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Creates and stores new FeatureSelectorData in pipeline_data
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If selector with given name already exists
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> manager = FeatureSelectorManager()
         >>> pipeline_data = PipelineData()
         >>> manager.create(pipeline_data, "protein_analysis")
@@ -155,13 +155,13 @@ class FeatureSelectorManager:
 
         Pattern used: manager explicitly passed, pipeline_data injected by AutoInjectProxy
 
-        Returns:
-        --------
+        Returns
+        -------
         FeatureSelectorAddService
             Service with feature-type properties (distances, contacts, etc.)
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> pipeline.feature_selector.add.distances("test", "res ALA")
         >>> pipeline.feature_selector.add.distances.with_cv_reduction("test", "res ALA", threshold_min=0.1)
         """
@@ -186,8 +186,8 @@ class FeatureSelectorManager:
         configuration. Multiple selections can be added for the same feature
         type with different criteria.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -204,8 +204,8 @@ class FeatureSelectorManager:
         >>> manager.add_selection(pipeline_data, "analysis", "distances", "all",
         ...     reduction={"metric": "mean", "threshold_min": 7.0, "cross_trajectory": False})
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object containing selector configurations
         name : str
@@ -236,18 +236,18 @@ class FeatureSelectorManager:
             - cross_trajectory : bool, default=True - Apply common denominator
             - Additional metric-specific parameters (e.g., transition_threshold)
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds selection configuration to the named selector
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If selector with given name does not exist
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> manager = FeatureSelectorManager()
         >>> pipeline_data = PipelineData()
         >>> manager.create(pipeline_data, "analysis")
@@ -284,8 +284,8 @@ class FeatureSelectorManager:
         the computed features in pipeline_data and stores the results for later
         access through data access methods.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -302,8 +302,8 @@ class FeatureSelectorManager:
         >>> # Or with specific reference trajectory
         >>> manager.select(pipeline_data, "my_analysis", reference_traj="system_A")
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object containing features and selector configurations
         name : str
@@ -312,13 +312,13 @@ class FeatureSelectorManager:
             Trajectory index or name to use as reference for metadata extraction.
             If None, uses the first trajectory from the selection.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Applies selections and stores results with reference trajectory info
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If selector with given name does not exist
         ValueError
@@ -326,8 +326,8 @@ class FeatureSelectorManager:
         ValueError
             If required data types (original/reduced) are not available
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> manager = FeatureSelectorManager()
         >>> pipeline_data = PipelineData()
         >>> # ... configure selector and compute features ...
@@ -375,8 +375,8 @@ class FeatureSelectorManager:
         """
         Get list of all configured feature selector names.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -389,18 +389,18 @@ class FeatureSelectorManager:
         >>> manager = FeatureSelectorManager()
         >>> manager.list_selectors(pipeline_data)  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object containing selector configurations
 
-        Returns:
-        --------
+        Returns
+        -------
         List[str]
             List of configured feature selector names
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> manager = FeatureSelectorManager()
         >>> pipeline_data = PipelineData()
         >>> manager.create(pipeline_data, "analysis1")
@@ -417,8 +417,8 @@ class FeatureSelectorManager:
         """
         Get summary information about a named selector configuration.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -431,25 +431,25 @@ class FeatureSelectorManager:
         >>> manager = FeatureSelectorManager()
         >>> manager.get_selector_summary(pipeline_data, "analysis")  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object containing selector configurations
         name : str
             Name of the feature selector configuration
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Summary information about the selector configuration
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If selector with given name does not exist
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> manager = FeatureSelectorManager()
         >>> summary = manager.get_selector_summary(pipeline_data, "analysis")
         >>> print(summary['feature_count'])
@@ -462,8 +462,8 @@ class FeatureSelectorManager:
         """
         Remove a named selector configuration.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -476,25 +476,25 @@ class FeatureSelectorManager:
         >>> manager = FeatureSelectorManager()
         >>> manager.remove_selector(pipeline_data, "old_analysis")  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object containing selector configurations
         name : str
             Name of the feature selector configuration to remove
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Removes selector configuration and any associated selected data
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If selector with given name does not exist
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> manager = FeatureSelectorManager()
         >>> manager.remove_selector(pipeline_data, "old_analysis")
         """
@@ -506,15 +506,15 @@ class FeatureSelectorManager:
         """
         Validate that a named selector configuration exists.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object to check
         name : str
             Name of selector to validate
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If selector does not exist
         """
@@ -530,15 +530,15 @@ class FeatureSelectorManager:
         """
         Validate that all required features exist in pipeline_data.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object to validate
         selector_data : FeatureSelectorData
             Selector configuration to validate
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If required features or data types are not available
         """
@@ -551,15 +551,15 @@ class FeatureSelectorManager:
         """
         Validate that a feature exists in pipeline data.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_key : str
             Feature key to validate
         pipeline_data : PipelineData
             Pipeline data object
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If feature does not exist
         """
@@ -572,8 +572,8 @@ class FeatureSelectorManager:
         """
         Validate that required data types are available for ALL relevant trajectories.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_key : str
             Feature key to validate
         selections : List[dict]
@@ -581,8 +581,8 @@ class FeatureSelectorManager:
         pipeline_data : PipelineData
             Pipeline data object
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If required data types are not available for any relevant trajectory
         """
@@ -608,8 +608,8 @@ class FeatureSelectorManager:
         """
         Check which trajectories are missing the required data type.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_data_dict : dict
             Dictionary mapping trajectory indices to FeatureData objects
         traj_indices : List[int]
@@ -617,8 +617,8 @@ class FeatureSelectorManager:
         use_reduced : bool
             Whether to check for reduced data (True) or original data (False)
 
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             List of trajectory indices that are missing the required data type
         """
@@ -649,8 +649,8 @@ class FeatureSelectorManager:
         """
         Raise error with specific information about missing data.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_key : str
             Feature key that has missing data
         missing_trajectories : List[int]
@@ -658,8 +658,8 @@ class FeatureSelectorManager:
         use_reduced : bool
             Whether reduced or original data is missing
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             Always raised with descriptive error message
         """
@@ -677,8 +677,8 @@ class FeatureSelectorManager:
         """
         Process all selections and store results.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
         selector_data : FeatureSelectorData
@@ -705,8 +705,8 @@ class FeatureSelectorManager:
         the CommonDenominatorHelper is applied only to that specific selection.
         All results are then combined using union.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
         feature_key : str
@@ -714,8 +714,8 @@ class FeatureSelectorManager:
         selections : List[dict]
             List of selection configurations
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Dictionary with trajectory-specific indices and use_reduced flags:
             {"trajectory_indices": {traj_idx: {"indices": [...], "use_reduced": [...]}}}
@@ -759,8 +759,8 @@ class FeatureSelectorManager:
         """
         Process a single selection and apply common_denominator if needed.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
         feature_key : str
@@ -768,8 +768,8 @@ class FeatureSelectorManager:
         selection_dict : dict
             Single selection configuration
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Dictionary with trajectory-specific indices and use_reduced flags
         """
@@ -828,18 +828,18 @@ class FeatureSelectorManager:
         Validates that all trajectories have the same number of columns for each feature
         to ensure consistent matrix construction.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_data : FeatureSelectorData
             Selector data with stored results
             
-        Returns:
-        --------
+        Returns
+        -------
         int
             Total number of columns across all features and trajectories
             
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If trajectories have inconsistent column counts for any feature
         """
@@ -883,8 +883,8 @@ class FeatureSelectorManager:
         """
         Collect indices for a specific trajectory from all selections.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
         feature_key : str
@@ -894,8 +894,8 @@ class FeatureSelectorManager:
         traj_idx : int
             Trajectory index to collect indices for
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             Tuple of (indices, use_reduced_flags) for this trajectory
         """
@@ -930,8 +930,8 @@ class FeatureSelectorManager:
         """
         Get indices for a selection on a specific trajectory's feature data.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_data : FeatureData
             Single trajectory's feature data
         selection_dict : dict
@@ -939,8 +939,8 @@ class FeatureSelectorManager:
         feature_key : str
             Feature key for error messages
 
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             List of matching indices for this trajectory
         """
@@ -980,15 +980,15 @@ class FeatureSelectorManager:
         """
         Remove duplicate indices while preserving use_reduced information.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         all_column_indices : list
             List of all column indices
         use_reduced_indices : list
             List of indices that use reduced data
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             Tuple of (unique_indices, unique_use_reduced)
         """
@@ -1013,8 +1013,8 @@ class FeatureSelectorManager:
         """
         Save all feature selector data to single file.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -1027,20 +1027,20 @@ class FeatureSelectorManager:
         >>> manager = FeatureSelectorManager()
         >>> manager.save(pipeline_data, 'feature_selector.npy')  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data container with feature selector data
         save_path : str
             Path where to save all feature selector data in one file
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Saves all feature selector data to the specified file
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> manager.save(pipeline_data, 'feature_selector.npy')
         """
         DataUtils.save_object(pipeline_data.selected_feature_data, save_path)
@@ -1049,8 +1049,8 @@ class FeatureSelectorManager:
         """
         Load all feature selector data from single file.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -1063,20 +1063,20 @@ class FeatureSelectorManager:
         >>> manager = FeatureSelectorManager()
         >>> manager.load(pipeline_data, 'feature_selector.npy')  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data container to load feature selector data into
         load_path : str
             Path to saved feature selector data file
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Loads all feature selector data from the specified file
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> manager.load(pipeline_data, 'feature_selector.npy')
         """
         temp_dict = {}
@@ -1087,8 +1087,8 @@ class FeatureSelectorManager:
         """
         Print featureselectordata information.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -1101,17 +1101,17 @@ class FeatureSelectorManager:
         >>> manager = FeatureSelectorManager()
         >>> manager.print_info(pipeline_data)  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data container with featureselectordata
 
-        Returns:
-        --------
+        Returns
+        -------
             Prints featureselectordata information to console
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> manager.print_info(pipeline_data)
         """
         if len(pipeline_data.selected_feature_data) == 0:

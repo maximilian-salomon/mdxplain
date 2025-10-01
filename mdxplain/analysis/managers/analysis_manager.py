@@ -34,8 +34,8 @@ class AnalysisManager:
     Currently supports feature analysis, with plans to extend to
     structure analysis, importance analysis, and more.
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> # Feature analysis (services)
     >>> pipeline.analysis.features.distances.mean()
     >>> pipeline.analysis.features.contacts.std()

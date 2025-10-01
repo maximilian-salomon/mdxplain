@@ -38,15 +38,15 @@ class SASAReduceService(ReduceServiceBase):
         """
         Initialize SASA reduce factory.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         manager : FeatureManager
             Feature manager instance
         pipeline_data : PipelineData
             Pipeline data container
 
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         super().__init__(manager, pipeline_data)
@@ -65,8 +65,8 @@ class SASAReduceService(ReduceServiceBase):
         Filters SASA features based on their relative variability.
         Higher CV indicates more dynamic surface accessibility.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -76,13 +76,13 @@ class SASAReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep highly dynamic surface accessibility
         >>> pipeline.feature.reduce.sasa.cv(threshold_min=0.3)
 
@@ -118,8 +118,8 @@ class SASAReduceService(ReduceServiceBase):
         Filters SASA features based on their dynamic range.
         Higher range indicates more variability in surface accessibility.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -129,13 +129,13 @@ class SASAReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep residues with large SASA changes
         >>> pipeline.feature.reduce.sasa.range(threshold_min=1.0)
 
@@ -171,8 +171,8 @@ class SASAReduceService(ReduceServiceBase):
         Filters SASA features based on their variability.
         Higher std indicates more dynamic surface accessibility.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -182,13 +182,13 @@ class SASAReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep residues with significant SASA fluctuations
         >>> pipeline.feature.reduce.sasa.std(threshold_min=0.4)
 
@@ -221,8 +221,8 @@ class SASAReduceService(ReduceServiceBase):
         """
         Reduce SASA by variance.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -232,13 +232,13 @@ class SASAReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep residues with high SASA variance
         >>> pipeline.feature.reduce.sasa.variance(threshold_min=0.5)
 
@@ -271,8 +271,8 @@ class SASAReduceService(ReduceServiceBase):
         """
         Reduce SASA by median absolute deviation.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -282,13 +282,13 @@ class SASAReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep robustly variable SASA (outlier-resistant)
         >>> pipeline.feature.reduce.sasa.mad(threshold_min=0.3)
 
@@ -321,8 +321,8 @@ class SASAReduceService(ReduceServiceBase):
         """
         Reduce SASA by mean value.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -332,13 +332,13 @@ class SASAReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep highly exposed residues
         >>> pipeline.feature.reduce.sasa.mean(threshold_min=2.0)
 
@@ -371,8 +371,8 @@ class SASAReduceService(ReduceServiceBase):
         """
         Reduce SASA by minimum value.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -382,13 +382,13 @@ class SASAReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep residues that can become buried
         >>> pipeline.feature.reduce.sasa.min(threshold_max=0.5)
 
@@ -421,8 +421,8 @@ class SASAReduceService(ReduceServiceBase):
         """
         Reduce SASA by maximum value.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -432,13 +432,13 @@ class SASAReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep residues that can become highly exposed
         >>> pipeline.feature.reduce.sasa.max(threshold_min=3.0)
 
@@ -474,8 +474,8 @@ class SASAReduceService(ReduceServiceBase):
         Filters residues based on fraction of time they are buried.
         Uses threshold_max as burial cutoff (SASA below this = buried).
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -485,13 +485,13 @@ class SASAReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep frequently buried residues
         >>> pipeline.feature.reduce.sasa.burial_fraction(
         ...     threshold_min=0.7,
@@ -533,8 +533,8 @@ class SASAReduceService(ReduceServiceBase):
         Filters residues based on fraction of time they are exposed.
         Uses threshold_max as exposure cutoff (SASA above this = exposed).
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -544,13 +544,13 @@ class SASAReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep frequently exposed residues
         >>> pipeline.feature.reduce.sasa.exposure_fraction(
         ...     threshold_min=0.6,
@@ -596,8 +596,8 @@ class SASAReduceService(ReduceServiceBase):
         Filters SASA features based on number of transitions.
         Detects changes in surface accessibility patterns.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -615,13 +615,13 @@ class SASAReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep residues with many burial/exposure transitions
         >>> pipeline.feature.reduce.sasa.transitions(
         ...     threshold_min=6,

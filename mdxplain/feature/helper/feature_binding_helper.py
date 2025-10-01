@@ -48,18 +48,18 @@ class FeatureBindingHelper:
         Creates bound methods that automatically pass the current data
         (reduced if available, otherwise original) to calculator analysis methods.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_data : FeatureData
             Feature data object to bind methods to
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Creates feature_data.analysis object with bound methods
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> FeatureBindingHelper.bind_stats_methods(feature_data)
         >>> # Now feature_data.analysis.mean() works automatically
         >>> mean_values = feature_data.analysis.mean()
@@ -90,15 +90,15 @@ class FeatureBindingHelper:
         """
         Bind individual analysis methods to feature data.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_data : FeatureData
             Feature data object to bind to
         requires_full_data : Set[str]
             Set of method names that require full data
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Binds methods to feature_data.analysis
         """
@@ -119,15 +119,15 @@ class FeatureBindingHelper:
         """
         Check if method should be bound (public and callable).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         method_name : str
             Name of method to check
         calculator_analysis : Any
             Calculator analysis object
 
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if method should be bound, False otherwise
         """
@@ -146,8 +146,8 @@ class FeatureBindingHelper:
         """
         Create bound method with automatic data selection.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_data : FeatureData
             Feature data object with data
         original_method : Callable
@@ -157,8 +157,8 @@ class FeatureBindingHelper:
         requires_full_data : Set[str]
             Set of methods that require full data
 
-        Returns:
-        --------
+        Returns
+        -------
         BoundMethod
             Bound method that automatically uses appropriate data
         """
@@ -172,13 +172,13 @@ class FeatureBindingHelper:
         This method restores the feature_data and original_method references
         that were removed during pickling.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_data : FeatureData
             Feature data object with analysis attribute to repair
         
-        Returns:
-        --------
+        Returns
+        -------
         None
             Repairs BoundMethod objects in-place
         """

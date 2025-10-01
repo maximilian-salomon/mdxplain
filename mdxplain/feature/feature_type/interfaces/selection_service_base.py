@@ -42,8 +42,8 @@ class SelectionServiceBase(ABC):
     - __call__: Main selection method for the feature type
     - Set self._feature_type: String identifier for the feature type
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> class ContactsSelectionService(SelectionServiceBase):
     ...     def __init__(self, manager, pipeline_data):
     ...         super().__init__(manager, pipeline_data)
@@ -58,15 +58,15 @@ class SelectionServiceBase(ABC):
         """
         Initialize base selection service.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         manager : FeatureSelectorManager
             Manager instance for executing add operations
         pipeline_data : PipelineData
             Pipeline data container with trajectory and feature data
 
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         self._manager = manager
@@ -89,8 +89,8 @@ class SelectionServiceBase(ABC):
         This abstract method must be implemented by all subclasses to provide
         the main selection functionality for their specific feature type.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -104,8 +104,8 @@ class SelectionServiceBase(ABC):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds feature selection to the named selector
         """
@@ -128,8 +128,8 @@ class SelectionServiceBase(ABC):
         of the feature type. It creates a configuration dictionary with
         all reduction parameters and attaches it to the selection.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         metric : str
@@ -143,13 +143,13 @@ class SelectionServiceBase(ABC):
         extra_params : dict, optional
             Additional parameters specific to the reduction metric
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Modifies the last selection of this feature type in-place
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If no selections exist for the feature type in the selector
         """

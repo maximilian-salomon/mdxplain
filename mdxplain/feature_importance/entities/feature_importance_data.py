@@ -36,12 +36,13 @@ class FeatureImportanceData:
     """
     Data entity for storing feature importance analysis results.
 
-    Stores feature importance results from ML algorithms with separated
+    Stores feature importance results from ML algorithms, 
+    in this case mainly classifiers with separated
     data and metadata storage. Each FeatureImportanceData contains results
     for all sub-comparisons from a single analysis run.
 
-    Attributes:
-    -----------
+    Attributes
+    ----------
     name : str
         Name identifier for this analysis
     analyzer_type : str
@@ -53,8 +54,8 @@ class FeatureImportanceData:
     metadata : List[Dict[str, Any]]
         List of metadata dictionaries (parallel to data list)
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> fi_data = FeatureImportanceData("tree_analysis")
     >>> fi_data.analyzer_type = "decision_tree"
     >>> fi_data.comparison_name = "folded_vs_unfolded"
@@ -70,18 +71,18 @@ class FeatureImportanceData:
         """
         Initialize feature importance data with given name.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         name : str
             Name identifier for this analysis
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes FeatureImportanceData with given name
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> fi_data = FeatureImportanceData("my_analysis")
         >>> print(fi_data.name)
         'my_analysis'
@@ -101,20 +102,20 @@ class FeatureImportanceData:
         """
         Add results for a sub-comparison.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         importance_scores : np.ndarray
             Feature importance scores from ML algorithm
         metadata : Dict[str, Any]
             Metadata for this sub-comparison
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds results to data and metadata lists
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> importance = np.array([0.3, 0.2, 0.1, 0.4])
         >>> meta = {
         ...     "comparison": "folded_vs_unfolded",
@@ -132,26 +133,26 @@ class FeatureImportanceData:
         """
         Get comparison results by index or name.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         identifier : int or str
             - int: Index of the comparison (0-based)
             - str: Name of the comparison from metadata
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[np.ndarray, Dict[str, Any]]
             Tuple of (importance_scores, metadata)
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If identifier not found
         TypeError
             If identifier is neither int nor str
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Access by index
         >>> scores, meta = fi_data.get_comparison(0)
 
@@ -191,13 +192,17 @@ class FeatureImportanceData:
         """
         Get all comparison results.
 
-        Returns:
-        --------
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
         List[Tuple[np.ndarray, Dict[str, Any]]]
             List of (importance_scores, metadata) tuples
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> all_results = fi_data.get_all_comparisons()
         >>> for scores, meta in all_results:
         ...     print(f"{meta['comparison']}: {scores[:3]}")
@@ -208,13 +213,17 @@ class FeatureImportanceData:
         """
         List all available comparison names.
 
-        Returns:
-        --------
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
         List[str]
             List of comparison names from metadata
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> names = fi_data.list_comparisons()
         >>> print(f"Available comparisons: {names}")
         """
@@ -229,20 +238,20 @@ class FeatureImportanceData:
         """
         Get top N most important features for a comparison.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         identifier : int or str
             Comparison identifier (index or name)
         n : int, default=10
             Number of top features to return
 
-        Returns:
-        --------
+        Returns
+        -------
         List[Tuple[int, float]]
             List of (feature_index, importance_score) tuples, sorted by importance
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> top_features = fi_data.get_top_features("folded_vs_rest", n=5)
         >>> for feat_idx, score in top_features:
         ...     print(f"Feature {feat_idx}: {score:.3f}")
@@ -260,13 +269,17 @@ class FeatureImportanceData:
         """
         Get average feature importance across all comparisons.
 
-        Returns:
-        --------
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
         np.ndarray
             Average importance scores across all sub-comparisons
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> avg_importance = fi_data.get_average_importance()
         >>> top_overall = np.argmax(avg_importance)
         >>> print(f"Most important feature overall: {top_overall}")
@@ -281,13 +294,17 @@ class FeatureImportanceData:
         """
         Get summary information about this analysis.
 
-        Returns:
-        --------
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
         Dict[str, Any]
             Dictionary with analysis summary information
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> info = fi_data.get_analysis_info()
         >>> print(f"Analyzer: {info['analyzer_type']}")
         >>> print(f"Comparisons: {info['n_comparisons']}")
@@ -305,13 +322,17 @@ class FeatureImportanceData:
         """
         Get number of stored comparisons.
 
-        Returns:
-        --------
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
         int
             Number of comparisons
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> print(f"Number of comparisons: {len(fi_data)}")
         """
         return len(self.data)
@@ -320,18 +341,18 @@ class FeatureImportanceData:
         """
         Check if a comparison exists.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         comparison_name : str
             Name of the comparison to check
 
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if comparison exists, False otherwise
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> if "folded_vs_rest" in fi_data:
         ...     print("Comparison exists")
         """
@@ -341,13 +362,17 @@ class FeatureImportanceData:
         """
         String representation of the FeatureImportanceData.
 
-        Returns:
-        --------
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
         str
             String representation
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> print(repr(fi_data))
         FeatureImportanceData(name='tree_analysis', analyzer='decision_tree', n_comp=4)
         """
@@ -360,18 +385,18 @@ class FeatureImportanceData:
         """
         Save FeatureImportanceData object to disk.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         save_path : str
             Path where to save the FeatureImportanceData object
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Saves the FeatureImportanceData object to the specified path
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> feature_importance_data.save('analysis_results/tree_importance.pkl')
         """
         DataUtils.save_object(self, save_path)
@@ -380,18 +405,18 @@ class FeatureImportanceData:
         """
         Load FeatureImportanceData object from disk.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         load_path : str
             Path to the saved FeatureImportanceData file
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Loads the FeatureImportanceData object from the specified path
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> feature_importance_data.load('analysis_results/tree_importance.pkl')
         """
         DataUtils.load_object(self, load_path)
@@ -400,17 +425,17 @@ class FeatureImportanceData:
         """
         Print comprehensive feature importance information.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Prints feature importance information to console
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> feature_importance_data.print_info()
         === FeatureImportanceData ===
         Name: tree_analysis
@@ -431,8 +456,12 @@ class FeatureImportanceData:
         """
         Check if no feature importance data is available.
 
-        Returns:
-        --------
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
         bool
             True if no data is available, False otherwise
         """
@@ -442,8 +471,8 @@ class FeatureImportanceData:
         """
         Print header with analysis name.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         print("=== FeatureImportanceData ===")
@@ -453,9 +482,14 @@ class FeatureImportanceData:
         """
         Print detailed importance analysis information.
 
-        Returns:
-        --------
+        Parameters
+        ----------
         None
+
+        Returns
+        -------
+        None
+            Prints detailed importance analysis information
         """
         print(f"Analyzer Type: {self.analyzer_type}")
         print(f"Comparison: {self.comparison_name}")
@@ -473,8 +507,12 @@ class FeatureImportanceData:
         """
         Print summary of top features across comparisons.
 
-        Returns:
-        --------
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
         None
         """
         if len(self.data) == 0:

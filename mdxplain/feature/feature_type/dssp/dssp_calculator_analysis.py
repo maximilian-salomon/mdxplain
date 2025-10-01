@@ -37,8 +37,8 @@ class DSSPCalculatorAnalysis:
     secondary structure stability, transition analysis, and
     structural dynamics patterns.
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> analysis = DSSPCalculatorAnalysis()
     >>> stability = analysis.compute_class_stability(dssp_data)
     >>> transitions = analysis.compute_transition_frequency(dssp_data)
@@ -48,8 +48,8 @@ class DSSPCalculatorAnalysis:
         """
         Initialize DSSP analysis with configuration parameters.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         full_classes : list
             List of full DSSP class labels (9 classes)
         simplified_classes : list
@@ -61,12 +61,12 @@ class DSSPCalculatorAnalysis:
         cache_path : str, default="./cache"
             Directory path for storing cache files
 
-        Returns:
-        --------
+        Returns
+        -------
         None
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic initialization
         >>> analysis = DSSPCalculatorAnalysis()
 
@@ -83,18 +83,18 @@ class DSSPCalculatorAnalysis:
         """
         Detect DSSP encoding type.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dssp_data : numpy.ndarray
             DSSP data array
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             ('onehot', n_residues, n_classes) or ('standard', n_residues, None)
 
-        Notes:
-        ------
+        Notes
+        -----
         Detects encoding by analyzing array shape and content.
         One-hot is detected when features are divisible by class count.
         """
@@ -117,8 +117,8 @@ class DSSPCalculatorAnalysis:
         """
         Convert one-hot encoded data to class indices.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dssp_data : numpy.ndarray
             One-hot encoded DSSP data with shape (n_frames, n_residues * n_classes)
         n_residues : int
@@ -126,13 +126,13 @@ class DSSPCalculatorAnalysis:
         n_classes : int
             Number of classes
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Class indices with shape (n_frames, n_residues)
 
-        Notes:
-        ------
+        Notes
+        -----
         Memmap-conform: Uses chunk-wise processing for memmap arrays.
         """
         n_frames = dssp_data.shape[0]
@@ -159,8 +159,8 @@ class DSSPCalculatorAnalysis:
         """
         Compute transitions with lag time for all DSSP encodings.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dssp_data : numpy.ndarray
             DSSP data array (all encodings supported)
         threshold : float, optional
@@ -168,13 +168,13 @@ class DSSPCalculatorAnalysis:
         lag_time : int, default=10
             Number of frames to look ahead for transitions
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Transition counts for each residue
 
-        Notes:
-        ------
+        Notes
+        -----
         Works with all DSSP encodings (char, int, one-hot).
         Clean pattern: detect → convert → process.
         """
@@ -206,8 +206,8 @@ class DSSPCalculatorAnalysis:
         """
         Compute transitions within sliding window for all DSSP encodings.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dssp_data : numpy.ndarray
             DSSP data array (all encodings supported)
         threshold : float, optional
@@ -215,13 +215,13 @@ class DSSPCalculatorAnalysis:
         window_size : int, default=10
             Size of sliding window for transition analysis
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Transition counts for each residue
 
-        Notes:
-        ------
+        Notes
+        -----
         Works with all DSSP encodings (char, int, one-hot).
         Clean pattern: detect → convert → process.
         """
@@ -266,23 +266,23 @@ class DSSPCalculatorAnalysis:
         """
         Compute class frequencies for all DSSP encodings.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dssp_data : numpy.ndarray
             DSSP data array (all encodings supported)
         simplified : bool, default=True
             Whether to use simplified DSSP classes (4) or full classes (9)
             Ignored for one-hot encoding (auto-detected)
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple[numpy.ndarray, numpy.ndarray]
             Tuple containing (frequencies, class_values) where:
             - frequencies: shape (n_residues, n_classes) with class frequencies
             - class_values: array of class values
 
-        Notes:
-        ------
+        Notes
+        -----
         Works with all DSSP encodings (char, int, one-hot).
         For one-hot: directly averages the encoded values.
         For standard: counts occurrences of each class.
@@ -326,19 +326,19 @@ class DSSPCalculatorAnalysis:
         """
         Compute transition frequency for each residue from DSSP data.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dssp_data : numpy.ndarray
             DSSP array with shape (n_frames, n_residues)
             Works with any encoding (integer, character, etc.)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Transition frequencies for each residue (number of transitions / frame)
 
-        Notes:
-        ------
+        Notes
+        -----
         Works with any DSSP encoding (integer, character, onehot, etc.).
         Counts the number of secondary structure transitions per residue using != comparison.
         """
@@ -378,18 +378,18 @@ class DSSPCalculatorAnalysis:
         """
         Compute secondary structure stability for each residue.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dssp_data : numpy.ndarray
             DSSP array (all encodings supported)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Stability scores for each residue (1 - transition_frequency)
 
-        Notes:
-        ------
+        Notes
+        -----
         Stability is computed as 1 - transition_frequency.
         High values (near 1) indicate stable secondary structure.
         Low values (near 0) indicate highly dynamic regions.
@@ -401,8 +401,8 @@ class DSSPCalculatorAnalysis:
         """
         Compute differences between two frames for all DSSP encodings.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dssp_data : numpy.ndarray
             DSSP array (all encodings supported)
         frame_1 : int, default=0
@@ -410,13 +410,13 @@ class DSSPCalculatorAnalysis:
         frame_2 : int, default=-1
             Second frame index (-1 for last frame)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Differences between frames (1.0 where different, 0.0 where same)
 
-        Notes:
-        ------
+        Notes
+        -----
         Works with all DSSP encodings (char, int, one-hot).
         Clean pattern: detect → convert → process.
         """
@@ -439,19 +439,19 @@ class DSSPCalculatorAnalysis:
         """
         Compute the dominant (most frequent) secondary structure class for each residue.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dssp_data : numpy.ndarray
             DSSP array with shape (n_frames, n_residues)
             Works with any encoding (integer, character, etc.)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Dominant class value for each residue (actual values, not indices)
 
-        Notes:
-        ------
+        Notes
+        -----
         Returns the class value that appears most frequently for each residue.
         Works with any DSSP encoding (integer, character, onehot, etc.).
         """

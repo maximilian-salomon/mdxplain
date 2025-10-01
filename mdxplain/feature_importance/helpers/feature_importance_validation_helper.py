@@ -49,8 +49,8 @@ class FeatureImportanceValidationHelper:
         """
         Validate analysis name doesn't already exist unless force is used.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object containing existing analyses
         analysis_name : str
@@ -58,13 +58,13 @@ class FeatureImportanceValidationHelper:
         force : bool
             Whether to allow overwriting existing analysis
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Method returns nothing, raises ValueError if name exists and force=False
             
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If analysis name already exists and force=False
         """
@@ -79,20 +79,20 @@ class FeatureImportanceValidationHelper:
         """
         Validate that feature importance analysis with given name exists.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object containing analysis data
         analysis_name : str
             Name of the analysis to validate
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Method returns nothing, raises ValueError if analysis not found
             
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If analysis not found in pipeline_data
         """
@@ -108,20 +108,20 @@ class FeatureImportanceValidationHelper:
         """
         Validate that comparison with given name exists.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object containing comparison data
         comparison_name : str
             Name of the comparison to validate
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Method returns nothing, raises ValueError if comparison not found
             
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If comparison not found in pipeline_data
         """
@@ -141,18 +141,18 @@ class FeatureImportanceValidationHelper:
         the required methods for feature importance analysis. Validates both
         type inheritance and method availability.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         analyzer_type : AnalyzerTypeBase
             Analyzer instance to validate
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Method returns nothing, raises errors for invalid analyzer types
             
-        Raises:
-        -------
+        Raises
+        ------
         TypeError
             If analyzer_type is not an instance of AnalyzerTypeBase
         ValueError

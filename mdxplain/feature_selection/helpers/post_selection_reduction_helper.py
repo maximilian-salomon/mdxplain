@@ -42,7 +42,8 @@ class PostSelectionReductionHelper:
     """
     Helper for applying post-selection reduction.
 
-    WICHTIG: Reduction wird NUR auf die spezifische Selection angewendet!
+    Imnportant: Reduction is applied ONLY to the specific selection where it's defined,
+    not to all selections of that feature type.
 
     This helper applies statistical reduction to features after initial selection.
     It uses the appropriate calculator for each feature type to compute reduction
@@ -75,8 +76,8 @@ class PostSelectionReductionHelper:
         3. Apply cross-trajectory common denominator
         4. Update trajectory_results
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data container
         feature_key : str
@@ -94,13 +95,13 @@ class PostSelectionReductionHelper:
         cache_dir : str, default="./cache"
             Directory for temporary cache files
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Updated trajectory_results with reduced indices
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> results = PostSelectionReductionHelper.apply_reduction(
         ...     pipeline_data, "distances", selection_dict, results, [0, 1])
         """
@@ -155,8 +156,8 @@ class PostSelectionReductionHelper:
         Extracts selected columns, applies calculator reduction, and maps
         back to original indices for one trajectory.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data container
         feature_key : str
@@ -176,8 +177,8 @@ class PostSelectionReductionHelper:
         cache_dir : str
             Cache directory
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             (kept_original_indices, temp_path or None)
         """
@@ -228,8 +229,8 @@ class PostSelectionReductionHelper:
         Handles common denominator (cross_trajectory=True) or individual
         trajectory reduction (cross_trajectory=False).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory_results : dict
             Results to update in-place
         reduced_indices_per_traj : dict
@@ -241,8 +242,8 @@ class PostSelectionReductionHelper:
         cross_trajectory : bool
             Apply common denominator
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates trajectory_results in-place
         """
@@ -283,8 +284,8 @@ class PostSelectionReductionHelper:
         Finds intersection of reduced indices across trajectories and
         updates all trajectories with common features only.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory_results : dict
             Results to update
         reduced_indices_per_traj : dict
@@ -294,8 +295,8 @@ class PostSelectionReductionHelper:
         selection_dict : dict
             Selection configuration
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates trajectory_results in-place
         """
@@ -327,8 +328,8 @@ class PostSelectionReductionHelper:
         Creates temporary memmap file and copies selected columns
         chunk-wise to minimize memory usage.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data_matrix : np.ndarray
             Full data matrix (can be memmap)
         column_indices : list
@@ -338,13 +339,13 @@ class PostSelectionReductionHelper:
         cache_dir : str
             Directory for temporary cache files
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             (selected_data, temp_path)
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> selected, path = PostSelectionReductionHelper._extract_memmap_columns(
         ...     data_matrix, [0, 5, 10], chunk_size=500, cache_dir="./cache")
         >>> print(selected.shape)
@@ -387,8 +388,8 @@ class PostSelectionReductionHelper:
         Calls calculator's compute_dynamic_values with all necessary
         parameters for reduction calculation.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         calculator : CalculatorBase
             Feature type specific calculator instance
         selected_data : np.ndarray
@@ -400,13 +401,13 @@ class PostSelectionReductionHelper:
         output_path : str
             Output path for calculator operations
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Calculator result with indices of features that meet criteria
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> result = PostSelectionReductionHelper._apply_calculator(
         ...     calculator, data, config, metadata, path)
         >>> kept_indices = result["indices"]
@@ -432,13 +433,13 @@ class PostSelectionReductionHelper:
         """
         Clean up temporary files.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         temp_paths : list
             List of temporary file paths to remove
 
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         for path in temp_paths:

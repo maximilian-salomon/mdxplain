@@ -51,15 +51,15 @@ class ContactCalculatorAnalysis:
         """
         Initialize contact analysis with chunking configuration.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for large datasets
         chunk_size : int, default=10000
             Number of frames to process per chunk for memory-mapped arrays
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Default chunking
         >>> analysis = ContactCalculatorAnalysis()
 
@@ -74,13 +74,13 @@ class ContactCalculatorAnalysis:
         """
         Compute contact frequency (fraction of frames in contact) per pair.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         contacts : numpy.ndarray
             Binary contact array (0/1 values)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Contact frequencies per pair (0.0 to 1.0)
         """
@@ -93,13 +93,13 @@ class ContactCalculatorAnalysis:
         """
         Compute absolute number of contacts per frame.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         contacts : numpy.ndarray
             Binary contact array
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Total contact count per frame
         """
@@ -111,13 +111,13 @@ class ContactCalculatorAnalysis:
         """
         Compute percentage of contacts per frame.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         contacts : numpy.ndarray
             Binary contact array
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Fraction of pairs in contact per frame (0.0 to 1.0)
         """
@@ -130,14 +130,14 @@ class ContactCalculatorAnalysis:
         """
         Compute mean contact frequency per residue. Auto-converts condensed to squareform.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         contacts : numpy.ndarray
             Contact array in condensed format (n_frames, n_pairs) -
             automatically converted to squareform
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Mean contact frequency per residue
         """
@@ -149,14 +149,14 @@ class ContactCalculatorAnalysis:
         """
         Compute standard deviation of contacts per residue. Auto-converts condensed to squareform.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         contacts : numpy.ndarray
             Contact array in condensed format (n_frames, n_pairs) -
             automatically converted to squareform
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Standard deviation of contacts per residue
         """
@@ -168,14 +168,14 @@ class ContactCalculatorAnalysis:
         """
         Compute total contact count per residue. Auto-converts condensed to squareform.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         contacts : numpy.ndarray
             Contact array in condensed format (n_frames, n_pairs) -
             automatically converted to squareform
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Total contact count per residue
         """
@@ -188,8 +188,8 @@ class ContactCalculatorAnalysis:
         """
         Compute contact transitions using lag time analysis.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         contacts : numpy.ndarray
             Binary contact array
         threshold : int, default=1
@@ -197,8 +197,8 @@ class ContactCalculatorAnalysis:
         lag_time : int, default=1
             Number of frames to look ahead for transitions
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Number of transitions per contact pair
         """
@@ -210,8 +210,8 @@ class ContactCalculatorAnalysis:
         """
         Compute contact transitions using sliding window analysis.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         contacts : numpy.ndarray
             Binary contact array
         threshold : int, default=1
@@ -219,8 +219,8 @@ class ContactCalculatorAnalysis:
         window_size : int, default=10
             Size of sliding window for transition detection
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Number of transitions per contact pair
         """
@@ -232,8 +232,8 @@ class ContactCalculatorAnalysis:
         """
         Compute contact stability (inverse of transition rate).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         contacts : numpy.ndarray
             Binary contact array
         threshold : int, default=1
@@ -241,8 +241,8 @@ class ContactCalculatorAnalysis:
         window_size : int, default=1
             Window size for stability calculation
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Stability values per contact pair (0=unstable, 1=stable)
         """
@@ -255,8 +255,8 @@ class ContactCalculatorAnalysis:
         """
         Compute differences between two contact datasets.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         contacts1 : numpy.ndarray
             First contact array for comparison
         contacts2 : numpy.ndarray
@@ -264,8 +264,8 @@ class ContactCalculatorAnalysis:
         preprocessing_func : callable, optional
             Function to apply before computing differences (default: frequency)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Element-wise differences between preprocessed contact arrays
         """

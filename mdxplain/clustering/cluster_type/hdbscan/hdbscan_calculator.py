@@ -42,8 +42,8 @@ class HDBSCANCalculator(CalculatorBase):
     This class implements the actual HDBSCAN clustering computation using
     scikit-learn's HDBSCAN implementation and computes clustering quality metrics.
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> # Create calculator and compute clustering
     >>> calc = HDBSCANCalculator()
     >>> data = np.random.rand(100, 10)
@@ -61,8 +61,8 @@ class HDBSCANCalculator(CalculatorBase):
         """
         Initialize HDBSCAN calculator.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cache_path : str, optional
             Path for cache files. Default is './cache'.
         max_memory_gb : float, optional
@@ -72,6 +72,10 @@ class HDBSCANCalculator(CalculatorBase):
             Used for chunked k-NN prediction and approximate_predict. Default is 1000.
         use_memmap : bool, optional
             Whether to use memory mapping for large datasets. Default is False.
+
+        Returns
+        -------
+        None
         """
         super().__init__(cache_path, max_memory_gb, chunk_size, use_memmap)
 
@@ -79,8 +83,8 @@ class HDBSCANCalculator(CalculatorBase):
         """
         Compute HDBSCAN clustering.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input data matrix to cluster, shape (n_samples, n_features)
         **kwargs : dict
@@ -93,15 +97,15 @@ class HDBSCANCalculator(CalculatorBase):
             - sample_fraction : float, fraction of data to sample
             - force : bool, override memory and dimensionality checks
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
             - cluster_labels: Cluster labels for each sample (-1 for noise)
             - metadata: Dictionary with clustering information
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If input data is invalid or required parameters are missing
         """
@@ -124,15 +128,15 @@ class HDBSCANCalculator(CalculatorBase):
         """
         Extract and validate HDBSCAN parameters.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         kwargs : dict
             Keyword arguments containing HDBSCAN parameters
         data : numpy.ndarray
             Input data to calculate sample size
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Validated HDBSCAN parameters
         """
@@ -158,15 +162,15 @@ class HDBSCANCalculator(CalculatorBase):
         """
         Perform HDBSCAN clustering computation.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input data to cluster
         parameters : dict
             HDBSCAN parameters
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[numpy.ndarray, hdbscan.HDBSCAN, float]
             Cluster labels, HDBSCAN model, and computation time
         """
@@ -190,15 +194,15 @@ class HDBSCANCalculator(CalculatorBase):
         """
         Perform standard HDBSCAN clustering by loading all data.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Full dataset to cluster
         parameters : dict
             HDBSCAN parameters
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[numpy.ndarray, hdbscan.HDBSCAN]
             Cluster labels and fitted model
         """
@@ -219,15 +223,15 @@ class HDBSCANCalculator(CalculatorBase):
         """
         HDBSCAN Sampling + approximate_predict (Gold Standard).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Full dataset to cluster
         parameters : dict
             HDBSCAN parameters
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[numpy.ndarray, hdbscan.HDBSCAN]
             Cluster labels and fitted model
         """
@@ -267,15 +271,15 @@ class HDBSCANCalculator(CalculatorBase):
         """
         Perform HDBSCAN on sample + k-NN classifier for rest.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Full dataset to cluster
         parameters : dict
             HDBSCAN parameters
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[numpy.ndarray, hdbscan.HDBSCAN]
             Cluster labels and fitted model
         """
@@ -308,8 +312,8 @@ class HDBSCANCalculator(CalculatorBase):
         """
         Build comprehensive metadata dictionary.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Original input data
         cluster_labels : numpy.ndarray
@@ -321,8 +325,8 @@ class HDBSCANCalculator(CalculatorBase):
         computation_time : float
             Time taken for computation
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Complete metadata dictionary
         """
@@ -348,13 +352,13 @@ class HDBSCANCalculator(CalculatorBase):
         """
         Extract cluster membership probabilities from HDBSCAN model.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         hdbscan_model : hdbscan.HDBSCAN
             Fitted HDBSCAN model
 
-        Returns:
-        --------
+        Returns
+        -------
         list or None
             List of cluster probabilities or None if not available
         """
@@ -369,13 +373,13 @@ class HDBSCANCalculator(CalculatorBase):
         """
         Extract outlier scores from HDBSCAN model.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         hdbscan_model : hdbscan.HDBSCAN
             Fitted HDBSCAN model
 
-        Returns:
-        --------
+        Returns
+        -------
         list or None
             List of outlier scores or None if not available
         """

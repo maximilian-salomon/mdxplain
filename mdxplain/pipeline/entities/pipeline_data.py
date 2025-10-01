@@ -55,8 +55,35 @@ class PipelineData:
     that gets passed around to managers, following the
     builder pattern while providing separation of concerns.
 
-    Examples:
-    ---------
+    Attributes
+    ----------
+    use_memmap : bool
+        Whether to use memory mapping for large datasets
+    cache_dir : str
+        Directory for cache files when using memory mapping
+    chunk_size : int
+        Chunk size for memory-efficient processing
+    max_memory_gb : float
+        Estimated maximum memory usage in GB for current data
+    trajectory_data : TrajectoryData
+        Container for trajectory data and metadata
+    feature_data : Dict[str, Dict[int, FeatureData]]
+        Nested dictionary of computed features by type and trajectory index
+    selected_feature_data : Dict[str, FeatureSelectorData]
+        Dictionary of feature selection results by selection name
+    decomposition_data : Dict[str, DecompositionData]
+        Dictionary of decomposition results by selection name
+    cluster_data : Dict[str, ClusterData]
+        Dictionary of clustering results by cluster name
+    data_selector_data : Dict[str, DataSelectorData]
+        Dictionary of data selector results by selector name
+    comparison_data : Dict[str, ComparisonData]
+        Dictionary of comparison results by comparison name
+    feature_importance_data : Dict[str, FeatureImportanceData]
+        Dictionary of feature importance results by analysis name
+
+    Examples
+    --------
     Pipeline mode (automatic):
 
     >>> pipeline = PipelineManager()
@@ -82,8 +109,8 @@ class PipelineData:
         Creates empty containers for all analysis data types that will
         be populated through the respective manager interfaces.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for large datasets
         cache_dir : str, default="./cache"
@@ -91,8 +118,8 @@ class PipelineData:
         chunk_size : int, default=10000
             Chunk size for memory-efficient processing
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes PipelineData instance with empty data containers
         """
@@ -134,13 +161,13 @@ class PipelineData:
         all computed results while preserving the container structure.
         Useful for starting fresh analysis or freeing memory.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Clears all data containers in-place
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> pipeline_data = PipelineData()
         >>> # ... after computations ...
         >>> pipeline_data.clear_all_data()
@@ -158,13 +185,13 @@ class PipelineData:
         """
         Update memory estimate after trajectory loading.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         max_atoms : int
             Maximum number of atoms across all trajectories
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates max_memory_gb based on atom count
         """
@@ -176,13 +203,13 @@ class PipelineData:
         """
         Update memory estimate after feature computation.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         n_features : int
             Actual number of features computed
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates max_memory_gb based on actual feature count
         """
@@ -197,13 +224,13 @@ class PipelineData:
         availability information. Useful for debugging and monitoring
         the state of the pipeline.
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Summary dictionary with data container information
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> pipeline_data = PipelineData()
         >>> summary = pipeline_data.get_data_summary()
         >>> print(summary['trajectories_loaded'])
@@ -225,8 +252,8 @@ class PipelineData:
         """
         Check if trajectory data is available.
 
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if trajectories are loaded, False otherwise
         """
@@ -236,8 +263,8 @@ class PipelineData:
         """
         Check if any feature data is available.
 
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if features are computed, False otherwise
         """
@@ -247,8 +274,8 @@ class PipelineData:
         """
         Check if any clustering results are available.
 
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if clustering results exist, False otherwise
         """
@@ -258,8 +285,8 @@ class PipelineData:
         """
         Check if any decomposition results are available.
 
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if decomposition results exist, False otherwise
         """
@@ -282,23 +309,23 @@ class PipelineData:
         - feature_type.Distances (class with metaclass)
         - "distances" (string)
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_type : FeatureTypeBase, FeatureTypeBase class, or str
             Feature type instance, class, or string (e.g., Distances(), Distances, "distances")
 
-        Returns:
-        --------
+        Returns
+        -------
         FeatureData
             The FeatureData instance containing computed data and analysis methods
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If the requested feature type has not been computed yet
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Get distances feature - all variants work:
         >>> distances = pipeline_data.get_feature("distances")
         >>> distance_data = distances.get_data()
@@ -337,23 +364,23 @@ class PipelineData:
         computed decomposition. The returned object provides access to the
         decomposed data, metadata, hyperparameters, and transformation details.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         decomposition_name : str
             Name of the decomposition
 
-        Returns:
-        --------
+        Returns
+        -------
         DecompositionData
             The DecompositionData instance containing decomposed data and metadata
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If the requested decomposition has not been computed yet
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Get decomposition for a selection
         >>> decomp_data = pipeline_data.get_decomposition("feature_sel")
         >>> transformed = decomp_data.get_data()
@@ -379,17 +406,17 @@ class PipelineData:
         Returns a list of all computed decompositions with their selection
         names and decomposition types for easy overview.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         list
             List of dictionaries containing decomposition information
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> decompositions = pipeline_data.list_decompositions()
         >>> for decomp in decompositions:
         ...     print(f"Selection: {decomp['decomposition_name']}, Type: {decomp['type']}")
@@ -425,23 +452,23 @@ class PipelineData:
         computed clustering analysis. The returned object provides access to the
         cluster labels, metadata, and clustering parameters.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cluster_name : str
             Name of the clustering result to retrieve
 
-        Returns:
-        --------
+        Returns
+        -------
         ClusterData
             The ClusterData instance containing cluster labels and metadata
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If the requested clustering result has not been computed yet
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Get clustering result by name
         >>> cluster_data = pipeline_data.get_cluster("dbscan_analysis")
         >>> labels = cluster_data.labels
@@ -467,17 +494,17 @@ class PipelineData:
         Returns a list of all computed clustering results with their names
         and basic information for easy overview.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         list
             List of dictionaries containing clustering information
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> clusters = pipeline_data.list_clusters()
         >>> for cluster in clusters:
         ...     print(f"Name: {cluster['name']}, Type: {cluster['type']}, "
@@ -524,19 +551,19 @@ class PipelineData:
         and metadata to a file. The saved object can be loaded later to
         restore the complete analysis state without recomputation.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         save_path : str
             Path where to save the PipelineData object. Should have a
             .pkl extension. The directory will be created if it doesn't exist.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Saves the PipelineData object to the specified path
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Save after computing features
         >>> pipeline_data.save('analysis_results/pipeline_data.pkl')
 
@@ -546,7 +573,7 @@ class PipelineData:
         >>> os.makedirs(save_dir, exist_ok=True)
         >>> pipeline_data.save(f'{save_dir}/pipeline_analysis.pkl')
 
-        Notes:
+        Notes
         -----
         - All computed features, clusterings, and decompositions are saved
         - Memory-mapped data files remain separate and are referenced
@@ -563,19 +590,19 @@ class PipelineData:
         After loading, the object is ready for immediate use without
         requiring recomputation.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         load_path : str
             Path to the saved PipelineData file (.pkl).
             The file must have been created using the save() method.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Loads the PipelineData object from the specified path
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Load previously saved analysis
         >>> pipeline_data = PipelineData()
         >>> pipeline_data.load('analysis_results/pipeline_data.pkl')
@@ -587,14 +614,14 @@ class PipelineData:
         >>> # Continue analysis where you left off
         >>> mean_distances = distances.analysis.compute_mean()
 
-        Raises:
-        -------
+        Raises
+        ------
         FileNotFoundError
             If the specified file doesn't exist
         ValueError
             If the file is corrupted or not a valid PipelineData save file
 
-        Notes:
+        Notes
         -----
         - All previously computed features are restored
         - Memory mapping settings and cache paths are preserved
@@ -620,13 +647,13 @@ class PipelineData:
         The reference trajectory for metadata is determined by the one specified
         during the FeatureSelector.select() operation.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         name : str
             Name of the selection to retrieve
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Array of dictionaries, one for each column in the selected matrix.
             Each dictionary has the structure:
@@ -635,13 +662,13 @@ class PipelineData:
                 'type': feature type name as string
             }
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If selection not found or no metadata available
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Get metadata for a selection
         >>> metadata = pipeline_data.get_selected_metadata("ala_analysis")
         >>> print(f"Number of selected features: {len(metadata)}")
@@ -661,17 +688,17 @@ class PipelineData:
         """
         Validate that the selection exists.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         name : str
             Name of the selection to validate
 
-        Returns:
-        --------
+        Returns
+        -------
         None
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If the selection does not exist
         """
@@ -700,8 +727,8 @@ class PipelineData:
         Frame mapping is ALWAYS created internally to simplify filtering logic,
         but only returned when requested.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str
             Name of the feature selector (which columns to include).
             Must be provided - cannot be None.
@@ -711,8 +738,8 @@ class PipelineData:
         return_frame_mapping : bool, default=False
             Whether to return frame mapping along with the matrix
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray or Tuple[np.ndarray, Dict[int, tuple]]
             If return_frame_mapping=False: Matrix with selected columns and optionally selected rows.
             If return_frame_mapping=True: Tuple of (matrix, frame_mapping).
@@ -721,13 +748,13 @@ class PipelineData:
               - Without data_selector: (n_all_frames, n_selected_features)
             - Frame mapping: {global_frame_index: (trajectory_index, local_frame_index)}
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If feature_selector doesn't exist, data_selector doesn't exist, or no data available
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Get data with both feature and frame selection
         >>> data = pipeline_data.get_selected_data(
         ...     feature_selector="key_distances",
@@ -767,27 +794,27 @@ class PipelineData:
         combining ComparisonData metadata with efficient data processing.
         Used by modules to get ready-to-use datasets for analysis.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         comparison_name : str
             Name of the comparison to retrieve data from
         sub_comparison_name : str
             Name of the specific sub-comparison within the comparison
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[np.ndarray, np.ndarray]
             Tuple of (X, y) where:
             - X is the feature matrix with selected features and frames
             - y is the label array for the comparison groups
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If comparison not found, sub-comparison not found, or no data available
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Get data for a binary comparison
         >>> X, y = pipeline_data.get_comparison_data("folded_vs_unfolded", "main")
         >>> print(f"Features shape: {X.shape}")
@@ -821,8 +848,8 @@ class PipelineData:
         BoundMethod analysis objects that were unpickled without their
         feature_data and original_method references.
         
-        Returns:
-        --------
+        Returns
+        -------
         None
             Repairs BoundMethod objects in-place throughout the pipeline data
         """
@@ -835,13 +862,13 @@ class PipelineData:
         Returns the current configuration settings for chunk_size,
         cache_dir, and use_memmap that are used across the pipeline.
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Dictionary containing current configuration values
 
-        Examples:
-        ---------
+        Examples
+        --------
         Check current configuration:
 
         >>> pipeline_data = PipelineData(chunk_size=1000, use_memmap=True)
@@ -858,9 +885,13 @@ class PipelineData:
     def _repair_bound_methods_recursive(self, obj: Any, FeatureData: type, FeatureBindingHelper: type, visited: set) -> None:
         """
         Recursively repair BoundMethod objects.
+
+        This method traverses the entire object graph starting from `obj`,
+        searching for FeatureData instances. When found, it calls the
+        FeatureBindingHelper to repair their BoundMethod analysis objects.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         obj : Any
             Object to search recursively
         FeatureData : type
@@ -869,6 +900,11 @@ class PipelineData:
             FeatureBindingHelper class for repair method
         visited : set
             Set of already visited object IDs to prevent infinite recursion
+
+        Returns
+        -------
+        None
+            Repairs BoundMethod objects in-place
         """
         # Prevent infinite recursion
         obj_id = id(obj)

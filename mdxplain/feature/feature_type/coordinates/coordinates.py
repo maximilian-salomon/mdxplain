@@ -45,8 +45,8 @@ class Coordinates(FeatureTypeBase):
     This is a base feature type with no dependencies that provides direct
     access to positional data for structural analysis.
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> # Extract alpha carbon coordinates
     >>> coords = Coordinates(selection='name CA')
     >>> pipeline.feature.add_feature(coords)
@@ -66,8 +66,8 @@ class Coordinates(FeatureTypeBase):
         """
         Initialize coordinates feature type with atom selection.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selection : str, default='name CA'
             Atom selection string using MDTraj syntax. Examples:
             - 'all': All atoms in trajectory
@@ -76,12 +76,12 @@ class Coordinates(FeatureTypeBase):
             - 'not element H': All heavy (non-hydrogen) atoms
             - 'name CA and resid 1 to 100': Custom selection
 
-        Returns:
-        --------
+        Returns
+        -------
         None
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Alpha carbons only (default)
         >>> coords = Coordinates()
 
@@ -101,8 +101,8 @@ class Coordinates(FeatureTypeBase):
         """
         Initialize the coordinates calculator with specified configuration.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for large datasets
         cache_path : str, optional
@@ -110,12 +110,12 @@ class Coordinates(FeatureTypeBase):
         chunk_size : int, optional
             Number of frames to process per chunk for memory-efficient processing
 
-        Returns:
-        --------
+        Returns
+        -------
         None
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic initialization
         >>> coords.init_calculator()
 
@@ -135,22 +135,22 @@ class Coordinates(FeatureTypeBase):
         """
         Compute coordinates for selected atoms from molecular dynamics trajectory.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         input_data : mdtraj.Trajectory
             MD trajectory to extract coordinates from
         feature_metadata : dict
             Residue metadata (passed through unchanged for coordinates)
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple[numpy.ndarray, dict]
             Tuple containing (coordinates_array, feature_metadata) where coordinates_array
             has shape (n_frames, n_selected_atoms * 3) with XYZ coordinates in Angstrom
             and feature_metadata contains atom selection information
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Extract coordinates for selected atoms
         >>> coords = Coordinates(selection='name CA')
         >>> coords.init_calculator()
@@ -158,8 +158,8 @@ class Coordinates(FeatureTypeBase):
         >>> print(f"Coordinate array shape: {data.shape}")
         >>> print(f"Number of selected atoms: {data.shape[1] // 3}")
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If calculator is not initialized or selection is invalid
         """
@@ -178,17 +178,17 @@ class Coordinates(FeatureTypeBase):
         """
         Get list of feature type dependencies for coordinates calculations.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         List[str]
             Empty list as coordinates are a base feature with no dependencies
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> coords = Coordinates()
         >>> print(coords.get_dependencies())
         []
@@ -200,17 +200,17 @@ class Coordinates(FeatureTypeBase):
         """
         Return unique string identifier for the coordinates feature type.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             String identifier 'coordinates' used as key in feature dictionaries
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> print(Coordinates.get_type_name())
         'coordinates'
         """
@@ -220,17 +220,17 @@ class Coordinates(FeatureTypeBase):
         """
         Get the input feature type that coordinates depend on.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             None since coordinates are a base feature with no input dependencies
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> coords = Coordinates()
         >>> print(coords.get_input())
         None

@@ -30,8 +30,13 @@ from .feature_selector_numeric_parse_helper import FeatureSelectorNumericParseHe
 
 
 class FeatureSelectorSeqidParseHelper(FeatureSelectorNumericParseHelper):
-    """Helper class for seqid category - biological sequence ID based operations."""
-    
+    """
+    Helper class for seqid category - biological sequence ID based operations.
+
+    Provides static methods to parse 'seqid' category selections like "123", "123-140"
+    to identify matching feature indices based on trajectory metadata.
+    """
+
     @staticmethod
     def parse_seqid_category(
         param_parts: List[str], features_list: List[list], require_all_partners: bool = False
@@ -40,8 +45,8 @@ class FeatureSelectorSeqidParseHelper(FeatureSelectorNumericParseHelper):
         Parse 'seqid' category and return matching feature indices.
         Uses biological sequence ID from metadata (residue.seqid).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         param_parts : List[str]
             List of parameter parts for sequence ID selection
         features_list : List[list]
@@ -49,13 +54,13 @@ class FeatureSelectorSeqidParseHelper(FeatureSelectorNumericParseHelper):
         require_all_partners : bool, default=False
             If True, ALL partners must contain the sequence ID
 
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             List of feature indices matching the sequence ID criteria
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If the sequence ID specification is invalid
         """

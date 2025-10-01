@@ -36,26 +36,41 @@ class ClusterData:
 
     Stores results from clustering methods (DBSCAN, HDBSCAN, DPA) along
     with clustering metadata and hyperparameters used for computation.
+
+    Attributes
+    ----------
+    cluster_type : str
+        Type of clustering algorithm used (e.g., "dbscan", "hdbscan", "dpa")
+    cache_path : str
+        Path for cached results
+    labels : numpy.ndarray or None
+        Array of cluster labels for each trajectory frame, or None if not computed
+    metadata : dict or None
+        Dictionary containing clustering parameters, metrics, and other metadata,
+        or None if not computed
+    frame_mapping : dict or None
+        Mapping from global_frame_index to (trajectory_index, local_frame_index),
+        or None if not computed
     """
 
     def __init__(self, cluster_type: str, cache_path: str = "./cache"):
         """
         Initialize cluster data container.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cluster_type : str
             Type of clustering algorithm used (e.g., "dbscan", "hdbscan", "dpa")
         cache_path : str, optional
             Path for cached results, default="./cache"
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes cluster data container
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic initialization
         >>> cluster_data = ClusterData("dbscan")
 
@@ -77,14 +92,14 @@ class ClusterData:
         """
         Get cluster labels for each trajectory frame.
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray or None
             Array of cluster labels corresponding to trajectory frame indices,
             or None if clustering has not been computed yet
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> cluster_data = ClusterData("dbscan")
         >>> labels = cluster_data.get_labels()
         >>> if labels is not None:
@@ -96,14 +111,14 @@ class ClusterData:
         """
         Get clustering metadata including parameters and metrics.
 
-        Returns:
-        --------
+        Returns
+        -------
         dict or None
             Dictionary containing clustering parameters, metrics, and other
             metadata, or None if clustering has not been computed yet
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> cluster_data = ClusterData("dbscan")
         >>> metadata = cluster_data.get_metadata()
         >>> if metadata is not None:
@@ -116,13 +131,13 @@ class ClusterData:
         """
         Get the clustering algorithm type.
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             The type of clustering algorithm used
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> cluster_data = ClusterData("dbscan")
         >>> print(cluster_data.get_cluster_type())
         'dbscan'
@@ -133,13 +148,13 @@ class ClusterData:
         """
         Get the cache path for clustering results.
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             Path where clustering results are cached
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> cluster_data = ClusterData("dbscan", cache_path="./my_cache")
         >>> print(cluster_data.get_cache_path())
         './my_cache'
@@ -150,13 +165,13 @@ class ClusterData:
         """
         Check if clustering data has been computed and stored.
 
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if both labels and metadata are available, False otherwise
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> cluster_data = ClusterData("dbscan")
         >>> print(cluster_data.has_data())
         False
@@ -172,14 +187,14 @@ class ClusterData:
         """
         Get the number of clusters found.
 
-        Returns:
-        --------
+        Returns
+        -------
         int or None
             Number of clusters found, or None if clustering has not been computed
             or if the information is not available in metadata
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> cluster_data = ClusterData("dbscan")
         >>> n_clusters = cluster_data.get_n_clusters()
         >>> if n_clusters is not None:
@@ -193,13 +208,13 @@ class ClusterData:
         """
         Get the number of trajectory frames that were clustered.
 
-        Returns:
-        --------
+        Returns
+        -------
         int or None
             Number of trajectory frames, or None if clustering has not been computed
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> cluster_data = ClusterData("dbscan")
         >>> n_frames = cluster_data.get_n_frames()
         >>> if n_frames is not None:
@@ -213,14 +228,14 @@ class ClusterData:
         """
         Get frame mapping from global frame indices to trajectory origins.
 
-        Returns:
-        --------
+        Returns
+        -------
         dict or None
             Mapping from global_frame_index to (trajectory_index, local_frame_index),
             or None if clustering has not been computed or mapping is not available
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> cluster_data = ClusterData("dbscan")
         >>> frame_mapping = cluster_data.get_frame_mapping()
         >>> if frame_mapping is not None:
@@ -232,18 +247,18 @@ class ClusterData:
         """
         Set frame mapping from global frame indices to trajectory origins.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         frame_mapping : dict
             Mapping from global_frame_index to (trajectory_index, local_frame_index)
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Sets the frame mapping for trajectory tracking
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> cluster_data = ClusterData("dbscan")
         >>> mapping = {0: (0, 10), 1: (0, 11), 2: (1, 5)}  # global -> (traj, local)
         >>> cluster_data.set_frame_mapping(mapping)
@@ -254,18 +269,18 @@ class ClusterData:
         """
         Save ClusterData object to disk.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         save_path : str
             Path where to save the ClusterData object
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Saves the ClusterData object to the specified path
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> cluster_data.save('analysis_results/dbscan_clustering.pkl')
         """
         DataUtils.save_object(self, save_path)
@@ -274,18 +289,18 @@ class ClusterData:
         """
         Load ClusterData object from disk.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         load_path : str
             Path to the saved ClusterData file
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Loads the ClusterData object from the specified path
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> cluster_data.load('analysis_results/dbscan_clustering.pkl')
         """
         DataUtils.load_object(self, load_path)
@@ -294,17 +309,17 @@ class ClusterData:
         """
         Print comprehensive cluster information.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Prints cluster information to console
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> cluster_data.print_info()
         === ClusterData ===
         Cluster Type: DBSCAN
@@ -325,8 +340,8 @@ class ClusterData:
         """
         Print header with cluster type.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         print("=== ClusterData ===")
@@ -336,8 +351,8 @@ class ClusterData:
         """
         Print detailed cluster information.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         n_clusters = self.get_n_clusters()
@@ -368,8 +383,8 @@ class ClusterData:
         """
         Print information about frame mapping.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         if self.frame_mapping:

@@ -46,8 +46,8 @@ class TrajectoryProcessHelper:
         """
         Apply slicing to trajectories using frames OR DataSelector.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object containing trajectory data
         indices : List[int]
@@ -61,13 +61,13 @@ class TrajectoryProcessHelper:
         cut : int or None
             Frame number after which to cut trajectories
         
-        Returns:
-        --------
+        Returns
+        -------
         None
             Modifies trajectories in-place
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Using frames parameter
         >>> TrajectoryProcessHelper.apply_slicing(
         ...     pipeline_data, [0, 1, 2], frames=1000, data_selector=None, stride=2, cut=500
@@ -113,15 +113,15 @@ class TrajectoryProcessHelper:
         """
         Get frames dictionary from DataSelector.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
         data_selector : str
             Name of DataSelector
             
-        Returns:
-        --------
+        Returns
+        -------
         Dict[int, List[int]]
             Dictionary mapping trajectory index to frame list
         """
@@ -138,8 +138,8 @@ class TrajectoryProcessHelper:
         """
         Combine frames, stride, and cut into one index list.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         frames : int, slice, list, or None
             Frame specification
         stride : int
@@ -149,8 +149,8 @@ class TrajectoryProcessHelper:
         n_frames : int
             Total frames in trajectory
             
-        Returns:
-        --------
+        Returns
+        -------
         list or None
             Combined indices for slicing, or None if no slicing needed
         """
@@ -183,20 +183,20 @@ class TrajectoryProcessHelper:
         """
         Apply atom selection to new trajectories if provided.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         new_trajectories : list
             List of trajectory objects to process
         selection : str or None
             MDTraj selection string to apply
 
-        Returns:
-        --------
+        Returns
+        -------
         list
             List of trajectories with selection applied
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> processed_trajs = TrajectoryProcessHelper.apply_selection_to_new_trajectories(
         ...     trajectories, "protein"
         ... )
@@ -214,20 +214,20 @@ class TrajectoryProcessHelper:
         """
         Remove trajectories and names from trajectory data.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_data : "TrajectoryData"
             Trajectory data object
         indices_to_remove : list
             List of trajectory indices to remove (must be sorted in reverse order)
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Removes trajectories from traj_data
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Remove trajectories at indices [3, 1, 0] (reverse sorted)
         >>> TrajectoryProcessHelper.execute_removal(traj_data, [3, 1, 0])
         """
@@ -258,27 +258,27 @@ class TrajectoryProcessHelper:
         """
         Validate name mapping input before processing.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_data : "TrajectoryData"
             Trajectory data object
         name_mapping : dict or list
             Name mapping to validate
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Validation successful
         
-        Examples:
-        ---------
+        Examples
+        --------
         >>> traj_data = "TrajectoryData"()
         >>> # Load some trajectories first
         >>> TrajectoryProcessHelper.validate_name_mapping(traj_data, ['new1', 'new2'])
         >>> TrajectoryProcessHelper.validate_name_mapping(traj_data, {0: 'renamed_first'})
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If trajectories are not loaded or mapping is invalid
         """
@@ -293,20 +293,20 @@ class TrajectoryProcessHelper:
         """
         Process list-based positional renaming with validation.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_data : "TrajectoryData"
             Trajectory data object
         name_list : list
             List of new names for positional assignment
 
-        Returns:
-        --------
+        Returns
+        -------
         list
             Validated list of new trajectory names
         
-        Examples:
-        ---------
+        Examples
+        --------
         >>> traj_data = "TrajectoryData"()
         >>> # Assuming 3 trajectories are loaded
         >>> new_names = TrajectoryProcessHelper.rename_with_list(
@@ -315,8 +315,8 @@ class TrajectoryProcessHelper:
         >>> print(new_names)
         ['system1', 'system2', 'system3']
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If list length doesn't match trajectory count
         """
@@ -334,20 +334,20 @@ class TrajectoryProcessHelper:
         """
         Process dict-based selective renaming with validation.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_data : "TrajectoryData"
             Trajectory data object
         name_dict : dict
             Dictionary mapping old identifiers to new names
 
-        Returns:
-        --------
+        Returns
+        -------
         list
             New list of trajectory names with applied changes
         
-        Examples:
-        ---------
+        Examples
+        --------
         >>> traj_data = "TrajectoryData"()
         >>> # Rename specific trajectories by index
         >>> new_names = TrajectoryProcessHelper.rename_with_dict(
@@ -358,25 +358,25 @@ class TrajectoryProcessHelper:
         ...     traj_data, {'old_name': 'new_name'}
         ... )
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If dictionary keys reference invalid trajectories
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_data : "TrajectoryData"
             Trajectory data object
         name_dict : dict
             Dictionary mapping old identifiers to new names
 
-        Returns:
-        --------
+        Returns
+        -------
         list
             New list of trajectory names with applied changes
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If dictionary keys reference invalid trajectories
         """
@@ -393,8 +393,8 @@ class TrajectoryProcessHelper:
         """
         Apply renaming dictionary to names list.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_data : "TrajectoryData"
             Trajectory data object
         name_dict : Dict[Union[int, str], str]
@@ -402,8 +402,8 @@ class TrajectoryProcessHelper:
         new_names : List[str]
             List of trajectory names to modify
         
-        Returns:
-        --------
+        Returns
+        -------
         None
             Modifies new_names list in-place
         """
@@ -422,8 +422,8 @@ class TrajectoryProcessHelper:
         """
         Process a single rename operation.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_data : "TrajectoryData"
             Trajectory data object
         old_identifier : Union[int, str]
@@ -433,13 +433,13 @@ class TrajectoryProcessHelper:
         new_names : List[str]
             List of trajectory names to modify
         
-        Returns:
-        --------
+        Returns
+        -------
         None
             Modifies new_names list in-place
         
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If identifier type is not int or str
         """
@@ -455,8 +455,8 @@ class TrajectoryProcessHelper:
         """
         Rename trajectory by index.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         old_index : int
             Trajectory index to rename
         new_name : str
@@ -464,13 +464,13 @@ class TrajectoryProcessHelper:
         new_names : List[str]
             List of trajectory names to modify
         
-        Returns:
-        --------
+        Returns
+        -------
         None
             Modifies new_names list in-place
         
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If index is out of range
         """
@@ -488,8 +488,8 @@ class TrajectoryProcessHelper:
         """
         Rename trajectory by name.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_data : "TrajectoryData"
             Trajectory data object
         old_name : str
@@ -499,13 +499,13 @@ class TrajectoryProcessHelper:
         new_names : List[str]
             List of trajectory names to modify
         
-        Returns:
-        --------
+        Returns
+        -------
         None
             Modifies new_names list in-place
         
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If old_name is not found in trajectory names
         """

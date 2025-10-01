@@ -46,8 +46,8 @@ class DistancesSelectionService(SelectionServiceBase):
     optional post-selection reduction. Each reduction method applies filtering
     ONLY to the specific selection where it's defined.
 
-    Examples:
-    ---------
+    Examples
+    --------
     Basic selection without reduction:
     >>> service("test", "res ALA")
 
@@ -66,20 +66,20 @@ class DistancesSelectionService(SelectionServiceBase):
         Creates a service for adding distance feature selections with optional
         post-selection reduction based on statistical metrics.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         manager : FeatureSelectorManager
             Manager instance for executing add operations
         pipeline_data : PipelineData
             Pipeline data container with trajectory and feature data
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes service with manager and pipeline_data references
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> from mdxplain.pipeline.managers.pipeline_manager import PipelineManager
         >>> pipeline = PipelineManager()
         >>> service = pipeline.feature_selector.add.distances
@@ -100,8 +100,8 @@ class DistancesSelectionService(SelectionServiceBase):
         """
         Add distances selection without reduction.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -115,13 +115,13 @@ class DistancesSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners to be present in selection
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds distances selection to the named selector
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service("analysis", "res ALA")
         >>> service("analysis", "resid 120-140", use_reduced=True)
         """
@@ -154,8 +154,8 @@ class DistancesSelectionService(SelectionServiceBase):
         Filters distance features based on coefficient of variation (std/mean).
         Features with CV outside the specified thresholds are removed.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -175,13 +175,13 @@ class DistancesSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds distances selection with CV reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_cv_reduction("test", "res ALA", threshold_min=0.1)
         >>> service.with_cv_reduction("test", "res ALA", threshold_min=0.05, threshold_max=0.8)
         """
@@ -212,8 +212,8 @@ class DistancesSelectionService(SelectionServiceBase):
         Filters distance features based on standard deviation.
         Features with standard deviation outside the specified thresholds are removed.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -233,13 +233,13 @@ class DistancesSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds distances selection with standard deviation reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_std_reduction("test", "res ALA", threshold_min=0.5)
         >>> service.with_std_reduction("test", "backbone", threshold_max=2.0)
         """
@@ -267,8 +267,8 @@ class DistancesSelectionService(SelectionServiceBase):
         Filters distance features based on variance.
         Features with variance outside the specified thresholds are removed.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -288,13 +288,13 @@ class DistancesSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds distances selection with variance reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_variance_reduction("test", "res ALA", threshold_min=0.1)
         >>> service.with_variance_reduction("test", "sidechain", threshold_max=5.0)
         """
@@ -322,8 +322,8 @@ class DistancesSelectionService(SelectionServiceBase):
         Filters distance features based on range (max - min).
         Features with range outside the specified thresholds are removed.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -343,13 +343,13 @@ class DistancesSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds distances selection with range reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_range_reduction("test", "res ALA", threshold_min=1.0)
         >>> service.with_range_reduction("test", "flexible_loops", threshold_max=10.0)
         """
@@ -381,8 +381,8 @@ class DistancesSelectionService(SelectionServiceBase):
         Filters distance features based on transition frequency or counts.
         Features with transitions outside the specified thresholds are removed.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -410,13 +410,13 @@ class DistancesSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds distances selection with transitions reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_transitions_reduction("test", "res ALA", threshold_min=5)
         >>> service.with_transitions_reduction("test", "binding_site",
         ...     threshold_min=10, transition_threshold=1.5, window_size=20)
@@ -453,8 +453,8 @@ class DistancesSelectionService(SelectionServiceBase):
         Filters distance features based on minimum values.
         Features with minimum values outside the specified thresholds are removed.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -474,13 +474,13 @@ class DistancesSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds distances selection with minimum value reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_min_reduction("test", "res ALA", threshold_min=2.0)
         >>> service.with_min_reduction("test", "close_contacts", threshold_max=5.0)
         """
@@ -508,8 +508,8 @@ class DistancesSelectionService(SelectionServiceBase):
         Filters distance features based on median absolute deviation.
         Features with MAD outside the specified thresholds are removed.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -529,13 +529,13 @@ class DistancesSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds distances selection with MAD reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_mad_reduction("test", "res ALA", threshold_min=0.3)
         >>> service.with_mad_reduction("test", "dynamic_region", threshold_max=1.5)
         """
@@ -563,8 +563,8 @@ class DistancesSelectionService(SelectionServiceBase):
         Filters distance features based on mean values.
         Features with mean values outside the specified thresholds are removed.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -584,13 +584,13 @@ class DistancesSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds distances selection with mean value reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_mean_reduction("test", "res ALA", threshold_min=5.0)
         >>> service.with_mean_reduction("test", "long_range", threshold_max=20.0)
         """
@@ -618,8 +618,8 @@ class DistancesSelectionService(SelectionServiceBase):
         Filters distance features based on maximum values.
         Features with maximum values outside the specified thresholds are removed.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -639,13 +639,13 @@ class DistancesSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds distances selection with maximum value reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_max_reduction("test", "res ALA", threshold_min=10.0)
         >>> service.with_max_reduction("test", "constrained_bonds", threshold_max=15.0)
         """

@@ -49,18 +49,18 @@ class FeatureResetHelper:
         """
         Reset all features in the pipeline data.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object to reset
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Clears all feature data and prints summary
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> FeatureResetHelper.reset_all_features(pipeline_data)
         Reset 3 feature(s): distances, contacts, angles
         All feature data has been cleared. Features must be recalculated.
@@ -79,8 +79,8 @@ class FeatureResetHelper:
         """
         Reset specific feature types with optional strict error handling.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object to reset
         feature_types : List[Any]
@@ -88,18 +88,18 @@ class FeatureResetHelper:
         strict : bool, default=False
             Whether to raise errors for non-existent features
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Resets specified features and prints status
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If strict=True and feature types are not found
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> FeatureResetHelper.reset_specific_features(
         ...     pipeline_data, ["distances", "contacts"], get_key_fn
         ... )
@@ -131,8 +131,8 @@ class FeatureResetHelper:
         """
         Handle missing feature keys based on strict mode.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         missing_keys : List[str]
             List of missing feature keys
         strict : bool
@@ -140,13 +140,13 @@ class FeatureResetHelper:
         pipeline_data : PipelineData
             Pipeline data for available features info
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Handles missing keys or raises ValueError
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If strict=True and keys are missing
         """
@@ -166,8 +166,8 @@ class FeatureResetHelper:
         """
         Report results of reset operation.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         reset_keys : List[str]
             List of successfully reset feature keys
         missing_keys : List[str]
@@ -175,8 +175,8 @@ class FeatureResetHelper:
         strict : bool
             Whether strict mode was used
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Prints appropriate status messages
         """
@@ -196,18 +196,18 @@ class FeatureResetHelper:
         """
         Normalize feature_type parameter to list format.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_type : FeatureType or List[FeatureType]
             Single feature type or list of feature types
 
-        Returns:
-        --------
+        Returns
+        -------
         List[Str]
             Normalized list of feature types
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> types = FeatureResetHelper.normalize_feature_types("distances")
         >>> print(types)
         ["distances"]
@@ -225,18 +225,18 @@ class FeatureResetHelper:
         """
         Check if pipeline data has any features to reset.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object to check
 
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if features exist, False otherwise
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> has_features = FeatureResetHelper.check_has_features(pipeline_data)
         >>> if not has_features:
         ...     print("No features to reset.")

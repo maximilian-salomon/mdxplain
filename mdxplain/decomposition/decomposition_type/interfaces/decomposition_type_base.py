@@ -41,8 +41,8 @@ class DecompositionTypeBase(ABC, metaclass=DecompositionTypeMeta):
     must implement. Each decomposition type encapsulates computation logic
     for a specific type of dimensionality reduction analysis.
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> class MyDecomposition(DecompositionTypeBase):
     ...     @classmethod
     ...     def get_type_name(cls) -> str:
@@ -60,16 +60,16 @@ class DecompositionTypeBase(ABC, metaclass=DecompositionTypeMeta):
         Sets up the decomposition type instance with an empty calculator that
         will be initialized later through init_calculator().
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
+        Returns
+        -------
+        None
+
+        Examples
         --------
-        None
-
-        Examples:
-        ---------
         >>> # Create decomposition type instance
         >>> decomp = MyDecomposition()
         >>> print(f"Type: {decomp.get_type_name()}")
@@ -85,18 +85,18 @@ class DecompositionTypeBase(ABC, metaclass=DecompositionTypeMeta):
         Used as the key for storing decomposition results in TrajectoryData
         dictionaries and for type identification.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cls : type
             The decomposition type class
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             Unique string identifier (e.g., 'pca', 'kernel_pca')
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> print(PCA.get_type_name())
         'pca'
         >>> print(KernelPCA.get_type_name())
@@ -109,8 +109,8 @@ class DecompositionTypeBase(ABC, metaclass=DecompositionTypeMeta):
         """
         Initialize the calculator instance for this decomposition type.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for efficient handling of large datasets
         cache_path : str, optional
@@ -118,13 +118,13 @@ class DecompositionTypeBase(ABC, metaclass=DecompositionTypeMeta):
         chunk_size : int, optional
             Number of samples to process per chunk for incremental computation
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Sets self.calculator to initialized calculator instance
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic initialization
         >>> pca = PCA()
         >>> pca.init_calculator()
@@ -143,21 +143,21 @@ class DecompositionTypeBase(ABC, metaclass=DecompositionTypeMeta):
         """
         Compute decomposition using the initialized calculator.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input data matrix to decompose, shape (n_samples, n_features)
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
             - transformed_data: Decomposed data matrix (n_samples, n_components)
             - metadata: Dictionary with transformation information including
               hyperparameters, explained variance, components, etc.
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compute PCA decomposition
         >>> pca = PCA()
         >>> pca.init_calculator()
@@ -165,8 +165,8 @@ class DecompositionTypeBase(ABC, metaclass=DecompositionTypeMeta):
         >>> transformed, metadata = pca.compute(data, n_components=10)
         >>> print(f"Transformed shape: {transformed.shape}")
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If calculator is not initialized or input data is invalid
         """
@@ -181,13 +181,17 @@ class DecompositionTypeBase(ABC, metaclass=DecompositionTypeMeta):
         is required, the DecompositionManager will validate that the 
         FeatureSelector contains only features of this type.
 
-        Returns:
-        --------
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
         Optional[str]
             Required feature type name, or None if no specific type required
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Most decompositions work with any feature type
         >>> pca = PCA()
         >>> print(pca.get_required_feature_type())

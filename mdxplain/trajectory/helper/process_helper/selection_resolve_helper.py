@@ -39,8 +39,8 @@ class SelectionResolveHelper:
         """
         Resolve selection list to trajectory indices.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_data : TrajectoryData
             Trajectory data object
         selection : int, str, list, or "all"
@@ -53,13 +53,13 @@ class SelectionResolveHelper:
                 * Pattern: "system_*" → fnmatch pattern matching
             - list: mix of indices/names/tags/patterns
 
-        Returns:
-        --------
+        Returns
+        -------
         list
             List of trajectory indices
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If selection contains invalid indices or names
         """
@@ -91,8 +91,8 @@ class SelectionResolveHelper:
         """
         Get list of trajectory indices to process.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_data : TrajectoryData
             Trajectory data object
         traj_selection : int, str, list, or "all"
@@ -106,13 +106,13 @@ class SelectionResolveHelper:
             - list: mix of indices/names/tags/patterns
             - "all": all trajectories
 
-        Returns:
-        --------
+        Returns
+        -------
         list
             List of trajectory indices to process
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Process all trajectories
         >>> indices = SelectionResolveHelper.get_indices_to_process(traj_data, "all")
 
@@ -151,20 +151,20 @@ class SelectionResolveHelper:
         - Pattern: "system_*" → [matching indices]
         - Tags: "tag:system_A" → [matching indices]
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         item : int or str
             Selection item to resolve
         traj_data : TrajectoryData
             Trajectory data object
 
-        Returns:
-        --------
+        Returns
+        -------
         int or List[int]
             Index(es) of the resolved selection item
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If selection item is not an integer or string
         """
@@ -187,15 +187,15 @@ class SelectionResolveHelper:
         - Names: "traj1" → single index
         - "all" → all trajectories
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         item : str
             String to resolve
         traj_data : TrajectoryData
             Trajectory data object
             
-        Returns:
-        --------
+        Returns
+        -------
         int or List[int]
             Index(es) of the resolved selection
         """
@@ -207,13 +207,13 @@ class SelectionResolveHelper:
         """
         Clean selector string by removing optional id prefix.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector : str
             Raw selector string potentially with "id " prefix
         
-        Returns:
-        --------
+        Returns
+        -------
         str
             Cleaned selector string
         """
@@ -224,15 +224,15 @@ class SelectionResolveHelper:
         """
         Route selector to appropriate resolver based on format.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_data : TrajectoryData
             Trajectory data object
         clean_selector : str
             Cleaned selector string
         
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             List of resolved trajectory indices
         """
@@ -253,13 +253,13 @@ class SelectionResolveHelper:
         """
         Check if selector is range format.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         clean_selector : str
             Cleaned selector string to check
         
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if selector matches range format (e.g., "0-3")
         """
@@ -270,13 +270,13 @@ class SelectionResolveHelper:
         """
         Check if selector is comma list format.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         clean_selector : str
             Cleaned selector string to check
         
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if selector matches comma list format (e.g., "1,2,4")
         """
@@ -287,13 +287,13 @@ class SelectionResolveHelper:
         """
         Check if selector is single number format.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         clean_selector : str
             Cleaned selector string to check
         
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if selector is a single digit string (e.g., "7")
         """
@@ -304,15 +304,15 @@ class SelectionResolveHelper:
         """
         Resolve pattern format (regex or fnmatch) or fallback to name/tag.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_data : TrajectoryData
             Trajectory data object
         clean_selector : str
             Pattern selector string
         
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             List of matching trajectory indices
         """
@@ -329,20 +329,20 @@ class SelectionResolveHelper:
         """
         Resolve integer index selection.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         item : int
             Index to resolve
         traj_data : TrajectoryData
             Trajectory data object
 
-        Returns:
-        --------
+        Returns
+        -------
         int
             Index of the resolved selection item
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If index is out of range
         """
@@ -358,20 +358,20 @@ class SelectionResolveHelper:
         """
         Resolve tag-based selection to first matching trajectory index.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         tag : str
             Tag to search for
         traj_data : TrajectoryData
             Trajectory data object
 
-        Returns:
-        --------
+        Returns
+        -------
         int
             Index of first trajectory with the specified tag
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If tag is not found in any trajectory
         """
@@ -390,15 +390,15 @@ class SelectionResolveHelper:
         """
         Find all trajectories that have the specified tag.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         tag : str
             Tag to search for
         traj_data : TrajectoryData
             Trajectory data object
 
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             List of trajectory indices that have the tag
         """
@@ -414,15 +414,15 @@ class SelectionResolveHelper:
         """
         Parse range string and resolve to trajectory indices.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_data : TrajectoryData
             Trajectory data object
         selector : str
             Range string like "0-3", "5-10"
             
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             List of trajectory indices from parsed range
         """
@@ -448,15 +448,15 @@ class SelectionResolveHelper:
         """
         Parse comma-separated list and resolve to trajectory indices.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_data : TrajectoryData
             Trajectory data object
         selector : str
             Comma list like "1,2,4,5"
             
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             List of trajectory indices from parsed list
         """
@@ -479,15 +479,15 @@ class SelectionResolveHelper:
         """
         Resolve integer selector to single-element list.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_data : TrajectoryData
             Trajectory data object
         selector : int
             Trajectory index
             
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             Single-element list with trajectory index
         """
@@ -501,15 +501,15 @@ class SelectionResolveHelper:
         """
         Resolve fnmatch pattern against trajectory names.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_data : TrajectoryData
             Trajectory data object
         pattern : str
             Fnmatch pattern (e.g., "system_*")
             
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             List of matching trajectory indices
         """
@@ -528,15 +528,15 @@ class SelectionResolveHelper:
         """
         Resolve regex pattern against trajectory names.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_data : TrajectoryData
             Trajectory data object
         pattern : str
             Regex pattern
             
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             List of matching trajectory indices
         """
@@ -559,13 +559,13 @@ class SelectionResolveHelper:
         """
         Get all unique tags from all trajectories.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_data : TrajectoryData
             Trajectory data object
 
-        Returns:
-        --------
+        Returns
+        -------
         List[str]
             List of all unique tags
         """
@@ -582,20 +582,20 @@ class SelectionResolveHelper:
         """
         Get all trajectory indices that have the specified tag.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         tag : str
             Tag to search for
         traj_data : TrajectoryData
             Trajectory data object
 
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             List of trajectory indices that have the tag
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Get all trajectories with "system_A" tag
         >>> indices = SelectionResolveHelper.get_all_trajectories_with_tag(
         ...     "system_A", traj_data
