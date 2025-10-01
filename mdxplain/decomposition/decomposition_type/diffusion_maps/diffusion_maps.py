@@ -75,6 +75,12 @@ class DiffusionMaps(DecompositionTypeBase):
         diffusion coordinates.
         `M * v_k = λ_k * v_k`
 
+    This method also allows for out-of-sample extension using the Nyström method [5].
+    The Nyström method approximates the kernel matrix using a subset of the data,
+    significantly reducing memory usage and computation time. This is particularly
+    beneficial for large datasets common in molecular dynamics simulations.
+    Use the `use_nystrom` parameter to enable this feature.
+
     References
     ----------
     .. [1] Coifman, R. R.; Lafon, S. Diffusion maps.
@@ -91,9 +97,13 @@ class DiffusionMaps(DecompositionTypeBase):
            Kevrekidis, I. G. Nonlinear dimensionality reduction in molecular
            simulation: The diffusion map approach. Chem. Phys. Lett. 2011,
            509 (1-3), 1–11.
+    .. [5] Fowlkes, C., Belongie, S., Chung, F., & Malik, J. (2004). 
+           Spectral grouping using the nystrom method. 
+           IEEE transactions on pattern analysis and 
+           machine intelligence, 26(2), 214-225.
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> # Basic Diffusion Maps decomposition via DecompositionManager
     >>> from mdxplain.decomposition import decomposition_type
     >>> decomp_manager = DecompositionManager()
@@ -126,8 +136,8 @@ class DiffusionMaps(DecompositionTypeBase):
         Creates a Diffusion Maps instance with specified parameters for constructing
         the diffusion process and extracting diffusion coordinates.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         n_components : int, required
             Number of diffusion coordinates to keep
         epsilon : float, optional, default=1.0
@@ -140,8 +150,8 @@ class DiffusionMaps(DecompositionTypeBase):
         random_state : int, optional
             Random state for reproducible results
 
-        Returned Metadata:
-        ------------------
+        Returned Metadata
+        -----------------
         hyperparameters : dict
             Dictionary containing all Diffusion Maps parameters used
         original_shape : tuple
@@ -161,8 +171,8 @@ class DiffusionMaps(DecompositionTypeBase):
         eigenvalues : numpy.ndarray
             Eigenvalues of the diffusion operator (diffusion timescales)
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Create Diffusion Maps instance
         >>> diffmaps = DiffusionMaps(n_components=10, epsilon=0.1)
         >>> print(f"Type: {diffmaps.get_type_name()}")
@@ -186,18 +196,18 @@ class DiffusionMaps(DecompositionTypeBase):
         Returns the unique string identifier for Diffusion Maps decomposition type
         used for storing results and type identification.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cls : type
             The DiffusionMaps class
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             String identifier 'diffusion_maps'
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> print(DiffusionMaps.get_type_name())
         'diffusion_maps'
         >>> # Can also be used via class directly
@@ -210,8 +220,12 @@ class DiffusionMaps(DecompositionTypeBase):
         """
         DiffusionMaps requires coordinate features for RMSD-based distance computation.
 
-        Returns:
-        --------
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
         str
             'coordinates' - indicating this method requires coordinate features
         """
@@ -226,8 +240,8 @@ class DiffusionMaps(DecompositionTypeBase):
         Sets up the Diffusion Maps calculator with options for memory mapping and
         iterative kernel computation for large datasets.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use iterative computation with memory mapping for large datasets
         cache_path : str, optional
@@ -235,13 +249,13 @@ class DiffusionMaps(DecompositionTypeBase):
         chunk_size : int, optional
             Number of samples to process per chunk for iterative computation
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Sets self.calculator to initialized DiffusionMapsCalculator instance
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic initialization
         >>> diffmaps = DiffusionMaps()
         >>> diffmaps.init_calculator()
@@ -267,15 +281,15 @@ class DiffusionMaps(DecompositionTypeBase):
         initialized calculator with the parameters provided during initialization.
         Constructs diffusion coordinates that capture the intrinsic geometry.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input coordinate matrix (n_frames, n_features) where n_features = n_atoms * 3
         **kwargs : dict
             Additional optional parameters (currently none supported)
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
             - diffusion_coords: Diffusion coordinates (n_frames, n_components)
@@ -284,8 +298,8 @@ class DiffusionMaps(DecompositionTypeBase):
               * method: computation method used
               * eigenvalues: Eigenvalues of diffusion operator
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Load trajectory and compute Diffusion Maps
         >>> import mdtraj as md
         >>> traj = md.load('trajectory.xtc', top='topology.pdb')
@@ -300,8 +314,8 @@ class DiffusionMaps(DecompositionTypeBase):
         >>> diffmaps.init_calculator(use_memmap=True, chunk_size=200)
         >>> coords, metadata = diffmaps.compute(large_trajectory)
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If calculator is not initialized, input data is invalid,
             or n_components is too large

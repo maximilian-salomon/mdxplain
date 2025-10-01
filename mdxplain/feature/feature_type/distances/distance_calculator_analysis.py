@@ -57,15 +57,15 @@ class DistanceCalculatorAnalysis:
         """
         Initialize distance analysis with chunking configuration.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for large datasets
         chunk_size : int, default=10000
             Number of frames to process per chunk for memory-mapped arrays
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Default chunking
         >>> analysis = DistanceCalculatorAnalysis()
 
@@ -80,13 +80,13 @@ class DistanceCalculatorAnalysis:
         """
         Compute mean distances per pair.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : np.ndarray or np.memmap
             Distance array with shape (n_frames, n_pairs)
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Mean distance for each pair with shape (n_pairs,)
         """
@@ -98,13 +98,13 @@ class DistanceCalculatorAnalysis:
         """
         Compute standard deviation of distances per pair.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : np.ndarray or np.memmap
             Distance array with shape (n_frames, n_pairs)
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Standard deviation for each pair with shape (n_pairs,)
         """
@@ -116,13 +116,13 @@ class DistanceCalculatorAnalysis:
         """
         Compute minimum distances per pair.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : np.ndarray or np.memmap
             Distance array with shape (n_frames, n_pairs)
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Minimum distance for each pair with shape (n_pairs,)
         """
@@ -134,13 +134,13 @@ class DistanceCalculatorAnalysis:
         """
         Compute maximum distances per pair.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : np.ndarray or np.memmap
             Distance array with shape (n_frames, n_pairs)
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Maximum distance for each pair with shape (n_pairs,)
         """
@@ -152,13 +152,13 @@ class DistanceCalculatorAnalysis:
         """
         Compute median distances per pair.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : np.ndarray or np.memmap
             Distance array with shape (n_frames, n_pairs)
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Median distance for each pair with shape (n_pairs,)
         """
@@ -170,13 +170,13 @@ class DistanceCalculatorAnalysis:
         """
         Compute variance of distances per pair.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : np.ndarray or np.memmap
             Distance array with shape (n_frames, n_pairs)
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Variance for each pair with shape (n_pairs,)
         """
@@ -188,13 +188,13 @@ class DistanceCalculatorAnalysis:
         """
         Compute range (peak-to-peak) of distances per pair.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : np.ndarray or np.memmap
             Distance array with shape (n_frames, n_pairs)
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Range (max - min) for each pair with shape (n_pairs,)
         """
@@ -206,13 +206,13 @@ class DistanceCalculatorAnalysis:
         """
         Compute 25th percentile of distances per pair.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : np.ndarray or np.memmap
             Distance array with shape (n_frames, n_pairs)
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             25th percentile for each pair with shape (n_pairs,)
         """
@@ -227,13 +227,13 @@ class DistanceCalculatorAnalysis:
         """
         Compute 75th percentile of distances per pair.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : np.ndarray or np.memmap
             Distance array with shape (n_frames, n_pairs)
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             75th percentile for each pair with shape (n_pairs,)
         """
@@ -248,13 +248,13 @@ class DistanceCalculatorAnalysis:
         """
         Compute interquartile range of distances per pair.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : np.ndarray or np.memmap
             Distance array with shape (n_frames, n_pairs)
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Interquartile range (Q75 - Q25) for each pair with shape (n_pairs,)
         """
@@ -275,13 +275,13 @@ class DistanceCalculatorAnalysis:
         than standard deviation. Calculated as median of absolute deviations
         from the median.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : np.ndarray or np.memmap
             Distance array with shape (n_frames, n_pairs)
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             MAD values per distance pair with shape (n_pairs,)
         """
@@ -302,18 +302,18 @@ class DistanceCalculatorAnalysis:
         to the mean, providing a normalized measure of variability that allows
         comparison of variability across different scales.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : np.ndarray or np.memmap
             Distance array with shape (n_frames, n_pairs)
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             CV values per distance pair with shape (n_pairs,)
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compute CV for all distance pairs
         >>> cv_values = analysis.compute_cv(distance_data)
         >>> highly_variable = cv_values > 0.5  # Pairs with high variability
@@ -327,13 +327,13 @@ class DistanceCalculatorAnalysis:
         """
         Compute mean distances per frame.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : np.ndarray or np.memmap
             Distance array with shape (n_frames, n_pairs)
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Mean distance across all pairs for each frame with shape (n_frames,)
         """
@@ -345,13 +345,13 @@ class DistanceCalculatorAnalysis:
         """
         Compute standard deviation of distances per frame.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : np.ndarray or np.memmap
             Distance array with shape (n_frames, n_pairs)
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Standard deviation across all pairs for each frame with shape (n_frames,)
         """
@@ -363,13 +363,13 @@ class DistanceCalculatorAnalysis:
         """
         Compute minimum distances per frame.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : np.ndarray or np.memmap
             Distance array with shape (n_frames, n_pairs)
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Minimum distance across all pairs for each frame with shape (n_frames,)
         """
@@ -381,13 +381,13 @@ class DistanceCalculatorAnalysis:
         """
         Compute maximum distances per frame.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : np.ndarray or np.memmap
             Distance array with shape (n_frames, n_pairs)
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Maximum distance across all pairs for each frame with shape (n_frames,)
         """
@@ -399,13 +399,13 @@ class DistanceCalculatorAnalysis:
         """
         Compute median distances per frame.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : np.ndarray or np.memmap
             Distance array with shape (n_frames, n_pairs)
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Median distance across all pairs for each frame with shape (n_frames,)
         """
@@ -417,13 +417,13 @@ class DistanceCalculatorAnalysis:
         """
         Compute range of distances per frame.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : np.ndarray or np.memmap
             Distance array with shape (n_frames, n_pairs)
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Range (max - min) across all pairs for each frame with shape (n_frames,)
         """
@@ -435,13 +435,13 @@ class DistanceCalculatorAnalysis:
         """
         Compute sum of distances per frame.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : np.ndarray or np.memmap
             Distance array with shape (n_frames, n_pairs)
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Sum of distances across all pairs for each frame with shape (n_frames,)
         """
@@ -454,14 +454,14 @@ class DistanceCalculatorAnalysis:
         """
         Compute mean distance for each residue. Auto-converts condensed to squareform.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : np.ndarray or np.memmap
             Distance array in condensed format (n_frames, n_pairs) -
             automatically converted to squareform
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Mean distance for each residue with shape (n_residues,)
         """
@@ -475,14 +475,14 @@ class DistanceCalculatorAnalysis:
 
         Auto-converts condensed to squareform.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : np.ndarray or np.memmap
             Distance array in condensed format (n_frames, n_pairs) -
             automatically converted to squareform
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Standard deviation for each residue with shape (n_residues,)
         """
@@ -494,14 +494,14 @@ class DistanceCalculatorAnalysis:
         """
         Compute minimum distances per residue. Auto-converts condensed to squareform.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : np.ndarray or np.memmap
             Distance array in condensed format (n_frames, n_pairs) -
             automatically converted to squareform
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Minimum distance for each residue with shape (n_residues,)
         """
@@ -513,14 +513,14 @@ class DistanceCalculatorAnalysis:
         """
         Compute maximum distances per residue. Auto-converts condensed to squareform.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : np.ndarray or np.memmap
             Distance array in condensed format (n_frames, n_pairs) -
             automatically converted to squareform
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Maximum distance for each residue with shape (n_residues,)
         """
@@ -532,14 +532,14 @@ class DistanceCalculatorAnalysis:
         """
         Compute median distances per residue. Auto-converts condensed to squareform.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : np.ndarray or np.memmap
             Distance array in condensed format (n_frames, n_pairs) -
             automatically converted to squareform
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Median distance for each residue with shape (n_residues,)
         """
@@ -551,14 +551,14 @@ class DistanceCalculatorAnalysis:
         """
         Compute sum of distances per residue. Auto-converts condensed to squareform.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : np.ndarray or np.memmap
             Distance array in condensed format (n_frames, n_pairs) -
             automatically converted to squareform
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Sum of distances for each residue with shape (n_residues,)
         """
@@ -570,14 +570,14 @@ class DistanceCalculatorAnalysis:
         """
         Compute variance of distances per residue. Auto-converts condensed to squareform.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : np.ndarray or np.memmap
             Distance array in condensed format (n_frames, n_pairs) -
             automatically converted to squareform
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Variance for each residue with shape (n_residues,)
         """
@@ -589,14 +589,14 @@ class DistanceCalculatorAnalysis:
         """
         Compute range of distances per residue. Auto-converts condensed to squareform.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : np.ndarray or np.memmap
             Distance array in condensed format (n_frames, n_pairs) -
             automatically converted to squareform
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Range (max - min) for each residue with shape (n_residues,)
         """
@@ -609,8 +609,8 @@ class DistanceCalculatorAnalysis:
         """
         Compute transitions within lag time.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : np.ndarray or np.memmap
             Distance array with shape (n_frames, n_pairs)
         threshold : float, default=2.0
@@ -618,8 +618,8 @@ class DistanceCalculatorAnalysis:
         lag_time : int, default=10
             Number of frames to look ahead for transitions
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Transition counts for each pair with shape (n_pairs,)
         """
@@ -631,8 +631,8 @@ class DistanceCalculatorAnalysis:
         """
         Compute transitions within window.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : np.ndarray or np.memmap
             Distance array with shape (n_frames, n_pairs)
         threshold : float, default=2.0
@@ -640,8 +640,8 @@ class DistanceCalculatorAnalysis:
         window_size : int, default=10
             Size of sliding window for transition analysis
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Transition counts for each pair with shape (n_pairs,)
         """
@@ -655,8 +655,8 @@ class DistanceCalculatorAnalysis:
         """
         Compute stability analysis.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances : np.ndarray or np.memmap
             Distance array with shape (n_frames, n_pairs)
         threshold : float, default=2.0
@@ -666,8 +666,8 @@ class DistanceCalculatorAnalysis:
         mode : str, default="window"
             Analysis mode: "window" or "lagtime"
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Stability scores for each pair with shape (n_pairs,)
         """
@@ -680,8 +680,8 @@ class DistanceCalculatorAnalysis:
         """
         Compute differences between two distance datasets.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         distances1 : np.ndarray or np.memmap
             First distance array with shape (n_frames, n_pairs)
         distances2 : np.ndarray or np.memmap
@@ -689,8 +689,8 @@ class DistanceCalculatorAnalysis:
         preprocessing_func : callable, optional
             Function to apply to each dataset before comparison
 
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Difference values with shape (n_frames, n_pairs)
         """

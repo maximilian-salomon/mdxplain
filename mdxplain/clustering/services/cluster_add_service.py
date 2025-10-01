@@ -38,8 +38,8 @@ class ClusterAddService:
     without requiring users to import and instantiate cluster types directly.
     All cluster type parameters are combined with manager.add parameters.
     
-    Examples:
-    ---------
+    Examples
+    --------
     >>> pipeline.clustering.add.dbscan("my_features", eps=0.5, min_samples=5)
     >>> pipeline.clustering.add.hdbscan("my_features", min_cluster_size=10)
     >>> pipeline.clustering.add.dpa("my_features", Z=2.0)
@@ -49,15 +49,15 @@ class ClusterAddService:
         """
         Initialize factory with manager and pipeline data.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         manager : ClusterManager
             Cluster manager instance
         pipeline_data : PipelineData
             Pipeline data container (injected by AutoInjectProxy)
             
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         self._manager = manager
@@ -84,8 +84,8 @@ class ClusterAddService:
         groups together points that are closely packed while marking points
         in low-density regions as outliers.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selection_name : str
             Name of feature selection to cluster
         eps : float, default=0.5
@@ -111,13 +111,13 @@ class ClusterAddService:
         override_cache : bool, default=False
             Override cache settings for this clustering
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds DBSCAN clustering results to pipeline data
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic DBSCAN clustering
         >>> pipeline.clustering.add.dbscan("my_features", eps=0.5, min_samples=5)
         
@@ -137,8 +137,8 @@ class ClusterAddService:
         ...     data_selector_name="folded_conformations"
         ... )
         
-        Notes:
-        ------
+        Notes
+        -----
         DBSCAN automatically determines the number of clusters and can find
         clusters of arbitrary shape. Points that don't belong to any cluster
         are labeled as noise (cluster label -1).
@@ -185,8 +185,8 @@ class ClusterAddService:
         with Noise) extends DBSCAN by converting it into a hierarchical clustering
         algorithm and extracting clusters based on the stability of clusters.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selection_name : str
             Name of feature selection to cluster
         min_cluster_size : int, default=5
@@ -215,13 +215,13 @@ class ClusterAddService:
         override_cache : bool, default=False
             Override cache settings for this clustering
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds HDBSCAN clustering results to pipeline data
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic HDBSCAN clustering
         >>> pipeline.clustering.add.hdbscan("my_features", min_cluster_size=10)
         
@@ -242,8 +242,8 @@ class ClusterAddService:
         ...     data_selector_name="active_conformations"
         ... )
         
-        Notes:
-        ------
+        Notes
+        -----
         HDBSCAN is more stable than DBSCAN across different parameter settings
         and provides a hierarchy of clusters. It's particularly good at finding
         clusters of varying densities.
@@ -299,8 +299,8 @@ class ClusterAddService:
         and high distance to points with higher density. It's particularly
         effective for finding clusters with irregular shapes.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selection_name : str
             Name of feature selection to cluster
         Z : float, default=1.0
@@ -342,13 +342,13 @@ class ClusterAddService:
         override_cache : bool, default=False
             Override cache settings for this clustering
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds DPA clustering results to pipeline data
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic DPA clustering
         >>> pipeline.clustering.add.dpa("my_features", Z=2.0)
         
@@ -370,11 +370,13 @@ class ClusterAddService:
         ...     data_selector_name="equilibrated_frames"
         ... )
         
-        Notes:
-        ------
-        DPA is effective for identifying natural cluster centers and works well
-        with non-spherical cluster shapes. The algorithm provides both automatic
-        (Z-score based) and manual threshold selection for cluster identification.
+        Notes
+        -----
+        DPA is in practice easy to use for molecular dynamics data and
+        does not require extensive parameter tuning. It can find clusters
+        of varying shapes and densities without prior knowledge of the
+        data distribution. Just vary the Z parameter to adjust the number
+        of clusters.
         """
         cluster_type = DPA(
             Z=Z,

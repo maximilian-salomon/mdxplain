@@ -44,8 +44,8 @@ class LabelOperationHelper:
         be filtered to only include residues that are still present after
         atom selection.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_data : TrajectoryData
             Trajectory data object containing labels
         traj_indices : List[int]
@@ -53,8 +53,8 @@ class LabelOperationHelper:
         original_residue_indices : Dict[int, np.ndarray]
             Mapping of trajectory index to original residue indices that were kept
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Modifies res_label_data in-place to match new residue structure
         """

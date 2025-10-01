@@ -56,13 +56,13 @@ class DaskMDTrajectoryJoinStackHelper:
         """
         Initialize DaskMDTrajectoryJoinStackHelper.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cache_dir : str, default='./cache'
             Directory for temporary files during join/stack operations
         
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes helper instance
         """
@@ -73,8 +73,8 @@ class DaskMDTrajectoryJoinStackHelper:
         """
         Combine trajectories along frame axis using memory-efficient approach.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj1 : DaskMDTrajectory
             First trajectory (self)
         traj2 : DaskMDTrajectory
@@ -82,20 +82,20 @@ class DaskMDTrajectoryJoinStackHelper:
         check_topology : bool, default=True
             Check topology compatibility
             
-        Returns:
-        --------
+        Returns
+        -------
         DaskMDTrajectory
             New trajectory with combined frames
             
-        Raises:
+        Raises
         ------
         ValueError
             If trajectories have different number of atoms when check_topology=True
         OSError
             If temporary cache directory is not writable
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> helper = DaskMDTrajectoryJoinStackHelper(cache_dir='./cache')
         >>> traj1 = DaskMDTrajectory('part1.xtc', 'topology.pdb')
         >>> traj2 = DaskMDTrajectory('part2.xtc', 'topology.pdb') 
@@ -147,27 +147,27 @@ class DaskMDTrajectoryJoinStackHelper:
         """
         Combine trajectories along atom axis using memory-efficient approach.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj1 : DaskMDTrajectory
             First trajectory (self)
         traj2 : DaskMDTrajectory
             Second trajectory to stack
             
-        Returns:
-        --------
+        Returns
+        -------
         DaskMDTrajectory
             New trajectory with combined atoms
             
-        Raises:
+        Raises
         ------
         ValueError
             If trajectories have different number of frames
         OSError
             If temporary cache directory is not writable
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> helper = DaskMDTrajectoryJoinStackHelper(cache_dir='./cache')
         >>> protein = DaskMDTrajectory('protein.xtc', 'protein.pdb')
         >>> ligand = DaskMDTrajectory('ligand.xtc', 'ligand.pdb')
@@ -217,8 +217,8 @@ class DaskMDTrajectoryJoinStackHelper:
         """
         Create coordinate and time arrays in zarr store.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         store : zarr.Group
             Target zarr store
         n_frames : int
@@ -228,8 +228,8 @@ class DaskMDTrajectoryJoinStackHelper:
         chunk_size : int
             Chunk size for arrays
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Creates coordinate and time arrays in store
         """
@@ -252,8 +252,8 @@ class DaskMDTrajectoryJoinStackHelper:
         """
         Create unitcell arrays in zarr store.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         store : zarr.Group
             Target zarr store
         n_frames : int
@@ -261,8 +261,8 @@ class DaskMDTrajectoryJoinStackHelper:
         chunk_size : int
             Chunk size for arrays
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Creates unitcell_vectors, unitcell_lengths, unitcell_angles arrays
         """
@@ -282,8 +282,8 @@ class DaskMDTrajectoryJoinStackHelper:
         """
         Stack trajectories chunk-wise along atom axis.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         store : zarr.Group
             Target zarr store
         traj1 : DaskMDTrajectory
@@ -291,8 +291,8 @@ class DaskMDTrajectoryJoinStackHelper:
         traj2 : DaskMDTrajectory
             Second trajectory
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Copies stacked data chunk-wise to store
         """

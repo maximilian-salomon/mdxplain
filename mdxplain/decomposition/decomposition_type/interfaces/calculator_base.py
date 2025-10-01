@@ -40,8 +40,8 @@ class CalculatorBase(ABC):
     ContactKernelPCA) must implement for consistency across different
     dimensionality reduction methods.
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> class MyCalculator(CalculatorBase):
     ...     def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000) -> None:
     ...         super().__init__(use_memmap, cache_path, chunk_size)
@@ -54,8 +54,8 @@ class CalculatorBase(ABC):
         """
         Initialize the decomposition calculator.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for large datasets
         cache_path : str, optional
@@ -63,13 +63,13 @@ class CalculatorBase(ABC):
         chunk_size : int, optional
             Size of chunks for incremental processing
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes calculator with specified configuration
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic initialization
         >>> calc = MyCalculator()
 
@@ -93,23 +93,23 @@ class CalculatorBase(ABC):
         and returns the transformed data along with metadata about the
         transformation process.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input data matrix to decompose, shape (n_samples, n_features)
         **kwargs : dict
             Additional parameters specific to the decomposition method
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
             - transformed_data: Decomposed data matrix (n_samples, n_components)
             - metadata: Dictionary with transformation information including
               hyperparameters, explained variance, components, etc.
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compute decomposition
         >>> calc = MyCalculator()
         >>> data = np.random.rand(100, 50)
@@ -123,18 +123,18 @@ class CalculatorBase(ABC):
         """
         Validate input data for decomposition.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input data to validate
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Validates input data format and shape
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If data format is invalid
         """
@@ -151,15 +151,15 @@ class CalculatorBase(ABC):
         """
         Prepare base metadata dictionary.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         hyperparameters : dict
             Hyperparameters used for decomposition
         original_shape : tuple
             Shape of original input data
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Base metadata dictionary with common information
         """
@@ -180,8 +180,8 @@ class CalculatorBase(ABC):
         Automatically chooses between regular numpy array or memory-mapped array
         based on self.use_memmap. Combines cache_path with cache_prefix and filename.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         shape : tuple
             Shape of the array to create
         dtype : numpy.dtype, default=np.float32
@@ -190,13 +190,13 @@ class CalculatorBase(ABC):
             Filename for memmap. If None, uses "temp.dat"
             Will be combined with cache_path and cache_prefix
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Either regular numpy array or memory-mapped array
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Create distance matrix
         >>> matrix = self._create_array_or_memmap(
         ...     (n_frames, n_frames), 

@@ -40,17 +40,11 @@ class DBSCAN(ClusterTypeBase):
     in low-density regions as outliers. It's particularly useful for identifying
     conformational states in molecular dynamics trajectories.
 
-    Parameters:
-    -----------
-    eps : float, optional
-        The maximum distance between two samples for one to be considered
-        as in the neighborhood of the other. Default is 0.5.
-    min_samples : int, optional
-        The number of samples in a neighborhood for a point to be considered
-        as a core point. Default is 5.
+    Uses sklearn's DBSCAN and NearestNeighbors under the hood.
 
-    Examples:
-    ---------
+
+    Examples
+    --------
     >>> # Create DBSCAN with default parameters
     >>> dbscan = DBSCAN()
 
@@ -74,8 +68,8 @@ class DBSCAN(ClusterTypeBase):
         """
         Initialize DBSCAN cluster type.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         eps : float, optional
             Maximum distance between samples in neighborhood. Default is 0.5.
         min_samples : int, optional
@@ -93,8 +87,8 @@ class DBSCAN(ClusterTypeBase):
         knn_neighbors : int, default=5
             Number of neighbors for k-NN sampling method.
 
-        Returned Metadata:
-        ------------------
+        Returned Metadata
+        -----------------
         algorithm : str
             Always "dbscan"
         hyperparameters : dict
@@ -128,8 +122,8 @@ class DBSCAN(ClusterTypeBase):
         """
         Return unique string identifier for DBSCAN cluster type.
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             The string 'dbscan'
         """
@@ -145,8 +139,8 @@ class DBSCAN(ClusterTypeBase):
         """
         Initialize the DBSCAN calculator.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cache_path : str, optional
             Directory path for cache files. Default is './cache'.
         max_memory_gb : float, optional
@@ -155,6 +149,10 @@ class DBSCAN(ClusterTypeBase):
             Chunk size for processing large datasets. Default is 1000.
         use_memmap : bool, optional
             Whether to use memory mapping for large datasets. Default is False.
+
+        Returns
+        -------
+        None
         """
         self.calculator = DBSCANCalculator(
             cache_path=cache_path, 
@@ -167,20 +165,20 @@ class DBSCAN(ClusterTypeBase):
         """
         Compute DBSCAN clustering.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input data matrix to cluster, shape (n_samples, n_features)
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
             - cluster_labels: Cluster labels for each sample (-1 for noise)
             - metadata: Dictionary with clustering information
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If calculator is not initialized
         """
@@ -201,8 +199,18 @@ class DBSCAN(ClusterTypeBase):
         """
         Validate DBSCAN parameters.
 
-        Raises:
+        Parameters
+        ----------
+        None
+            Only instance attributes are validated.
+
+        Returns
         -------
+        None
+            Only instance attributes are validated.
+
+        Raises
+        ------
         ValueError
             If parameters are invalid
         """

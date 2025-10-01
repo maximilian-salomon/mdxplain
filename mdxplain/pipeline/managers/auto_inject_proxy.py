@@ -49,8 +49,8 @@ class AutoInjectProxy:
     modification, allowing for both stateful pipeline operations and
     stateless utility functions within the same manager.
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> from mdxplain.pipeline import PipelineManager
     >>> pipeline = PipelineManager()
     >>>
@@ -65,15 +65,15 @@ class AutoInjectProxy:
         """
         Initialize the auto-injection proxy.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         manager : object
             The manager instance to wrap with auto-injection
         pipeline_data : PipelineData
             The PipelineData instance to inject into methods
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes the proxy with manager and data references
         """
@@ -86,8 +86,8 @@ class AutoInjectProxy:
         """
         Return list of available attributes for IDE autocompletion.
 
-        Returns:
-        --------
+        Returns
+        -------
         list
             List of public method names from the wrapped manager
         """
@@ -101,6 +101,15 @@ class AutoInjectProxy:
         wrapped manager. Each proxy method automatically handles pipeline_data
         injection when needed, enabling both IDE autocompletion and seamless
         auto-injection functionality.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+            Initializes the proxy with manager and data references
         """
         for attr_name in dir(self._manager):
             # Skip private attributes
@@ -141,13 +150,13 @@ class AutoInjectProxy:
         a wrapper that automatically injects it at the correct position.
         Also validates that users don't manually pass pipeline_data in Pipeline mode.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         method : callable
             The original method to wrap
 
-        Returns:
-        --------
+        Returns
+        -------
         callable
             Wrapped method with intelligent auto-injection or original method unchanged
         """
@@ -201,15 +210,15 @@ class AutoInjectProxy:
         whether as positional or keyword argument. AutoInjectProxy handles
         injection automatically.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         args : tuple
             Positional arguments from user
         kwargs : dict
             Keyword arguments from user
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If user tries to pass pipeline_data manually
         """
@@ -241,13 +250,13 @@ class AutoInjectProxy:
         This conservative approach minimizes false positives while catching
         the most common cases where users mistakenly pass pipeline data manually.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         obj : PipelineData
             PipelineData to check
 
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if object looks like pipeline-related data, False otherwise
         """
@@ -289,13 +298,13 @@ class AutoInjectProxy:
         Intelligently detects the pattern by inspecting the service constructor signature
         and handles each appropriately.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         original_property : property
             The original property from the manager
             
-        Returns:
-        --------
+        Returns
+        -------
         property
             New property that handles service creation correctly
         """
@@ -338,8 +347,8 @@ class AutoInjectProxy:
         Handles all parameter types: positional, keyword-only, with defaults, etc.
         Always injects pipeline_data regardless of how it's defined in the original method.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data_param : Parameter
             The pipeline_data parameter object from signature inspection
         pipeline_data_index : int
@@ -349,8 +358,8 @@ class AutoInjectProxy:
         kwargs : dict
             User-provided keyword arguments
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[tuple, dict]
             Modified (args, kwargs) with pipeline_data injected
         """
@@ -380,13 +389,13 @@ class AutoInjectProxy:
         """
         Fallback method for dynamic attribute access.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         name : str
             Name of the method or attribute being accessed
 
-        Returns:
-        --------
+        Returns
+        -------
         Any
             Method wrapper with auto-injection if needed, or original attribute
         """
@@ -421,8 +430,8 @@ class AutoInjectProxy:
         """
         Return string representation of the proxy.
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             String representation showing wrapped manager type
         """

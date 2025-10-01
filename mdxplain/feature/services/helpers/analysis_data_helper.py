@@ -53,9 +53,13 @@ class AnalysisDataHelper:
         
         This method integrates trajectory selection and feature selection
         to provide the appropriate data matrix for analysis methods.
-        
-        Parameters:
-        -----------
+
+        This method creates temporary selectors as needed and cleans
+        them up afterwards. If no feature_selector is provided, a temporary
+        selector is created for the current feature type.
+
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data container
         feature_type : str
@@ -66,19 +70,19 @@ class AnalysisDataHelper:
         traj_selection : str, int, list, optional
             Trajectory selection criteria. If None, uses "all"
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Selected feature data matrix
             
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If feature_selector contains features from other types
             or if no features of the required type are found
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> data = AnalysisDataHelper.get_selected_data(
         ...     pipeline_data, "distances", 
         ...     feature_selector="my_selector",

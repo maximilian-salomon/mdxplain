@@ -38,8 +38,8 @@ class FeatureImportanceAddService:
     without requiring users to import and instantiate analyzer types directly.
     All analyzer type parameters are combined with manager.add_analysis parameters.
     
-    Examples:
-    ---------
+    Examples
+    --------
     >>> pipeline.feature_importance.add.decision_tree("my_comparison", max_depth=5, analysis_name="tree_analysis")
     """
     
@@ -47,15 +47,15 @@ class FeatureImportanceAddService:
         """
         Initialize factory with manager and pipeline data.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         manager : FeatureImportanceManager
             Feature importance manager instance
         pipeline_data : PipelineData
             Pipeline data container (injected by AutoInjectProxy)
             
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         self._manager = manager
@@ -87,8 +87,8 @@ class FeatureImportanceAddService:
         interpretable feature rankings for understanding which molecular features
         are most important for distinguishing between different states.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         comparison_name : str
             Name of the comparison to analyze
         analysis_name : str
@@ -120,13 +120,13 @@ class FeatureImportanceAddService:
         force : bool, default=False
             Whether to overwrite existing analysis with same name
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds Decision Tree feature importance results to pipeline data
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic decision tree analysis
         >>> pipeline.feature_importance.add.decision_tree(
         ...     "folded_vs_unfolded", 
@@ -151,11 +151,13 @@ class FeatureImportanceAddService:
         ...     class_weight="balanced"
         ... )
         
-        Notes:
-        ------
+        Notes
+        -----
         Decision trees provide interpretable feature importance based on split
         criteria. Higher importance scores indicate features that contribute
         more to reducing impurity when making classification decisions.
+
+        Uses sklearn.tree.DecisionTreeClassifier internally.
         """
         analyzer_type = DecisionTree(
             criterion=criterion,

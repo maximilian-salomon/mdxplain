@@ -42,9 +42,12 @@ class DPA(ClusterTypeBase):
     It's particularly useful for identifying conformational states in molecular
     dynamics trajectories with complex cluster shapes and varying densities.
 
+    Uses mariad'Errico et al.'s DPA package under the hood and sklearn's
+    NearestNeighbors for k-NN sampling method.
 
-    Examples:
-    ---------
+
+    Examples
+    --------
     >>> # Create DPA with default parameters
     >>> dpa = DPA()
 
@@ -56,8 +59,8 @@ class DPA(ClusterTypeBase):
     >>> dpa.init_calculator()
     >>> labels, metadata = dpa.compute(data)
 
-    References:
-    -----------
+    References
+    ----------
     M. d'Errico, E. Facco, A. Laio, A. Rodriguez, Information Sciences, Volume 560,
     June 2021, 476-492. See: https://github.com/mariaderrico/DPA
     """
@@ -83,8 +86,8 @@ class DPA(ClusterTypeBase):
         """
         Initialize DPA cluster type.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         Z : float, default=1
             The number of standard deviations, which fixes the level of statistical
             confidence at which one decides to consider a cluster meaningful.
@@ -177,8 +180,8 @@ class DPA(ClusterTypeBase):
         force : bool, default=False
             Override memory and dimensionality checks (converts errors to warnings)
 
-        Returned Metadata:
-        ------------------
+        Returned Metadata
+        -----------------
         algorithm : str
             Always "dpa"
         hyperparameters : dict
@@ -213,8 +216,8 @@ class DPA(ClusterTypeBase):
         The n_jobs parameter is automatically set to -1 (use all processors) for
         optimal performance in molecular dynamics analysis.
 
-        References:
-        -----------
+        References
+        ----------
         Parameter descriptions adapted from the DPA package documentation.
         See: https://github.com/mariaderrico/DPA
         """
@@ -241,8 +244,8 @@ class DPA(ClusterTypeBase):
         """
         Return unique string identifier for DPA cluster type.
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             The string 'dpa'
         """
@@ -258,8 +261,8 @@ class DPA(ClusterTypeBase):
         """
         Initialize the DPA calculator.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cache_path : str, optional
             Directory path for cache files. Default is './cache'.
         max_memory_gb : float, optional
@@ -268,6 +271,10 @@ class DPA(ClusterTypeBase):
             Chunk size for processing large datasets. Default is 1000.
         use_memmap : bool, optional
             Whether to use memory mapping for large datasets. Default is False.
+
+        Returns
+        -------
+        None
         """
         self.calculator = DPACalculator(
             cache_path=cache_path, 
@@ -280,20 +287,20 @@ class DPA(ClusterTypeBase):
         """
         Compute DPA clustering.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input data matrix to cluster, shape (n_samples, n_features)
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
             - cluster_labels: Cluster labels for each sample
             - metadata: Dictionary with clustering information
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If calculator is not initialized
         """
@@ -325,8 +332,8 @@ class DPA(ClusterTypeBase):
         """
         Validate DPA parameters.
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If parameters are invalid
         """

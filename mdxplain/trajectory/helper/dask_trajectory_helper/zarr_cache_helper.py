@@ -53,14 +53,19 @@ class ZarrCacheHelper:
         """
         Initialize Zarr cache manager.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         chunk_size : int, default=1000
             Number of frames per chunk (optimized for DaskZarr)
         compression : str, default='lz4'
             Compression algorithm for Zarr storage
         cache_dir : str, default='./cache'
             Default cache directory for zarr files
+
+        Returns
+        -------
+        None
+            Initializes Zarr cache manager
         """
         self.chunk_size = chunk_size
         self.compression = compression
@@ -70,20 +75,20 @@ class ZarrCacheHelper:
         """
         Generate cache path for trajectory file.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory_file : str
             Path to trajectory file
         cache_dir : str, optional
             Directory for cache files (default: ./cache)
             
-        Returns:
-        --------
+        Returns
+        -------
         str
             Path to Zarr cache file
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> cache_manager = ZarrCacheHelper()
         >>> # Default cache directory
         >>> path = cache_manager.get_cache_path('/data/traj.xtc')
@@ -106,23 +111,23 @@ class ZarrCacheHelper:
         """
         Check if valid Zarr cache exists.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cache_path : str
             Path to Zarr cache file
             
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if valid cache exists
             
-        Raises:
+        Raises
         ------
         Exception
             If cache file is corrupted or unreadable (errors bubble up for debugging)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> cache_manager = ZarrCacheHelper()
         >>> cache_path = './cache/trajectory.dask.zarr'
         >>> if cache_manager.cache_exists(cache_path):
@@ -146,8 +151,8 @@ class ZarrCacheHelper:
         """
         Create Zarr cache from trajectory file using md.iterload().
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory_file : str
             Path to trajectory file
         topology_file : str, optional
@@ -155,12 +160,12 @@ class ZarrCacheHelper:
         cache_path : str
             Path for Zarr cache file
             
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Metadata about the cached trajectory
             
-        Raises:
+        Raises
         ------
         FileNotFoundError
             If trajectory_file or topology_file doesn't exist
@@ -169,8 +174,8 @@ class ZarrCacheHelper:
         OSError
             If cache directory is not writable
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> cache_manager = ZarrCacheHelper(chunk_size=1000)
         >>> metadata = cache_manager.create_cache(
         ...     'trajectory.xtc', 'topology.pdb', 'cache/traj.zarr'
@@ -204,15 +209,15 @@ class ZarrCacheHelper:
         """
         Load topology from file or trajectory.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory_file : str
             Path to trajectory file
         topology_file : Optional[str]
             Path to topology file, or None to extract from trajectory
         
-        Returns:
-        --------
+        Returns
+        -------
         md.Topology
             MDTraj topology object
         """
@@ -226,15 +231,15 @@ class ZarrCacheHelper:
         """
         Analyze trajectory dimensions and properties.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory_file : str
             Path to trajectory file
         topology : md.Topology
             MDTraj topology object
         
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Dictionary with trajectory info (n_frames, n_atoms, has_unitcell)
         """
@@ -257,15 +262,15 @@ class ZarrCacheHelper:
         """
         Create zarr store with all required arrays.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cache_path : str
             Path for the new zarr store
         traj_info : dict
             Dictionary with trajectory info (n_frames, n_atoms, has_unitcell)
             
-        Returns:
-        --------
+        Returns
+        -------
         zarr.Group
             Newly created zarr store with coordinate and time arrays
         """
@@ -299,8 +304,8 @@ class ZarrCacheHelper:
         """
         Create unitcell arrays in zarr store.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         store : zarr.Group
             Target zarr store to create arrays in
         traj_info : dict
@@ -308,8 +313,8 @@ class ZarrCacheHelper:
         compressor : object
             Compression codec for the arrays
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Creates unitcell_vectors, unitcell_lengths, unitcell_angles arrays
         """
@@ -329,8 +334,8 @@ class ZarrCacheHelper:
         """
         Fill zarr store with trajectory data.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory_file : str
             Path to source trajectory file
         topology : md.Topology
@@ -340,8 +345,8 @@ class ZarrCacheHelper:
         traj_info : dict
             Dictionary with trajectory dimensions
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Fills store with trajectory data using md.iterload
         """
@@ -361,8 +366,8 @@ class ZarrCacheHelper:
         """
         Store single chunk data to zarr arrays.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         store : zarr.Group
             Target zarr store to write data to
         chunk : md.Trajectory
@@ -372,8 +377,8 @@ class ZarrCacheHelper:
         end_idx : int
             Ending frame index for this chunk
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Stores chunk coordinate, time, and unitcell data to zarr arrays
         """
@@ -396,8 +401,8 @@ class ZarrCacheHelper:
         """
         Create metadata dictionary for trajectory.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory_file : str
             Path to source trajectory file
         topology_file : str, optional
@@ -407,8 +412,8 @@ class ZarrCacheHelper:
         topology : md.Topology
             MDTraj topology object
             
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Metadata dictionary with trajectory information
         """
@@ -427,8 +432,8 @@ class ZarrCacheHelper:
         """
         Store metadata and topology to zarr store.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         store : zarr.Group
             Target zarr store to write final data to
         metadata : dict
@@ -436,8 +441,8 @@ class ZarrCacheHelper:
         topology : md.Topology
             MDTraj topology object to store
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Stores metadata attributes and topology in store
         """
@@ -449,25 +454,25 @@ class ZarrCacheHelper:
         """
         Load metadata from Zarr cache.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cache_path : str
             Path to Zarr cache file
             
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Trajectory metadata
             
-        Raises:
+        Raises
         ------
         FileNotFoundError
             If cache file doesn't exist
         KeyError
             If metadata is missing from cache file
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> cache_manager = ZarrCacheHelper()
         >>> metadata = cache_manager.load_cache_metadata('cache/traj.zarr')
         >>> print(f"Cache contains {metadata['n_frames']} frames")
@@ -480,8 +485,8 @@ class ZarrCacheHelper:
         """
         Get existing cache or create new one.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory_file : str
             Path to trajectory file
         topology_file : str, optional
@@ -489,12 +494,12 @@ class ZarrCacheHelper:
         cache_path : str, optional
             Custom cache path
             
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             (cache_path, metadata)
             
-        Raises:
+        Raises
         ------
         FileNotFoundError
             If trajectory_file doesn't exist
@@ -503,8 +508,8 @@ class ZarrCacheHelper:
         OSError
             If cache directory is not writable
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> cache_manager = ZarrCacheHelper()
         >>> cache_path, metadata = cache_manager.get_or_create_cache(
         ...     'trajectory.xtc', 'topology.pdb'
@@ -527,13 +532,13 @@ class ZarrCacheHelper:
         """
         Get cache file size in MB.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cache_path : str
             Path to cache directory or file
             
-        Returns:
-        --------
+        Returns
+        -------
         float
             Total cache size in megabytes
         """
@@ -552,8 +557,8 @@ class ZarrCacheHelper:
         """
         Store topology in Zarr store using pickle serialization.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         store : zarr.Group
             Target zarr store to store topology in
         topology : md.Topology
@@ -561,13 +566,13 @@ class ZarrCacheHelper:
         compressor : object, optional
             Compression codec for topology storage
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Stores topology as pickled array in zarr store
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> import zarr
         >>> import mdtraj as md
         >>> store = zarr.open('trajectory.zarr', mode='w')
@@ -590,18 +595,18 @@ class ZarrCacheHelper:
         """
         Load topology from Zarr store.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         store : zarr.Group
             Zarr store containing pickled topology data
             
-        Returns:
-        --------
+        Returns
+        -------
         md.Topology
             Loaded MDTraj topology object
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> import zarr
         >>> store = zarr.open('trajectory.zarr', mode='r')
         >>> topology = ZarrCacheHelper.load_topology(store)
@@ -617,20 +622,20 @@ class ZarrCacheHelper:
         """
         Create Zarr cache directly from MDTraj trajectory object.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         mdtraj : md.Trajectory
             MDTraj trajectory object to cache
         cache_path : str, optional
             Path for cache. If None, creates temporary cache.
             
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             (cache_path, metadata_dict) containing cache location and info
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> import mdtraj as md
         >>> traj = md.load('trajectory.xtc', top='topology.pdb')
         >>> cache_helper = ZarrCacheHelper()

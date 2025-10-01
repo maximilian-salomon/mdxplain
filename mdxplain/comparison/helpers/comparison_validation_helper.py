@@ -47,15 +47,15 @@ class ComparisonValidationHelper:
         """
         Validate that comparison name doesn't already exist.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object containing existing comparisons
         name : str
             Name of the comparison to validate
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Method returns nothing, raises ValueError if name already exists
         """
@@ -67,15 +67,15 @@ class ComparisonValidationHelper:
         """
         Validate that a comparison with given name exists.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object containing comparison data
         name : str
             Name of the comparison to validate
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Method returns nothing, raises ValueError if comparison not found
         """
@@ -90,13 +90,13 @@ class ComparisonValidationHelper:
         """
         Validate that comparison mode is supported.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         mode : str
             Comparison mode to validate
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Method returns nothing, raises ValueError if mode invalid
         """
@@ -109,15 +109,15 @@ class ComparisonValidationHelper:
         """
         Validate that a feature selector with given name exists.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object containing feature selector data
         feature_selector : str
             Name of the feature selector to validate
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Method returns nothing, raises ValueError if selector not found
         """
@@ -136,15 +136,15 @@ class ComparisonValidationHelper:
         Checks that the list is non-empty and that all data selector names
         are found in the pipeline data. Reports any missing selectors.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object containing data selector data
         data_selectors : List[str]
             List of data selector names to validate
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Method returns nothing, raises ValueError if selectors missing or empty
         """

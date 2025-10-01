@@ -40,8 +40,8 @@ class DataUtils:
     memory-mapped numpy arrays while preserving memmap properties and file
     references. Works with any Python object, not just mdxplain classes.
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> # Save any object with memmap support
     >>> DataUtils.save_object(my_object, 'data/my_object.pkl')
 
@@ -55,20 +55,20 @@ class DataUtils:
         """
         Save any Python object while preserving memory-mapped array properties.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         obj : object
             Python object to save (can contain memmap arrays and DaskMDTrajectory objects)
         save_path : str
             File path for saving (should end with .pkl or .npy)
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Saves object to disk using numpy.save with pickle support
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Save TrajectoryData object
         >>> DataUtils.save_object(traj_data, 'analysis/results.pkl')
 
@@ -85,20 +85,20 @@ class DataUtils:
         """
         Load data into existing Python object while restoring memmap properties.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         obj : object
             Existing Python object to load data into (will be modified in-place)
         load_path : str
             Path to saved object file (.pkl or .npy)
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Modifies obj in-place, restoring attributes and memmap connections
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Load into TrajectoryData object
         >>> traj = TrajectoryData()
         >>> DataUtils.load_object(traj, 'analysis/results.pkl')
@@ -116,13 +116,13 @@ class DataUtils:
         """
         Prepare object for saving by converting memmaps and special objects to metadata.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         obj : object
             Object to prepare
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Dictionary with attributes, special objects converted to metadata
         """
@@ -142,15 +142,15 @@ class DataUtils:
         """
         Convert single attribute for saving.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         attr_value : Any
             Attribute value to convert
         attr_name : str
             Attribute name for error messages
 
-        Returns:
-        --------
+        Returns
+        -------
         Any
             Converted attribute (metadata dict for special types, original value otherwise)
         """
@@ -164,15 +164,15 @@ class DataUtils:
         """
         Save memmap metadata for later restoration.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         memmap_array : np.memmap
             Memory-mapped array to save metadata for
         attr_name : str
             Attribute name for error messages
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Metadata dictionary with shape, dtype, and file path
         """
@@ -194,15 +194,15 @@ class DataUtils:
         """
         Restore object attributes from loaded data.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         obj : object
             Target object to restore attributes into
         loaded_obj : dict
             Loaded data dictionary with attributes
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Modifies obj in-place
         """
@@ -215,8 +215,8 @@ class DataUtils:
         """
         Restore single attribute from loaded data.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         obj : object
             Target object for restoration context
         attr_value : Any
@@ -224,8 +224,8 @@ class DataUtils:
         attr_name : str
             Attribute name
 
-        Returns:
-        --------
+        Returns
+        -------
         Any
             Restored attribute value
         """
@@ -239,8 +239,8 @@ class DataUtils:
         """
         Restore memmap from metadata.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         obj : object
             Target object for memmap restoration
         memmap_info : dict
@@ -248,8 +248,8 @@ class DataUtils:
         attr_name : str
             Attribute name for the memmap
 
-        Returns:
-        --------
+        Returns
+        -------
         np.memmap or None
             Restored memmap or None if file not found
         """
@@ -270,15 +270,15 @@ class DataUtils:
         """
         Try to restore memmap from given path.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         path : str
             File path to try for memmap restoration
         memmap_info : dict
             Metadata dictionary with memmap information
 
-        Returns:
-        --------
+        Returns
+        -------
         np.memmap or None
             Restored memmap if file exists, None otherwise
         """
@@ -301,8 +301,8 @@ class DataUtils:
         """
         Try to restore memmap from alternative path.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         obj : object
             Target object for memmap restoration
         attr_name : str
@@ -312,8 +312,8 @@ class DataUtils:
         original_path : str
             Original file path that failed
 
-        Returns:
-        --------
+        Returns
+        -------
         np.memmap or None
             Restored memmap from alternative path or None if not possible
         """
@@ -331,15 +331,15 @@ class DataUtils:
         """
         Check if object supports alternative path restoration.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         obj : object
             Object to check for alternative path support
         attr_name : str
             Attribute name to check for path support
 
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if object supports alternative path restoration
         """
@@ -354,15 +354,15 @@ class DataUtils:
         """
         Check if alternative path is invalid.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         target_path : str
             Alternative path to check
         original_path : str
             Original path for comparison
 
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if alternative path is invalid
         """
@@ -373,20 +373,20 @@ class DataUtils:
         """
         Get cache file path from cache_path and cache_name.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cache_name : str
             Name for the cache file (e.g., 'pca.dat', 'kernel_pca.dat')
         cache_path : str, default="./cache"
             Base cache path (can be directory or full file path)
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             Full path to the cache file
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # With directory cache_path
         >>> path = DataUtils.get_cache_file_path("pca.dat", "./cache")
         >>> print(path)  # "./cache/pca.dat"
@@ -421,18 +421,18 @@ class DataUtils:
         (instances, classes, strings) to their string identifier.
         It is specially used for the conventions inside this software.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         type_obj : str, class, or instance
             Type object to get key for (e.g., decomposition type, feature type)
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             Type key string identifier
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> DataUtils.get_type_key("pca")
         'pca'
         >>> DataUtils.get_type_key(PCA())

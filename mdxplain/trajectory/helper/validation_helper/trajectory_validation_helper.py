@@ -44,8 +44,8 @@ class TrajectoryValidationHelper:
         """
         Check if features exist before trajectory modification.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object containing feature data
         force : bool
@@ -56,8 +56,8 @@ class TrajectoryValidationHelper:
             Trajectory indices to check for features.
             If None, checks if ANY features exist at all.
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If features exist and force=False
         """
@@ -78,8 +78,8 @@ class TrajectoryValidationHelper:
         """
         Check if any features exist in pipeline.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object containing feature data
         force : bool
@@ -87,8 +87,8 @@ class TrajectoryValidationHelper:
         operation_name : str
             Name of the operation for error messages
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If features exist and force=False
         """
@@ -121,23 +121,23 @@ class TrajectoryValidationHelper:
         """
         Validate parameters for trajectory slicing.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         frames : int, slice, list, or None
             Frame specification for slicing
         
-        Returns:
-        --------
+        Returns
+        -------
         None
             Performs validation, does not return value
         
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If frames parameter is invalid
         
-        Examples:
-        ---------
+        Examples
+        --------
         >>> TrajectoryValidationHelper.validate_slice_parameters(1000)  # OK
         >>> TrajectoryValidationHelper.validate_slice_parameters(slice(100, 500))  # OK
         >>> TrajectoryValidationHelper.validate_slice_parameters([0, 10, 20])  # OK
@@ -160,25 +160,25 @@ class TrajectoryValidationHelper:
         """
         Validate DataSelector exists and has data.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
         data_selector : str
             Name of DataSelector to validate
         
-        Returns:
-        --------
+        Returns
+        -------
         DataSelectorData
             The validated selector data object
         
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If DataSelector does not exist or has no data
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> selector_data = TrajectoryValidationHelper.validate_data_selector(
         ...     pipeline_data, "folded_frames"
         ... )
@@ -203,18 +203,18 @@ class TrajectoryValidationHelper:
         """
         Validate that all trajectories match the memmap setting.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
             
-        Raises:
-        -------
+        Raises
+        ------
         TypeError
             If trajectory types don't match use_memmap setting
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> TrajectoryValidationHelper.validate_trajectory_types(pipeline_data)
         """       
         if not pipeline_data.trajectory_data.trajectories:
@@ -245,8 +245,8 @@ class TrajectoryValidationHelper:
         """
         Check if specific trajectories have features.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object containing feature data
         force : bool
@@ -256,8 +256,8 @@ class TrajectoryValidationHelper:
         traj_indices : List[int]
             Trajectory indices to check for features
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If features exist for trajectories and force=False
         """
@@ -307,8 +307,8 @@ class TrajectoryValidationHelper:
         """
         Validate all parameters for superpose operation.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data container with trajectory data
         reference_traj : int
@@ -320,18 +320,18 @@ class TrajectoryValidationHelper:
         traj_selection : various
             Selection of trajectories to align
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             (reference_trajectory, traj_indices, ref_frame, ref_atom_indices)
 
-        Raises:
+        Raises
         ------
         ValueError
             If any parameter is invalid
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> ref_traj, indices, ref_frame, atom_indices = \\
         ...     TrajectoryValidationHelper.validate_superpose_parameters(
         ...         pipeline_data, 0, 0, "backbone", "all"

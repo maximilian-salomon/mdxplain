@@ -44,7 +44,18 @@ class TorsionsAnalysisService(AnalysisServiceBase):
     """
     
     def __init__(self, pipeline_data: PipelineData) -> None:
-        """Initialize torsions analysis service."""
+        """
+        Initialize torsions analysis service.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data containing feature data and configuration
+        
+        Returns
+        -------
+        None
+        """
         super().__init__(pipeline_data)
         self._feature_type = "torsions"
         self._calculator = TorsionsCalculatorAnalysis(
@@ -58,20 +69,20 @@ class TorsionsAnalysisService(AnalysisServiceBase):
         """
         Compute circular mean for each torsion angle.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Circular mean angle for each torsion in degrees
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compute circular mean for all torsion angles
         >>> pipeline.analysis.features.torsions.mean()
         
@@ -88,20 +99,20 @@ class TorsionsAnalysisService(AnalysisServiceBase):
         """
         Compute circular standard deviation for each torsion angle.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Circular standard deviation for each torsion angle in degrees
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compute std for all torsion angles
         >>> pipeline.analysis.features.torsions.std()
         
@@ -118,20 +129,20 @@ class TorsionsAnalysisService(AnalysisServiceBase):
         """
         Compute circular variance for each torsion angle.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Circular variance for each torsion angle (0-1 scale)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compute variance for all torsion angles
         >>> pipeline.analysis.features.torsions.variance()
         """
@@ -145,20 +156,20 @@ class TorsionsAnalysisService(AnalysisServiceBase):
         """
         Compute minimum angle for each torsion.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Minimum angle for each torsion
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find minimum angles observed
         >>> pipeline.analysis.features.torsions.min()
         """
@@ -172,20 +183,20 @@ class TorsionsAnalysisService(AnalysisServiceBase):
         """
         Compute maximum angle for each torsion.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Maximum angle for each torsion
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find maximum angles observed
         >>> pipeline.analysis.features.torsions.max()
         """
@@ -199,20 +210,20 @@ class TorsionsAnalysisService(AnalysisServiceBase):
         """
         Compute median absolute deviation for each torsion angle.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Median absolute deviation for each torsion angle
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Robust measure of angle variability
         >>> pipeline.analysis.features.torsions.mad()
         """
@@ -226,20 +237,20 @@ class TorsionsAnalysisService(AnalysisServiceBase):
         """
         Compute angular range for each torsion considering periodicity.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Angular range for each torsion (0-180 degrees)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find angular range with periodic boundary handling
         >>> pipeline.analysis.features.torsions.range()
         """
@@ -253,20 +264,20 @@ class TorsionsAnalysisService(AnalysisServiceBase):
         """
         Compute coefficient of variation for each torsion angle.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Coefficient of variation for each torsion angle
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find most variable torsions (high CV)
         >>> pipeline.analysis.features.torsions.cv()
         """
@@ -282,20 +293,20 @@ class TorsionsAnalysisService(AnalysisServiceBase):
         """
         Compute circular mean angle per frame across all torsions.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Circular mean angle per frame in degrees
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Overall conformational state per frame
         >>> pipeline.analysis.features.torsions.mean_per_frame()
         """
@@ -309,20 +320,20 @@ class TorsionsAnalysisService(AnalysisServiceBase):
         """
         Compute circular standard deviation per frame across all torsions.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Circular standard deviation per frame in degrees
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Conformational disorder per frame
         >>> pipeline.analysis.features.torsions.std_per_frame()
         """
@@ -336,20 +347,20 @@ class TorsionsAnalysisService(AnalysisServiceBase):
         """
         Compute circular variance per frame across all torsions.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Circular variance per frame (0-1 scale)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Conformational variance per frame
         >>> pipeline.analysis.features.torsions.variance_per_frame()
         """
@@ -363,20 +374,20 @@ class TorsionsAnalysisService(AnalysisServiceBase):
         """
         Compute minimum angle per frame across all torsions.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Minimum angle per frame
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Most negative angle per frame
         >>> pipeline.analysis.features.torsions.min_per_frame()
         """
@@ -390,20 +401,20 @@ class TorsionsAnalysisService(AnalysisServiceBase):
         """
         Compute maximum angle per frame across all torsions.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Maximum angle per frame
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Most positive angle per frame
         >>> pipeline.analysis.features.torsions.max_per_frame()
         """
@@ -417,20 +428,20 @@ class TorsionsAnalysisService(AnalysisServiceBase):
         """
         Compute median absolute deviation per frame across all torsions.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Median absolute deviation per frame
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Robust measure of conformational spread per frame
         >>> pipeline.analysis.features.torsions.mad_per_frame()
         """
@@ -444,20 +455,20 @@ class TorsionsAnalysisService(AnalysisServiceBase):
         """
         Compute angular range per frame across all torsions with periodicity.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Angular range per frame
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Conformational spread per frame
         >>> pipeline.analysis.features.torsions.range_per_frame()
         """
@@ -475,8 +486,8 @@ class TorsionsAnalysisService(AnalysisServiceBase):
         """
         Compute transitions with lag time for each torsion angle with periodic boundaries.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         threshold : float, default=30.0
             Threshold for detecting transitions (in degrees)
         lag_time : int, default=1
@@ -486,13 +497,13 @@ class TorsionsAnalysisService(AnalysisServiceBase):
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Transition counts per torsion angle
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find dynamic torsions with 30° threshold
         >>> pipeline.analysis.features.torsions.transitions_lagtime(threshold=30.0)
         
@@ -513,8 +524,8 @@ class TorsionsAnalysisService(AnalysisServiceBase):
         """
         Compute transitions within sliding window for each torsion angle with periodic boundaries.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         threshold : float, default=30.0
             Threshold for detecting transitions (in degrees)
         window_size : int, default=10
@@ -524,13 +535,13 @@ class TorsionsAnalysisService(AnalysisServiceBase):
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Transition counts per torsion angle
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Window-based transition detection
         >>> pipeline.analysis.features.torsions.transitions_window(
         ...     threshold=30.0, window_size=10
@@ -548,8 +559,8 @@ class TorsionsAnalysisService(AnalysisServiceBase):
         """
         Compute stability (inverse of transition rate) for each torsion angle with periodic boundaries.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         threshold : float, default=30.0
             Threshold for stability detection (in degrees)
         window_size : int, default=10
@@ -561,13 +572,13 @@ class TorsionsAnalysisService(AnalysisServiceBase):
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Stability values per torsion angle (0=unstable, 1=stable)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find most stable torsions
         >>> pipeline.analysis.features.torsions.stability(
         ...     threshold=30.0, window_size=10, mode='window'
@@ -587,8 +598,8 @@ class TorsionsAnalysisService(AnalysisServiceBase):
         """
         Compute angle differences between two frames with periodic boundary handling.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         frame_1 : int, default=0
             First frame index
         frame_2 : int, default=-1
@@ -598,13 +609,13 @@ class TorsionsAnalysisService(AnalysisServiceBase):
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Angle differences between frames with proper periodic handling
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compare first and last frames
         >>> pipeline.analysis.features.torsions.differences(frame_1=0, frame_2=-1)
         
@@ -624,8 +635,8 @@ class TorsionsAnalysisService(AnalysisServiceBase):
         """
         Compute differences between circular means of two datasets.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector2 : str, optional
             Second feature selector for comparison
         traj_selection2 : str, int, list, optional
@@ -635,13 +646,13 @@ class TorsionsAnalysisService(AnalysisServiceBase):
         traj_selection : str, int, list, optional
             First trajectory selection for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Circular mean angle differences between datasets
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compare mean conformations between conditions
         >>> pipeline.analysis.features.torsions.differences_mean(
         ...     traj_selection=[0, 1],      # Native state

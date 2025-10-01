@@ -44,8 +44,8 @@ class CalculatorBase(ABC):
     Defines the interface that all clustering calculators (DBSCAN, HDBSCAN,
     DPA) must implement for consistency across different clustering methods.
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> class MyCalculator(CalculatorBase):
     ...     def __init__(self, cache_path="./cache"):
     ...         super().__init__(cache_path)
@@ -64,8 +64,8 @@ class CalculatorBase(ABC):
         """
         Initialize the clustering calculator.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cache_path : str, optional
             Path for cache files
         max_memory_gb : float, optional
@@ -75,13 +75,13 @@ class CalculatorBase(ABC):
         use_memmap : bool, optional
             Whether to use memory mapping for large datasets. Default is False.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes calculator with specified configuration
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic initialization
         >>> calc = MyCalculator()
 
@@ -104,23 +104,23 @@ class CalculatorBase(ABC):
         and returns the cluster labels along with metadata about the
         clustering process.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input data matrix to cluster, shape (n_samples, n_features)
         **kwargs : dict
             Additional parameters specific to the clustering method
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
             - cluster_labels: Cluster labels for each sample (n_samples,)
             - metadata: Dictionary with clustering information including
               hyperparameters, number of clusters, silhouette score, etc.
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compute clustering
         >>> calc = MyCalculator()
         >>> data = np.random.rand(100, 50)
@@ -134,18 +134,18 @@ class CalculatorBase(ABC):
         """
         Validate input data for clustering.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input data to validate
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Validates input data format and shape
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If data format is invalid
         """
@@ -162,8 +162,8 @@ class CalculatorBase(ABC):
         """
         Prepare base metadata dictionary.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         hyperparameters : dict
             Hyperparameters used for clustering
         original_shape : tuple
@@ -173,8 +173,8 @@ class CalculatorBase(ABC):
         n_noise : int, optional
             Number of noise points (for algorithms that identify noise)
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Base metadata dictionary with common information
         """
@@ -190,13 +190,13 @@ class CalculatorBase(ABC):
         """
         Count number of clusters (excluding noise).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         labels : numpy.ndarray
             Cluster labels (-1 indicates noise)
 
-        Returns:
-        --------
+        Returns
+        -------
         int
             Number of clusters found
         """
@@ -208,14 +208,14 @@ class CalculatorBase(ABC):
         """
         Count number of noise points.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         labels : numpy.ndarray
             Cluster labels (-1 indicates noise)
         noise_cluster : int
             The value or label which is assigned to noise data points
-        Returns:
-        --------
+        Returns
+        -------
         int
             Number of noise points
         """
@@ -227,8 +227,8 @@ class CalculatorBase(ABC):
         
         Uses sampling for large datasets to avoid O(n²) performance issues.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Original data used for clustering
         labels : numpy.ndarray
@@ -237,8 +237,8 @@ class CalculatorBase(ABC):
             Maximum number of samples to use for silhouette calculation.
             Default is 50000 to balance accuracy and performance.
 
-        Returns:
-        --------
+        Returns
+        -------
         float or None
             Silhouette score, or None if cannot be computed
         """
@@ -291,8 +291,8 @@ class CalculatorBase(ABC):
         """
         Calculate sample size with configurable constraints for sampling-based methods.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         n_samples : int
             Total number of samples in dataset
         sample_fraction : float
@@ -302,8 +302,8 @@ class CalculatorBase(ABC):
         max_samples : int, optional
             Maximum sample size. Default is 100k for HDBSCAN/DBSCAN
 
-        Returns:
-        --------
+        Returns
+        -------
         int
             Sample size between min_samples and max_samples, or n_samples if smaller
         """
@@ -317,15 +317,15 @@ class CalculatorBase(ABC):
         """
         Validate memory and dimensionality constraints for clustering algorithms.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input data to check
         parameters : dict
             Algorithm parameters including force flag and method
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If constraints are violated and force=False
         """
@@ -381,8 +381,8 @@ class CalculatorBase(ABC):
         """
         Prepare storage for cluster labels (memmap or numpy array).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         n_samples : int
             Number of samples to store labels for
         algorithm : str
@@ -390,8 +390,8 @@ class CalculatorBase(ABC):
         method : str
             Method name (e.g., 'standard', 'knn_sampling', 'precomputed')
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray or numpy.memmap
             Storage array for cluster labels
         """
@@ -406,8 +406,8 @@ class CalculatorBase(ABC):
         """
         Convert labels to final format (memmap or numpy array).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         labels : numpy.ndarray
             Computed cluster labels
         algorithm : str
@@ -415,8 +415,8 @@ class CalculatorBase(ABC):
         method : str
             Method name for memmap filename
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray or numpy.memmap
             Final labels in requested format
         """
@@ -440,8 +440,8 @@ class CalculatorBase(ABC):
         """
         Generic k-NN sampling implementation for all clustering algorithms.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Full dataset to cluster
         parameters : dict
@@ -455,8 +455,8 @@ class CalculatorBase(ABC):
         noise_label : int, optional
             Label for noise points (default -1, DPA uses 0 with halos=True)
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Full cluster labels (memmap or numpy array)
         """

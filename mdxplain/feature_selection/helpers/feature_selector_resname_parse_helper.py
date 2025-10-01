@@ -30,8 +30,13 @@ from typing import List
 
 
 class FeatureSelectorResnameParseHelper:
-    """Helper class for res category - amino acid name based operations."""
-    
+    """
+    Helper class for res category - amino acid name based operations.
+
+    Provides static methods to parse 'res' category selections like "ALA", "ALA13"
+    to identify matching feature indices based on trajectory metadata.
+    """
+
     @staticmethod
     def parse_res_category(
         param_tokens: List[str], features_list: List[list], require_all_partners: bool = False
@@ -44,8 +49,8 @@ class FeatureSelectorResnameParseHelper:
         - "ALA" → all alanines (any seqid)
         - "ALA13" → specific alanine at seqid 13
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         param_tokens : List[str]
             List of parameter tokens for residue selection
         features_list : List[list]
@@ -53,13 +58,13 @@ class FeatureSelectorResnameParseHelper:
         require_all_partners : bool, default=False
             If True, ALL partners must contain the residue ID
 
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             List of feature indices matching the residue criteria
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If the residue specification is invalid
         """
@@ -95,18 +100,18 @@ class FeatureSelectorResnameParseHelper:
         - "A" → ("A", None)
         - "A13" → ("A", 13)
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         param : str
             Residue specification (e.g., "ALA", "ALA13", "A", "A13")
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             Tuple of (residue_name, residue_seqid or None)
             
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If the residue specification is invalid
         """
@@ -129,8 +134,8 @@ class FeatureSelectorResnameParseHelper:
         """
         Find features containing the specified residue name (any seqid).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         residue_name : str
             Residue name to find (e.g., "ALA", "A")
         features_list : List[list]
@@ -139,8 +144,8 @@ class FeatureSelectorResnameParseHelper:
             If True, ALL partners must contain the residue name
             If False, at least ONE partner must contain the residue name
 
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             List of feature indices with the specified residue name
         """
@@ -161,8 +166,8 @@ class FeatureSelectorResnameParseHelper:
         """
         Find features matching both residue name and sequence ID.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         residue_name : str
             Residue name to find (e.g., "ALA", "A")
         residue_seqid : int
@@ -173,8 +178,8 @@ class FeatureSelectorResnameParseHelper:
             If True, ALL partners must contain both residue name and sequence ID
             If False, at least ONE partner must contain both
 
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             List of feature indices with the specified residue name and sequence ID
         """
@@ -195,8 +200,8 @@ class FeatureSelectorResnameParseHelper:
         """
         Check if feature has the specified residue name.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature : list
             Feature from metadata
         residue_name : str
@@ -205,8 +210,8 @@ class FeatureSelectorResnameParseHelper:
             If True, ALL partners must have the residue name
             If False, at least ONE partner must have the residue name
 
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if residue name criteria are met
         """
@@ -233,8 +238,8 @@ class FeatureSelectorResnameParseHelper:
         """
         Check if feature has the specified residue name and sequence ID.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature : list
             Feature from metadata
         residue_name : str
@@ -245,8 +250,8 @@ class FeatureSelectorResnameParseHelper:
             If True, ALL partners must have both residue name and sequence ID
             If False, at least ONE partner must have both
 
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if residue name and sequence ID criteria are met
         """
@@ -276,15 +281,15 @@ class FeatureSelectorResnameParseHelper:
         """
         Check if residue name matches either aaa_code or a_code.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         residue : dict
             Residue from metadata
         residue_name : str
             Residue name to find
 
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if residue name matches either aaa_code or a_code, False otherwise
         """

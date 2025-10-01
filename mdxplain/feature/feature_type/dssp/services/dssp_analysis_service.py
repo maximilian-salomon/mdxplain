@@ -44,7 +44,23 @@ class DSSPAnalysisService(AnalysisServiceBase):
     """
     
     def __init__(self, pipeline_data: PipelineData) -> None:
-        """Initialize DSSP analysis service."""
+        """
+        Initialize DSSP analysis service.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data containing DSSP feature data
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        >>> # Initialize DSSP analysis service
+        >>> dssp_service = DSSPAnalysisService(pipeline.data)
+        """
         super().__init__(pipeline_data)
         self._feature_type = "dssp"
 
@@ -63,8 +79,8 @@ class DSSPAnalysisService(AnalysisServiceBase):
         """
         Compute DSSP transitions using lag time analysis.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         lag_time : int, default=10
             Number of frames to look ahead for transitions
         feature_selector : str, optional
@@ -72,13 +88,13 @@ class DSSPAnalysisService(AnalysisServiceBase):
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Transition counts per residue
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find dynamic secondary structure elements
         >>> pipeline.analysis.features.dssp.compute_transitions_lagtime()
         """
@@ -94,8 +110,8 @@ class DSSPAnalysisService(AnalysisServiceBase):
         """
         Compute DSSP transitions within sliding window.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         window_size : int, default=10
             Size of sliding window for transition detection
         feature_selector : str, optional
@@ -103,13 +119,13 @@ class DSSPAnalysisService(AnalysisServiceBase):
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Transition counts per residue
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Window-based transition detection for secondary structure
         >>> pipeline.analysis.features.dssp.compute_transitions_window(window_size=20)
         """
@@ -125,8 +141,8 @@ class DSSPAnalysisService(AnalysisServiceBase):
         """
         Compute frequencies of DSSP classes.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         simplified : bool, default=True
             Use simplified classes (H, E, C) vs full classes
         feature_selector : str, optional
@@ -134,13 +150,13 @@ class DSSPAnalysisService(AnalysisServiceBase):
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             (class_names, frequencies) for each DSSP class
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Get secondary structure composition
         >>> classes, freqs = pipeline.analysis.features.dssp.compute_class_frequencies()
         """
@@ -155,20 +171,20 @@ class DSSPAnalysisService(AnalysisServiceBase):
         """
         Compute transition frequency between DSSP classes.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Transition frequency matrix between classes
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Get secondary structure transition matrix
         >>> pipeline.analysis.features.dssp.compute_transition_frequency()
         """
@@ -183,20 +199,20 @@ class DSSPAnalysisService(AnalysisServiceBase):
         """
         Compute stability of DSSP assignments per residue.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Stability values per residue (0=unstable, 1=stable)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find most stable secondary structure elements
         >>> pipeline.analysis.features.dssp.compute_stability()
         """
@@ -212,8 +228,8 @@ class DSSPAnalysisService(AnalysisServiceBase):
         """
         Compute differences in DSSP assignments between frames.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         frame_1 : int, default=0
             First frame for comparison
         frame_2 : int, default=-1
@@ -223,13 +239,13 @@ class DSSPAnalysisService(AnalysisServiceBase):
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Differences in DSSP assignments
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compare first and last frame
         >>> pipeline.analysis.features.dssp.compute_differences()
         
@@ -247,20 +263,20 @@ class DSSPAnalysisService(AnalysisServiceBase):
         """
         Compute dominant DSSP class per residue across trajectory.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Dominant class index per residue
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Get most common secondary structure per residue
         >>> pipeline.analysis.features.dssp.compute_dominant_class()
         """

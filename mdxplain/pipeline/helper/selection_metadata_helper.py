@@ -36,27 +36,32 @@ if TYPE_CHECKING:
 
 
 class SelectionMetadataHelper:
-    """Helper class for metadata operations in feature selection system."""
+    """
+    Helper class for metadata operations in feature selection system.
+
+    Provides static methods for collecting metadata for selections,
+    processing individual feature metadata, and finalizing metadata results.
+    """
 
     @staticmethod
     def collect_metadata_for_selection(pipeline_data: PipelineData, name: str) -> List[Dict[str, Any]]:
         """
         Collect metadata for all features in the selection using stored reference trajectory.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object containing feature data
         name : str
             Name of the selection to collect metadata for
 
-        Returns:
-        --------
+        Returns
+        -------
         list
             List of metadata for all features in the selection
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If the selection does not exist or reference trajectory not set/valid
         """
@@ -99,8 +104,8 @@ class SelectionMetadataHelper:
         """
         Get metadata for a single feature type.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object containing feature data
         feature_type : str
@@ -112,13 +117,13 @@ class SelectionMetadataHelper:
         name : str
             Name of the selection to get metadata for
 
-        Returns:
-        --------
+        Returns
+        -------
         list
             List of metadata for the feature type
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If the feature type does not exist
         """
@@ -149,8 +154,8 @@ class SelectionMetadataHelper:
         """
         Get metadata entry for a single column.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_data : FeatureData
             Feature data object
         col_idx : int
@@ -162,13 +167,13 @@ class SelectionMetadataHelper:
         name : str
             Name of the selection to get metadata for
 
-        Returns:
-        --------
+        Returns
+        -------
         Optional[dict]
             Metadata entry for the column, or None if not available
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If the feature type does not exist
         """
@@ -187,8 +192,8 @@ class SelectionMetadataHelper:
         """
         Get the appropriate metadata based on use_reduced flag.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_data : FeatureData
             Feature data object
         use_reduced : bool
@@ -198,13 +203,13 @@ class SelectionMetadataHelper:
         name : str
             Name of the selection to get metadata for
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Metadata for the feature type
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If the metadata is not available
         """
@@ -228,20 +233,20 @@ class SelectionMetadataHelper:
         """
         Finalize and validate the metadata result.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selected_metadata : list
             List of metadata for all features in the selection
         name : str
             Name of the selection to get metadata for
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Array of dictionaries, one for each column in the selected matrix.
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If no valid metadata is found for the selection
         """

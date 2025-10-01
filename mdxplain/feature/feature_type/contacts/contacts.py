@@ -44,8 +44,8 @@ class Contacts(FeatureTypeBase):
     This feature type enables analysis of contact formation/breaking patterns,
     contact frequencies, and structural stability through contact persistence.
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> # Basic contact calculation with default cutoff
     >>> contacts = Contacts()
     >>> contacts.init_calculator()
@@ -68,18 +68,18 @@ class Contacts(FeatureTypeBase):
         """
         Initialize contact feature type with distance cutoff parameter.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cutoff : float, default=4.5
             Distance cutoff in Angstrom for contact determination. Pairs with
             distances <= cutoff are considered in contact (1), others not (0).
 
-        Returns:
-        --------
+        Returns
+        -------
         None
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Default cutoff (4.5 Angstrom)
         >>> contacts = Contacts()
 
@@ -96,8 +96,8 @@ class Contacts(FeatureTypeBase):
         """
         Initialize the contact calculator with specified configuration.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for large datasets
         cache_path : str, optional
@@ -105,12 +105,12 @@ class Contacts(FeatureTypeBase):
         chunk_size : int, optional
             Number of frames to process per chunk (None for automatic sizing)
 
-        Returns:
-        --------
+        Returns
+        -------
         None
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic initialization
         >>> contacts.init_calculator()
 
@@ -128,22 +128,22 @@ class Contacts(FeatureTypeBase):
         """
         Compute binary contact maps from distance data using distance cutoff.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         input_data : numpy.ndarray
             Distance matrix data from distance feature type (n_frames, n_pairs)
         feature_metadata : dict
             Feature metadata from distance calculations (structured metadata)
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple[numpy.ndarray, dict]
             Tuple containing (contact_matrix, feature_metadata) where contact_matrix
             is binary (0/1) indicating contact presence and feature_metadata is
             the same structured metadata from input with features in same order as data columns
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compute contacts from distance data
         >>> contacts = Contacts(cutoff=4.0)
         >>> contacts.init_calculator()
@@ -167,17 +167,17 @@ class Contacts(FeatureTypeBase):
         """
         Get list of feature type dependencies for contact calculations.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         List[str]
             List containing 'distances' as contacts require distance data
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> contacts = Contacts()
         >>> print(contacts.get_dependencies())
         ['distances']
@@ -189,17 +189,17 @@ class Contacts(FeatureTypeBase):
         """
         Return unique string identifier for the contact feature type.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             String identifier 'contacts' used as key in feature dictionaries
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> print(Contacts.get_type_name())
         'contacts'
         """
@@ -209,17 +209,17 @@ class Contacts(FeatureTypeBase):
         """
         Get the primary input feature type that contacts depend on.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             String identifier 'distances' indicating contacts use distance data
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> contacts = Contacts()
         >>> print(contacts.get_input())
         'distances'

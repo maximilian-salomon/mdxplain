@@ -25,7 +25,7 @@ Container for decomposition results (PCA, KernelPCA) with associated metadata
 and hyperparameters. Stores decomposed data with transformation information.
 """
 
-from typing import Dict, Any
+from typing import Dict
 from ...utils.data_utils import DataUtils
 
 
@@ -35,14 +35,30 @@ class DecompositionData:
 
     Stores results from dimensionality reduction methods (PCA, KernelPCA) along
     with transformation metadata and hyperparameters used for computation.
+
+    Attributes
+    ----------
+    decomposition_type : str
+        Type of decomposition used (e.g., "pca", "kernel_pca")
+    use_memmap : bool
+        Whether memory mapping is used for large datasets
+    cache_path : str
+        Path for memory-mapped cache files
+    data : np.ndarray or None
+        Decomposed data array
+    metadata : dict or None
+        Metadata including explained variance, hyperparameters, etc.
+    frame_mapping : dict or None
+        Mapping from global_frame_index to (trajectory_index, local_frame_index)
+        for tracking frame origins across multiple trajectories
     """
 
     def __init__(self, decomposition_type: str, use_memmap: bool = False, cache_path: str = "./cache") -> None:
         """
         Initialize decomposition data container.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         decomposition_type : str
             Type of decomposition used (e.g., "pca", "kernel_pca")
         use_memmap : bool, default=False
@@ -50,13 +66,13 @@ class DecompositionData:
         cache_path : str, optional
             Path for memory-mapped cache files
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes decomposition data container
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic initialization
         >>> decomp_data = DecompositionData("pca")
 
@@ -79,14 +95,14 @@ class DecompositionData:
         """
         Get frame mapping from global frame indices to trajectory origins.
 
-        Returns:
-        --------
+        Returns
+        -------
         dict or None
             Mapping from global_frame_index to (trajectory_index, local_frame_index),
             or None if decomposition has not been computed or mapping is not available
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> decomp_data = DecompositionData("pca")
         >>> frame_mapping = decomp_data.get_frame_mapping()
         >>> if frame_mapping is not None:
@@ -98,18 +114,18 @@ class DecompositionData:
         """
         Set frame mapping from global frame indices to trajectory origins.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         frame_mapping : dict
             Mapping from global_frame_index to (trajectory_index, local_frame_index)
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Sets the frame mapping for trajectory tracking
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> decomp_data = DecompositionData("pca")
         >>> mapping = {0: (0, 10), 1: (0, 11), 2: (1, 5)}  # global -> (traj, local)
         >>> decomp_data.set_frame_mapping(mapping)
@@ -120,18 +136,18 @@ class DecompositionData:
         """
         Save DecompositionData object to disk.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         save_path : str
             Path where to save the DecompositionData object
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Saves the DecompositionData object to the specified path
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> decomposition_data.save('analysis_results/pca_decomposition.pkl')
         """
         DataUtils.save_object(self, save_path)
@@ -140,18 +156,18 @@ class DecompositionData:
         """
         Load DecompositionData object from disk.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         load_path : str
             Path to the saved DecompositionData file
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Loads the DecompositionData object from the specified path
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> decomposition_data.load('analysis_results/pca_decomposition.pkl')
         """
         DataUtils.load_object(self, load_path)
@@ -160,17 +176,17 @@ class DecompositionData:
         """
         Print comprehensive decomposition information.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Prints decomposition information to console
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> decomposition_data.print_info()
         === DecompositionData ===
         Decomposition Type: PCA
@@ -190,8 +206,8 @@ class DecompositionData:
         """
         Check if no decomposition data is available.
 
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if no data is available, False otherwise
         """
@@ -201,8 +217,8 @@ class DecompositionData:
         """
         Print header with decomposition type.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         print("=== DecompositionData ===")
@@ -212,8 +228,8 @@ class DecompositionData:
         """
         Print detailed decomposition information.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         if self.data is not None:
@@ -246,8 +262,8 @@ class DecompositionData:
         """
         Print information about frame mapping.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         if self.frame_mapping:

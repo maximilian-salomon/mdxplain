@@ -41,8 +41,8 @@ class DPACalculator(CalculatorBase):
     This class implements the actual DPA clustering computation using
     the DPA package and computes clustering quality metrics.
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> # Create calculator and compute clustering
     >>> calc = DPACalculator()
     >>> data = np.random.rand(100, 10)
@@ -63,8 +63,8 @@ class DPACalculator(CalculatorBase):
         """
         Initialize DPA calculator.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cache_path : str, optional
             Path for cache files. Default is './cache'.
         max_memory_gb : float, optional
@@ -74,6 +74,10 @@ class DPACalculator(CalculatorBase):
             Used for chunked k-NN prediction. Default is 1000.
         use_memmap : bool, optional
             Whether to use memory mapping for large datasets. Default is False.
+
+        Returns
+        -------
+        None
         """
         super().__init__(cache_path, max_memory_gb, chunk_size, use_memmap)
 
@@ -81,8 +85,8 @@ class DPACalculator(CalculatorBase):
         """
         Compute DPA clustering.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input data matrix to cluster, shape (n_samples, n_features)
         **kwargs : dict
@@ -102,15 +106,15 @@ class DPACalculator(CalculatorBase):
             - sample_fraction : float, fraction of data to sample
             - force : bool, override memory and dimensionality checks
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
             - cluster_labels: Cluster labels for each sample
             - metadata: Dictionary with clustering information
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If input data is invalid or required parameters are missing
         ImportError
@@ -135,15 +139,15 @@ class DPACalculator(CalculatorBase):
         """
         Extract and validate DPA parameters.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         kwargs : dict
             Keyword arguments containing DPA parameters
         data : numpy.ndarray
             Input data to calculate sample size
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Validated DPA parameters
         """
@@ -193,15 +197,15 @@ class DPACalculator(CalculatorBase):
         """
         Perform DPA clustering computation.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input data to cluster
         parameters : dict
             DPA parameters
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[numpy.ndarray, object, float]
             Cluster labels, DPA model, and computation time
         """
@@ -223,15 +227,15 @@ class DPACalculator(CalculatorBase):
         """
         Perform standard DPA clustering by loading all data.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Full dataset to cluster
         parameters : dict
             DPA parameters
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[numpy.ndarray, DensityPeakAdvanced]
             Cluster labels and fitted model
         """
@@ -247,15 +251,15 @@ class DPACalculator(CalculatorBase):
         """
         DPA Sampling + k-NN (only practical option for large data).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Full dataset to cluster
         parameters : dict
             DPA parameters
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[numpy.ndarray, DensityPeakAdvanced]
             Cluster labels and fitted model
         """
@@ -285,15 +289,15 @@ class DPACalculator(CalculatorBase):
         """
         Create and fit DPA model.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input data to cluster
         parameters : dict
             DPA parameters
 
-        Returns:
-        --------
+        Returns
+        -------
         object
             Fitted DPA model
         """
@@ -318,15 +322,15 @@ class DPACalculator(CalculatorBase):
         """
         Extract cluster labels from DPA model.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dpa_model : object
             Fitted DPA model
         use_halos : bool
             Whether to return halo points or regular labels
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Cluster labels
         """
@@ -348,8 +352,8 @@ class DPACalculator(CalculatorBase):
         """
         Build comprehensive metadata dictionary.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Original input data
         cluster_labels : numpy.ndarray
@@ -361,8 +365,8 @@ class DPACalculator(CalculatorBase):
         computation_time : float
             Time taken for computation
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Complete metadata dictionary
         """
@@ -398,13 +402,13 @@ class DPACalculator(CalculatorBase):
         """
         Extract cluster centers from DPA model.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dpa_model : object
             Fitted DPA model
 
-        Returns:
-        --------
+        Returns
+        -------
         list or None
             List of cluster center indices or None if not available
         """
@@ -419,13 +423,13 @@ class DPACalculator(CalculatorBase):
         """
         Extract density values from DPA model.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dpa_model : object
             Fitted DPA model
 
-        Returns:
-        --------
+        Returns
+        -------
         list or None
             List of density values or None if not available
         """
@@ -440,13 +444,13 @@ class DPACalculator(CalculatorBase):
         """
         Extract indices of the k_max neighbors of each points.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dpa_model : object
             Fitted DPA model
 
-        Returns:
-        --------
+        Returns
+        -------
         list or None
             List of nn_indice values or None if not available
         """
@@ -463,18 +467,18 @@ class DPACalculator(CalculatorBase):
         in which the diagonal entries are the heights of the peaks and the off-diagonal entries are the
         heights of the saddle points.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dpa_model : object
             Fitted DPA model
 
-        Returns:
-        --------
+        Returns
+        -------
         list or None
             List of topography values or None if not available
 
-        References:
-        -----------
+        References
+        ----------
         Parameter descriptions adapted from the DPA package documentation.
         See: https://github.com/mariaderrico/DPA
         """
@@ -489,13 +493,13 @@ class DPACalculator(CalculatorBase):
         """
         Extract uncertainty values of the density estimation from DPA model.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dpa_model : object
             Fitted DPA model
 
-        Returns:
-        --------
+        Returns
+        -------
         list or None
             List of error density values or None if not available
         """
@@ -513,13 +517,13 @@ class DPACalculator(CalculatorBase):
         """
         Extract distances to k_max neighbors from DPA model.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dpa_model : object
             Fitted DPA model
 
-        Returns:
-        --------
+        Returns
+        -------
         list or None
             List of nn_distance values or None if not available
         """

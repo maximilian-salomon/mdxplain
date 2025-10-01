@@ -20,7 +20,7 @@
 """
 FeatureManager is a manager for feature data objects.
 
-It is used to add, reset, and reduce features to the trajectory data.
+It is used to add, reset, and reduce features to the pipeline data.
 """
 from __future__ import annotations
 
@@ -47,14 +47,30 @@ from ...utils.data_utils import DataUtils
 
 
 class FeatureManager:
-    """Manager for feature data objects."""
+    """
+    Manager for feature data objects.
+
+    This class provides methods to add, reset, and reduce features in the
+    pipeline data. It handles feature dependencies, computation, and storage.
+
+    Examples
+    --------
+    >>> pipeline_data = PipelineData()
+    >>> feature_manager = FeatureManager()
+    >>> feature_manager.add_feature(pipeline_data, feature_type.Distances())
+    >>> feature_manager.reduce_data(pipeline_data, feature_type.Distances(), metric="cv", threshold_min=0.1)
+    >>> feature_manager.reset_features(pipeline_data, "distances")
+    >>> feature_manager.print_info(pipeline_data)
+    >>> feature_manager.save(pipeline_data, 'features.npy')
+    >>> feature_manager.load(pipeline_data, 'features.npy')
+    """
 
     def __init__(self, use_memmap: bool = False, chunk_size: int = 2000, cache_dir: str = "./cache") -> None:
         """
         Initialize feature manager.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for feature data
         chunk_size : int, optional
@@ -62,8 +78,8 @@ class FeatureManager:
         cache_dir : str, default="./cache"
             Cache path for feature data
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes FeatureManager instance with specified configuration
         """
@@ -84,8 +100,8 @@ class FeatureManager:
         after trajectory modifications that invalidate existing features.
         Can reset all features or specific feature types.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -98,8 +114,8 @@ class FeatureManager:
         >>> manager = FeatureManager()
         >>> manager.reset_features(pipeline_data)  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
         feature_type : str, FeatureTypeBase, list, or None, default=None
@@ -113,13 +129,13 @@ class FeatureManager:
             Whether to raise ValueError if feature_type doesn't exist.
             If False, non-existent features are silently ignored with warning.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Clears specified feature data from pipeline_data.feature_data in-place
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> pipeline_data = PipelineData()
         >>> feature_manager = FeatureManager()
         >>> feature_manager.add_feature(pipeline_data, feature_type.Distances())
@@ -137,7 +153,7 @@ class FeatureManager:
         >>> # Strict mode - raise error for non-existent features
         >>> feature_manager.reset_features(pipeline_data, "nonexistent", strict=True)  # Raises ValueError
 
-        Notes:
+        Notes
         -----
         - Selected feature data is permanently deleted
         - Memory-mapped feature files remain on disk but are no longer referenced
@@ -171,8 +187,8 @@ class FeatureManager:
         dependencies (like Contacts depending on Distances) will automatically
         use the required input data.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -185,8 +201,8 @@ class FeatureManager:
         >>> manager = FeatureManager()
         >>> manager.add_feature(pipeline_data, feature_type.Distances())  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
         feature_type : FeatureTypeBase
@@ -204,19 +220,19 @@ class FeatureManager:
             Whether to force using the original data as base for the calculation for
             features using other features as input instead of the reduced data
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds computed feature to pipeline data and creates analysis methods
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If the feature already exists with computed data, if required
             dependencies are missing, or if trajectories are not loaded.
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> pipeline_data = PipelineData()
         >>> feature_manager = FeatureManager()
         >>> feature_manager.add_feature(pipeline_data, feature_type.Distances())
@@ -273,8 +289,8 @@ class FeatureManager:
         - feature_type.Distances (class with metaclass)
         - "distances" (string)
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -287,21 +303,21 @@ class FeatureManager:
         >>> manager = FeatureManager()
         >>> manager.reset_reduction(pipeline_data, "distances")  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
         feature_type : FeatureTypeBase, FeatureTypeBase class, or str
             Feature type instance, class, or string
             E.g. Distances(), Distances, "distances"
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Clears reduced_data and prints confirmation with shape info
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> pipeline_data = PipelineData()
         >>> feature_manager = FeatureManager()
         >>> feature_manager.add_feature(pipeline_data, feature_type.Distances())
@@ -334,8 +350,8 @@ class FeatureManager:
         - feature_type.Distances (class with metaclass)
         - "distances" (string)
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -348,8 +364,8 @@ class FeatureManager:
         >>> manager = FeatureManager()
         >>> manager.reduce_data(pipeline_data, "distances", metric="cv")  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
         feature_type : FeatureTypeBase, FeatureTypeBase class, or str
@@ -373,19 +389,19 @@ class FeatureManager:
             If True, find common features across all selected trajectories.
             If False, reduce each trajectory independently.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Stores filtered data in self.reduced_data and prints reduction summary
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If the feature has no data, if the reduction has already been performed,
             or if threshold parameters are invalid (threshold_min > threshold_max)
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> pipeline_data = PipelineData()
         >>> feature_manager = FeatureManager()
         >>> feature_manager.add_feature(pipeline_data, feature_type.Distances())  # instance
@@ -473,8 +489,8 @@ class FeatureManager:
         """
         Create FeatureData objects for specified trajectories.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
         feature_type : FeatureTypeBase
@@ -486,8 +502,8 @@ class FeatureManager:
         force_original : bool
             Whether to force original data for dependent features
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Creates and stores FeatureData objects in pipeline_data
         """
@@ -531,8 +547,8 @@ class FeatureManager:
         """
         Compute and store feature for single trajectory.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
         feature_data : FeatureData
@@ -544,8 +560,8 @@ class FeatureManager:
         force_original : bool
             Whether to force original data for dependent features
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Computes and stores data in feature_data
         """
@@ -564,8 +580,8 @@ class FeatureManager:
         """
         Print feature information.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -578,18 +594,18 @@ class FeatureManager:
         >>> manager = FeatureManager()
         >>> manager.print_info(pipeline_data)  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data container with feature data
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Prints feature information to console
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> pipeline_data = PipelineData()
         >>> feature_manager = FeatureManager()
         >>> feature_manager.print_info(pipeline_data)
@@ -612,8 +628,8 @@ class FeatureManager:
         """
         Save all feature data to single file.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -626,20 +642,20 @@ class FeatureManager:
         >>> manager = FeatureManager()
         >>> manager.save(pipeline_data, 'features.npy')  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data container with feature data
         save_path : str
             Path where to save all feature data in one file
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Saves all feature data to the specified file
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> feature_manager.save(pipeline_data, 'features.npy')
         """
         DataUtils.save_object(pipeline_data.feature_data, save_path)
@@ -648,8 +664,8 @@ class FeatureManager:
         """
         Load all feature data from single file.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -662,20 +678,20 @@ class FeatureManager:
         >>> manager = FeatureManager()
         >>> manager.load(pipeline_data, 'features.npy')  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data container to load feature data into
         load_path : str
             Path to saved feature data file
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Loads all feature data from the specified file
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> feature_manager.load(pipeline_data, 'features.npy')
         """
         temp_dict = {}
@@ -690,13 +706,13 @@ class FeatureManager:
         Provides an intuitive interface for adding features without requiring
         explicit feature type instantiation or imports.
 
-        Returns:
-        --------
+        Returns
+        -------
         FeatureAddService
             Service instance for adding features with combined parameters
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Add different feature types
         >>> pipeline.feature.add.distances(excluded_neighbors=2)
         >>> pipeline.feature.add.contacts(threshold=5.0, traj_selection=[0,1,2])
@@ -705,7 +721,7 @@ class FeatureManager:
         >>> pipeline.feature.add.sasa(probe_radius=0.12)
         >>> pipeline.feature.add.coordinates(atom_selection="backbone")
         
-        Notes:
+        Notes
         -----
         Pipeline data is automatically injected by AutoInjectProxy.
         All feature type parameters are combined with add_feature parameters.
@@ -720,13 +736,13 @@ class FeatureManager:
         Provides type-specific reduction metrics tailored to each feature type,
         such as coefficient of variation for distances or frequency for contacts.
 
-        Returns:
-        --------
+        Returns
+        -------
         FeatureReduceService
             Service instance for feature reduction with type-specific metrics
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Distance-specific metrics
         >>> pipeline.feature.reduce.distances.cv(threshold_min=0.1)
         >>> pipeline.feature.reduce.distances.transitions(window_size=20)
@@ -738,7 +754,7 @@ class FeatureManager:
         >>> # Torsion-specific metrics (circular statistics)
         >>> pipeline.feature.reduce.torsions.circular_std(threshold_max=30.0)
         
-        Notes:
+        Notes
         -----
         Pipeline data is automatically injected by AutoInjectProxy.
         Each feature type has its own specialized metrics.
@@ -753,9 +769,19 @@ class FeatureManager:
         Provides analysis operations tailored to each feature type,
         such as circular statistics for torsions or contact frequency analysis.
 
-        Returns:
-        --------
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
         FeatureAnalysisService
             Service instance for feature analysis with type-specific methods
+
+        Examples
+        --------
+        >>> # Analyze distances
+        >>> pipeline.feature.analysis.distances.compute_mean()
+        >>> pipeline.feature.analysis.distances.compute_std()
         """
         return FeatureAnalysisService(None) # PipelineData is injected automatically

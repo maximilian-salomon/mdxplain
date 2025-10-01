@@ -42,8 +42,8 @@ class FeatureNameMappingHelper:
     names using feature metadata from the pipeline. These methods extract
     common logic from FeatureImportanceManager to improve code organization.
     
-    Examples:
-    ---------
+    Examples
+    --------
     >>> # Get feature name from metadata
     >>> name = FeatureNameMappingHelper.get_feature_name(
     ...     feature_metadata, feature_idx
@@ -63,20 +63,20 @@ class FeatureNameMappingHelper:
         Safely retrieves feature metadata from pipeline_data for the given
         feature_selector, handling cases where metadata is unavailable.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object containing metadata
         feature_selector : str or None
             Name of the feature selector to get metadata for
             
-        Returns:
-        --------
+        Returns
+        -------
         list or None
             Feature metadata list or None if unavailable
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> metadata = FeatureNameMappingHelper.get_feature_metadata(
         ...     pipeline_data, "my_features"
         ... )
@@ -99,20 +99,20 @@ class FeatureNameMappingHelper:
         Extracts the feature name from metadata for the given index,
         providing fallbacks when metadata is unavailable or incomplete.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_metadata : list or None
             Feature metadata list from pipeline
         feature_idx : int
             Index of the feature to get name for
             
-        Returns:
-        --------
+        Returns
+        -------
         str
             Human-readable feature name
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> name = FeatureNameMappingHelper.get_feature_name(
         ...     metadata, 42
         ... )
@@ -151,20 +151,20 @@ class FeatureNameMappingHelper:
         Extracts the feature type from metadata for the given index,
         providing fallback when metadata is unavailable.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_metadata : list or None
             Feature metadata list from pipeline
         feature_idx : int
             Index of the feature to get type for
             
-        Returns:
-        --------
+        Returns
+        -------
         str
             Feature type name
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> ftype = FeatureNameMappingHelper.get_feature_type(
         ...     metadata, 42
         ... )
@@ -189,8 +189,8 @@ class FeatureNameMappingHelper:
         Enriches a feature info dictionary with human-readable name and
         type information extracted from metadata.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_info : Dict[str, Any]
             Feature info dictionary to enrich (modified in-place)
         feature_metadata : list or None
@@ -198,13 +198,13 @@ class FeatureNameMappingHelper:
         feature_idx : int
             Index of the feature to add names for
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Modifies feature_info dictionary in-place
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> feature_info = {"feature_index": 42, "importance_score": 0.85}
         >>> FeatureNameMappingHelper.add_feature_names(
         ...     feature_info, metadata, 42

@@ -42,8 +42,8 @@ class DistancesAnalysisService(AnalysisServiceBase):
     are automatically available with additional feature_selector and 
     traj_selection parameters.
     
-    Examples:
-    ---------
+    Examples
+    --------
     >>> # All methods from DistanceCalculatorAnalysis are available
     >>> mean = pipeline.feature.analysis.distances.compute_mean()
     >>> std = pipeline.feature.analysis.distances.compute_std(
@@ -56,13 +56,13 @@ class DistancesAnalysisService(AnalysisServiceBase):
         """
         Initialize distances analysis service.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data container with all necessary data
             
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         super().__init__(pipeline_data)
@@ -78,20 +78,20 @@ class DistancesAnalysisService(AnalysisServiceBase):
         """
         Compute mean distances per pair.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Mean distance for each pair with shape (n_pairs,)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compute mean for all distance pairs
         >>> pipeline.analysis.features.distances.mean()
         
@@ -111,20 +111,20 @@ class DistancesAnalysisService(AnalysisServiceBase):
         """
         Compute standard deviation of distances per pair.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Standard deviation for each pair with shape (n_pairs,)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compute std for all distance pairs
         >>> pipeline.analysis.features.distances.std()
         
@@ -141,20 +141,20 @@ class DistancesAnalysisService(AnalysisServiceBase):
         """
         Compute minimum distances per pair.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Minimum distance for each pair with shape (n_pairs,)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find closest approach for all pairs
         >>> pipeline.analysis.features.distances.min()
         """
@@ -168,20 +168,20 @@ class DistancesAnalysisService(AnalysisServiceBase):
         """
         Compute maximum distances per pair.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Maximum distance for each pair with shape (n_pairs,)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find maximum separation for all pairs
         >>> pipeline.analysis.features.distances.max()
         """
@@ -195,20 +195,20 @@ class DistancesAnalysisService(AnalysisServiceBase):
         """
         Compute median distances per pair.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Median distance for each pair with shape (n_pairs,)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find median distance for all pairs
         >>> pipeline.analysis.features.distances.median()
         """
@@ -222,20 +222,20 @@ class DistancesAnalysisService(AnalysisServiceBase):
         """
         Compute variance of distances per pair.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Variance for each pair with shape (n_pairs,)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compute variance for all distance pairs
         >>> pipeline.analysis.features.distances.variance()
         """
@@ -249,20 +249,20 @@ class DistancesAnalysisService(AnalysisServiceBase):
         """
         Compute range (max - min) for each distance pair.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Range for each distance pair with shape (n_pairs,)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find pairs with largest distance variations
         >>> pipeline.analysis.features.distances.range()
         """
@@ -276,20 +276,20 @@ class DistancesAnalysisService(AnalysisServiceBase):
         """
         Compute 25th percentile for each distance pair.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             25th percentile for each distance pair with shape (n_pairs,)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Get first quartile distances
         >>> pipeline.analysis.features.distances.q25()
         """
@@ -303,20 +303,20 @@ class DistancesAnalysisService(AnalysisServiceBase):
         """
         Compute 75th percentile for each distance pair.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             75th percentile for each distance pair with shape (n_pairs,)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Get third quartile distances
         >>> pipeline.analysis.features.distances.q75()
         """
@@ -330,20 +330,20 @@ class DistancesAnalysisService(AnalysisServiceBase):
         """
         Compute interquartile range (Q75 - Q25) for each distance pair.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Interquartile range for each distance pair with shape (n_pairs,)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Robust measure of distance spread
         >>> pipeline.analysis.features.distances.iqr()
         """
@@ -357,20 +357,20 @@ class DistancesAnalysisService(AnalysisServiceBase):
         """
         Compute median absolute deviation for each distance pair.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Median absolute deviation for each distance pair with shape (n_pairs,)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Robust measure of distance variability
         >>> pipeline.analysis.features.distances.mad()
         """
@@ -384,20 +384,20 @@ class DistancesAnalysisService(AnalysisServiceBase):
         """
         Compute coefficient of variation (CV = std/mean) for distances per pair.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Coefficient of variation for each pair with shape (n_pairs,)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find most variable distances (high CV)
         >>> pipeline.analysis.features.distances.cv()
         """
@@ -413,20 +413,20 @@ class DistancesAnalysisService(AnalysisServiceBase):
         """
         Compute mean distances per frame.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Mean distance across all pairs for each frame with shape (n_frames,)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Track average distance over trajectory
         >>> pipeline.analysis.features.distances.distances_per_frame_mean()
         """
@@ -440,20 +440,20 @@ class DistancesAnalysisService(AnalysisServiceBase):
         """
         Compute standard deviation of distances per frame.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Standard deviation across all pairs for each frame with shape (n_frames,)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Track distance variability over trajectory
         >>> pipeline.analysis.features.distances.distances_per_frame_std()
         """
@@ -467,20 +467,20 @@ class DistancesAnalysisService(AnalysisServiceBase):
         """
         Compute minimum distances per frame.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Minimum distance across all pairs for each frame with shape (n_frames,)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Track closest approach over trajectory
         >>> pipeline.analysis.features.distances.distances_per_frame_min()
         """
@@ -494,20 +494,20 @@ class DistancesAnalysisService(AnalysisServiceBase):
         """
         Compute maximum distances per frame.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Maximum distance across all pairs for each frame with shape (n_frames,)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Track maximum separation over trajectory
         >>> pipeline.analysis.features.distances.distances_per_frame_max()
         """
@@ -521,20 +521,20 @@ class DistancesAnalysisService(AnalysisServiceBase):
         """
         Compute median distances per frame.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Median distance across all pairs for each frame with shape (n_frames,)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Track robust average distance over trajectory
         >>> pipeline.analysis.features.distances.distances_per_frame_median()
         """
@@ -548,20 +548,20 @@ class DistancesAnalysisService(AnalysisServiceBase):
         """
         Compute range of distances per frame.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Range (max - min) across all pairs for each frame with shape (n_frames,)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Track distance spread over trajectory
         >>> pipeline.analysis.features.distances.distances_per_frame_range()
         """
@@ -575,20 +575,20 @@ class DistancesAnalysisService(AnalysisServiceBase):
         """
         Compute sum of distances per frame.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Sum of distances across all pairs for each frame with shape (n_frames,)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Track total distance involvement over trajectory
         >>> pipeline.analysis.features.distances.distances_per_frame_sum()
         """
@@ -604,20 +604,20 @@ class DistancesAnalysisService(AnalysisServiceBase):
         """
         Compute mean distance per residue (auto-converts condensed to squareform).
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Mean distance per residue
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find most connected residues
         >>> pipeline.analysis.features.distances.per_residue_mean()
         """
@@ -631,20 +631,20 @@ class DistancesAnalysisService(AnalysisServiceBase):
         """
         Compute standard deviation of distances per residue.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Standard deviation per residue
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find most variable residues
         >>> pipeline.analysis.features.distances.per_residue_std()
         """
@@ -658,20 +658,20 @@ class DistancesAnalysisService(AnalysisServiceBase):
         """
         Compute minimum distance per residue.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Minimum distance per residue
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find closest approach distances per residue
         >>> pipeline.analysis.features.distances.per_residue_min()
         """
@@ -685,20 +685,20 @@ class DistancesAnalysisService(AnalysisServiceBase):
         """
         Compute maximum distance per residue.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Maximum distance per residue
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find maximum separation distances per residue
         >>> pipeline.analysis.features.distances.per_residue_max()
         """
@@ -712,20 +712,20 @@ class DistancesAnalysisService(AnalysisServiceBase):
         """
         Compute median distance per residue.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Median distance per residue
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Robust average distance per residue
         >>> pipeline.analysis.features.distances.per_residue_median()
         """
@@ -739,20 +739,20 @@ class DistancesAnalysisService(AnalysisServiceBase):
         """
         Compute sum of distances per residue.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Sum of distances per residue
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Total distance involvement per residue
         >>> pipeline.analysis.features.distances.per_residue_sum()
         """
@@ -766,20 +766,20 @@ class DistancesAnalysisService(AnalysisServiceBase):
         """
         Compute variance of distances per residue.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Variance per residue
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Distance variance per residue
         >>> pipeline.analysis.features.distances.per_residue_variance()
         """
@@ -793,20 +793,20 @@ class DistancesAnalysisService(AnalysisServiceBase):
         """
         Compute range of distances per residue.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Distance range per residue
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Distance range per residue
         >>> pipeline.analysis.features.distances.per_residue_range()
         """
@@ -824,8 +824,8 @@ class DistancesAnalysisService(AnalysisServiceBase):
         """
         Compute distance transitions using lag time analysis.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         threshold : float, default=2.0
             Distance threshold for transition detection in Angstroms
         lag_time : int, default=10
@@ -835,13 +835,13 @@ class DistancesAnalysisService(AnalysisServiceBase):
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Transition counts for each pair with shape (n_pairs,)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Detect transitions with 2Å threshold
         >>> pipeline.analysis.features.distances.transitions_lagtime(threshold=2.0)
         
@@ -862,8 +862,8 @@ class DistancesAnalysisService(AnalysisServiceBase):
         """
         Compute distance transitions within sliding window.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         threshold : float, default=2.0
             Distance threshold for transition detection in Angstroms
         window_size : int, default=10
@@ -873,13 +873,13 @@ class DistancesAnalysisService(AnalysisServiceBase):
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Transition counts for each pair with shape (n_pairs,)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Window-based transition detection
         >>> pipeline.analysis.features.distances.transitions_window(
         ...     threshold=3.0, window_size=20
@@ -897,8 +897,8 @@ class DistancesAnalysisService(AnalysisServiceBase):
         """
         Compute distance stability (inverse of transition rate).
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         threshold : float, default=2.0
             Distance threshold for stability detection in Angstroms
         window_size : int, default=10
@@ -910,13 +910,13 @@ class DistancesAnalysisService(AnalysisServiceBase):
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Stability values per pair (0=unstable, 1=stable)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find most stable distance pairs
         >>> pipeline.analysis.features.distances.stability(
         ...     threshold=2.5, window_size=15, mode='window'
@@ -938,8 +938,8 @@ class DistancesAnalysisService(AnalysisServiceBase):
         """
         Compute differences between two distance data selections.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector2 : str, optional
             Second feature selector for comparison
         traj_selection2 : str, int, list, optional
@@ -951,13 +951,13 @@ class DistancesAnalysisService(AnalysisServiceBase):
         traj_selection : str, int, list, optional
             First trajectory selection for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Differences between the two selections
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compare same features across different trajectories
         >>> pipeline.analysis.features.distances.differences(
         ...     traj_selection=[0, 1],      # Wild type
