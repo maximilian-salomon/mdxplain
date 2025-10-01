@@ -46,8 +46,8 @@ class AnalyzerTypeBase(ABC, metaclass=AnalyzerTypeMeta):
     - get_type_name(): Unique identifier string
     - get_params(): Parameter dictionary
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> class CustomAnalyzer(AnalyzerTypeBase):
     ...     def compute(self, X, y):
     ...         # Implementation here
@@ -62,8 +62,12 @@ class AnalyzerTypeBase(ABC, metaclass=AnalyzerTypeMeta):
         """
         Initialize analyzer type base class.
 
-        Returns:
-        --------
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
         None
             Initializes base analyzer type
         """
@@ -78,23 +82,23 @@ class AnalyzerTypeBase(ABC, metaclass=AnalyzerTypeMeta):
         It should train the ML model and return feature importance scores
         along with the trained model and metadata.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         X : np.ndarray
             Feature matrix with shape (n_samples, n_features)
         y : np.ndarray
             Target labels with shape (n_samples,)
 
-        Returns:
-        --------
+        Returns
+        -------
         Dict[str, Any]
             Dictionary containing:
             - 'importances': np.ndarray of feature importance scores
             - 'model': Trained ML model object
             - 'metadata': Dict with additional information
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> result = analyzer.compute(X, y)
         >>> importance_scores = result['importances']
         >>> trained_model = result['model']
@@ -111,13 +115,18 @@ class AnalyzerTypeBase(ABC, metaclass=AnalyzerTypeMeta):
         Returns the string identifier used to identify this analyzer type
         in the pipeline system. This name is used for storage and retrieval.
 
-        Returns:
-        --------
+        Parameters
+        ----------
+        None but cls : Type[AnalyzerTypeBase]
+            The class itself
+
+        Returns
+        -------
         str
             Unique string identifier for this analyzer type
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> print(DecisionTree.get_type_name())
         'decision_tree'
         """
@@ -131,8 +140,8 @@ class AnalyzerTypeBase(ABC, metaclass=AnalyzerTypeMeta):
         Sets up the analyzer calculator with options for memory mapping and
         chunk processing for large datasets.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for large datasets
         cache_path : str, default="./cache"
@@ -140,13 +149,13 @@ class AnalyzerTypeBase(ABC, metaclass=AnalyzerTypeMeta):
         chunk_size : int, default=10000
             Number of samples to process per chunk
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Sets self.calculator to initialized calculator instance
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> analyzer = DecisionTree()
         >>> analyzer.init_calculator(use_memmap=True, chunk_size=1000)
         """
@@ -159,13 +168,18 @@ class AnalyzerTypeBase(ABC, metaclass=AnalyzerTypeMeta):
         Returns a dictionary of all parameters used by this analyzer instance.
         This is used for metadata storage and reproducibility.
 
-        Returns:
-        --------
+        Parameters
+        ----------
+        None but self : AnalyzerTypeBase
+            The analyzer instance
+
+        Returns
+        -------
         Dict[str, Any]
             Dictionary of analyzer parameters
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> params = analyzer.get_params()
         >>> print(f"Max depth: {params.get('max_depth', 'unlimited')}")
         """

@@ -53,8 +53,8 @@ class FeatureSelectorAddService:
     - Basic add method via __call__()
     - Reduction methods like with_cv_reduction(), with_std_reduction(), etc.
 
-    Examples:
-    ---------
+    Examples
+    --------
     Basic usage:
     >>> pipeline.feature_selector.add.distances("test", "res ALA")
     >>> pipeline.feature_selector.add.contacts("test", "resid 120-140")
@@ -68,15 +68,15 @@ class FeatureSelectorAddService:
         """
         Initialize feature selector add service.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         manager : FeatureSelectorManager
             Manager instance for executing add operations
         pipeline_data : PipelineData
             Pipeline data container with trajectory and feature data
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes service with manager and pipeline_data references
         """
@@ -92,8 +92,12 @@ class FeatureSelectorAddService:
         selections with optional post-selection reduction based on statistical
         metrics like CV, standard deviation, variance, etc.
 
-        Returns:
-        --------
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
         DistancesSelectionService
             Service with distances-specific reduction methods
 
@@ -108,8 +112,8 @@ class FeatureSelectorAddService:
         - with_mean_reduction(): Mean value filtering
         - with_max_reduction(): Maximum value filtering
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> pipeline.feature_selector.add.distances("test", "res ALA")
         >>> pipeline.feature_selector.add.distances.with_cv_reduction("test", "res ALA", threshold_min=0.1)
         """
@@ -124,8 +128,12 @@ class FeatureSelectorAddService:
         selections with optional post-selection reduction based on contact
         statistics like frequency, stability, and transitions.
 
-        Returns:
-        --------
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
         ContactsSelectionService
             Service with contacts-specific reduction methods
 
@@ -134,8 +142,8 @@ class FeatureSelectorAddService:
         - with_stability_reduction(): Contact stability filtering
         - with_transitions_reduction(): Contact transition filtering
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> pipeline.feature_selector.add.contacts("test", "resid 120-140")
         >>> pipeline.feature_selector.add.contacts.with_frequency_reduction("test", "resid 120-140", threshold_min=0.3)
         """
@@ -150,8 +158,12 @@ class FeatureSelectorAddService:
         selections with optional post-selection reduction based on structural
         flexibility metrics like RMSF, standard deviation, etc.
 
-        Returns:
-        --------
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
         CoordinatesSelectionService
             Service with coordinates-specific reduction methods
 
@@ -166,8 +178,8 @@ class FeatureSelectorAddService:
         - with_min_reduction(): Minimum value filtering
         - with_max_reduction(): Maximum value filtering
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> pipeline.feature_selector.add.coordinates("test", "backbone")
         >>> pipeline.feature_selector.add.coordinates.with_rmsf_reduction("test", "backbone", threshold_max=2.0)
         """
@@ -182,8 +194,12 @@ class FeatureSelectorAddService:
         selections with optional post-selection reduction based on angular
         flexibility and transition metrics.
 
-        Returns:
-        --------
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
         TorsionsSelectionService
             Service with torsions-specific reduction methods
 
@@ -198,8 +214,8 @@ class FeatureSelectorAddService:
         - with_cv_reduction(): Coefficient of variation filtering
         - with_variance_reduction(): Variance filtering
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> pipeline.feature_selector.add.torsions("test", "phi psi")
         >>> pipeline.feature_selector.add.torsions.with_transitions_reduction("test", "phi psi", threshold_min=5)
         """
@@ -214,8 +230,12 @@ class FeatureSelectorAddService:
         feature selections with optional post-selection reduction based on
         structural stability and transition frequencies.
 
-        Returns:
-        --------
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
         DsspSelectionService
             Service with DSSP-specific reduction methods
 
@@ -225,8 +245,8 @@ class FeatureSelectorAddService:
         - with_stability_reduction(): Structural stability filtering
         - with_class_frequencies_reduction(): Structure class frequency filtering
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> pipeline.feature_selector.add.dssp("test", "resid 50-100")
         >>> pipeline.feature_selector.add.dssp.with_stability_reduction("test", "resid 50-100", threshold_min=0.7)
         """
@@ -241,8 +261,12 @@ class FeatureSelectorAddService:
         surface area feature selections with optional post-selection reduction
         based on exposure variability and burial statistics.
 
-        Returns:
-        --------
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
         SasaSelectionService
             Service with SASA-specific reduction methods
 
@@ -257,8 +281,8 @@ class FeatureSelectorAddService:
         - with_max_reduction(): Maximum value filtering
         - with_burial_fraction_reduction(): Burial fraction filtering
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> pipeline.feature_selector.add.sasa("test", "resid 1-50")
         >>> pipeline.feature_selector.add.sasa.with_cv_reduction("test", "resid 1-50", threshold_max=0.5)
         """

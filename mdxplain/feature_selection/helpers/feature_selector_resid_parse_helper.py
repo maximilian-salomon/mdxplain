@@ -30,8 +30,13 @@ from .feature_selector_numeric_parse_helper import FeatureSelectorNumericParseHe
 
 
 class FeatureSelectorResidParseHelper(FeatureSelectorNumericParseHelper):
-    """Helper class for resid category - array index based operations."""
-    
+    """
+    Helper class for resid category - array index based operations.
+
+    Provides static methods to parse 'resid' category selections like "123", "123-140"
+    to identify matching feature indices based on trajectory metadata.
+    """
+
     @staticmethod
     def parse_resid_category(
         param_parts: List[str], features_list: List[list], require_all_partners: bool = False
@@ -40,8 +45,8 @@ class FeatureSelectorResidParseHelper(FeatureSelectorNumericParseHelper):
         Parse 'resid' category and return matching feature indices.
         Uses array index from metadata (residue.index).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         param_parts : List[str]
             List of parameter parts for residue ID selection
         features_list : List[list]
@@ -49,13 +54,13 @@ class FeatureSelectorResidParseHelper(FeatureSelectorNumericParseHelper):
         require_all_partners : bool, default=False
             If True, ALL partners must contain the residue ID
 
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             List of feature indices matching the residue ID criteria
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If the residue ID specification is invalid
         """

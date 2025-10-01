@@ -36,7 +36,12 @@ from .feature_selector_consensus_parse_helper import FeatureSelectorConsensusPar
 
 
 class FeatureSelectorParseCoreHelper:
-    """Core parser that coordinates pattern detection and delegates to specialized helpers."""
+    """
+    Core parser that coordinates pattern detection and delegates to specialized helpers.
+
+    This class implements the main logic for parsing feature selection strings,
+    including smart pattern detection to infer categories when not explicitly provided.
+    """
     
     @staticmethod
     def parse_selection(selection_string: str, features_list: List[list], require_all_partners: bool = False) -> List[int]:
@@ -44,8 +49,8 @@ class FeatureSelectorParseCoreHelper:
         Parse selection string and return matching feature indices.
         Coordinates pattern detection and delegates to specialized category helpers.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selection_string : str
             Selection string (e.g., "res ALA HIS", "resid 123 130", "res ALA and not resid 124-130")
         features_list : List[list]
@@ -53,13 +58,13 @@ class FeatureSelectorParseCoreHelper:
         require_all_partners : bool, default=False
             For pairwise features, require all partners to be present in selection
 
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             List of feature indices that match the selection
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If the selection string is invalid
         """
@@ -74,13 +79,13 @@ class FeatureSelectorParseCoreHelper:
         """
         Split selection string into individual instructions.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selection_string : str
             Selection string to split
 
-        Returns:
-        --------
+        Returns
+        -------
         List[str]
             List of individual instruction strings
         """
@@ -93,8 +98,8 @@ class FeatureSelectorParseCoreHelper:
         """
         Process all instructions and return positive and negative indices, plus flag for negative instructions.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         instructions : List[str]
             List of instruction strings
         features_list : List[list]
@@ -102,13 +107,13 @@ class FeatureSelectorParseCoreHelper:
         require_all_partners : bool, default=False
             For pairwise features, require all partners to be present in selection
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             Tuple of (positive_indices, negative_indices, had_negative_instructions)
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If the instruction is invalid
         """
@@ -136,8 +141,8 @@ class FeatureSelectorParseCoreHelper:
         """
         Process a single instruction and return positive and negative indices.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         instruction : str
             Single instruction string
         features_list : List[list]
@@ -145,13 +150,13 @@ class FeatureSelectorParseCoreHelper:
         require_all_partners : bool, default=False
             For pairwise features, require all partners to be present in selection
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             Tuple of (positive_indices, negative_indices)
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If the instruction is invalid
         """
@@ -179,8 +184,8 @@ class FeatureSelectorParseCoreHelper:
         Get indices for a specific category and parameters.
         Delegates to appropriate specialized helper.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         category : str
             Category type (e.g., 'res', 'resid', 'seqid')
         parameters : str
@@ -188,13 +193,13 @@ class FeatureSelectorParseCoreHelper:
         features_list : List[list]
             List of features from metadata
 
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             List of feature indices matching the category and parameters
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If the category is unknown
         """
@@ -232,8 +237,8 @@ class FeatureSelectorParseCoreHelper:
         """
         Combine positive and negative results into final selection.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         positive : List[int]
             List of feature indices
         negative : List[int]
@@ -243,8 +248,8 @@ class FeatureSelectorParseCoreHelper:
         had_negative_instructions : bool, default=False
             Whether the selection contained any "not" instructions
 
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             Final list of selected feature indices
         """
@@ -271,13 +276,13 @@ class FeatureSelectorParseCoreHelper:
         """
         Normalize parameters to uppercase and split by separators.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         parameters : str
             Parameters string to normalize and split
 
-        Returns:
-        --------
+        Returns
+        -------
         Union[List[str], str]
             List of parameter tokens or "ALL" string
         """
@@ -303,18 +308,18 @@ class FeatureSelectorParseCoreHelper:
         - 'ALA' or 'A' or 'LEU' → 'res ALA' or 'res A' or 'res LEU'
         - 'ALA13' or 'A13' → 'res ALA13' or 'res A13'
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         tokens : List[str]
             List of tokens from instruction
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             Tuple of (category, parameters, is_negative)
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If the instruction is invalid
         """
@@ -347,13 +352,13 @@ class FeatureSelectorParseCoreHelper:
         - ['res', 'ALA'] -> ('res', 'ALA')
         - ['13', '14', '15'] -> ('seqid', '13 14 15')
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         tokens : List[str]
             List of tokens to analyze
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             Tuple of (category, parameters)
         """

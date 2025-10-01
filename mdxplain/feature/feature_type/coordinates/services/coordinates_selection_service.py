@@ -53,20 +53,20 @@ class CoordinatesSelectionService(SelectionServiceBase):
         Creates a service for adding coordinate feature selections with optional
         post-selection reduction based on structural flexibility metrics.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         manager : FeatureSelectorManager
             Manager instance for executing add operations
         pipeline_data : PipelineData
             Pipeline data container with trajectory and feature data
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes service with manager and pipeline_data references
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> from mdxplain.pipeline.managers.pipeline_manager import PipelineManager
         >>> pipeline = PipelineManager()
         >>> service = pipeline.feature_selector.add.coordinates
@@ -87,8 +87,8 @@ class CoordinatesSelectionService(SelectionServiceBase):
         """
         Add coordinates selection without reduction.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -102,8 +102,8 @@ class CoordinatesSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds coordinates selection to the named selector
         """
@@ -136,8 +136,8 @@ class CoordinatesSelectionService(SelectionServiceBase):
         Filters coordinate features based on atomic positional fluctuations.
         Higher RMSF values indicate more mobile atoms/residues.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -157,13 +157,13 @@ class CoordinatesSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds coordinates selection with RMSF reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_rmsf_reduction("test", "res ALA", threshold_min=2.0)
         >>> service.with_rmsf_reduction("test", "mobile_loops", threshold_min=3.0)
         """
@@ -191,8 +191,8 @@ class CoordinatesSelectionService(SelectionServiceBase):
         Filters coordinate features based on standard deviation of atomic
         positions. Higher values indicate more mobile atoms/residues.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -212,13 +212,13 @@ class CoordinatesSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds coordinates selection with standard deviation reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_std_reduction("test", "res ALA", threshold_min=1.5)
         >>> service.with_std_reduction("test", "flexible_regions", threshold_min=2.0)
         """
@@ -247,8 +247,8 @@ class CoordinatesSelectionService(SelectionServiceBase):
         of atomic positions. Higher CV values indicate more variable atoms/residues
         relative to their mean position.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -268,13 +268,13 @@ class CoordinatesSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds coordinates selection with CV reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_cv_reduction("test", "res ALA", threshold_min=0.1)
         >>> service.with_cv_reduction("test", "variable_loops", threshold_min=0.2)
         """
@@ -303,8 +303,8 @@ class CoordinatesSelectionService(SelectionServiceBase):
         Higher variance values indicate more mobile atoms/residues with
         broader positional distributions.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -324,13 +324,13 @@ class CoordinatesSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds coordinates selection with variance reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_variance_reduction("test", "res ALA", threshold_min=2.25)
         >>> service.with_variance_reduction("test", "flexible_regions", threshold_min=4.0)
         """
@@ -359,8 +359,8 @@ class CoordinatesSelectionService(SelectionServiceBase):
         positions. Higher range values indicate atoms with larger amplitude
         of motion.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -380,13 +380,13 @@ class CoordinatesSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds coordinates selection with range reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_range_reduction("test", "res ALA", threshold_min=3.0)
         >>> service.with_range_reduction("test", "mobile_loops", threshold_min=5.0)
         """
@@ -415,8 +415,8 @@ class CoordinatesSelectionService(SelectionServiceBase):
         atomic positions. MAD is more robust to outliers than standard
         deviation while still indicating positional variability.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -436,13 +436,13 @@ class CoordinatesSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds coordinates selection with MAD reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_mad_reduction("test", "res ALA", threshold_min=1.0)
         >>> service.with_mad_reduction("test", "robust_flexible", threshold_min=1.5)
         """
@@ -471,8 +471,8 @@ class CoordinatesSelectionService(SelectionServiceBase):
         This can be used to select atoms based on their average
         position along specific coordinate axes.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -492,13 +492,13 @@ class CoordinatesSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds coordinates selection with mean reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_mean_reduction("test", "res ALA", threshold_min=10.0)
         >>> service.with_mean_reduction("test", "central_atoms", threshold_min=5.0, threshold_max=15.0)
         """
@@ -527,8 +527,8 @@ class CoordinatesSelectionService(SelectionServiceBase):
         across the trajectory. This can identify atoms that reach
         specific minimum positions during dynamics.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -548,13 +548,13 @@ class CoordinatesSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds coordinates selection with minimum reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_min_reduction("test", "res ALA", threshold_min=0.0)
         >>> service.with_min_reduction("test", "lower_bound", threshold_max=5.0)
         """
@@ -583,8 +583,8 @@ class CoordinatesSelectionService(SelectionServiceBase):
         across the trajectory. This can identify atoms that reach
         specific maximum positions during dynamics.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -604,13 +604,13 @@ class CoordinatesSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds coordinates selection with maximum reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_max_reduction("test", "res ALA", threshold_min=20.0)
         >>> service.with_max_reduction("test", "upper_bound", threshold_min=15.0, threshold_max=25.0)
         """
@@ -643,8 +643,8 @@ class CoordinatesSelectionService(SelectionServiceBase):
         transitions. Higher values indicate more dynamic atoms that
         frequently change their position by more than the threshold.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -672,13 +672,13 @@ class CoordinatesSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds coordinates selection with transitions reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_transitions_reduction("test", "res ALA", threshold_min=10)
         >>> service.with_transitions_reduction("test", "dynamic_loops",
         ...     threshold_min=20, transition_threshold=3.0, window_size=20)

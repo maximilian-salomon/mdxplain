@@ -45,8 +45,8 @@ class TorsionsCalculator(CalculatorBase):
     padding for residues where angles are not defined. All angles are
     computed and returned in degrees.
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> # Basic torsions calculation with all angles
     >>> calculator = TorsionsCalculator()
     >>> torsions, metadata = calculator.compute(trajectory)
@@ -66,8 +66,8 @@ class TorsionsCalculator(CalculatorBase):
         """
         Initialize torsions calculator with configuration parameters.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for large datasets
         cache_path : str, optional
@@ -75,12 +75,12 @@ class TorsionsCalculator(CalculatorBase):
         chunk_size : int, optional
             Number of frames to process per chunk
 
-        Returns:
-        --------
+        Returns
+        -------
         None
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic initialization
         >>> calculator = TorsionsCalculator()
 
@@ -98,8 +98,8 @@ class TorsionsCalculator(CalculatorBase):
         """
         Compute torsion angles from trajectory.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         input_data : mdtraj.Trajectory
             MDTraj trajectory object to process
         **kwargs : dict
@@ -110,14 +110,14 @@ class TorsionsCalculator(CalculatorBase):
             - calculate_chi : bool - Whether to compute side chain chi angles (chi1-4)
             - res_metadata : dict - Residue metadata for naming
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple[numpy.ndarray, dict]
             Tuple containing (torsions_array, feature_metadata) where torsions_array
             has shape (n_frames, n_residues * n_angle_types) with angles in degrees
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Only phi and psi backbone torsions
         >>> torsions, metadata = calculator.compute(trajectory, 
         ...                                        calculate_phi=True, calculate_psi=True,
@@ -159,15 +159,15 @@ class TorsionsCalculator(CalculatorBase):
         """
         Create output array for torsions storage.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory : mdtraj.Trajectory
             Trajectory object for size information
         n_features : int
             Number of computed angle features
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray or numpy.memmap
             Output array for torsions storage
         """
@@ -186,8 +186,8 @@ class TorsionsCalculator(CalculatorBase):
         """
         Compute torsion angles using MDTraj functions.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory : mdtraj.Trajectory
             Source trajectory
         torsions_array : numpy.ndarray or numpy.memmap
@@ -201,8 +201,8 @@ class TorsionsCalculator(CalculatorBase):
         calculate_chi : bool
             Whether to include chi angles
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Filled torsions array
         """
@@ -233,8 +233,8 @@ class TorsionsCalculator(CalculatorBase):
         """
         Compute all requested torsion angles directly.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory : mdtraj.Trajectory
             Trajectory to process
         calculate_phi : bool
@@ -246,8 +246,8 @@ class TorsionsCalculator(CalculatorBase):
         calculate_chi : bool
             Whether to include chi angles
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple[numpy.ndarray, list]
             Tuple of (angles_array, angle_info) where angle_info contains
             (angle_type, indices) pairs for metadata generation
@@ -302,8 +302,8 @@ class TorsionsCalculator(CalculatorBase):
         Creates metadata only for angles that were actually computed,
         using angle_info from the compute process.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory : mdtraj.Trajectory
             Source trajectory for topology information
         angle_info : list
@@ -311,8 +311,8 @@ class TorsionsCalculator(CalculatorBase):
         res_metadata : dict or None
             Residue metadata for naming
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Feature metadata dictionary with torsion calculation details
         """
@@ -387,8 +387,8 @@ class TorsionsCalculator(CalculatorBase):
         Input data is assumed to be in degrees and all calculations handle circular
         properties (periodicity at ±180°) correctly.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         input_data : numpy.ndarray
             Torsion angle array (n_frames, n_angles) in degrees
         metric : str, default='cv'
@@ -419,14 +419,14 @@ class TorsionsCalculator(CalculatorBase):
         lag_time : int, default=1
             Lag time for transition analysis
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Dictionary with keys: 'indices', 'values', 'dynamic_data', 'feature_metadata',
             'metric_used', 'n_dynamic', 'total_angles', 'threshold_min', 'threshold_max'
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Select highly flexible torsions (CV >= 0.5)
         >>> result = calculator.compute_dynamic_values(torsions, metric='cv', threshold_min=0.5)
         >>> flexible_torsions = result['dynamic_data']
@@ -477,8 +477,8 @@ class TorsionsCalculator(CalculatorBase):
         """
         Compute metric values for torsions based on specified metric type.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         torsions_data : numpy.ndarray
             Torsion angle array (n_frames, n_angles)
         metric : str
@@ -492,8 +492,8 @@ class TorsionsCalculator(CalculatorBase):
         lag_time : int, default=1
             Lag time for transitions metric
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Computed metric values per torsion angle
         """

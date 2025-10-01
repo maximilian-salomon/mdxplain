@@ -46,8 +46,8 @@ class ContactsSelectionService(SelectionServiceBase):
     optional post-selection reduction. Each reduction method applies filtering
     ONLY to the specific selection where it's defined.
 
-    Examples:
-    ---------
+    Examples
+    --------
     Basic selection without reduction:
     >>> service("test", "resid 120-140")
 
@@ -66,20 +66,20 @@ class ContactsSelectionService(SelectionServiceBase):
         Creates a service for adding contact feature selections with optional
         post-selection reduction based on contact-specific metrics.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         manager : FeatureSelectorManager
             Manager instance for executing add operations
         pipeline_data : PipelineData
             Pipeline data container with trajectory and feature data
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes service with manager and pipeline_data references
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> from mdxplain.pipeline.managers.pipeline_manager import PipelineManager
         >>> pipeline = PipelineManager()
         >>> service = pipeline.feature_selector.add.contacts
@@ -100,8 +100,8 @@ class ContactsSelectionService(SelectionServiceBase):
         """
         Add contacts selection without reduction.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -115,13 +115,13 @@ class ContactsSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners to be present in selection
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds contacts selection to the named selector
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service("analysis", "resid 120-140")
         >>> service("analysis", "binding_site", use_reduced=True)
         """
@@ -155,8 +155,8 @@ class ContactsSelectionService(SelectionServiceBase):
         where contact is formed). Features with frequency outside the specified
         thresholds are removed.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -176,13 +176,13 @@ class ContactsSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds contacts selection with frequency reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_frequency_reduction("test", "resid 120-140", threshold_min=0.3)
         >>> service.with_frequency_reduction("test", "stable_contacts", threshold_min=0.8, threshold_max=1.0)
         """
@@ -211,8 +211,8 @@ class ContactsSelectionService(SelectionServiceBase):
         consistently a contact is maintained over time). Features with stability
         outside the specified thresholds are removed.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -232,13 +232,13 @@ class ContactsSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds contacts selection with stability reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_stability_reduction("test", "resid 120-140", threshold_min=0.7)
         >>> service.with_stability_reduction("test", "dynamic_contacts", threshold_max=0.3)
         """
@@ -271,8 +271,8 @@ class ContactsSelectionService(SelectionServiceBase):
         often contacts form/break). Features with transitions outside the
         specified thresholds are removed.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -300,13 +300,13 @@ class ContactsSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds contacts selection with transitions reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_transitions_reduction("test", "resid 120-140", threshold_min=5)
         >>> service.with_transitions_reduction("test", "dynamic_binding",
         ...     threshold_min=10, transition_threshold=0.8, window_size=20)

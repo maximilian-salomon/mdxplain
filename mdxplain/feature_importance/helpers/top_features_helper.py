@@ -45,8 +45,8 @@ class TopFeaturesHelper:
     importance data and formatting them with human-readable names and
     metadata. These methods extract common logic from FeatureImportanceManager.
     
-    Examples:
-    ---------
+    Examples
+    --------
     >>> # Get top features for specific comparison
     >>> top_features = TopFeaturesHelper.get_top_features_for_comparison(
     ...     fi_data, "folded_vs_rest", 5
@@ -70,8 +70,8 @@ class TopFeaturesHelper:
         Extracts the top N most important features for a specific
         sub-comparison from feature importance data.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         fi_data : FeatureImportanceData
             Feature importance data object
         comparison_identifier : str
@@ -79,13 +79,13 @@ class TopFeaturesHelper:
         n : int
             Number of top features to return
             
-        Returns:
-        --------
+        Returns
+        -------
         List[Tuple[int, float]]
             List of (feature_index, importance_score) tuples
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> indices_scores = TopFeaturesHelper.get_top_features_for_comparison(
         ...     fi_data, "folded_vs_rest", 5
         ... )
@@ -105,20 +105,20 @@ class TopFeaturesHelper:
         Computes average importance across all sub-comparisons and
         returns the top N features based on average importance.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         fi_data : FeatureImportanceData
             Feature importance data object
         n : int
             Number of top features to return
             
-        Returns:
-        --------
+        Returns
+        -------
         List[Tuple[int, float]]
             List of (feature_index, average_importance_score) tuples
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> indices_scores = TopFeaturesHelper.get_top_features_averaged(
         ...     fi_data, 10
         ... )
@@ -150,20 +150,20 @@ class TopFeaturesHelper:
         Converts a list of (index, score) tuples into dictionaries
         containing detailed feature information including names and types.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         indices_scores : List[Tuple[int, float]]
             List of (feature_index, importance_score) tuples
         feature_metadata : list or None
             Feature metadata from pipeline for name mapping
             
-        Returns:
-        --------
+        Returns
+        -------
         List[Dict[str, Any]]
             List of feature info dictionaries with names and metadata
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> formatted = TopFeaturesHelper.format_features_with_names(
         ...     [(42, 0.85), (15, 0.72)], metadata
         ... )
@@ -202,8 +202,8 @@ class TopFeaturesHelper:
         and formats the results with human-readable names and types.
         This is the main entry point for top features processing.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object containing metadata
         fi_data : FeatureImportanceData
@@ -214,13 +214,13 @@ class TopFeaturesHelper:
         n : int, default=10
             Number of top features to return
             
-        Returns:
-        --------
+        Returns
+        -------
         List[Dict[str, Any]]
             List of dictionaries with complete feature information
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Get top features for specific comparison
         >>> top_features = TopFeaturesHelper.get_top_features_with_names(
         ...     pipeline_data, fi_data, "folded_vs_rest", 5

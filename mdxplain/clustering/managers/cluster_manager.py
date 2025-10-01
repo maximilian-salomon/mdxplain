@@ -51,8 +51,8 @@ class ClusterManager:
     to perform clustering analysis using various clustering methods
     (DBSCAN, HDBSCAN, DPA).
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> # Create manager and add DBSCAN clustering
     >>> from mdxplain.clustering import cluster_type
     >>> manager = ClusterManager()
@@ -73,18 +73,18 @@ class ClusterManager:
         """
         Initialize cluster manager.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cache_dir : str, optional
             Cache directory path for clustering data, default="./cache"
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes ClusterManager instance with specified configuration
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic manager
         >>> manager = ClusterManager()
 
@@ -101,8 +101,8 @@ class ClusterManager:
         This method removes all computed clustering results and their associated data,
         requiring clustering to be recalculated from scratch.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -115,18 +115,18 @@ class ClusterManager:
         >>> manager = ClusterManager()
         >>> manager.reset_clusters(pipeline_data)  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Clears all clustering data from pipeline_data.cluster_data
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> manager = ClusterManager()
         >>> manager.reset_clusters(pipeline_data)
         """
@@ -146,8 +146,8 @@ class ClusterManager:
         """
         Check if clustering already exists and handle accordingly.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Trajectory data object
         cluster_name : str
@@ -155,13 +155,13 @@ class ClusterManager:
         force : bool
             Whether to force recomputation
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Validates clustering status
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If clustering exists and force is False
         """
@@ -178,18 +178,18 @@ class ClusterManager:
         """
         Validate cluster type instance and parameters.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cluster_type : ClusterTypeBase instance
             Cluster type instance with parameters
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Validates cluster type
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If cluster type is invalid or missing required methods
         """
@@ -209,20 +209,20 @@ class ClusterManager:
         """
         Validate data matrix for clustering.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data_matrix : numpy.ndarray
             Data matrix to validate
         selection_name : str
             Name of the selection for error messages
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Validates data matrix
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If data matrix is invalid for clustering
         """
@@ -251,20 +251,20 @@ class ClusterManager:
         Uses the new simplified approach where decompositions are stored
         with selection_name as the key (not selection_name_decomposition_type).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Trajectory data object containing decomposition results
         decomposition_name : str
             Name of the decomposition
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             Tuple of (data_matrix, frame_mapping) for clustering
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If decomposition data is not found or invalid
         """
@@ -291,8 +291,8 @@ class ClusterManager:
         """
         Retrieve feature selection data matrix and frame mapping for clustering.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Trajectory data object containing feature selections
         selection_name : str
@@ -301,13 +301,13 @@ class ClusterManager:
             Name of DataSelector to apply frame filtering.
             If None, uses all frames from the selection.
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             Tuple of (data_matrix, frame_mapping) for clustering
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If feature selection data is not found or invalid
         """
@@ -333,8 +333,8 @@ class ClusterManager:
         """
         Retrieve data matrix and frame mapping for clustering based on use_decomposed flag.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Trajectory data object
         name : str
@@ -346,13 +346,13 @@ class ClusterManager:
             If None, uses all frames from the selection.
             Only applies if use_decomposed=False
     
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             Tuple of (data_matrix, frame_mapping) for clustering
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If data retrieval fails or data is invalid
         """
@@ -379,8 +379,8 @@ class ClusterManager:
         using the provided cluster type. Results are stored in the PipelineData
         object's cluster_data dictionary with the specified or default cluster name.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -393,8 +393,8 @@ class ClusterManager:
         >>> manager = ClusterManager()
         >>> manager.add_clustering(pipeline_data, "selection", cluster_type.DBSCAN())  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object containing feature selections or decomposition results
         selection_name : str
@@ -416,13 +416,13 @@ class ClusterManager:
         override_cache : bool, optional
             Whether to clear entire cluster_name subdirectory before computation, default=False
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Stores ClusterData object in pipeline_data.cluster_data dictionary
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Cluster decomposition results with custom name
         >>> from mdxplain.clustering import cluster_type
         >>> manager = ClusterManager()
@@ -443,8 +443,8 @@ class ClusterManager:
         ...     data_selector_name="folded_frames", use_decomposed=False
         ... )
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If selection not found, cluster type invalid, or clustering computation fails
         """
@@ -479,15 +479,15 @@ class ClusterManager:
         """
         Determine cluster name (use provided or default to str(cluster_type)).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cluster_name : str or None
             Custom cluster name provided by user
         cluster_type : ClusterTypeBase instance
             Cluster type instance to get default name from
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             Final cluster name to use for storage
         """
@@ -501,13 +501,13 @@ class ClusterManager:
         """
         Clear entire cache directory for cluster_name subdirectory.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cache_path : str
             Path to the cache directory to clear
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Removes all files in the cache directory
         """
@@ -520,8 +520,8 @@ class ClusterManager:
         """
         Prepare and validate data matrix for clustering with frame mapping.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Trajectory data object
         selection_name : str
@@ -533,8 +533,8 @@ class ClusterManager:
             If None, uses all frames from the selection.
             Only applies if use_decomposed=False
         
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             Tuple of (data_matrix, frame_mapping) ready for clustering
         """
@@ -548,15 +548,15 @@ class ClusterManager:
         """
         Perform clustering computation with error handling.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cluster_type : ClusterTypeBase instance
             Initialized cluster type instance
         data_matrix : numpy.ndarray
             Data matrix to cluster
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             Tuple containing (cluster_labels, metadata)
         """
@@ -569,20 +569,20 @@ class ClusterManager:
         """
         Ensure cluster labels correspond to trajectory frame indices.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cluster_labels : numpy.ndarray
             Array of cluster labels for each sample
         data_matrix : numpy.ndarray
             Original data matrix that was clustered
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Validates cluster labels
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If cluster labels length doesn't match number of trajectory frames
         """
@@ -598,8 +598,8 @@ class ClusterManager:
         """
         Create ClusterData object with results and frame mapping.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cluster_type : ClusterTypeBase instance
             Cluster type instance used for clustering
         cluster_labels : numpy.ndarray
@@ -611,8 +611,8 @@ class ClusterManager:
         frame_mapping : Dict[int, tuple]
             Mapping from global frame index to (trajectory_index, local_frame_index)
 
-        Returns:
-        --------
+        Returns
+        -------
         ClusterData
             Initialized ClusterData object with results and frame mapping
         """
@@ -629,8 +629,8 @@ class ClusterManager:
         """
         Store clustering results and print success message.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Trajectory data object to store results in
         cluster_name : str
@@ -638,8 +638,8 @@ class ClusterManager:
         cluster_data : ClusterData
             ClusterData object containing results and metadata
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Stores results in pipeline_data.cluster_data and prints success message
         """
@@ -655,8 +655,8 @@ class ClusterManager:
         """
         Handle clustering computation errors with informative messages.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         error : Exception
             The original error that occurred
         cluster_type : ClusterTypeBase instance
@@ -664,13 +664,13 @@ class ClusterManager:
         selection_name : str
             Name of the selection being clustered
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Re-raises error with additional context
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             Enhanced error message with clustering context
         """
@@ -687,8 +687,8 @@ class ClusterManager:
         """
         Save all clustering data to single file.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -701,20 +701,20 @@ class ClusterManager:
         >>> manager = ClusterManager()
         >>> manager.save(pipeline_data, 'clustering.npy')  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data container with clustering data
         save_path : str
             Path where to save all clustering data in one file
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Saves all clustering data to the specified file
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> manager.save(pipeline_data, 'clustering.npy')
         """
         DataUtils.save_object(pipeline_data.cluster_data, save_path)
@@ -723,8 +723,8 @@ class ClusterManager:
         """
         Load all clustering data from single file.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -737,20 +737,20 @@ class ClusterManager:
         >>> manager = ClusterManager()
         >>> manager.load(pipeline_data, 'clustering.npy')  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data container to load clustering data into
         load_path : str
             Path to saved clustering data file
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Loads all clustering data from the specified file
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> manager.load(pipeline_data, 'clustering.npy')
         """
         temp_dict = {}
@@ -761,8 +761,8 @@ class ClusterManager:
         """
         Print clustering data information.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -775,18 +775,18 @@ class ClusterManager:
         >>> manager = ClusterManager()
         >>> manager.print_info(pipeline_data)  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data container with clustering data
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Prints clustering data information to console
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> manager.print_info(pipeline_data)
         """
         if len(pipeline_data.cluster_data) == 0:
@@ -809,20 +809,20 @@ class ClusterManager:
         Provides an intuitive interface for adding clustering algorithms without
         requiring explicit cluster type instantiation or imports.
         
-        Returns:
-        --------
+        Returns
+        -------
         ClusterAddService
             Service instance for adding clustering algorithms with combined parameters
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Add different clustering algorithms
         >>> pipeline.clustering.add.dbscan("my_features", eps=0.5, min_samples=5)
         >>> pipeline.clustering.add.hdbscan("pca_features", min_cluster_size=10)
         >>> pipeline.clustering.add.dpa("distance_features", Z=2.0)
         
-        Notes:
-        ------
+        Notes
+        -----
         Pipeline data is automatically injected by AutoInjectProxy.
         All cluster type parameters are combined with manager.add parameters.
         """

@@ -40,8 +40,8 @@ class ReduceServiceBase(ABC):
     Subclasses must set:
     - self._feature_type: String identifier for the feature type
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> class ContactsReduceService(ReduceServiceBase):
     ...     def __init__(self, manager, pipeline_data):
     ...         super().__init__(manager, pipeline_data)
@@ -56,15 +56,15 @@ class ReduceServiceBase(ABC):
         """
         Initialize base reduce service.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         manager : FeatureManager
             Feature manager instance for executing reduce operations
         pipeline_data : PipelineData
             Pipeline data container with trajectory and feature data
 
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         self._manager = manager

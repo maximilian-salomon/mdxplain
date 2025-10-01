@@ -44,8 +44,8 @@ class CommonDenominatorHelper:
 
         Uses biological feature identity (aaa_code, seqid, consensus) for comparison.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
         feature_key : str
@@ -53,8 +53,8 @@ class CommonDenominatorHelper:
         trajectory_results : dict
             Dictionary with trajectory-specific indices
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Filtered trajectory_results containing only common features
         """
@@ -97,8 +97,8 @@ class CommonDenominatorHelper:
         """
         Filter indices using pre-computed identities.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         indices : List[int]
             Original indices
         use_reduced_flags : List[bool]
@@ -108,8 +108,8 @@ class CommonDenominatorHelper:
         common_identities : List[dict]
             Common feature identities to keep
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             Tuple of (filtered_indices, filtered_use_reduced)
         """
@@ -132,8 +132,8 @@ class CommonDenominatorHelper:
         """
         Extract biological feature identities for given indices.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
         feature_key : str
@@ -145,8 +145,8 @@ class CommonDenominatorHelper:
         use_reduced_flags : List[bool]
             Whether each index uses reduced data
 
-        Returns:
-        --------
+        Returns
+        -------
         List[dict]
             List of feature identities with biological information
         """
@@ -191,13 +191,13 @@ class CommonDenominatorHelper:
         """
         Find feature identities that are present in all trajectories.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory_identities : dict
             Dictionary mapping trajectory indices to their feature identities
 
-        Returns:
-        --------
+        Returns
+        -------
         List[dict]
             List of feature identities common to all trajectories
         """
@@ -230,8 +230,8 @@ class CommonDenominatorHelper:
         """
         Filter indices to keep only those matching common identities.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
         feature_key : str
@@ -245,8 +245,8 @@ class CommonDenominatorHelper:
         common_identities : List[dict]
             Common feature identities to keep
 
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             Tuple of (filtered_indices, filtered_use_reduced)
         """
@@ -270,15 +270,15 @@ class CommonDenominatorHelper:
         """
         Check if target identity is present in identity list.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         target_identity : dict
             Identity to search for (with "partners" key containing all partner info)
         identity_list : List[dict]
             List of identities to search in
 
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if identity is found (matches all partners' aaa_code, seqid, consensus)
         """

@@ -41,8 +41,8 @@ class DecisionTree(AnalyzerTypeBase):
     feature importance based on how much each feature contributes to
     reducing impurity at each split.
 
-    Examples:
-    ---------
+    Examples
+    --------
     Basic usage via FeatureImportanceManager:
 
     >>> from mdxplain.feature_importance import analyzer_types
@@ -80,10 +80,12 @@ class DecisionTree(AnalyzerTypeBase):
         Initialize Decision Tree analyzer type with parameters.
 
         Creates a DecisionTree instance with specified parameters that will be
-        used during computation via the calculator.
+        used during computation via the calculator. Mainly they are from sklearn's
+        DecisionTreeClassifier. For more details on parameters, see
+        https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         criterion : str, default="gini"
             Function to measure quality of splits ("gini" or "entropy")
         splitter : str, default="best"
@@ -109,13 +111,13 @@ class DecisionTree(AnalyzerTypeBase):
         ccp_alpha : float, default=0.0
             Complexity parameter for minimal cost-complexity pruning
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes DecisionTree with specified parameters
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic decision tree
         >>> dt = DecisionTree(max_depth=5, random_state=42)
         >>> print(f"Type: {dt.get_type_name()}")
@@ -143,18 +145,18 @@ class DecisionTree(AnalyzerTypeBase):
         Returns the unique string identifier for Decision Tree analyzer type
         used for storing results and type identification.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cls : type
             The DecisionTree class
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             String identifier 'decision_tree'
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> print(DecisionTree.get_type_name())
         'decision_tree'
         >>> # Can also be used via analyzer_types module
@@ -171,8 +173,8 @@ class DecisionTree(AnalyzerTypeBase):
         Sets up the Decision Tree calculator with options for memory mapping and
         chunk processing for large datasets.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for large datasets
         cache_path : str, optional
@@ -180,13 +182,13 @@ class DecisionTree(AnalyzerTypeBase):
         chunk_size : int, optional
             Number of samples to process per chunk (reserved for future use)
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Sets self.calculator to initialized DecisionTreeCalculator instance
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic initialization
         >>> dt = DecisionTree()
         >>> dt.init_calculator()
@@ -209,15 +211,15 @@ class DecisionTree(AnalyzerTypeBase):
         using the initialized calculator and the parameters provided during
         initialization.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         X : numpy.ndarray
             Input feature matrix to analyze, shape (n_samples, n_features)
         y : numpy.ndarray
             Target labels, shape (n_samples,)
 
-        Returns:
-        --------
+        Returns
+        -------
         Dict[str, Any]
             Dictionary containing:
             - importances: Feature importance scores (n_features,)
@@ -229,8 +231,8 @@ class DecisionTree(AnalyzerTypeBase):
               * tree_depth: Depth of the trained tree
               * tree_n_leaves: Number of leaves in the tree
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compute feature importance with predefined parameters
         >>> dt = DecisionTree(max_depth=5, random_state=42)
         >>> dt.init_calculator()
@@ -239,8 +241,8 @@ class DecisionTree(AnalyzerTypeBase):
         >>> result = dt.compute(X, y)
         >>> print(f"Importance shape: {result['importances'].shape}")
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If calculator is not initialized, input data is invalid,
             or computation fails
@@ -274,13 +276,18 @@ class DecisionTree(AnalyzerTypeBase):
         Returns a dictionary of all parameters used by this analyzer instance.
         This is used for metadata storage and reproducibility.
 
-        Returns:
-        --------
+        Parameters
+        ----------
+        None but self : DecisionTree
+            The DecisionTree instance
+
+        Returns
+        -------
         Dict[str, Any]
             Dictionary of Decision Tree parameters
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> dt = DecisionTree(max_depth=5, random_state=42)
         >>> params = dt.get_params()
         >>> print(f"Max depth: {params['max_depth']}")

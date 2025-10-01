@@ -43,8 +43,8 @@ class TrajectoryData:
     The class supports tag annotation for trajectories, enabling advanced
     data selection and filtering capabilities through the DataPicker module.
 
-    Examples:
-    ---------
+    Examples
+    --------
     Basic usage:
 
     >>> traj_data = TrajectoryData()
@@ -60,8 +60,8 @@ class TrajectoryData:
     >>> tags = traj_data.get_trajectory_tags(0)
     >>> print(tags)  # ["system_A", "biased", "high_temp"]
 
-    Attributes:
-    -----------
+    Attributes
+    ----------
     trajectories : list
         List of loaded MD trajectory objects (MDTraj)
     trajectory_names : list
@@ -76,17 +76,17 @@ class TrajectoryData:
         """
         Initialize trajectory data container.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes empty trajectory data container
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> traj_data = TrajectoryData()
         >>> print(len(traj_data.trajectories))  # 0
         """
@@ -101,18 +101,18 @@ class TrajectoryData:
         """
         Get tags for a specific trajectory.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory_id : int or str
             Trajectory index or name
 
-        Returns:
-        --------
+        Returns
+        -------
         list or None
             List of tags for the trajectory, or None if not found
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> traj_data = TrajectoryData()
         >>> traj_data.trajectory_tags = {0: ["system_A", "biased"]}
         >>> tags = traj_data.get_trajectory_tags(0)
@@ -126,20 +126,20 @@ class TrajectoryData:
         """
         Set tags for a specific trajectory.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory_id : int or str
             Trajectory index or name
         tags : list
             List of tag strings
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Sets tags for the specified trajectory
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> traj_data = TrajectoryData()
         >>> traj_data.set_trajectory_tags(0, ["system_A", "biased"])
         >>> traj_data.set_trajectory_tags("traj1", ["system_B", "unbiased"])
@@ -151,8 +151,8 @@ class TrajectoryData:
         """
         Get total number of frames across all trajectories.
         
-        Returns:
-        --------
+        Returns
+        -------
         int
             Total number of frames
         """
@@ -162,13 +162,13 @@ class TrajectoryData:
         """
         Get list of trajectory names.
 
-        Returns:
-        --------
+        Returns
+        -------
         list
             List of trajectory names
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> names = traj_data.get_trajectory_names()
         >>> print(names)
         ['system1_prot_traj1', 'system1_prot_traj2']
@@ -179,17 +179,17 @@ class TrajectoryData:
         """
         Print information about loaded trajectories.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Prints trajectory information to console
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> traj_data.print_info()
         Loaded 3 trajectories:
           [0] system1_prot_traj1: 1000 frames, tags: ['system_A', 'biased']
@@ -207,12 +207,12 @@ class TrajectoryData:
         """
         Check if no trajectories are loaded.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
         
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if no trajectories are loaded, False otherwise
         """
@@ -222,12 +222,12 @@ class TrajectoryData:
         """
         Print header with trajectory count.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
         
-        Returns:
-        --------
+        Returns
+        -------
         None
             Prints header to console
         """
@@ -237,12 +237,12 @@ class TrajectoryData:
         """
         Print information for each individual trajectory.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
         
-        Returns:
-        --------
+        Returns
+        -------
         None
             Prints trajectory information to console
         """
@@ -255,15 +255,15 @@ class TrajectoryData:
         """
         Get trajectory tags for display, trying index first then name.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         index : int
             Trajectory index to lookup
         name : str
             Trajectory name as fallback lookup
         
-        Returns:
-        --------
+        Returns
+        -------
         Optional[List[str]]
             List of tags if found, None if no tags exist for the trajectory
         """
@@ -273,13 +273,13 @@ class TrajectoryData:
         """
         Format tags for display string.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         tags : Optional[List[str]]
             List of tags to format, or None
         
-        Returns:
-        --------
+        Returns
+        -------
         str
             Formatted string with tags or empty string if no tags
         """
@@ -289,18 +289,18 @@ class TrajectoryData:
         """
         Save the TrajectoryData object to disk.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         save_path : str
             Path where to save the TrajectoryData object
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Saves the TrajectoryData object to the specified path
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> traj_data.save('trajectory_data.pkl')
         """
         DataUtils.save_object(self, save_path)
@@ -309,18 +309,18 @@ class TrajectoryData:
         """
         Load a previously saved TrajectoryData object from disk.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         load_path : str
             Path to the saved TrajectoryData file
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Loads the TrajectoryData object from the specified path
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> traj_data = TrajectoryData()
         >>> traj_data.load('trajectory_data.pkl')
         """
@@ -330,17 +330,17 @@ class TrajectoryData:
         """
         Reset the trajectory data object to empty state.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Resets all trajectory data and tags
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> traj_data.reset()
         >>> print(len(traj_data.trajectories))  # 0
         """
@@ -360,8 +360,8 @@ class TrajectoryData:
         tags, and combinations thereof. Uses SelectionResolveHelper for
         consistent trajectory resolution across all modules.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : int, str, list, or "all"
             Selection criteria:
             - int: trajectory index
@@ -373,13 +373,13 @@ class TrajectoryData:
             - list: mix of indices/names/tags/patterns
             - "all": all trajectories
 
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             List of trajectory indices matching the selection criteria
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # All trajectories
         >>> indices = traj_data.get_trajectory_indices("all")
 

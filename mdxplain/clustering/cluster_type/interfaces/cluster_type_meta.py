@@ -42,13 +42,13 @@ class ClusterTypeMeta(ABCMeta):
         """
         Return string representation of the cluster type class.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cls : type
             The cluster type class
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             String representation of the cluster type class
         """
@@ -58,13 +58,13 @@ class ClusterTypeMeta(ABCMeta):
         """
         Return string representation for use as dict keys, etc.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cls : type
             The cluster type class
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             String representation of the cluster type class
         """
@@ -74,13 +74,13 @@ class ClusterTypeMeta(ABCMeta):
         """
         Make classes hashable for use as dict keys.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cls : type
             The cluster type class
 
-        Returns:
-        --------
+        Returns
+        -------
         int
             Hash value of the cluster type class
         """

@@ -42,8 +42,8 @@ class TagHelper:
         This method handles all selector types and returns a list of assignments
         for the TrajectoryManager to apply. It does NOT modify the trajectory data.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_data : TrajectoryData
             Trajectory data object
         trajectory_selector : int, str, list, range, dict
@@ -51,20 +51,20 @@ class TagHelper:
         tags : list, optional
             List of tag strings. Required when trajectory_selector is not dict.
 
-        Returns:
-        --------
+        Returns
+        -------
         List[tuple]
             List of (indices, tags) tuples for TrajectoryManager to apply
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Returns: [(indices, tags), ...]
         >>> assignments = TagHelper.resolve_trajectory_selectors(
         ...     traj_data, 0, ["system_A"]
         ... )
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If tags is None when trajectory_selector is not dict
         """

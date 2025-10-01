@@ -49,13 +49,13 @@ class DaskMDTrajectoryStoreHelper:
         """
         Initialize DaskMDTrajectoryStoreHelper.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cache_dir : str, default='./cache'
             Directory for temporary files during store operations
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes store manager instance
         """
@@ -65,20 +65,20 @@ class DaskMDTrajectoryStoreHelper:
         """
         Create new zarr store with sliced trajectory data.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dask_traj : DaskMDTrajectory
             Source trajectory to slice
         key : Union[slice, np.ndarray]
             Slice or array indices to extract
             
-        Returns:
-        --------
+        Returns
+        -------
         zarr.Group
             New zarr store with sliced data
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> store_mgr = DaskMDTrajectoryStoreHelper()
         >>> zarr_store = store_mgr.create_slice_store(dask_traj, slice(0, 100))
         >>> # Creates store with first 100 frames

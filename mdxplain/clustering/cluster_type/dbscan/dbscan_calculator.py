@@ -44,8 +44,8 @@ class DBSCANCalculator(CalculatorBase):
     This class implements the actual DBSCAN clustering computation using
     scikit-learn's DBSCAN implementation and computes clustering quality metrics.
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> # Create calculator and compute clustering
     >>> calc = DBSCANCalculator()
     >>> data = np.random.rand(100, 10)
@@ -63,8 +63,8 @@ class DBSCANCalculator(CalculatorBase):
         """
         Initialize DBSCAN calculator.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cache_path : str, optional
             Path for cache files. Default is './cache'.
         max_memory_gb : float, optional
@@ -81,8 +81,8 @@ class DBSCANCalculator(CalculatorBase):
         """
         Compute DBSCAN clustering.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input data matrix to cluster, shape (n_samples, n_features)
         kwargs : dict
@@ -93,15 +93,15 @@ class DBSCANCalculator(CalculatorBase):
             - sample_fraction : float, fraction of data to sample
             - force : bool, override memory and dimensionality checks
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
             - cluster_labels: Cluster labels for each sample (-1 for noise)
             - metadata: Dictionary with clustering information
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If input data is invalid or required parameters are missing
         """
@@ -125,15 +125,15 @@ class DBSCANCalculator(CalculatorBase):
         """
         Extract and validate DBSCAN parameters.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         kwargs : dict
             Keyword arguments containing DBSCAN parameters
         data : numpy.ndarray
             Input data to calculate sample size
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Validated DBSCAN parameters
         """
@@ -157,15 +157,15 @@ class DBSCANCalculator(CalculatorBase):
         """
         Perform DBSCAN clustering computation.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input data to cluster
         parameters : dict
             DBSCAN parameters
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[numpy.ndarray, SklearnDBSCAN, float]
             Cluster labels, DBSCAN model, and computation time
         """
@@ -189,15 +189,15 @@ class DBSCANCalculator(CalculatorBase):
         """
         Perform standard DBSCAN clustering by loading all data.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Full dataset to cluster
         parameters : dict
             DBSCAN parameters
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[numpy.ndarray, SklearnDBSCAN]
             Cluster labels and fitted model
         """
@@ -216,15 +216,15 @@ class DBSCANCalculator(CalculatorBase):
         """
         DBSCAN with precomputed distance matrix (exact but slow).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Full dataset to cluster
         parameters : dict
             DBSCAN parameters
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[numpy.ndarray, SklearnDBSCAN]
             Cluster labels and fitted model
         """
@@ -273,15 +273,15 @@ class DBSCANCalculator(CalculatorBase):
         """
         DBSCAN Sampling + k-NN (fast approximation).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Full dataset to cluster
         parameters : dict
             DBSCAN parameters
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[numpy.ndarray, SklearnDBSCAN]
             Cluster labels and fitted model
         """
@@ -312,8 +312,8 @@ class DBSCANCalculator(CalculatorBase):
         """
         Build comprehensive metadata dictionary.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Original input data
         cluster_labels : numpy.ndarray
@@ -327,8 +327,8 @@ class DBSCANCalculator(CalculatorBase):
         computation_time : float
             Time taken for computation
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Complete metadata dictionary
         """
@@ -357,13 +357,13 @@ class DBSCANCalculator(CalculatorBase):
         """
         Extract core sample indices from DBSCAN model.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dbscan_model : SklearnDBSCAN
             Fitted DBSCAN model
 
-        Returns:
-        --------
+        Returns
+        -------
         list
             List of core sample indices
         """

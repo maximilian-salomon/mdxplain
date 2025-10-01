@@ -43,8 +43,8 @@ class CalculatorBase(ABC):
     All calculators support memory mapping for efficient handling of large
     datasets and provide statistical analysis capabilities.
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> class MyCalculator(CalculatorBase):
     ...     def compute(self, input_data, **kwargs):
     ...         # Implementation here
@@ -63,8 +63,8 @@ class CalculatorBase(ABC):
         """
         Initialize calculator with common configuration parameters.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for efficient handling of large datasets
         cache_path : str, optional
@@ -72,8 +72,8 @@ class CalculatorBase(ABC):
         chunk_size : int, optional
             Number of frames to process in each chunk (None for automatic sizing)
 
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         self.use_memmap = use_memmap
@@ -88,15 +88,15 @@ class CalculatorBase(ABC):
         """
         Compute feature data from input data (must be implemented by subclasses).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         input_data : Any
             Input data for computation (trajectories for distances, distances for contacts, etc.)
         **kwargs : dict
             Additional calculator-specific parameters
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[np.ndarray, dict]
             Tuple containing (computed_data, feature_metadata) where computed_data
             is the calculated feature matrix and feature_metadata is structured metadata
@@ -120,8 +120,8 @@ class CalculatorBase(ABC):
         """
         Compute statistical analysis and filter features based on dynamic criteria.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         input_data : np.ndarray
             Feature data matrix to analyze (frames x features)
         metric : str
@@ -143,8 +143,8 @@ class CalculatorBase(ABC):
         lag_time : int, optional
             Lag time for transition rate calculations
 
-        Returns:
-        --------
+        Returns
+        -------
         Dict[str, Any]
             Dictionary with keys: 'filtered_data', 'selected_indices',
             'statistics', 'feature_names', and analysis metadata

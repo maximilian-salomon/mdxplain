@@ -54,6 +54,37 @@ class DaskMDTrajectory:
     
     Uses Dask arrays and Zarr storage for optimal memory usage while maintaining
     full compatibility with MDTraj operations and workflows.
+
+    Attributes
+    ----------
+    trajectory_file : str
+        Path to the trajectory file
+    topology_file : str, optional
+        Path to the topology file
+    zarr_cache_path : str, optional
+        Path to the Zarr cache directory
+    chunk_size : int
+        Number of frames per chunk
+    n_workers : int
+        Number of parallel workers
+
+    Examples
+    --------
+    >>> dask_traj = DaskMDTrajectory(
+    ...     trajectory_file='trajectory.xtc',
+    ...     topology_file='topology.pdb',
+    ...     zarr_cache_path='/tmp/my_cache.zarr'
+    ... )
+
+    Notes
+    -----
+    This class is designed for memory-efficient processing of large trajectory files
+    using Dask and Zarr. It provides a drop-in replacement for MDTraj's trajectory
+    class with additional features for parallel processing and out-of-core computation.
+    It supports all standard MDTraj properties and methods, including slicing,
+    atom selection, superposition, and more.
+
+    So it is basically a md.Trajectory wrapper with a Dask/Zarr backend.
     """
     
     def __init__(self, trajectory_file: str, topology_file: Optional[str] = None,
@@ -62,8 +93,8 @@ class DaskMDTrajectory:
         """
         Initialize DaskMDTrajectory.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory_file : str
             Path to trajectory file (.xtc, .dcd, etc.)
         topology_file : str, optional
@@ -97,8 +128,8 @@ class DaskMDTrajectory:
         """
         Create DaskMDTrajectory from existing MDTraj trajectory.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         mdtraj : md.Trajectory
             MDTraj trajectory object to convert
         zarr_cache_path : str, optional
@@ -108,13 +139,13 @@ class DaskMDTrajectory:
         n_workers : int, optional
             Number of parallel workers (defaults to CPU count)
             
-        Returns:
-        --------
+        Returns
+        -------
         DaskMDTrajectory
             New DaskMDTrajectory instance with data from MDTraj
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> import mdtraj as md
         >>> traj = md.load('trajectory.xtc', top='topology.pdb')
         >>> dask_traj = DaskMDTrajectory.from_mdtraj(traj)
@@ -154,13 +185,13 @@ class DaskMDTrajectory:
         """
         Number of frames in the trajectory.
         
-        Returns:
-        --------
+        Returns
+        -------
         int
             Total number of frames
         
-        Examples:
-        ---------
+        Examples
+        --------
         >>> dask_traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
         >>> print(dask_traj.n_frames)
         1000
@@ -172,13 +203,13 @@ class DaskMDTrajectory:
         """
         Number of atoms in the trajectory.
         
-        Returns:
-        --------
+        Returns
+        -------
         int
             Total number of atoms
         
-        Examples:
-        ---------
+        Examples
+        --------
         >>> dask_traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
         >>> print(dask_traj.n_atoms)
         5000
@@ -190,13 +221,13 @@ class DaskMDTrajectory:
         """
         Number of residues in the trajectory.
         
-        Returns:
-        --------
+        Returns
+        -------
         int
             Total number of residues
         
-        Examples:
-        ---------
+        Examples
+        --------
         >>> dask_traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
         >>> print(dask_traj.n_residues)
         333
@@ -208,13 +239,13 @@ class DaskMDTrajectory:
         """
         System topology.
         
-        Returns:
-        --------
+        Returns
+        -------
         md.Topology
             MDTraj topology object
         
-        Examples:
-        ---------
+        Examples
+        --------
         >>> dask_traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
         >>> topology = dask_traj.topology
         >>> print(topology.n_atoms)
@@ -227,13 +258,13 @@ class DaskMDTrajectory:
         """
         System topology (alias for topology property).
         
-        Returns:
-        --------
+        Returns
+        -------
         md.Topology
             MDTraj topology object
         
-        Examples:
-        ---------
+        Examples
+        --------
         >>> dask_traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
         >>> top = dask_traj.top  # Same as dask_traj.topology
         >>> print(top.n_residues)
@@ -246,13 +277,13 @@ class DaskMDTrajectory:
         """
         Simulation time for each frame (lazy loaded).
         
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Array of simulation times with shape (n_frames,)
         
-        Examples:
-        ---------
+        Examples
+        --------
         >>> dask_traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
         >>> times = dask_traj.time
         >>> print(f"First frame: {times[0]} ps")
@@ -268,13 +299,13 @@ class DaskMDTrajectory:
         """
         Time between frames in picoseconds.
         
-        Returns:
-        --------
+        Returns
+        -------
         float
             Time step in picoseconds
         
-        Examples:
-        ---------
+        Examples
+        --------
         >>> dask_traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
         >>> dt = dask_traj.timestep
         >>> print(f"Timestep: {dt} ps")
@@ -289,13 +320,13 @@ class DaskMDTrajectory:
         """
         Cartesian coordinates (lazy loaded with memory management).
         
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Coordinate array with shape (n_frames, n_atoms, 3)
         
-        Examples:
-        ---------
+        Examples
+        --------
         >>> dask_traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
         >>> coords = dask_traj.xyz  # Loads all coordinates into memory
         >>> print(coords.shape)
@@ -320,13 +351,13 @@ class DaskMDTrajectory:
         """
         Unit cell vectors (lazy loaded).
         
-        Returns:
-        --------
+        Returns
+        -------
         Optional[np.ndarray]
             Unit cell vectors array with shape (n_frames, 3, 3) or None if no unitcell
         
-        Examples:
-        ---------
+        Examples
+        --------
         >>> dask_traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
         >>> vectors = dask_traj.unitcell_vectors
         >>> if vectors is not None:
@@ -341,13 +372,13 @@ class DaskMDTrajectory:
         """
         Unit cell lengths (lazy loaded).
         
-        Returns:
-        --------
+        Returns
+        -------
         Optional[np.ndarray]
             Unit cell lengths array with shape (n_frames, 3) or None if no unitcell
         
-        Examples:
-        ---------
+        Examples
+        --------
         >>> dask_traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
         >>> lengths = dask_traj.unitcell_lengths
         >>> if lengths is not None:
@@ -362,13 +393,13 @@ class DaskMDTrajectory:
         """
         Unit cell angles (lazy loaded).
         
-        Returns:
-        --------
+        Returns
+        -------
         Optional[np.ndarray]
             Unit cell angles array with shape (n_frames, 3) or None if no unitcell
         
-        Examples:
-        ---------
+        Examples
+        --------
         >>> dask_traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
         >>> angles = dask_traj.unitcell_angles
         >>> if angles is not None:
@@ -390,21 +421,21 @@ class DaskMDTrajectory:
         """
         Create trajectory from subset of atoms.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         atom_indices : array_like
             Indices of atoms to keep
         inplace : bool, default=False
             If True, modify trajectory in place and return self.
             If False, return new trajectory instance.
 
-        Returns:
-        --------
+        Returns
+        -------
         DaskMDTrajectory
             Self if inplace=True, otherwise new trajectory with selected atoms
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> dask_traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
         >>> # Select first 100 atoms (new trajectory)
         >>> small_traj = dask_traj.atom_slice(range(100))
@@ -430,21 +461,21 @@ class DaskMDTrajectory:
 
         This method acts in-place on the trajectory by default, similar to MDTraj behavior.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         mass_weighted : bool, default=False
             Use mass-weighted centering
         inplace : bool, default=True
             If True, modify trajectory in place and return self.
             If False, return new trajectory instance.
 
-        Returns:
-        --------
+        Returns
+        -------
         DaskMDTrajectory
             Self if inplace=True, otherwise new trajectory with centered coordinates
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> dask_traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
         >>> # Center coordinates in-place (geometric center) - modifies dask_traj
         >>> dask_traj.center_coordinates()
@@ -475,8 +506,8 @@ class DaskMDTrajectory:
 
         This method acts in-place on the trajectory by default, similar to MDTraj behavior.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         reference : DaskMDTrajectory, md.Trajectory, optional
             Reference trajectory (if None, uses self as reference)
         frame : int, default=0
@@ -492,13 +523,13 @@ class DaskMDTrajectory:
             If True, modify trajectory in place and return self.
             If False, return new trajectory instance.
 
-        Returns:
-        --------
+        Returns
+        -------
         DaskMDTrajectory
             Self if inplace=True, otherwise new trajectory aligned to reference
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> dask_traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
         >>> # Align to own first frame in-place - modifies dask_traj
         >>> dask_traj.superpose()
@@ -511,8 +542,8 @@ class DaskMDTrajectory:
         >>> ca_indices = dask_traj.topology.select('name CA')
         >>> dask_traj.superpose(atom_indices=ca_indices)
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If reference frame index is out of range
         """
@@ -559,8 +590,8 @@ class DaskMDTrajectory:
         """
         Apply smoothing filter to trajectory.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         width : int
             Smoothing window width
         order : int, optional
@@ -571,13 +602,13 @@ class DaskMDTrajectory:
             If True, modify trajectory in place and return self.
             If False, return new trajectory instance.
 
-        Returns:
-        --------
+        Returns
+        -------
         DaskMDTrajectory
             Self if inplace=True, otherwise new trajectory with smoothed coordinates
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> dask_traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
         >>> # Apply smoothing with window width 5 (new trajectory)
         >>> smoothed = dask_traj.smooth(width=5)
@@ -600,27 +631,27 @@ class DaskMDTrajectory:
         """
         Combine trajectories along frame axis.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         other : DaskMDTrajectory
             Trajectory to join
         check_topology : bool, default=True
             Check topology compatibility
             
-        Returns:
-        --------
+        Returns
+        -------
         DaskMDTrajectory
             New trajectory with combined frames
         
-        Examples:
-        ---------
+        Examples
+        --------
         >>> traj1 = DaskMDTrajectory('part1.xtc', 'topology.pdb')
         >>> traj2 = DaskMDTrajectory('part2.xtc', 'topology.pdb')
         >>> combined = traj1.join(traj2)
         >>> print(f"Combined: {combined.n_frames} frames")
         
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If trajectories have different number of atoms when check_topology=True
         """
@@ -634,25 +665,25 @@ class DaskMDTrajectory:
         """
         Combine trajectories along atom axis.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         other : DaskMDTrajectory
             Trajectory to stack
             
-        Returns:
-        --------
+        Returns
+        -------
         DaskMDTrajectory
             New trajectory with combined atoms
         
-        Examples:
-        ---------
+        Examples
+        --------
         >>> protein = DaskMDTrajectory('protein.xtc', 'protein.pdb')
         >>> ligand = DaskMDTrajectory('ligand.xtc', 'ligand.pdb')
         >>> complex_traj = protein.stack(ligand)
         >>> print(f"Complex: {complex_traj.n_atoms} atoms")
         
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If trajectories have different number of frames
         """
@@ -666,22 +697,22 @@ class DaskMDTrajectory:
         """
         Extract specific frames.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         key : int, slice, or array_like
             Frame indices to extract
         return_dask : bool, default=True
             If True, returns a new DaskMDTrajectory with sliced data
             If False, returns an md.Trajectory (original behavior)
             
-        Returns:
-        --------
+        Returns
+        -------
         DaskMDTrajectory or md.Trajectory
             DaskMDTrajectory with selected frames (if return_dask=True) or
             MDTraj trajectory with selected frames (if return_dask=False)
         
-        Examples:
-        ---------
+        Examples
+        --------
         >>> dask_traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
         >>> # Extract first 100 frames as DaskMDTrajectory (default)
         >>> subset = dask_traj.slice(slice(0, 100))
@@ -707,13 +738,13 @@ class DaskMDTrajectory:
         """
         Index trajectory frames.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         key : int, slice, or array_like
             Frame indices
             
-        Returns:
-        --------
+        Returns
+        -------
         md.Trajectory
             Trajectory object with selected frames
         """
@@ -734,13 +765,13 @@ class DaskMDTrajectory:
         """
         Compute basic coordinate and time arrays.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         key : Union[int, slice, np.ndarray]
             Index specification for array slicing
         
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             Tuple containing (coordinates, time) arrays
         """
@@ -752,13 +783,13 @@ class DaskMDTrajectory:
         """
         Compute unitcell arrays if present.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         key : Union[int, slice, np.ndarray]
             Index specification for array slicing
         
-        Returns:
-        --------
+        Returns
+        -------
         tuple
             Tuple containing (unitcell_vectors, unitcell_lengths, unitcell_angles) or (None, None, None)
         """
@@ -773,8 +804,8 @@ class DaskMDTrajectory:
         """
         Create md.Trajectory from computed arrays.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         coords : np.ndarray
             Coordinate array with shape (n_frames, n_atoms, 3)
         time : np.ndarray
@@ -782,8 +813,8 @@ class DaskMDTrajectory:
         unitcell_data : tuple
             Tuple containing unitcell vectors, lengths, and angles
         
-        Returns:
-        --------
+        Returns
+        -------
         md.Trajectory
             Constructed MDTraj trajectory object
         """
@@ -815,13 +846,13 @@ class DaskMDTrajectory:
         """
         Get memory usage information.
         
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Memory usage statistics with keys: coordinates_size_mb, zarr_cache_size_mb, chunk_size, n_workers
         
-        Examples:
-        ---------
+        Examples
+        --------
         >>> dask_traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
         >>> usage = dask_traj.memory_usage()
         >>> print(f"Trajectory size: {usage['coordinates_size_mb']:.1f} MB")
@@ -841,17 +872,17 @@ class DaskMDTrajectory:
         """
         Clean up resources and temporary files.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
         
-        Returns:
-        --------
+        Returns
+        -------
         None
             Clears caches and closes zarr store
         
-        Examples:
-        ---------
+        Examples
+        --------
         >>> dask_traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
         >>> # Do some work...
         >>> dask_traj.cleanup()  # Clean up when done
@@ -896,15 +927,15 @@ class DaskMDTrajectory:
         """
         Copy trajectory data chunk-wise to target zarr store.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         target_store : zarr.Group
             Target zarr store to copy data to
         frame_offset : int, default=0
             Frame offset in target store where to start copying
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Copies coordinate, time, and unitcell data chunk-wise
         """
@@ -943,18 +974,18 @@ class DaskMDTrajectory:
         """
         Create new DaskMDTrajectory with sliced arrays (lazy operation).
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         key : int, slice, or array_like
             Frame indices to extract
             
-        Returns:
-        --------
+        Returns
+        -------
         DaskMDTrajectory
             New DaskMDTrajectory with only selected frames
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> sliced = dask_traj._create_sliced_dask(slice(0, 100))
         >>> sliced = dask_traj._create_sliced_dask([10, 50, 100])
         """
@@ -1021,13 +1052,13 @@ class DaskMDTrajectory:
         """
         Create new DaskMDTrajectory from Zarr store.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         zarr_store : zarr.Group
             Zarr group containing trajectory data
         
-        Returns:
-        --------
+        Returns
+        -------
         DaskMDTrajectory
             New DaskMDTrajectory instance with data from zarr store
         """
@@ -1083,18 +1114,18 @@ class DaskMDTrajectory:
         """
         Replace all attributes of self with those from new trajectory.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         new_trajectory : DaskMDTrajectory
             New trajectory to replace self with
 
-        Returns:
-        --------
+        Returns
+        -------
         DaskMDTrajectory
             Returns self for method chaining
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> dask_traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
         >>> new_traj = dask_traj._create_from_zarr_store(zarr_store)
         >>> dask_traj._replace_self_with_new(new_traj)  # dask_traj is now updated
@@ -1116,13 +1147,13 @@ class DaskMDTrajectory:
         """
         Create new DaskMDTrajectory from slice.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         key : Union[slice, np.ndarray]
             Slice or array indices to extract
         
-        Returns:
-        --------
+        Returns
+        -------
         DaskMDTrajectory
             New DaskMDTrajectory instance with sliced data
         """
@@ -1135,24 +1166,24 @@ class DaskMDTrajectory:
         """
         Save DaskMDTrajectory to file.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         filepath : str
             Path where to save the trajectory. Directory will be created if needed.
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Saves trajectory to disk using pickle
             
-        Notes:
-        ------
+        Notes
+        -----
         - Creates parent directories if they don't exist
         - The zarr cache must remain available at its original location
         - Uses pickle to preserve the complete object state
         
-        Examples:
-        ---------
+        Examples
+        --------
         >>> traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
         >>> traj.save('output/my_traj.pkl')
         """
@@ -1169,27 +1200,27 @@ class DaskMDTrajectory:
         """
         Load DaskMDTrajectory from file.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         filepath : str
             Path to the saved trajectory file
             
-        Returns:
-        --------
+        Returns
+        -------
         DaskMDTrajectory
             Loaded trajectory object
             
-        Raises:
-        -------
+        Raises
+        ------
         FileNotFoundError
             If the saved file does not exist
             
-        Notes:
-        ------
+        Notes
+        -----
         The zarr cache must still exist at the original location.
         
-        Examples:
-        ---------
+        Examples
+        --------
         >>> traj = DaskMDTrajectory.load('output/my_traj.pkl')
         """
         if not os.path.exists(filepath):
