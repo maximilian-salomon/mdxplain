@@ -48,8 +48,8 @@ class SelectionMatrixHelper:
         """
         Build selection matrix directly with efficient memory usage.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object containing all data
         feature_selector_name : str
@@ -57,8 +57,8 @@ class SelectionMatrixHelper:
         data_selector_name : str, optional
             Name of data selector for frame filtering
             
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[np.ndarray, Dict[int, Tuple[int, int]]]
             Complete matrix and frame mapping
         """
@@ -87,8 +87,8 @@ class SelectionMatrixHelper:
         """
         Calculate final matrix shape efficiently.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object
         feature_selector_name : str
@@ -96,8 +96,8 @@ class SelectionMatrixHelper:
         data_selector_name : str, optional
             Data selector name
             
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[int, int]
             (n_rows, n_columns) for final matrix
         """
@@ -137,8 +137,8 @@ class SelectionMatrixHelper:
         """
         Create matrix with optimal memory management.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         shape : Tuple[int, int]
             Matrix shape (rows, columns)
         use_memmap : bool
@@ -148,8 +148,8 @@ class SelectionMatrixHelper:
         name : str
             Matrix name for memmap filename
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Empty matrix ready for filling
         """
@@ -173,8 +173,8 @@ class SelectionMatrixHelper:
         """
         Fill matrix with data and create frame mapping.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         matrix : np.ndarray
             Pre-allocated matrix to fill
         pipeline_data : PipelineData
@@ -184,8 +184,8 @@ class SelectionMatrixHelper:
         data_selector_name : str, optional
             Data selector name
             
-        Returns:
-        --------
+        Returns
+        -------
         Dict[int, Tuple[int, int]]
             Frame mapping {global_idx: (traj_idx, local_idx)}
         """
@@ -224,8 +224,8 @@ class SelectionMatrixHelper:
         """
         Fill matrix with data from one trajectory.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         matrix : np.ndarray
             Matrix to fill
         pipeline_data : PipelineData
@@ -241,8 +241,8 @@ class SelectionMatrixHelper:
         frame_mapping : dict
             Frame mapping to update
             
-        Returns:
-        --------
+        Returns
+        -------
         int
             Next available row index
         """
@@ -282,8 +282,8 @@ class SelectionMatrixHelper:
         """
         Fill matrix with data from one feature type.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         matrix : np.ndarray
             Matrix to fill
         pipeline_data : PipelineData
@@ -301,8 +301,8 @@ class SelectionMatrixHelper:
         start_col : int
             Starting column in matrix
             
-        Returns:
-        --------
+        Returns
+        -------
         int
             Next available column index
         """

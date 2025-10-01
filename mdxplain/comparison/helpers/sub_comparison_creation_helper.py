@@ -48,15 +48,15 @@ class SubComparisonCreationHelper:
         Creates a single sub-comparison between two data selectors with
         binary labels (0, 1). Validates that exactly 2 selectors are provided.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         comp_data : ComparisonData
             Comparison data object to add sub-comparison to
         data_selectors : List[str]
             List of data selector names (must contain exactly 2 selectors)
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds one sub-comparison to the comp_data object
         """
@@ -81,15 +81,15 @@ class SubComparisonCreationHelper:
         Each pair becomes a binary comparison with labels (0, 1).
         For N selectors, creates N*(N-1)/2 sub-comparisons.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         comp_data : ComparisonData
             Comparison data object to add sub-comparisons to
         data_selectors : List[str]
             List of data selector names (must contain at least 2 selectors)
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds multiple sub-comparisons to the comp_data object
         """
@@ -115,15 +115,15 @@ class SubComparisonCreationHelper:
         all other selectors combined. The target selector gets label 1,
         and all others get label 0. For N selectors, creates N sub-comparisons.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         comp_data : ComparisonData
             Comparison data object to add sub-comparisons to
         data_selectors : List[str]
             List of data selector names (must contain at least 2 selectors)
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds N sub-comparisons to the comp_data object (one per selector)
         """
@@ -151,15 +151,15 @@ class SubComparisonCreationHelper:
         classes with incremental labels (0, 1, 2, ...). This mode is handled
         specially in ComparisonData.get_sub_comparison_data().
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         comp_data : ComparisonData
             Comparison data object to add sub-comparison to
         data_selectors : List[str]
             List of data selector names (must contain at least 2 selectors)
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds one special multiclass sub-comparison to the comp_data object
         """

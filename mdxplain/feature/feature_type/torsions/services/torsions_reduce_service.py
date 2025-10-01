@@ -43,15 +43,15 @@ class TorsionsReduceService(ReduceServiceBase):
         """
         Initialize torsion reduce factory.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         manager : FeatureManager
             Feature manager instance
         pipeline_data : PipelineData
             Pipeline data container
 
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         super().__init__(manager, pipeline_data)
@@ -71,8 +71,8 @@ class TorsionsReduceService(ReduceServiceBase):
         
         Detects transitions in torsion angles using circular statistics.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -86,13 +86,13 @@ class TorsionsReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep dynamic torsions with many angle changes
         >>> pipeline.feature.reduce.torsions.transitions(
         ...     threshold_min=8,
@@ -137,8 +137,8 @@ class TorsionsReduceService(ReduceServiceBase):
         Filters torsion features based on their circular standard deviation.
         Higher values indicate more flexible/dynamic torsional angles.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -148,13 +148,13 @@ class TorsionsReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep highly flexible torsions
         >>> pipeline.feature.reduce.torsions.std(threshold_min=30.0)
 
@@ -190,8 +190,8 @@ class TorsionsReduceService(ReduceServiceBase):
         Filters torsion features based on their circular median absolute deviation.
         More robust to outliers than standard deviation.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -201,13 +201,13 @@ class TorsionsReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep robustly variable torsions (outlier-resistant)
         >>> pipeline.feature.reduce.torsions.mad(threshold_min=20.0)
 
@@ -243,8 +243,8 @@ class TorsionsReduceService(ReduceServiceBase):
         Filters torsion features based on their mean angle values.
         Useful for selecting angles in specific conformational ranges.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -254,13 +254,13 @@ class TorsionsReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep torsions in alpha-helix range
         >>> pipeline.feature.reduce.torsions.mean(
         ...     threshold_min=-90.0,
@@ -299,8 +299,8 @@ class TorsionsReduceService(ReduceServiceBase):
         Filters torsion features based on their angular range accounting for circularity.
         Higher values indicate more flexible torsional motion.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -310,13 +310,13 @@ class TorsionsReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep torsions with large conformational sampling
         >>> pipeline.feature.reduce.torsions.range(threshold_min=60.0)
 
@@ -351,8 +351,8 @@ class TorsionsReduceService(ReduceServiceBase):
 
         Filters torsion features based on their minimum angle values.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -362,13 +362,13 @@ class TorsionsReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep torsions that reach negative angles
         >>> pipeline.feature.reduce.torsions.min(threshold_max=-30.0)
 
@@ -403,8 +403,8 @@ class TorsionsReduceService(ReduceServiceBase):
 
         Filters torsion features based on their maximum angle values.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -414,13 +414,13 @@ class TorsionsReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep torsions that reach high positive angles
         >>> pipeline.feature.reduce.torsions.max(threshold_min=120.0)
 
@@ -456,8 +456,8 @@ class TorsionsReduceService(ReduceServiceBase):
         Filters torsion features based on their relative variability.
         CV = circular_std / abs(circular_mean), indicating flexibility.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -467,13 +467,13 @@ class TorsionsReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep highly flexible torsions (high relative variability)
         >>> pipeline.feature.reduce.torsions.cv(threshold_min=0.5)
 
@@ -509,8 +509,8 @@ class TorsionsReduceService(ReduceServiceBase):
         Filters torsion features based on their circular variance.
         Values 0-1 where higher values indicate more flexible angles.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
@@ -520,13 +520,13 @@ class TorsionsReduceService(ReduceServiceBase):
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced data in pipeline
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Keep torsions with high circular variance
         >>> pipeline.feature.reduce.torsions.variance(threshold_min=0.7)
 

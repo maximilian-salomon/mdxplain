@@ -33,15 +33,15 @@ class DSSPSelectionService(SelectionServiceBase):
     """
     Service for selecting DSSP features with DSSP-specific reduction methods.
 
-    Knows ALL reduction metrics from DsspReduceService:
+    Knows ALL reduction metrics from DSSPReduceService:
     - transitions, transition_frequency, stability, class_frequencies
 
     This service provides methods to add DSSP (secondary structure) feature
     selections with optional post-selection reduction. Each reduction method
     applies filtering ONLY to the specific selection where it's defined.
 
-    Examples:
-    ---------
+    Examples
+    --------
     Basic selection without reduction:
     >>> service("test", "res ALA")
 
@@ -61,20 +61,20 @@ class DSSPSelectionService(SelectionServiceBase):
         selections with optional post-selection reduction based on
         secondary structure-specific metrics.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         manager : FeatureSelectorManager
             Manager instance for executing add operations
         pipeline_data : PipelineData
             Pipeline data container with trajectory and feature data
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes service with manager and pipeline_data references
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> from mdxplain.pipeline.managers.pipeline_manager import PipelineManager
         >>> pipeline = PipelineManager()
         >>> service = pipeline.feature_selector.add.dssp
@@ -99,8 +99,8 @@ class DSSPSelectionService(SelectionServiceBase):
         selector without applying any statistical filtering. All DSSP
         features matching the selection criteria will be included.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -114,13 +114,13 @@ class DSSPSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners to be present in selection
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds DSSP selection to the named selector
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service("analysis", "res ALA")
         >>> service("analysis", "resid 120-140", use_reduced=True)
         """
@@ -136,8 +136,8 @@ class DSSPSelectionService(SelectionServiceBase):
         Filters DSSP features based on the number of secondary structure
         transitions. Higher values indicate more dynamic secondary structure.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -163,13 +163,13 @@ class DSSPSelectionService(SelectionServiceBase):
         lag_time : int, default=1
             Lag time for transition detection
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds DSSP selection with transitions reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_transitions_reduction("test", "res ALA", threshold_min=5)
         >>> service.with_transitions_reduction("test", "loop_regions",
         ...     threshold_min=10, window_size=20)
@@ -186,8 +186,8 @@ class DSSPSelectionService(SelectionServiceBase):
         transitions normalized by trajectory length. Higher values indicate
         residues with more frequent secondary structure changes.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -207,13 +207,13 @@ class DSSPSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds DSSP selection with transition frequency reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_transition_frequency_reduction("test", "res ALA", threshold_min=0.1)
         >>> service.with_transition_frequency_reduction("test", "dynamic_loops", threshold_min=0.2)
         """
@@ -227,8 +227,8 @@ class DSSPSelectionService(SelectionServiceBase):
         Filters DSSP features based on secondary structure stability
         (1 - transition frequency). Higher values indicate more stable secondary structure.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -248,13 +248,13 @@ class DSSPSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds DSSP selection with stability reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_stability_reduction("test", "res ALA", threshold_min=0.7)
         >>> service.with_stability_reduction("test", "stable_helices",
         ...     threshold_min=0.9)
@@ -271,8 +271,8 @@ class DSSPSelectionService(SelectionServiceBase):
         This allows selection of residues that spend certain amounts of 
         time in particular secondary structures.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -294,13 +294,13 @@ class DSSPSelectionService(SelectionServiceBase):
         target_classes : list of str, optional
             List of secondary structure classes to analyze (e.g., ['H', 'E', 'C'])
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds DSSP selection with class frequencies reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_class_frequencies_reduction("test", "res ALA",
         ...     threshold_min=0.5, target_classes=['H'])
         >>> service.with_class_frequencies_reduction("test", "mixed_structure",

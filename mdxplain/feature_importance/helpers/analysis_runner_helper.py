@@ -50,8 +50,8 @@ class AnalysisRunnerHelper:
     extract common logic from FeatureImportanceManager to improve code
     organization and reusability.
     
-    Examples:
-    ---------
+    Examples
+    --------
     >>> # Run analysis on single sub-comparison
     >>> result = AnalysisRunnerHelper.run_single_analysis(
     ...     analyzer_type, X, y, sub_comp
@@ -75,8 +75,8 @@ class AnalysisRunnerHelper:
         Executes the analyzer on the provided data and returns the complete
         result including importances, model, and metadata.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         analyzer_type : AnalyzerTypeBase
             Analyzer instance to run the analysis
         X : np.ndarray
@@ -84,18 +84,18 @@ class AnalysisRunnerHelper:
         y : np.ndarray
             Label array for the sub-comparison
             
-        Returns:
-        --------
+        Returns
+        -------
         Dict[str, Any]
             Analysis result containing importances, model, and metadata
             
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If analysis computation fails
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> result = AnalysisRunnerHelper.run_single_analysis(
         ...     decision_tree_analyzer, X, y, sub_comp_dict
         ... )
@@ -129,8 +129,8 @@ class AnalysisRunnerHelper:
         Takes the analysis result and metadata and stores them properly
         in the FeatureImportanceData container.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         fi_data : FeatureImportanceData
             Feature importance data container to store result in
         result : Dict[str, Any]
@@ -138,13 +138,13 @@ class AnalysisRunnerHelper:
         metadata : Dict[str, Any]
             Metadata dictionary describing the analysis
             
-        Returns:
-        --------
+        Returns
+        -------
         None
             Stores result in the fi_data object
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> AnalysisRunnerHelper.store_analysis_result(
         ...     fi_data, analysis_result, metadata_dict
         ... )
@@ -165,8 +165,8 @@ class AnalysisRunnerHelper:
         Processes all sub-comparisons within a comparison object, running
         the specified analyzer on each one and collecting results.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object containing data and comparisons
         comp_data : ComparisonData
@@ -176,13 +176,13 @@ class AnalysisRunnerHelper:
         analysis_name : str
             Name for the analysis (for metadata)
             
-        Returns:
-        --------
+        Returns
+        -------
         FeatureImportanceData
             Complete feature importance data with all sub-comparison results
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> fi_data = AnalysisRunnerHelper.run_comparison_analysis(
         ...     pipeline_data, comp_data, analyzer, "my_analysis"
         ... )

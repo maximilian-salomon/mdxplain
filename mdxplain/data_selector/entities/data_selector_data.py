@@ -43,19 +43,17 @@ class DataSelectorData:
     each trajectory has its own frame indices, supporting the new trajectory-
     specific architecture.
 
-    Attributes:
-    -----------
+    Attributes
+    ----------
     name : str
         Name identifier for this data selector configuration
     trajectory_frames : Dict[int, List[int]]
-        Dictionary mapping trajectory indices to their selected frame indices
+        Dictionary mapping trajectory indices to lists of selected frame indices
     selection_criteria : Dict[str, Any]
-        Dictionary containing the criteria used for selection
-    n_selected_frames : int
-        Total number of selected frames across all trajectories (convenience property)
+        Dictionary containing selection criteria and operations history
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> selector_data = DataSelectorData("folded_frames")
     >>> selector_data.set_trajectory_frames({0: [0, 5, 12], 1: [18, 25]})
     >>> print(f"Selected {selector_data.n_selected_frames} frames")
@@ -71,18 +69,18 @@ class DataSelectorData:
         """
         Initialize data selector data with given name.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         name : str
             Name identifier for this data selector configuration
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes empty DataSelectorData with given name
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> selector_data = DataSelectorData("active_site_frames")
         >>> print(selector_data.name)
         'active_site_frames'
@@ -98,13 +96,13 @@ class DataSelectorData:
         """
         Get total number of selected frames across all trajectories.
 
-        Returns:
-        --------
+        Returns
+        -------
         int
             Total number of frames in the selection
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> selector_data.set_trajectory_frames({0: [1, 5, 10], 1: [2, 7]})
         >>> print(selector_data.n_selected_frames)
         5
@@ -115,18 +113,18 @@ class DataSelectorData:
         """
         Set the selected frame indices per trajectory.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory_frames : Dict[int, List[int]]
             Dictionary mapping trajectory indices to frame indices
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates the trajectory_frames attribute
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> selector_data = DataSelectorData("test")
         >>> selector_data.set_trajectory_frames({0: [0, 10, 20], 1: [5, 15]})
         >>> print(selector_data.trajectory_frames)
@@ -140,13 +138,13 @@ class DataSelectorData:
         """
         Get the selected frame indices per trajectory.
 
-        Returns:
-        --------
+        Returns
+        -------
         Dict[int, List[int]]
             Dictionary mapping trajectory indices to frame indices
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> traj_frames = selector_data.get_trajectory_frames()
         >>> print(f"Trajectory 0 frames: {traj_frames.get(0, [])}")
         """
@@ -160,18 +158,18 @@ class DataSelectorData:
         subsequent calls. Maintains chronological order of operations for
         full reproducibility of frame selection process.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         criteria : Dict[str, Any]
             Dictionary containing selection criteria for this operation
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates the selection_criteria attribute with operations list
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # First operation - creates operations list
         >>> selector_data.append_selection_criteria({
         ...     "type": "cluster", "clustering": "conformations", 
@@ -197,13 +195,13 @@ class DataSelectorData:
         """
         Get the selection criteria.
 
-        Returns:
-        --------
+        Returns
+        -------
         Dict[str, Any]
             Dictionary containing selection criteria
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> criteria = selector_data.get_selection_criteria()
         >>> print(f"Selection type: {criteria.get('type', 'unknown')}")
         """
@@ -213,18 +211,18 @@ class DataSelectorData:
         """
         Add additional frame indices to existing trajectories.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         trajectory_frames : Dict[int, List[int]]
             Dictionary mapping trajectory indices to additional frame indices
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Extends existing trajectory frame lists with new indices
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> selector_data.set_trajectory_frames({0: [0, 5, 10]})
         >>> selector_data.add_trajectory_frames({0: [15, 20], 1: [2, 7]})
         >>> print(selector_data.trajectory_frames)
@@ -240,13 +238,13 @@ class DataSelectorData:
         """
         Remove duplicate frame indices and sort the lists for each trajectory.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Removes duplicates from trajectory frame lists and sorts them
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> selector_data.trajectory_frames = {0: [5, 1, 5, 3], 1: [8, 1, 8]}
         >>> selector_data.remove_duplicates()
         >>> print(selector_data.trajectory_frames)
@@ -259,13 +257,13 @@ class DataSelectorData:
         """
         Clear all selected frame indices and criteria.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Resets trajectory_frames and selection_criteria to empty
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> selector_data.clear_selection()
         >>> print(selector_data.n_selected_frames)
         0
@@ -279,13 +277,13 @@ class DataSelectorData:
         """
         Get summary information about this selection.
 
-        Returns:
-        --------
+        Returns
+        -------
         Dict[str, Any]
             Dictionary with selection summary information
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> info = selector_data.get_selection_info()
         >>> print(f"Name: {info['name']}")
         >>> print(f"Frames: {info['n_frames']}")
@@ -316,8 +314,8 @@ class DataSelectorData:
         """
         Get a summary of frame ranges across all trajectories.
         
-        Returns:
-        --------
+        Returns
+        -------
         str
             Summary string of frame ranges
         """
@@ -335,13 +333,13 @@ class DataSelectorData:
         """
         Check if the selection is empty.
 
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if no frames are selected, False otherwise
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> empty_selector = DataSelectorData("empty")
         >>> print(empty_selector.is_empty())
         True
@@ -352,13 +350,13 @@ class DataSelectorData:
         """
         Get number of selected frames.
 
-        Returns:
-        --------
+        Returns
+        -------
         int
             Total number of selected frames across all trajectories
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> selector_data.set_trajectory_frames({0: [1, 2, 3], 1: [4, 5]})
         >>> print(len(selector_data))
         5
@@ -369,18 +367,18 @@ class DataSelectorData:
         """
         Check if a (trajectory_index, frame_index) tuple is in the selection.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         traj_frame_tuple : tuple
             Tuple of (trajectory_index, frame_index) to check
 
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if the trajectory-frame combination is in the selection
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> selector_data.set_trajectory_frames({0: [1, 5, 10], 1: [2, 7]})
         >>> print((0, 5) in selector_data)
         True
@@ -396,13 +394,13 @@ class DataSelectorData:
         """
         String representation of the DataSelectorData.
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             String representation
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> print(repr(selector_data))
         DataSelectorData(name='folded_frames', n_frames=150, n_trajectories=3)
         """
@@ -412,18 +410,18 @@ class DataSelectorData:
         """
         Save DataSelectorData object to disk.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         save_path : str
             Path where to save the DataSelectorData object
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Saves the DataSelectorData object to the specified path
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> data_selector_data.save('analysis_results/folded_frames.pkl')
         """
         DataUtils.save_object(self, save_path)
@@ -432,18 +430,18 @@ class DataSelectorData:
         """
         Load DataSelectorData object from disk.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         load_path : str
             Path to the saved DataSelectorData file
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Loads the DataSelectorData object from the specified path
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> data_selector_data.load('analysis_results/folded_frames.pkl')
         """
         DataUtils.load_object(self, load_path)
@@ -452,17 +450,17 @@ class DataSelectorData:
         """
         Print comprehensive data selector information.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Prints data selector information to console
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> data_selector_data.print_info()
         === DataSelectorData ===
         Name: folded_frames
@@ -482,8 +480,8 @@ class DataSelectorData:
         """
         Print header with selector name.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         print("=== DataSelectorData ===")
@@ -493,8 +491,8 @@ class DataSelectorData:
         """
         Print detailed selection information.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         info = self.get_selection_info()
@@ -508,8 +506,8 @@ class DataSelectorData:
         """
         Print frame distribution across trajectories.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         if not self.trajectory_frames:

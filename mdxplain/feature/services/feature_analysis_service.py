@@ -42,8 +42,8 @@ class FeatureAnalysisService:
         """
         Initialize feature analysis service.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data container
         """

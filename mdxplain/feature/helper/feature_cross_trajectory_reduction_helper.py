@@ -57,8 +57,8 @@ class FeatureCrossTrajectoryReductionHelper:
         Uses existing calculator logic to find features that meet the criteria
         in every trajectory, then returns the intersection of valid indices.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_data_dict : Dict[int, FeatureData]
             Dictionary mapping trajectory indices to their FeatureData
         metric : str
@@ -70,13 +70,13 @@ class FeatureCrossTrajectoryReductionHelper:
         **kwargs : dict
             Additional parameters for reduction metric calculation
 
-        Returns:
-        --------
+        Returns
+        -------
         Set[int]
             Set of feature indices that pass criteria in all trajectories
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> common_indices = FeatureCrossTrajectoryReductionHelper.find_common_features(
         ...     feature_data_dict, "frequency", threshold_min=0.5
         ... )
@@ -124,8 +124,8 @@ class FeatureCrossTrajectoryReductionHelper:
         Creates results dictionary and uses FeatureReductionHelper to handle
         the reduction processing, including memmap compatibility.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_data_dict : Dict[int, FeatureData]
             Dictionary mapping trajectory indices to their FeatureData
         common_indices : Set[int]
@@ -137,13 +137,13 @@ class FeatureCrossTrajectoryReductionHelper:
         threshold_max : float, optional
             Maximum threshold used (for metadata)
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced_data and metadata for all FeatureData objects
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> FeatureCrossTrajectoryReductionHelper.apply_common_reduction(
         ...     feature_data_dict, common_indices, "frequency", 0.5, None
         ... )
@@ -195,20 +195,20 @@ class FeatureCrossTrajectoryReductionHelper:
         """
         Generate summary of cross-trajectory reduction.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_data_dict : Dict[int, FeatureData]
             Dictionary mapping trajectory indices to their FeatureData
         common_features : Set[str]
             Set of common features retained
 
-        Returns:
-        --------
+        Returns
+        -------
         Dict[str, Any]
             Summary dictionary with reduction statistics
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> summary = FeatureCrossTrajectoryReductionHelper.get_reduction_summary(
         ...     feature_data_dict, common_features
         ... )
@@ -249,20 +249,20 @@ class FeatureCrossTrajectoryReductionHelper:
         """
         Print summary of cross-trajectory reduction results.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_data_dict : Dict[int, FeatureData]
             Dictionary mapping trajectory indices to their FeatureData
         common_features : Set[str]
             Set of common features retained
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Prints reduction summary to console
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> FeatureCrossTrajectoryReductionHelper.print_cross_trajectory_summary(
         ...     feature_data_dict, common_features
         ... )

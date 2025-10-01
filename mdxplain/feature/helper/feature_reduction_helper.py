@@ -50,8 +50,8 @@ class FeatureReductionHelper:
         """
         Process and store reduction results for a single trajectory FeatureData object.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_data : FeatureData
             FeatureData object to update with reduction results
         results : Dict[str, Any]
@@ -63,13 +63,13 @@ class FeatureReductionHelper:
         metric : str
             Metric name used for context in warnings
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates feature_data with reduction results and prints warnings
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> FeatureReductionHelper.process_reduction_results(
         ...     feature_data, results, 0.1, 0.9, "cv"
         ... )
@@ -108,15 +108,15 @@ class FeatureReductionHelper:
         """
         Update reduced feature metadata from results.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_data : FeatureData
             FeatureData object to update metadata for
         results : Dict[str, Any]
             Results dictionary containing feature names
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates reduced_feature_metadata in feature_data
         """
@@ -137,15 +137,15 @@ class FeatureReductionHelper:
         """
         Print summary of data reduction operation.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_data : FeatureData
             FeatureData object with reduction results
         retention_rate : float
             Data retention rate
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Prints reduction summary
         """
@@ -169,8 +169,8 @@ class FeatureReductionHelper:
         """
         Check retention rate and print warnings if necessary.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         retention_rate : float
             Data retention rate (0.0 to 1.0)
         threshold_min : float or None
@@ -180,8 +180,8 @@ class FeatureReductionHelper:
         metric : str
             Metric name for context
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Prints warnings for very low retention rates
         """
@@ -202,20 +202,20 @@ class FeatureReductionHelper:
         """
         Reset data reduction and return to using full original data.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object to reset
         feature_key : str
             Feature key to reset reduction for
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Resets reduced data and prints summary
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> FeatureReductionHelper.reset_reduction(pipeline_data, "distances")
         Reset reduction: Now using full data (1000, 500). (Data was reduced to (1000, 45), 9.0%)
         """
@@ -240,20 +240,20 @@ class FeatureReductionHelper:
         """
         Check if feature has reduced data.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object to check
         feature_key : str
             Feature key to check
 
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if feature has reduced data, False otherwise
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> has_reduction = FeatureReductionHelper.check_reduction_state(
         ...     pipeline_data, "distances"
         ... )

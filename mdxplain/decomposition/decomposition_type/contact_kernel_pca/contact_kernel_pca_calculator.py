@@ -45,8 +45,8 @@ class ContactKernelPCACalculator(KernelPCACalculator):
     kernel computation for binary contact data while maintaining the same
     interface and incremental computation capabilities.
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> # ContactKernelPCA for binary contact matrices
     >>> calc = ContactKernelPCACalculator()
     >>> binary_data = np.random.choice([0, 1], size=(1000, 100))
@@ -67,8 +67,8 @@ class ContactKernelPCACalculator(KernelPCACalculator):
         """
         Initialize ContactKernelPCA calculator.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use memory mapping and incremental kernel computation
         cache_path : str, optional
@@ -82,13 +82,13 @@ class ContactKernelPCACalculator(KernelPCACalculator):
         min_chunk_size : int, default=1000
             Minimum chunk size per parallel process to avoid overhead
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes ContactKernelPCA calculator with specified configuration
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Standard ContactKernelPCA
         >>> calc = ContactKernelPCACalculator()
 
@@ -106,8 +106,8 @@ class ContactKernelPCACalculator(KernelPCACalculator):
         contact matrices using the Hamming distance-based kernel that is
         equivalent to RBF kernel for binary data.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Binary contact matrix to decompose, shape (n_samples, n_features)
             Values should be 0 or 1
@@ -124,24 +124,24 @@ class ContactKernelPCACalculator(KernelPCACalculator):
             - random_state : int, optional
                 Random state for reproducible results
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
             - transformed_data: ContactKernelPCA-transformed data (n_samples, n_components)
             - metadata: Dictionary with ContactKernelPCA information including
               kernel parameters, eigenvalues, and hyperparameters
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compute ContactKernelPCA for binary contact matrix
         >>> calc = ContactKernelPCACalculator()
         >>> contacts = np.random.choice([0, 1], size=(500, 100))
         >>> transformed, metadata = calc.compute(contacts, n_components=10)
         >>> print(f"Kernel: {metadata['hyperparameters']['kernel']}")
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If input data is invalid, not binary, or n_components is too large
         """
@@ -160,18 +160,18 @@ class ContactKernelPCACalculator(KernelPCACalculator):
         """
         Validate that input data is binary (contains only 0s and 1s).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input data to validate
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Validates that data is binary
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If data is not binary
         """
@@ -196,15 +196,15 @@ class ContactKernelPCACalculator(KernelPCACalculator):
         """
         Extract and validate ContactKernelPCA hyperparameters.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input data for parameter validation
         kwargs : dict
             Input parameters to extract and validate
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Validated hyperparameters with forced Hamming kernel
         """

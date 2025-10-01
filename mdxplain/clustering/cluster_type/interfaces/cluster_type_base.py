@@ -40,8 +40,8 @@ class ClusterTypeBase(ABC, metaclass=ClusterTypeMeta):
     must implement. Each cluster type encapsulates computation logic
     for a specific type of clustering analysis.
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> class MyCluster(ClusterTypeBase):
     ...     @classmethod
     ...     def get_type_name(cls) -> str:
@@ -59,16 +59,16 @@ class ClusterTypeBase(ABC, metaclass=ClusterTypeMeta):
         Sets up the cluster type instance with an empty calculator that
         will be initialized later through init_calculator().
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
+        Returns
+        -------
+        None
+
+        Examples
         --------
-        None
-
-        Examples:
-        ---------
         >>> # Create cluster type instance
         >>> cluster = MyCluster()
         >>> print(f"Type: {cluster.get_type_name()}")
@@ -84,18 +84,18 @@ class ClusterTypeBase(ABC, metaclass=ClusterTypeMeta):
         Used as the key for storing clustering results in TrajectoryData
         dictionaries and for type identification.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cls : type
             The cluster type class
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             Unique string identifier (e.g., 'dbscan', 'hdbscan', 'dpa')
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> print(DBSCAN.get_type_name())
         'dbscan'
         >>> print(HDBSCAN.get_type_name())
@@ -108,18 +108,18 @@ class ClusterTypeBase(ABC, metaclass=ClusterTypeMeta):
         """
         Initialize the calculator instance for this cluster type.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cache_path : str, optional
             Directory path for cache files
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Sets self.calculator to initialized calculator instance
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic initialization
         >>> dbscan = DBSCAN()
         >>> dbscan.init_calculator()
@@ -134,21 +134,21 @@ class ClusterTypeBase(ABC, metaclass=ClusterTypeMeta):
         """
         Compute clustering using the initialized calculator.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input data matrix to cluster, shape (n_samples, n_features)
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
             - cluster_labels: Cluster labels for each sample (n_samples,)
             - metadata: Dictionary with clustering information including
               hyperparameters, number of clusters, silhouette score, etc.
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compute DBSCAN clustering
         >>> dbscan = DBSCAN(eps=0.5, min_samples=5)
         >>> dbscan.init_calculator()
@@ -156,8 +156,8 @@ class ClusterTypeBase(ABC, metaclass=ClusterTypeMeta):
         >>> labels, metadata = dbscan.compute(data)
         >>> print(f"Number of clusters: {metadata['n_clusters']}")
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If calculator is not initialized or input data is invalid
         """

@@ -41,8 +41,8 @@ class SasaSelectionService(SelectionServiceBase):
     optional post-selection reduction. Each reduction method applies filtering
     ONLY to the specific selection where it's defined.
 
-    Examples:
-    ---------
+    Examples
+    --------
     Basic selection without reduction:
     >>> service("test", "res ALA")
 
@@ -61,20 +61,20 @@ class SasaSelectionService(SelectionServiceBase):
         Creates a service for adding SASA feature selections with optional
         post-selection reduction based on statistical metrics.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         manager : FeatureSelectorManager
             Manager instance for executing add operations
         pipeline_data : PipelineData
             Pipeline data container with trajectory and feature data
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes service with manager and pipeline_data references
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> from mdxplain.pipeline.managers.pipeline_manager import PipelineManager
         >>> pipeline = PipelineManager()
         >>> service = pipeline.feature_selector.add.sasa
@@ -99,8 +99,8 @@ class SasaSelectionService(SelectionServiceBase):
         any statistical filtering. All SASA features matching the selection
         criteria will be included.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -114,13 +114,13 @@ class SasaSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners to be present in selection
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds SASA selection to the named selector
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service("analysis", "res ALA")
         >>> service("analysis", "resid 120-140", use_reduced=True)
         """
@@ -136,8 +136,8 @@ class SasaSelectionService(SelectionServiceBase):
         Filters SASA features based on coefficient of variation (std/mean).
         Features with CV outside the specified thresholds are removed.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -157,13 +157,13 @@ class SasaSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds SASA selection with CV reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_cv_reduction("test", "res ALA", threshold_min=0.1)
         >>> service.with_cv_reduction("test", "res ALA", threshold_min=0.05, threshold_max=0.8)
         """
@@ -178,8 +178,8 @@ class SasaSelectionService(SelectionServiceBase):
         accessibility values. Higher range values indicate residues
         with more dynamic surface exposure.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -199,13 +199,13 @@ class SasaSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds SASA selection with range reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_range_reduction("test", "res ALA", threshold_min=20.0)
         >>> service.with_range_reduction("test", "dynamic_surface", threshold_min=50.0)
         """
@@ -220,8 +220,8 @@ class SasaSelectionService(SelectionServiceBase):
         accessibility values. Higher values indicate more dynamic
         surface exposure with greater variability.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -241,13 +241,13 @@ class SasaSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds SASA selection with standard deviation reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_std_reduction("test", "res ALA", threshold_min=10.0)
         >>> service.with_std_reduction("test", "variable_exposure", threshold_min=15.0)
         """
@@ -262,8 +262,8 @@ class SasaSelectionService(SelectionServiceBase):
         values. Higher variance indicates residues with more dynamic
         surface exposure and broader SASA distributions.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -283,13 +283,13 @@ class SasaSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds SASA selection with variance reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_variance_reduction("test", "res ALA", threshold_min=100.0)
         >>> service.with_variance_reduction("test", "high_variance", threshold_min=200.0)
         """
@@ -304,8 +304,8 @@ class SasaSelectionService(SelectionServiceBase):
         surface accessibility. MAD is more robust to outliers than
         standard deviation while still indicating surface exposure variability.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -325,13 +325,13 @@ class SasaSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds SASA selection with MAD reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_mad_reduction("test", "res ALA", threshold_min=8.0)
         >>> service.with_mad_reduction("test", "robust_variable", threshold_min=12.0)
         """
@@ -346,8 +346,8 @@ class SasaSelectionService(SelectionServiceBase):
         This can be used to select residues based on their average
         surface exposure over the trajectory.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -367,13 +367,13 @@ class SasaSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds SASA selection with mean reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_mean_reduction("test", "res ALA", threshold_min=20.0)
         >>> service.with_mean_reduction("test", "exposed_residues", threshold_min=50.0, threshold_max=150.0)
         """
@@ -388,8 +388,8 @@ class SasaSelectionService(SelectionServiceBase):
         values across the trajectory. This can identify residues that
         reach specific minimum exposure levels during dynamics.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -409,13 +409,13 @@ class SasaSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds SASA selection with minimum reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_min_reduction("test", "res ALA", threshold_min=0.0)
         >>> service.with_min_reduction("test", "sometimes_buried", threshold_max=10.0)
         """
@@ -430,8 +430,8 @@ class SasaSelectionService(SelectionServiceBase):
         values across the trajectory. This can identify residues that
         reach specific maximum exposure levels during dynamics.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -451,13 +451,13 @@ class SasaSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds SASA selection with maximum reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_max_reduction("test", "res ALA", threshold_min=100.0)
         >>> service.with_max_reduction("test", "highly_exposed", threshold_min=150.0, threshold_max=250.0)
         """
@@ -472,8 +472,8 @@ class SasaSelectionService(SelectionServiceBase):
         buried (SASA below burial_threshold). Higher values indicate more
         buried residues.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -491,13 +491,13 @@ class SasaSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds SASA selection with burial fraction reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_burial_fraction_reduction("test", "res ALA", burial_threshold=0.15)
         >>> service.with_burial_fraction_reduction("test", "core_residues", burial_threshold=0.1)
         """
@@ -512,8 +512,8 @@ class SasaSelectionService(SelectionServiceBase):
         exposed (SASA above exposure_threshold). Higher values indicate
         more consistently exposed residues.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -531,13 +531,13 @@ class SasaSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds SASA selection with exposure fraction reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_exposure_fraction_reduction("test", "res ALA", exposure_threshold=0.3)
         >>> service.with_exposure_fraction_reduction("test", "surface_residues", exposure_threshold=0.5)
         """
@@ -552,8 +552,8 @@ class SasaSelectionService(SelectionServiceBase):
         exposed and buried states. Higher values indicate more dynamic
         surface accessibility.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selector_name : str
             Name of the feature selector configuration
         selection : str, default="all"
@@ -581,13 +581,13 @@ class SasaSelectionService(SelectionServiceBase):
         require_all_partners : bool, default=False
             For pairwise features, require all partners present
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds SASA selection with transitions reduction
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> service.with_transitions_reduction("test", "res ALA", threshold_min=5)
         >>> service.with_transitions_reduction("test", "dynamic_surface",
         ...     threshold_min=10, transition_threshold=15.0, window_size=20)

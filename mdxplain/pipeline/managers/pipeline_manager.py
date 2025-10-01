@@ -62,9 +62,13 @@ class PipelineManager:
     - Feature selection
     - Clustering analysis
     - Decomposition analysis
+    - Data selection
+    - Comparison management
+    - Feature importance analysis
+    - General analysis operations
 
-    Examples:
-    ---------
+    Examples
+    --------
     Basic pipeline workflow:
 
     >>> pipeline = PipelineManager()
@@ -100,8 +104,8 @@ class PipelineManager:
         """
         Initialize the pipeline manager with configuration for all managers.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         stride : int, default=1
             Default stride for trajectory loading
         concat : bool, default=False
@@ -115,8 +119,8 @@ class PipelineManager:
         cache_dir : str, default="./cache"
             Cache directory path for all managers
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes PipelineManager with automatic data injection
         """
@@ -159,8 +163,8 @@ class PipelineManager:
         """
         Access trajectory management with automatic PipelineData injection.
 
-        Returns:
-        --------
+        Returns
+        -------
         TrajectoryManager
             Trajectory manager with automatic PipelineData injection.
             All methods that expect pipeline_data parameter will receive it automatically.
@@ -174,8 +178,8 @@ class PipelineManager:
         """
         Access feature computation with automatic PipelineData injection.
 
-        Returns:
-        --------
+        Returns
+        -------
         FeatureManager
             Feature manager with automatic PipelineData injection.
             All methods that expect pipeline_data parameter will receive it automatically.
@@ -187,8 +191,8 @@ class PipelineManager:
         """
         Access clustering analysis with automatic PipelineData injection.
 
-        Returns:
-        --------
+        Returns
+        -------
         ClusterManager
             Cluster manager with automatic PipelineData injection.
             All methods that expect pipeline_data parameter will receive it automatically.
@@ -200,8 +204,8 @@ class PipelineManager:
         """
         Access decomposition analysis with automatic PipelineData injection.
 
-        Returns:
-        --------
+        Returns
+        -------
         DecompositionManager
             Decomposition manager with automatic PipelineData injection.
             All methods that expect pipeline_data parameter will receive it automatically.
@@ -216,8 +220,8 @@ class PipelineManager:
         """
         Access feature selector management with automatic PipelineData injection.
 
-        Returns:
-        --------
+        Returns
+        -------
         FeatureSelectorManager
             Feature selector manager with automatic PipelineData injection.
             All methods that expect pipeline_data parameter will receive it automatically.
@@ -232,8 +236,8 @@ class PipelineManager:
         """
         Access data selector management with automatic PipelineData injection.
 
-        Returns:
-        --------
+        Returns
+        -------
         DataSelectorManager
             Data selector manager with automatic PipelineData injection.
             All methods that expect pipeline_data parameter will receive it automatically.
@@ -248,8 +252,8 @@ class PipelineManager:
         """
         Access comparison management with automatic PipelineData injection.
 
-        Returns:
-        --------
+        Returns
+        -------
         ComparisonManager
             Comparison manager with automatic PipelineData injection.
             All methods that expect pipeline_data parameter will receive it automatically.
@@ -264,8 +268,8 @@ class PipelineManager:
         """
         Access feature importance analysis with automatic PipelineData injection.
 
-        Returns:
-        --------
+        Returns
+        -------
         FeatureImportanceManager
             Feature importance manager with automatic PipelineData injection.
             All methods that expect pipeline_data parameter will receive it automatically.
@@ -280,8 +284,8 @@ class PipelineManager:
         """
         Access analysis operations with automatic PipelineData injection.
 
-        Returns:
-        --------
+        Returns
+        -------
         AnalysisManager
             Analysis manager with automatic PipelineData injection.
             All methods that expect pipeline_data parameter will receive it automatically.
@@ -297,8 +301,8 @@ class PipelineManager:
         advanced users who need to inspect or manipulate data directly.
         Normal usage should go through the manager properties.
 
-        Returns:
-        --------
+        Returns
+        -------
         PipelineData
             Central pipeline data container with all analysis data
         """
@@ -308,8 +312,8 @@ class PipelineManager:
         """
         Get summary of all pipeline data.
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Summary information about all loaded and computed data
         """
@@ -332,18 +336,18 @@ class PipelineManager:
         computed features, trajectories, clusterings, decompositions,
         and metadata to a file.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         save_path : str
             Path where to save the complete pipeline
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Saves the complete pipeline to the specified path
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> pipeline.save('complete_analysis.pkl')
         """
         self._data.save(save_path)
@@ -355,18 +359,18 @@ class PipelineManager:
         This method loads a complete PipelineData object from a file,
         restoring all computed features, trajectories, and analysis state.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         load_path : str
             Path to the saved pipeline file
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Loads the complete pipeline from the specified path
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> pipeline.load('complete_analysis.pkl')
         """
         self._data.load(load_path)
@@ -379,18 +383,18 @@ class PipelineManager:
         This static method creates a new PipelineManager instance and
         loads a complete pipeline state from a file.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         load_path : str
             Path to the saved pipeline file
 
-        Returns:
-        --------
+        Returns
+        -------
         PipelineManager
             New PipelineManager instance with loaded pipeline state
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> loaded_pipeline = PipelineManager.load_pipeline('complete_analysis.pkl')
         >>> loaded_pipeline.print_info()
         """
@@ -405,13 +409,13 @@ class PipelineManager:
         This method prints information from ALL managers to provide
         a complete overview of the pipeline state.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Prints comprehensive pipeline information to console
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> pipeline.print_info()
         ======= PIPELINE INFORMATION =======
         
@@ -476,8 +480,8 @@ class PipelineManager:
         initialization. Changes are propagated to all managers and the
         central PipelineData container.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         chunk_size : int, optional
             New chunk size for processing operations. Must be positive integer.
         cache_dir : str, optional
@@ -485,20 +489,20 @@ class PipelineManager:
         use_memmap : bool, optional
             Whether to use memory mapping for data storage operations.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Updates configuration in all components
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If chunk_size is not a positive integer
         OSError
             If cache_dir cannot be created
 
-        Examples:
-        ---------
+        Examples
+        --------
         Update chunk size for better memory management:
 
         >>> pipeline.update_config(chunk_size=5000)
@@ -584,13 +588,13 @@ class PipelineManager:
         Returns the current configuration settings that are active
         across all pipeline components.
 
-        Returns:
-        --------
+        Returns
+        -------
         dict
             Dictionary containing current configuration values
 
-        Examples:
-        ---------
+        Examples
+        --------
         Check current configuration:
 
         >>> pipeline = PipelineManager(chunk_size=1000, use_memmap=True)

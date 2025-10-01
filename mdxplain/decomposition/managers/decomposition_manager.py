@@ -48,8 +48,8 @@ class DecompositionManager:
     matrices. Works with TrajectoryData objects to perform dimensionality
     reduction using various decomposition methods (PCA, KernelPCA, etc.).
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> # Create manager and add PCA decomposition
     >>> from mdxplain.decomposition import decomposition_type
     >>> manager = DecompositionManager()
@@ -70,8 +70,8 @@ class DecompositionManager:
         """
         Initialize decomposition manager.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for decomposition data
         chunk_size : int, optional
@@ -79,13 +79,13 @@ class DecompositionManager:
         cache_dir : str, optional
             Cache directory path for decomposition data
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes DecompositionManager instance with specified configuration
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic manager
         >>> manager = DecompositionManager()
 
@@ -121,8 +121,8 @@ class DecompositionManager:
         the decomposition computation, and stores the result in the
         TrajectoryData object.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -135,8 +135,8 @@ class DecompositionManager:
         >>> manager = DecompositionManager()
         >>> manager.add_decomposition(pipeline_data, "selection", decomposition_type.PCA())  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Trajectory data object containing feature selections
         selection_name : str
@@ -152,19 +152,19 @@ class DecompositionManager:
         force : bool, default=False
             Whether to force recomputation if decomposition already exists
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Adds computed decomposition to trajectory data
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If the decomposition already exists, if required selection is missing,
             or if the decomposition computation fails
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Add PCA decomposition
         >>> from mdxplain.decomposition import decomposition_type
         >>> manager = DecompositionManager()
@@ -227,8 +227,8 @@ class DecompositionManager:
         """
         Check if decomposition already exists and handle accordingly.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Trajectory data object
         selection_name : str
@@ -236,13 +236,13 @@ class DecompositionManager:
         force : bool
             Whether to force recomputation
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Validates decomposition status
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If decomposition exists and force is False
         """
@@ -264,13 +264,13 @@ class DecompositionManager:
         Creates cache path structure: base_cache_dir/selection_name/
         This allows multiple decomposition types for the same selection.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         selection_name : str
             Name of the feature selection
 
-        Returns:
-        --------
+        Returns
+        -------
         str or None
             Cache directory path for the selection
         """
@@ -284,8 +284,8 @@ class DecompositionManager:
         """
         Compute the decomposition using the specified type and parameters.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         decomposition_data : DecompositionData
             Decomposition data container
         decomposition_type : DecompositionTypeBase instance
@@ -295,8 +295,8 @@ class DecompositionManager:
         decomposition_name : str
             Name of the feature selection used
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Performs decomposition computation
         """
@@ -330,8 +330,8 @@ class DecompositionManager:
         """
         Store decomposition results in trajectory data.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Trajectory data object
         selection_name : str
@@ -345,8 +345,8 @@ class DecompositionManager:
         decomposition_key : str
             Type of decomposition for logging
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Stores decomposition results
         """
@@ -364,8 +364,8 @@ class DecompositionManager:
         This method removes all computed decompositions and their associated data,
         requiring decompositions to be recalculated from scratch.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -378,18 +378,18 @@ class DecompositionManager:
         >>> manager = DecompositionManager()
         >>> manager.reset_decompositions(pipeline_data)  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Trajectory data object
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Clears all decomposition data from pipeline_data.decomposition_data
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> manager = DecompositionManager()
         >>> manager.reset_decompositions(pipeline_data)
         """
@@ -411,8 +411,8 @@ class DecompositionManager:
         """
         Save all decomposition data to single file.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -425,20 +425,20 @@ class DecompositionManager:
         >>> manager = DecompositionManager()
         >>> manager.save(pipeline_data, 'decomposition.npy')  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data container with decomposition data
         save_path : str
             Path where to save all decomposition data in one file
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Saves all decomposition data to the specified file
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> manager.save(pipeline_data, 'decomposition.npy')
         """
         DataUtils.save_object(pipeline_data.decomposition_data, save_path)
@@ -447,8 +447,8 @@ class DecompositionManager:
         """
         Load all decomposition data from single file.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -461,20 +461,20 @@ class DecompositionManager:
         >>> manager = DecompositionManager()
         >>> manager.load(pipeline_data, 'decomposition.npy')  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data container to load decomposition data into
         load_path : str
             Path to saved decomposition data file
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Loads all decomposition data from the specified file
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> manager.load(pipeline_data, 'decomposition.npy')
         """
         temp_dict = {}
@@ -485,8 +485,8 @@ class DecompositionManager:
         """
         Print decomposition data information.
 
-        Warning:
-        --------
+        Warning
+        -------
         When using PipelineManager, do NOT provide the pipeline_data parameter.
         The PipelineManager automatically injects this parameter.
 
@@ -499,18 +499,18 @@ class DecompositionManager:
         >>> manager = DecompositionManager()
         >>> manager.print_info(pipeline_data)  # pipeline_data required
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data container with decomposition data
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Prints decomposition data information to console
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> manager.print_info(pipeline_data)
         """
         if len(pipeline_data.decomposition_data) == 0:
@@ -534,8 +534,8 @@ class DecompositionManager:
         Some decomposition methods require specific feature types (e.g., 
         DiffusionMaps requires 'coordinates'). This method checks compatibility.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data container
         selection_name : str
@@ -543,13 +543,13 @@ class DecompositionManager:
         decomposition_type : DecompositionTypeBase
             Decomposition type to validate
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Validation passes silently
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If decomposition type is incompatible with feature selection
         """
@@ -586,20 +586,20 @@ class DecompositionManager:
         Provides an intuitive interface for adding decomposition algorithms without
         requiring explicit decomposition type instantiation or imports.
         
-        Returns:
-        --------
+        Returns
+        -------
         DecompositionAddService
             Service instance for adding decomposition algorithms with combined parameters
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Add different decomposition algorithms
         >>> pipeline.decomposition.add.pca("my_features", n_components=10)
         >>> pipeline.decomposition.add.kernel_pca("contact_features", kernel='rbf', n_components=20)
         >>> pipeline.decomposition.add.contact_kernel_pca("contact_features", n_components=15)
         >>> pipeline.decomposition.add.diffusion_maps("distance_features", n_components=12)
         
-        Notes:
+        Notes
         -----
         Pipeline data is automatically injected by AutoInjectProxy.
         All decomposition type parameters are combined with manager.add parameters.

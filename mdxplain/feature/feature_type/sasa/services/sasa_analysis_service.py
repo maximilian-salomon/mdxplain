@@ -44,7 +44,18 @@ class SASAAnalysisService(AnalysisServiceBase):
     """
     
     def __init__(self, pipeline_data: PipelineData) -> None:
-        """Initialize SASA analysis service."""
+        """
+        Initialize SASA analysis service.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data containing feature data and configuration
+
+        Returns
+        -------
+        None
+        """
         super().__init__(pipeline_data)
         self._feature_type = "sasa"
         self._calculator = SASACalculatorAnalysis(
@@ -58,20 +69,20 @@ class SASAAnalysisService(AnalysisServiceBase):
         """
         Compute mean SASA for each residue/atom.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Mean SASA for each residue/atom
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compute mean SASA for all residues
         >>> pipeline.analysis.features.sasa.mean()
         
@@ -88,20 +99,20 @@ class SASAAnalysisService(AnalysisServiceBase):
         """
         Compute standard deviation of SASA for each residue/atom.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Standard deviation for each residue/atom
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find most variable surface areas
         >>> pipeline.analysis.features.sasa.std()
         
@@ -118,20 +129,20 @@ class SASAAnalysisService(AnalysisServiceBase):
         """
         Compute variance of SASA for each residue/atom.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Variance for each residue/atom
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compute SASA variance
         >>> pipeline.analysis.features.sasa.variance()
         """
@@ -145,20 +156,20 @@ class SASAAnalysisService(AnalysisServiceBase):
         """
         Compute minimum SASA for each residue/atom.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Minimum SASA for each residue/atom
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find most buried state for each residue
         >>> pipeline.analysis.features.sasa.min()
         """
@@ -172,20 +183,20 @@ class SASAAnalysisService(AnalysisServiceBase):
         """
         Compute maximum SASA for each residue/atom.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Maximum SASA for each residue/atom
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find most exposed state for each residue
         >>> pipeline.analysis.features.sasa.max()
         """
@@ -199,20 +210,20 @@ class SASAAnalysisService(AnalysisServiceBase):
         """
         Compute median absolute deviation of SASA for each residue/atom.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Median absolute deviation for each residue/atom
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Robust measure of SASA variability
         >>> pipeline.analysis.features.sasa.mad()
         """
@@ -226,20 +237,20 @@ class SASAAnalysisService(AnalysisServiceBase):
         """
         Compute SASA range for each residue/atom.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Range (max - min) for each residue/atom
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find residues with largest burial/exposure changes
         >>> pipeline.analysis.features.sasa.range()
         """
@@ -253,20 +264,20 @@ class SASAAnalysisService(AnalysisServiceBase):
         """
         Compute coefficient of variation for each residue/atom.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Coefficient of variation for each residue/atom
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find most variable residues (high CV)
         >>> pipeline.analysis.features.sasa.cv()
         """
@@ -281,8 +292,8 @@ class SASAAnalysisService(AnalysisServiceBase):
         """
         Compute burial fraction for each residue/atom.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         threshold : float, default=0.1
             SASA threshold below which residue is considered buried
         feature_selector : str, optional
@@ -290,13 +301,13 @@ class SASAAnalysisService(AnalysisServiceBase):
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Fraction of time each residue is buried (below threshold)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find frequently buried residues (< 0.1 nm²)
         >>> pipeline.analysis.features.sasa.burial_fraction(threshold=0.1)
         
@@ -314,8 +325,8 @@ class SASAAnalysisService(AnalysisServiceBase):
         """
         Compute exposure fraction for each residue/atom.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         threshold : float, default=1.0
             SASA threshold above which residue is considered exposed
         feature_selector : str, optional
@@ -323,13 +334,13 @@ class SASAAnalysisService(AnalysisServiceBase):
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Fraction of time each residue is exposed (above threshold)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find frequently exposed residues (> 1.0 nm²)
         >>> pipeline.analysis.features.sasa.exposure_fraction(threshold=1.0)
         
@@ -348,20 +359,20 @@ class SASAAnalysisService(AnalysisServiceBase):
         """
         Compute mean SASA per frame across all residues/atoms.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Mean SASA per frame
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Overall surface exposure per frame
         >>> pipeline.analysis.features.sasa.mean_per_frame()
         """
@@ -375,20 +386,20 @@ class SASAAnalysisService(AnalysisServiceBase):
         """
         Compute standard deviation per frame across all residues/atoms.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Standard deviation per frame
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # SASA heterogeneity per frame
         >>> pipeline.analysis.features.sasa.std_per_frame()
         """
@@ -402,20 +413,20 @@ class SASAAnalysisService(AnalysisServiceBase):
         """
         Compute variance per frame across all residues/atoms.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Variance per frame
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # SASA variance per frame
         >>> pipeline.analysis.features.sasa.variance_per_frame()
         """
@@ -429,20 +440,20 @@ class SASAAnalysisService(AnalysisServiceBase):
         """
         Compute minimum SASA per frame across all residues/atoms.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Minimum SASA per frame
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Most buried residue per frame
         >>> pipeline.analysis.features.sasa.min_per_frame()
         """
@@ -456,20 +467,20 @@ class SASAAnalysisService(AnalysisServiceBase):
         """
         Compute maximum SASA per frame across all residues/atoms.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Maximum SASA per frame
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Most exposed residue per frame
         >>> pipeline.analysis.features.sasa.max_per_frame()
         """
@@ -483,20 +494,20 @@ class SASAAnalysisService(AnalysisServiceBase):
         """
         Compute median absolute deviation per frame across all residues/atoms.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Median absolute deviation per frame
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Robust measure of SASA spread per frame
         >>> pipeline.analysis.features.sasa.mad_per_frame()
         """
@@ -510,20 +521,20 @@ class SASAAnalysisService(AnalysisServiceBase):
         """
         Compute SASA range per frame across all residues/atoms.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector : str, optional
             Name of feature selector for column selection
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Range per frame
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Surface exposure heterogeneity per frame
         >>> pipeline.analysis.features.sasa.range_per_frame()
         """
@@ -541,8 +552,8 @@ class SASAAnalysisService(AnalysisServiceBase):
         """
         Compute SASA transitions with lag time for each residue/atom.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         threshold : float, default=0.5
             SASA change threshold for detecting transitions
         lag_time : int, default=1
@@ -552,13 +563,13 @@ class SASAAnalysisService(AnalysisServiceBase):
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Transition counts per residue/atom
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find dynamic surface areas with 0.5 nm² threshold
         >>> pipeline.analysis.features.sasa.transitions_lagtime(threshold=0.5)
         
@@ -579,8 +590,8 @@ class SASAAnalysisService(AnalysisServiceBase):
         """
         Compute SASA transitions within sliding window for each residue/atom.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         threshold : float, default=0.5
             SASA change threshold for detecting transitions
         window_size : int, default=10
@@ -590,13 +601,13 @@ class SASAAnalysisService(AnalysisServiceBase):
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Transition counts per residue/atom
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Window-based transition detection
         >>> pipeline.analysis.features.sasa.transitions_window(
         ...     threshold=0.5, window_size=10
@@ -614,8 +625,8 @@ class SASAAnalysisService(AnalysisServiceBase):
         """
         Compute SASA stability (inverse of transition rate) for each residue/atom.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         threshold : float, default=0.5
             SASA change threshold for stability detection
         window_size : int, default=10
@@ -627,13 +638,13 @@ class SASAAnalysisService(AnalysisServiceBase):
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Stability values per residue/atom (0=unstable, 1=stable)
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Find most stable surface areas
         >>> pipeline.analysis.features.sasa.stability(
         ...     threshold=0.5, window_size=10, mode='window'
@@ -653,8 +664,8 @@ class SASAAnalysisService(AnalysisServiceBase):
         """
         Compute SASA differences between two frames.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         frame_1 : int, default=0
             First frame index
         frame_2 : int, default=-1
@@ -664,13 +675,13 @@ class SASAAnalysisService(AnalysisServiceBase):
         traj_selection : str, int, list, optional
             Trajectory selection criteria for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             SASA differences between frames
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compare first and last frames
         >>> pipeline.analysis.features.sasa.differences(frame_1=0, frame_2=-1)
         
@@ -690,8 +701,8 @@ class SASAAnalysisService(AnalysisServiceBase):
         """
         Compute differences between mean SASA of two datasets.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_selector2 : str, optional
             Second feature selector for comparison
         traj_selection2 : str, int, list, optional
@@ -701,13 +712,13 @@ class SASAAnalysisService(AnalysisServiceBase):
         traj_selection : str, int, list, optional
             First trajectory selection for row selection
             
-        Returns:
-        --------
+        Returns
+        -------
         np.ndarray
             Mean SASA differences between datasets
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compare surface exposure between conditions
         >>> pipeline.analysis.features.sasa.differences_mean(
         ...     traj_selection=[0, 1],      # Native state

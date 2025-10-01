@@ -42,19 +42,31 @@ class FeatureData:
     Stores per-trajectory feature data enabling mixed systems with different
     proteins in a single pipeline. Each trajectory computes its own features
     which are combined at the selection level.
-    
-    Attributes:
-    -----------
-    data : np.ndarray
-        Feature matrix for single trajectory
-    feature_metadata : dict
-        Feature metadata for single trajectory
-    reduced_data : np.ndarray 
-        Reduced feature matrix for single trajectory
-    reduced_feature_metadata : dict
-        Reduced metadata for single trajectory
-    reduction_info : dict
-        Reduction information for single trajectory
+
+    Attributes
+    ----------
+    feature_type : FeatureTypeBase
+        Feature type object to compute data
+    use_memmap : bool
+        Whether memory mapping is used for large datasets
+    cache_path : str or None
+        Path for memory-mapped cache files
+    reduced_cache_path : str or None
+        Path for memory-mapped reduced cache files
+    chunk_size : int
+        Chunk size for processing large datasets
+    data : np.ndarray or None
+        Original feature data array
+    feature_metadata : dict or None
+        Metadata including feature definitions, hyperparameters, etc.
+    reduced_data : np.ndarray or None
+        Reduced feature data array (e.g., after PCA)
+    reduced_feature_metadata : dict or None
+        Metadata for reduced features
+    reduction_info : dict or None
+        Information about the reduction method and parameters
+    analsis : Any
+        Facade for analysis methods on this feature data
     """
 
     def __init__(
@@ -63,8 +75,8 @@ class FeatureData:
         """
         Initialize feature data container.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_type : FeatureTypeBase
             Feature type object to compute data
         use_memmap : bool, default=False
@@ -77,8 +89,8 @@ class FeatureData:
         trajectory_name : str, optional
             Trajectory name for unique cache filenames
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes feature data container
         """
@@ -120,18 +132,18 @@ class FeatureData:
         """
         Get current dataset (reduced if available, else original).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         force_original : bool, default=False
             Whether to force using the original data instead of the reduced data
 
-        Returns:
-        --------
+        Returns
+        -------
         numpy.ndarray
             Feature data array for this trajectory
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Get current data
         >>> data = feature_data.get_data()
         >>> print(f"Data shape: {data.shape}")
@@ -148,20 +160,20 @@ class FeatureData:
         active dataset. If reduced data is available, it returns the
         reduced metadata. Otherwise, it returns the original metadata.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         force_original : bool, default=False
             Whether to force using the original data instead of the reduced data
 
-        Returns:
-        --------
+        Returns
+        -------
         dict or None
             Feature metadata dict for this trajectory
             If traj_idx is None: Dict mapping trajectory indices to metadata dicts
             Returns None if no metadata available
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Get current metadata
         >>> metadata = feature_data.get_feature_metadata()
         >>> print(f"Features: {len(metadata['features'])}")
@@ -178,18 +190,18 @@ class FeatureData:
         structured metadata. For pair-based features, it creates names
         by joining the full names of the involved partners.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         force_original : bool, default=False
             Whether to return the feature names for the original data
 
-        Returns:
-        --------
+        Returns
+        -------
         list or None
             List of feature names extracted from metadata, or None if not available
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> feature_data = traj.get_feature("distances")
         >>> names = feature_data.get_feature_names()
         >>> print(f"First few feature names: {names[:3]}")
@@ -211,18 +223,18 @@ class FeatureData:
         """
         Save FeatureData object to disk.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         save_path : str
             Path where to save the FeatureData object
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Saves the FeatureData object to the specified path
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> feature_data.save('analysis_results/distances.pkl')
         """
         DataUtils.save_object(self, save_path)
@@ -231,18 +243,18 @@ class FeatureData:
         """
         Load FeatureData object from disk.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         load_path : str
             Path to the saved FeatureData file
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Loads the FeatureData object from the specified path
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> feature_data.load('analysis_results/distances.pkl')
         """
         DataUtils.load_object(self, load_path)
@@ -251,17 +263,17 @@ class FeatureData:
         """
         Print comprehensive feature information.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Prints feature information to console
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> feature_data.print_info()
         === FeatureData ===
         Feature Type: Distances
@@ -281,8 +293,8 @@ class FeatureData:
         """
         Check if no feature data is available.
 
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if no data is available, False otherwise
         """
@@ -292,8 +304,8 @@ class FeatureData:
         """
         Print header with feature type information.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         print("=== FeatureData ===")
@@ -304,8 +316,8 @@ class FeatureData:
         """
         Print detailed feature information.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         if self.data is not None:
@@ -320,8 +332,8 @@ class FeatureData:
         """
         Print information about data reduction.
 
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         if self.reduced_data is not None:

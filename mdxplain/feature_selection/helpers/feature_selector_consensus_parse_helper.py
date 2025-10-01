@@ -24,7 +24,12 @@ from typing import List, Optional, Dict, Any, Tuple
 
 
 class FeatureSelectorConsensusParseHelper:
-    """Helper class for parsing consensus nomenclature patterns."""
+    """
+    Helper class for parsing consensus nomenclature patterns.
+
+    Provides static methods to parse consensus patterns like "7x50", "7x*", "7x-8x",
+    and "*40-*50" to identify matching residue indices based on trajectory metadata.
+    """
 
     @staticmethod
     def parse_consensus_category(
@@ -36,8 +41,8 @@ class FeatureSelectorConsensusParseHelper:
         Uses unified interface like other parsers. Converts features_list to metadata
         format and delegates to parse_consensus_pattern.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         param_tokens : List[str]
             List of parameter tokens (should be single pattern like ["7x50-8x50"])
         features_list : List[list]
@@ -45,13 +50,13 @@ class FeatureSelectorConsensusParseHelper:
         require_all_partners : bool, default=False
             For pairwise features, require all partners to be present in selection
 
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             List of feature indices matching the consensus criteria
             
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Single consensus position
         >>> indices = FeatureSelectorConsensusParseHelper.parse_consensus_category(
         ...     ["7x50"], features_list
@@ -78,8 +83,8 @@ class FeatureSelectorConsensusParseHelper:
         """
         Parse consensus nomenclature pattern and return matching residue indices.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         metadata : dict
             Trajectory metadata with residue information
         pattern : str
@@ -92,13 +97,13 @@ class FeatureSelectorConsensusParseHelper:
         require_all_partners : bool, default=False
             For pairwise features, require all partners to be present in selection
 
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             List of residue indices matching the pattern
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Single position
         >>> indices = FeatureSelectorConsensusParseHelper.parse_consensus_pattern(metadata, "7x50")
         >>> # [145]  # Index of residue with consensus "7x50"
@@ -134,8 +139,8 @@ class FeatureSelectorConsensusParseHelper:
         
         Handles both partner-based features (distances) and simple features.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         metadata : dict
             Feature metadata with features information
         substring : str
@@ -143,8 +148,8 @@ class FeatureSelectorConsensusParseHelper:
         require_all_partners : bool, default=False
             If True, ALL partners must contain the substring
 
-        Returns:
-        --------
+        Returns
+        -------
         Optional[int]
             First matching feature index or None if not found
         """
@@ -161,8 +166,8 @@ class FeatureSelectorConsensusParseHelper:
         
         Handles both partner-based features (distances) and simple features.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         metadata : dict
             Feature metadata with features information
         substring : str
@@ -170,8 +175,8 @@ class FeatureSelectorConsensusParseHelper:
         require_all_partners : bool, default=False
             If True, ALL partners must contain the substring
             
-        Returns:
-        --------
+        Returns
+        -------
         Optional[int]
             Last matching feature index or None if not found
         """
@@ -189,8 +194,8 @@ class FeatureSelectorConsensusParseHelper:
         
         Handles both partner-based features (distances) and simple features.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         metadata : dict
             Feature metadata with features information
         substring : str
@@ -198,8 +203,8 @@ class FeatureSelectorConsensusParseHelper:
         require_all_partners : bool, default=False
             If True, ALL partners must contain the substring
             
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             List of all matching feature indices
         """
@@ -215,8 +220,8 @@ class FeatureSelectorConsensusParseHelper:
         """
         Check if a feature matches consensus pattern (substring or exact).
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature : list
             List of partners in the feature
         pattern : str
@@ -226,8 +231,8 @@ class FeatureSelectorConsensusParseHelper:
         exact_match : bool, default=False
             If True, use exact matching; if False, use substring matching
             
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if consensus criteria are met
         """
@@ -262,13 +267,13 @@ class FeatureSelectorConsensusParseHelper:
         Feature structure is always: feature = [partner1, partner2, ...]
         Each partner has: {"residue": {"consensus": "value"}, ...}
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature : list
             List of partners in the feature
             
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if any partner has consensus information
         """
@@ -285,8 +290,8 @@ class FeatureSelectorConsensusParseHelper:
         """
         Parse single consensus position or wildcard pattern.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         metadata : dict
             Feature metadata with features information
         pattern : str
@@ -294,8 +299,8 @@ class FeatureSelectorConsensusParseHelper:
         require_all_partners : bool, default=False
             If True, ALL partners must contain the substring
 
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             List of matching feature indices
         """
@@ -311,8 +316,8 @@ class FeatureSelectorConsensusParseHelper:
         """
         Parse consensus range pattern with support for wildcards and multiple blocks.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         metadata : dict
             Trajectory metadata with residue information
         pattern : str
@@ -322,8 +327,8 @@ class FeatureSelectorConsensusParseHelper:
         require_all_partners : bool, default=False
             If True, ALL partners must contain the substring
 
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             List of matching residue indices
         """
@@ -355,8 +360,8 @@ class FeatureSelectorConsensusParseHelper:
         Finds blocks like 1x40-1x50, 2x40-2x50, etc.
         Handles edge cases where start or end is missing.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         metadata : dict
             Feature metadata with features information
         start_pattern : str
@@ -370,8 +375,8 @@ class FeatureSelectorConsensusParseHelper:
         is_wildcard : bool, default=True
             If True, use substring matching; if False, use exact matching
             
-        Returns:
-        --------
+        Returns
+        -------
         List[int]
             List of all feature indices in all matching blocks
         """
@@ -415,13 +420,13 @@ class FeatureSelectorConsensusParseHelper:
         """
         Extract all unique partners (residues) from features.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         features : list
             List of features
             
-        Returns:
-        --------
+        Returns
+        -------
         list
             List of unique partners with seqid and consensus
         """
@@ -441,8 +446,8 @@ class FeatureSelectorConsensusParseHelper:
         """
         Find all seqid ranges between start and end patterns.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         partners : list
             List of partners with seqid and consensus
         start_pattern : str
@@ -452,8 +457,8 @@ class FeatureSelectorConsensusParseHelper:
         match_func : callable
             Function to match consensus against pattern
             
-        Returns:
-        --------
+        Returns
+        -------
         list
             List of (min_seqid, max_seqid) tuples
         """
@@ -500,8 +505,8 @@ class FeatureSelectorConsensusParseHelper:
         """
         Find fallback seqid in given direction.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         partners : list
             List of partners with seqid and consensus
         from_seqid : int
@@ -509,8 +514,8 @@ class FeatureSelectorConsensusParseHelper:
         direction : str
             "forward" or "backward"
             
-        Returns:
-        --------
+        Returns
+        -------
         int or None
             Fallback seqid or None
         """
@@ -532,8 +537,8 @@ class FeatureSelectorConsensusParseHelper:
         """
         Check if feature matches seqid range criteria.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature : list
             List of partners in feature
         min_seqid : int
@@ -546,8 +551,8 @@ class FeatureSelectorConsensusParseHelper:
             If True, ALL partners must be in the seqid range
             If False, ANY partner in range is sufficient
             
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if feature matches criteria
         """

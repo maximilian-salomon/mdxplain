@@ -34,12 +34,12 @@ class CalculatorBase(ABC):
     """
     Abstract base class for feature importance calculators.
 
-    Defines the interface that all feature importance calculators (DecisionTree,
+    Defines the interface that all feature importance calculators (e.g. DecisionTree,
     RandomForest, SVM) must implement for consistency across different
     ML algorithms used in feature importance analysis.
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> class MyCalculator(CalculatorBase):
     ...     def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000):
     ...         super().__init__(use_memmap, cache_path, chunk_size)
@@ -52,8 +52,8 @@ class CalculatorBase(ABC):
         """
         Initialize the calculator with configuration options.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for large datasets
         cache_path : str, default="./cache"
@@ -61,8 +61,8 @@ class CalculatorBase(ABC):
         chunk_size : int, default=10000
             Chunk size for processing large datasets
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Initializes calculator with given configuration
         """
@@ -79,8 +79,8 @@ class CalculatorBase(ABC):
         It should train the ML model and return feature importance scores
         along with the trained model and metadata.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         X : np.ndarray
             Feature matrix with shape (n_samples, n_features)
         y : np.ndarray
@@ -88,16 +88,16 @@ class CalculatorBase(ABC):
         **kwargs : dict
             Additional keyword arguments specific to the ML algorithm
 
-        Returns:
-        --------
+        Returns
+        -------
         Dict[str, Any]
             Dictionary containing:
             - 'importances': np.ndarray of feature importance scores
             - 'model': Trained ML model object
             - 'metadata': Dict with additional information (scores, parameters, etc.)
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> result = calculator.compute(X, y, max_depth=5, random_state=42)
         >>> importance_scores = result['importances']
         >>> trained_model = result['model']

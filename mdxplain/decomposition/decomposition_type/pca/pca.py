@@ -44,8 +44,10 @@ class PCA(DecompositionTypeBase):
     This is a linear dimensionality reduction method that finds the directions
     of maximum variance in the data and projects the data onto these directions.
 
-    Examples:
-    ---------
+    Uses sklearn's PCA and IncrementalPCA under the hood.
+
+    Examples
+    --------
     >>> # Basic PCA decomposition via DecompositionManager
     >>> from mdxplain.decomposition import decomposition_type
     >>> decomp_manager = DecompositionManager()
@@ -66,16 +68,16 @@ class PCA(DecompositionTypeBase):
         Creates a PCA instance with specified parameters that will be
         used during computation.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         n_components : int, float, optional
             Number of components to keep. If None, keeps min(n_samples, n_features).
             If float, keeps components corresponding to the fraction of variance to keep.
         random_state : int, optional
             Random state for reproducible results
 
-        Returned Metadata:
-        ------------------
+        Returned Metadata
+        -----------------
         hyperparameters : dict
             Dictionary containing all PCA parameters used
         original_shape : tuple
@@ -95,8 +97,8 @@ class PCA(DecompositionTypeBase):
         n_chunks : int
             Number of chunks used (only for incremental_pca)
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Create PCA instance with parameters
         >>> pca = PCA(n_components=10, random_state=42)
         >>> print(f"Type: {pca.get_type_name()}")
@@ -114,18 +116,18 @@ class PCA(DecompositionTypeBase):
         Returns the unique string identifier for PCA decomposition type
         used for storing results and type identification.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cls : type
             The PCA class
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             String identifier 'pca'
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> print(PCA.get_type_name())
         'pca'
         >>> # Can also be used via class directly
@@ -141,8 +143,8 @@ class PCA(DecompositionTypeBase):
         Sets up the PCA calculator with options for memory mapping and
         incremental computation for large datasets.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use incremental computation for large datasets
         cache_path : str, optional
@@ -150,13 +152,13 @@ class PCA(DecompositionTypeBase):
         chunk_size : int, optional
             Number of samples to process per chunk for incremental computation
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Sets self.calculator to initialized PCACalculator instance
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic initialization
         >>> pca = PCA()
         >>> pca.init_calculator()
@@ -179,13 +181,13 @@ class PCA(DecompositionTypeBase):
         using the initialized calculator and the parameters provided during
         initialization.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Input feature matrix to decompose, shape (n_samples, n_features)
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
             - transformed_data: PCA-transformed data matrix (n_samples, n_components)
@@ -197,8 +199,8 @@ class PCA(DecompositionTypeBase):
               * mean: Mean of the original data
               * method: 'standard_pca' or 'incremental_pca'
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Compute PCA with predefined parameters
         >>> pca = PCA(n_components=10, random_state=42)
         >>> pca.init_calculator()
@@ -212,8 +214,8 @@ class PCA(DecompositionTypeBase):
         >>> large_data = np.random.rand(10000, 500)
         >>> transformed, metadata = pca.compute(large_data)
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If calculator is not initialized, input data is invalid,
             or n_components is too large

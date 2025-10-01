@@ -55,8 +55,8 @@ class FeatureComputationHelper:
         """
         Check if feature already exists and handle accordingly.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object to check
         feature_key : str
@@ -64,18 +64,18 @@ class FeatureComputationHelper:
         force : bool
             Whether to force recomputation
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Handles existing features or raises ValueError
 
-        Raises:
-        -------
+        Raises
+        ------
         ValueError
             If feature exists and force=False
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> FeatureComputationHelper.check_feature_existence(
         ...     pipeline_data, "distances", False
         ... )
@@ -99,15 +99,15 @@ class FeatureComputationHelper:
         """
         Check if feature already exists with computed data.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object to check
         feature_key : str
             Feature key to check
 
-        Returns:
-        --------
+        Returns
+        -------
         bool
             True if feature exists with data, False otherwise
         """
@@ -126,15 +126,15 @@ class FeatureComputationHelper:
         """
         Handle forced recomputation of existing feature.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object to modify
         feature_key : str
             Feature key to remove and recompute
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Removes existing feature and prints warning
         """
@@ -159,8 +159,8 @@ class FeatureComputationHelper:
         """
         Execute feature computation for a single trajectory.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         pipeline_data : PipelineData
             Pipeline data object with input data
         feature_data : FeatureData
@@ -172,13 +172,13 @@ class FeatureComputationHelper:
         force_original : bool, default=True
             Whether to force using original data instead of reduced data
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[Any, Dict]
             Tuple of (computed_data, metadata) for single trajectory
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Process single trajectory
         >>> data, metadata = FeatureComputationHelper.execute_computation(
         ...     pipeline_data, feature_data, distances_feature, traj_idx=0
@@ -213,8 +213,8 @@ class FeatureComputationHelper:
         """
         Store computation results in feature data object.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_data : FeatureData
             Feature data object to store results in
         data : np.ndarray
@@ -222,13 +222,13 @@ class FeatureComputationHelper:
         feature_metadata : Dict
             Feature metadata dictionary
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Stores data and metadata in feature_data object
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> FeatureComputationHelper.store_computation_results(
         ...     feature_data, distance_matrix, metadata_dict
         ... )
@@ -243,13 +243,13 @@ class FeatureComputationHelper:
         """
         Ensure features in metadata are numpy arrays for consistency.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         feature_metadata : Dict
             Feature metadata dictionary
 
-        Returns:
-        --------
+        Returns
+        -------
         Dict
             Feature metadata with features converted to numpy arrays
         """

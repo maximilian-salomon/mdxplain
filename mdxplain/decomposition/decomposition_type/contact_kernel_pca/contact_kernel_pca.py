@@ -45,8 +45,10 @@ class ContactKernelPCA(DecompositionTypeBase):
     equivalent to the RBF kernel while being conceptually appropriate
     for binary contact data.
 
-    Examples:
-    ---------
+    Uses sklearn's IncrementalPCA, KernelPCA and Nystroem under the hood.
+
+    Examples
+    --------
     >>> # Basic ContactKernelPCA via DecompositionManager
     >>> from mdxplain.decomposition import decomposition_type
     >>> decomp_manager = DecompositionManager()
@@ -78,8 +80,8 @@ class ContactKernelPCA(DecompositionTypeBase):
         Creates a ContactKernelPCA instance specialized for binary contact
         matrices using Hamming/RBF kernel with specified parameters.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         n_components : int, optional
             Number of components to keep. If None, keeps min(n_samples, n_features)
         gamma : float, default=1.0
@@ -97,8 +99,8 @@ class ContactKernelPCA(DecompositionTypeBase):
         min_chunk_size : int, default=1000
             Minimum chunk size per parallel process to avoid overhead
 
-        Returned Metadata:
-        ------------------
+        Returned Metadata
+        -----------------
         hyperparameters : dict
             Dictionary containing all Contact Kernel PCA parameters used
         original_shape : tuple
@@ -118,8 +120,8 @@ class ContactKernelPCA(DecompositionTypeBase):
         n_landmarks : int
             Number of landmarks used for Nyström approximation (when applicable)
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Create ContactKernelPCA instance for contact data
         >>> ckpca = ContactKernelPCA(n_components=15, gamma=1.0)
         >>> print(f"Type: {ckpca.get_type_name()}")
@@ -150,18 +152,18 @@ class ContactKernelPCA(DecompositionTypeBase):
         Returns the unique string identifier for ContactKernelPCA decomposition
         type used for storing results and type identification.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cls : type
             The ContactKernelPCA class
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             String identifier 'contact_kernel_pca'
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> print(ContactKernelPCA.get_type_name())
         'contact_kernel_pca'
         >>> # Can also be used via class directly
@@ -177,8 +179,8 @@ class ContactKernelPCA(DecompositionTypeBase):
         Sets up the ContactKernelPCA calculator with options for memory mapping
         and incremental kernel computation for large binary contact matrices.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use incremental kernel computation for large datasets
         cache_path : str, optional
@@ -186,13 +188,13 @@ class ContactKernelPCA(DecompositionTypeBase):
         chunk_size : int, optional
             Number of samples to process per chunk for incremental computation
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Sets self.calculator to initialized ContactKernelPCACalculator instance
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Basic initialization
         >>> ckpca = ContactKernelPCA()
         >>> ckpca.init_calculator()
@@ -223,14 +225,14 @@ class ContactKernelPCA(DecompositionTypeBase):
         contact matrices using the initialized calculator with Hamming/RBF
         kernel and the parameters provided during initialization.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data : numpy.ndarray
             Binary contact matrix to decompose, shape (n_samples, n_features)
             Values must be 0 or 1 representing contact states
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
             - transformed_data: ContactKernelPCA-transformed data matrix

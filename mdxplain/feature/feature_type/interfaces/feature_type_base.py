@@ -42,8 +42,8 @@ class FeatureTypeBase(ABC, metaclass=FeatureTypeMeta):
     must implement. Each feature type encapsulates computation logic and dependency
     management for a specific type of molecular dynamics analysis.
 
-    Examples:
-    ---------
+    Examples
+    --------
     >>> class MyFeature(FeatureTypeBase):
     ...     def get_dependencies(self):
     ...         return ['distances']  # Depends on distance features
@@ -62,12 +62,12 @@ class FeatureTypeBase(ABC, metaclass=FeatureTypeMeta):
         Sets up the feature type instance with an empty calculator that will
         be initialized later through init_calculator().
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         None
         """
         self.calculator: CalculatorBase = None
@@ -76,8 +76,8 @@ class FeatureTypeBase(ABC, metaclass=FeatureTypeMeta):
         """
         Return string representation of the feature type instance.
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             String representation using the class's get_type_name() method
         """
@@ -87,8 +87,8 @@ class FeatureTypeBase(ABC, metaclass=FeatureTypeMeta):
         """
         Return string representation of the feature type instance.
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             String representation using the class's get_type_name() method
         """
@@ -99,18 +99,18 @@ class FeatureTypeBase(ABC, metaclass=FeatureTypeMeta):
         """
         Get list of feature type dependencies that must be computed first.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         List[str]
             List of feature type names (e.g., ['distances']) that this feature
             type depends on and must be computed before this feature
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> # Contacts depend on distances
         >>> contacts = ContactsFeature()
         >>> print(contacts.get_dependencies())
@@ -132,13 +132,13 @@ class FeatureTypeBase(ABC, metaclass=FeatureTypeMeta):
         Used as the key for storing features in TrajectoryData dictionaries
         and for dependency resolution.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cls : type
             The feature type class
 
-        Returns:
-        --------
+        Returns
+        -------
         str
             Unique string identifier (e.g., 'distances', 'contacts')
         """
@@ -149,8 +149,8 @@ class FeatureTypeBase(ABC, metaclass=FeatureTypeMeta):
         """
         Initialize the calculator instance for this feature type.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for efficient handling of large datasets
         cache_path : str, optional
@@ -158,8 +158,8 @@ class FeatureTypeBase(ABC, metaclass=FeatureTypeMeta):
         chunk_size : int, optional
             Number of frames to process per chunk
 
-        Returns:
-        --------
+        Returns
+        -------
         None
             Sets self.calculator to initialized calculator instance
         """
@@ -170,15 +170,15 @@ class FeatureTypeBase(ABC, metaclass=FeatureTypeMeta):
         """
         Compute features using the initialized calculator.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         input_data : Any
             Input data for computation (trajectories, distances, etc.)
         feature_metadata : dict, optional
             Structured metadata for input features (used by dependent features)
 
-        Returns:
-        --------
+        Returns
+        -------
         Tuple[np.ndarray, dict]
             Tuple containing (computed_features, feature_metadata) where
             computed_features is the calculated data matrix and
@@ -191,17 +191,17 @@ class FeatureTypeBase(ABC, metaclass=FeatureTypeMeta):
         """
         Get the input feature type that this feature depends on.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         None
 
-        Returns:
-        --------
+        Returns
+        -------
         str or None
             Name of the primary input feature type, or None for base features
 
-        Examples:
-        ---------
+        Examples
+        --------
         >>> contacts = ContactsFeature()
         >>> print(contacts.get_input())
         'distances'
