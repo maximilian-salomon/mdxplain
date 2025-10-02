@@ -159,8 +159,8 @@ class DPA(ClusterTypeBase):
             By default the full data set is used.
 
         halos : bool, default=False
-            Whether to return halo points. If True, returns dpa.halos_,
-            otherwise returns dpa.labels_.
+            Whether to return halo points. If True, returns dpa.halos,
+            otherwise returns dpa.labels.
             If true frames which are on a low density are set to 0.
             So kind of a -1 in sklearn clustering algorithms.
             If false, each frame is assigned to its most probable cluster.
