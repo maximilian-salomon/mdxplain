@@ -102,7 +102,7 @@ matrices or decomposition results. Works with TrajectoryData objects
 to perform clustering analysis using various clustering methods
 (DBSCAN, HDBSCAN, DPA).</p>
 <section id="examples">
-<h4>Examples:<a class="headerlink" href="#examples" title="Link to this heading"></a></h4>
+<h4>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h4>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Create manager and add DBSCAN clustering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">mdxplain.clustering</span><span class="w"> </span><span class="kn">import</span> <span class="n">cluster_type</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span> <span class="o">=</span> <span class="n">ClusterManager</span><span class="p">()</span>
@@ -123,21 +123,21 @@ to perform clustering analysis using various clustering methods
 <p>Initialize cluster manager.</p>
 </section>
 <section id="parameters">
-<h4>Parameters:<a class="headerlink" href="#parameters" title="Link to this heading"></a></h4>
+<h4>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h4>
 <dl class="simple">
 <dt>cache_dir<span class="classifier">str, optional</span></dt><dd><p>Cache directory path for clustering data, default=”./cache”</p>
 </dd>
 </dl>
 </section>
 <section id="returns">
-<h4>Returns:<a class="headerlink" href="#returns" title="Link to this heading"></a></h4>
+<h4>Returns<a class="headerlink" href="#returns" title="Link to this heading"></a></h4>
 <dl class="simple">
 <dt>None</dt><dd><p>Initializes ClusterManager instance with specified configuration</p>
 </dd>
 </dl>
 </section>
 <section id="id1">
-<h4>Examples:<a class="headerlink" href="#id1" title="Link to this heading"></a></h4>
+<h4>Examples<a class="headerlink" href="#id1" title="Link to this heading"></a></h4>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Basic manager</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span> <span class="o">=</span> <span class="n">ClusterManager</span><span class="p">()</span>
 </pre></div>
@@ -153,7 +153,7 @@ to perform clustering analysis using various clustering methods
 <p>This method removes all computed clustering results and their associated data,
 requiring clustering to be recalculated from scratch.</p>
 <section id="warning">
-<h5>Warning:<a class="headerlink" href="#warning" title="Link to this heading"></a></h5>
+<h5>Warning<a class="headerlink" href="#warning" title="Link to this heading"></a></h5>
 <p>When using PipelineManager, do NOT provide the pipeline_data parameter.
 The PipelineManager automatically injects this parameter.</p>
 <p>Pipeline mode:
@@ -165,21 +165,21 @@ The PipelineManager automatically injects this parameter.</p>
 &gt;&gt;&gt; manager.reset_clusters(pipeline_data)  # pipeline_data required</p>
 </section>
 <section id="id2">
-<h5>Parameters:<a class="headerlink" href="#id2" title="Link to this heading"></a></h5>
+<h5>Parameters<a class="headerlink" href="#id2" title="Link to this heading"></a></h5>
 <dl class="simple">
 <dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data object</p>
 </dd>
 </dl>
 </section>
 <section id="id3">
-<h5>Returns:<a class="headerlink" href="#id3" title="Link to this heading"></a></h5>
+<h5>Returns<a class="headerlink" href="#id3" title="Link to this heading"></a></h5>
 <dl class="simple">
 <dt>None</dt><dd><p>Clears all clustering data from pipeline_data.cluster_data</p>
 </dd>
 </dl>
 </section>
 <section id="id4">
-<h5>Examples:<a class="headerlink" href="#id4" title="Link to this heading"></a></h5>
+<h5>Examples<a class="headerlink" href="#id4" title="Link to this heading"></a></h5>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span> <span class="o">=</span> <span class="n">ClusterManager</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">reset_clusters</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">)</span>
 </pre></div>
@@ -195,7 +195,7 @@ The PipelineManager automatically injects this parameter.</p>
 using the provided cluster type. Results are stored in the PipelineData
 object’s cluster_data dictionary with the specified or default cluster name.</p>
 <section id="id5">
-<h5>Warning:<a class="headerlink" href="#id5" title="Link to this heading"></a></h5>
+<h5>Warning<a class="headerlink" href="#id5" title="Link to this heading"></a></h5>
 <p>When using PipelineManager, do NOT provide the pipeline_data parameter.
 The PipelineManager automatically injects this parameter.</p>
 <p>Pipeline mode:
@@ -207,7 +207,7 @@ The PipelineManager automatically injects this parameter.</p>
 &gt;&gt;&gt; manager.add_clustering(pipeline_data, “selection”, cluster_type.DBSCAN())  # pipeline_data required</p>
 </section>
 <section id="id6">
-<h5>Parameters:<a class="headerlink" href="#id6" title="Link to this heading"></a></h5>
+<h5>Parameters<a class="headerlink" href="#id6" title="Link to this heading"></a></h5>
 <dl class="simple">
 <dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data object containing feature selections or decomposition results</p>
 </dd>
@@ -232,14 +232,14 @@ Only applies if use_decomposed=False</p>
 </dl>
 </section>
 <section id="id7">
-<h5>Returns:<a class="headerlink" href="#id7" title="Link to this heading"></a></h5>
+<h5>Returns<a class="headerlink" href="#id7" title="Link to this heading"></a></h5>
 <dl class="simple">
 <dt>None</dt><dd><p>Stores ClusterData object in pipeline_data.cluster_data dictionary</p>
 </dd>
 </dl>
 </section>
 <section id="id8">
-<h5>Examples:<a class="headerlink" href="#id8" title="Link to this heading"></a></h5>
+<h5>Examples<a class="headerlink" href="#id8" title="Link to this heading"></a></h5>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Cluster decomposition results with custom name</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">mdxplain.clustering</span><span class="w"> </span><span class="kn">import</span> <span class="n">cluster_type</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span> <span class="o">=</span> <span class="n">ClusterManager</span><span class="p">()</span>
@@ -265,7 +265,7 @@ Only applies if use_decomposed=False</p>
 </div>
 </section>
 <section id="raises">
-<h5>Raises:<a class="headerlink" href="#raises" title="Link to this heading"></a></h5>
+<h5>Raises<a class="headerlink" href="#raises" title="Link to this heading"></a></h5>
 <dl class="simple">
 <dt>ValueError</dt><dd><p>If selection not found, cluster type invalid, or clustering computation fails</p>
 </dd>
@@ -278,7 +278,7 @@ Only applies if use_decomposed=False</p>
 <span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PipelineData</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.clustering.managers.cluster_manager.ClusterManager.save" title="Link to this definition"></a></dt>
 <dd><p>Save all clustering data to single file.</p>
 <section id="id9">
-<h5>Warning:<a class="headerlink" href="#id9" title="Link to this heading"></a></h5>
+<h5>Warning<a class="headerlink" href="#id9" title="Link to this heading"></a></h5>
 <p>When using PipelineManager, do NOT provide the pipeline_data parameter.
 The PipelineManager automatically injects this parameter.</p>
 <p>Pipeline mode:
@@ -290,7 +290,7 @@ The PipelineManager automatically injects this parameter.</p>
 &gt;&gt;&gt; manager.save(pipeline_data, ‘clustering.npy’)  # pipeline_data required</p>
 </section>
 <section id="id10">
-<h5>Parameters:<a class="headerlink" href="#id10" title="Link to this heading"></a></h5>
+<h5>Parameters<a class="headerlink" href="#id10" title="Link to this heading"></a></h5>
 <dl class="simple">
 <dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data container with clustering data</p>
 </dd>
@@ -299,14 +299,14 @@ The PipelineManager automatically injects this parameter.</p>
 </dl>
 </section>
 <section id="id11">
-<h5>Returns:<a class="headerlink" href="#id11" title="Link to this heading"></a></h5>
+<h5>Returns<a class="headerlink" href="#id11" title="Link to this heading"></a></h5>
 <dl class="simple">
 <dt>None</dt><dd><p>Saves all clustering data to the specified file</p>
 </dd>
 </dl>
 </section>
 <section id="id12">
-<h5>Examples:<a class="headerlink" href="#id12" title="Link to this heading"></a></h5>
+<h5>Examples<a class="headerlink" href="#id12" title="Link to this heading"></a></h5>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s1">&#39;clustering.npy&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -318,7 +318,7 @@ The PipelineManager automatically injects this parameter.</p>
 <span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PipelineData</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.clustering.managers.cluster_manager.ClusterManager.load" title="Link to this definition"></a></dt>
 <dd><p>Load all clustering data from single file.</p>
 <section id="id13">
-<h5>Warning:<a class="headerlink" href="#id13" title="Link to this heading"></a></h5>
+<h5>Warning<a class="headerlink" href="#id13" title="Link to this heading"></a></h5>
 <p>When using PipelineManager, do NOT provide the pipeline_data parameter.
 The PipelineManager automatically injects this parameter.</p>
 <p>Pipeline mode:
@@ -330,7 +330,7 @@ The PipelineManager automatically injects this parameter.</p>
 &gt;&gt;&gt; manager.load(pipeline_data, ‘clustering.npy’)  # pipeline_data required</p>
 </section>
 <section id="id14">
-<h5>Parameters:<a class="headerlink" href="#id14" title="Link to this heading"></a></h5>
+<h5>Parameters<a class="headerlink" href="#id14" title="Link to this heading"></a></h5>
 <dl class="simple">
 <dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data container to load clustering data into</p>
 </dd>
@@ -339,14 +339,14 @@ The PipelineManager automatically injects this parameter.</p>
 </dl>
 </section>
 <section id="id15">
-<h5>Returns:<a class="headerlink" href="#id15" title="Link to this heading"></a></h5>
+<h5>Returns<a class="headerlink" href="#id15" title="Link to this heading"></a></h5>
 <dl class="simple">
 <dt>None</dt><dd><p>Loads all clustering data from the specified file</p>
 </dd>
 </dl>
 </section>
 <section id="id16">
-<h5>Examples:<a class="headerlink" href="#id16" title="Link to this heading"></a></h5>
+<h5>Examples<a class="headerlink" href="#id16" title="Link to this heading"></a></h5>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s1">&#39;clustering.npy&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -358,7 +358,7 @@ The PipelineManager automatically injects this parameter.</p>
 <span class="sig-name descname"><span class="pre">print_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PipelineData</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.clustering.managers.cluster_manager.ClusterManager.print_info" title="Link to this definition"></a></dt>
 <dd><p>Print clustering data information.</p>
 <section id="id17">
-<h5>Warning:<a class="headerlink" href="#id17" title="Link to this heading"></a></h5>
+<h5>Warning<a class="headerlink" href="#id17" title="Link to this heading"></a></h5>
 <p>When using PipelineManager, do NOT provide the pipeline_data parameter.
 The PipelineManager automatically injects this parameter.</p>
 <p>Pipeline mode:
@@ -370,21 +370,21 @@ The PipelineManager automatically injects this parameter.</p>
 &gt;&gt;&gt; manager.print_info(pipeline_data)  # pipeline_data required</p>
 </section>
 <section id="id18">
-<h5>Parameters:<a class="headerlink" href="#id18" title="Link to this heading"></a></h5>
+<h5>Parameters<a class="headerlink" href="#id18" title="Link to this heading"></a></h5>
 <dl class="simple">
 <dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data container with clustering data</p>
 </dd>
 </dl>
 </section>
 <section id="id19">
-<h5>Returns:<a class="headerlink" href="#id19" title="Link to this heading"></a></h5>
+<h5>Returns<a class="headerlink" href="#id19" title="Link to this heading"></a></h5>
 <dl class="simple">
 <dt>None</dt><dd><p>Prints clustering data information to console</p>
 </dd>
 </dl>
 </section>
 <section id="id20">
-<h5>Examples:<a class="headerlink" href="#id20" title="Link to this heading"></a></h5>
+<h5>Examples<a class="headerlink" href="#id20" title="Link to this heading"></a></h5>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">print_info</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -398,14 +398,14 @@ The PipelineManager automatically injects this parameter.</p>
 <p>Provides an intuitive interface for adding clustering algorithms without
 requiring explicit cluster type instantiation or imports.</p>
 <section id="id21">
-<h5>Returns:<a class="headerlink" href="#id21" title="Link to this heading"></a></h5>
+<h5>Returns<a class="headerlink" href="#id21" title="Link to this heading"></a></h5>
 <dl class="simple">
 <dt>ClusterAddService</dt><dd><p>Service instance for adding clustering algorithms with combined parameters</p>
 </dd>
 </dl>
 </section>
 <section id="id22">
-<h5>Examples:<a class="headerlink" href="#id22" title="Link to this heading"></a></h5>
+<h5>Examples<a class="headerlink" href="#id22" title="Link to this heading"></a></h5>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Add different clustering algorithms</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">clustering</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">dbscan</span><span class="p">(</span><span class="s2">&quot;my_features&quot;</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">min_samples</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">clustering</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">hdbscan</span><span class="p">(</span><span class="s2">&quot;pca_features&quot;</span><span class="p">,</span> <span class="n">min_cluster_size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
@@ -414,7 +414,7 @@ requiring explicit cluster type instantiation or imports.</p>
 </div>
 </section>
 <section id="notes">
-<h5>Notes:<a class="headerlink" href="#notes" title="Link to this heading"></a></h5>
+<h5>Notes<a class="headerlink" href="#notes" title="Link to this heading"></a></h5>
 <p>Pipeline data is automatically injected by AutoInjectProxy.
 All cluster type parameters are combined with manager.add parameters.</p>
 </section>
