@@ -10,8 +10,7 @@ Welcome to mdxplain's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   clustering_manager
-   dbscan
+   api/clustering/mdxplain.clustering
 
 
 Indices and tables
