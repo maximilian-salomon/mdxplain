@@ -108,7 +108,7 @@ class CalculatorBase(ABC):
         ----------
         data : numpy.ndarray
             Input data matrix to cluster, shape (n_samples, n_features)
-        **kwargs : dict
+        kwargs : dict
             Additional parameters specific to the clustering method
 
         Returns
@@ -116,8 +116,7 @@ class CalculatorBase(ABC):
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
             - cluster_labels: Cluster labels for each sample (n_samples,)
-            - metadata: Dictionary with clustering information including
-              hyperparameters, number of clusters, silhouette score, etc.
+            - metadata: Dictionary with clustering information including hyperparameters, number of clusters, silhouette score, etc.
 
         Examples
         --------
