@@ -14,7 +14,6 @@ Welcome to mdxplain's documentation!
    dbscan
 
 
-
 Indices and tables
 ==================
 
