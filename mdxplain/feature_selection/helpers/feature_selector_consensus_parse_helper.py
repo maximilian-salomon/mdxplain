@@ -28,7 +28,7 @@ class FeatureSelectorConsensusParseHelper:
     Helper class for parsing consensus nomenclature patterns.
 
     Provides static methods to parse consensus patterns like "7x50", "7x*", "7x-8x",
-    and "*40-*50" to identify matching residue indices based on trajectory metadata.
+    and "\*40-\*50" to identify matching residue indices based on trajectory metadata.
     """
 
     @staticmethod
@@ -83,19 +83,6 @@ class FeatureSelectorConsensusParseHelper:
         """
         Parse consensus nomenclature pattern and return matching residue indices.
 
-        Parameters
-        ----------
-        metadata : dict
-            Trajectory metadata with residue information
-        pattern : str
-            Consensus pattern to parse:
-            - Single: "7x50" → Find first entry containing substring
-            - Wildcard: "7x*" → Find all containing "7x"  
-            - Range: "7x-8x" → From first "7x" to last "8x" (consensus != None)
-            - Range All: "all 7x-8x" → Same but include None entries
-            - Multi-Pattern: "*40-*50" → All blocks like 1x40-1x50, 2x40-2x50, etc.
-        require_all_partners : bool, default=False
-            For pairwise features, require all partners to be present in selection
 
         Returns
         -------

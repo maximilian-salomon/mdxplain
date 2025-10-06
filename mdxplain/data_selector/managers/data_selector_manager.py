@@ -169,6 +169,7 @@ class DataSelectorManager:
         stride : int, default=1
             Minimum distance between consecutive frames (per trajectory).
             stride=1 returns all frames, stride=10 returns every 10th frame.
+        
         # TODO: We could use an Enum for modes
 
         Returns

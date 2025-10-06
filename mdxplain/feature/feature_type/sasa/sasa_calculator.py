@@ -96,7 +96,7 @@ class SASACalculator(CalculatorBase):
         ----------
         input_data : mdtraj.Trajectory
             MDTraj trajectory object to process
-        **kwargs : dict
+        \*\*kwargs : dict
             Additional parameters:
             - mode : str - 'residue' or 'atom' level SASA
             - probe_radius : float - Probe sphere radius in nm

@@ -34,6 +34,7 @@ class SasaSelectionService(SelectionServiceBase):
     Service for selecting SASA features with SASA-specific reduction methods.
 
     Knows ALL reduction metrics from SasaReduceService:
+    
     - cv, std, variance, range, mad, mean, min, max, burial_fraction,
       exposure_fraction, transitions
 

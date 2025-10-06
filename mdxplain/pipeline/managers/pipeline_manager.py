@@ -420,7 +420,8 @@ class PipelineManager:
         ======= PIPELINE INFORMATION =======
         
         --- Trajectory Data ---
-        Loaded 3 trajectories:
+        Loaded 3 trajectories::
+        
             [0] system1_traj1: 1000 frames
             [1] system1_traj2: 1500 frames
             [2] system2_traj1: 800 frames

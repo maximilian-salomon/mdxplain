@@ -109,7 +109,7 @@ class NomenclatureHelper:
             Whether to write cache files to disk
         cache_folder : str, default "./cache"
             Folder for cache files
-        **labeler_kwargs
+        \*\*labeler_kwargs
             Additional keyword arguments passed to the mdciao labelers
 
         Returns
@@ -125,6 +125,7 @@ class NomenclatureHelper:
             If fragment_type is required when consensus=True
         ValueError
             If fragment_molecule_name is required when consensus=True
+       
         Notes
         -----
         This class uses mdciao consensus nomenclature systems:
