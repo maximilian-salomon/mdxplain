@@ -364,8 +364,10 @@ class TrajectoryData:
         ----------
         traj_selection : int, str, list, or "all"
             Selection criteria:
+            
             - int: trajectory index
             - str: trajectory name, tag (prefixed with "tag:") or advanced formats:
+                
                 * Range: "0-3", "id 0-3" → [0, 1, 2, 3]
                 * Comma list: "1,2,4,5", "id 1,2,4,5" → [1, 2, 4, 5]
                 * Single number: "7", "id 7" → [7]

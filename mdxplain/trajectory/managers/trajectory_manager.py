@@ -264,6 +264,7 @@ class TrajectoryManager:
         selection : str, optional
             MDTraj selection string to apply to all newly loaded trajectories.
             If None, uses manager default.
+        
         Returns
         -------
         None
@@ -677,7 +678,7 @@ class TrajectoryManager:
             Whether to write cache files to disk
         cache_folder : str, default "./cache"
             Folder for cache files
-        **nomenclature_kwargs
+        \*\*nomenclature_kwargs
             Additional keyword arguments passed to the mdciao labelers
 
         Returns
@@ -808,9 +809,11 @@ class TrajectoryManager:
             Pipeline data object
         trajectory_selector : int, str, list, range, dict
             Flexible selector for trajectories:
+            
             - int: single trajectory by index (e.g., 0)
             - str: single trajectory by name or pattern (e.g., "traj1", "system_*")
                 Supports multiple string formats:
+                
                 - Range: "0-3", "id 0-3" → [0, 1, 2, 3]
                 - Comma list: "1,2,4,5", "id 1,2,4,5" → [1, 2, 4, 5]
                 - Single number: "7", "id 7" → [7]
@@ -905,9 +908,11 @@ class TrajectoryManager:
             Pipeline data object
         trajectory_selector : int, str, list, range, dict
             Flexible selector for trajectories:
+            
             - int: single trajectory by index (e.g., 0)
             - str: single trajectory by name or pattern (e.g., "traj1", "system_*")
                 Supports multiple string formats:
+                
                 - Range: "0-3", "id 0-3" → [0, 1, 2, 3]
                 - Comma list: "1,2,4,5", "id 1,2,4,5" → [1, 2, 4, 5]
                 - Single number: "7", "id 7" → [7]
