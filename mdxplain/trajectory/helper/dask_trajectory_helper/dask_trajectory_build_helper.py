@@ -129,8 +129,8 @@ class DaskMDTrajectoryBuildHelper:
         instance._dask_time = da.from_zarr(instance.zarr_cache_path, component='time')
         
         # Optional unitcell data
-        instance._has_unitcell = 'unitcell_vectors' in instance._zarr_store
-        if instance._has_unitcell:
+        instance._have_unitcell = 'unitcell_vectors' in instance._zarr_store
+        if instance._have_unitcell:
             instance._dask_unitcell_vectors = da.from_zarr(instance.zarr_cache_path, component='unitcell_vectors')
             instance._dask_unitcell_lengths = da.from_zarr(instance.zarr_cache_path, component='unitcell_lengths')
             instance._dask_unitcell_angles = da.from_zarr(instance.zarr_cache_path, component='unitcell_angles')
@@ -212,8 +212,8 @@ class DaskMDTrajectoryBuildHelper:
         instance._dask_time = da.from_zarr(instance.zarr_cache_path, component='time')
         
         # Optional unitcell data
-        instance._has_unitcell = 'unitcell_vectors' in instance._zarr_store
-        if instance._has_unitcell:
+        instance._have_unitcell = 'unitcell_vectors' in instance._zarr_store
+        if instance._have_unitcell:
             instance._dask_unitcell_vectors = da.from_zarr(instance.zarr_cache_path, component='unitcell_vectors')
             instance._dask_unitcell_lengths = da.from_zarr(instance.zarr_cache_path, component='unitcell_lengths')
             instance._dask_unitcell_angles = da.from_zarr(instance.zarr_cache_path, component='unitcell_angles')
