@@ -1,0 +1,576 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pipeline Managers: Manager &mdash; mdxplain 31.10.2025 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=55e8f53f"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Trajectory" href="../trajectory/mdxplain.trajectory.html" />
+    <link rel="prev" title="Pipeline Managers: Auto Inject Proxy" href="mdxplain.pipeline.managers.auto_inject_proxy.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mdxplain
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction.html">Introduction to mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting started with mdxplain</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/theory/theory.html">The Theory Behind mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/learning/learning.html">Learn mdxplain</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../analysis/mdxplain.analysis.html">Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering/mdxplain.clustering.html">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../comparison/mdxplain.comparison.html">Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_selector/mdxplain.data_selector.html">Data Selector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../decomposition/mdxplain.decomposition.html">Decomposition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature/mdxplain.feature.html">Feature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.html">Feature Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_selection/mdxplain.feature_selection.html">Feature Selection</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="mdxplain.pipeline.html">Pipeline</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.pipeline.entities.html">Pipeline Entities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.pipeline.helper.html">Pipeline: Helpers</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="mdxplain.pipeline.managers.html">Pipeline Managers</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.pipeline.managers.auto_inject_proxy.html">Pipeline Managers: Auto Inject Proxy</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Pipeline Managers: Manager</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../trajectory/mdxplain.trajectory.html">Trajectory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/mdxplain.utils.html">Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mdxplain</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API Documentation</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.pipeline.html">Pipeline</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.pipeline.managers.html">Pipeline Managers</a></li>
+      <li class="breadcrumb-item active">Pipeline Managers: Manager</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api/pipeline/mdxplain.pipeline.managers.pipeline_manager.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mdxplain.pipeline.managers.pipeline_manager">
+<span id="pipeline-managers-manager"></span><h1>Pipeline Managers: Manager<a class="headerlink" href="#module-mdxplain.pipeline.managers.pipeline_manager" title="Link to this heading"></a></h1>
+<p>Central pipeline manager with automatic data injection.</p>
+<p>This module provides the PipelineManager class that serves as the central
+orchestration point for all analysis workflows. It uses AutoInjectProxy
+to automatically inject PipelineData into manager methods that need it.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mdxplain.pipeline.managers.pipeline_manager.PipelineManager">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mdxplain.pipeline.managers.pipeline_manager.</span></span><span class="sig-name descname"><span class="pre">PipelineManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">concat</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_memmap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'./cache'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.pipeline.managers.pipeline_manager.PipelineManager" title="Link to this definition"></a></dt>
+<dd><p>Central pipeline manager with automatic PipelineData injection.</p>
+<p>This class provides a unified interface to all analysis modules through
+AutoInjectProxy instances that automatically inject PipelineData into
+methods that expect it while leaving utility methods unchanged.</p>
+<p>The PipelineManager is designed to simplify the usage of the
+mdxplain pipeline system by providing a single entry point for all
+analysis workflows. It manages the trajectory loading, feature computation,
+clustering, and decomposition processes in a cohesive manner.</p>
+<p>It is the single entry point for:</p>
+<ul class="simple">
+<li><p>Trajectory loading and validation</p></li>
+<li><p>Feature computation</p></li>
+<li><p>Feature selection</p></li>
+<li><p>Clustering analysis</p></li>
+<li><p>Decomposition analysis</p></li>
+<li><p>Data selection</p></li>
+<li><p>Comparison management</p></li>
+<li><p>Feature importance analysis</p></li>
+<li><p>General analysis operations</p></li>
+</ul>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<p>Basic pipeline workflow:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span> <span class="o">=</span> <span class="n">PipelineManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Methods expecting pipeline_data get automatic injection</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">trajectory</span><span class="o">.</span><span class="n">load_trajectories</span><span class="p">(</span><span class="s1">&#39;../data&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">compute_features</span><span class="p">(</span><span class="s1">&#39;distances&#39;</span><span class="p">,</span> <span class="s1">&#39;res CA&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature_selector</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="s1">&#39;my_selection&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature_selector</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;my_selection&#39;</span><span class="p">,</span> <span class="s1">&#39;distances&#39;</span><span class="p">,</span> <span class="s1">&#39;res ALA&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature_selector</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s1">&#39;my_selection&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">clustering</span><span class="o">.</span><span class="n">cluster</span><span class="p">(</span><span class="s1">&#39;my_features&#39;</span><span class="p">,</span> <span class="s1">&#39;dbscan&#39;</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Utility methods work without injection</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">valid</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">trajectory</span><span class="o">.</span><span class="n">validate_selection</span><span class="p">(</span><span class="s1">&#39;res CA&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">formats</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">trajectory</span><span class="o">.</span><span class="n">get_supported_formats</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Advanced: Direct data access</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">summary</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get_data_summary</span><span class="p">()</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.pipeline.managers.pipeline_manager.PipelineManager.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">concat</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_memmap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'./cache'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.pipeline.managers.pipeline_manager.PipelineManager.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize the pipeline manager with configuration for all managers.</p>
+<section id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>stride<span class="classifier">int, default=1</span></dt><dd><p>Default stride for trajectory loading</p>
+</dd>
+<dt>concat<span class="classifier">bool, default=False</span></dt><dd><p>Default concatenation setting for trajectories</p>
+</dd>
+<dt>selection<span class="classifier">str, optional</span></dt><dd><p>Default MDTraj selection string for trajectories</p>
+</dd>
+<dt>use_memmap<span class="classifier">bool, default=False</span></dt><dd><p>Whether to use memory mapping for feature and decomposition data</p>
+</dd>
+<dt>chunk_size<span class="classifier">int, default=10000</span></dt><dd><p>Processing chunk size for feature and decomposition computation</p>
+</dd>
+<dt>cache_dir<span class="classifier">str, default=”./cache”</span></dt><dd><p>Cache directory path for all managers</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h3>Returns<a class="headerlink" href="#returns" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>None</dt><dd><p>Initializes PipelineManager with automatic data injection</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.pipeline.managers.pipeline_manager.PipelineManager.trajectory">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">trajectory</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../trajectory/mdxplain.trajectory.managers.html#mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager" title="mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager"><span class="pre">TrajectoryManager</span></a></em><a class="headerlink" href="#mdxplain.pipeline.managers.pipeline_manager.PipelineManager.trajectory" title="Link to this definition"></a></dt>
+<dd><p>Access trajectory management with automatic PipelineData injection.</p>
+<section id="id1">
+<h3>Returns<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>TrajectoryManager</dt><dd><p>Trajectory manager with automatic PipelineData injection.
+All methods that expect pipeline_data parameter will receive it automatically.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.pipeline.managers.pipeline_manager.PipelineManager.feature">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">feature</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../feature/mdxplain.feature.managers.html#mdxplain.feature.managers.feature_manager.FeatureManager" title="mdxplain.feature.managers.feature_manager.FeatureManager"><span class="pre">FeatureManager</span></a></em><a class="headerlink" href="#mdxplain.pipeline.managers.pipeline_manager.PipelineManager.feature" title="Link to this definition"></a></dt>
+<dd><p>Access feature computation with automatic PipelineData injection.</p>
+<section id="id2">
+<h3>Returns<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>FeatureManager</dt><dd><p>Feature manager with automatic PipelineData injection.
+All methods that expect pipeline_data parameter will receive it automatically.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.pipeline.managers.pipeline_manager.PipelineManager.clustering">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">clustering</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../clustering/mdxplain.clustering.managers.html#mdxplain.clustering.managers.cluster_manager.ClusterManager" title="mdxplain.clustering.managers.cluster_manager.ClusterManager"><span class="pre">ClusterManager</span></a></em><a class="headerlink" href="#mdxplain.pipeline.managers.pipeline_manager.PipelineManager.clustering" title="Link to this definition"></a></dt>
+<dd><p>Access clustering analysis with automatic PipelineData injection.</p>
+<section id="id3">
+<h3>Returns<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>ClusterManager</dt><dd><p>Cluster manager with automatic PipelineData injection.
+All methods that expect pipeline_data parameter will receive it automatically.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.pipeline.managers.pipeline_manager.PipelineManager.decomposition">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">decomposition</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../decomposition/mdxplain.decomposition.managers.html#mdxplain.decomposition.managers.decomposition_manager.DecompositionManager" title="mdxplain.decomposition.managers.decomposition_manager.DecompositionManager"><span class="pre">DecompositionManager</span></a></em><a class="headerlink" href="#mdxplain.pipeline.managers.pipeline_manager.PipelineManager.decomposition" title="Link to this definition"></a></dt>
+<dd><p>Access decomposition analysis with automatic PipelineData injection.</p>
+<section id="id4">
+<h3>Returns<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>DecompositionManager</dt><dd><p>Decomposition manager with automatic PipelineData injection.
+All methods that expect pipeline_data parameter will receive it automatically.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.pipeline.managers.pipeline_manager.PipelineManager.feature_selector">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">feature_selector</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../feature_selection/mdxplain.feature_selection.managers.html#mdxplain.feature_selection.managers.feature_selector_manager.FeatureSelectorManager" title="mdxplain.feature_selection.managers.feature_selector_manager.FeatureSelectorManager"><span class="pre">FeatureSelectorManager</span></a></em><a class="headerlink" href="#mdxplain.pipeline.managers.pipeline_manager.PipelineManager.feature_selector" title="Link to this definition"></a></dt>
+<dd><p>Access feature selector management with automatic PipelineData injection.</p>
+<section id="id5">
+<h3>Returns<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>FeatureSelectorManager</dt><dd><p>Feature selector manager with automatic PipelineData injection.
+All methods that expect pipeline_data parameter will receive it automatically.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.pipeline.managers.pipeline_manager.PipelineManager.data_selector">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">data_selector</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../data_selector/mdxplain.data_selector.managers.html#mdxplain.data_selector.managers.data_selector_manager.DataSelectorManager" title="mdxplain.data_selector.managers.data_selector_manager.DataSelectorManager"><span class="pre">DataSelectorManager</span></a></em><a class="headerlink" href="#mdxplain.pipeline.managers.pipeline_manager.PipelineManager.data_selector" title="Link to this definition"></a></dt>
+<dd><p>Access data selector management with automatic PipelineData injection.</p>
+<section id="id6">
+<h3>Returns<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>DataSelectorManager</dt><dd><p>Data selector manager with automatic PipelineData injection.
+All methods that expect pipeline_data parameter will receive it automatically.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.pipeline.managers.pipeline_manager.PipelineManager.comparison">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">comparison</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../comparison/mdxplain.comparison.managers.html#mdxplain.comparison.managers.comparison_manager.ComparisonManager" title="mdxplain.comparison.managers.comparison_manager.ComparisonManager"><span class="pre">ComparisonManager</span></a></em><a class="headerlink" href="#mdxplain.pipeline.managers.pipeline_manager.PipelineManager.comparison" title="Link to this definition"></a></dt>
+<dd><p>Access comparison management with automatic PipelineData injection.</p>
+<section id="id7">
+<h3>Returns<a class="headerlink" href="#id7" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>ComparisonManager</dt><dd><p>Comparison manager with automatic PipelineData injection.
+All methods that expect pipeline_data parameter will receive it automatically.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.pipeline.managers.pipeline_manager.PipelineManager.feature_importance">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">feature_importance</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.managers.html#mdxplain.feature_importance.managers.feature_importance_manager.FeatureImportanceManager" title="mdxplain.feature_importance.managers.feature_importance_manager.FeatureImportanceManager"><span class="pre">FeatureImportanceManager</span></a></em><a class="headerlink" href="#mdxplain.pipeline.managers.pipeline_manager.PipelineManager.feature_importance" title="Link to this definition"></a></dt>
+<dd><p>Access feature importance analysis with automatic PipelineData injection.</p>
+<section id="id8">
+<h3>Returns<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>FeatureImportanceManager</dt><dd><p>Feature importance manager with automatic PipelineData injection.
+All methods that expect pipeline_data parameter will receive it automatically.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.pipeline.managers.pipeline_manager.PipelineManager.analysis">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">analysis</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../analysis/mdxplain.analysis.managers.html#mdxplain.analysis.managers.analysis_manager.AnalysisManager" title="mdxplain.analysis.managers.analysis_manager.AnalysisManager"><span class="pre">AnalysisManager</span></a></em><a class="headerlink" href="#mdxplain.pipeline.managers.pipeline_manager.PipelineManager.analysis" title="Link to this definition"></a></dt>
+<dd><p>Access analysis operations with automatic PipelineData injection.</p>
+<section id="id9">
+<h3>Returns<a class="headerlink" href="#id9" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>AnalysisManager</dt><dd><p>Analysis manager with automatic PipelineData injection.
+All methods that expect pipeline_data parameter will receive it automatically.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.pipeline.managers.pipeline_manager.PipelineManager.data">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">data</span></span><a class="headerlink" href="#mdxplain.pipeline.managers.pipeline_manager.PipelineManager.data" title="Link to this definition"></a></dt>
+<dd><p>Direct access to pipeline data (advanced usage).</p>
+<p>Provides direct access to the central PipelineData container for
+advanced users who need to inspect or manipulate data directly.
+Normal usage should go through the manager properties.</p>
+<section id="id10">
+<h3>Returns<a class="headerlink" href="#id10" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>PipelineData</dt><dd><p>Central pipeline data container with all analysis data</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.pipeline.managers.pipeline_manager.PipelineManager.summary">
+<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mdxplain.pipeline.managers.pipeline_manager.PipelineManager.summary" title="Link to this definition"></a></dt>
+<dd><p>Get summary of all pipeline data.</p>
+<section id="id11">
+<h3>Returns<a class="headerlink" href="#id11" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>dict</dt><dd><p>Summary information about all loaded and computed data</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.pipeline.managers.pipeline_manager.PipelineManager.clear_all">
+<span class="sig-name descname"><span class="pre">clear_all</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.pipeline.managers.pipeline_manager.PipelineManager.clear_all" title="Link to this definition"></a></dt>
+<dd><p>Clear all pipeline data.</p>
+<p>Resets the entire pipeline to empty state, clearing all
+trajectories, features, clustering, and decomposition results.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.pipeline.managers.pipeline_manager.PipelineManager.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.pipeline.managers.pipeline_manager.PipelineManager.save" title="Link to this definition"></a></dt>
+<dd><p>Save complete pipeline to disk.</p>
+<p>This method saves the entire PipelineData object including all
+computed features, trajectories, clusterings, decompositions,
+and metadata to a file.</p>
+<section id="id12">
+<h3>Parameters<a class="headerlink" href="#id12" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>save_path<span class="classifier">str</span></dt><dd><p>Path where to save the complete pipeline</p>
+</dd>
+</dl>
+</section>
+<section id="id13">
+<h3>Returns<a class="headerlink" href="#id13" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>None</dt><dd><p>Saves the complete pipeline to the specified path</p>
+</dd>
+</dl>
+</section>
+<section id="id14">
+<h3>Examples<a class="headerlink" href="#id14" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;complete_analysis.pkl&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.pipeline.managers.pipeline_manager.PipelineManager.load">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.pipeline.managers.pipeline_manager.PipelineManager.load" title="Link to this definition"></a></dt>
+<dd><p>Load complete pipeline from disk.</p>
+<p>This method loads a complete PipelineData object from a file,
+restoring all computed features, trajectories, and analysis state.</p>
+<section id="id15">
+<h3>Parameters<a class="headerlink" href="#id15" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>load_path<span class="classifier">str</span></dt><dd><p>Path to the saved pipeline file</p>
+</dd>
+</dl>
+</section>
+<section id="id16">
+<h3>Returns<a class="headerlink" href="#id16" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>None</dt><dd><p>Loads the complete pipeline from the specified path</p>
+</dd>
+</dl>
+</section>
+<section id="id17">
+<h3>Examples<a class="headerlink" href="#id17" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;complete_analysis.pkl&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.pipeline.managers.pipeline_manager.PipelineManager.load_pipeline">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mdxplain.pipeline.managers.pipeline_manager.PipelineManager" title="mdxplain.pipeline.managers.pipeline_manager.PipelineManager"><span class="pre">PipelineManager</span></a></span></span><a class="headerlink" href="#mdxplain.pipeline.managers.pipeline_manager.PipelineManager.load_pipeline" title="Link to this definition"></a></dt>
+<dd><p>Load complete pipeline from disk as a static constructor.</p>
+<p>This static method creates a new PipelineManager instance and
+loads a complete pipeline state from a file.</p>
+<section id="id18">
+<h3>Parameters<a class="headerlink" href="#id18" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>load_path<span class="classifier">str</span></dt><dd><p>Path to the saved pipeline file</p>
+</dd>
+</dl>
+</section>
+<section id="id19">
+<h3>Returns<a class="headerlink" href="#id19" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>PipelineManager</dt><dd><p>New PipelineManager instance with loaded pipeline state</p>
+</dd>
+</dl>
+</section>
+<section id="id20">
+<h3>Examples<a class="headerlink" href="#id20" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">loaded_pipeline</span> <span class="o">=</span> <span class="n">PipelineManager</span><span class="o">.</span><span class="n">load_pipeline</span><span class="p">(</span><span class="s1">&#39;complete_analysis.pkl&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">loaded_pipeline</span><span class="o">.</span><span class="n">print_info</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.pipeline.managers.pipeline_manager.PipelineManager.print_info">
+<span class="sig-name descname"><span class="pre">print_info</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.pipeline.managers.pipeline_manager.PipelineManager.print_info" title="Link to this definition"></a></dt>
+<dd><p>Print comprehensive pipeline information.</p>
+<p>This method prints information from ALL managers to provide
+a complete overview of the pipeline state.</p>
+<section id="id21">
+<h3>Returns<a class="headerlink" href="#id21" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>None</dt><dd><p>Prints comprehensive pipeline information to console</p>
+</dd>
+</dl>
+</section>
+<section id="id22">
+<h3>Examples<a class="headerlink" href="#id22" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">print_info</span><span class="p">()</span>
+<span class="go">======= PIPELINE INFORMATION =======</span>
+</pre></div>
+</div>
+<p>— Trajectory Data —
+Loaded 3 trajectories:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="n">system1_traj1</span><span class="p">:</span> <span class="mi">1000</span> <span class="n">frames</span>
+<span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="n">system1_traj2</span><span class="p">:</span> <span class="mi">1500</span> <span class="n">frames</span>
+<span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="n">system2_traj1</span><span class="p">:</span> <span class="mi">800</span> <span class="n">frames</span>
+</pre></div>
+</div>
+<p>— Feature Data —
+Feature Types: 2 (distances, contacts)</p>
+<p>— Clustering Data —
+Clustering Names: 1 (conformations)</p>
+<p>(… information from all managers …)</p>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.pipeline.managers.pipeline_manager.PipelineManager.update_config">
+<span class="sig-name descname"><span class="pre">update_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_memmap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.pipeline.managers.pipeline_manager.PipelineManager.update_config" title="Link to this definition"></a></dt>
+<dd><p>Update pipeline configuration parameters at runtime.</p>
+<p>Allows modification of key configuration parameters after pipeline
+initialization. Changes are propagated to all managers and the
+central PipelineData container.</p>
+<section id="id23">
+<h3>Parameters<a class="headerlink" href="#id23" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>chunk_size<span class="classifier">int, optional</span></dt><dd><p>New chunk size for processing operations. Must be positive integer.</p>
+</dd>
+<dt>cache_dir<span class="classifier">str, optional</span></dt><dd><p>New cache directory path. Directory will be created if it doesn’t exist.</p>
+</dd>
+<dt>use_memmap<span class="classifier">bool, optional</span></dt><dd><p>Whether to use memory mapping for data storage operations.</p>
+</dd>
+</dl>
+</section>
+<section id="id24">
+<h3>Returns<a class="headerlink" href="#id24" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>None</dt><dd><p>Updates configuration in all components</p>
+</dd>
+</dl>
+</section>
+<section id="raises">
+<h3>Raises<a class="headerlink" href="#raises" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If chunk_size is not a positive integer</p>
+</dd>
+<dt>OSError</dt><dd><p>If cache_dir cannot be created</p>
+</dd>
+</dl>
+</section>
+<section id="id25">
+<h3>Examples<a class="headerlink" href="#id25" title="Link to this heading"></a></h3>
+<p>Update chunk size for better memory management:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">update_config</span><span class="p">(</span><span class="n">chunk_size</span><span class="o">=</span><span class="mi">5000</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Change cache directory and enable memory mapping:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">update_config</span><span class="p">(</span><span class="n">cache_dir</span><span class="o">=</span><span class="s2">&quot;/tmp/mdx_cache&quot;</span><span class="p">,</span> <span class="n">use_memmap</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.pipeline.managers.pipeline_manager.PipelineManager.get_config">
+<span class="sig-name descname"><span class="pre">get_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#mdxplain.pipeline.managers.pipeline_manager.PipelineManager.get_config" title="Link to this definition"></a></dt>
+<dd><p>Get current pipeline configuration parameters.</p>
+<p>Returns the current configuration settings that are active
+across all pipeline components.</p>
+<section id="id26">
+<h3>Returns<a class="headerlink" href="#id26" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>dict</dt><dd><p>Dictionary containing current configuration values</p>
+</dd>
+</dl>
+</section>
+<section id="id27">
+<h3>Examples<a class="headerlink" href="#id27" title="Link to this heading"></a></h3>
+<p>Check current configuration:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span> <span class="o">=</span> <span class="n">PipelineManager</span><span class="p">(</span><span class="n">chunk_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">use_memmap</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">config</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Using chunk size: </span><span class="si">{</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;chunk_size&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Memory mapping: </span><span class="si">{</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;use_memmap&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mdxplain.pipeline.managers.auto_inject_proxy.html" class="btn btn-neutral float-left" title="Pipeline Managers: Auto Inject Proxy" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../trajectory/mdxplain.trajectory.html" class="btn btn-neutral float-right" title="Trajectory" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maximilian Salomon.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

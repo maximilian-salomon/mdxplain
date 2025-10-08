@@ -1,0 +1,243 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DBA Calculator &mdash; mdxplain 31.10.2025 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=55e8f53f"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Cluster Type: HDBSCAN" href="mdxplain.clustering.cluster_type.hdbscan.html" />
+    <link rel="prev" title="DPA Module" href="mdxplain.clustering.cluster_type.dpa.dpa_module.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mdxplain
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction.html">Introduction to mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting started with mdxplain</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/theory/theory.html">The Theory Behind mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/learning/learning.html">Learn mdxplain</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../analysis/mdxplain.analysis.html">Analysis</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="mdxplain.clustering.html">Clustering</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="mdxplain.clustering.cluster_type.html">Cluster Types</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.clustering.cluster_type.dbscan.html">Cluster Type: DBSCAN</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="mdxplain.clustering.cluster_type.dpa.html">Cluster Type: DPA</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.clustering.cluster_type.hdbscan.html">Cluster Type: HDBSCAN</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.clustering.cluster_type.interfaces.html">Cluster Types: Interface Packages</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.clustering.entities.html">Entities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.clustering.managers.html">Clustering Manager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.clustering.services.html">Cluster Type: Services</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../comparison/mdxplain.comparison.html">Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_selector/mdxplain.data_selector.html">Data Selector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../decomposition/mdxplain.decomposition.html">Decomposition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature/mdxplain.feature.html">Feature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.html">Feature Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_selection/mdxplain.feature_selection.html">Feature Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pipeline/mdxplain.pipeline.html">Pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../trajectory/mdxplain.trajectory.html">Trajectory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/mdxplain.utils.html">Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mdxplain</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API Documentation</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.clustering.html">Clustering</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.clustering.cluster_type.html">Cluster Types</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.clustering.cluster_type.dpa.html">Cluster Type: DPA</a></li>
+      <li class="breadcrumb-item active">DBA Calculator</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api/clustering/mdxplain.clustering.cluster_type.dpa.dba_calculator.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mdxplain.clustering.cluster_type.dpa.dpa_calculator">
+<span id="dba-calculator"></span><h1>DBA Calculator<a class="headerlink" href="#module-mdxplain.clustering.cluster_type.dpa.dpa_calculator" title="Link to this heading"></a></h1>
+<p>DPA calculator implementation.</p>
+<p>This module provides the DPACalculator class that performs the actual
+DPA clustering computation using the DPA package from conda environment.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mdxplain.clustering.cluster_type.dpa.dpa_calculator.DPACalculator">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mdxplain.clustering.cluster_type.dpa.dpa_calculator.</span></span><span class="sig-name descname"><span class="pre">DPACalculator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cache_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'./cache'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_memory_gb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_memmap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.clustering.cluster_type.dpa.dpa_calculator.DPACalculator" title="Link to this definition"></a></dt>
+<dd><p>Calculator for DPA clustering.</p>
+<p>This class implements the actual DPA clustering computation using
+the DPA package and computes clustering quality metrics.</p>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Create calculator and compute clustering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">calc</span> <span class="o">=</span> <span class="n">DPACalculator</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">labels</span><span class="p">,</span> <span class="n">metadata</span> <span class="o">=</span> <span class="n">calc</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">affinity</span><span class="o">=</span><span class="s1">&#39;euclidean&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                               <span class="n">nn_distances</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">density_algo</span><span class="o">=</span><span class="s1">&#39;knn&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                               <span class="n">k_max</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">block_ratio</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">blockAn</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span>                               <span class="n">frac</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">halos</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found </span><span class="si">{</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;n_clusters&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> clusters&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.clustering.cluster_type.dpa.dpa_calculator.DPACalculator.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cache_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'./cache'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_memory_gb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_memmap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.clustering.cluster_type.dpa.dpa_calculator.DPACalculator.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize DPA calculator.</p>
+<section id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>cache_path<span class="classifier">str, optional</span></dt><dd><p>Path for cache files. Default is ‘./cache’.</p>
+</dd>
+<dt>max_memory_gb<span class="classifier">float, optional</span></dt><dd><p>Maximum memory threshold in GB. Default is 2.0.</p>
+</dd>
+<dt>chunk_size<span class="classifier">int, optional</span></dt><dd><p>Chunk size for processing large datasets in sampling methods.
+Used for chunked k-NN prediction. Default is 1000.</p>
+</dd>
+<dt>use_memmap<span class="classifier">bool, optional</span></dt><dd><p>Whether to use memory mapping for large datasets. Default is False.</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h3>Returns<a class="headerlink" href="#returns" title="Link to this heading"></a></h3>
+<p>None</p>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.clustering.cluster_type.dpa.dpa_calculator.DPACalculator.compute">
+<span class="sig-name descname"><span class="pre">compute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mdxplain.clustering.cluster_type.dpa.dpa_calculator.DPACalculator.compute" title="Link to this definition"></a></dt>
+<dd><p>Compute DPA clustering.</p>
+<section id="id1">
+<h3>Parameters<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>data<span class="classifier">numpy.ndarray</span></dt><dd><p>Input data matrix to cluster, shape (n_samples, n_features)</p>
+</dd>
+<dt>**kwargs<span class="classifier">dict</span></dt><dd><p>DPA parameters including:
+See DPA init docstring for more information or
+<a class="reference external" href="https://github.com/mariaderrico/DPA">https://github.com/mariaderrico/DPA</a> and <a class="reference external" href="https://github.com/mariaderrico/DPA/blob/master/DPA_analysis.ipynb">https://github.com/mariaderrico/DPA/blob/master/DPA_analysis.ipynb</a></p>
+<ul class="simple">
+<li><p>Z : float, density threshold parameter</p></li>
+<li><p>affinity : str, affinity metric for distance calculation</p></li>
+<li><p>nn_distances : int, number of nearest neighbors</p></li>
+<li><p>density_algo : str, algorithm for density computation</p></li>
+<li><p>k_max : int, maximum number of clusters</p></li>
+<li><p>block_ratio : float, block ratio parameter</p></li>
+<li><p>blockAn : bool, whether to use block analysis</p></li>
+<li><p>frac : float, fraction parameter for sampling</p></li>
+<li><p>halos : bool, whether to return halo points assigned to cluster 0</p></li>
+<li><p>method : str, clustering method (‘standard’, ‘knn_sampling’)</p></li>
+<li><p>sample_fraction : float, fraction of data to sample</p></li>
+<li><p>force : bool, override memory and dimensionality checks</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+<section id="id2">
+<h3>Returns<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>Tuple[numpy.ndarray, Dict]</dt><dd><p>Tuple containing:</p>
+<ul class="simple">
+<li><p>cluster_labels: Cluster labels for each sample</p></li>
+<li><p>metadata: Dictionary with clustering information</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+<section id="raises">
+<h3>Raises<a class="headerlink" href="#raises" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If input data is invalid or required parameters are missing</p>
+</dd>
+<dt>ImportError</dt><dd><p>If DPA package is not available</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mdxplain.clustering.cluster_type.dpa.dpa_module.html" class="btn btn-neutral float-left" title="DPA Module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mdxplain.clustering.cluster_type.hdbscan.html" class="btn btn-neutral float-right" title="Cluster Type: HDBSCAN" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maximilian Salomon.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

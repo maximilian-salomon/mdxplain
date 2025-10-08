@@ -1,0 +1,192 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pipeline Managers: Auto Inject Proxy &mdash; mdxplain 31.10.2025 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=55e8f53f"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Pipeline Managers: Manager" href="mdxplain.pipeline.managers.pipeline_manager.html" />
+    <link rel="prev" title="Pipeline Managers" href="mdxplain.pipeline.managers.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mdxplain
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction.html">Introduction to mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting started with mdxplain</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/theory/theory.html">The Theory Behind mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/learning/learning.html">Learn mdxplain</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../analysis/mdxplain.analysis.html">Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering/mdxplain.clustering.html">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../comparison/mdxplain.comparison.html">Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_selector/mdxplain.data_selector.html">Data Selector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../decomposition/mdxplain.decomposition.html">Decomposition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature/mdxplain.feature.html">Feature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.html">Feature Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_selection/mdxplain.feature_selection.html">Feature Selection</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="mdxplain.pipeline.html">Pipeline</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.pipeline.entities.html">Pipeline Entities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.pipeline.helper.html">Pipeline: Helpers</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="mdxplain.pipeline.managers.html">Pipeline Managers</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Pipeline Managers: Auto Inject Proxy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.pipeline.managers.pipeline_manager.html">Pipeline Managers: Manager</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../trajectory/mdxplain.trajectory.html">Trajectory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/mdxplain.utils.html">Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mdxplain</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API Documentation</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.pipeline.html">Pipeline</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.pipeline.managers.html">Pipeline Managers</a></li>
+      <li class="breadcrumb-item active">Pipeline Managers: Auto Inject Proxy</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api/pipeline/mdxplain.pipeline.managers.auto_inject_proxy.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mdxplain.pipeline.managers.auto_inject_proxy">
+<span id="pipeline-managers-auto-inject-proxy"></span><h1>Pipeline Managers: Auto Inject Proxy<a class="headerlink" href="#module-mdxplain.pipeline.managers.auto_inject_proxy" title="Link to this heading"></a></h1>
+<p>Auto-injection proxy for pipeline managers.</p>
+<p>This module provides the AutoInjectProxy class that automatically detects
+whether a method needs PipelineData and injects it as the first parameter
+when needed. This eliminates the need for manual wrapper methods while
+maintaining clean manager APIs.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mdxplain.pipeline.managers.auto_inject_proxy.AutoInjectProxy">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mdxplain.pipeline.managers.auto_inject_proxy.</span></span><span class="sig-name descname"><span class="pre">AutoInjectProxy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">manager</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.pipeline.managers.auto_inject_proxy.AutoInjectProxy" title="Link to this definition"></a></dt>
+<dd><p>Proxy that automatically injects PipelineData into manager methods.</p>
+<p>This proxy analyzes method signatures to determine if a method expects
+PipelineData as any parameter. If so, it automatically injects
+the PipelineData instance at the correct position when called through the proxy.</p>
+<p>Methods that don’t expect PipelineData are called directly without
+modification, allowing for both stateful pipeline operations and
+stateless utility functions within the same manager.</p>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">mdxplain.pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">PipelineManager</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span> <span class="o">=</span> <span class="n">PipelineManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Methods with pipeline_data parameter get auto-injection</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">trajectory</span><span class="o">.</span><span class="n">load_trajectories</span><span class="p">(</span><span class="s1">&#39;../data&#39;</span><span class="p">)</span>  <span class="c1"># pipeline_data injected</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Utility methods without pipeline_data work normally</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">valid</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">trajectory</span><span class="o">.</span><span class="n">validate_selection</span><span class="p">(</span><span class="s1">&#39;res CA&#39;</span><span class="p">)</span>  <span class="c1"># no injection</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.pipeline.managers.auto_inject_proxy.AutoInjectProxy.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">manager</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.pipeline.managers.auto_inject_proxy.AutoInjectProxy.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize the auto-injection proxy.</p>
+<section id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>manager<span class="classifier">object</span></dt><dd><p>The manager instance to wrap with auto-injection</p>
+</dd>
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>The PipelineData instance to inject into methods</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h3>Returns<a class="headerlink" href="#returns" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>None</dt><dd><p>Initializes the proxy with manager and data references</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mdxplain.pipeline.managers.html" class="btn btn-neutral float-left" title="Pipeline Managers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mdxplain.pipeline.managers.pipeline_manager.html" class="btn btn-neutral float-right" title="Pipeline Managers: Manager" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maximilian Salomon.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,303 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Feature Type: Contacts Reduce Service &mdash; mdxplain 31.10.2025 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=55e8f53f"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Feature Type: Contacts Selection Service" href="mdxplain.feature.feature_type.contacts.services.contacts_selection_service.html" />
+    <link rel="prev" title="Feature Type: Contacts Analysis Service" href="mdxplain.feature.feature_type.contacts.services.contacts_analysis_service.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            mdxplain
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../introduction.html">Introduction to mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting started with mdxplain</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/theory/theory.html">The Theory Behind mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/learning/learning.html">Learn mdxplain</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../analysis/mdxplain.analysis.html">Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../clustering/mdxplain.clustering.html">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../comparison/mdxplain.comparison.html">Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data_selector/mdxplain.data_selector.html">Data Selector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../decomposition/mdxplain.decomposition.html">Decomposition</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../mdxplain.feature.html">Feature</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../mdxplain.feature.entities.html">Feature Entities</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="mdxplain.feature.feature_type.html">Feature Types</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="mdxplain.feature.feature_type.contacts.html">Feature Type: Contacts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.coordinates.html">Feature Type: Coordinates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.distances.html">Feature Type: Distances</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.dssp.html">Feature Type: DSSP</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.helpers.html">Feature Types: Helpers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.interfaces.html">Feature Types: Interfaces</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.sasa.html">Feature Type: SASA</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.torsions.html">Feature Type: Torsions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../mdxplain.feature.helper.html">Feature Helpers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mdxplain.feature.managers.html">Feature Managers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mdxplain.feature.services.html">Feature Services</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../feature_importance/mdxplain.feature_importance.html">Feature Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../feature_selection/mdxplain.feature_selection.html">Feature Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pipeline/mdxplain.pipeline.html">Pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../trajectory/mdxplain.trajectory.html">Trajectory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../utils/mdxplain.utils.html">Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">mdxplain</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../api.html">API Documentation</a></li>
+          <li class="breadcrumb-item"><a href="../mdxplain.feature.html">Feature</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.feature.feature_type.html">Feature Types</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.feature.feature_type.contacts.html">Feature Type: Contacts</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.feature.feature_type.contacts.services.html">Feature Type: Contact Services</a></li>
+      <li class="breadcrumb-item active">Feature Type: Contacts Reduce Service</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/api/feature/feature_type/mdxplain.feature.feature_type.contacts.services.contacts_reduce_service.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mdxplain.feature.feature_type.contacts.services.contacts_reduce_service">
+<span id="feature-type-contacts-reduce-service"></span><h1>Feature Type: Contacts Reduce Service<a class="headerlink" href="#module-mdxplain.feature.feature_type.contacts.services.contacts_reduce_service" title="Link to this heading"></a></h1>
+<p>Factory for contact-specific reduce operations.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.contacts.services.contacts_reduce_service.ContactsReduceService">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mdxplain.feature.feature_type.contacts.services.contacts_reduce_service.</span></span><span class="sig-name descname"><span class="pre">ContactsReduceService</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">manager</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../mdxplain.feature.managers.html#mdxplain.feature.managers.feature_manager.FeatureManager" title="mdxplain.feature.managers.feature_manager.FeatureManager"><span class="pre">FeatureManager</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.feature.feature_type.contacts.services.contacts_reduce_service.ContactsReduceService" title="Link to this definition"></a></dt>
+<dd><p>Service for contact-specific reduce metrics.</p>
+<p>Provides metrics specifically useful for contact features,
+focusing on contact frequency and stability patterns.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.contacts.services.contacts_reduce_service.ContactsReduceService.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">manager</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../mdxplain.feature.managers.html#mdxplain.feature.managers.feature_manager.FeatureManager" title="mdxplain.feature.managers.feature_manager.FeatureManager"><span class="pre">FeatureManager</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.contacts.services.contacts_reduce_service.ContactsReduceService.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize contact reduce factory.</p>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>manager<span class="classifier">FeatureManager</span></dt><dd><p>Feature manager instance</p>
+</dd>
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data container</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading"></a></h2>
+<p>None</p>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.contacts.services.contacts_reduce_service.ContactsReduceService.frequency">
+<span class="sig-name descname"><span class="pre">frequency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">traj_selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cross_trajectory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.contacts.services.contacts_reduce_service.ContactsReduceService.frequency" title="Link to this definition"></a></dt>
+<dd><p>Reduce contacts by contact frequency.</p>
+<p>Filters contact features based on how frequently they occur
+(fraction of frames where pair is in contact).</p>
+<section id="id1">
+<h2>Parameters<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>traj_selection<span class="classifier">str, int, list, default=”all”</span></dt><dd><p>Which trajectories to analyze for reduction</p>
+</dd>
+<dt>threshold_min<span class="classifier">float, optional</span></dt><dd><p>Minimum contact frequency (0.0 to 1.0)</p>
+</dd>
+<dt>threshold_max<span class="classifier">float, optional</span></dt><dd><p>Maximum contact frequency (0.0 to 1.0)</p>
+</dd>
+<dt>cross_trajectory<span class="classifier">bool, default=False</span></dt><dd><p>If True, find common features across all selected trajectories</p>
+</dd>
+</dl>
+</section>
+<section id="id2">
+<h2>Returns<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>None</dt><dd><p>Updates reduced data in pipeline</p>
+</dd>
+</dl>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Keep persistent contacts (&gt;50% of time)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">contacts</span><span class="o">.</span><span class="n">frequency</span><span class="p">(</span><span class="n">threshold_min</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Keep moderately frequent contacts</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">contacts</span><span class="o">.</span><span class="n">frequency</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">threshold_min</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> 
+<span class="gp">... </span>    <span class="n">threshold_max</span><span class="o">=</span><span class="mf">0.8</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.contacts.services.contacts_reduce_service.ContactsReduceService.stability">
+<span class="sig-name descname"><span class="pre">stability</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">traj_selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cross_trajectory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.contacts.services.contacts_reduce_service.ContactsReduceService.stability" title="Link to this definition"></a></dt>
+<dd><p>Reduce contacts by stability.</p>
+<p>Filters contact features based on their stability over time
+(measure of contact persistence patterns).</p>
+<section id="id3">
+<h2>Parameters<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>traj_selection<span class="classifier">str, int, list, default=”all”</span></dt><dd><p>Which trajectories to analyze for reduction</p>
+</dd>
+<dt>threshold_min<span class="classifier">float, optional</span></dt><dd><p>Minimum stability threshold</p>
+</dd>
+<dt>threshold_max<span class="classifier">float, optional</span></dt><dd><p>Maximum stability threshold</p>
+</dd>
+<dt>cross_trajectory<span class="classifier">bool, default=False</span></dt><dd><p>If True, find common features across all selected trajectories</p>
+</dd>
+</dl>
+</section>
+<section id="id4">
+<h2>Returns<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>None</dt><dd><p>Updates reduced data in pipeline</p>
+</dd>
+</dl>
+</section>
+<section id="id5">
+<h2>Examples<a class="headerlink" href="#id5" title="Link to this heading"></a></h2>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Keep stable contacts</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">contacts</span><span class="o">.</span><span class="n">stability</span><span class="p">(</span><span class="n">threshold_min</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Remove very unstable contacts</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">contacts</span><span class="o">.</span><span class="n">stability</span><span class="p">(</span><span class="n">threshold_max</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.contacts.services.contacts_reduce_service.ContactsReduceService.transitions">
+<span class="sig-name descname"><span class="pre">transitions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">traj_selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cross_trajectory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.contacts.services.contacts_reduce_service.ContactsReduceService.transitions" title="Link to this definition"></a></dt>
+<dd><p>Reduce contacts by number of formation/breaking transitions.</p>
+<section id="id6">
+<h2>Parameters<a class="headerlink" href="#id6" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>traj_selection<span class="classifier">str, int, list, default=”all”</span></dt><dd><p>Which trajectories to analyze for reduction</p>
+</dd>
+<dt>threshold_min<span class="classifier">float, optional</span></dt><dd><p>Minimum number of transitions</p>
+</dd>
+<dt>threshold_max<span class="classifier">float, optional</span></dt><dd><p>Maximum number of transitions</p>
+</dd>
+<dt>cross_trajectory<span class="classifier">bool, default=False</span></dt><dd><p>If True, find common features across all selected trajectories</p>
+</dd>
+</dl>
+</section>
+<section id="id7">
+<h2>Returns<a class="headerlink" href="#id7" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>None</dt><dd><p>Updates reduced data in pipeline</p>
+</dd>
+</dl>
+</section>
+<section id="id8">
+<h2>Examples<a class="headerlink" href="#id8" title="Link to this heading"></a></h2>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Keep dynamic contacts with many transitions</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">contacts</span><span class="o">.</span><span class="n">transitions</span><span class="p">(</span><span class="n">threshold_min</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Keep stable contacts with few transitions</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">contacts</span><span class="o">.</span><span class="n">transitions</span><span class="p">(</span><span class="n">threshold_max</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Focus on moderately dynamic contacts</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">contacts</span><span class="o">.</span><span class="n">transitions</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">threshold_min</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">threshold_max</span><span class="o">=</span><span class="mi">15</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mdxplain.feature.feature_type.contacts.services.contacts_analysis_service.html" class="btn btn-neutral float-left" title="Feature Type: Contacts Analysis Service" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mdxplain.feature.feature_type.contacts.services.contacts_selection_service.html" class="btn btn-neutral float-right" title="Feature Type: Contacts Selection Service" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maximilian Salomon.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

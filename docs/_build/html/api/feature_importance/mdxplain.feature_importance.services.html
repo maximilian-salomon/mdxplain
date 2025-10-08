@@ -1,0 +1,269 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Feature Importance Services &mdash; mdxplain 31.10.2025 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=55e8f53f"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Feature Selection" href="../feature_selection/mdxplain.feature_selection.html" />
+    <link rel="prev" title="Feature Importance Managers" href="mdxplain.feature_importance.managers.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mdxplain
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction.html">Introduction to mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting started with mdxplain</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/theory/theory.html">The Theory Behind mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/learning/learning.html">Learn mdxplain</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../analysis/mdxplain.analysis.html">Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering/mdxplain.clustering.html">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../comparison/mdxplain.comparison.html">Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_selector/mdxplain.data_selector.html">Data Selector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../decomposition/mdxplain.decomposition.html">Decomposition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature/mdxplain.feature.html">Feature</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="mdxplain.feature_importance.html">Feature Importance</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature_importance.html#examples">Examples:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature_importance.analyzer_types.html">Feature Importance Analyzer Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature_importance.entities.html">Feature Importance Entities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature_importance.helpers.html">Feature Importance Helpers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature_importance.managers.html">Feature Importance Managers</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Feature Importance Services</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#module-mdxplain.feature_importance.services.feature_importance_add_service">Add Service</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_selection/mdxplain.feature_selection.html">Feature Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pipeline/mdxplain.pipeline.html">Pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../trajectory/mdxplain.trajectory.html">Trajectory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/mdxplain.utils.html">Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mdxplain</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API Documentation</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.feature_importance.html">Feature Importance</a></li>
+      <li class="breadcrumb-item active">Feature Importance Services</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api/feature_importance/mdxplain.feature_importance.services.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mdxplain.feature_importance.services">
+<span id="feature-importance-services"></span><h1>Feature Importance Services<a class="headerlink" href="#module-mdxplain.feature_importance.services" title="Link to this heading"></a></h1>
+<p>Feature importance factories module.</p>
+<section id="module-mdxplain.feature_importance.services.feature_importance_add_service">
+<span id="add-service"></span><h2>Add Service<a class="headerlink" href="#module-mdxplain.feature_importance.services.feature_importance_add_service" title="Link to this heading"></a></h2>
+<p>Factory for adding feature importance analyzers with simplified syntax.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mdxplain.feature_importance.services.feature_importance_add_service.FeatureImportanceAddService">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mdxplain.feature_importance.services.feature_importance_add_service.</span></span><span class="sig-name descname"><span class="pre">FeatureImportanceAddService</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">manager</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="mdxplain.feature_importance.managers.html#mdxplain.feature_importance.managers.feature_importance_manager.FeatureImportanceManager" title="mdxplain.feature_importance.managers.feature_importance_manager.FeatureImportanceManager"><span class="pre">FeatureImportanceManager</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.feature_importance.services.feature_importance_add_service.FeatureImportanceAddService" title="Link to this definition"></a></dt>
+<dd><p>Service for adding feature importance analyzers without explicit type instantiation.</p>
+<p>This service provides an intuitive interface for adding feature importance analyzers
+without requiring users to import and instantiate analyzer types directly.
+All analyzer type parameters are combined with manager.add_analysis parameters.</p>
+<section id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature_importance</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">decision_tree</span><span class="p">(</span><span class="s2">&quot;my_comparison&quot;</span><span class="p">,</span> <span class="n">max_depth</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">analysis_name</span><span class="o">=</span><span class="s2">&quot;tree_analysis&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_importance.services.feature_importance_add_service.FeatureImportanceAddService.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">manager</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="mdxplain.feature_importance.managers.html#mdxplain.feature_importance.managers.feature_importance_manager.FeatureImportanceManager" title="mdxplain.feature_importance.managers.feature_importance_manager.FeatureImportanceManager"><span class="pre">FeatureImportanceManager</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature_importance.services.feature_importance_add_service.FeatureImportanceAddService.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize factory with manager and pipeline data.</p>
+<section id="parameters">
+<h4>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>manager<span class="classifier">FeatureImportanceManager</span></dt><dd><p>Feature importance manager instance</p>
+</dd>
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data container (injected by AutoInjectProxy)</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h4>Returns<a class="headerlink" href="#returns" title="Link to this heading"></a></h4>
+<p>None</p>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_importance.services.feature_importance_add_service.FeatureImportanceAddService.decision_tree">
+<span class="sig-name descname"><span class="pre">decision_tree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">comparison_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">criterion</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'gini'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">splitter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'best'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_depth</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_samples_split</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_samples_leaf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_weight_fraction_leaf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_leaf_nodes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_impurity_decrease</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ccp_alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature_importance.services.feature_importance_add_service.FeatureImportanceAddService.decision_tree" title="Link to this definition"></a></dt>
+<dd><p>Add Decision Tree feature importance analysis.</p>
+<p>Decision Tree classifier computes feature importance scores based on how much
+each feature contributes to reducing impurity at tree splits. This provides
+interpretable feature rankings for understanding which molecular features
+are most important for distinguishing between different states.</p>
+<section id="id1">
+<h4>Parameters<a class="headerlink" href="#id1" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>comparison_name<span class="classifier">str</span></dt><dd><p>Name of the comparison to analyze</p>
+</dd>
+<dt>analysis_name<span class="classifier">str</span></dt><dd><p>Name to store the analysis results</p>
+</dd>
+<dt>criterion<span class="classifier">str, default=”gini”</span></dt><dd><p>Function to measure quality of splits (“gini” or “entropy”)</p>
+</dd>
+<dt>splitter<span class="classifier">str, default=”best”</span></dt><dd><p>Strategy to split at each node (“best” or “random”)</p>
+</dd>
+<dt>max_depth<span class="classifier">int, optional</span></dt><dd><p>Maximum depth of tree. None means unlimited depth</p>
+</dd>
+<dt>min_samples_split<span class="classifier">int, default=2</span></dt><dd><p>Minimum samples required to split an internal node</p>
+</dd>
+<dt>min_samples_leaf<span class="classifier">int, default=1</span></dt><dd><p>Minimum samples required to be at a leaf node</p>
+</dd>
+<dt>min_weight_fraction_leaf<span class="classifier">float, default=0.0</span></dt><dd><p>Minimum weighted fraction of sum total of weights required at leaf</p>
+</dd>
+<dt>max_features<span class="classifier">str, optional</span></dt><dd><p>Number of features to consider when looking for best split</p>
+</dd>
+<dt>random_state<span class="classifier">int, optional</span></dt><dd><p>Random state for reproducible results</p>
+</dd>
+<dt>max_leaf_nodes<span class="classifier">int, optional</span></dt><dd><p>Maximum number of leaf nodes in best-first manner</p>
+</dd>
+<dt>min_impurity_decrease<span class="classifier">float, default=0.0</span></dt><dd><p>Minimum impurity decrease required to make a split</p>
+</dd>
+<dt>class_weight<span class="classifier">str, optional</span></dt><dd><p>Weights associated with classes (“balanced” or None)</p>
+</dd>
+<dt>ccp_alpha<span class="classifier">float, default=0.0</span></dt><dd><p>Complexity parameter for Minimal Cost-Complexity Pruning</p>
+</dd>
+<dt>force<span class="classifier">bool, default=False</span></dt><dd><p>Whether to overwrite existing analysis with same name</p>
+</dd>
+</dl>
+</section>
+<section id="id2">
+<h4>Returns<a class="headerlink" href="#id2" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Adds Decision Tree feature importance results to pipeline data</p>
+</dd>
+</dl>
+</section>
+<section id="id3">
+<h4>Examples<a class="headerlink" href="#id3" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Basic decision tree analysis</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature_importance</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">decision_tree</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="s2">&quot;folded_vs_unfolded&quot;</span><span class="p">,</span> 
+<span class="gp">... </span>    <span class="s2">&quot;basic_tree&quot;</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Decision tree with custom parameters</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature_importance</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">decision_tree</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="s2">&quot;state_comparison&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s2">&quot;deep_tree&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">max_depth</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">min_samples_split</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Decision tree with entropy criterion</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature_importance</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">decision_tree</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="s2">&quot;conformational_states&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s2">&quot;entropy_tree&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">criterion</span><span class="o">=</span><span class="s2">&quot;entropy&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">max_features</span><span class="o">=</span><span class="s2">&quot;sqrt&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">class_weight</span><span class="o">=</span><span class="s2">&quot;balanced&quot;</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="notes">
+<h4>Notes<a class="headerlink" href="#notes" title="Link to this heading"></a></h4>
+<p>Decision trees provide interpretable feature importance based on split
+criteria. Higher importance scores indicate features that contribute
+more to reducing impurity when making classification decisions.</p>
+<p>Uses sklearn.tree.DecisionTreeClassifier internally.</p>
+</section>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mdxplain.feature_importance.managers.html" class="btn btn-neutral float-left" title="Feature Importance Managers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../feature_selection/mdxplain.feature_selection.html" class="btn btn-neutral float-right" title="Feature Selection" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maximilian Salomon.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,258 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Feature Type: Calculator Compute Helper &mdash; mdxplain 31.10.2025 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=55e8f53f"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Feature Type: Calculator Stat Helper" href="mdxplain.feature.feature_type.helper.calculator_stat_helper.html" />
+    <link rel="prev" title="Feature Types: Helpers" href="mdxplain.feature.feature_type.helpers.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            mdxplain
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../introduction.html">Introduction to mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting started with mdxplain</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/theory/theory.html">The Theory Behind mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/learning/learning.html">Learn mdxplain</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../analysis/mdxplain.analysis.html">Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../clustering/mdxplain.clustering.html">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../comparison/mdxplain.comparison.html">Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data_selector/mdxplain.data_selector.html">Data Selector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../decomposition/mdxplain.decomposition.html">Decomposition</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../mdxplain.feature.html">Feature</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../mdxplain.feature.entities.html">Feature Entities</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="mdxplain.feature.feature_type.html">Feature Types</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.contacts.html">Feature Type: Contacts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.coordinates.html">Feature Type: Coordinates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.distances.html">Feature Type: Distances</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.dssp.html">Feature Type: DSSP</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="mdxplain.feature.feature_type.helpers.html">Feature Types: Helpers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.interfaces.html">Feature Types: Interfaces</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.sasa.html">Feature Type: SASA</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.torsions.html">Feature Type: Torsions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../mdxplain.feature.helper.html">Feature Helpers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mdxplain.feature.managers.html">Feature Managers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mdxplain.feature.services.html">Feature Services</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../feature_importance/mdxplain.feature_importance.html">Feature Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../feature_selection/mdxplain.feature_selection.html">Feature Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pipeline/mdxplain.pipeline.html">Pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../trajectory/mdxplain.trajectory.html">Trajectory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../utils/mdxplain.utils.html">Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">mdxplain</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../api.html">API Documentation</a></li>
+          <li class="breadcrumb-item"><a href="../mdxplain.feature.html">Feature</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.feature.feature_type.html">Feature Types</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.feature.feature_type.helpers.html">Feature Types: Helpers</a></li>
+      <li class="breadcrumb-item active">Feature Type: Calculator Compute Helper</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/api/feature/feature_type/mdxplain.feature.feature_type.helper.calculator_compute_helper.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mdxplain.feature.feature_type.helper.calculator_compute_helper">
+<span id="feature-type-calculator-compute-helper"></span><h1>Feature Type: Calculator Compute Helper<a class="headerlink" href="#module-mdxplain.feature.feature_type.helper.calculator_compute_helper" title="Link to this heading"></a></h1>
+<p>Common helper methods for calculator dynamic value computation.</p>
+<p>Provides common functionality for dynamic value computation across different
+calculators (ContactCalculator, DistanceCalculator, etc.) with memory-mapped
+array support and statistical filtering capabilities.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.helper.calculator_compute_helper.CalculatorComputeHelper">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mdxplain.feature.feature_type.helper.calculator_compute_helper.</span></span><span class="sig-name descname"><span class="pre">CalculatorComputeHelper</span></span><a class="headerlink" href="#mdxplain.feature.feature_type.helper.calculator_compute_helper.CalculatorComputeHelper" title="Link to this definition"></a></dt>
+<dd><p>Static utility class for dynamic feature filtering and selection operations.</p>
+<p>Provides common functionality for filtering features based on statistical
+criteria with memory-mapped array support. Used by distance and contact
+calculators for dynamic value computation.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.helper.calculator_compute_helper.CalculatorComputeHelper.compute_dynamic_values">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_dynamic_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_memmap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.helper.calculator_compute_helper.CalculatorComputeHelper.compute_dynamic_values" title="Link to this definition"></a></dt>
+<dd><p>Filter feature data based on statistical metric thresholds.</p>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>data<span class="classifier">np.ndarray</span></dt><dd><p>Feature data array to filter</p>
+</dd>
+<dt>metric_values<span class="classifier">np.ndarray</span></dt><dd><p>Pre-computed statistical values for filtering</p>
+</dd>
+<dt>metric_name<span class="classifier">str</span></dt><dd><p>Name of the metric for reporting</p>
+</dd>
+<dt>threshold_min<span class="classifier">float, optional</span></dt><dd><p>Minimum threshold (metric_values &gt;= threshold_min)</p>
+</dd>
+<dt>threshold_max<span class="classifier">float, optional</span></dt><dd><p>Maximum threshold (metric_values &lt;= threshold_max)</p>
+</dd>
+<dt>feature_metadata<span class="classifier">list, optional</span></dt><dd><p>Feature metadata</p>
+</dd>
+<dt>use_memmap<span class="classifier">bool, default=False</span></dt><dd><p>Whether to use memory mapping for output</p>
+</dd>
+<dt>output_path<span class="classifier">str, optional</span></dt><dd><p>Path for memory-mapped output file</p>
+</dd>
+<dt>chunk_size<span class="classifier">int, default=1000</span></dt><dd><p>Chunk size for processing</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>dict</dt><dd><p>Dictionary with keys: ‘indices’, ‘values’, ‘dynamic_data’,
+‘feature_names’, ‘metric_used’, ‘n_dynamic’, ‘total_pairs’</p>
+</dd>
+</dl>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<p># High values only (&gt; 0.5)
+result = compute_dynamic_values(data, values, ‘cv’, threshold_min=0.5)</p>
+<p># Range filtering (0.2 &lt;= values &lt;= 0.8)
+result = compute_dynamic_values(data, values, ‘cv’, threshold_min=0.2, threshold_max=0.8)</p>
+<p># Low values only (&lt; 0.3)
+result = compute_dynamic_values(data, values, ‘cv’, threshold_max=0.3)</p>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.helper.calculator_compute_helper.CalculatorComputeHelper.calculate_output_dimensions">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">calculate_output_dimensions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">squareform</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.helper.calculator_compute_helper.CalculatorComputeHelper.calculate_output_dimensions" title="Link to this definition"></a></dt>
+<dd><p>Calculate output array dimensions after format conversion.</p>
+<section id="id1">
+<h2>Parameters<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>input_shape<span class="classifier">tuple</span></dt><dd><p>Shape of input array</p>
+</dd>
+<dt>squareform<span class="classifier">bool</span></dt><dd><p>Whether output should be square format</p>
+</dd>
+<dt>k<span class="classifier">int</span></dt><dd><p>Diagonal offset parameter</p>
+</dd>
+</dl>
+</section>
+<section id="id2">
+<h2>Returns<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>tuple[tuple, int or None]</dt><dd><p>Output shape and number of residues</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.helper.calculator_compute_helper.CalculatorComputeHelper.create_output_array">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_output_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">use_memmap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dtype</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.helper.calculator_compute_helper.CalculatorComputeHelper.create_output_array" title="Link to this definition"></a></dt>
+<dd><p>Create output array (regular or memory-mapped).</p>
+<section id="id3">
+<h2>Parameters<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>use_memmap<span class="classifier">bool</span></dt><dd><p>Whether to use memory mapping</p>
+</dd>
+<dt>path<span class="classifier">str or None</span></dt><dd><p>File path for memory-mapped array</p>
+</dd>
+<dt>output_shape<span class="classifier">tuple</span></dt><dd><p>Shape of output array</p>
+</dd>
+<dt>dtype<span class="classifier">np.dtype</span></dt><dd><p>Data type of array</p>
+</dd>
+</dl>
+</section>
+<section id="id4">
+<h2>Returns<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>numpy.ndarray or numpy.memmap</dt><dd><p>Created output array</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mdxplain.feature.feature_type.helpers.html" class="btn btn-neutral float-left" title="Feature Types: Helpers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mdxplain.feature.feature_type.helper.calculator_stat_helper.html" class="btn btn-neutral float-right" title="Feature Type: Calculator Stat Helper" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maximilian Salomon.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

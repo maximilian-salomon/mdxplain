@@ -1,0 +1,299 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trajectory: Metadata Nomenclature Helper &mdash; mdxplain 31.10.2025 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=55e8f53f"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Trajectory: Metadata Tag Helper" href="mdxplain.trajectory.helper.metadata_helper.tag_helper.html" />
+    <link rel="prev" title="Trajectory: Metadata Helpers" href="mdxplain.trajectory.helper.metadata_helper.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mdxplain
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction.html">Introduction to mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting started with mdxplain</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/theory/theory.html">The Theory Behind mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/learning/learning.html">Learn mdxplain</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../analysis/mdxplain.analysis.html">Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering/mdxplain.clustering.html">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../comparison/mdxplain.comparison.html">Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_selector/mdxplain.data_selector.html">Data Selector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../decomposition/mdxplain.decomposition.html">Decomposition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature/mdxplain.feature.html">Feature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.html">Feature Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_selection/mdxplain.feature_selection.html">Feature Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pipeline/mdxplain.pipeline.html">Pipeline</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="mdxplain.trajectory.html">Trajectory</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.trajectory.entities.html">Trajectory Entities</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="mdxplain.trajectory.helper.html">Trajectory: Helpers</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.trajectory.helper.dask_trajectory_helper.html">Trajectory: Dask Trajectory Helper</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="mdxplain.trajectory.helper.metadata_helper.html">Trajectory: Metadata Helpers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.trajectory.helper.process_helper.html">Trajectory: Process Helpers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.trajectory.helper.validation_helper.html">Trajectory: Validation Helpers</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.trajectory.managers.html">Trajectory: Managers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/mdxplain.utils.html">Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mdxplain</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API Documentation</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.trajectory.html">Trajectory</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.trajectory.helper.html">Trajectory: Helpers</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.trajectory.helper.metadata_helper.html">Trajectory: Metadata Helpers</a></li>
+      <li class="breadcrumb-item active">Trajectory: Metadata Nomenclature Helper</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api/trajectory/mdxplain.trajectory.helper.metadata_helper.nomenclature_helper.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mdxplain.trajectory.helper.metadata_helper.nomenclature_helper">
+<span id="trajectory-metadata-nomenclature-helper"></span><h1>Trajectory: Metadata Nomenclature Helper<a class="headerlink" href="#module-mdxplain.trajectory.helper.metadata_helper.nomenclature_helper" title="Link to this heading"></a></h1>
+<p>NomenclatureHelper utilities for molecular dynamics trajectory labeling.</p>
+<p>This module provides utilities to create consensus labels for MD trajectories
+using different nomenclature systems (GPCR, CGN, KLIFS) via mdciao labelers.</p>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading"></a></h2>
+<dl>
+<dt>This module uses mdciao consensus nomenclature systems:</dt><dd><p><a class="reference external" href="https://proteinformatics.uni-leipzig.de/mdciao/api/generated/mdciao.nomenclature.html">https://proteinformatics.uni-leipzig.de/mdciao/api/generated/mdciao.nomenclature.html</a>  # noqa: E501</p>
+<p>Supported fragment types:</p>
+<ul class="simple">
+<li><p>gpcr: <a class="reference external" href="https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerGPCR.html#mdciao.nomenclature.LabelerGPCR">https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerGPCR.html#mdciao.nomenclature.LabelerGPCR</a>  # noqa: E501</p></li>
+<li><p>cgn: <a class="reference external" href="https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerCGN.html#mdciao.nomenclature.LabelerCGN">https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerCGN.html#mdciao.nomenclature.LabelerCGN</a>  # noqa: E501</p></li>
+<li><p>klifs: <a class="reference external" href="https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerKLIFS.html#mdciao.nomenclature.LabelerKLIFS">https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerKLIFS.html#mdciao.nomenclature.LabelerKLIFS</a>  # noqa: E501</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="mdxplain.trajectory.helper.metadata_helper.nomenclature_helper.NomenclatureHelper">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mdxplain.trajectory.helper.metadata_helper.nomenclature_helper.</span></span><span class="sig-name descname"><span class="pre">NomenclatureHelper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">topology</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Topology</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragment_definition</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragment_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragment_molecule_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">consensus</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aa_short</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">try_web_lookup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_to_disk</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'./cache'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">labeler_kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.trajectory.helper.metadata_helper.nomenclature_helper.NomenclatureHelper" title="Link to this definition"></a></dt>
+<dd><p>A utility class for creating consensus labels from MD trajectories.</p>
+<p>This class provides a unified interface to use different mdciao labelers
+(GPCR, CGN, KLIFS) and generate label lists for molecular dynamics analysis.</p>
+<p>Uses mdciao nomenclature systems:
+<a class="reference external" href="https://proteinformatics.uni-leipzig.de/mdciao/api/generated/mdciao.nomenclature.html">https://proteinformatics.uni-leipzig.de/mdciao/api/generated/mdciao.nomenclature.html</a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.helper.metadata_helper.nomenclature_helper.NomenclatureHelper.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">topology</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Topology</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragment_definition</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragment_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragment_molecule_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">consensus</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aa_short</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">try_web_lookup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_to_disk</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'./cache'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">labeler_kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.trajectory.helper.metadata_helper.nomenclature_helper.NomenclatureHelper.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize the NomenclatureHelper labeler.</p>
+<p>This class provides a unified interface to create consensus labels for MD trajectories
+using different mdciao nomenclature systems.</p>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>topology<span class="classifier">md.Topology</span></dt><dd><p>MDTraj topology object to label</p>
+</dd>
+<dt>fragment_definition<span class="classifier">str or dict, default None</span></dt><dd><p>If string, uses that as fragment name for entire topology.
+If dict, maps fragment names to residue ranges: {“cgn_a”: (0, 348), “beta2”: (400, 684)}
+Only required when consensus=True.</p>
+</dd>
+<dt>fragment_type<span class="classifier">str or dict, default None</span></dt><dd><p>If string, uses that nomenclature type for all fragments.
+If dict, maps fragment names to nomenclature types: {“cgn_a”: “cgn”, “beta2”: “gpcr”}
+Use mdciao nomenclature types.
+Allowed types: gpcr, cgn, klifs
+Only required when consensus=True.</p>
+</dd>
+<dt>fragment_molecule_name<span class="classifier">str or dict, default None</span></dt><dd><p>If string, uses that molecule name for all fragments.
+If dict, maps fragment names to molecule names:
+{“cgn_a”: “gnas2_bovin”, “beta2”: “adrb2_human”}
+Use the UniProt entry name (not accession ID) for GPCR/CGN labelers,
+or KLIFS string for KLIFS labelers.
+See <a class="reference external" href="https://www.uniprot.org/help/difference_accession_entryname">https://www.uniprot.org/help/difference_accession_entryname</a> for UniProt naming conventions.  # noqa: E501
+See <a class="reference external" href="https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerKLIFS.html#mdciao.nomenclature.LabelerKLIFS">https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerKLIFS.html#mdciao.nomenclature.LabelerKLIFS</a> for KLIFS naming conventions.  # noqa: E501
+Only required when consensus=True.</p>
+</dd>
+<dt>consensus<span class="classifier">bool, default False</span></dt><dd><p>Whether to use consensus labeling (combines AA codes with nomenclature labels).
+If False, only returns amino acid labels without nomenclature.</p>
+</dd>
+<dt>aa_short<span class="classifier">bool, default False</span></dt><dd><p>Whether to use short amino acid names (T vs THR)</p>
+</dd>
+<dt>verbose<span class="classifier">bool, default False</span></dt><dd><p>Whether to enable verbose output from labelers</p>
+</dd>
+<dt>try_web_lookup<span class="classifier">bool, default True</span></dt><dd><p>Whether to try web lookup for molecule data</p>
+</dd>
+<dt>write_to_disk<span class="classifier">bool, default False</span></dt><dd><p>Whether to write cache files to disk</p>
+</dd>
+<dt>cache_folder<span class="classifier">str, default “./cache”</span></dt><dd><p>Folder for cache files</p>
+</dd>
+<dt>**labeler_kwargs</dt><dd><p>Additional keyword arguments passed to the mdciao labelers</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>None</dt><dd><p>Initializes the NomenclatureHelper object</p>
+</dd>
+</dl>
+</section>
+<section id="raises">
+<h2>Raises<a class="headerlink" href="#raises" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If fragment_definition is required when consensus=True</p>
+</dd>
+<dt>ValueError</dt><dd><p>If fragment_type is required when consensus=True</p>
+</dd>
+<dt>ValueError</dt><dd><p>If fragment_molecule_name is required when consensus=True</p>
+</dd>
+</dl>
+</section>
+<section id="id1">
+<h2>Notes<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
+<p>This class uses mdciao consensus nomenclature systems:
+<a class="reference external" href="https://proteinformatics.uni-leipzig.de/mdciao/api/generated/mdciao.nomenclature.html">https://proteinformatics.uni-leipzig.de/mdciao/api/generated/mdciao.nomenclature.html</a></p>
+<p>Supported fragment types:</p>
+<ul class="simple">
+<li><p>gpcr: <a class="reference external" href="https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerGPCR.html#mdciao.nomenclature.LabelerGPCR">https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerGPCR.html#mdciao.nomenclature.LabelerGPCR</a></p></li>
+<li><p>cgn: <a class="reference external" href="https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerCGN.html#mdciao.nomenclature.LabelerCGN">https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerCGN.html#mdciao.nomenclature.LabelerCGN</a></p></li>
+<li><p>klifs: <a class="reference external" href="https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerKLIFS.html#mdciao.nomenclature.LabelerKLIFS">https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerKLIFS.html#mdciao.nomenclature.LabelerKLIFS</a></p></li>
+</ul>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<p>Amino acid labels only (no nomenclature):</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">nomenclature</span> <span class="o">=</span> <span class="n">NomenclatureHelper</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">topology</span><span class="o">=</span><span class="n">traj</span><span class="o">.</span><span class="n">top</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">consensus</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">aa_short</span><span class="o">=</span><span class="kc">True</span>  <span class="c1"># Use single-letter codes: A, C, D, ...</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">labels</span> <span class="o">=</span> <span class="n">nomenclature</span><span class="o">.</span><span class="n">create_labels</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Simple single fragment labeling:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">nomenclature</span> <span class="o">=</span> <span class="n">NomenclatureHelper</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">topology</span><span class="o">=</span><span class="n">traj</span><span class="o">.</span><span class="n">top</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">fragment_definition</span><span class="o">=</span><span class="s2">&quot;receptor&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">fragment_type</span><span class="o">=</span><span class="s2">&quot;gpcr&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">fragment_molecule_name</span><span class="o">=</span><span class="s2">&quot;adrb2_human&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">consensus</span><span class="o">=</span><span class="kc">True</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">labels</span> <span class="o">=</span> <span class="n">nomenclature</span><span class="o">.</span><span class="n">create_labels</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Complex multi-fragment labeling:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">nomenclature</span> <span class="o">=</span> <span class="n">NomenclatureHelper</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">topology</span><span class="o">=</span><span class="n">traj</span><span class="o">.</span><span class="n">top</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">fragment_definition</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;gpcr&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span> <span class="s2">&quot;g_protein&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="mi">600</span><span class="p">)},</span>
+<span class="gp">... </span>    <span class="n">fragment_type</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;gpcr&quot;</span><span class="p">:</span> <span class="s2">&quot;gpcr&quot;</span><span class="p">,</span> <span class="s2">&quot;g_protein&quot;</span><span class="p">:</span> <span class="s2">&quot;cgn&quot;</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="n">fragment_molecule_name</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;gpcr&quot;</span><span class="p">:</span> <span class="s2">&quot;adrb2_human&quot;</span><span class="p">,</span> <span class="s2">&quot;g_protein&quot;</span><span class="p">:</span> <span class="s2">&quot;gnas_human&quot;</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="n">consensus</span><span class="o">=</span><span class="kc">True</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">labels</span> <span class="o">=</span> <span class="n">nomenclature</span><span class="o">.</span><span class="n">create_labels</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.helper.metadata_helper.nomenclature_helper.NomenclatureHelper.create_trajectory_label_dicts">
+<span class="sig-name descname"><span class="pre">create_trajectory_label_dicts</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mdxplain.trajectory.helper.metadata_helper.nomenclature_helper.NomenclatureHelper.create_trajectory_label_dicts" title="Link to this definition"></a></dt>
+<dd><p>Create structured label dictionaries for the trajectory.</p>
+<section id="id2">
+<h2>Parameters<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<p>None</p>
+</section>
+<section id="id3">
+<h2>Returns<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>List[Dict]</dt><dd><p>List of label dictionaries for each residue in the topology.
+Each dict contains: aaa_code, a_code, index, seqid, consensus, full_name</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mdxplain.trajectory.helper.metadata_helper.html" class="btn btn-neutral float-left" title="Trajectory: Metadata Helpers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mdxplain.trajectory.helper.metadata_helper.tag_helper.html" class="btn btn-neutral float-right" title="Trajectory: Metadata Tag Helper" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maximilian Salomon.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

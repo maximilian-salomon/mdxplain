@@ -1,0 +1,1276 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trajectory: Managers &mdash; mdxplain 31.10.2025 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=55e8f53f"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Utilities" href="../utils/mdxplain.utils.html" />
+    <link rel="prev" title="Trajectory: Validation Helpers" href="mdxplain.trajectory.helper.validation_helper.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mdxplain
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction.html">Introduction to mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting started with mdxplain</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/theory/theory.html">The Theory Behind mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/learning/learning.html">Learn mdxplain</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../analysis/mdxplain.analysis.html">Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering/mdxplain.clustering.html">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../comparison/mdxplain.comparison.html">Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_selector/mdxplain.data_selector.html">Data Selector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../decomposition/mdxplain.decomposition.html">Decomposition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature/mdxplain.feature.html">Feature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.html">Feature Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_selection/mdxplain.feature_selection.html">Feature Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pipeline/mdxplain.pipeline.html">Pipeline</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="mdxplain.trajectory.html">Trajectory</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.trajectory.entities.html">Trajectory Entities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.trajectory.helper.html">Trajectory: Helpers</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Trajectory: Managers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#module-mdxplain.trajectory.managers.trajectory_manager">Manager</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/mdxplain.utils.html">Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mdxplain</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API Documentation</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.trajectory.html">Trajectory</a></li>
+      <li class="breadcrumb-item active">Trajectory: Managers</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api/trajectory/mdxplain.trajectory.managers.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mdxplain.trajectory.managers">
+<span id="trajectory-managers"></span><h1>Trajectory: Managers<a class="headerlink" href="#module-mdxplain.trajectory.managers" title="Link to this heading"></a></h1>
+<p>Trajectory management.</p>
+<section id="module-mdxplain.trajectory.managers.trajectory_manager">
+<span id="manager"></span><h2>Manager<a class="headerlink" href="#module-mdxplain.trajectory.managers.trajectory_manager" title="Link to this heading"></a></h2>
+<p>Trajectory management module for loading and manipulating MD trajectory data.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mdxplain.trajectory.managers.trajectory_manager.</span></span><span class="sig-name descname"><span class="pre">TrajectoryManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">concat</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'./cache'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_memmap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager" title="Link to this definition"></a></dt>
+<dd><p>Manager for pure trajectory data objects without feature dependencies.</p>
+<p>Provides methods to load, add, remove, slice, and select atoms in MD trajectories.
+This manager operates on TrajectoryData objects and does not depend on
+any feature data. It is designed to be used both standalone and within
+a pipeline context.</p>
+<p>It handles various trajectory formats, automatic format detection, and
+provides a consistent interface for working with trajectory data.</p>
+<p>It can load multiple trajectories, apply selections, and manage
+memory-efficient representations using DaskMDTrajectory.</p>
+<p>It can load trajectories from directories and nested directories or lists of files,
+handle topology files, and apply MDTraj selection strings.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">concat</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'./cache'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_memmap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize trajectory manager.</p>
+<section id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>stride<span class="classifier">int, default=1</span></dt><dd><p>Load every stride-th frame from trajectories. Use values &gt; 1 to
+reduce memory usage and computation time by subsampling frames.</p>
+</dd>
+<dt>concat<span class="classifier">bool, default=False</span></dt><dd><p>Whether to concatenate multiple trajectories per system into single
+trajectory objects. Useful when dealing with trajectory splits.</p>
+</dd>
+<dt>selection<span class="classifier">str, optional</span></dt><dd><p>MDTraj selection string to apply to all loaded trajectories.
+See: <a class="reference external" href="https://mdtraj.org/1.9.4/atom_selection.html">https://mdtraj.org/1.9.4/atom_selection.html</a></p>
+</dd>
+<dt>use_memmap<span class="classifier">bool, default=False</span></dt><dd><p>Whether to use memory-mapped DaskMDTrajectory for large files.
+When True, trajectories are loaded as DaskMDTrajectory objects
+for efficient memory usage.</p>
+</dd>
+<dt>chunk_size<span class="classifier">int, default=1000</span></dt><dd><p>Chunk size for DaskMDTrajectory (only used when use_memmap=True).
+Number of frames per chunk for memory management.</p>
+</dd>
+<dt>cache_dir<span class="classifier">str, default=”./cache”</span></dt><dd><p>Directory for caching intermediate results and Zarr files.</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h3>Returns<a class="headerlink" href="#returns" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>None</dt><dd><p>Initializes TrajectoryManager instance with default parameters</p>
+</dd>
+</dl>
+</section>
+<section id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">traj_data</span> <span class="o">=</span> <span class="n">TrajectoryData</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span> <span class="o">=</span> <span class="n">TrajectoryManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">load_trajectories</span><span class="p">(</span><span class="n">traj_data</span><span class="p">,</span> <span class="s1">&#39;../data&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager.load_trajectories">
+<span class="sig-name descname"><span class="pre">load_trajectories</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">concat</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager.load_trajectories" title="Link to this definition"></a></dt>
+<dd><p>Load molecular dynamics trajectories from files or directories into PipelineData.</p>
+<p>This method handles loading of MD trajectories in various formats
+(e.g., .xtc, .dcd, .trr) along with their topology files. The loading
+is performed using the TrajectoryLoadHelper class which supports automatic
+format detection and multiple trajectory handling.</p>
+<section id="warning">
+<h3>Warning<a class="headerlink" href="#warning" title="Link to this heading"></a></h3>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.trajectory.load_trajectories(‘../data’)  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = TrajectoryManager()
+&gt;&gt;&gt; manager.load_trajectories(pipeline_data, ‘../data’)  # pipeline_data required</p>
+</section>
+<section id="id1">
+<h3>Parameters<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data container where trajectories will be stored</p>
+</dd>
+<dt>data_input<span class="classifier">str or list</span></dt><dd><p>Path to directory containing trajectory files, or list of trajectory
+file paths. When a directory is provided, all supported trajectory
+files in that directory will be loaded.</p>
+</dd>
+<dt>concat<span class="classifier">bool, optional</span></dt><dd><p>Whether to concatenate multiple trajectories per system into single
+trajectory objects. If None, uses manager default.</p>
+</dd>
+<dt>stride<span class="classifier">int, optional</span></dt><dd><p>Load every stride-th frame from trajectories. If None, uses manager default.</p>
+</dd>
+<dt>selection<span class="classifier">str, optional</span></dt><dd><p>MDTraj selection string to apply to all loaded trajectories.
+If None, uses manager default.</p>
+</dd>
+<dt>force<span class="classifier">bool, default=False</span></dt><dd><p>Whether to force loading even when features have been calculated. When True,
+existing features become invalid and should be recalculated.</p>
+</dd>
+</dl>
+</section>
+<section id="id2">
+<h3>Returns<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>None</dt><dd><p>Loads trajectories into pipeline_data.trajectory_data and sets up topology/names</p>
+</dd>
+</dl>
+</section>
+<section id="id3">
+<h3>Examples<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<p>Pipeline mode (automatic injection):
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.trajectory.load_trajectories(‘../data’)</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; traj_manager = TrajectoryManager()
+&gt;&gt;&gt; traj_manager.load_trajectories(pipeline_data, ‘../data’)</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Load with tags</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">load_trajectories</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">pipeline_data</span><span class="p">,</span> <span class="s1">&#39;../data&#39;</span><span class="p">,</span> <span class="n">tags_file</span><span class="o">=</span><span class="s1">&#39;tags.json&#39;</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="notes">
+<h3>Notes<a class="headerlink" href="#notes" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Supported formats depend on MDTraj capabilities</p></li>
+<li><p>Topology files (.pdb, .gro, .psf) should be in the same directory</p></li>
+<li><p>Large trajectories benefit from striding to reduce memory usage</p></li>
+<li><p>Selection is applied to all trajectories after loading</p></li>
+</ul>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager.add_trajectory">
+<span class="sig-name descname"><span class="pre">add_trajectory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">concat</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager.add_trajectory" title="Link to this definition"></a></dt>
+<dd><p>Add molecular dynamics trajectories to TrajectoryData object.</p>
+<p>This method works like load_trajectories but appends new trajectories
+instead of replacing existing ones. Useful for loading additional
+trajectory data without losing previously loaded trajectories.</p>
+<section id="id4">
+<h3>Warning<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.trajectory.add_trajectory(‘../data2’)  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = TrajectoryManager()
+&gt;&gt;&gt; manager.add_trajectory(pipeline_data, ‘../data2’)  # pipeline_data required</p>
+</section>
+<section id="id5">
+<h3>Parameters<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data object</p>
+</dd>
+<dt>data_input<span class="classifier">str or list</span></dt><dd><p>Path to directory containing trajectory files, or list of trajectory
+file paths. When a directory is provided, all supported trajectory
+files in that directory will be loaded.</p>
+</dd>
+<dt>concat<span class="classifier">bool, optional</span></dt><dd><p>Whether to concatenate multiple trajectories per system into single
+trajectory objects. If None, uses manager default.</p>
+</dd>
+<dt>stride<span class="classifier">int, optional</span></dt><dd><p>Load every stride-th frame from trajectories. If None, uses manager default.</p>
+</dd>
+<dt>selection<span class="classifier">str, optional</span></dt><dd><p>MDTraj selection string to apply to all newly loaded trajectories.
+If None, uses manager default.</p>
+</dd>
+</dl>
+</section>
+<section id="id6">
+<h3>Returns<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>None</dt><dd><p>Appends new trajectories to existing trajectory list in pipeline_data</p>
+</dd>
+</dl>
+</section>
+<section id="id7">
+<h3>Examples<a class="headerlink" href="#id7" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">traj_data</span> <span class="o">=</span> <span class="n">TrajectoryData</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span> <span class="o">=</span> <span class="n">TrajectoryManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">load_trajectories</span><span class="p">(</span><span class="n">traj_data</span><span class="p">,</span> <span class="s1">&#39;../data&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">add_trajectory</span><span class="p">(</span><span class="n">traj_data</span><span class="p">,</span> <span class="s1">&#39;../data2&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="raises">
+<h3>Raises<a class="headerlink" href="#raises" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If no trajectories are currently loaded</p>
+</dd>
+</dl>
+</section>
+<section id="id8">
+<h3>Notes<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>New trajectories are appended to existing ones</p></li>
+<li><p>Trajectory names are also appended to maintain consistency</p></li>
+<li><p>Selection is only applied to newly loaded trajectories</p></li>
+<li><p>Existing trajectories remain unchanged</p></li>
+</ul>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager.remove_trajectory">
+<span class="sig-name descname"><span class="pre">remove_trajectory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">traj_selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager.remove_trajectory" title="Link to this definition"></a></dt>
+<dd><p>Remove specified trajectories from the loaded trajectory list.</p>
+<section id="id9">
+<h3>Warning<a class="headerlink" href="#id9" title="Link to this heading"></a></h3>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.trajectory.remove_trajectory([0, 1])  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = TrajectoryManager()
+&gt;&gt;&gt; manager.remove_trajectory(pipeline_data, [0, 1])  # pipeline_data required</p>
+</section>
+<section id="id10">
+<h3>Parameters<a class="headerlink" href="#id10" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data object</p>
+</dd>
+<dt>traj_selection<span class="classifier">int, str, list, or “all”</span></dt><dd><p>Trajectory selection (required). Options:</p>
+<ul class="simple">
+<li><p>int: single trajectory by index (e.g., 0)</p></li>
+<li><p>str: trajectory name or “all” for all trajectories</p></li>
+<li><p>list: multiple indices/names (can be mixed)</p></li>
+<li><p>“all”: all loaded trajectories</p></li>
+</ul>
+</dd>
+<dt>force<span class="classifier">bool, default=False</span></dt><dd><p>Whether to force removal even when features have been calculated. When True,
+existing features become invalid and should be recalculated.</p>
+</dd>
+</dl>
+</section>
+<section id="id11">
+<h3>Returns<a class="headerlink" href="#id11" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>None</dt><dd><p>Removes trajectories from pipeline_data</p>
+</dd>
+</dl>
+</section>
+<section id="id12">
+<h3>Examples<a class="headerlink" href="#id12" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_data</span> <span class="o">=</span> <span class="n">PipelineData</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span> <span class="o">=</span> <span class="n">TrajectoryManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">load_trajectories</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s1">&#39;../data&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">remove_trajectory</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+<section id="id13">
+<h3>Raises<a class="headerlink" href="#id13" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If trajectories are not loaded, if trajs contains invalid indices/names</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager.slice_traj">
+<span class="sig-name descname"><span class="pre">slice_traj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">traj_selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frames</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">slice</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cut</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_selector</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager.slice_traj" title="Link to this definition"></a></dt>
+<dd><p>Slice trajectories using frame ranges, stride, OR DataSelector.</p>
+<section id="id14">
+<h3>Warning<a class="headerlink" href="#id14" title="Link to this heading"></a></h3>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.trajectory.slice_traj(frames=1000, traj_selection=”all”)  # NO pipeline_data parameter
+&gt;&gt;&gt; pipeline.trajectory.slice_traj(data_selector=”folded_frames”)  # Use DataSelector</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = TrajectoryManager()
+&gt;&gt;&gt; manager.slice_traj(pipeline_data, frames=1000, traj_selection=”all”)  # pipeline_data required</p>
+</section>
+<section id="id15">
+<h3>Parameters<a class="headerlink" href="#id15" title="Link to this heading"></a></h3>
+<dl>
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data object</p>
+</dd>
+<dt>traj_selection<span class="classifier">int, str, list, or “all”, default=”all”</span></dt><dd><p>Selection of trajectories to process:</p>
+<ul class="simple">
+<li><p>int: trajectory index</p></li>
+<li><p>str: trajectory name or “all” for all trajectories</p></li>
+<li><p>list: list of indices/names</p></li>
+<li><p>“all”: all loaded trajectories</p></li>
+</ul>
+</dd>
+<dt>frames<span class="classifier">int, slice, list, optional</span></dt><dd><p>Frame specification for slicing:</p>
+<ul class="simple">
+<li><p>int: include frames 0 to frames (e.g., frames=1000 → frames 0-999)</p></li>
+<li><p>slice: direct slice object (e.g., slice(100, 500) → frames 100-499)</p></li>
+<li><p>list: specific frame indices (e.g., [0, 10, 20, 30])</p></li>
+</ul>
+<p>Ignored if data_selector is provided.</p>
+</dd>
+<dt>stride<span class="classifier">int, optional</span></dt><dd><p>Take every stride-th frame. Use values &gt; 1 to subsample frames.
+If None, uses manager default.</p>
+</dd>
+<dt>cut<span class="classifier">int, optional</span></dt><dd><p>Frame number after which to cut trajectories. Frames after this 
+index will be removed. Applied after frame selection and stride.</p>
+</dd>
+<dt>data_selector<span class="classifier">str, optional</span></dt><dd><p>Name of DataSelector to use for frame selection.
+If provided, overrides frames/stride parameters and uses
+the selected frames from the DataSelector.</p>
+</dd>
+<dt>force<span class="classifier">bool, default=False</span></dt><dd><p>Whether to force slicing even when features have been calculated. When True,
+existing features become invalid and should be recalculated.</p>
+</dd>
+</dl>
+</section>
+<section id="id16">
+<h3>Returns<a class="headerlink" href="#id16" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>None</dt><dd><p>Modifies trajectories in-place</p>
+</dd>
+</dl>
+</section>
+<section id="id17">
+<h3>Examples<a class="headerlink" href="#id17" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_data</span> <span class="o">=</span> <span class="n">PipelineData</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span> <span class="o">=</span> <span class="n">TrajectoryManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">load_trajectories</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s1">&#39;../data&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">slice_traj</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="n">frames</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">traj_selection</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Slice specific frames with stride for specific trajectories by index</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">slice_traj</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="n">frames</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">traj_selection</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Use slice object for precise frame ranges</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">slice_traj</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="n">frames</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">500</span><span class="p">),</span> <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">traj_selection</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Select specific frame indices by name selection</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">slice_traj</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">pipeline_data</span><span class="p">,</span> <span class="n">frames</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="n">traj_selection</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;system1_prot_traj1&#39;</span><span class="p">,</span> <span class="s1">&#39;system2_prot_traj2&#39;</span><span class="p">]</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Cut trajectory after 1000 frames with stride</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">slice_traj</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="n">cut</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">traj_selection</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Use DataSelector to slice trajectories to folded frames only</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">slice_traj</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="n">data_selector</span><span class="o">=</span><span class="s2">&quot;folded_frames&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id18">
+<h3>Raises<a class="headerlink" href="#id18" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If trajectories are not loaded or if selection contains invalid indices/names
+or if DataSelector does not exist</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager.select_atoms">
+<span class="sig-name descname"><span class="pre">select_atoms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">traj_selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="s"><span class="pre">'all'</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager.select_atoms" title="Link to this definition"></a></dt>
+<dd><p>Apply atom selection to trajectories using MDTraj selection syntax.</p>
+<section id="id19">
+<h3>Warning<a class="headerlink" href="#id19" title="Link to this heading"></a></h3>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.trajectory.select_atoms(“protein”, “all”)  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = TrajectoryManager()
+&gt;&gt;&gt; manager.select_atoms(pipeline_data, “protein”, “all”)  # pipeline_data required</p>
+</section>
+<section id="id20">
+<h3>Parameters<a class="headerlink" href="#id20" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data object</p>
+</dd>
+<dt>traj_selection<span class="classifier">int, str, list, or “all”</span></dt><dd><p>Selection of trajectories to process:</p>
+<ul class="simple">
+<li><p>int: trajectory index</p></li>
+<li><p>str: trajectory name or “all” for all trajectories</p></li>
+<li><p>list: list of indices/names</p></li>
+</ul>
+</dd>
+<dt>selection<span class="classifier">str</span></dt><dd><p>MDTraj selection string (e.g., “protein”, “backbone”, “resid 10 to 50”)
+See: <a class="reference external" href="https://mdtraj.org/1.9.4/atom_selection.html">https://mdtraj.org/1.9.4/atom_selection.html</a></p>
+</dd>
+<dt>force<span class="classifier">bool, default=False</span></dt><dd><p>Whether to force atom selection even when features have been calculated. When True,
+existing features become invalid and should be recalculated.</p>
+</dd>
+</dl>
+</section>
+<section id="id21">
+<h3>Returns<a class="headerlink" href="#id21" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>None</dt><dd><p>Applies atom selection to trajectories in-place</p>
+</dd>
+</dl>
+</section>
+<section id="id22">
+<h3>Examples<a class="headerlink" href="#id22" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_data</span> <span class="o">=</span> <span class="n">PipelineData</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span> <span class="o">=</span> <span class="n">TrajectoryManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">load_trajectories</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s1">&#39;../data&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">select_atoms</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;protein&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Select atoms from specific trajectories</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">select_atoms</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;protein&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+<section id="id23">
+<h3>Raises<a class="headerlink" href="#id23" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If trajectories are not loaded or if selection/trajs contain invalid values</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager.add_labels">
+<span class="sig-name descname"><span class="pre">add_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">traj_selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="s"><span class="pre">'all'</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragment_definition</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragment_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragment_molecule_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">consensus</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aa_short</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">try_web_lookup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">nomenclature_kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager.add_labels" title="Link to this definition"></a></dt>
+<dd><p>Add nomenclature labels to selected trajectories.</p>
+<p>This method creates consensus labels for MD trajectories using different
+mdciao nomenclature systems (GPCR, CGN, KLIFS). Different systems can have
+different nomenclatures by applying labels to specific trajectory selections.</p>
+<section id="id24">
+<h3>Warning<a class="headerlink" href="#id24" title="Link to this heading"></a></h3>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.trajectory.add_labels([0, 1], fragment_definition=”receptor”)  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = TrajectoryManager()
+&gt;&gt;&gt; manager.add_labels(pipeline_data, [0, 1], fragment_definition=”receptor”)  # pipeline_data required</p>
+</section>
+<section id="id25">
+<h3>Parameters<a class="headerlink" href="#id25" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data object</p>
+</dd>
+<dt>traj_selection<span class="classifier">int, str, list, or “all”</span></dt><dd><p>Selection of trajectories to add labels to:</p>
+<ul class="simple">
+<li><p>int: trajectory index</p></li>
+<li><p>str: trajectory name or “all” for all trajectories</p></li>
+<li><p>list: list of indices/names</p></li>
+<li><p>“all”: all loaded trajectories</p></li>
+</ul>
+</dd>
+<dt>fragment_definition<span class="classifier">str or dict, default None</span></dt><dd><p>If string, uses that as fragment name for entire topology.
+If dict, maps fragment names to residue ranges: {“cgn_a”: (0, 348), “beta2”: (400, 684)}
+Only required when consensus=True.</p>
+</dd>
+<dt>fragment_type<span class="classifier">str or dict, default None</span></dt><dd><p>If string, uses that nomenclature type for all fragments.
+If dict, maps fragment names to nomenclature types:
+{“cgn_a”: “cgn”, “beta2”: “gpcr”}. Use mdciao nomenclature types.
+Allowed types: gpcr, cgn, klifs
+Only required when consensus=True.</p>
+</dd>
+<dt>fragment_molecule_name<span class="classifier">str or dict, default None</span></dt><dd><p>If string, uses that molecule name for all fragments.
+If dict, maps fragment names to molecule names:
+{“cgn_a”: “gnas2_bovin”, “beta2”: “adrb2_human”}.
+Use the UniProt entry name (not accession ID) for GPCR/CGN labelers,
+or KLIFS string for KLIFS labelers.
+See <a class="reference external" href="https://www.uniprot.org/help/difference_accession_entryname">https://www.uniprot.org/help/difference_accession_entryname</a>  # noqa: E501
+for UniProt naming conventions.
+See <a class="reference external" href="https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerKLIFS.html#mdciao.nomenclature.LabelerKLIFS">https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerKLIFS.html#mdciao.nomenclature.LabelerKLIFS</a>  # noqa: E501
+for KLIFS naming conventions.
+Only required when consensus=True.</p>
+</dd>
+<dt>consensus<span class="classifier">bool, default False</span></dt><dd><p>Whether to use consensus labeling (combines AA codes with nomenclature labels).
+If False, only returns amino acid labels without nomenclature.</p>
+</dd>
+<dt>aa_short<span class="classifier">bool, default True</span></dt><dd><p>Whether to use short amino acid names (T vs THR)</p>
+</dd>
+<dt>verbose<span class="classifier">bool, default False</span></dt><dd><p>Whether to enable verbose output from labelers</p>
+</dd>
+<dt>try_web_lookup<span class="classifier">bool, default True</span></dt><dd><p>Whether to try web lookup for molecule data</p>
+</dd>
+<dt>force<span class="classifier">bool, default False</span></dt><dd><p>Whether to force label addition even when labels already exist. When True,
+existing labels will be overwritten. When False, raises ValueError if labels exist.</p>
+</dd>
+<dt>write_to_disk<span class="classifier">bool, default False</span></dt><dd><p>Whether to write cache files to disk</p>
+</dd>
+<dt>cache_folder<span class="classifier">str, default “./cache”</span></dt><dd><p>Folder for cache files</p>
+</dd>
+<dt>**nomenclature_kwargs</dt><dd><p>Additional keyword arguments passed to the mdciao labelers</p>
+</dd>
+</dl>
+</section>
+<section id="id26">
+<h3>Returns<a class="headerlink" href="#id26" title="Link to this heading"></a></h3>
+<p>None</p>
+</section>
+<section id="id27">
+<h3>Raises<a class="headerlink" href="#id27" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If trajectories are not loaded</p>
+</dd>
+<dt>ValueError</dt><dd><p>If traj_selection contains invalid indices or names</p>
+</dd>
+<dt>ValueError</dt><dd><p>If nomenclature labels already exist for selected trajectories and force=False</p>
+</dd>
+<dt>ValueError</dt><dd><p>If fragment_definition is required when consensus=True</p>
+</dd>
+<dt>ValueError</dt><dd><p>If fragment_type is required when consensus=True</p>
+</dd>
+<dt>ValueError</dt><dd><p>If fragment_molecule_name is required when consensus=True</p>
+</dd>
+<dt>ValueError</dt><dd><p>If fragment_definition is not a string or dictionary</p>
+</dd>
+<dt>ValueError</dt><dd><p>If fragment_type is not a string or dictionary</p>
+</dd>
+<dt>ValueError</dt><dd><p>If fragment_molecule_name is not a string or dictionary</p>
+</dd>
+</dl>
+</section>
+<section id="id28">
+<h3>Notes<a class="headerlink" href="#id28" title="Link to this heading"></a></h3>
+<p>This method wraps mdciao consensus nomenclature systems:
+<a class="reference external" href="https://proteinformatics.uni-leipzig.de/mdciao/api/generated/mdciao.nomenclature.html">https://proteinformatics.uni-leipzig.de/mdciao/api/generated/mdciao.nomenclature.html</a></p>
+<p>Supported fragment types:</p>
+<ul class="simple">
+<li><p>gpcr: <a class="reference external" href="https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerGPCR.html#mdciao.nomenclature.LabelerGPCR">https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerGPCR.html#mdciao.nomenclature.LabelerGPCR</a></p></li>
+<li><p>cgn: <a class="reference external" href="https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerCGN.html#mdciao.nomenclature.LabelerCGN">https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerCGN.html#mdciao.nomenclature.LabelerCGN</a></p></li>
+<li><p>klifs: <a class="reference external" href="https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerKLIFS.html#mdciao.nomenclature.LabelerKLIFS">https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerKLIFS.html#mdciao.nomenclature.LabelerKLIFS</a></p></li>
+</ul>
+</section>
+<section id="id29">
+<h3>Examples<a class="headerlink" href="#id29" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_data</span> <span class="o">=</span> <span class="n">PipelineData</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span> <span class="o">=</span> <span class="n">TrajectoryManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">load_trajectories</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s1">&#39;../data&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Add labels to specific trajectories (different systems)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">add_labels</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">pipeline_data</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">fragment_definition</span><span class="o">=</span><span class="s2">&quot;receptor&quot;</span><span class="p">,</span> <span class="n">fragment_type</span><span class="o">=</span><span class="s2">&quot;gpcr&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">fragment_molecule_name</span><span class="o">=</span><span class="s2">&quot;adrb2_human&quot;</span><span class="p">,</span> <span class="n">consensus</span><span class="o">=</span><span class="kc">True</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">add_labels</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">pipeline_data</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="n">fragment_definition</span><span class="o">=</span><span class="s2">&quot;kinase&quot;</span><span class="p">,</span> <span class="n">fragment_type</span><span class="o">=</span><span class="s2">&quot;klifs&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">fragment_molecule_name</span><span class="o">=</span><span class="s2">&quot;abl1_human&quot;</span><span class="p">,</span> <span class="n">consensus</span><span class="o">=</span><span class="kc">True</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Add labels to all trajectories</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">add_labels</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="n">fragment_definition</span><span class="o">=</span><span class="s2">&quot;protein&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Adding labels again requires force=True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">add_labels</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># Overwrites existing labels</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager.add_tags">
+<span class="sig-name descname"><span class="pre">add_tags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">trajectory_selector</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">range</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tags</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager.add_tags" title="Link to this definition"></a></dt>
+<dd><p>Add tags to trajectories using flexible selectors.</p>
+<p>This method supports single trajectories, multiple trajectories, pattern matching,
+and bulk assignment using dictionaries. It provides a powerful interface for
+managing trajectory tags in complex scenarios.</p>
+<section id="id30">
+<h3>Warning<a class="headerlink" href="#id30" title="Link to this heading"></a></h3>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.trajectory.add_tags(0, [“system_A”])  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = TrajectoryManager()
+&gt;&gt;&gt; manager.add_tags(pipeline_data, 0, [“system_A”])  # pipeline_data required</p>
+</section>
+<section id="id31">
+<h3>Parameters<a class="headerlink" href="#id31" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data object</p>
+</dd>
+<dt>trajectory_selector<span class="classifier">int, str, list, range, dict</span></dt><dd><p>Flexible selector for trajectories:</p>
+<ul class="simple">
+<li><p>int: single trajectory by index (e.g., 0)</p></li>
+<li><dl class="simple">
+<dt>str: single trajectory by name or pattern (e.g., “traj1”, “system_*”)</dt><dd><p>Supports multiple string formats:</p>
+<ul>
+<li><p>Range: “0-3”, “id 0-3” → [0, 1, 2, 3]</p></li>
+<li><p>Comma list: “1,2,4,5”, “id 1,2,4,5” → [1, 2, 4, 5]</p></li>
+<li><p>Single number: “7”, “id 7” → [7]</p></li>
+<li><p>Pattern: “system_*” → fnmatch pattern matching</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>list: multiple selectors (e.g., [0, 1, “special_traj”, range(5,8)])</p></li>
+<li><p>range: range of indices (e.g., range(0, 4))</p></li>
+<li><p>dict: bulk assignment {selector: tags, …}</p></li>
+</ul>
+</dd>
+<dt>tags<span class="classifier">list, optional</span></dt><dd><p>List of tag strings to add. Required when trajectory_selector is not dict.
+Ignored when trajectory_selector is dict.</p>
+</dd>
+</dl>
+</section>
+<section id="id32">
+<h3>Returns<a class="headerlink" href="#id32" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>None</dt><dd><p>Adds tags to selected trajectories and rebuilds frame mapping</p>
+</dd>
+</dl>
+</section>
+<section id="id33">
+<h3>Examples<a class="headerlink" href="#id33" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Single trajectory</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">add_tags</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;system_A&quot;</span><span class="p">,</span> <span class="s2">&quot;biased&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">add_tags</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;traj1&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;system_B&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Multiple trajectories</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">add_tags</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;control&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">add_tags</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">[</span><span class="s2">&quot;batch_1&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Pattern matching</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">add_tags</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;system_2_*&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;system_B&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Complex nested selectors</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">add_tags</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span> <span class="s2">&quot;system_2_*&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;mixed&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Bulk assignment with dict</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">add_tags</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">4</span><span class="p">)]:</span> <span class="p">[</span><span class="s2">&quot;system_A&quot;</span><span class="p">,</span> <span class="s2">&quot;unbiased&quot;</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">8</span><span class="p">),</span> <span class="s2">&quot;special_traj&quot;</span><span class="p">]:</span> <span class="p">[</span><span class="s2">&quot;control&quot;</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="s2">&quot;system_2_*&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;system_B&quot;</span><span class="p">,</span> <span class="s2">&quot;production&quot;</span><span class="p">]</span>
+<span class="gp">... </span><span class="p">})</span>
+</pre></div>
+</div>
+</section>
+<section id="id34">
+<h3>Raises<a class="headerlink" href="#id34" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If tags is None when trajectory_selector is not dict</p>
+</dd>
+<dt>ValueError</dt><dd><p>If trajectory selector contains invalid indices or names</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager.set_tags">
+<span class="sig-name descname"><span class="pre">set_tags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">trajectory_selector</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">range</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tags</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager.set_tags" title="Link to this definition"></a></dt>
+<dd><p>Set (replace) tags for trajectories using flexible selectors.</p>
+<p>This method completely replaces existing tags instead of merging them.
+It supports the same flexible selector system as add_tags() but provides
+replacement semantics for tag management scenarios where you need to 
+reset or completely change trajectory tags.</p>
+<section id="id35">
+<h3>Warning<a class="headerlink" href="#id35" title="Link to this heading"></a></h3>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.trajectory.set_tags(0, [“system_A”])  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = TrajectoryManager()
+&gt;&gt;&gt; manager.set_tags(pipeline_data, 0, [“system_A”])  # pipeline_data required</p>
+</section>
+<section id="id36">
+<h3>Parameters<a class="headerlink" href="#id36" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data object</p>
+</dd>
+<dt>trajectory_selector<span class="classifier">int, str, list, range, dict</span></dt><dd><p>Flexible selector for trajectories:</p>
+<ul class="simple">
+<li><p>int: single trajectory by index (e.g., 0)</p></li>
+<li><dl class="simple">
+<dt>str: single trajectory by name or pattern (e.g., “traj1”, “system_*”)</dt><dd><p>Supports multiple string formats:</p>
+<ul>
+<li><p>Range: “0-3”, “id 0-3” → [0, 1, 2, 3]</p></li>
+<li><p>Comma list: “1,2,4,5”, “id 1,2,4,5” → [1, 2, 4, 5]</p></li>
+<li><p>Single number: “7”, “id 7” → [7]</p></li>
+<li><p>Pattern: “system_*” → fnmatch pattern matching</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>list: multiple selectors (e.g., [0, 1, “special_traj”, range(5,8)])</p></li>
+<li><p>range: range of indices (e.g., range(0, 4))</p></li>
+<li><p>dict: bulk assignment {selector: tags, …}</p></li>
+</ul>
+</dd>
+<dt>tags<span class="classifier">list, optional</span></dt><dd><p>List of tag strings to set. Required when trajectory_selector is not dict.
+Ignored when trajectory_selector is dict.</p>
+</dd>
+</dl>
+</section>
+<section id="id37">
+<h3>Returns<a class="headerlink" href="#id37" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>None</dt><dd><p>Sets tags for selected trajectories and rebuilds frame mapping</p>
+</dd>
+</dl>
+</section>
+<section id="id38">
+<h3>Examples<a class="headerlink" href="#id38" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Replace tags for single trajectory</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">add_tags</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;old_tag&quot;</span><span class="p">,</span> <span class="s2">&quot;other&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">set_tags</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;new_tag&quot;</span><span class="p">])</span>  <span class="c1"># Replaces both old tags</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Reset multiple trajectories to same tags</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">set_tags</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;reset&quot;</span><span class="p">,</span> <span class="s2">&quot;control&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Clear all tags (set to empty)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">set_tags</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="p">[])</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Bulk replacement with dict</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">set_tags</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]:</span> <span class="p">[</span><span class="s2">&quot;system_A&quot;</span><span class="p">,</span> <span class="s2">&quot;production&quot;</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]:</span> <span class="p">[</span><span class="s2">&quot;system_B&quot;</span><span class="p">,</span> <span class="s2">&quot;test&quot;</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="s2">&quot;control_*&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;control&quot;</span><span class="p">]</span>
+<span class="gp">... </span><span class="p">})</span>
+</pre></div>
+</div>
+</section>
+<section id="id39">
+<h3>Raises<a class="headerlink" href="#id39" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If tags is None when trajectory_selector is not dict</p>
+</dd>
+<dt>ValueError</dt><dd><p>If trajectory selector contains invalid indices or names</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager.rename_trajectories">
+<span class="sig-name descname"><span class="pre">rename_trajectories</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">name_mapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager.rename_trajectories" title="Link to this definition"></a></dt>
+<dd><p>Rename trajectory names.</p>
+<p>This method allows renaming trajectory names for better organization
+and more descriptive identification. Supports both dictionary-based
+mapping and positional list assignment.</p>
+<section id="id40">
+<h3>Warning<a class="headerlink" href="#id40" title="Link to this heading"></a></h3>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.trajectory.rename_trajectories({0: “new_name”})  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = TrajectoryManager()
+&gt;&gt;&gt; manager.rename_trajectories(pipeline_data, {0: “new_name”})  # pipeline_data required</p>
+</section>
+<section id="id41">
+<h3>Parameters<a class="headerlink" href="#id41" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data object</p>
+</dd>
+<dt>name_mapping<span class="classifier">dict or list</span></dt><dd><p>Mapping for trajectory names:</p>
+<ul class="simple">
+<li><p>dict: {old_name_or_index: new_name, …} for selective renaming</p></li>
+<li><p>list: [new_name1, new_name2, …] for positional assignment</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+<section id="id42">
+<h3>Returns<a class="headerlink" href="#id42" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>None</dt><dd><p>Renames trajectories and rebuilds frame tag mapping</p>
+</dd>
+</dl>
+</section>
+<section id="id43">
+<h3>Examples<a class="headerlink" href="#id43" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Dictionary-based renaming</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">rename_trajectories</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;system_A_replicate_1&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s2">&quot;old_traj_name&quot;</span><span class="p">:</span> <span class="s2">&quot;system_B_replicate_1&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="mi">2</span><span class="p">:</span> <span class="s2">&quot;control_experiment&quot;</span>
+<span class="gp">... </span><span class="p">})</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Positional list assignment</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">rename_trajectories</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="p">[</span>
+<span class="gp">... </span>    <span class="s2">&quot;system_A_rep1&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s2">&quot;system_A_rep2&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s2">&quot;system_B_rep1&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s2">&quot;control&quot;</span>
+<span class="gp">... </span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+<section id="id44">
+<h3>Raises<a class="headerlink" href="#id44" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If no trajectories are loaded, mapping is invalid, or references invalid trajectories</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager.reset_trajectory_data">
+<span class="sig-name descname"><span class="pre">reset_trajectory_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager.reset_trajectory_data" title="Link to this definition"></a></dt>
+<dd><p>Reset the trajectory data object to empty state.</p>
+<section id="id45">
+<h3>Warning<a class="headerlink" href="#id45" title="Link to this heading"></a></h3>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.trajectory.reset_trajectory_data()  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = TrajectoryManager()
+&gt;&gt;&gt; manager.reset_trajectory_data(pipeline_data)  # pipeline_data required</p>
+</section>
+<section id="id46">
+<h3>Parameters<a class="headerlink" href="#id46" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data object</p>
+</dd>
+</dl>
+</section>
+<section id="id47">
+<h3>Returns<a class="headerlink" href="#id47" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>None</dt><dd><p>Resets trajectory data to empty state</p>
+</dd>
+</dl>
+</section>
+<section id="id48">
+<h3>Examples<a class="headerlink" href="#id48" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">traj_manager</span><span class="o">.</span><span class="n">reset_trajectory_data</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager.save" title="Link to this definition"></a></dt>
+<dd><p>Save trajectory data to disk.</p>
+<section id="id49">
+<h3>Warning<a class="headerlink" href="#id49" title="Link to this heading"></a></h3>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.trajectory.save(‘trajectory_backup.pkl’)  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = TrajectoryManager()
+&gt;&gt;&gt; manager.save(pipeline_data, ‘trajectory_backup.pkl’)  # pipeline_data required</p>
+</section>
+<section id="id50">
+<h3>Parameters<a class="headerlink" href="#id50" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data container with trajectory data</p>
+</dd>
+<dt>save_path<span class="classifier">str</span></dt><dd><p>Path where to save the trajectory data</p>
+</dd>
+</dl>
+</section>
+<section id="id51">
+<h3>Returns<a class="headerlink" href="#id51" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>None</dt><dd><p>Saves the trajectory data to the specified path</p>
+</dd>
+</dl>
+</section>
+<section id="id52">
+<h3>Examples<a class="headerlink" href="#id52" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">trajectory_manager</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s1">&#39;trajectory_backup.pkl&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager.load">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager.load" title="Link to this definition"></a></dt>
+<dd><p>Load trajectory data from disk.</p>
+<section id="id53">
+<h3>Warning<a class="headerlink" href="#id53" title="Link to this heading"></a></h3>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.trajectory.load(‘trajectory_backup.pkl’)  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = TrajectoryManager()
+&gt;&gt;&gt; manager.load(pipeline_data, ‘trajectory_backup.pkl’)  # pipeline_data required</p>
+</section>
+<section id="id54">
+<h3>Parameters<a class="headerlink" href="#id54" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data container to load trajectory data into</p>
+</dd>
+<dt>load_path<span class="classifier">str</span></dt><dd><p>Path to the saved trajectory data file</p>
+</dd>
+</dl>
+</section>
+<section id="id55">
+<h3>Returns<a class="headerlink" href="#id55" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>None</dt><dd><p>Loads the trajectory data from the specified path</p>
+</dd>
+</dl>
+</section>
+<section id="id56">
+<h3>Examples<a class="headerlink" href="#id56" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">trajectory_manager</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s1">&#39;trajectory_backup.pkl&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager.print_info">
+<span class="sig-name descname"><span class="pre">print_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager.print_info" title="Link to this definition"></a></dt>
+<dd><p>Print trajectory information.</p>
+<section id="id57">
+<h3>Warning<a class="headerlink" href="#id57" title="Link to this heading"></a></h3>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.trajectory.print_info()  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = TrajectoryManager()
+&gt;&gt;&gt; manager.print_info(pipeline_data)  # pipeline_data required</p>
+</section>
+<section id="id58">
+<h3>Parameters<a class="headerlink" href="#id58" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data container with trajectory data</p>
+</dd>
+</dl>
+</section>
+<section id="id59">
+<h3>Returns<a class="headerlink" href="#id59" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>None</dt><dd><p>Prints trajectory information to console</p>
+</dd>
+</dl>
+</section>
+<section id="id60">
+<h3>Examples<a class="headerlink" href="#id60" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">trajectory_manager</span><span class="o">.</span><span class="n">print_info</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">)</span>
+<span class="go">=== TrajectoryData ===</span>
+<span class="go">Loaded 3 trajectories:</span>
+<span class="go">  [0] system1_prot_traj1: 1000 frames, tags: [&#39;system_A&#39;, &#39;biased&#39;]</span>
+<span class="go">  [1] system1_prot_traj2: 1500 frames, tags: [&#39;system_A&#39;, &#39;unbiased&#39;]</span>
+<span class="go">  [2] system2_prot_traj1: 800 frames, tags: [&#39;system_B&#39;, &#39;biased&#39;]</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager.select_trajs">
+<span class="sig-name descname"><span class="pre">select_trajs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_selector</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="mdxplain.trajectory.entities.dask_md_trajectory.html#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory" title="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory"><span class="pre">DaskMDTrajectory</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">md.Trajectory</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager.select_trajs" title="Link to this definition"></a></dt>
+<dd><p>Create new trajectory objects from DataSelector frames.</p>
+<section id="id61">
+<h3>Warning<a class="headerlink" href="#id61" title="Link to this heading"></a></h3>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; selected = pipeline.trajectory.select_trajs(“folded_frames”)  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = TrajectoryManager()
+&gt;&gt;&gt; selected = manager.select_trajs(pipeline_data, “folded_frames”)  # pipeline_data required</p>
+</section>
+<section id="id62">
+<h3>Parameters<a class="headerlink" href="#id62" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data with trajectories and DataSelector</p>
+</dd>
+<dt>data_selector<span class="classifier">str</span></dt><dd><p>Name of DataSelector to use</p>
+</dd>
+</dl>
+</section>
+<section id="id63">
+<h3>Returns<a class="headerlink" href="#id63" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>List[Union[DaskMDTrajectory, md.Trajectory]]</dt><dd><p>List of new trajectory objects with selected frames</p>
+</dd>
+</dl>
+</section>
+<section id="id64">
+<h3>Examples<a class="headerlink" href="#id64" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Create new trajectories from DataSelector</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">selected</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">trajectory</span><span class="o">.</span><span class="n">select_trajs</span><span class="p">(</span><span class="s2">&quot;folded_frames&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Created </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">selected</span><span class="p">)</span><span class="si">}</span><span class="s2"> new trajectories&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Use the returned trajectories for analysis</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">traj</span> <span class="ow">in</span> <span class="n">selected</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Trajectory has </span><span class="si">{</span><span class="n">traj</span><span class="o">.</span><span class="n">n_frames</span><span class="si">}</span><span class="s2"> frames&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager.superpose">
+<span class="sig-name descname"><span class="pre">superpose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_traj</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_frame</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">traj_selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="s"><span class="pre">'all'</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atom_selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'backbone'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.trajectory.managers.trajectory_manager.TrajectoryManager.superpose" title="Link to this definition"></a></dt>
+<dd><p>Superpose selected trajectories to a reference frame (always in-place).</p>
+<p>This method aligns all frames of selected trajectories to a specific reference
+frame using MDTraj’s superpose functionality. The operation is performed
+in-place, modifying the original trajectories. For memory-mapped trajectories,
+the alignment is performed chunk-wise to manage memory usage efficiently.</p>
+<section id="id65">
+<h3>Warning<a class="headerlink" href="#id65" title="Link to this heading"></a></h3>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.trajectory.superpose(reference_traj=0, reference_frame=0)  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = TrajectoryManager()
+&gt;&gt;&gt; manager.superpose(pipeline_data, reference_traj=0, reference_frame=0)  # pipeline_data required</p>
+</section>
+<section id="id66">
+<h3>Parameters<a class="headerlink" href="#id66" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data container with trajectory data</p>
+</dd>
+<dt>reference_traj<span class="classifier">int, default=0</span></dt><dd><p>Index of trajectory containing the reference frame</p>
+</dd>
+<dt>reference_frame<span class="classifier">int, default=0</span></dt><dd><p>Frame index within reference trajectory to use as alignment reference</p>
+</dd>
+<dt>traj_selection<span class="classifier">int, str, list, or “all”, default=”all”</span></dt><dd><p>Selection of trajectories to align:</p>
+<ul class="simple">
+<li><p>int: single trajectory by index</p></li>
+<li><p>str: trajectory name, tag, or pattern (e.g., “<a class="reference external" href="tag:system_A">tag:system_A</a>”, “traj_*”)</p></li>
+<li><p>list: multiple indices/names/tags</p></li>
+<li><p>“all”: all loaded trajectories</p></li>
+</ul>
+</dd>
+<dt>atom_selection<span class="classifier">str, default=”backbone”</span></dt><dd><p>MDTraj selection string for atoms to use in alignment calculation.
+Common selections: “backbone”, “name CA”, “protein”, “resid 10 to 50”
+See: <a class="reference external" href="https://mdtraj.org/1.9.4/atom_selection.html">https://mdtraj.org/1.9.4/atom_selection.html</a></p>
+</dd>
+</dl>
+</section>
+<section id="id67">
+<h3>Returns<a class="headerlink" href="#id67" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>None</dt><dd><p>Modifies trajectories in-place. No return value.</p>
+</dd>
+</dl>
+</section>
+<section id="id68">
+<h3>Examples<a class="headerlink" href="#id68" title="Link to this heading"></a></h3>
+<p>Basic alignment:
+&gt;&gt;&gt; pipeline.trajectory.superpose()  # Align all to first frame of first trajectory</p>
+<p>Specific reference:
+&gt;&gt;&gt; pipeline.trajectory.superpose(
+…     reference_traj=2,
+…     reference_frame=100,
+…     atom_selection=”name CA”
+… )</p>
+<p>Selective alignment:
+&gt;&gt;&gt; pipeline.trajectory.superpose(
+…     traj_selection=[0, 1, 3],
+…     atom_selection=”backbone and resid 50:150”
+… )</p>
+<p>Tag-based selection:
+&gt;&gt;&gt; pipeline.trajectory.superpose(
+…     traj_selection=”<a class="reference external" href="tag:wild_type">tag:wild_type</a>”,
+…     reference_traj=0,
+…     reference_frame=0
+… )</p>
+</section>
+<section id="id69">
+<h3>Notes<a class="headerlink" href="#id69" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Dask trajectories (use_memmap=True) handle memory management automatically</p></li>
+<li><p>The reference trajectory itself is also aligned to the reference frame</p></li>
+<li><p>All trajectories must have compatible topology for alignment</p></li>
+<li><p>Large trajectories may take significant time to align</p></li>
+</ul>
+</section>
+<section id="id70">
+<h3>Raises<a class="headerlink" href="#id70" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If no trajectories are loaded</p>
+</dd>
+<dt>ValueError</dt><dd><p>If reference_traj index is invalid</p>
+</dd>
+<dt>ValueError</dt><dd><p>If reference_frame index is invalid for reference trajectory</p>
+</dd>
+<dt>ValueError</dt><dd><p>If traj_selection contains invalid indices/names</p>
+</dd>
+<dt>ValueError</dt><dd><p>If atom_selection produces no atoms or incompatible atom counts</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mdxplain.trajectory.helper.validation_helper.html" class="btn btn-neutral float-left" title="Trajectory: Validation Helpers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../utils/mdxplain.utils.html" class="btn btn-neutral float-right" title="Utilities" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maximilian Salomon.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

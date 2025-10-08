@@ -7,10 +7,18 @@ Welcome to mdxplain's documentation!
 ====================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 
-   api/clustering/mdxplain.clustering
+   introduction
+   getting_started
+
+.. toctree::
+   :maxdepth: 2
+
+   tutorials/theory/theory
+   tutorials/learning/learning
+   api/api
 
 
 Indices and tables

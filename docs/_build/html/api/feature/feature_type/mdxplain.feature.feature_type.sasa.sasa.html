@@ -1,0 +1,388 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Feature Type: SASA Data &mdash; mdxplain 31.10.2025 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=55e8f53f"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Feature Type: SASA Calculator" href="mdxplain.feature.feature_type.sasa.sasa_calculator.html" />
+    <link rel="prev" title="Feature Type: SASA Selection Service" href="mdxplain.feature.feature_type.sasa.services.sasa_selection_service.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            mdxplain
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../introduction.html">Introduction to mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting started with mdxplain</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/theory/theory.html">The Theory Behind mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/learning/learning.html">Learn mdxplain</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../analysis/mdxplain.analysis.html">Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../clustering/mdxplain.clustering.html">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../comparison/mdxplain.comparison.html">Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data_selector/mdxplain.data_selector.html">Data Selector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../decomposition/mdxplain.decomposition.html">Decomposition</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../mdxplain.feature.html">Feature</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../mdxplain.feature.entities.html">Feature Entities</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="mdxplain.feature.feature_type.html">Feature Types</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.contacts.html">Feature Type: Contacts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.coordinates.html">Feature Type: Coordinates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.distances.html">Feature Type: Distances</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.dssp.html">Feature Type: DSSP</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.helpers.html">Feature Types: Helpers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.interfaces.html">Feature Types: Interfaces</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="mdxplain.feature.feature_type.sasa.html">Feature Type: SASA</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.torsions.html">Feature Type: Torsions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../mdxplain.feature.helper.html">Feature Helpers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mdxplain.feature.managers.html">Feature Managers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mdxplain.feature.services.html">Feature Services</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../feature_importance/mdxplain.feature_importance.html">Feature Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../feature_selection/mdxplain.feature_selection.html">Feature Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pipeline/mdxplain.pipeline.html">Pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../trajectory/mdxplain.trajectory.html">Trajectory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../utils/mdxplain.utils.html">Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">mdxplain</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../api.html">API Documentation</a></li>
+          <li class="breadcrumb-item"><a href="../mdxplain.feature.html">Feature</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.feature.feature_type.html">Feature Types</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.feature.feature_type.sasa.html">Feature Type: SASA</a></li>
+      <li class="breadcrumb-item active">Feature Type: SASA Data</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/api/feature/feature_type/mdxplain.feature.feature_type.sasa.sasa.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mdxplain.feature.feature_type.sasa.sasa">
+<span id="feature-type-sasa-data"></span><h1>Feature Type: SASA Data<a class="headerlink" href="#module-mdxplain.feature.feature_type.sasa.sasa" title="Link to this heading"></a></h1>
+<p>SASA feature type implementation for molecular dynamics analysis.</p>
+<p>SASA feature type implementation for computing Solvent Accessible Surface Area
+using the Shrake-Rupley algorithm with support for both residue and atom level.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.sasa.sasa.SASA">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mdxplain.feature.feature_type.sasa.sasa.</span></span><span class="sig-name descname"><span class="pre">SASA</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'residue'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probe_radius</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.14</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.feature.feature_type.sasa.sasa.SASA" title="Link to this definition"></a></dt>
+<dd><p>SASA feature type for computing Solvent Accessible Surface Area.</p>
+<p>Computes solvent accessible surface area using the Shrake-Rupley algorithm.
+Supports both residue-level and atom-level calculations with configurable
+probe radius. The algorithm determines the surface area accessible to a
+spherical probe of specified radius.</p>
+<p>This is a base feature type with no dependencies that provides insights
+into protein-solvent interactions and buried surface areas.</p>
+<p>Uses mdtraj for SASA calculation under the hood.</p>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Residue-level SASA with default water probe</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sasa</span> <span class="o">=</span> <span class="n">SASA</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;residue&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">add_feature</span><span class="p">(</span><span class="n">sasa</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Atom-level SASA with custom probe radius</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sasa</span> <span class="o">=</span> <span class="n">SASA</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;atom&#39;</span><span class="p">,</span> <span class="n">probe_radius</span><span class="o">=</span><span class="mf">0.12</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">add_feature</span><span class="p">(</span><span class="n">sasa</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Large probe for detecting cavities</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sasa</span> <span class="o">=</span> <span class="n">SASA</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;residue&#39;</span><span class="p">,</span> <span class="n">probe_radius</span><span class="o">=</span><span class="mf">0.20</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">add_feature</span><span class="p">(</span><span class="n">sasa</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.sasa.sasa.SASA.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'residue'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probe_radius</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.14</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.sasa.sasa.SASA.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize SASA feature type with calculation parameters.</p>
+<section id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>mode<span class="classifier">str, default=’residue’</span></dt><dd><p>Level of SASA calculation:</p>
+<ul class="simple">
+<li><p>‘residue’: SASA per residue (sum of constituent atoms)</p></li>
+<li><p>‘atom’: SASA per individual atom</p></li>
+</ul>
+</dd>
+<dt>probe_radius<span class="classifier">float, default=0.14</span></dt><dd><p>Probe sphere radius in nanometers. Common values:</p>
+<ul class="simple">
+<li><p>0.14 nm: Water molecule (default, most common)</p></li>
+<li><p>0.12 nm: Small probe for tight cavities</p></li>
+<li><p>0.20 nm: Large probe for detecting large cavities</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h3>Returns<a class="headerlink" href="#returns" title="Link to this heading"></a></h3>
+<p>None</p>
+</section>
+<section id="id1">
+<h3>Examples<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Residue-level SASA (default)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sasa</span> <span class="o">=</span> <span class="n">SASA</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Atom-level SASA</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sasa</span> <span class="o">=</span> <span class="n">SASA</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;atom&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Custom probe radius for cavity detection</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sasa</span> <span class="o">=</span> <span class="n">SASA</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;residue&#39;</span><span class="p">,</span> <span class="n">probe_radius</span><span class="o">=</span><span class="mf">0.20</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Small probe for detailed surface analysis</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sasa</span> <span class="o">=</span> <span class="n">SASA</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;residue&#39;</span><span class="p">,</span> <span class="n">probe_radius</span><span class="o">=</span><span class="mf">0.12</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.sasa.sasa.SASA.init_calculator">
+<span class="sig-name descname"><span class="pre">init_calculator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">use_memmap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'./cache'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2000</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.sasa.sasa.SASA.init_calculator" title="Link to this definition"></a></dt>
+<dd><p>Initialize the SASA calculator with specified configuration.</p>
+<section id="id2">
+<h3>Parameters<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>use_memmap<span class="classifier">bool, default=False</span></dt><dd><p>Whether to use memory mapping for large datasets</p>
+</dd>
+<dt>cache_path<span class="classifier">str, optional</span></dt><dd><p>Directory path for storing cache files when using memory mapping</p>
+</dd>
+<dt>chunk_size<span class="classifier">int, optional</span></dt><dd><p>Number of frames to process per chunk for memory-efficient processing</p>
+</dd>
+</dl>
+</section>
+<section id="id3">
+<h3>Returns<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<p>None</p>
+</section>
+<section id="id4">
+<h3>Examples<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Basic initialization</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sasa</span><span class="o">.</span><span class="n">init_calculator</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># With memory mapping for large datasets</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sasa</span><span class="o">.</span><span class="n">init_calculator</span><span class="p">(</span><span class="n">use_memmap</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache_path</span><span class="o">=</span><span class="s1">&#39;./cache/&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># With custom chunk size</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sasa</span><span class="o">.</span><span class="n">init_calculator</span><span class="p">(</span><span class="n">chunk_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.sasa.sasa.SASA.compute">
+<span class="sig-name descname"><span class="pre">compute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Trajectory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.sasa.sasa.SASA.compute" title="Link to this definition"></a></dt>
+<dd><p>Compute SASA from molecular dynamics trajectory.</p>
+<section id="id5">
+<h3>Parameters<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>input_data<span class="classifier">mdtraj.Trajectory</span></dt><dd><p>MD trajectory to compute SASA from</p>
+</dd>
+<dt>feature_metadata<span class="classifier">dict</span></dt><dd><p>Residue metadata (passed through for residue-level analysis)</p>
+</dd>
+</dl>
+</section>
+<section id="id6">
+<h3>Returns<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>tuple[numpy.ndarray, dict]</dt><dd><p>Tuple containing (sasa_array, feature_metadata) where sasa_array
+has shape (n_frames, n_residues) or (n_frames, n_atoms) depending
+on mode, with SASA values in nm²</p>
+</dd>
+</dl>
+</section>
+<section id="id7">
+<h3>Examples<a class="headerlink" href="#id7" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Compute residue-level SASA</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sasa</span> <span class="o">=</span> <span class="n">SASA</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;residue&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sasa</span><span class="o">.</span><span class="n">init_calculator</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="p">,</span> <span class="n">metadata</span> <span class="o">=</span> <span class="n">sasa</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">trajectory</span><span class="p">,</span> <span class="n">res_metadata</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;SASA array shape: </span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mean SASA per residue: </span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Compute atom-level SASA with memory mapping</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sasa</span> <span class="o">=</span> <span class="n">SASA</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;atom&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sasa</span><span class="o">.</span><span class="n">init_calculator</span><span class="p">(</span><span class="n">use_memmap</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="p">,</span> <span class="n">metadata</span> <span class="o">=</span> <span class="n">sasa</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">trajectory</span><span class="p">,</span> <span class="n">res_metadata</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="raises">
+<h3>Raises<a class="headerlink" href="#raises" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If calculator is not initialized</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.sasa.sasa.SASA.get_dependencies">
+<span class="sig-name descname"><span class="pre">get_dependencies</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.sasa.sasa.SASA.get_dependencies" title="Link to this definition"></a></dt>
+<dd><p>Get list of feature type dependencies for SASA calculations.</p>
+<section id="id8">
+<h3>Parameters<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
+<p>None</p>
+</section>
+<section id="id9">
+<h3>Returns<a class="headerlink" href="#id9" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>List[str]</dt><dd><p>Empty list as SASA is a base feature with no dependencies</p>
+</dd>
+</dl>
+</section>
+<section id="id10">
+<h3>Examples<a class="headerlink" href="#id10" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sasa</span> <span class="o">=</span> <span class="n">SASA</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">sasa</span><span class="o">.</span><span class="n">get_dependencies</span><span class="p">())</span>
+<span class="go">[]</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.sasa.sasa.SASA.get_type_name">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_type_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.sasa.sasa.SASA.get_type_name" title="Link to this definition"></a></dt>
+<dd><p>Return unique string identifier for the SASA feature type.</p>
+<section id="id11">
+<h3>Parameters<a class="headerlink" href="#id11" title="Link to this heading"></a></h3>
+<p>None</p>
+</section>
+<section id="id12">
+<h3>Returns<a class="headerlink" href="#id12" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>str</dt><dd><p>String identifier ‘sasa’ used as key in feature dictionaries</p>
+</dd>
+</dl>
+</section>
+<section id="id13">
+<h3>Examples<a class="headerlink" href="#id13" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">SASA</span><span class="o">.</span><span class="n">get_type_name</span><span class="p">())</span>
+<span class="go">&#39;sasa&#39;</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.sasa.sasa.SASA.get_input">
+<span class="sig-name descname"><span class="pre">get_input</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.feature.feature_type.sasa.sasa.SASA.get_input" title="Link to this definition"></a></dt>
+<dd><p>Get the input feature type that SASA depends on.</p>
+<section id="id14">
+<h3>Parameters<a class="headerlink" href="#id14" title="Link to this heading"></a></h3>
+<p>None</p>
+</section>
+<section id="id15">
+<h3>Returns<a class="headerlink" href="#id15" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>None</dt><dd><p>None since SASA is a base feature with no input dependencies</p>
+</dd>
+</dl>
+</section>
+<section id="id16">
+<h3>Examples<a class="headerlink" href="#id16" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sasa</span> <span class="o">=</span> <span class="n">SASA</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">sasa</span><span class="o">.</span><span class="n">get_input</span><span class="p">())</span>
+<span class="go">None</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mdxplain.feature.feature_type.sasa.services.sasa_selection_service.html" class="btn btn-neutral float-left" title="Feature Type: SASA Selection Service" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mdxplain.feature.feature_type.sasa.sasa_calculator.html" class="btn btn-neutral float-right" title="Feature Type: SASA Calculator" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maximilian Salomon.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

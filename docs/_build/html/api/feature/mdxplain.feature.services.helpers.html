@@ -1,0 +1,217 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Feature Services: Helpers &mdash; mdxplain 31.10.2025 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=55e8f53f"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Feature Services: Feature Add Service" href="mdxplain.feature.services.feature_add_service.html" />
+    <link rel="prev" title="Feature Services" href="mdxplain.feature.services.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mdxplain
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction.html">Introduction to mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting started with mdxplain</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/theory/theory.html">The Theory Behind mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/learning/learning.html">Learn mdxplain</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../analysis/mdxplain.analysis.html">Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering/mdxplain.clustering.html">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../comparison/mdxplain.comparison.html">Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_selector/mdxplain.data_selector.html">Data Selector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../decomposition/mdxplain.decomposition.html">Decomposition</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="mdxplain.feature.html">Feature</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature.entities.html">Feature Entities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="feature_type/mdxplain.feature.feature_type.html">Feature Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature.helper.html">Feature Helpers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature.managers.html">Feature Managers</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="mdxplain.feature.services.html">Feature Services</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Feature Services: Helpers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.services.feature_add_service.html">Feature Services: Feature Add Service</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.services.feature_analysis_service.html">Feature Services: Feature Analysis Service</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.services.feature_reduce_service.html">Feature Services: Feature Reduce Service</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.services.feature_selector_add_service.html">Feature Services: Feature Selector Add Service</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.html">Feature Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_selection/mdxplain.feature_selection.html">Feature Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pipeline/mdxplain.pipeline.html">Pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../trajectory/mdxplain.trajectory.html">Trajectory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/mdxplain.utils.html">Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mdxplain</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API Documentation</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.feature.html">Feature</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.feature.services.html">Feature Services</a></li>
+      <li class="breadcrumb-item active">Feature Services: Helpers</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api/feature/mdxplain.feature.services.helpers.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mdxplain.feature.services.helpers">
+<span id="feature-services-helpers"></span><h1>Feature Services: Helpers<a class="headerlink" href="#module-mdxplain.feature.services.helpers" title="Link to this heading"></a></h1>
+<p>Helper utilities for feature services.</p>
+<p>This submodule contains helper classes that provide common functionality
+for feature services:</p>
+<ul class="simple">
+<li><p>AnalysisDataHelper: Manages data selection for analysis operations,
+handling both trajectory and feature selection with temporary selector
+creation and cleanup</p></li>
+</ul>
+<section id="module-mdxplain.feature.services.helpers.analysis_data_helper">
+<span id="helper"></span><h2>Helper<a class="headerlink" href="#module-mdxplain.feature.services.helpers.analysis_data_helper" title="Link to this heading"></a></h2>
+<p>Helper for analysis factory data selection operations.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mdxplain.feature.services.helpers.analysis_data_helper.AnalysisDataHelper">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mdxplain.feature.services.helpers.analysis_data_helper.</span></span><span class="sig-name descname"><span class="pre">AnalysisDataHelper</span></span><a class="headerlink" href="#mdxplain.feature.services.helpers.analysis_data_helper.AnalysisDataHelper" title="Link to this definition"></a></dt>
+<dd><p>Helper class for data selection in analysis factories.</p>
+<p>Provides centralized data selection logic that can be used by all
+analysis factories without code duplication. Handles trajectory
+selection and feature selection using the existing pipeline infrastructure.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.services.helpers.analysis_data_helper.AnalysisDataHelper.get_selected_data">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_selected_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_selector</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">traj_selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">np.ndarray</span></span></span><a class="headerlink" href="#mdxplain.feature.services.helpers.analysis_data_helper.AnalysisDataHelper.get_selected_data" title="Link to this definition"></a></dt>
+<dd><p>Get selected feature data using pipeline infrastructure.</p>
+<p>This method integrates trajectory selection and feature selection
+to provide the appropriate data matrix for analysis methods.</p>
+<p>This method creates temporary selectors as needed and cleans
+them up afterwards. If no feature_selector is provided, a temporary
+selector is created for the current feature type.</p>
+<section id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data container</p>
+</dd>
+<dt>feature_type<span class="classifier">str</span></dt><dd><p>Feature type name (e.g., “distances”, “contacts”)</p>
+</dd>
+<dt>feature_selector<span class="classifier">str, optional</span></dt><dd><p>Name of existing feature selector. If None, creates temporary selector
+with all features of the current feature type</p>
+</dd>
+<dt>traj_selection<span class="classifier">str, int, list, optional</span></dt><dd><p>Trajectory selection criteria. If None, uses “all”</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h3>Returns<a class="headerlink" href="#returns" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>np.ndarray</dt><dd><p>Selected feature data matrix</p>
+</dd>
+</dl>
+</section>
+<section id="raises">
+<h3>Raises<a class="headerlink" href="#raises" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If feature_selector contains features from other types
+or if no features of the required type are found</p>
+</dd>
+</dl>
+</section>
+<section id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">AnalysisDataHelper</span><span class="o">.</span><span class="n">get_selected_data</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;distances&quot;</span><span class="p">,</span> 
+<span class="gp">... </span>    <span class="n">feature_selector</span><span class="o">=</span><span class="s2">&quot;my_selector&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">traj_selection</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>  <span class="c1"># (n_frames, n_features)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mdxplain.feature.services.html" class="btn btn-neutral float-left" title="Feature Services" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mdxplain.feature.services.feature_add_service.html" class="btn btn-neutral float-right" title="Feature Services: Feature Add Service" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maximilian Salomon.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

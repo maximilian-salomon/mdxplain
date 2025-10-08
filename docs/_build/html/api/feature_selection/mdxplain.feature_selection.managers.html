@@ -1,0 +1,687 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Feature Selection: Managers &mdash; mdxplain 31.10.2025 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=55e8f53f"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Pipeline" href="../pipeline/mdxplain.pipeline.html" />
+    <link rel="prev" title="Feature Selection: Post Selection Reduction Helper" href="mdxplain.feature_selection.helpers.post_selection_reduction_helper.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mdxplain
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction.html">Introduction to mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting started with mdxplain</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/theory/theory.html">The Theory Behind mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/learning/learning.html">Learn mdxplain</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../analysis/mdxplain.analysis.html">Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering/mdxplain.clustering.html">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../comparison/mdxplain.comparison.html">Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_selector/mdxplain.data_selector.html">Data Selector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../decomposition/mdxplain.decomposition.html">Decomposition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature/mdxplain.feature.html">Feature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.html">Feature Importance</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="mdxplain.feature_selection.html">Feature Selection</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature_selection.entities.html">Feature Selection Entities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature_selection.helpers.html">Feature Selection: Helpers</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Feature Selection: Managers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#module-mdxplain.feature_selection.managers.feature_selector_manager">Manager</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../pipeline/mdxplain.pipeline.html">Pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../trajectory/mdxplain.trajectory.html">Trajectory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/mdxplain.utils.html">Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mdxplain</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API Documentation</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.feature_selection.html">Feature Selection</a></li>
+      <li class="breadcrumb-item active">Feature Selection: Managers</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api/feature_selection/mdxplain.feature_selection.managers.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mdxplain.feature_selection.managers">
+<span id="feature-selection-managers"></span><h1>Feature Selection: Managers<a class="headerlink" href="#module-mdxplain.feature_selection.managers" title="Link to this heading"></a></h1>
+<p>Feature selection managers module.</p>
+<section id="module-mdxplain.feature_selection.managers.feature_selector_manager">
+<span id="manager"></span><h2>Manager<a class="headerlink" href="#module-mdxplain.feature_selection.managers.feature_selector_manager" title="Link to this heading"></a></h2>
+<p>Feature selector manager for creating custom feature data matrices.</p>
+<p>This module provides the FeatureSelectorManager class that manages multiple
+named feature selector configurations and applies them to create custom
+feature data matrices from computed features.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mdxplain.feature_selection.managers.feature_selector_manager.FeatureSelectorManager">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mdxplain.feature_selection.managers.feature_selector_manager.</span></span><span class="sig-name descname"><span class="pre">FeatureSelectorManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">use_memmap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'./cache'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.feature_selection.managers.feature_selector_manager.FeatureSelectorManager" title="Link to this definition"></a></dt>
+<dd><p>Manager for creating and applying feature selector configurations.</p>
+<p>This manager creates, stores, and applies named feature selector configurations
+to generate custom feature data matrices. Each selector can combine multiple
+feature types with different selection criteria and data preferences.</p>
+<p>The manager follows the same pattern as other managers (ClusterManager,
+DecompositionManager) by storing named entity instances and providing
+methods to create, configure, and apply them.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_selection.managers.feature_selector_manager.FeatureSelectorManager.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">use_memmap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'./cache'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature_selection.managers.feature_selector_manager.FeatureSelectorManager.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize feature selector manager.</p>
+<section id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>use_memmap<span class="classifier">bool, default=False</span></dt><dd><p>Whether to use memory mapping for large datasets</p>
+</dd>
+<dt>chunk_size<span class="classifier">int, default=2000</span></dt><dd><p>Chunk size for processing large datasets</p>
+</dd>
+<dt>cache_dir<span class="classifier">str, default=”./cache”</span></dt><dd><p>Directory for caching temporary files</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h3>Returns<a class="headerlink" href="#returns" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>None</dt><dd><p>Initializes FeatureSelectorManager with configuration parameters</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_selection.managers.feature_selector_manager.FeatureSelectorManager.create">
+<span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature_selection.managers.feature_selector_manager.FeatureSelectorManager.create" title="Link to this definition"></a></dt>
+<dd><p>Create a new feature selector configuration.</p>
+<p>Creates a new FeatureSelectorData instance with the given name and stores
+it in the pipeline data for later configuration and use.</p>
+<section id="warning">
+<h3>Warning<a class="headerlink" href="#warning" title="Link to this heading"></a></h3>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.feature_selector.create(“my_analysis”)  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = FeatureSelectorManager()
+&gt;&gt;&gt; manager.create(pipeline_data, “my_analysis”)  # pipeline_data required</p>
+</section>
+<section id="id1">
+<h3>Parameters<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data object to store the selector configuration</p>
+</dd>
+<dt>name<span class="classifier">str</span></dt><dd><p>Name identifier for the feature selector configuration</p>
+</dd>
+</dl>
+</section>
+<section id="id2">
+<h3>Returns<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>None</dt><dd><p>Creates and stores new FeatureSelectorData in pipeline_data</p>
+</dd>
+</dl>
+</section>
+<section id="raises">
+<h3>Raises<a class="headerlink" href="#raises" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If selector with given name already exists</p>
+</dd>
+</dl>
+</section>
+<section id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span> <span class="o">=</span> <span class="n">FeatureSelectorManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_data</span> <span class="o">=</span> <span class="n">PipelineData</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;protein_analysis&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;protein_analysis&quot;</span> <span class="ow">in</span> <span class="n">pipeline_data</span><span class="o">.</span><span class="n">selected_feature_data</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.feature_selection.managers.feature_selector_manager.FeatureSelectorManager.add">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">add</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../feature/mdxplain.feature.services.feature_selector_add_service.html#mdxplain.feature.services.feature_selector_add_service.FeatureSelectorAddService" title="mdxplain.feature.services.feature_selector_add_service.FeatureSelectorAddService"><span class="pre">FeatureSelectorAddService</span></a></em><a class="headerlink" href="#mdxplain.feature_selection.managers.feature_selector_manager.FeatureSelectorManager.add" title="Link to this definition"></a></dt>
+<dd><p>Property for IDE-supported feature selector add operations.</p>
+<p>Returns a service object that provides feature-type-specific add methods
+with reduction options. This follows the consistent pattern where the
+manager is passed explicitly and AutoInjectProxy handles pipeline_data.</p>
+<section id="technical-note-on-autoinjectproxy">
+<h3>Technical Note on AutoInjectProxy:<a class="headerlink" href="#technical-note-on-autoinjectproxy" title="Link to this heading"></a></h3>
+<p>The AutoInjectProxy mechanism in PipelineManager automatically intercepts
+method and property accesses on managers. When this property is accessed:</p>
+<ol class="arabic simple">
+<li><p>AutoInjectProxy detects the property access</p></li>
+<li><p>Calls this property to get the service class and parameters</p></li>
+<li><p>Automatically injects pipeline_data as the second parameter</p></li>
+<li><p>Returns FeatureSelectorAddService(self, pipeline_data) to the user</p></li>
+</ol>
+<p>This design provides:</p>
+<ul class="simple">
+<li><p>Clean API without users needing to pass pipeline_data</p></li>
+<li><p>Proper type hints for IDE autocomplete support</p></li>
+<li><p>Consistent parameter passing across all manager services</p></li>
+</ul>
+<p>Pattern used: manager explicitly passed, pipeline_data injected by AutoInjectProxy</p>
+</section>
+<section id="id3">
+<h3>Returns<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>FeatureSelectorAddService</dt><dd><p>Service with feature-type properties (distances, contacts, etc.)</p>
+</dd>
+</dl>
+</section>
+<section id="id4">
+<h3>Examples<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature_selector</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">distances</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="s2">&quot;res ALA&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature_selector</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">distances</span><span class="o">.</span><span class="n">with_cv_reduction</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="s2">&quot;res ALA&quot;</span><span class="p">,</span> <span class="n">threshold_min</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_selection.managers.feature_selector_manager.FeatureSelectorManager.add_selection">
+<span class="sig-name descname"><span class="pre">add_selection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_reduced</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">common_denominator</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">traj_selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="s"><span class="pre">'all'</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">require_all_partners</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature_selection.managers.feature_selector_manager.FeatureSelectorManager.add_selection" title="Link to this definition"></a></dt>
+<dd><p>Add a feature selection to a named selector configuration.</p>
+<p>Adds selection criteria for a feature type to an existing selector
+configuration. Multiple selections can be added for the same feature
+type with different criteria.</p>
+<section id="id5">
+<h3>Warning<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.feature_selector.add_selection(“analysis”, “distances”, “res ALA”)  # NO pipeline_data
+&gt;&gt;&gt; pipeline.feature_selector.add_selection(“analysis”, “distances”, “all”,
+…     reduction={“metric”: “max”, “threshold_min”: 10.0})</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = FeatureSelectorManager()
+&gt;&gt;&gt; manager.add_selection(pipeline_data, “analysis”, “distances”, “res ALA”)  # pipeline_data required
+&gt;&gt;&gt; manager.add_selection(pipeline_data, “analysis”, “distances”, “all”,
+…     reduction={“metric”: “mean”, “threshold_min”: 7.0, “cross_trajectory”: False})</p>
+</section>
+<section id="id6">
+<h3>Parameters<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data object containing selector configurations</p>
+</dd>
+<dt>name<span class="classifier">str</span></dt><dd><p>Name of the existing feature selector configuration</p>
+</dd>
+<dt>feature_type<span class="classifier">str or object</span></dt><dd><p>Feature type to select from (e.g., “distances”, “contacts”)</p>
+</dd>
+<dt>selection<span class="classifier">str, default=”all”</span></dt><dd><p>Selection criteria string (e.g., “res ALA”, “resid 123-140”, “7x50-8x50”, “all”)</p>
+</dd>
+<dt>use_reduced<span class="classifier">bool, default=False</span></dt><dd><p>Whether to use reduced data (True) or original data (False)</p>
+</dd>
+<dt>common_denominator<span class="classifier">bool, default=True</span></dt><dd><p>Whether to find common features across trajectories in traj_selection.
+If True, only features present in ALL selected trajectories are included.
+If False, union of all features from selected trajectories is used.</p>
+</dd>
+<dt>traj_selection<span class="classifier">int, str, list, or “all”, default=”all”</span></dt><dd><p>Selection of trajectories to process:</p>
+<ul class="simple">
+<li><p>int: trajectory index</p></li>
+<li><p>str: trajectory name, tag (prefixed with “tag:”), or “all”</p></li>
+<li><p>list: list of indices/names/tags</p></li>
+<li><p>“all”: all trajectories (default)</p></li>
+</ul>
+</dd>
+<dt>require_all_partners<span class="classifier">bool, default=False</span></dt><dd><p>For pairwise features, require all partners to be present in selection</p>
+</dd>
+<dt>reduction<span class="classifier">dict, optional</span></dt><dd><p>Post-selection reduction configuration with keys:</p>
+<ul class="simple">
+<li><p>metric : str - Reduction metric (e.g., “max”, “min”, “mean”, “std”)</p></li>
+<li><p>threshold_min : float, optional - Minimum threshold</p></li>
+<li><p>threshold_max : float, optional - Maximum threshold</p></li>
+<li><p>cross_trajectory : bool, default=True - Apply common denominator</p></li>
+<li><p>Additional metric-specific parameters (e.g., transition_threshold)</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+<section id="id7">
+<h3>Returns<a class="headerlink" href="#id7" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>None</dt><dd><p>Adds selection configuration to the named selector</p>
+</dd>
+</dl>
+</section>
+<section id="id8">
+<h3>Raises<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If selector with given name does not exist</p>
+</dd>
+</dl>
+</section>
+<section id="id9">
+<h3>Examples<a class="headerlink" href="#id9" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span> <span class="o">=</span> <span class="n">FeatureSelectorManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_data</span> <span class="o">=</span> <span class="n">PipelineData</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;analysis&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;analysis&quot;</span><span class="p">,</span> <span class="s2">&quot;distances&quot;</span><span class="p">,</span> <span class="s2">&quot;res ALA&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;analysis&quot;</span><span class="p">,</span> <span class="s2">&quot;contacts&quot;</span><span class="p">,</span> <span class="s2">&quot;resid 120-140&quot;</span><span class="p">,</span> <span class="n">use_reduced</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_selection.managers.feature_selector_manager.FeatureSelectorManager.select">
+<span class="sig-name descname"><span class="pre">select</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_traj</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature_selection.managers.feature_selector_manager.FeatureSelectorManager.select" title="Link to this definition"></a></dt>
+<dd><p>Apply a named selector configuration to create selected feature matrix.</p>
+<p>Applies all selection criteria from a named selector configuration to
+the computed features in pipeline_data and stores the results for later
+access through data access methods.</p>
+<section id="id10">
+<h3>Warning<a class="headerlink" href="#id10" title="Link to this heading"></a></h3>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.feature_selector.select(“my_analysis”)  # NO pipeline_data parameter
+&gt;&gt;&gt; # Or with specific reference trajectory
+&gt;&gt;&gt; pipeline.feature_selector.select(“my_analysis”, reference_traj=2)</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = FeatureSelectorManager()
+&gt;&gt;&gt; manager.select(pipeline_data, “my_analysis”)  # pipeline_data required
+&gt;&gt;&gt; # Or with specific reference trajectory
+&gt;&gt;&gt; manager.select(pipeline_data, “my_analysis”, reference_traj=”system_A”)</p>
+</section>
+<section id="id11">
+<h3>Parameters<a class="headerlink" href="#id11" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data object containing features and selector configurations</p>
+</dd>
+<dt>name<span class="classifier">str</span></dt><dd><p>Name of the feature selector configuration to apply</p>
+</dd>
+<dt>reference_traj<span class="classifier">Union[int, str], default=None</span></dt><dd><p>Trajectory index or name to use as reference for metadata extraction.
+If None, uses the first trajectory from the selection.</p>
+</dd>
+</dl>
+</section>
+<section id="id12">
+<h3>Returns<a class="headerlink" href="#id12" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>None</dt><dd><p>Applies selections and stores results with reference trajectory info</p>
+</dd>
+</dl>
+</section>
+<section id="id13">
+<h3>Raises<a class="headerlink" href="#id13" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If selector with given name does not exist</p>
+</dd>
+<dt>ValueError</dt><dd><p>If required features are not computed</p>
+</dd>
+<dt>ValueError</dt><dd><p>If required data types (original/reduced) are not available</p>
+</dd>
+</dl>
+</section>
+<section id="id14">
+<h3>Examples<a class="headerlink" href="#id14" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span> <span class="o">=</span> <span class="n">FeatureSelectorManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_data</span> <span class="o">=</span> <span class="n">PipelineData</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># ... configure selector and compute features ...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;protein_analysis&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Results available via pipeline_data.selected_data[&quot;protein_analysis&quot;]</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_selection.managers.feature_selector_manager.FeatureSelectorManager.list_selectors">
+<span class="sig-name descname"><span class="pre">list_selectors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mdxplain.feature_selection.managers.feature_selector_manager.FeatureSelectorManager.list_selectors" title="Link to this definition"></a></dt>
+<dd><p>Get list of all configured feature selector names.</p>
+<section id="id15">
+<h3>Warning<a class="headerlink" href="#id15" title="Link to this heading"></a></h3>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.feature_selector.list_selectors()  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = FeatureSelectorManager()
+&gt;&gt;&gt; manager.list_selectors(pipeline_data)  # pipeline_data required</p>
+</section>
+<section id="id16">
+<h3>Parameters<a class="headerlink" href="#id16" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data object containing selector configurations</p>
+</dd>
+</dl>
+</section>
+<section id="id17">
+<h3>Returns<a class="headerlink" href="#id17" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>List[str]</dt><dd><p>List of configured feature selector names</p>
+</dd>
+</dl>
+</section>
+<section id="id18">
+<h3>Examples<a class="headerlink" href="#id18" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span> <span class="o">=</span> <span class="n">FeatureSelectorManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_data</span> <span class="o">=</span> <span class="n">PipelineData</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;analysis1&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;analysis2&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">selectors</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">list_selectors</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">selectors</span><span class="p">))</span>
+<span class="go">[&#39;analysis1&#39;, &#39;analysis2&#39;]</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_selection.managers.feature_selector_manager.FeatureSelectorManager.get_selector_summary">
+<span class="sig-name descname"><span class="pre">get_selector_summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#mdxplain.feature_selection.managers.feature_selector_manager.FeatureSelectorManager.get_selector_summary" title="Link to this definition"></a></dt>
+<dd><p>Get summary information about a named selector configuration.</p>
+<section id="id19">
+<h3>Warning<a class="headerlink" href="#id19" title="Link to this heading"></a></h3>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.feature_selector.get_selector_summary(“analysis”)  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = FeatureSelectorManager()
+&gt;&gt;&gt; manager.get_selector_summary(pipeline_data, “analysis”)  # pipeline_data required</p>
+</section>
+<section id="id20">
+<h3>Parameters<a class="headerlink" href="#id20" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data object containing selector configurations</p>
+</dd>
+<dt>name<span class="classifier">str</span></dt><dd><p>Name of the feature selector configuration</p>
+</dd>
+</dl>
+</section>
+<section id="id21">
+<h3>Returns<a class="headerlink" href="#id21" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>dict</dt><dd><p>Summary information about the selector configuration</p>
+</dd>
+</dl>
+</section>
+<section id="id22">
+<h3>Raises<a class="headerlink" href="#id22" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If selector with given name does not exist</p>
+</dd>
+</dl>
+</section>
+<section id="id23">
+<h3>Examples<a class="headerlink" href="#id23" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span> <span class="o">=</span> <span class="n">FeatureSelectorManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">summary</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">get_selector_summary</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;analysis&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">summary</span><span class="p">[</span><span class="s1">&#39;feature_count&#39;</span><span class="p">])</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_selection.managers.feature_selector_manager.FeatureSelectorManager.remove_selector">
+<span class="sig-name descname"><span class="pre">remove_selector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature_selection.managers.feature_selector_manager.FeatureSelectorManager.remove_selector" title="Link to this definition"></a></dt>
+<dd><p>Remove a named selector configuration.</p>
+<section id="id24">
+<h3>Warning<a class="headerlink" href="#id24" title="Link to this heading"></a></h3>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.feature_selector.remove_selector(“old_analysis”)  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = FeatureSelectorManager()
+&gt;&gt;&gt; manager.remove_selector(pipeline_data, “old_analysis”)  # pipeline_data required</p>
+</section>
+<section id="id25">
+<h3>Parameters<a class="headerlink" href="#id25" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data object containing selector configurations</p>
+</dd>
+<dt>name<span class="classifier">str</span></dt><dd><p>Name of the feature selector configuration to remove</p>
+</dd>
+</dl>
+</section>
+<section id="id26">
+<h3>Returns<a class="headerlink" href="#id26" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>None</dt><dd><p>Removes selector configuration and any associated selected data</p>
+</dd>
+</dl>
+</section>
+<section id="id27">
+<h3>Raises<a class="headerlink" href="#id27" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If selector with given name does not exist</p>
+</dd>
+</dl>
+</section>
+<section id="id28">
+<h3>Examples<a class="headerlink" href="#id28" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span> <span class="o">=</span> <span class="n">FeatureSelectorManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">remove_selector</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;old_analysis&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_selection.managers.feature_selector_manager.FeatureSelectorManager.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature_selection.managers.feature_selector_manager.FeatureSelectorManager.save" title="Link to this definition"></a></dt>
+<dd><p>Save all feature selector data to single file.</p>
+<section id="id29">
+<h3>Warning<a class="headerlink" href="#id29" title="Link to this heading"></a></h3>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.feature_selector.save(‘feature_selector.npy’)  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = FeatureSelectorManager()
+&gt;&gt;&gt; manager.save(pipeline_data, ‘feature_selector.npy’)  # pipeline_data required</p>
+</section>
+<section id="id30">
+<h3>Parameters<a class="headerlink" href="#id30" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data container with feature selector data</p>
+</dd>
+<dt>save_path<span class="classifier">str</span></dt><dd><p>Path where to save all feature selector data in one file</p>
+</dd>
+</dl>
+</section>
+<section id="id31">
+<h3>Returns<a class="headerlink" href="#id31" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>None</dt><dd><p>Saves all feature selector data to the specified file</p>
+</dd>
+</dl>
+</section>
+<section id="id32">
+<h3>Examples<a class="headerlink" href="#id32" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s1">&#39;feature_selector.npy&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_selection.managers.feature_selector_manager.FeatureSelectorManager.load">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature_selection.managers.feature_selector_manager.FeatureSelectorManager.load" title="Link to this definition"></a></dt>
+<dd><p>Load all feature selector data from single file.</p>
+<section id="id33">
+<h3>Warning<a class="headerlink" href="#id33" title="Link to this heading"></a></h3>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.feature_selector.load(‘feature_selector.npy’)  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = FeatureSelectorManager()
+&gt;&gt;&gt; manager.load(pipeline_data, ‘feature_selector.npy’)  # pipeline_data required</p>
+</section>
+<section id="id34">
+<h3>Parameters<a class="headerlink" href="#id34" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data container to load feature selector data into</p>
+</dd>
+<dt>load_path<span class="classifier">str</span></dt><dd><p>Path to saved feature selector data file</p>
+</dd>
+</dl>
+</section>
+<section id="id35">
+<h3>Returns<a class="headerlink" href="#id35" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>None</dt><dd><p>Loads all feature selector data from the specified file</p>
+</dd>
+</dl>
+</section>
+<section id="id36">
+<h3>Examples<a class="headerlink" href="#id36" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s1">&#39;feature_selector.npy&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_selection.managers.feature_selector_manager.FeatureSelectorManager.print_info">
+<span class="sig-name descname"><span class="pre">print_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature_selection.managers.feature_selector_manager.FeatureSelectorManager.print_info" title="Link to this definition"></a></dt>
+<dd><p>Print featureselectordata information.</p>
+<section id="id37">
+<h3>Warning<a class="headerlink" href="#id37" title="Link to this heading"></a></h3>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.feature_selector.print_info()  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = FeatureSelectorManager()
+&gt;&gt;&gt; manager.print_info(pipeline_data)  # pipeline_data required</p>
+</section>
+<section id="id38">
+<h3>Parameters<a class="headerlink" href="#id38" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data container with featureselectordata</p>
+</dd>
+</dl>
+</section>
+<section id="id39">
+<h3>Returns<a class="headerlink" href="#id39" title="Link to this heading"></a></h3>
+<blockquote>
+<div><p>Prints featureselectordata information to console</p>
+</div></blockquote>
+</section>
+<section id="id40">
+<h3>Examples<a class="headerlink" href="#id40" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">print_info</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mdxplain.feature_selection.helpers.post_selection_reduction_helper.html" class="btn btn-neutral float-left" title="Feature Selection: Post Selection Reduction Helper" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../pipeline/mdxplain.pipeline.html" class="btn btn-neutral float-right" title="Pipeline" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maximilian Salomon.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

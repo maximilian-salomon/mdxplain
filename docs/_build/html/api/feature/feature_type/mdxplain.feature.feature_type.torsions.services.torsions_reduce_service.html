@@ -1,0 +1,603 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Feature Type: Torsions Reduce Service &mdash; mdxplain 31.10.2025 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=55e8f53f"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Feature Type: Torsions Selection Service" href="mdxplain.feature.feature_type.torsions.services.torsions_selection_service.html" />
+    <link rel="prev" title="Feature Type: Torsions Analysis Service" href="mdxplain.feature.feature_type.torsions.services.torsions_analysis_service.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            mdxplain
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../introduction.html">Introduction to mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting started with mdxplain</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/theory/theory.html">The Theory Behind mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/learning/learning.html">Learn mdxplain</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../analysis/mdxplain.analysis.html">Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../clustering/mdxplain.clustering.html">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../comparison/mdxplain.comparison.html">Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data_selector/mdxplain.data_selector.html">Data Selector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../decomposition/mdxplain.decomposition.html">Decomposition</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../mdxplain.feature.html">Feature</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../mdxplain.feature.entities.html">Feature Entities</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="mdxplain.feature.feature_type.html">Feature Types</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.contacts.html">Feature Type: Contacts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.coordinates.html">Feature Type: Coordinates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.distances.html">Feature Type: Distances</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.dssp.html">Feature Type: DSSP</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.helpers.html">Feature Types: Helpers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.interfaces.html">Feature Types: Interfaces</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.sasa.html">Feature Type: SASA</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="mdxplain.feature.feature_type.torsions.html">Feature Type: Torsions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../mdxplain.feature.helper.html">Feature Helpers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mdxplain.feature.managers.html">Feature Managers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mdxplain.feature.services.html">Feature Services</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../feature_importance/mdxplain.feature_importance.html">Feature Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../feature_selection/mdxplain.feature_selection.html">Feature Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pipeline/mdxplain.pipeline.html">Pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../trajectory/mdxplain.trajectory.html">Trajectory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../utils/mdxplain.utils.html">Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">mdxplain</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../api.html">API Documentation</a></li>
+          <li class="breadcrumb-item"><a href="../mdxplain.feature.html">Feature</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.feature.feature_type.html">Feature Types</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.feature.feature_type.torsions.html">Feature Type: Torsions</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.feature.feature_type.torsions.services.html">Feature Type: Torsions Services</a></li>
+      <li class="breadcrumb-item active">Feature Type: Torsions Reduce Service</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/api/feature/feature_type/mdxplain.feature.feature_type.torsions.services.torsions_reduce_service.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mdxplain.feature.feature_type.torsions.services.torsions_reduce_service">
+<span id="feature-type-torsions-reduce-service"></span><h1>Feature Type: Torsions Reduce Service<a class="headerlink" href="#module-mdxplain.feature.feature_type.torsions.services.torsions_reduce_service" title="Link to this heading"></a></h1>
+<p>Factory for torsion-specific reduce operations.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.torsions.services.torsions_reduce_service.TorsionsReduceService">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mdxplain.feature.feature_type.torsions.services.torsions_reduce_service.</span></span><span class="sig-name descname"><span class="pre">TorsionsReduceService</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">manager</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../mdxplain.feature.managers.html#mdxplain.feature.managers.feature_manager.FeatureManager" title="mdxplain.feature.managers.feature_manager.FeatureManager"><span class="pre">FeatureManager</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.feature.feature_type.torsions.services.torsions_reduce_service.TorsionsReduceService" title="Link to this definition"></a></dt>
+<dd><p>Service for torsion-specific reduce metrics.</p>
+<p>Provides metrics specifically useful for torsion angle features,
+using circular statistics appropriate for angular data.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.torsions.services.torsions_reduce_service.TorsionsReduceService.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">manager</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../mdxplain.feature.managers.html#mdxplain.feature.managers.feature_manager.FeatureManager" title="mdxplain.feature.managers.feature_manager.FeatureManager"><span class="pre">FeatureManager</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.torsions.services.torsions_reduce_service.TorsionsReduceService.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize torsion reduce factory.</p>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>manager<span class="classifier">FeatureManager</span></dt><dd><p>Feature manager instance</p>
+</dd>
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data container</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading"></a></h2>
+<p>None</p>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.torsions.services.torsions_reduce_service.TorsionsReduceService.transitions">
+<span class="sig-name descname"><span class="pre">transitions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">traj_selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">45.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cross_trajectory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.torsions.services.torsions_reduce_service.TorsionsReduceService.transitions" title="Link to this definition"></a></dt>
+<dd><p>Reduce torsions by transition detection.</p>
+<p>Detects transitions in torsion angles using circular statistics.</p>
+<section id="id1">
+<h2>Parameters<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>traj_selection<span class="classifier">str, int, list, default=”all”</span></dt><dd><p>Which trajectories to analyze for reduction</p>
+</dd>
+<dt>threshold_min<span class="classifier">float, optional</span></dt><dd><p>Minimum number of transitions</p>
+</dd>
+<dt>threshold_max<span class="classifier">float, optional</span></dt><dd><p>Maximum number of transitions</p>
+</dd>
+<dt>transition_threshold<span class="classifier">float, default=45.0</span></dt><dd><p>Angle threshold in degrees for transition detection</p>
+</dd>
+<dt>window_size<span class="classifier">int, default=10</span></dt><dd><p>Window size for transition detection</p>
+</dd>
+<dt>cross_trajectory<span class="classifier">bool, default=False</span></dt><dd><p>If True, find common features across all selected trajectories</p>
+</dd>
+</dl>
+</section>
+<section id="id2">
+<h2>Returns<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>None</dt><dd><p>Updates reduced data in pipeline</p>
+</dd>
+</dl>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Keep dynamic torsions with many angle changes</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">torsions</span><span class="o">.</span><span class="n">transitions</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">threshold_min</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">transition_threshold</span><span class="o">=</span><span class="mf">30.0</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Keep stable torsions with few transitions</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">torsions</span><span class="o">.</span><span class="n">transitions</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">threshold_max</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">window_size</span><span class="o">=</span><span class="mi">15</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Focus on moderate torsional dynamics</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">torsions</span><span class="o">.</span><span class="n">transitions</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">threshold_min</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">threshold_max</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">transition_threshold</span><span class="o">=</span><span class="mf">45.0</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.torsions.services.torsions_reduce_service.TorsionsReduceService.std">
+<span class="sig-name descname"><span class="pre">std</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">traj_selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cross_trajectory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.torsions.services.torsions_reduce_service.TorsionsReduceService.std" title="Link to this definition"></a></dt>
+<dd><p>Reduce torsions by standard deviation (circular).</p>
+<p>Filters torsion features based on their circular standard deviation.
+Higher values indicate more flexible/dynamic torsional angles.</p>
+<section id="id3">
+<h2>Parameters<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>traj_selection<span class="classifier">str, int, list, default=”all”</span></dt><dd><p>Which trajectories to analyze for reduction</p>
+</dd>
+<dt>threshold_min<span class="classifier">float, optional</span></dt><dd><p>Minimum standard deviation threshold (degrees)</p>
+</dd>
+<dt>threshold_max<span class="classifier">float, optional</span></dt><dd><p>Maximum standard deviation threshold (degrees)</p>
+</dd>
+<dt>cross_trajectory<span class="classifier">bool, default=False</span></dt><dd><p>If True, find common features across all selected trajectories</p>
+</dd>
+</dl>
+</section>
+<section id="id4">
+<h2>Returns<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>None</dt><dd><p>Updates reduced data in pipeline</p>
+</dd>
+</dl>
+</section>
+<section id="id5">
+<h2>Examples<a class="headerlink" href="#id5" title="Link to this heading"></a></h2>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Keep highly flexible torsions</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">torsions</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">threshold_min</span><span class="o">=</span><span class="mf">30.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Remove extremely variable torsions</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">torsions</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">threshold_max</span><span class="o">=</span><span class="mf">60.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Focus on moderately flexible angles</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">torsions</span><span class="o">.</span><span class="n">std</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">threshold_min</span><span class="o">=</span><span class="mf">15.0</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">threshold_max</span><span class="o">=</span><span class="mf">45.0</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.torsions.services.torsions_reduce_service.TorsionsReduceService.mad">
+<span class="sig-name descname"><span class="pre">mad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">traj_selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cross_trajectory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.torsions.services.torsions_reduce_service.TorsionsReduceService.mad" title="Link to this definition"></a></dt>
+<dd><p>Reduce torsions by median absolute deviation (circular).</p>
+<p>Filters torsion features based on their circular median absolute deviation.
+More robust to outliers than standard deviation.</p>
+<section id="id6">
+<h2>Parameters<a class="headerlink" href="#id6" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>traj_selection<span class="classifier">str, int, list, default=”all”</span></dt><dd><p>Which trajectories to analyze for reduction</p>
+</dd>
+<dt>threshold_min<span class="classifier">float, optional</span></dt><dd><p>Minimum MAD threshold (degrees)</p>
+</dd>
+<dt>threshold_max<span class="classifier">float, optional</span></dt><dd><p>Maximum MAD threshold (degrees)</p>
+</dd>
+<dt>cross_trajectory<span class="classifier">bool, default=False</span></dt><dd><p>If True, find common features across all selected trajectories</p>
+</dd>
+</dl>
+</section>
+<section id="id7">
+<h2>Returns<a class="headerlink" href="#id7" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>None</dt><dd><p>Updates reduced data in pipeline</p>
+</dd>
+</dl>
+</section>
+<section id="id8">
+<h2>Examples<a class="headerlink" href="#id8" title="Link to this heading"></a></h2>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Keep robustly variable torsions (outlier-resistant)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">torsions</span><span class="o">.</span><span class="n">mad</span><span class="p">(</span><span class="n">threshold_min</span><span class="o">=</span><span class="mf">20.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Remove extreme outlier torsions</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">torsions</span><span class="o">.</span><span class="n">mad</span><span class="p">(</span><span class="n">threshold_max</span><span class="o">=</span><span class="mf">40.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># MAD-based selection for stable analysis</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">torsions</span><span class="o">.</span><span class="n">mad</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">threshold_min</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">threshold_max</span><span class="o">=</span><span class="mf">35.0</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.torsions.services.torsions_reduce_service.TorsionsReduceService.mean">
+<span class="sig-name descname"><span class="pre">mean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">traj_selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cross_trajectory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.torsions.services.torsions_reduce_service.TorsionsReduceService.mean" title="Link to this definition"></a></dt>
+<dd><p>Reduce torsions by circular mean angle.</p>
+<p>Filters torsion features based on their mean angle values.
+Useful for selecting angles in specific conformational ranges.</p>
+<section id="id9">
+<h2>Parameters<a class="headerlink" href="#id9" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>traj_selection<span class="classifier">str, int, list, default=”all”</span></dt><dd><p>Which trajectories to analyze for reduction</p>
+</dd>
+<dt>threshold_min<span class="classifier">float, optional</span></dt><dd><p>Minimum mean angle threshold (degrees, -180 to 180)</p>
+</dd>
+<dt>threshold_max<span class="classifier">float, optional</span></dt><dd><p>Maximum mean angle threshold (degrees, -180 to 180)</p>
+</dd>
+<dt>cross_trajectory<span class="classifier">bool, default=False</span></dt><dd><p>If True, find common features across all selected trajectories</p>
+</dd>
+</dl>
+</section>
+<section id="id10">
+<h2>Returns<a class="headerlink" href="#id10" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>None</dt><dd><p>Updates reduced data in pipeline</p>
+</dd>
+</dl>
+</section>
+<section id="id11">
+<h2>Examples<a class="headerlink" href="#id11" title="Link to this heading"></a></h2>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Keep torsions in alpha-helix range</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">torsions</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">threshold_min</span><span class="o">=-</span><span class="mf">90.0</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">threshold_max</span><span class="o">=-</span><span class="mf">30.0</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Select beta-sheet conformations</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">torsions</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">threshold_min</span><span class="o">=</span><span class="mf">90.0</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">threshold_max</span><span class="o">=</span><span class="mf">150.0</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Exclude unfavorable conformations</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">torsions</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">threshold_max</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.torsions.services.torsions_reduce_service.TorsionsReduceService.range">
+<span class="sig-name descname"><span class="pre">range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">traj_selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cross_trajectory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.torsions.services.torsions_reduce_service.TorsionsReduceService.range" title="Link to this definition"></a></dt>
+<dd><p>Reduce torsions by angular range (circular).</p>
+<p>Filters torsion features based on their angular range accounting for circularity.
+Higher values indicate more flexible torsional motion.</p>
+<section id="id12">
+<h2>Parameters<a class="headerlink" href="#id12" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>traj_selection<span class="classifier">str, int, list, default=”all”</span></dt><dd><p>Which trajectories to analyze for reduction</p>
+</dd>
+<dt>threshold_min<span class="classifier">float, optional</span></dt><dd><p>Minimum angular range threshold (degrees, 0-180)</p>
+</dd>
+<dt>threshold_max<span class="classifier">float, optional</span></dt><dd><p>Maximum angular range threshold (degrees, 0-180)</p>
+</dd>
+<dt>cross_trajectory<span class="classifier">bool, default=False</span></dt><dd><p>If True, find common features across all selected trajectories</p>
+</dd>
+</dl>
+</section>
+<section id="id13">
+<h2>Returns<a class="headerlink" href="#id13" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>None</dt><dd><p>Updates reduced data in pipeline</p>
+</dd>
+</dl>
+</section>
+<section id="id14">
+<h2>Examples<a class="headerlink" href="#id14" title="Link to this heading"></a></h2>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Keep torsions with large conformational sampling</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">torsions</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="n">threshold_min</span><span class="o">=</span><span class="mf">60.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Keep relatively constrained torsions</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">torsions</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="n">threshold_max</span><span class="o">=</span><span class="mf">45.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Focus on moderate angular flexibility</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">torsions</span><span class="o">.</span><span class="n">range</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">threshold_min</span><span class="o">=</span><span class="mf">30.0</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">threshold_max</span><span class="o">=</span><span class="mf">90.0</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.torsions.services.torsions_reduce_service.TorsionsReduceService.min">
+<span class="sig-name descname"><span class="pre">min</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">traj_selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cross_trajectory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.torsions.services.torsions_reduce_service.TorsionsReduceService.min" title="Link to this definition"></a></dt>
+<dd><p>Reduce torsions by minimum angle value.</p>
+<p>Filters torsion features based on their minimum angle values.</p>
+<section id="id15">
+<h2>Parameters<a class="headerlink" href="#id15" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>traj_selection<span class="classifier">str, int, list, default=”all”</span></dt><dd><p>Which trajectories to analyze for reduction</p>
+</dd>
+<dt>threshold_min<span class="classifier">float, optional</span></dt><dd><p>Minimum angle threshold (degrees, -180 to 180)</p>
+</dd>
+<dt>threshold_max<span class="classifier">float, optional</span></dt><dd><p>Maximum angle threshold (degrees, -180 to 180)</p>
+</dd>
+<dt>cross_trajectory<span class="classifier">bool, default=False</span></dt><dd><p>If True, find common features across all selected trajectories</p>
+</dd>
+</dl>
+</section>
+<section id="id16">
+<h2>Returns<a class="headerlink" href="#id16" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>None</dt><dd><p>Updates reduced data in pipeline</p>
+</dd>
+</dl>
+</section>
+<section id="id17">
+<h2>Examples<a class="headerlink" href="#id17" title="Link to this heading"></a></h2>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Keep torsions that reach negative angles</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">torsions</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">threshold_max</span><span class="o">=-</span><span class="mf">30.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Exclude torsions that get too negative</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">torsions</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">threshold_min</span><span class="o">=-</span><span class="mf">120.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Focus on specific minimum angle range</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">torsions</span><span class="o">.</span><span class="n">min</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">threshold_min</span><span class="o">=-</span><span class="mf">90.0</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">threshold_max</span><span class="o">=-</span><span class="mf">10.0</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.torsions.services.torsions_reduce_service.TorsionsReduceService.max">
+<span class="sig-name descname"><span class="pre">max</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">traj_selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cross_trajectory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.torsions.services.torsions_reduce_service.TorsionsReduceService.max" title="Link to this definition"></a></dt>
+<dd><p>Reduce torsions by maximum angle value.</p>
+<p>Filters torsion features based on their maximum angle values.</p>
+<section id="id18">
+<h2>Parameters<a class="headerlink" href="#id18" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>traj_selection<span class="classifier">str, int, list, default=”all”</span></dt><dd><p>Which trajectories to analyze for reduction</p>
+</dd>
+<dt>threshold_min<span class="classifier">float, optional</span></dt><dd><p>Minimum angle threshold (degrees, -180 to 180)</p>
+</dd>
+<dt>threshold_max<span class="classifier">float, optional</span></dt><dd><p>Maximum angle threshold (degrees, -180 to 180)</p>
+</dd>
+<dt>cross_trajectory<span class="classifier">bool, default=False</span></dt><dd><p>If True, find common features across all selected trajectories</p>
+</dd>
+</dl>
+</section>
+<section id="id19">
+<h2>Returns<a class="headerlink" href="#id19" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>None</dt><dd><p>Updates reduced data in pipeline</p>
+</dd>
+</dl>
+</section>
+<section id="id20">
+<h2>Examples<a class="headerlink" href="#id20" title="Link to this heading"></a></h2>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Keep torsions that reach high positive angles</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">torsions</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">threshold_min</span><span class="o">=</span><span class="mf">120.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Keep constrained torsions</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">torsions</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">threshold_max</span><span class="o">=</span><span class="mf">90.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Focus on specific maximum angle range</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">torsions</span><span class="o">.</span><span class="n">max</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">threshold_min</span><span class="o">=</span><span class="mf">60.0</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">threshold_max</span><span class="o">=</span><span class="mf">150.0</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.torsions.services.torsions_reduce_service.TorsionsReduceService.cv">
+<span class="sig-name descname"><span class="pre">cv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">traj_selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cross_trajectory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.torsions.services.torsions_reduce_service.TorsionsReduceService.cv" title="Link to this definition"></a></dt>
+<dd><p>Reduce torsions by coefficient of variation (circular).</p>
+<p>Filters torsion features based on their relative variability.
+CV = circular_std / abs(circular_mean), indicating flexibility.</p>
+<section id="id21">
+<h2>Parameters<a class="headerlink" href="#id21" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>traj_selection<span class="classifier">str, int, list, default=”all”</span></dt><dd><p>Which trajectories to analyze for reduction</p>
+</dd>
+<dt>threshold_min<span class="classifier">float, optional</span></dt><dd><p>Minimum CV threshold for flexibility</p>
+</dd>
+<dt>threshold_max<span class="classifier">float, optional</span></dt><dd><p>Maximum CV threshold for flexibility</p>
+</dd>
+<dt>cross_trajectory<span class="classifier">bool, default=False</span></dt><dd><p>If True, find common features across all selected trajectories</p>
+</dd>
+</dl>
+</section>
+<section id="id22">
+<h2>Returns<a class="headerlink" href="#id22" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>None</dt><dd><p>Updates reduced data in pipeline</p>
+</dd>
+</dl>
+</section>
+<section id="id23">
+<h2>Examples<a class="headerlink" href="#id23" title="Link to this heading"></a></h2>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Keep highly flexible torsions (high relative variability)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">torsions</span><span class="o">.</span><span class="n">cv</span><span class="p">(</span><span class="n">threshold_min</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Remove extremely variable torsions</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">torsions</span><span class="o">.</span><span class="n">cv</span><span class="p">(</span><span class="n">threshold_max</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Focus on moderate torsional flexibility</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">torsions</span><span class="o">.</span><span class="n">cv</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">threshold_min</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">threshold_max</span><span class="o">=</span><span class="mf">1.0</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.torsions.services.torsions_reduce_service.TorsionsReduceService.variance">
+<span class="sig-name descname"><span class="pre">variance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">traj_selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cross_trajectory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.torsions.services.torsions_reduce_service.TorsionsReduceService.variance" title="Link to this definition"></a></dt>
+<dd><p>Reduce torsions by circular variance.</p>
+<p>Filters torsion features based on their circular variance.
+Values 0-1 where higher values indicate more flexible angles.</p>
+<section id="id24">
+<h2>Parameters<a class="headerlink" href="#id24" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>traj_selection<span class="classifier">str, int, list, default=”all”</span></dt><dd><p>Which trajectories to analyze for reduction</p>
+</dd>
+<dt>threshold_min<span class="classifier">float, optional</span></dt><dd><p>Minimum variance threshold (0-1)</p>
+</dd>
+<dt>threshold_max<span class="classifier">float, optional</span></dt><dd><p>Maximum variance threshold (0-1)</p>
+</dd>
+<dt>cross_trajectory<span class="classifier">bool, default=False</span></dt><dd><p>If True, find common features across all selected trajectories</p>
+</dd>
+</dl>
+</section>
+<section id="id25">
+<h2>Returns<a class="headerlink" href="#id25" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>None</dt><dd><p>Updates reduced data in pipeline</p>
+</dd>
+</dl>
+</section>
+<section id="id26">
+<h2>Examples<a class="headerlink" href="#id26" title="Link to this heading"></a></h2>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Keep torsions with high circular variance</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">torsions</span><span class="o">.</span><span class="n">variance</span><span class="p">(</span><span class="n">threshold_min</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Keep relatively stable torsions</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">torsions</span><span class="o">.</span><span class="n">variance</span><span class="p">(</span><span class="n">threshold_max</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Focus on moderate angular variance</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">torsions</span><span class="o">.</span><span class="n">variance</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">threshold_min</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">threshold_max</span><span class="o">=</span><span class="mf">0.8</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mdxplain.feature.feature_type.torsions.services.torsions_analysis_service.html" class="btn btn-neutral float-left" title="Feature Type: Torsions Analysis Service" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mdxplain.feature.feature_type.torsions.services.torsions_selection_service.html" class="btn btn-neutral float-right" title="Feature Type: Torsions Selection Service" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maximilian Salomon.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

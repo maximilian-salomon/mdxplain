@@ -1,0 +1,651 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Feature Importance Managers &mdash; mdxplain 31.10.2025 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=55e8f53f"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Feature Importance Services" href="mdxplain.feature_importance.services.html" />
+    <link rel="prev" title="Feature Importance: Top Features Helper" href="mdxplain.feature_importance.helpers.top_features_helper.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mdxplain
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction.html">Introduction to mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting started with mdxplain</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/theory/theory.html">The Theory Behind mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/learning/learning.html">Learn mdxplain</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../analysis/mdxplain.analysis.html">Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering/mdxplain.clustering.html">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../comparison/mdxplain.comparison.html">Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_selector/mdxplain.data_selector.html">Data Selector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../decomposition/mdxplain.decomposition.html">Decomposition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature/mdxplain.feature.html">Feature</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="mdxplain.feature_importance.html">Feature Importance</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature_importance.html#examples">Examples:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature_importance.analyzer_types.html">Feature Importance Analyzer Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature_importance.entities.html">Feature Importance Entities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature_importance.helpers.html">Feature Importance Helpers</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Feature Importance Managers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#module-mdxplain.feature_importance.managers.feature_importance_manager">Manager</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature_importance.services.html">Feature Importance Services</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_selection/mdxplain.feature_selection.html">Feature Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pipeline/mdxplain.pipeline.html">Pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../trajectory/mdxplain.trajectory.html">Trajectory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/mdxplain.utils.html">Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mdxplain</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API Documentation</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.feature_importance.html">Feature Importance</a></li>
+      <li class="breadcrumb-item active">Feature Importance Managers</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api/feature_importance/mdxplain.feature_importance.managers.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mdxplain.feature_importance.managers">
+<span id="feature-importance-managers"></span><h1>Feature Importance Managers<a class="headerlink" href="#module-mdxplain.feature_importance.managers" title="Link to this heading"></a></h1>
+<p>Feature importance managers for managing ML importance analyses.</p>
+<section id="module-mdxplain.feature_importance.managers.feature_importance_manager">
+<span id="manager"></span><h2>Manager<a class="headerlink" href="#module-mdxplain.feature_importance.managers.feature_importance_manager" title="Link to this heading"></a></h2>
+<p>Feature importance manager for ML-based feature analysis.</p>
+<p>This module provides the FeatureImportanceManager class that manages
+feature importance analysis using various ML algorithms. It follows
+the same pattern as DecompositionManager, working with analyzer_types
+and creating FeatureImportanceData objects.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mdxplain.feature_importance.managers.feature_importance_manager.FeatureImportanceManager">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mdxplain.feature_importance.managers.feature_importance_manager.</span></span><span class="sig-name descname"><span class="pre">FeatureImportanceManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">use_memmap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'./cache'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.feature_importance.managers.feature_importance_manager.FeatureImportanceManager" title="Link to this definition"></a></dt>
+<dd><p>Manager for creating and managing feature importance analyses.</p>
+<p>This class provides methods to run feature importance analysis on
+comparisons created by ComparisonManager. It uses various ML algorithms
+(analyzer_types) to determine which features are most important for
+distinguishing between different data groups. So basically classifiers.</p>
+<p>The manager follows the same pattern as DecompositionManager:</p>
+<ul class="simple">
+<li><p>Uses analyzer_type objects similar to decomposition_type</p></li>
+<li><p>Creates FeatureImportanceData objects similar to DecompositionData</p></li>
+<li><p>Integrates with pipeline via AutoInjectProxy</p></li>
+</ul>
+<section id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h3>
+<p>Pipeline mode (automatic injection):</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span> <span class="o">=</span> <span class="n">PipelineManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">mdxplain.feature_importance</span><span class="w"> </span><span class="kn">import</span> <span class="n">analyzer_types</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature_importance</span><span class="o">.</span><span class="n">add_analysis</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="s2">&quot;my_comparison&quot;</span><span class="p">,</span> <span class="n">analyzer_types</span><span class="o">.</span><span class="n">DecisionTree</span><span class="p">(</span><span class="n">max_depth</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span> <span class="s2">&quot;tree_analysis&quot;</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Standalone mode:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_data</span> <span class="o">=</span> <span class="n">PipelineData</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span> <span class="o">=</span> <span class="n">FeatureImportanceManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">add_analysis</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;my_comparison&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">analyzer_types</span><span class="o">.</span><span class="n">DecisionTree</span><span class="p">(</span><span class="n">max_depth</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span> <span class="s2">&quot;tree_analysis&quot;</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_importance.managers.feature_importance_manager.FeatureImportanceManager.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">use_memmap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'./cache'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature_importance.managers.feature_importance_manager.FeatureImportanceManager.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize the feature importance manager.</p>
+<section id="parameters">
+<h4>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>use_memmap<span class="classifier">bool, default=False</span></dt><dd><p>Whether to use memory mapping for large datasets</p>
+</dd>
+<dt>chunk_size<span class="classifier">int, default=10000</span></dt><dd><p>Processing chunk size for incremental computation</p>
+</dd>
+<dt>cache_dir<span class="classifier">str, default=”./cache”</span></dt><dd><p>Cache directory path</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h4>Returns<a class="headerlink" href="#returns" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Initializes FeatureImportanceManager instance with specified configuration</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_importance.managers.feature_importance_manager.FeatureImportanceManager.add_analysis">
+<span class="sig-name descname"><span class="pre">add_analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">comparison_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analyzer_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="mdxplain.feature_importance.analyzer_types.interfaces.analyzer_type_base.html#mdxplain.feature_importance.analyzer_types.interfaces.analyzer_type_base.AnalyzerTypeBase" title="mdxplain.feature_importance.analyzer_types.interfaces.analyzer_type_base.AnalyzerTypeBase"><span class="pre">AnalyzerTypeBase</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature_importance.managers.feature_importance_manager.FeatureImportanceManager.add_analysis" title="Link to this definition"></a></dt>
+<dd><p>Add feature importance analysis for a comparison.</p>
+<p>Runs feature importance analysis on all sub-comparisons within the
+specified comparison using the provided analyzer. Creates a single
+FeatureImportanceData object containing results for all sub-comparisons.</p>
+<section id="warning">
+<h4>Warning<a class="headerlink" href="#warning" title="Link to this heading"></a></h4>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; from mdxplain.feature_importance import analyzer_types
+&gt;&gt;&gt; pipeline.feature_importance.add_analysis(“folded_vs_unfolded”, analyzer_types.DecisionTree(), “tree_analysis”)  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = FeatureImportanceManager()
+&gt;&gt;&gt; manager.add_analysis(pipeline_data, “folded_vs_unfolded”, analyzer_types.DecisionTree(), “tree_analysis”)  # WITH pipeline_data parameter</p>
+</section>
+<section id="id1">
+<h4>Parameters<a class="headerlink" href="#id1" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data object containing comparisons</p>
+</dd>
+<dt>comparison_name<span class="classifier">str</span></dt><dd><p>Name of the comparison to analyze</p>
+</dd>
+<dt>analyzer_type<span class="classifier">AnalyzerTypeBase</span></dt><dd><p>Analyzer instance (e.g., analyzer_types.DecisionTree(max_depth=5))</p>
+</dd>
+<dt>analysis_name<span class="classifier">str</span></dt><dd><p>Name to store the analysis results</p>
+</dd>
+<dt>force<span class="classifier">bool, default=False</span></dt><dd><p>Whether to overwrite existing analysis with same name</p>
+</dd>
+</dl>
+</section>
+<section id="id2">
+<h4>Returns<a class="headerlink" href="#id2" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Creates FeatureImportanceData in pipeline_data</p>
+</dd>
+</dl>
+</section>
+<section id="raises">
+<h4>Raises<a class="headerlink" href="#raises" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If analysis already exists (and force=False), comparison not found,
+or analysis computation fails</p>
+</dd>
+</dl>
+</section>
+<section id="id3">
+<h4>Examples<a class="headerlink" href="#id3" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">mdxplain.feature_importance</span><span class="w"> </span><span class="kn">import</span> <span class="n">analyzer_types</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span> <span class="o">=</span> <span class="n">FeatureImportanceManager</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Basic decision tree analysis</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">add_analysis</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;folded_vs_unfolded&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">analyzer_types</span><span class="o">.</span><span class="n">DecisionTree</span><span class="p">(</span><span class="n">max_depth</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="s2">&quot;tree_analysis&quot;</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Balanced tree for imbalanced data</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">add_analysis</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;conformations&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">analyzer_types</span><span class="o">.</span><span class="n">DecisionTree</span><span class="p">(</span><span class="n">class_weight</span><span class="o">=</span><span class="s2">&quot;balanced&quot;</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="s2">&quot;balanced_tree&quot;</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_importance.managers.feature_importance_manager.FeatureImportanceManager.get_analysis_info">
+<span class="sig-name descname"><span class="pre">get_analysis_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mdxplain.feature_importance.managers.feature_importance_manager.FeatureImportanceManager.get_analysis_info" title="Link to this definition"></a></dt>
+<dd><p>Get information about a feature importance analysis.</p>
+<section id="id4">
+<h4>Warning<a class="headerlink" href="#id4" title="Link to this heading"></a></h4>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.feature_importance.get_analysis_info(“tree_analysis”)  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = FeatureImportanceManager()
+&gt;&gt;&gt; manager.get_analysis_info(pipeline_data, “tree_analysis”)  # pipeline_data required</p>
+</section>
+<section id="id5">
+<h4>Parameters<a class="headerlink" href="#id5" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data object</p>
+</dd>
+<dt>analysis_name<span class="classifier">str</span></dt><dd><p>Name of the analysis</p>
+</dd>
+</dl>
+</section>
+<section id="id6">
+<h4>Returns<a class="headerlink" href="#id6" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>Dict[str, Any]</dt><dd><p>Dictionary with analysis information</p>
+</dd>
+</dl>
+</section>
+<section id="id7">
+<h4>Examples<a class="headerlink" href="#id7" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">info</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">get_analysis_info</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;tree_analysis&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Analyzer: </span><span class="si">{</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;analyzer_type&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Comparisons: </span><span class="si">{</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;n_comparisons&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_importance.managers.feature_importance_manager.FeatureImportanceManager.get_top_features">
+<span class="sig-name descname"><span class="pre">get_top_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comparison_identifier</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mdxplain.feature_importance.managers.feature_importance_manager.FeatureImportanceManager.get_top_features" title="Link to this definition"></a></dt>
+<dd><p>Get top N most important features from analysis.</p>
+<section id="id8">
+<h4>Parameters<a class="headerlink" href="#id8" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data object</p>
+</dd>
+<dt>analysis_name<span class="classifier">str</span></dt><dd><p>Name of the analysis</p>
+</dd>
+<dt>comparison_identifier<span class="classifier">str, optional</span></dt><dd><p>Specific sub-comparison to get features from.
+If None, returns average across all sub-comparisons.</p>
+</dd>
+<dt>n<span class="classifier">int, default=10</span></dt><dd><p>Number of top features to return</p>
+</dd>
+</dl>
+</section>
+<section id="id9">
+<h4>Returns<a class="headerlink" href="#id9" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>List[Dict[str, Any]]</dt><dd><p>List of dictionaries with feature information</p>
+</dd>
+</dl>
+</section>
+<section id="id10">
+<h4>Examples<a class="headerlink" href="#id10" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Get top features averaged across all comparisons</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">top_features</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">get_top_features</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;tree_analysis&quot;</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">5</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Get top features for specific comparison</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">top_features</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">get_top_features</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;tree_analysis&quot;</span><span class="p">,</span> <span class="s2">&quot;folded_vs_rest&quot;</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">5</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_importance.managers.feature_importance_manager.FeatureImportanceManager.get_all_top_features">
+<span class="sig-name descname"><span class="pre">get_all_top_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mdxplain.feature_importance.managers.feature_importance_manager.FeatureImportanceManager.get_all_top_features" title="Link to this definition"></a></dt>
+<dd><p>Get top features for all sub-comparisons in an analysis.</p>
+<p>Returns a dictionary where keys are comparison identifiers
+and values are lists of top features for each comparison.</p>
+<section id="id11">
+<h4>Warning<a class="headerlink" href="#id11" title="Link to this heading"></a></h4>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; all_features = pipeline.feature_importance.get_all_top_features(“dt_analysis”, n=5)</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = FeatureImportanceManager()
+&gt;&gt;&gt; all_features = manager.get_all_top_features(pipeline_data, “dt_analysis”, n=5)</p>
+</section>
+<section id="id12">
+<h4>Parameters<a class="headerlink" href="#id12" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data object</p>
+</dd>
+<dt>analysis_name<span class="classifier">str</span></dt><dd><p>Name of the analysis</p>
+</dd>
+<dt>n<span class="classifier">int, default=10</span></dt><dd><p>Number of top features per comparison</p>
+</dd>
+</dl>
+</section>
+<section id="id13">
+<h4>Returns<a class="headerlink" href="#id13" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>Dict[str, List[Dict[str, Any]]]</dt><dd><p>Dictionary mapping comparison names to their top features</p>
+</dd>
+</dl>
+</section>
+<section id="id14">
+<h4>Examples<a class="headerlink" href="#id14" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">all_features</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">get_all_top_features</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;dt_analysis&quot;</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">5</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Access specific comparison</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cluster_0</span> <span class="o">=</span> <span class="n">all_features</span><span class="p">[</span><span class="s2">&quot;cluster_0_vs_rest&quot;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Top feature: </span><span class="si">{</span><span class="n">cluster_0</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;feature_name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_importance.managers.feature_importance_manager.FeatureImportanceManager.list_analyses">
+<span class="sig-name descname"><span class="pre">list_analyses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mdxplain.feature_importance.managers.feature_importance_manager.FeatureImportanceManager.list_analyses" title="Link to this definition"></a></dt>
+<dd><p>List all available feature importance analyses.</p>
+<section id="id15">
+<h4>Warning<a class="headerlink" href="#id15" title="Link to this heading"></a></h4>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.feature_importance.list_analyses()  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = FeatureImportanceManager()
+&gt;&gt;&gt; manager.list_analyses(pipeline_data)  # pipeline_data required</p>
+</section>
+<section id="id16">
+<h4>Parameters<a class="headerlink" href="#id16" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data object</p>
+</dd>
+</dl>
+</section>
+<section id="id17">
+<h4>Returns<a class="headerlink" href="#id17" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>List[str]</dt><dd><p>List of analysis names</p>
+</dd>
+</dl>
+</section>
+<section id="id18">
+<h4>Examples<a class="headerlink" href="#id18" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">analyses</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">list_analyses</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Available analyses: </span><span class="si">{</span><span class="n">analyses</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_importance.managers.feature_importance_manager.FeatureImportanceManager.remove_analysis">
+<span class="sig-name descname"><span class="pre">remove_analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature_importance.managers.feature_importance_manager.FeatureImportanceManager.remove_analysis" title="Link to this definition"></a></dt>
+<dd><p>Remove a feature importance analysis.</p>
+<section id="id19">
+<h4>Warning<a class="headerlink" href="#id19" title="Link to this heading"></a></h4>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.feature_importance.remove_analysis(“old_analysis”)  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = FeatureImportanceManager()
+&gt;&gt;&gt; manager.remove_analysis(pipeline_data, “old_analysis”)  # pipeline_data required</p>
+</section>
+<section id="id20">
+<h4>Parameters<a class="headerlink" href="#id20" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data object</p>
+</dd>
+<dt>analysis_name<span class="classifier">str</span></dt><dd><p>Name of the analysis to remove</p>
+</dd>
+</dl>
+</section>
+<section id="id21">
+<h4>Returns<a class="headerlink" href="#id21" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Removes the analysis from pipeline_data</p>
+</dd>
+</dl>
+</section>
+<section id="id22">
+<h4>Examples<a class="headerlink" href="#id22" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">remove_analysis</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;old_analysis&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_importance.managers.feature_importance_manager.FeatureImportanceManager.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature_importance.managers.feature_importance_manager.FeatureImportanceManager.save" title="Link to this definition"></a></dt>
+<dd><p>Save all feature importance data to single file.</p>
+<section id="id23">
+<h4>Warning<a class="headerlink" href="#id23" title="Link to this heading"></a></h4>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.feature_importance.save(‘feature_importance.npy’)  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = FeatureImportanceManager()
+&gt;&gt;&gt; manager.save(pipeline_data, ‘feature_importance.npy’)  # pipeline_data required</p>
+</section>
+<section id="id24">
+<h4>Parameters<a class="headerlink" href="#id24" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data container with feature importance data</p>
+</dd>
+<dt>save_path<span class="classifier">str</span></dt><dd><p>Path where to save all feature importance data in one file</p>
+</dd>
+</dl>
+</section>
+<section id="id25">
+<h4>Returns<a class="headerlink" href="#id25" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Saves all feature importance data to the specified file</p>
+</dd>
+</dl>
+</section>
+<section id="id26">
+<h4>Examples<a class="headerlink" href="#id26" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s1">&#39;feature_importance.npy&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_importance.managers.feature_importance_manager.FeatureImportanceManager.load">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature_importance.managers.feature_importance_manager.FeatureImportanceManager.load" title="Link to this definition"></a></dt>
+<dd><p>Load all feature importance data from single file.</p>
+<section id="id27">
+<h4>Warning<a class="headerlink" href="#id27" title="Link to this heading"></a></h4>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.feature_importance.load(‘feature_importance.npy’)  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = FeatureImportanceManager()
+&gt;&gt;&gt; manager.load(pipeline_data, ‘feature_importance.npy’)  # pipeline_data required</p>
+</section>
+<section id="id28">
+<h4>Parameters<a class="headerlink" href="#id28" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data container to load feature importance data into</p>
+</dd>
+<dt>load_path<span class="classifier">str</span></dt><dd><p>Path to saved feature importance data file</p>
+</dd>
+</dl>
+</section>
+<section id="id29">
+<h4>Returns<a class="headerlink" href="#id29" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Loads all feature importance data from the specified file</p>
+</dd>
+</dl>
+</section>
+<section id="id30">
+<h4>Examples<a class="headerlink" href="#id30" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s1">&#39;feature_importance.npy&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_importance.managers.feature_importance_manager.FeatureImportanceManager.print_info">
+<span class="sig-name descname"><span class="pre">print_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature_importance.managers.feature_importance_manager.FeatureImportanceManager.print_info" title="Link to this definition"></a></dt>
+<dd><p>Print feature importance data information.</p>
+<section id="id31">
+<h4>Warning<a class="headerlink" href="#id31" title="Link to this heading"></a></h4>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.feature_importance.print_info()  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = FeatureImportanceManager()
+&gt;&gt;&gt; manager.print_info(pipeline_data)  # pipeline_data required</p>
+</section>
+<section id="id32">
+<h4>Parameters<a class="headerlink" href="#id32" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data container with feature importance data</p>
+</dd>
+</dl>
+</section>
+<section id="id33">
+<h4>Returns<a class="headerlink" href="#id33" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Prints feature importance data information to console</p>
+</dd>
+</dl>
+</section>
+<section id="id34">
+<h4>Examples<a class="headerlink" href="#id34" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_data</span> <span class="o">=</span> <span class="n">PipelineData</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feature_importance_manager</span> <span class="o">=</span> <span class="n">FeatureImportanceManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feature_importance_manager</span><span class="o">.</span><span class="n">print_info</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.feature_importance.managers.feature_importance_manager.FeatureImportanceManager.add">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">add</span></span><a class="headerlink" href="#mdxplain.feature_importance.managers.feature_importance_manager.FeatureImportanceManager.add" title="Link to this definition"></a></dt>
+<dd><p>Service for adding feature importance analyses with simplified syntax.</p>
+<p>Provides an intuitive interface for adding feature importance analyses without
+requiring explicit analyzer type instantiation or imports.</p>
+<section id="id35">
+<h4>Returns<a class="headerlink" href="#id35" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>FeatureImportanceAddService</dt><dd><p>Service instance for adding feature importance analyses with combined parameters</p>
+</dd>
+</dl>
+</section>
+<section id="id36">
+<h4>Examples<a class="headerlink" href="#id36" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Add different analyzer types</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature_importance</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">decision_tree</span><span class="p">(</span><span class="s2">&quot;my_comparison&quot;</span><span class="p">,</span> <span class="s2">&quot;tree_analysis&quot;</span><span class="p">,</span> <span class="n">max_depth</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature_importance</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">decision_tree</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="s2">&quot;folded_vs_unfolded&quot;</span><span class="p">,</span> 
+<span class="gp">... </span>    <span class="s2">&quot;deep_tree&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">max_depth</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">criterion</span><span class="o">=</span><span class="s2">&quot;entropy&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="notes">
+<h4>Notes<a class="headerlink" href="#notes" title="Link to this heading"></a></h4>
+<p>Pipeline data is automatically injected by AutoInjectProxy.
+All analyzer type parameters are combined with add_analysis parameters.</p>
+</section>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mdxplain.feature_importance.helpers.top_features_helper.html" class="btn btn-neutral float-left" title="Feature Importance: Top Features Helper" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mdxplain.feature_importance.services.html" class="btn btn-neutral float-right" title="Feature Importance Services" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maximilian Salomon.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
