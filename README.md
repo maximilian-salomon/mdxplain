@@ -2,7 +2,8 @@
 
 A Python toolkit for scalable molecular dynamics trajectory analysis, combining modular workflows, memory-efficient processing and interpretable machine learning via decision trees to identify key conformational features and streamline complex pipelines.
 
-**Developer:** Maximilian Salomon
+**Developer:** Maximilian Salomon (Software), Maeve Buttler (ReadTheDocs Documentation)
+
 **Version:** 1.0.0
 
 ## Common Use Cases
