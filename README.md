@@ -241,7 +241,7 @@ pipeline.trajectory.add_labels(
 )
 
 # Now you can select features using consensus patterns:
-# "consensus 7x50" => GPCR activation switch
+# "consensus 7x49-7x53" => NPxxY region on TM7
 # "consensus G.H5.*" => G-protein helix 5
 # "consensus 3x* and consensus 6x*" => TM3-TM6 interface
 ```
@@ -311,7 +311,7 @@ The selection language is case-insensitive and automatically recognizes keywords
   - **Conserved networks**: `consensus *40-*50` => positions 40-50 e.g. across all TM helices (allosteric pathways)
   - **Cross-protein comparison**: Same consensus position = functionally equivalent
 - **Patterns**:
-  - Single: `7x50` => GPCR activation switch (specific position)
+  - Single: `7x53` => NPxxY tyrosine (Y7.53, activation-associated)
   - Range: `7x50-8x50` => TM7-TM8 interface region
   - Wildcard: `7x*` => all TM7 positions
   - Multi-pattern: `*40-*50` => positions 40-50 in all TM helices
@@ -379,12 +379,11 @@ pipeline.feature_selector.select("my_selection")
 **Practical Examples with Biological Context:**
 
 ```python
-# GPCR activation switch (conserved toggle switch)
-# Selects contacts between two functionally critical positions:
-# - 3x50: DRY motif (ionic lock, inactive state stabilization)
-# - 6x50: CWxP motif (helix kink, TM6 movement during activation)
-# This interaction is involved in receptor activation
-pipeline.feature_selector.add.contacts("gpcr", "consensus 3x50 and consensus 6x50")
+# GPCR activation contact (ionic lock)
+# Selects a known constraining interaction in GPCRs:
+# - 3x50: DRY motif arginine (R3.50)
+# - 6x30: conserved glutamate (E6.30) on TM6
+pipeline.feature_selector.add.contacts("gpcr", "consensus 3x50 and consensus 6x30")
 
 # G-protein binding interface
 # Combines two structural elements for GPCR-G-protein coupling:
