@@ -1,0 +1,201 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trajectory: Process Trajectory Load Helper &mdash; mdxplain 31.10.2025 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=55e8f53f"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Trajectory: Process Trajectory Process Helper" href="mdxplain.trajectory.helper.process_helper.trajectory_process_helper.html" />
+    <link rel="prev" title="Trajectory: Process Selection Resolve Helper" href="mdxplain.trajectory.helper.process_helper.selection_resolve_helper.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mdxplain
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction.html">Introduction to mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting started with mdxplain</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/theory/theory.html">The Theory Behind mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/learning/learning.html">Learn mdxplain</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../analysis/mdxplain.analysis.html">Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering/mdxplain.clustering.html">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../comparison/mdxplain.comparison.html">Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_selector/mdxplain.data_selector.html">Data Selector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../decomposition/mdxplain.decomposition.html">Decomposition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature/mdxplain.feature.html">Feature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.html">Feature Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_selection/mdxplain.feature_selection.html">Feature Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pipeline/mdxplain.pipeline.html">Pipeline</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="mdxplain.trajectory.html">Trajectory</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.trajectory.entities.html">Trajectory Entities</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="mdxplain.trajectory.helper.html">Trajectory: Helpers</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.trajectory.helper.dask_trajectory_helper.html">Trajectory: Dask Trajectory Helper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.trajectory.helper.metadata_helper.html">Trajectory: Metadata Helpers</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="mdxplain.trajectory.helper.process_helper.html">Trajectory: Process Helpers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.trajectory.helper.validation_helper.html">Trajectory: Validation Helpers</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.trajectory.managers.html">Trajectory: Managers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/mdxplain.utils.html">Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mdxplain</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API Documentation</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.trajectory.html">Trajectory</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.trajectory.helper.html">Trajectory: Helpers</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.trajectory.helper.process_helper.html">Trajectory: Process Helpers</a></li>
+      <li class="breadcrumb-item active">Trajectory: Process Trajectory Load Helper</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api/trajectory/mdxplain.trajectory.helper.process_helper.trajectory_load_helper.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mdxplain.trajectory.helper.process_helper.trajectory_load_helper">
+<span id="trajectory-process-trajectory-load-helper"></span><h1>Trajectory: Process Trajectory Load Helper<a class="headerlink" href="#module-mdxplain.trajectory.helper.process_helper.trajectory_load_helper" title="Link to this heading"></a></h1>
+<p>MD trajectory loading strategies and utilities.</p>
+<p>Handles the loading methodology for MD trajectories from files and directories.
+This class can be easily replaced or extended for different loading strategies.
+Supports nested directory structures and trajectory concatenation.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mdxplain.trajectory.helper.process_helper.trajectory_load_helper.TrajectoryLoadHelper">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mdxplain.trajectory.helper.process_helper.trajectory_load_helper.</span></span><span class="sig-name descname"><span class="pre">TrajectoryLoadHelper</span></span><a class="headerlink" href="#mdxplain.trajectory.helper.process_helper.trajectory_load_helper.TrajectoryLoadHelper" title="Link to this definition"></a></dt>
+<dd><p>Internal utility class for loading MD trajectories from files and directories.</p>
+<p>Supports nested directory structures and trajectory concatenation.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.helper.process_helper.trajectory_load_helper.TrajectoryLoadHelper.load_trajectories">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_trajectories</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">concat</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_memmap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'./cache'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mdxplain.trajectory.helper.process_helper.trajectory_load_helper.TrajectoryLoadHelper.load_trajectories" title="Link to this definition"></a></dt>
+<dd><p>Load trajectories from various input types.</p>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>data_input<span class="classifier">list or str</span></dt><dd><p>List of trajectory objects or path to directory</p>
+</dd>
+<dt>concat<span class="classifier">bool, default=False</span></dt><dd><p>Whether to concatenate trajectories per system</p>
+</dd>
+<dt>stride<span class="classifier">int, default=1</span></dt><dd><p>Frame striding parameter</p>
+</dd>
+<dt>selection<span class="classifier">str, optional</span></dt><dd><p>MDTraj selection string to apply to each trajectory before concatenation</p>
+</dd>
+<dt>use_memmap<span class="classifier">bool, default=False</span></dt><dd><p>Whether to use memory-mapped DaskMDTrajectory for large files</p>
+</dd>
+<dt>chunk_size<span class="classifier">int, default=1000</span></dt><dd><p>Chunk size for DaskMDTrajectory (only used when use_memmap=True)</p>
+</dd>
+<dt>cache_dir<span class="classifier">str, default=”./cache”</span></dt><dd><p>Cache directory for DaskMDTrajectory (only used when use_memmap=True)</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>dict</dt><dd><p>Dictionary with ‘trajectories’ and ‘names’ keys containing
+list of loaded trajectory objects and their corresponding names</p>
+</dd>
+</dl>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Load from trajectory list</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">trajs</span> <span class="o">=</span> <span class="p">[</span><span class="n">traj1</span><span class="p">,</span> <span class="n">traj2</span><span class="p">,</span> <span class="n">traj3</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">TrajectoryLoadHelper</span><span class="o">.</span><span class="n">load_trajectories</span><span class="p">(</span><span class="n">trajs</span><span class="p">,</span> <span class="n">concat</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loaded </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;trajectories&#39;</span><span class="p">])</span><span class="si">}</span><span class="s2"> trajectories&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Load from directory</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">TrajectoryLoadHelper</span><span class="o">.</span><span class="n">load_trajectories</span><span class="p">(</span><span class="s1">&#39;../data&#39;</span><span class="p">,</span> <span class="n">use_memmap</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Load with selection</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">TrajectoryLoadHelper</span><span class="o">.</span><span class="n">load_trajectories</span><span class="p">(</span><span class="s1">&#39;../data&#39;</span><span class="p">,</span> <span class="n">selection</span><span class="o">=</span><span class="s1">&#39;protein&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mdxplain.trajectory.helper.process_helper.selection_resolve_helper.html" class="btn btn-neutral float-left" title="Trajectory: Process Selection Resolve Helper" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mdxplain.trajectory.helper.process_helper.trajectory_process_helper.html" class="btn btn-neutral float-right" title="Trajectory: Process Trajectory Process Helper" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maximilian Salomon.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

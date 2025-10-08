@@ -1,0 +1,757 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Feature Type: Torsions Calculator Analysis &mdash; mdxplain 31.10.2025 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=55e8f53f"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Feature Helpers" href="../mdxplain.feature.helper.html" />
+    <link rel="prev" title="Feature Type: Torsions Calculator" href="mdxplain.feature.feature_type.torsions.torsions_calculator.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            mdxplain
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../introduction.html">Introduction to mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting started with mdxplain</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/theory/theory.html">The Theory Behind mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/learning/learning.html">Learn mdxplain</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../analysis/mdxplain.analysis.html">Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../clustering/mdxplain.clustering.html">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../comparison/mdxplain.comparison.html">Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../data_selector/mdxplain.data_selector.html">Data Selector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../decomposition/mdxplain.decomposition.html">Decomposition</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../mdxplain.feature.html">Feature</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../mdxplain.feature.entities.html">Feature Entities</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="mdxplain.feature.feature_type.html">Feature Types</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.contacts.html">Feature Type: Contacts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.coordinates.html">Feature Type: Coordinates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.distances.html">Feature Type: Distances</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.dssp.html">Feature Type: DSSP</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.helpers.html">Feature Types: Helpers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.interfaces.html">Feature Types: Interfaces</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.feature_type.sasa.html">Feature Type: SASA</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="mdxplain.feature.feature_type.torsions.html">Feature Type: Torsions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../mdxplain.feature.helper.html">Feature Helpers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mdxplain.feature.managers.html">Feature Managers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../mdxplain.feature.services.html">Feature Services</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../feature_importance/mdxplain.feature_importance.html">Feature Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../feature_selection/mdxplain.feature_selection.html">Feature Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pipeline/mdxplain.pipeline.html">Pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../trajectory/mdxplain.trajectory.html">Trajectory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../utils/mdxplain.utils.html">Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">mdxplain</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../api.html">API Documentation</a></li>
+          <li class="breadcrumb-item"><a href="../mdxplain.feature.html">Feature</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.feature.feature_type.html">Feature Types</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.feature.feature_type.torsions.html">Feature Type: Torsions</a></li>
+      <li class="breadcrumb-item active">Feature Type: Torsions Calculator Analysis</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/api/feature/feature_type/mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mdxplain.feature.feature_type.torsions.torsions_calculator_analysis">
+<span id="feature-type-torsions-calculator-analysis"></span><h1>Feature Type: Torsions Calculator Analysis<a class="headerlink" href="#module-mdxplain.feature.feature_type.torsions.torsions_calculator_analysis" title="Link to this heading"></a></h1>
+<p>Torsion angles calculator analysis for molecular dynamics trajectory analysis.</p>
+<p>Analysis utilities for torsion angle data including conformational dynamics,
+angular distributions, and circular statistics with complete per-feature and per-frame metrics.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.</span></span><span class="sig-name descname"><span class="pre">TorsionsCalculatorAnalysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">use_memmap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis" title="Link to this definition"></a></dt>
+<dd><p>Analysis utilities for torsion angle data from MD trajectories.</p>
+<p>Provides statistical analysis methods for torsion angle data including
+conformational dynamics, circular statistics, and angular distributions
+with complete per-feature and per-frame metrics.</p>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">analysis</span> <span class="o">=</span> <span class="n">TorsionsCalculatorAnalysis</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">circular_mean</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">compute_circular_mean</span><span class="p">(</span><span class="n">torsion_data</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">transitions</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">compute_transitions_lagtime</span><span class="p">(</span><span class="n">torsion_data</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">30.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">use_memmap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2000</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize torsion analysis with configuration parameters.</p>
+<section id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>use_memmap<span class="classifier">bool, default=False</span></dt><dd><p>Whether to use memory mapping for large datasets</p>
+</dd>
+<dt>chunk_size<span class="classifier">int, optional</span></dt><dd><p>Number of frames to process per chunk</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h3>Returns<a class="headerlink" href="#returns" title="Link to this heading"></a></h3>
+<p>None</p>
+</section>
+<section id="id1">
+<h3>Examples<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Basic initialization</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">analysis</span> <span class="o">=</span> <span class="n">TorsionsCalculatorAnalysis</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># With memory mapping</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">analysis</span> <span class="o">=</span> <span class="n">TorsionsCalculatorAnalysis</span><span class="p">(</span><span class="n">use_memmap</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">chunk_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_mean">
+<span class="sig-name descname"><span class="pre">compute_mean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">torsion_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_mean" title="Link to this definition"></a></dt>
+<dd><p>Compute circular mean for each torsion angle.</p>
+<section id="id2">
+<h3>Parameters<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>torsion_data<span class="classifier">numpy.ndarray</span></dt><dd><p>Torsion angles array with shape (n_frames, n_angles) in degrees</p>
+</dd>
+</dl>
+</section>
+<section id="id3">
+<h3>Returns<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>Circular mean angle for each torsion in degrees</p>
+</dd>
+</dl>
+</section>
+<section id="id4">
+<h3>Examples<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mean_angles</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">compute_mean</span><span class="p">(</span><span class="n">torsion_data</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_std">
+<span class="sig-name descname"><span class="pre">compute_std</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">torsion_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_std" title="Link to this definition"></a></dt>
+<dd><p>Compute circular standard deviation for each torsion angle.</p>
+<section id="id5">
+<h3>Parameters<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>torsion_data<span class="classifier">numpy.ndarray</span></dt><dd><p>Torsion angles array with shape (n_frames, n_angles) in degrees</p>
+</dd>
+</dl>
+</section>
+<section id="id6">
+<h3>Returns<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>Circular standard deviation for each torsion angle in degrees</p>
+</dd>
+</dl>
+</section>
+<section id="id7">
+<h3>Examples<a class="headerlink" href="#id7" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">std_angles</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">compute_std</span><span class="p">(</span><span class="n">torsion_data</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_variance">
+<span class="sig-name descname"><span class="pre">compute_variance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">torsion_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_variance" title="Link to this definition"></a></dt>
+<dd><p>Compute circular variance for each torsion angle.</p>
+<section id="id8">
+<h3>Parameters<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>torsion_data<span class="classifier">numpy.ndarray</span></dt><dd><p>Torsion angles array with shape (n_frames, n_angles) in degrees</p>
+</dd>
+</dl>
+</section>
+<section id="id9">
+<h3>Returns<a class="headerlink" href="#id9" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>Circular variance for each torsion angle (0-1 scale)</p>
+</dd>
+</dl>
+</section>
+<section id="id10">
+<h3>Examples<a class="headerlink" href="#id10" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">var_angles</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">compute_variance</span><span class="p">(</span><span class="n">torsion_data</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_min">
+<span class="sig-name descname"><span class="pre">compute_min</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">torsion_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_min" title="Link to this definition"></a></dt>
+<dd><p>Compute minimum angle for each torsion.</p>
+<section id="id11">
+<h3>Parameters<a class="headerlink" href="#id11" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>torsion_data<span class="classifier">numpy.ndarray</span></dt><dd><p>Torsion angles array with shape (n_frames, n_angles)</p>
+</dd>
+</dl>
+</section>
+<section id="id12">
+<h3>Returns<a class="headerlink" href="#id12" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>Minimum angle for each torsion</p>
+</dd>
+</dl>
+</section>
+<section id="id13">
+<h3>Examples<a class="headerlink" href="#id13" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">min_angles</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">compute_min</span><span class="p">(</span><span class="n">torsion_data</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_max">
+<span class="sig-name descname"><span class="pre">compute_max</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">torsion_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_max" title="Link to this definition"></a></dt>
+<dd><p>Compute maximum angle for each torsion.</p>
+<section id="id14">
+<h3>Parameters<a class="headerlink" href="#id14" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>torsion_data<span class="classifier">numpy.ndarray</span></dt><dd><p>Torsion angles array with shape (n_frames, n_angles)</p>
+</dd>
+</dl>
+</section>
+<section id="id15">
+<h3>Returns<a class="headerlink" href="#id15" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>Maximum angle for each torsion</p>
+</dd>
+</dl>
+</section>
+<section id="id16">
+<h3>Examples<a class="headerlink" href="#id16" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">max_angles</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">compute_max</span><span class="p">(</span><span class="n">torsion_data</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_mad">
+<span class="sig-name descname"><span class="pre">compute_mad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">torsion_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_mad" title="Link to this definition"></a></dt>
+<dd><p>Compute median absolute deviation for each torsion angle.</p>
+<section id="id17">
+<h3>Parameters<a class="headerlink" href="#id17" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>torsion_data<span class="classifier">numpy.ndarray</span></dt><dd><p>Torsion angles array with shape (n_frames, n_angles)</p>
+</dd>
+</dl>
+</section>
+<section id="id18">
+<h3>Returns<a class="headerlink" href="#id18" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>Median absolute deviation for each torsion angle</p>
+</dd>
+</dl>
+</section>
+<section id="id19">
+<h3>Examples<a class="headerlink" href="#id19" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mad_angles</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">compute_mad</span><span class="p">(</span><span class="n">torsion_data</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_range">
+<span class="sig-name descname"><span class="pre">compute_range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">torsion_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_range" title="Link to this definition"></a></dt>
+<dd><p>Compute angular range for each torsion considering periodicity.</p>
+<section id="id20">
+<h3>Parameters<a class="headerlink" href="#id20" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>torsion_data<span class="classifier">numpy.ndarray</span></dt><dd><p>Torsion angles array with shape (n_frames, n_angles) in degrees</p>
+</dd>
+</dl>
+</section>
+<section id="id21">
+<h3>Returns<a class="headerlink" href="#id21" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>Angular range for each torsion (0-180 degrees)</p>
+</dd>
+</dl>
+</section>
+<section id="id22">
+<h3>Examples<a class="headerlink" href="#id22" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">range_angles</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">compute_range</span><span class="p">(</span><span class="n">torsion_data</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="notes">
+<h3>Notes<a class="headerlink" href="#notes" title="Link to this heading"></a></h3>
+<p>Uses circular statistics to handle periodicity (-180° to 180°).
+Range is computed as the minimum angular distance that contains all data points.</p>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_mean_per_frame">
+<span class="sig-name descname"><span class="pre">compute_mean_per_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">torsion_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_mean_per_frame" title="Link to this definition"></a></dt>
+<dd><p>Compute circular mean angle per frame across all torsions.</p>
+<section id="id23">
+<h3>Parameters<a class="headerlink" href="#id23" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>torsion_data<span class="classifier">numpy.ndarray</span></dt><dd><p>Torsion angles array with shape (n_frames, n_angles) in degrees</p>
+</dd>
+</dl>
+</section>
+<section id="id24">
+<h3>Returns<a class="headerlink" href="#id24" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>Circular mean angle per frame in degrees</p>
+</dd>
+</dl>
+</section>
+<section id="id25">
+<h3>Examples<a class="headerlink" href="#id25" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mean_per_frame</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">compute_mean_per_frame</span><span class="p">(</span><span class="n">torsion_data</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_std_per_frame">
+<span class="sig-name descname"><span class="pre">compute_std_per_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">torsion_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_std_per_frame" title="Link to this definition"></a></dt>
+<dd><p>Compute circular standard deviation per frame across all torsions.</p>
+<section id="id26">
+<h3>Parameters<a class="headerlink" href="#id26" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>torsion_data<span class="classifier">numpy.ndarray</span></dt><dd><p>Torsion angles array with shape (n_frames, n_angles) in degrees</p>
+</dd>
+</dl>
+</section>
+<section id="id27">
+<h3>Returns<a class="headerlink" href="#id27" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>Circular standard deviation per frame in degrees</p>
+</dd>
+</dl>
+</section>
+<section id="id28">
+<h3>Examples<a class="headerlink" href="#id28" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">std_per_frame</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">compute_std_per_frame</span><span class="p">(</span><span class="n">torsion_data</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_variance_per_frame">
+<span class="sig-name descname"><span class="pre">compute_variance_per_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">torsion_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_variance_per_frame" title="Link to this definition"></a></dt>
+<dd><p>Compute circular variance per frame across all torsions.</p>
+<section id="id29">
+<h3>Parameters<a class="headerlink" href="#id29" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>torsion_data<span class="classifier">numpy.ndarray</span></dt><dd><p>Torsion angles array with shape (n_frames, n_angles) in degrees</p>
+</dd>
+</dl>
+</section>
+<section id="id30">
+<h3>Returns<a class="headerlink" href="#id30" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>Circular variance per frame (0-1 scale)</p>
+</dd>
+</dl>
+</section>
+<section id="id31">
+<h3>Examples<a class="headerlink" href="#id31" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">var_per_frame</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">compute_variance_per_frame</span><span class="p">(</span><span class="n">torsion_data</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_min_per_frame">
+<span class="sig-name descname"><span class="pre">compute_min_per_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">torsion_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_min_per_frame" title="Link to this definition"></a></dt>
+<dd><p>Compute minimum angle per frame across all torsions.</p>
+<section id="id32">
+<h3>Parameters<a class="headerlink" href="#id32" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>torsion_data<span class="classifier">numpy.ndarray</span></dt><dd><p>Torsion angles array with shape (n_frames, n_angles)</p>
+</dd>
+</dl>
+</section>
+<section id="id33">
+<h3>Returns<a class="headerlink" href="#id33" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>Minimum angle per frame</p>
+</dd>
+</dl>
+</section>
+<section id="id34">
+<h3>Examples<a class="headerlink" href="#id34" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">min_per_frame</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">compute_min_per_frame</span><span class="p">(</span><span class="n">torsion_data</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_max_per_frame">
+<span class="sig-name descname"><span class="pre">compute_max_per_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">torsion_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_max_per_frame" title="Link to this definition"></a></dt>
+<dd><p>Compute maximum angle per frame across all torsions.</p>
+<section id="id35">
+<h3>Parameters<a class="headerlink" href="#id35" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>torsion_data<span class="classifier">numpy.ndarray</span></dt><dd><p>Torsion angles array with shape (n_frames, n_angles)</p>
+</dd>
+</dl>
+</section>
+<section id="id36">
+<h3>Returns<a class="headerlink" href="#id36" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>Maximum angle per frame</p>
+</dd>
+</dl>
+</section>
+<section id="id37">
+<h3>Examples<a class="headerlink" href="#id37" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">max_per_frame</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">compute_max_per_frame</span><span class="p">(</span><span class="n">torsion_data</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_mad_per_frame">
+<span class="sig-name descname"><span class="pre">compute_mad_per_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">torsion_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_mad_per_frame" title="Link to this definition"></a></dt>
+<dd><p>Compute median absolute deviation per frame across all torsions.</p>
+<section id="id38">
+<h3>Parameters<a class="headerlink" href="#id38" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>torsion_data<span class="classifier">numpy.ndarray</span></dt><dd><p>Torsion angles array with shape (n_frames, n_angles)</p>
+</dd>
+</dl>
+</section>
+<section id="id39">
+<h3>Returns<a class="headerlink" href="#id39" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>Median absolute deviation per frame</p>
+</dd>
+</dl>
+</section>
+<section id="id40">
+<h3>Examples<a class="headerlink" href="#id40" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mad_per_frame</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">compute_mad_per_frame</span><span class="p">(</span><span class="n">torsion_data</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_range_per_frame">
+<span class="sig-name descname"><span class="pre">compute_range_per_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">torsion_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_range_per_frame" title="Link to this definition"></a></dt>
+<dd><p>Compute angular range per frame across all torsions with periodicity.</p>
+<section id="id41">
+<h3>Parameters<a class="headerlink" href="#id41" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>torsion_data<span class="classifier">numpy.ndarray</span></dt><dd><p>Torsion angles array with shape (n_frames, n_angles) in degrees</p>
+</dd>
+</dl>
+</section>
+<section id="id42">
+<h3>Returns<a class="headerlink" href="#id42" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>Angular range per frame</p>
+</dd>
+</dl>
+</section>
+<section id="id43">
+<h3>Examples<a class="headerlink" href="#id43" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">range_per_frame</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">compute_range_per_frame</span><span class="p">(</span><span class="n">torsion_data</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id44">
+<h3>Notes<a class="headerlink" href="#id44" title="Link to this heading"></a></h3>
+<p>Uses circular statistics for proper angular range calculation.</p>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_differences">
+<span class="sig-name descname"><span class="pre">compute_differences</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">torsion_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame_1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame_2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_differences" title="Link to this definition"></a></dt>
+<dd><p>Compute angle differences between two frames with periodic boundary handling.</p>
+<section id="id45">
+<h3>Parameters<a class="headerlink" href="#id45" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>torsion_data<span class="classifier">numpy.ndarray</span></dt><dd><p>Torsion angles array with shape (n_frames, n_angles)</p>
+</dd>
+<dt>frame_1<span class="classifier">int, default=0</span></dt><dd><p>First frame index</p>
+</dd>
+<dt>frame_2<span class="classifier">int, default=-1</span></dt><dd><p>Second frame index (-1 for last frame)</p>
+</dd>
+</dl>
+</section>
+<section id="id46">
+<h3>Returns<a class="headerlink" href="#id46" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>Angle differences between frames with proper periodic handling</p>
+</dd>
+</dl>
+</section>
+<section id="id47">
+<h3>Notes<a class="headerlink" href="#id47" title="Link to this heading"></a></h3>
+<p>Handles periodic boundary conditions for angles (-180 to 180 degrees).</p>
+</section>
+<section id="id48">
+<h3>Examples<a class="headerlink" href="#id48" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">differences</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">compute_differences</span><span class="p">(</span><span class="n">torsion_data</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_differences_mean">
+<span class="sig-name descname"><span class="pre">compute_differences_mean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">torsion_data_1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">torsion_data_2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_differences_mean" title="Link to this definition"></a></dt>
+<dd><p>Compute differences between circular means of two datasets.</p>
+<section id="id49">
+<h3>Parameters<a class="headerlink" href="#id49" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>torsion_data_1<span class="classifier">numpy.ndarray</span></dt><dd><p>First torsion dataset</p>
+</dd>
+<dt>torsion_data_2<span class="classifier">numpy.ndarray</span></dt><dd><p>Second torsion dataset</p>
+</dd>
+</dl>
+</section>
+<section id="id50">
+<h3>Returns<a class="headerlink" href="#id50" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>Circular mean angle differences between datasets</p>
+</dd>
+</dl>
+</section>
+<section id="id51">
+<h3>Examples<a class="headerlink" href="#id51" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">diff_means</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">compute_differences_mean</span><span class="p">(</span><span class="n">torsion_1</span><span class="p">,</span> <span class="n">torsion_2</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_transitions_lagtime">
+<span class="sig-name descname"><span class="pre">compute_transitions_lagtime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">torsion_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">30.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lag_time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_transitions_lagtime" title="Link to this definition"></a></dt>
+<dd><p>Compute transitions with lag time for each torsion angle with periodic boundaries.</p>
+<section id="id52">
+<h3>Parameters<a class="headerlink" href="#id52" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>torsion_data<span class="classifier">numpy.ndarray</span></dt><dd><p>Torsion angles array with shape (n_frames, n_angles) in degrees</p>
+</dd>
+<dt>threshold<span class="classifier">float, default=30.0</span></dt><dd><p>Threshold for detecting transitions (in degrees)</p>
+</dd>
+<dt>lag_time<span class="classifier">int, default=1</span></dt><dd><p>Number of frames to look ahead</p>
+</dd>
+</dl>
+</section>
+<section id="id53">
+<h3>Returns<a class="headerlink" href="#id53" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>Transition counts per torsion angle</p>
+</dd>
+</dl>
+</section>
+<section id="id54">
+<h3>Examples<a class="headerlink" href="#id54" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">transitions</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">compute_transitions_lagtime</span><span class="p">(</span><span class="n">torsion_data</span><span class="p">,</span> <span class="mf">30.0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_transitions_window">
+<span class="sig-name descname"><span class="pre">compute_transitions_window</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">torsion_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">30.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_transitions_window" title="Link to this definition"></a></dt>
+<dd><p>Compute transitions within sliding window for each torsion angle with periodic boundaries.</p>
+<section id="id55">
+<h3>Parameters<a class="headerlink" href="#id55" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>torsion_data<span class="classifier">numpy.ndarray</span></dt><dd><p>Torsion angles array with shape (n_frames, n_angles) in degrees</p>
+</dd>
+<dt>threshold<span class="classifier">float, default=30.0</span></dt><dd><p>Threshold for detecting transitions (in degrees)</p>
+</dd>
+<dt>window_size<span class="classifier">int, default=10</span></dt><dd><p>Size of sliding window</p>
+</dd>
+</dl>
+</section>
+<section id="id56">
+<h3>Returns<a class="headerlink" href="#id56" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>Transition counts per torsion angle</p>
+</dd>
+</dl>
+</section>
+<section id="id57">
+<h3>Examples<a class="headerlink" href="#id57" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">transitions</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">compute_transitions_window</span><span class="p">(</span><span class="n">torsion_data</span><span class="p">,</span> <span class="mf">30.0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_stability">
+<span class="sig-name descname"><span class="pre">compute_stability</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">torsion_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">30.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'lagtime'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_stability" title="Link to this definition"></a></dt>
+<dd><p>Compute stability (inverse of transition rate) for each torsion angle with periodic boundaries.</p>
+<section id="id58">
+<h3>Parameters<a class="headerlink" href="#id58" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>torsion_data<span class="classifier">numpy.ndarray</span></dt><dd><p>Torsion angles array with shape (n_frames, n_angles) in degrees</p>
+</dd>
+<dt>threshold<span class="classifier">float, default=30.0</span></dt><dd><p>Threshold for stability detection (in degrees)</p>
+</dd>
+<dt>window_size<span class="classifier">int, default=10</span></dt><dd><p>Window size for calculation</p>
+</dd>
+<dt>mode<span class="classifier">str, default=’lagtime’</span></dt><dd><p>Calculation mode (‘lagtime’ or ‘window’)</p>
+</dd>
+</dl>
+</section>
+<section id="id59">
+<h3>Returns<a class="headerlink" href="#id59" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>Stability values per torsion angle (0=unstable, 1=stable)</p>
+</dd>
+</dl>
+</section>
+<section id="id60">
+<h3>Examples<a class="headerlink" href="#id60" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">stability</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">compute_stability</span><span class="p">(</span><span class="n">torsion_data</span><span class="p">,</span> <span class="mf">30.0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;window&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_cv">
+<span class="sig-name descname"><span class="pre">compute_cv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">torsion_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.TorsionsCalculatorAnalysis.compute_cv" title="Link to this definition"></a></dt>
+<dd><p>Compute coefficient of variation for each torsion angle.</p>
+<section id="id61">
+<h3>Parameters<a class="headerlink" href="#id61" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>torsion_data<span class="classifier">numpy.ndarray</span></dt><dd><p>Torsion angles array with shape (n_frames, n_angles) in degrees</p>
+</dd>
+</dl>
+</section>
+<section id="id62">
+<h3>Returns<a class="headerlink" href="#id62" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>Coefficient of variation for each torsion angle</p>
+</dd>
+</dl>
+</section>
+<section id="id63">
+<h3>Notes<a class="headerlink" href="#id63" title="Link to this heading"></a></h3>
+<p>CV = circular_standard_deviation / abs(circular_mean)
+Uses circular statistics for proper angular data handling.</p>
+</section>
+<section id="id64">
+<h3>Examples<a class="headerlink" href="#id64" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cv_angles</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">compute_cv</span><span class="p">(</span><span class="n">torsion_data</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mdxplain.feature.feature_type.torsions.torsions_calculator.html" class="btn btn-neutral float-left" title="Feature Type: Torsions Calculator" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../mdxplain.feature.helper.html" class="btn btn-neutral float-right" title="Feature Helpers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maximilian Salomon.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

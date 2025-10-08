@@ -1,0 +1,326 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trajectory: Validation Helpers &mdash; mdxplain 31.10.2025 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=55e8f53f"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Trajectory: Managers" href="mdxplain.trajectory.managers.html" />
+    <link rel="prev" title="Trajectory: Process Trajectory Process Helper" href="mdxplain.trajectory.helper.process_helper.trajectory_process_helper.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mdxplain
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction.html">Introduction to mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting started with mdxplain</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/theory/theory.html">The Theory Behind mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/learning/learning.html">Learn mdxplain</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../analysis/mdxplain.analysis.html">Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering/mdxplain.clustering.html">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../comparison/mdxplain.comparison.html">Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_selector/mdxplain.data_selector.html">Data Selector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../decomposition/mdxplain.decomposition.html">Decomposition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature/mdxplain.feature.html">Feature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.html">Feature Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_selection/mdxplain.feature_selection.html">Feature Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pipeline/mdxplain.pipeline.html">Pipeline</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="mdxplain.trajectory.html">Trajectory</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.trajectory.entities.html">Trajectory Entities</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="mdxplain.trajectory.helper.html">Trajectory: Helpers</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.trajectory.helper.dask_trajectory_helper.html">Trajectory: Dask Trajectory Helper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.trajectory.helper.metadata_helper.html">Trajectory: Metadata Helpers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.trajectory.helper.process_helper.html">Trajectory: Process Helpers</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Trajectory: Validation Helpers</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.trajectory.managers.html">Trajectory: Managers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/mdxplain.utils.html">Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mdxplain</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API Documentation</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.trajectory.html">Trajectory</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.trajectory.helper.html">Trajectory: Helpers</a></li>
+      <li class="breadcrumb-item active">Trajectory: Validation Helpers</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api/trajectory/mdxplain.trajectory.helper.validation_helper.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mdxplain.trajectory.helper.validation_helper">
+<span id="trajectory-validation-helpers"></span><h1>Trajectory: Validation Helpers<a class="headerlink" href="#module-mdxplain.trajectory.helper.validation_helper" title="Link to this heading"></a></h1>
+<p>Trajectory validation helper utilities.</p>
+<section id="module-mdxplain.trajectory.helper.validation_helper.trajectory_validation_helper">
+<span id="helper"></span><h2>Helper<a class="headerlink" href="#module-mdxplain.trajectory.helper.validation_helper.trajectory_validation_helper" title="Link to this heading"></a></h2>
+<p>Trajectory validation helper for pipeline operations.</p>
+<p>Provides validation logic for trajectory-changing operations in the pipeline,
+ensuring that existing features are properly handled before modifications.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mdxplain.trajectory.helper.validation_helper.trajectory_validation_helper.TrajectoryValidationHelper">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mdxplain.trajectory.helper.validation_helper.trajectory_validation_helper.</span></span><span class="sig-name descname"><span class="pre">TrajectoryValidationHelper</span></span><a class="headerlink" href="#mdxplain.trajectory.helper.validation_helper.trajectory_validation_helper.TrajectoryValidationHelper" title="Link to this definition"></a></dt>
+<dd><p>Helper class for validating trajectory operations in pipeline context.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.helper.validation_helper.trajectory_validation_helper.TrajectoryValidationHelper.check_features_before_trajectory_changes">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">check_features_before_trajectory_changes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operation_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">traj_indices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.trajectory.helper.validation_helper.trajectory_validation_helper.TrajectoryValidationHelper.check_features_before_trajectory_changes" title="Link to this definition"></a></dt>
+<dd><p>Check if features exist before trajectory modification.</p>
+<section id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data object containing feature data</p>
+</dd>
+<dt>force<span class="classifier">bool</span></dt><dd><p>Whether to force the operation despite existing features</p>
+</dd>
+<dt>operation_name<span class="classifier">str</span></dt><dd><p>Name of the operation for error messages</p>
+</dd>
+<dt>traj_indices<span class="classifier">List[int], optional</span></dt><dd><p>Trajectory indices to check for features.
+If None, checks if ANY features exist at all.</p>
+</dd>
+</dl>
+</section>
+<section id="raises">
+<h3>Raises<a class="headerlink" href="#raises" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If features exist and force=False</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.helper.validation_helper.trajectory_validation_helper.TrajectoryValidationHelper.validate_slice_parameters">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_slice_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frames</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">slice</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.trajectory.helper.validation_helper.trajectory_validation_helper.TrajectoryValidationHelper.validate_slice_parameters" title="Link to this definition"></a></dt>
+<dd><p>Validate parameters for trajectory slicing.</p>
+<section id="id1">
+<h3>Parameters<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>frames<span class="classifier">int, slice, list, or None</span></dt><dd><p>Frame specification for slicing</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h3>Returns<a class="headerlink" href="#returns" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>None</dt><dd><p>Performs validation, does not return value</p>
+</dd>
+</dl>
+</section>
+<section id="id2">
+<h3>Raises<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If frames parameter is invalid</p>
+</dd>
+</dl>
+</section>
+<section id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">TrajectoryValidationHelper</span><span class="o">.</span><span class="n">validate_slice_parameters</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>  <span class="c1"># OK</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">TrajectoryValidationHelper</span><span class="o">.</span><span class="n">validate_slice_parameters</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">500</span><span class="p">))</span>  <span class="c1"># OK</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">TrajectoryValidationHelper</span><span class="o">.</span><span class="n">validate_slice_parameters</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">])</span>  <span class="c1"># OK</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">TrajectoryValidationHelper</span><span class="o">.</span><span class="n">validate_slice_parameters</span><span class="p">(</span><span class="o">-</span><span class="mi">100</span><span class="p">)</span>  <span class="c1"># ValueError</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.helper.validation_helper.trajectory_validation_helper.TrajectoryValidationHelper.validate_data_selector">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_data_selector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_selector</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#mdxplain.trajectory.helper.validation_helper.trajectory_validation_helper.TrajectoryValidationHelper.validate_data_selector" title="Link to this definition"></a></dt>
+<dd><p>Validate DataSelector exists and has data.</p>
+<section id="id3">
+<h3>Parameters<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data object</p>
+</dd>
+<dt>data_selector<span class="classifier">str</span></dt><dd><p>Name of DataSelector to validate</p>
+</dd>
+</dl>
+</section>
+<section id="id4">
+<h3>Returns<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>DataSelectorData</dt><dd><p>The validated selector data object</p>
+</dd>
+</dl>
+</section>
+<section id="id5">
+<h3>Raises<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If DataSelector does not exist or has no data</p>
+</dd>
+</dl>
+</section>
+<section id="id6">
+<h3>Examples<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">selector_data</span> <span class="o">=</span> <span class="n">TrajectoryValidationHelper</span><span class="o">.</span><span class="n">validate_data_selector</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;folded_frames&quot;</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Selector has </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">selector_data</span><span class="o">.</span><span class="n">trajectory_frames</span><span class="p">)</span><span class="si">}</span><span class="s2"> trajectories&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.helper.validation_helper.trajectory_validation_helper.TrajectoryValidationHelper.validate_trajectory_types">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_trajectory_types</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.trajectory.helper.validation_helper.trajectory_validation_helper.TrajectoryValidationHelper.validate_trajectory_types" title="Link to this definition"></a></dt>
+<dd><p>Validate that all trajectories match the memmap setting.</p>
+<section id="id7">
+<h3>Parameters<a class="headerlink" href="#id7" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data object</p>
+</dd>
+</dl>
+</section>
+<section id="id8">
+<h3>Raises<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>TypeError</dt><dd><p>If trajectory types don’t match use_memmap setting</p>
+</dd>
+</dl>
+</section>
+<section id="id9">
+<h3>Examples<a class="headerlink" href="#id9" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">TrajectoryValidationHelper</span><span class="o">.</span><span class="n">validate_trajectory_types</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.helper.validation_helper.trajectory_validation_helper.TrajectoryValidationHelper.validate_superpose_parameters">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_superpose_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_traj</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_frame</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atom_selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">traj_selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="headerlink" href="#mdxplain.trajectory.helper.validation_helper.trajectory_validation_helper.TrajectoryValidationHelper.validate_superpose_parameters" title="Link to this definition"></a></dt>
+<dd><p>Validate all parameters for superpose operation.</p>
+<section id="id10">
+<h3>Parameters<a class="headerlink" href="#id10" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data container with trajectory data</p>
+</dd>
+<dt>reference_traj<span class="classifier">int</span></dt><dd><p>Index of trajectory containing the reference frame</p>
+</dd>
+<dt>reference_frame<span class="classifier">int</span></dt><dd><p>Frame index within reference trajectory</p>
+</dd>
+<dt>atom_selection<span class="classifier">str</span></dt><dd><p>MDTraj selection string for alignment atoms</p>
+</dd>
+<dt>traj_selection<span class="classifier">various</span></dt><dd><p>Selection of trajectories to align</p>
+</dd>
+</dl>
+</section>
+<section id="id11">
+<h3>Returns<a class="headerlink" href="#id11" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>tuple</dt><dd><p>(reference_trajectory, traj_indices, ref_frame, ref_atom_indices)</p>
+</dd>
+</dl>
+</section>
+<section id="id12">
+<h3>Raises<a class="headerlink" href="#id12" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If any parameter is invalid</p>
+</dd>
+</dl>
+</section>
+<section id="id13">
+<h3>Examples<a class="headerlink" href="#id13" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ref_traj</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">ref_frame</span><span class="p">,</span> <span class="n">atom_indices</span> <span class="o">=</span> \
+<span class="gp">... </span>    <span class="n">TrajectoryValidationHelper</span><span class="o">.</span><span class="n">validate_superpose_parameters</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="n">pipeline_data</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;backbone&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span>
+<span class="gp">... </span>    <span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mdxplain.trajectory.helper.process_helper.trajectory_process_helper.html" class="btn btn-neutral float-left" title="Trajectory: Process Trajectory Process Helper" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mdxplain.trajectory.managers.html" class="btn btn-neutral float-right" title="Trajectory: Managers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maximilian Salomon.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

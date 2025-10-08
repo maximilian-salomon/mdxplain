@@ -1,0 +1,194 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Feature Services: Feature Reduce Service &mdash; mdxplain 31.10.2025 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=55e8f53f"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Feature Services: Feature Selector Add Service" href="mdxplain.feature.services.feature_selector_add_service.html" />
+    <link rel="prev" title="Feature Services: Feature Analysis Service" href="mdxplain.feature.services.feature_analysis_service.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mdxplain
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction.html">Introduction to mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting started with mdxplain</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/theory/theory.html">The Theory Behind mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/learning/learning.html">Learn mdxplain</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../analysis/mdxplain.analysis.html">Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering/mdxplain.clustering.html">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../comparison/mdxplain.comparison.html">Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_selector/mdxplain.data_selector.html">Data Selector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../decomposition/mdxplain.decomposition.html">Decomposition</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="mdxplain.feature.html">Feature</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature.entities.html">Feature Entities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="feature_type/mdxplain.feature.feature_type.html">Feature Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature.helper.html">Feature Helpers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature.managers.html">Feature Managers</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="mdxplain.feature.services.html">Feature Services</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.services.helpers.html">Feature Services: Helpers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.services.feature_add_service.html">Feature Services: Feature Add Service</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.services.feature_analysis_service.html">Feature Services: Feature Analysis Service</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Feature Services: Feature Reduce Service</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature.services.feature_selector_add_service.html">Feature Services: Feature Selector Add Service</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.html">Feature Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_selection/mdxplain.feature_selection.html">Feature Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pipeline/mdxplain.pipeline.html">Pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../trajectory/mdxplain.trajectory.html">Trajectory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/mdxplain.utils.html">Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mdxplain</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API Documentation</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.feature.html">Feature</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.feature.services.html">Feature Services</a></li>
+      <li class="breadcrumb-item active">Feature Services: Feature Reduce Service</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api/feature/mdxplain.feature.services.feature_reduce_service.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mdxplain.feature.services.feature_reduce_service">
+<span id="feature-services-feature-reduce-service"></span><h1>Feature Services: Feature Reduce Service<a class="headerlink" href="#module-mdxplain.feature.services.feature_reduce_service" title="Link to this heading"></a></h1>
+<p>Main factory for feature reduce operations.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mdxplain.feature.services.feature_reduce_service.FeatureReduceService">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mdxplain.feature.services.feature_reduce_service.</span></span><span class="sig-name descname"><span class="pre">FeatureReduceService</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">manager</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="mdxplain.feature.managers.html#mdxplain.feature.managers.feature_manager.FeatureManager" title="mdxplain.feature.managers.feature_manager.FeatureManager"><span class="pre">FeatureManager</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.feature.services.feature_reduce_service.FeatureReduceService" title="Link to this definition"></a></dt>
+<dd><p>Main service for accessing reduce operations on feature types.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.services.feature_reduce_service.FeatureReduceService.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">manager</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="mdxplain.feature.managers.html#mdxplain.feature.managers.feature_manager.FeatureManager" title="mdxplain.feature.managers.feature_manager.FeatureManager"><span class="pre">FeatureManager</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature.services.feature_reduce_service.FeatureReduceService.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize feature reduce service.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.feature.services.feature_reduce_service.FeatureReduceService.distances">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">distances</span></span><a class="headerlink" href="#mdxplain.feature.services.feature_reduce_service.FeatureReduceService.distances" title="Link to this definition"></a></dt>
+<dd><p>Access distance-specific reduce metrics.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.feature.services.feature_reduce_service.FeatureReduceService.contacts">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">contacts</span></span><a class="headerlink" href="#mdxplain.feature.services.feature_reduce_service.FeatureReduceService.contacts" title="Link to this definition"></a></dt>
+<dd><p>Access contact-specific reduce metrics.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.feature.services.feature_reduce_service.FeatureReduceService.torsions">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">torsions</span></span><a class="headerlink" href="#mdxplain.feature.services.feature_reduce_service.FeatureReduceService.torsions" title="Link to this definition"></a></dt>
+<dd><p>Access torsion-specific reduce metrics.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.feature.services.feature_reduce_service.FeatureReduceService.dssp">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dssp</span></span><a class="headerlink" href="#mdxplain.feature.services.feature_reduce_service.FeatureReduceService.dssp" title="Link to this definition"></a></dt>
+<dd><p>Access DSSP-specific reduce metrics.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.feature.services.feature_reduce_service.FeatureReduceService.sasa">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sasa</span></span><a class="headerlink" href="#mdxplain.feature.services.feature_reduce_service.FeatureReduceService.sasa" title="Link to this definition"></a></dt>
+<dd><p>Access SASA-specific reduce metrics.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.feature.services.feature_reduce_service.FeatureReduceService.coordinates">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">coordinates</span></span><a class="headerlink" href="#mdxplain.feature.services.feature_reduce_service.FeatureReduceService.coordinates" title="Link to this definition"></a></dt>
+<dd><p>Access coordinates-specific reduce metrics.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mdxplain.feature.services.feature_analysis_service.html" class="btn btn-neutral float-left" title="Feature Services: Feature Analysis Service" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mdxplain.feature.services.feature_selector_add_service.html" class="btn btn-neutral float-right" title="Feature Services: Feature Selector Add Service" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maximilian Salomon.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

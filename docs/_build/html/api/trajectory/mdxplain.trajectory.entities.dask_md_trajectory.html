@@ -1,0 +1,884 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trajectory: Dask MD Trajectory &mdash; mdxplain 31.10.2025 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=55e8f53f"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Trajectory: Data" href="mdxplain.trajectory.entities.trajectory_data.html" />
+    <link rel="prev" title="Trajectory Entities" href="mdxplain.trajectory.entities.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mdxplain
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction.html">Introduction to mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting started with mdxplain</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/theory/theory.html">The Theory Behind mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/learning/learning.html">Learn mdxplain</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../analysis/mdxplain.analysis.html">Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering/mdxplain.clustering.html">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../comparison/mdxplain.comparison.html">Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_selector/mdxplain.data_selector.html">Data Selector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../decomposition/mdxplain.decomposition.html">Decomposition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature/mdxplain.feature.html">Feature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.html">Feature Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_selection/mdxplain.feature_selection.html">Feature Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pipeline/mdxplain.pipeline.html">Pipeline</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="mdxplain.trajectory.html">Trajectory</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="mdxplain.trajectory.entities.html">Trajectory Entities</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Trajectory: Dask MD Trajectory</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.trajectory.entities.trajectory_data.html">Trajectory: Data</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.trajectory.helper.html">Trajectory: Helpers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.trajectory.managers.html">Trajectory: Managers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/mdxplain.utils.html">Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mdxplain</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API Documentation</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.trajectory.html">Trajectory</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.trajectory.entities.html">Trajectory Entities</a></li>
+      <li class="breadcrumb-item active">Trajectory: Dask MD Trajectory</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api/trajectory/mdxplain.trajectory.entities.dask_md_trajectory.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mdxplain.trajectory.entities.dask_md_trajectory">
+<span id="trajectory-dask-md-trajectory"></span><h1>Trajectory: Dask MD Trajectory<a class="headerlink" href="#module-mdxplain.trajectory.entities.dask_md_trajectory" title="Link to this heading"></a></h1>
+<p>DaskMDTrajectory - Memory-efficient MDTraj-compatible trajectory class.</p>
+<p>Provides the complete MDTraj.Trajectory interface with Dask/Zarr backend
+for efficient processing of large trajectory files.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mdxplain.trajectory.entities.dask_md_trajectory.</span></span><span class="sig-name descname"><span class="pre">DaskMDTrajectory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trajectory_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topology_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zarr_cache_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_workers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory" title="Link to this definition"></a></dt>
+<dd><p>Memory-efficient trajectory class compatible with MDTraj interface.</p>
+<p>Uses Dask arrays and Zarr storage for optimal memory usage while maintaining
+full compatibility with MDTraj operations and workflows.</p>
+<section id="attributes">
+<h2>Attributes<a class="headerlink" href="#attributes" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>trajectory_file<span class="classifier">str</span></dt><dd><p>Path to the trajectory file</p>
+</dd>
+<dt>topology_file<span class="classifier">str, optional</span></dt><dd><p>Path to the topology file</p>
+</dd>
+<dt>zarr_cache_path<span class="classifier">str, optional</span></dt><dd><p>Path to the Zarr cache directory</p>
+</dd>
+<dt>chunk_size<span class="classifier">int</span></dt><dd><p>Number of frames per chunk</p>
+</dd>
+<dt>n_workers<span class="classifier">int</span></dt><dd><p>Number of parallel workers</p>
+</dd>
+</dl>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dask_traj</span> <span class="o">=</span> <span class="n">DaskMDTrajectory</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">trajectory_file</span><span class="o">=</span><span class="s1">&#39;trajectory.xtc&#39;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">topology_file</span><span class="o">=</span><span class="s1">&#39;topology.pdb&#39;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">zarr_cache_path</span><span class="o">=</span><span class="s1">&#39;/tmp/my_cache.zarr&#39;</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading"></a></h2>
+<p>This class is designed for memory-efficient processing of large trajectory files
+using Dask and Zarr. It provides a drop-in replacement for MDTraj’s trajectory
+class with additional features for parallel processing and out-of-core computation.
+It supports all standard MDTraj properties and methods, including slicing,
+atom selection, superposition, and more.</p>
+<p>So it is basically a md.Trajectory wrapper with a Dask/Zarr backend.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trajectory_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topology_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zarr_cache_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_workers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize DaskMDTrajectory.</p>
+<section id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>trajectory_file<span class="classifier">str</span></dt><dd><p>Path to trajectory file (.xtc, .dcd, etc.)</p>
+</dd>
+<dt>topology_file<span class="classifier">str, optional</span></dt><dd><p>Path to topology file (.pdb, .gro, etc.)</p>
+</dd>
+<dt>zarr_cache_path<span class="classifier">str, optional</span></dt><dd><p>Custom path for Zarr cache file</p>
+</dd>
+<dt>chunk_size<span class="classifier">int, default=1000</span></dt><dd><p>Number of frames per chunk (optimized for performance)</p>
+</dd>
+<dt>n_workers<span class="classifier">int, optional</span></dt><dd><p>Number of parallel workers (defaults to CPU count)</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.from_mdtraj">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_mdtraj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mdtraj</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Trajectory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zarr_cache_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_workers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory" title="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory"><span class="pre">DaskMDTrajectory</span></a></span></span><a class="headerlink" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.from_mdtraj" title="Link to this definition"></a></dt>
+<dd><p>Create DaskMDTrajectory from existing MDTraj trajectory.</p>
+<section id="id1">
+<h3>Parameters<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>mdtraj<span class="classifier">md.Trajectory</span></dt><dd><p>MDTraj trajectory object to convert</p>
+</dd>
+<dt>zarr_cache_path<span class="classifier">str, optional</span></dt><dd><p>Path for Zarr cache. If None, creates temporary cache.</p>
+</dd>
+<dt>chunk_size<span class="classifier">int, default=1000</span></dt><dd><p>Number of frames per chunk for Dask arrays</p>
+</dd>
+<dt>n_workers<span class="classifier">int, optional</span></dt><dd><p>Number of parallel workers (defaults to CPU count)</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h3>Returns<a class="headerlink" href="#returns" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>DaskMDTrajectory</dt><dd><p>New DaskMDTrajectory instance with data from MDTraj</p>
+</dd>
+</dl>
+</section>
+<section id="id2">
+<h3>Examples<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">mdtraj</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">md</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj</span> <span class="o">=</span> <span class="n">md</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;trajectory.xtc&#39;</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="s1">&#39;topology.pdb&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dask_traj</span> <span class="o">=</span> <span class="n">DaskMDTrajectory</span><span class="o">.</span><span class="n">from_mdtraj</span><span class="p">(</span><span class="n">traj</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Converted </span><span class="si">{</span><span class="n">dask_traj</span><span class="o">.</span><span class="n">n_frames</span><span class="si">}</span><span class="s2"> frames&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># With custom cache path</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dask_traj</span> <span class="o">=</span> <span class="n">DaskMDTrajectory</span><span class="o">.</span><span class="n">from_mdtraj</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">traj</span><span class="p">,</span> <span class="n">zarr_cache_path</span><span class="o">=</span><span class="s1">&#39;/tmp/my_cache.zarr&#39;</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.n_frames">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_frames</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.n_frames" title="Link to this definition"></a></dt>
+<dd><p>Number of frames in the trajectory.</p>
+<section id="id3">
+<h3>Returns<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>int</dt><dd><p>Total number of frames</p>
+</dd>
+</dl>
+</section>
+<section id="id4">
+<h3>Examples<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dask_traj</span> <span class="o">=</span> <span class="n">DaskMDTrajectory</span><span class="p">(</span><span class="s1">&#39;trajectory.xtc&#39;</span><span class="p">,</span> <span class="s1">&#39;topology.pdb&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">dask_traj</span><span class="o">.</span><span class="n">n_frames</span><span class="p">)</span>
+<span class="go">1000</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.n_atoms">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_atoms</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.n_atoms" title="Link to this definition"></a></dt>
+<dd><p>Number of atoms in the trajectory.</p>
+<section id="id5">
+<h3>Returns<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>int</dt><dd><p>Total number of atoms</p>
+</dd>
+</dl>
+</section>
+<section id="id6">
+<h3>Examples<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dask_traj</span> <span class="o">=</span> <span class="n">DaskMDTrajectory</span><span class="p">(</span><span class="s1">&#39;trajectory.xtc&#39;</span><span class="p">,</span> <span class="s1">&#39;topology.pdb&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">dask_traj</span><span class="o">.</span><span class="n">n_atoms</span><span class="p">)</span>
+<span class="go">5000</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.n_residues">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_residues</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.n_residues" title="Link to this definition"></a></dt>
+<dd><p>Number of residues in the trajectory.</p>
+<section id="id7">
+<h3>Returns<a class="headerlink" href="#id7" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>int</dt><dd><p>Total number of residues</p>
+</dd>
+</dl>
+</section>
+<section id="id8">
+<h3>Examples<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dask_traj</span> <span class="o">=</span> <span class="n">DaskMDTrajectory</span><span class="p">(</span><span class="s1">&#39;trajectory.xtc&#39;</span><span class="p">,</span> <span class="s1">&#39;topology.pdb&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">dask_traj</span><span class="o">.</span><span class="n">n_residues</span><span class="p">)</span>
+<span class="go">333</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.topology">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">topology</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Topology</span></em><a class="headerlink" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.topology" title="Link to this definition"></a></dt>
+<dd><p>System topology.</p>
+<section id="id9">
+<h3>Returns<a class="headerlink" href="#id9" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>md.Topology</dt><dd><p>MDTraj topology object</p>
+</dd>
+</dl>
+</section>
+<section id="id10">
+<h3>Examples<a class="headerlink" href="#id10" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dask_traj</span> <span class="o">=</span> <span class="n">DaskMDTrajectory</span><span class="p">(</span><span class="s1">&#39;trajectory.xtc&#39;</span><span class="p">,</span> <span class="s1">&#39;topology.pdb&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">topology</span> <span class="o">=</span> <span class="n">dask_traj</span><span class="o">.</span><span class="n">topology</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">topology</span><span class="o">.</span><span class="n">n_atoms</span><span class="p">)</span>
+<span class="go">5000</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.top">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">top</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Topology</span></em><a class="headerlink" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.top" title="Link to this definition"></a></dt>
+<dd><p>System topology (alias for topology property).</p>
+<section id="id11">
+<h3>Returns<a class="headerlink" href="#id11" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>md.Topology</dt><dd><p>MDTraj topology object</p>
+</dd>
+</dl>
+</section>
+<section id="id12">
+<h3>Examples<a class="headerlink" href="#id12" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dask_traj</span> <span class="o">=</span> <span class="n">DaskMDTrajectory</span><span class="p">(</span><span class="s1">&#39;trajectory.xtc&#39;</span><span class="p">,</span> <span class="s1">&#39;topology.pdb&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">top</span> <span class="o">=</span> <span class="n">dask_traj</span><span class="o">.</span><span class="n">top</span>  <span class="c1"># Same as dask_traj.topology</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">top</span><span class="o">.</span><span class="n">n_residues</span><span class="p">)</span>
+<span class="go">333</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.time">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">time</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.time" title="Link to this definition"></a></dt>
+<dd><p>Simulation time for each frame (lazy loaded).</p>
+<section id="id13">
+<h3>Returns<a class="headerlink" href="#id13" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>np.ndarray</dt><dd><p>Array of simulation times with shape (n_frames,)</p>
+</dd>
+</dl>
+</section>
+<section id="id14">
+<h3>Examples<a class="headerlink" href="#id14" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dask_traj</span> <span class="o">=</span> <span class="n">DaskMDTrajectory</span><span class="p">(</span><span class="s1">&#39;trajectory.xtc&#39;</span><span class="p">,</span> <span class="s1">&#39;topology.pdb&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">times</span> <span class="o">=</span> <span class="n">dask_traj</span><span class="o">.</span><span class="n">time</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;First frame: </span><span class="si">{</span><span class="n">times</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> ps&quot;</span><span class="p">)</span>
+<span class="go">First frame: 0.0 ps</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.timestep">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">timestep</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.timestep" title="Link to this definition"></a></dt>
+<dd><p>Time between frames in picoseconds.</p>
+<section id="id15">
+<h3>Returns<a class="headerlink" href="#id15" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>float</dt><dd><p>Time step in picoseconds</p>
+</dd>
+</dl>
+</section>
+<section id="id16">
+<h3>Examples<a class="headerlink" href="#id16" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dask_traj</span> <span class="o">=</span> <span class="n">DaskMDTrajectory</span><span class="p">(</span><span class="s1">&#39;trajectory.xtc&#39;</span><span class="p">,</span> <span class="s1">&#39;topology.pdb&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dt</span> <span class="o">=</span> <span class="n">dask_traj</span><span class="o">.</span><span class="n">timestep</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Timestep: </span><span class="si">{</span><span class="n">dt</span><span class="si">}</span><span class="s2"> ps&quot;</span><span class="p">)</span>
+<span class="go">Timestep: 1.0 ps</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.xyz">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">xyz</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.xyz" title="Link to this definition"></a></dt>
+<dd><p>Cartesian coordinates (lazy loaded with memory management).</p>
+<section id="id17">
+<h3>Returns<a class="headerlink" href="#id17" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>np.ndarray</dt><dd><p>Coordinate array with shape (n_frames, n_atoms, 3)</p>
+</dd>
+</dl>
+</section>
+<section id="id18">
+<h3>Examples<a class="headerlink" href="#id18" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dask_traj</span> <span class="o">=</span> <span class="n">DaskMDTrajectory</span><span class="p">(</span><span class="s1">&#39;trajectory.xtc&#39;</span><span class="p">,</span> <span class="s1">&#39;topology.pdb&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">coords</span> <span class="o">=</span> <span class="n">dask_traj</span><span class="o">.</span><span class="n">xyz</span>  <span class="c1"># Loads all coordinates into memory</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">coords</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="go">(1000, 5000, 3)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># For large trajectories, use slicing:</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">coords_subset</span> <span class="o">=</span> <span class="n">dask_traj</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">100</span><span class="p">]</span><span class="o">.</span><span class="n">xyz</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.unitcell_vectors">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">unitcell_vectors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.unitcell_vectors" title="Link to this definition"></a></dt>
+<dd><p>Unit cell vectors (lazy loaded).</p>
+<section id="id19">
+<h3>Returns<a class="headerlink" href="#id19" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>Optional[np.ndarray]</dt><dd><p>Unit cell vectors array with shape (n_frames, 3, 3) or None if no unitcell</p>
+</dd>
+</dl>
+</section>
+<section id="id20">
+<h3>Examples<a class="headerlink" href="#id20" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dask_traj</span> <span class="o">=</span> <span class="n">DaskMDTrajectory</span><span class="p">(</span><span class="s1">&#39;trajectory.xtc&#39;</span><span class="p">,</span> <span class="s1">&#39;topology.pdb&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">vectors</span> <span class="o">=</span> <span class="n">dask_traj</span><span class="o">.</span><span class="n">unitcell_vectors</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="n">vectors</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unit cell shape: </span><span class="si">{</span><span class="n">vectors</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.unitcell_lengths">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">unitcell_lengths</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.unitcell_lengths" title="Link to this definition"></a></dt>
+<dd><p>Unit cell lengths (lazy loaded).</p>
+<section id="id21">
+<h3>Returns<a class="headerlink" href="#id21" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>Optional[np.ndarray]</dt><dd><p>Unit cell lengths array with shape (n_frames, 3) or None if no unitcell</p>
+</dd>
+</dl>
+</section>
+<section id="id22">
+<h3>Examples<a class="headerlink" href="#id22" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dask_traj</span> <span class="o">=</span> <span class="n">DaskMDTrajectory</span><span class="p">(</span><span class="s1">&#39;trajectory.xtc&#39;</span><span class="p">,</span> <span class="s1">&#39;topology.pdb&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lengths</span> <span class="o">=</span> <span class="n">dask_traj</span><span class="o">.</span><span class="n">unitcell_lengths</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="n">lengths</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Average box size: </span><span class="si">{</span><span class="n">lengths</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="si">}</span><span class="s2"> nm&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.unitcell_angles">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">unitcell_angles</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.unitcell_angles" title="Link to this definition"></a></dt>
+<dd><p>Unit cell angles (lazy loaded).</p>
+<section id="id23">
+<h3>Returns<a class="headerlink" href="#id23" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>Optional[np.ndarray]</dt><dd><p>Unit cell angles array with shape (n_frames, 3) or None if no unitcell</p>
+</dd>
+</dl>
+</section>
+<section id="id24">
+<h3>Examples<a class="headerlink" href="#id24" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dask_traj</span> <span class="o">=</span> <span class="n">DaskMDTrajectory</span><span class="p">(</span><span class="s1">&#39;trajectory.xtc&#39;</span><span class="p">,</span> <span class="s1">&#39;topology.pdb&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">angles</span> <span class="o">=</span> <span class="n">dask_traj</span><span class="o">.</span><span class="n">unitcell_angles</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="n">angles</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Box angles: </span><span class="si">{</span><span class="n">angles</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> degrees&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.atom_slice">
+<span class="sig-name descname"><span class="pre">atom_slice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atom_indices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory" title="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory"><span class="pre">DaskMDTrajectory</span></a></span></span><a class="headerlink" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.atom_slice" title="Link to this definition"></a></dt>
+<dd><p>Create trajectory from subset of atoms.</p>
+<section id="id25">
+<h3>Parameters<a class="headerlink" href="#id25" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>atom_indices<span class="classifier">array_like</span></dt><dd><p>Indices of atoms to keep</p>
+</dd>
+<dt>inplace<span class="classifier">bool, default=False</span></dt><dd><p>If True, modify trajectory in place and return self.
+If False, return new trajectory instance.</p>
+</dd>
+</dl>
+</section>
+<section id="id26">
+<h3>Returns<a class="headerlink" href="#id26" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>DaskMDTrajectory</dt><dd><p>Self if inplace=True, otherwise new trajectory with selected atoms</p>
+</dd>
+</dl>
+</section>
+<section id="id27">
+<h3>Examples<a class="headerlink" href="#id27" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dask_traj</span> <span class="o">=</span> <span class="n">DaskMDTrajectory</span><span class="p">(</span><span class="s1">&#39;trajectory.xtc&#39;</span><span class="p">,</span> <span class="s1">&#39;topology.pdb&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Select first 100 atoms (new trajectory)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">small_traj</span> <span class="o">=</span> <span class="n">dask_traj</span><span class="o">.</span><span class="n">atom_slice</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Original: </span><span class="si">{</span><span class="n">dask_traj</span><span class="o">.</span><span class="n">n_atoms</span><span class="si">}</span><span class="s2"> atoms, Sliced: </span><span class="si">{</span><span class="n">small_traj</span><span class="o">.</span><span class="n">n_atoms</span><span class="si">}</span><span class="s2"> atoms&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Select specific atom indices in-place</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ca_indices</span> <span class="o">=</span> <span class="n">dask_traj</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s1">&#39;name CA&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dask_traj</span><span class="o">.</span><span class="n">atom_slice</span><span class="p">(</span><span class="n">ca_indices</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># Modifies dask_traj</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.center_coordinates">
+<span class="sig-name descname"><span class="pre">center_coordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mass_weighted</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory" title="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory"><span class="pre">DaskMDTrajectory</span></a></span></span><a class="headerlink" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.center_coordinates" title="Link to this definition"></a></dt>
+<dd><p>Center trajectory frames at origin (in-place operation by default).</p>
+<p>This method acts in-place on the trajectory by default, similar to MDTraj behavior.</p>
+<section id="id28">
+<h3>Parameters<a class="headerlink" href="#id28" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>mass_weighted<span class="classifier">bool, default=False</span></dt><dd><p>Use mass-weighted centering</p>
+</dd>
+<dt>inplace<span class="classifier">bool, default=True</span></dt><dd><p>If True, modify trajectory in place and return self.
+If False, return new trajectory instance.</p>
+</dd>
+</dl>
+</section>
+<section id="id29">
+<h3>Returns<a class="headerlink" href="#id29" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>DaskMDTrajectory</dt><dd><p>Self if inplace=True, otherwise new trajectory with centered coordinates</p>
+</dd>
+</dl>
+</section>
+<section id="id30">
+<h3>Examples<a class="headerlink" href="#id30" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dask_traj</span> <span class="o">=</span> <span class="n">DaskMDTrajectory</span><span class="p">(</span><span class="s1">&#39;trajectory.xtc&#39;</span><span class="p">,</span> <span class="s1">&#39;topology.pdb&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Center coordinates in-place (geometric center) - modifies dask_traj</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dask_traj</span><span class="o">.</span><span class="n">center_coordinates</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Center coordinates using mass weighting, create new trajectory</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mass_centered</span> <span class="o">=</span> <span class="n">dask_traj</span><span class="o">.</span><span class="n">center_coordinates</span><span class="p">(</span><span class="n">mass_weighted</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.superpose">
+<span class="sig-name descname"><span class="pre">superpose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory" title="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory"><span class="pre">DaskMDTrajectory</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Trajectory</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atom_indices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_atom_indices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory" title="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory"><span class="pre">DaskMDTrajectory</span></a></span></span><a class="headerlink" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.superpose" title="Link to this definition"></a></dt>
+<dd><p>Align trajectory to reference structure (in-place operation by default).</p>
+<p>This method acts in-place on the trajectory by default, similar to MDTraj behavior.</p>
+<section id="id31">
+<h3>Parameters<a class="headerlink" href="#id31" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>reference<span class="classifier">DaskMDTrajectory, md.Trajectory, optional</span></dt><dd><p>Reference trajectory (if None, uses self as reference)</p>
+</dd>
+<dt>frame<span class="classifier">int, default=0</span></dt><dd><p>Frame index from reference trajectory to use for alignment</p>
+</dd>
+<dt>atom_indices<span class="classifier">np.ndarray, optional</span></dt><dd><p>Atoms to use for alignment on this trajectory</p>
+</dd>
+<dt>ref_atom_indices<span class="classifier">np.ndarray, optional</span></dt><dd><p>Atoms to use for alignment on reference trajectory
+If None, uses same as atom_indices</p>
+</dd>
+<dt>parallel<span class="classifier">bool, default=True</span></dt><dd><p>Use parallel processing (for MDTraj compatibility)</p>
+</dd>
+<dt>inplace<span class="classifier">bool, default=True</span></dt><dd><p>If True, modify trajectory in place and return self.
+If False, return new trajectory instance.</p>
+</dd>
+</dl>
+</section>
+<section id="id32">
+<h3>Returns<a class="headerlink" href="#id32" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>DaskMDTrajectory</dt><dd><p>Self if inplace=True, otherwise new trajectory aligned to reference</p>
+</dd>
+</dl>
+</section>
+<section id="id33">
+<h3>Examples<a class="headerlink" href="#id33" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dask_traj</span> <span class="o">=</span> <span class="n">DaskMDTrajectory</span><span class="p">(</span><span class="s1">&#39;trajectory.xtc&#39;</span><span class="p">,</span> <span class="s1">&#39;topology.pdb&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Align to own first frame in-place - modifies dask_traj</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dask_traj</span><span class="o">.</span><span class="n">superpose</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Align to own frame 10, create new trajectory</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">aligned</span> <span class="o">=</span> <span class="n">dask_traj</span><span class="o">.</span><span class="n">superpose</span><span class="p">(</span><span class="n">frame</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Align to external trajectory frame 0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">other_traj</span> <span class="o">=</span> <span class="n">DaskMDTrajectory</span><span class="p">(</span><span class="s1">&#39;other.xtc&#39;</span><span class="p">,</span> <span class="s1">&#39;topology.pdb&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dask_traj</span><span class="o">.</span><span class="n">superpose</span><span class="p">(</span><span class="n">reference</span><span class="o">=</span><span class="n">other_traj</span><span class="p">,</span> <span class="n">frame</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Align using only CA atoms</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ca_indices</span> <span class="o">=</span> <span class="n">dask_traj</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s1">&#39;name CA&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dask_traj</span><span class="o">.</span><span class="n">superpose</span><span class="p">(</span><span class="n">atom_indices</span><span class="o">=</span><span class="n">ca_indices</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="raises">
+<h3>Raises<a class="headerlink" href="#raises" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If reference frame index is out of range</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.smooth">
+<span class="sig-name descname"><span class="pre">smooth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atom_indices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory" title="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory"><span class="pre">DaskMDTrajectory</span></a></span></span><a class="headerlink" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.smooth" title="Link to this definition"></a></dt>
+<dd><p>Apply smoothing filter to trajectory.</p>
+<section id="id34">
+<h3>Parameters<a class="headerlink" href="#id34" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>width<span class="classifier">int</span></dt><dd><p>Smoothing window width</p>
+</dd>
+<dt>order<span class="classifier">int, optional</span></dt><dd><p>Polynomial order for Savitzky-Golay filter</p>
+</dd>
+<dt>atom_indices<span class="classifier">np.ndarray, optional</span></dt><dd><p>Atoms to smooth (default: all)</p>
+</dd>
+<dt>inplace<span class="classifier">bool, default=False</span></dt><dd><p>If True, modify trajectory in place and return self.
+If False, return new trajectory instance.</p>
+</dd>
+</dl>
+</section>
+<section id="id35">
+<h3>Returns<a class="headerlink" href="#id35" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>DaskMDTrajectory</dt><dd><p>Self if inplace=True, otherwise new trajectory with smoothed coordinates</p>
+</dd>
+</dl>
+</section>
+<section id="id36">
+<h3>Examples<a class="headerlink" href="#id36" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dask_traj</span> <span class="o">=</span> <span class="n">DaskMDTrajectory</span><span class="p">(</span><span class="s1">&#39;trajectory.xtc&#39;</span><span class="p">,</span> <span class="s1">&#39;topology.pdb&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Apply smoothing with window width 5 (new trajectory)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">smoothed</span> <span class="o">=</span> <span class="n">dask_traj</span><span class="o">.</span><span class="n">smooth</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Smooth only backbone atoms in-place</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">backbone</span> <span class="o">=</span> <span class="n">dask_traj</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s1">&#39;backbone&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dask_traj</span><span class="o">.</span><span class="n">smooth</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">atom_indices</span><span class="o">=</span><span class="n">backbone</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.join">
+<span class="sig-name descname"><span class="pre">join</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory" title="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory"><span class="pre">DaskMDTrajectory</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_topology</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory" title="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory"><span class="pre">DaskMDTrajectory</span></a></span></span><a class="headerlink" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.join" title="Link to this definition"></a></dt>
+<dd><p>Combine trajectories along frame axis.</p>
+<section id="id37">
+<h3>Parameters<a class="headerlink" href="#id37" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>other<span class="classifier">DaskMDTrajectory</span></dt><dd><p>Trajectory to join</p>
+</dd>
+<dt>check_topology<span class="classifier">bool, default=True</span></dt><dd><p>Check topology compatibility</p>
+</dd>
+</dl>
+</section>
+<section id="id38">
+<h3>Returns<a class="headerlink" href="#id38" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>DaskMDTrajectory</dt><dd><p>New trajectory with combined frames</p>
+</dd>
+</dl>
+</section>
+<section id="id39">
+<h3>Examples<a class="headerlink" href="#id39" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">traj1</span> <span class="o">=</span> <span class="n">DaskMDTrajectory</span><span class="p">(</span><span class="s1">&#39;part1.xtc&#39;</span><span class="p">,</span> <span class="s1">&#39;topology.pdb&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj2</span> <span class="o">=</span> <span class="n">DaskMDTrajectory</span><span class="p">(</span><span class="s1">&#39;part2.xtc&#39;</span><span class="p">,</span> <span class="s1">&#39;topology.pdb&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">combined</span> <span class="o">=</span> <span class="n">traj1</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">traj2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Combined: </span><span class="si">{</span><span class="n">combined</span><span class="o">.</span><span class="n">n_frames</span><span class="si">}</span><span class="s2"> frames&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id40">
+<h3>Raises<a class="headerlink" href="#id40" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If trajectories have different number of atoms when check_topology=True</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.stack">
+<span class="sig-name descname"><span class="pre">stack</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory" title="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory"><span class="pre">DaskMDTrajectory</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory" title="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory"><span class="pre">DaskMDTrajectory</span></a></span></span><a class="headerlink" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.stack" title="Link to this definition"></a></dt>
+<dd><p>Combine trajectories along atom axis.</p>
+<section id="id41">
+<h3>Parameters<a class="headerlink" href="#id41" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>other<span class="classifier">DaskMDTrajectory</span></dt><dd><p>Trajectory to stack</p>
+</dd>
+</dl>
+</section>
+<section id="id42">
+<h3>Returns<a class="headerlink" href="#id42" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>DaskMDTrajectory</dt><dd><p>New trajectory with combined atoms</p>
+</dd>
+</dl>
+</section>
+<section id="id43">
+<h3>Examples<a class="headerlink" href="#id43" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">protein</span> <span class="o">=</span> <span class="n">DaskMDTrajectory</span><span class="p">(</span><span class="s1">&#39;protein.xtc&#39;</span><span class="p">,</span> <span class="s1">&#39;protein.pdb&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ligand</span> <span class="o">=</span> <span class="n">DaskMDTrajectory</span><span class="p">(</span><span class="s1">&#39;ligand.xtc&#39;</span><span class="p">,</span> <span class="s1">&#39;ligand.pdb&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">complex_traj</span> <span class="o">=</span> <span class="n">protein</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">ligand</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Complex: </span><span class="si">{</span><span class="n">complex_traj</span><span class="o">.</span><span class="n">n_atoms</span><span class="si">}</span><span class="s2"> atoms&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id44">
+<h3>Raises<a class="headerlink" href="#id44" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If trajectories have different number of frames</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.slice">
+<span class="sig-name descname"><span class="pre">slice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">slice</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_dask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory" title="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory"><span class="pre">DaskMDTrajectory</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Trajectory</span></span></span><a class="headerlink" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.slice" title="Link to this definition"></a></dt>
+<dd><p>Extract specific frames.</p>
+<section id="id45">
+<h3>Parameters<a class="headerlink" href="#id45" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>key<span class="classifier">int, slice, or array_like</span></dt><dd><p>Frame indices to extract</p>
+</dd>
+<dt>return_dask<span class="classifier">bool, default=True</span></dt><dd><p>If True, returns a new DaskMDTrajectory with sliced data
+If False, returns an md.Trajectory (original behavior)</p>
+</dd>
+</dl>
+</section>
+<section id="id46">
+<h3>Returns<a class="headerlink" href="#id46" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>DaskMDTrajectory or md.Trajectory</dt><dd><p>DaskMDTrajectory with selected frames (if return_dask=True) or
+MDTraj trajectory with selected frames (if return_dask=False)</p>
+</dd>
+</dl>
+</section>
+<section id="id47">
+<h3>Examples<a class="headerlink" href="#id47" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dask_traj</span> <span class="o">=</span> <span class="n">DaskMDTrajectory</span><span class="p">(</span><span class="s1">&#39;trajectory.xtc&#39;</span><span class="p">,</span> <span class="s1">&#39;topology.pdb&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Extract first 100 frames as DaskMDTrajectory (default)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">subset</span> <span class="o">=</span> <span class="n">dask_traj</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Extract specific frames as md.Trajectory</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">frames</span> <span class="o">=</span> <span class="n">dask_traj</span><span class="o">.</span><span class="n">slice</span><span class="p">([</span><span class="mi">10</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">],</span> <span class="n">return_dask</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Extracted </span><span class="si">{</span><span class="n">frames</span><span class="o">.</span><span class="n">n_frames</span><span class="si">}</span><span class="s2"> frames&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="note">
+<h3>Note:<a class="headerlink" href="#note" title="Link to this heading"></a></h3>
+<p>When return_dask=True, uses lazy Dask array slicing to avoid memory issues.
+The slicing operation is completely lazy until data is actually accessed.</p>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.memory_usage">
+<span class="sig-name descname"><span class="pre">memory_usage</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.memory_usage" title="Link to this definition"></a></dt>
+<dd><p>Get memory usage information.</p>
+<section id="id48">
+<h3>Returns<a class="headerlink" href="#id48" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>dict</dt><dd><p>Memory usage statistics with keys: coordinates_size_mb, zarr_cache_size_mb, chunk_size, n_workers</p>
+</dd>
+</dl>
+</section>
+<section id="id49">
+<h3>Examples<a class="headerlink" href="#id49" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dask_traj</span> <span class="o">=</span> <span class="n">DaskMDTrajectory</span><span class="p">(</span><span class="s1">&#39;trajectory.xtc&#39;</span><span class="p">,</span> <span class="s1">&#39;topology.pdb&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">usage</span> <span class="o">=</span> <span class="n">dask_traj</span><span class="o">.</span><span class="n">memory_usage</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Trajectory size: </span><span class="si">{</span><span class="n">usage</span><span class="p">[</span><span class="s1">&#39;coordinates_size_mb&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> MB&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cache size: </span><span class="si">{</span><span class="n">usage</span><span class="p">[</span><span class="s1">&#39;zarr_cache_size_mb&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> MB&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.cleanup">
+<span class="sig-name descname"><span class="pre">cleanup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.cleanup" title="Link to this definition"></a></dt>
+<dd><p>Clean up resources and temporary files.</p>
+<section id="id50">
+<h3>Parameters<a class="headerlink" href="#id50" title="Link to this heading"></a></h3>
+<p>None</p>
+</section>
+<section id="id51">
+<h3>Returns<a class="headerlink" href="#id51" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>None</dt><dd><p>Clears caches and closes zarr store</p>
+</dd>
+</dl>
+</section>
+<section id="id52">
+<h3>Examples<a class="headerlink" href="#id52" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dask_traj</span> <span class="o">=</span> <span class="n">DaskMDTrajectory</span><span class="p">(</span><span class="s1">&#39;trajectory.xtc&#39;</span><span class="p">,</span> <span class="s1">&#39;topology.pdb&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Do some work...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dask_traj</span><span class="o">.</span><span class="n">cleanup</span><span class="p">()</span>  <span class="c1"># Clean up when done</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.save" title="Link to this definition"></a></dt>
+<dd><p>Save DaskMDTrajectory to file.</p>
+<section id="id53">
+<h3>Parameters<a class="headerlink" href="#id53" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>filepath<span class="classifier">str</span></dt><dd><p>Path where to save the trajectory. Directory will be created if needed.</p>
+</dd>
+</dl>
+</section>
+<section id="id54">
+<h3>Returns<a class="headerlink" href="#id54" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>None</dt><dd><p>Saves trajectory to disk using pickle</p>
+</dd>
+</dl>
+</section>
+<section id="id55">
+<h3>Notes<a class="headerlink" href="#id55" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Creates parent directories if they don’t exist</p></li>
+<li><p>The zarr cache must remain available at its original location</p></li>
+<li><p>Uses pickle to preserve the complete object state</p></li>
+</ul>
+</section>
+<section id="id56">
+<h3>Examples<a class="headerlink" href="#id56" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">traj</span> <span class="o">=</span> <span class="n">DaskMDTrajectory</span><span class="p">(</span><span class="s1">&#39;trajectory.xtc&#39;</span><span class="p">,</span> <span class="s1">&#39;topology.pdb&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;output/my_traj.pkl&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.load">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory" title="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory"><span class="pre">DaskMDTrajectory</span></a></span></span><a class="headerlink" href="#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory.load" title="Link to this definition"></a></dt>
+<dd><p>Load DaskMDTrajectory from file.</p>
+<section id="id57">
+<h3>Parameters<a class="headerlink" href="#id57" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>filepath<span class="classifier">str</span></dt><dd><p>Path to the saved trajectory file</p>
+</dd>
+</dl>
+</section>
+<section id="id58">
+<h3>Returns<a class="headerlink" href="#id58" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>DaskMDTrajectory</dt><dd><p>Loaded trajectory object</p>
+</dd>
+</dl>
+</section>
+<section id="id59">
+<h3>Raises<a class="headerlink" href="#id59" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>FileNotFoundError</dt><dd><p>If the saved file does not exist</p>
+</dd>
+</dl>
+</section>
+<section id="id60">
+<h3>Notes<a class="headerlink" href="#id60" title="Link to this heading"></a></h3>
+<p>The zarr cache must still exist at the original location.</p>
+</section>
+<section id="id61">
+<h3>Examples<a class="headerlink" href="#id61" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">traj</span> <span class="o">=</span> <span class="n">DaskMDTrajectory</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;output/my_traj.pkl&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mdxplain.trajectory.entities.html" class="btn btn-neutral float-left" title="Trajectory Entities" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mdxplain.trajectory.entities.trajectory_data.html" class="btn btn-neutral float-right" title="Trajectory: Data" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maximilian Salomon.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

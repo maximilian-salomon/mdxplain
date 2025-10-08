@@ -1,0 +1,246 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Feature Importance: Analysis Runner Helper &mdash; mdxplain 31.10.2025 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=55e8f53f"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Feature Importance: Validation Helper" href="mdxplain.feature_importance.helpers.feature_importance_validation_helper.html" />
+    <link rel="prev" title="Feature Importance Helpers" href="mdxplain.feature_importance.helpers.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mdxplain
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction.html">Introduction to mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting started with mdxplain</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/theory/theory.html">The Theory Behind mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/learning/learning.html">Learn mdxplain</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../analysis/mdxplain.analysis.html">Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering/mdxplain.clustering.html">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../comparison/mdxplain.comparison.html">Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_selector/mdxplain.data_selector.html">Data Selector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../decomposition/mdxplain.decomposition.html">Decomposition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature/mdxplain.feature.html">Feature</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="mdxplain.feature_importance.html">Feature Importance</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature_importance.html#examples">Examples:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature_importance.analyzer_types.html">Feature Importance Analyzer Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature_importance.entities.html">Feature Importance Entities</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="mdxplain.feature_importance.helpers.html">Feature Importance Helpers</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Feature Importance: Analysis Runner Helper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature_importance.helpers.feature_importance_validation_helper.html">Feature Importance: Validation Helper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature_importance.helpers.feature_name_mapping_helper.html">Feature Importance: Mapping Helper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature_importance.helpers.metadata_builder_helper.html">Feature Importance: Metadata Builder Helper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.feature_importance.helpers.top_features_helper.html">Feature Importance: Top Features Helper</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature_importance.managers.html">Feature Importance Managers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature_importance.services.html">Feature Importance Services</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_selection/mdxplain.feature_selection.html">Feature Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pipeline/mdxplain.pipeline.html">Pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../trajectory/mdxplain.trajectory.html">Trajectory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/mdxplain.utils.html">Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mdxplain</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API Documentation</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.feature_importance.html">Feature Importance</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.feature_importance.helpers.html">Feature Importance Helpers</a></li>
+      <li class="breadcrumb-item active">Feature Importance: Analysis Runner Helper</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api/feature_importance/mdxplain.feature_importance.helpers.analysis_runner_helper.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mdxplain.feature_importance.helpers.analysis_runner_helper">
+<span id="feature-importance-analysis-runner-helper"></span><h1>Feature Importance: Analysis Runner Helper<a class="headerlink" href="#module-mdxplain.feature_importance.helpers.analysis_runner_helper" title="Link to this heading"></a></h1>
+<p>Analysis runner helper for feature importance operations.</p>
+<p>This module provides helper methods for running feature importance analyses
+on individual sub-comparisons, extracting common logic from
+FeatureImportanceManager methods.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mdxplain.feature_importance.helpers.analysis_runner_helper.AnalysisRunnerHelper">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mdxplain.feature_importance.helpers.analysis_runner_helper.</span></span><span class="sig-name descname"><span class="pre">AnalysisRunnerHelper</span></span><a class="headerlink" href="#mdxplain.feature_importance.helpers.analysis_runner_helper.AnalysisRunnerHelper" title="Link to this definition"></a></dt>
+<dd><p>Helper class for running feature importance analyses.</p>
+<p>Provides static methods for executing feature importance analysis on
+individual sub-comparisons and processing the results. These methods
+extract common logic from FeatureImportanceManager to improve code
+organization and reusability.</p>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Run analysis on single sub-comparison</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">AnalysisRunnerHelper</span><span class="o">.</span><span class="n">run_single_analysis</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">analyzer_type</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sub_comp</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Process and store analysis result</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">AnalysisRunnerHelper</span><span class="o">.</span><span class="n">store_analysis_result</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">fi_data</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">metadata</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_importance.helpers.analysis_runner_helper.AnalysisRunnerHelper.store_analysis_result">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">store_analysis_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fi_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="mdxplain.feature_importance.entities.html#mdxplain.feature_importance.entities.feature_importance_data.FeatureImportanceData" title="mdxplain.feature_importance.entities.feature_importance_data.FeatureImportanceData"><span class="pre">FeatureImportanceData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature_importance.helpers.analysis_runner_helper.AnalysisRunnerHelper.store_analysis_result" title="Link to this definition"></a></dt>
+<dd><p>Store analysis result in FeatureImportanceData object.</p>
+<p>Takes the analysis result and metadata and stores them properly
+in the FeatureImportanceData container.</p>
+<section id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>fi_data<span class="classifier">FeatureImportanceData</span></dt><dd><p>Feature importance data container to store result in</p>
+</dd>
+<dt>result<span class="classifier">Dict[str, Any]</span></dt><dd><p>Analysis result from analyzer containing importances</p>
+</dd>
+<dt>metadata<span class="classifier">Dict[str, Any]</span></dt><dd><p>Metadata dictionary describing the analysis</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h3>Returns<a class="headerlink" href="#returns" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>None</dt><dd><p>Stores result in the fi_data object</p>
+</dd>
+</dl>
+</section>
+<section id="id1">
+<h3>Examples<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">AnalysisRunnerHelper</span><span class="o">.</span><span class="n">store_analysis_result</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">fi_data</span><span class="p">,</span> <span class="n">analysis_result</span><span class="p">,</span> <span class="n">metadata_dict</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_importance.helpers.analysis_runner_helper.AnalysisRunnerHelper.run_comparison_analysis">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">run_comparison_analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">comp_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../comparison/mdxplain.comparison.entities.html#mdxplain.comparison.entities.comparison_data.ComparisonData" title="mdxplain.comparison.entities.comparison_data.ComparisonData"><span class="pre">ComparisonData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">analyzer_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="mdxplain.feature_importance.analyzer_types.interfaces.analyzer_type_base.html#mdxplain.feature_importance.analyzer_types.interfaces.analyzer_type_base.AnalyzerTypeBase" title="mdxplain.feature_importance.analyzer_types.interfaces.analyzer_type_base.AnalyzerTypeBase"><span class="pre">AnalyzerTypeBase</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="mdxplain.feature_importance.entities.html#mdxplain.feature_importance.entities.feature_importance_data.FeatureImportanceData" title="mdxplain.feature_importance.entities.feature_importance_data.FeatureImportanceData"><span class="pre">FeatureImportanceData</span></a></span></span><a class="headerlink" href="#mdxplain.feature_importance.helpers.analysis_runner_helper.AnalysisRunnerHelper.run_comparison_analysis" title="Link to this definition"></a></dt>
+<dd><p>Run analysis on all sub-comparisons in a comparison.</p>
+<p>Processes all sub-comparisons within a comparison object, running
+the specified analyzer on each one and collecting results.</p>
+<section id="id2">
+<h3>Parameters<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data object containing data and comparisons</p>
+</dd>
+<dt>comp_data<span class="classifier">ComparisonData</span></dt><dd><p>Comparison data object containing sub-comparisons</p>
+</dd>
+<dt>analyzer_type<span class="classifier">AnalyzerTypeBase</span></dt><dd><p>Analyzer instance to use for all sub-comparisons</p>
+</dd>
+<dt>analysis_name<span class="classifier">str</span></dt><dd><p>Name for the analysis (for metadata)</p>
+</dd>
+</dl>
+</section>
+<section id="id3">
+<h3>Returns<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>FeatureImportanceData</dt><dd><p>Complete feature importance data with all sub-comparison results</p>
+</dd>
+</dl>
+</section>
+<section id="id4">
+<h3>Examples<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fi_data</span> <span class="o">=</span> <span class="n">AnalysisRunnerHelper</span><span class="o">.</span><span class="n">run_comparison_analysis</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">pipeline_data</span><span class="p">,</span> <span class="n">comp_data</span><span class="p">,</span> <span class="n">analyzer</span><span class="p">,</span> <span class="s2">&quot;my_analysis&quot;</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">fi_data</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>  <span class="c1"># Number of sub-comparisons analyzed</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mdxplain.feature_importance.helpers.html" class="btn btn-neutral float-left" title="Feature Importance Helpers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mdxplain.feature_importance.helpers.feature_importance_validation_helper.html" class="btn btn-neutral float-right" title="Feature Importance: Validation Helper" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maximilian Salomon.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,237 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Structure Calculation Helper &mdash; mdxplain 31.10.2025 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=55e8f53f"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Trajectory Service Helper" href="mdxplain.analysis.structure.helpers.trajectory_service_helper.html" />
+    <link rel="prev" title="Residue Aggregation Helper" href="mdxplain.analysis.structure.helpers.residue_aggregation_helper.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mdxplain
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction.html">Introduction to mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting started with mdxplain</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/theory/theory.html">The Theory Behind mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/learning/learning.html">Learn mdxplain</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="mdxplain.analysis.html">Analysis</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="mdxplain.analysis.html#module-contents">Module contents</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.analysis.managers.html">Analysis Managers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.analysis.services.html">Analysis Services</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="mdxplain.analysis.structure.html">Analysis Structure</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering/mdxplain.clustering.html">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../comparison/mdxplain.comparison.html">Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_selector/mdxplain.data_selector.html">Data Selector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../decomposition/mdxplain.decomposition.html">Decomposition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature/mdxplain.feature.html">Feature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.html">Feature Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_selection/mdxplain.feature_selection.html">Feature Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pipeline/mdxplain.pipeline.html">Pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../trajectory/mdxplain.trajectory.html">Trajectory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/mdxplain.utils.html">Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mdxplain</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API Documentation</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.analysis.html">Analysis</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.analysis.structure.html">Analysis Structure</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.analysis.structure.helpers.html">Analysis Structure Helpers</a></li>
+      <li class="breadcrumb-item active">Structure Calculation Helper</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api/analysis/mdxplain.analysis.structure.helpers.structure_calculation_helper.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mdxplain.analysis.structure.helpers.structure_calculation_helper">
+<span id="structure-calculation-helper"></span><h1>Structure Calculation Helper<a class="headerlink" href="#module-mdxplain.analysis.structure.helpers.structure_calculation_helper" title="Link to this heading"></a></h1>
+<p>Shared helper functions for structure calculations.</p>
+<p>These helpers provide chunk iteration and stacking utilities that allow
+structure analyses to process large trajectories without loading all frames
+into memory simultaneously.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mdxplain.analysis.structure.helpers.structure_calculation_helper.StructureCalculationHelper">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mdxplain.analysis.structure.helpers.structure_calculation_helper.</span></span><span class="sig-name descname"><span class="pre">StructureCalculationHelper</span></span><a class="headerlink" href="#mdxplain.analysis.structure.helpers.structure_calculation_helper.StructureCalculationHelper" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Bundle of shared low-level operations for structure analysis.</p>
+<p>The helper centralises chunk iteration and frame stacking logic so higher
+level services/calculators can operate on homogeneous APIs regardless of
+whether trajectories are processed in-memory or via memmap streaming.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.analysis.structure.helpers.structure_calculation_helper.StructureCalculationHelper.iterate_chunks">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">iterate_chunks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trajectory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">md.Trajectory</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../trajectory/mdxplain.trajectory.entities.dask_md_trajectory.html#mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory" title="mdxplain.trajectory.entities.dask_md_trajectory.DaskMDTrajectory"><span class="pre">DaskMDTrajectory</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">md.Trajectory</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mdxplain.analysis.structure.helpers.structure_calculation_helper.StructureCalculationHelper.iterate_chunks" title="Link to this definition"></a></dt>
+<dd><p>Yield slices of a trajectory with the requested chunk size.</p>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>trajectory<span class="classifier">md.Trajectory or DaskMDTrajectory</span></dt><dd><p>Trajectory object supporting slicing via <code class="docutils literal notranslate"><span class="pre">__getitem__</span></code>.</p>
+</dd>
+<dt>chunk_size<span class="classifier">int</span></dt><dd><p>Number of frames processed per chunk. Values less than one default to
+the full trajectory length.</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>Iterator[Tuple[md.Trajectory, int, int]]</dt><dd><p>Iterator yielding tuples containing <code class="docutils literal notranslate"><span class="pre">(chunk,</span> <span class="pre">start_index,</span> <span class="pre">end_index)</span></code>.</p>
+</dd>
+</dl>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading"></a></h2>
+<p>When chunking is disabled the helper yields a single tuple containing the
+original trajectory and the full frame range.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">topology</span> <span class="o">=</span> <span class="n">md</span><span class="o">.</span><span class="n">Topology</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chain</span> <span class="o">=</span> <span class="n">topology</span><span class="o">.</span><span class="n">add_chain</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">residue</span> <span class="o">=</span> <span class="n">topology</span><span class="o">.</span><span class="n">add_residue</span><span class="p">(</span><span class="s2">&quot;ALA&quot;</span><span class="p">,</span> <span class="n">chain</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">topology</span><span class="o">.</span><span class="n">add_atom</span><span class="p">(</span><span class="s2">&quot;CA&quot;</span><span class="p">,</span> <span class="n">md</span><span class="o">.</span><span class="n">element</span><span class="o">.</span><span class="n">carbon</span><span class="p">,</span> <span class="n">residue</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traj</span> <span class="o">=</span> <span class="n">md</span><span class="o">.</span><span class="n">Trajectory</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="n">topology</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iterator</span> <span class="o">=</span> <span class="n">StructureCalculationHelper</span><span class="o">.</span><span class="n">iterate_chunks</span><span class="p">(</span><span class="n">traj</span><span class="p">,</span> <span class="n">chunk_size</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chunk</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">iterator</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">chunk</span><span class="o">.</span><span class="n">n_frames</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
+<span class="go">(2, 0, 2)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.analysis.structure.helpers.structure_calculation_helper.StructureCalculationHelper.stack_frames">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stack_frames</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frames</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Trajectory</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Trajectory</span></span></span><a class="headerlink" href="#mdxplain.analysis.structure.helpers.structure_calculation_helper.StructureCalculationHelper.stack_frames" title="Link to this definition"></a></dt>
+<dd><p>Stack individual frames into a single trajectory.</p>
+<section id="id1">
+<h2>Parameters<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>frames<span class="classifier">Iterable[md.Trajectory]</span></dt><dd><p>Iterable of trajectories with exactly one frame each.</p>
+</dd>
+</dl>
+</section>
+<section id="id2">
+<h2>Returns<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>md.Trajectory</dt><dd><p>Combined trajectory containing the stacked frames.</p>
+</dd>
+</dl>
+</section>
+<section id="raises">
+<h2>Raises<a class="headerlink" href="#raises" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If the iterable is empty.</p>
+</dd>
+</dl>
+</section>
+<section id="id3">
+<h2>Examples<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">topology</span> <span class="o">=</span> <span class="n">md</span><span class="o">.</span><span class="n">Topology</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chain</span> <span class="o">=</span> <span class="n">topology</span><span class="o">.</span><span class="n">add_chain</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">residue</span> <span class="o">=</span> <span class="n">topology</span><span class="o">.</span><span class="n">add_residue</span><span class="p">(</span><span class="s2">&quot;ALA&quot;</span><span class="p">,</span> <span class="n">chain</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">topology</span><span class="o">.</span><span class="n">add_atom</span><span class="p">(</span><span class="s2">&quot;CA&quot;</span><span class="p">,</span> <span class="n">md</span><span class="o">.</span><span class="n">element</span><span class="o">.</span><span class="n">carbon</span><span class="p">,</span> <span class="n">residue</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">frame</span> <span class="o">=</span> <span class="n">md</span><span class="o">.</span><span class="n">Trajectory</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> <span class="n">topology</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">stacked</span> <span class="o">=</span> <span class="n">StructureCalculationHelper</span><span class="o">.</span><span class="n">stack_frames</span><span class="p">([</span><span class="n">frame</span><span class="p">,</span> <span class="n">frame</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">stacked</span><span class="o">.</span><span class="n">n_frames</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mdxplain.analysis.structure.helpers.residue_aggregation_helper.html" class="btn btn-neutral float-left" title="Residue Aggregation Helper" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mdxplain.analysis.structure.helpers.trajectory_service_helper.html" class="btn btn-neutral float-right" title="Trajectory Service Helper" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maximilian Salomon.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

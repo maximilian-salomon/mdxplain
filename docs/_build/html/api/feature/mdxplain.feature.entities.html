@@ -1,0 +1,385 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Feature Entities &mdash; mdxplain 31.10.2025 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=55e8f53f"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Feature Types" href="feature_type/mdxplain.feature.feature_type.html" />
+    <link rel="prev" title="Feature" href="mdxplain.feature.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mdxplain
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction.html">Introduction to mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting started with mdxplain</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/theory/theory.html">The Theory Behind mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/learning/learning.html">Learn mdxplain</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../analysis/mdxplain.analysis.html">Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering/mdxplain.clustering.html">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../comparison/mdxplain.comparison.html">Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_selector/mdxplain.data_selector.html">Data Selector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../decomposition/mdxplain.decomposition.html">Decomposition</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="mdxplain.feature.html">Feature</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Feature Entities</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#module-mdxplain.feature.entities.feature_data">Entities</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="feature_type/mdxplain.feature.feature_type.html">Feature Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature.helper.html">Feature Helpers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature.managers.html">Feature Managers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature.services.html">Feature Services</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.html">Feature Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_selection/mdxplain.feature_selection.html">Feature Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pipeline/mdxplain.pipeline.html">Pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../trajectory/mdxplain.trajectory.html">Trajectory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/mdxplain.utils.html">Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mdxplain</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API Documentation</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.feature.html">Feature</a></li>
+      <li class="breadcrumb-item active">Feature Entities</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api/feature/mdxplain.feature.entities.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mdxplain.feature.entities">
+<span id="feature-entities"></span><h1>Feature Entities<a class="headerlink" href="#module-mdxplain.feature.entities" title="Link to this heading"></a></h1>
+<p>Feature entities.</p>
+<section id="module-mdxplain.feature.entities.feature_data">
+<span id="entities"></span><h2>Entities<a class="headerlink" href="#module-mdxplain.feature.entities.feature_data" title="Link to this heading"></a></h2>
+<p>Feature data container for trajectory-specific computed features.</p>
+<p>Container for trajectory-specific feature data (distances, contacts) with 
+associated calculator. Stores per-trajectory feature data enabling mixed 
+systems with different proteins in a single pipeline.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mdxplain.feature.entities.feature_data.FeatureData">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mdxplain.feature.entities.feature_data.</span></span><span class="sig-name descname"><span class="pre">FeatureData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="feature_type/mdxplain.feature.feature_type.interfaces.feature_type_base.html#mdxplain.feature.feature_type.interfaces.feature_type_base.FeatureTypeBase" title="mdxplain.feature.feature_type.interfaces.feature_type_base.FeatureTypeBase"><span class="pre">FeatureTypeBase</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_memmap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'./cache'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trajectory_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.feature.entities.feature_data.FeatureData" title="Link to this definition"></a></dt>
+<dd><p>Internal container for trajectory-specific computed feature data.</p>
+<p>Stores per-trajectory feature data enabling mixed systems with different
+proteins in a single pipeline. Each trajectory computes its own features
+which are combined at the selection level.</p>
+<section id="attributes">
+<h3>Attributes<a class="headerlink" href="#attributes" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>feature_type<span class="classifier">FeatureTypeBase</span></dt><dd><p>Feature type object to compute data</p>
+</dd>
+<dt>use_memmap<span class="classifier">bool</span></dt><dd><p>Whether memory mapping is used for large datasets</p>
+</dd>
+<dt>cache_path<span class="classifier">str or None</span></dt><dd><p>Path for memory-mapped cache files</p>
+</dd>
+<dt>reduced_cache_path<span class="classifier">str or None</span></dt><dd><p>Path for memory-mapped reduced cache files</p>
+</dd>
+<dt>chunk_size<span class="classifier">int</span></dt><dd><p>Chunk size for processing large datasets</p>
+</dd>
+<dt>data<span class="classifier">np.ndarray or None</span></dt><dd><p>Original feature data array</p>
+</dd>
+<dt>feature_metadata<span class="classifier">dict or None</span></dt><dd><p>Metadata including feature definitions, hyperparameters, etc.</p>
+</dd>
+<dt>reduced_data<span class="classifier">np.ndarray or None</span></dt><dd><p>Reduced feature data array (e.g., after PCA)</p>
+</dd>
+<dt>reduced_feature_metadata<span class="classifier">dict or None</span></dt><dd><p>Metadata for reduced features</p>
+</dd>
+<dt>reduction_info<span class="classifier">dict or None</span></dt><dd><p>Information about the reduction method and parameters</p>
+</dd>
+<dt>analsis<span class="classifier">Any</span></dt><dd><p>Facade for analysis methods on this feature data</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.entities.feature_data.FeatureData.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="feature_type/mdxplain.feature.feature_type.interfaces.feature_type_base.html#mdxplain.feature.feature_type.interfaces.feature_type_base.FeatureTypeBase" title="mdxplain.feature.feature_type.interfaces.feature_type_base.FeatureTypeBase"><span class="pre">FeatureTypeBase</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_memmap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'./cache'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trajectory_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature.entities.feature_data.FeatureData.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize feature data container.</p>
+<section id="parameters">
+<h4>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>feature_type<span class="classifier">FeatureTypeBase</span></dt><dd><p>Feature type object to compute data</p>
+</dd>
+<dt>use_memmap<span class="classifier">bool, default=False</span></dt><dd><p>Whether to use memory mapping</p>
+</dd>
+<dt>cache_path<span class="classifier">str, optional</span></dt><dd><p>Cache directory path for memmap</p>
+</dd>
+<dt>chunk_size<span class="classifier">int, optional</span></dt><dd><p>Chunk size for processing large datasets. Smaller chunks use less
+memory but may be slower. If None, uses automatic chunking.</p>
+</dd>
+<dt>trajectory_name<span class="classifier">str, optional</span></dt><dd><p>Trajectory name for unique cache filenames</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h4>Returns<a class="headerlink" href="#returns" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Initializes feature data container</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.entities.feature_data.FeatureData.get_data">
+<span class="sig-name descname"><span class="pre">get_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">force_original</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mdxplain.feature.entities.feature_data.FeatureData.get_data" title="Link to this definition"></a></dt>
+<dd><p>Get current dataset (reduced if available, else original).</p>
+<section id="id1">
+<h4>Parameters<a class="headerlink" href="#id1" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>force_original<span class="classifier">bool, default=False</span></dt><dd><p>Whether to force using the original data instead of the reduced data</p>
+</dd>
+</dl>
+</section>
+<section id="id2">
+<h4>Returns<a class="headerlink" href="#id2" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>Feature data array for this trajectory</p>
+</dd>
+</dl>
+</section>
+<section id="examples">
+<h4>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Get current data</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">feature_data</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Data shape: </span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.entities.feature_data.FeatureData.get_feature_metadata">
+<span class="sig-name descname"><span class="pre">get_feature_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">force_original</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mdxplain.feature.entities.feature_data.FeatureData.get_feature_metadata" title="Link to this definition"></a></dt>
+<dd><p>Get current feature metadata (reduced if available, else original).</p>
+<p>This method returns the metadata corresponding to the current
+active dataset. If reduced data is available, it returns the
+reduced metadata. Otherwise, it returns the original metadata.</p>
+<section id="id3">
+<h4>Parameters<a class="headerlink" href="#id3" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>force_original<span class="classifier">bool, default=False</span></dt><dd><p>Whether to force using the original data instead of the reduced data</p>
+</dd>
+</dl>
+</section>
+<section id="id4">
+<h4>Returns<a class="headerlink" href="#id4" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>dict or None</dt><dd><p>Feature metadata dict for this trajectory
+If traj_idx is None: Dict mapping trajectory indices to metadata dicts
+Returns None if no metadata available</p>
+</dd>
+</dl>
+</section>
+<section id="id5">
+<h4>Examples<a class="headerlink" href="#id5" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Get current metadata</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metadata</span> <span class="o">=</span> <span class="n">feature_data</span><span class="o">.</span><span class="n">get_feature_metadata</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Features: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;features&#39;</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.entities.feature_data.FeatureData.get_feature_names">
+<span class="sig-name descname"><span class="pre">get_feature_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">force_original</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mdxplain.feature.entities.feature_data.FeatureData.get_feature_names" title="Link to this definition"></a></dt>
+<dd><p>Extract feature names from metadata.</p>
+<p>This method generates human-readable feature names from the
+structured metadata. For pair-based features, it creates names
+by joining the full names of the involved partners.</p>
+<section id="id6">
+<h4>Parameters<a class="headerlink" href="#id6" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>force_original<span class="classifier">bool, default=False</span></dt><dd><p>Whether to return the feature names for the original data</p>
+</dd>
+</dl>
+</section>
+<section id="id7">
+<h4>Returns<a class="headerlink" href="#id7" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>list or None</dt><dd><p>List of feature names extracted from metadata, or None if not available</p>
+</dd>
+</dl>
+</section>
+<section id="id8">
+<h4>Examples<a class="headerlink" href="#id8" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">feature_data</span> <span class="o">=</span> <span class="n">traj</span><span class="o">.</span><span class="n">get_feature</span><span class="p">(</span><span class="s2">&quot;distances&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">names</span> <span class="o">=</span> <span class="n">feature_data</span><span class="o">.</span><span class="n">get_feature_names</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;First few feature names: </span><span class="si">{</span><span class="n">names</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Output: [&#39;ALA1-VAL2&#39;, &#39;ALA1-GLY3&#39;, &#39;VAL2-GLY3&#39;]</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.entities.feature_data.FeatureData.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature.entities.feature_data.FeatureData.save" title="Link to this definition"></a></dt>
+<dd><p>Save FeatureData object to disk.</p>
+<section id="id9">
+<h4>Parameters<a class="headerlink" href="#id9" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>save_path<span class="classifier">str</span></dt><dd><p>Path where to save the FeatureData object</p>
+</dd>
+</dl>
+</section>
+<section id="id10">
+<h4>Returns<a class="headerlink" href="#id10" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Saves the FeatureData object to the specified path</p>
+</dd>
+</dl>
+</section>
+<section id="id11">
+<h4>Examples<a class="headerlink" href="#id11" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">feature_data</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;analysis_results/distances.pkl&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.entities.feature_data.FeatureData.load">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature.entities.feature_data.FeatureData.load" title="Link to this definition"></a></dt>
+<dd><p>Load FeatureData object from disk.</p>
+<section id="id12">
+<h4>Parameters<a class="headerlink" href="#id12" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>load_path<span class="classifier">str</span></dt><dd><p>Path to the saved FeatureData file</p>
+</dd>
+</dl>
+</section>
+<section id="id13">
+<h4>Returns<a class="headerlink" href="#id13" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Loads the FeatureData object from the specified path</p>
+</dd>
+</dl>
+</section>
+<section id="id14">
+<h4>Examples<a class="headerlink" href="#id14" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">feature_data</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;analysis_results/distances.pkl&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.entities.feature_data.FeatureData.print_info">
+<span class="sig-name descname"><span class="pre">print_info</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature.entities.feature_data.FeatureData.print_info" title="Link to this definition"></a></dt>
+<dd><p>Print comprehensive feature information.</p>
+<section id="id15">
+<h4>Parameters<a class="headerlink" href="#id15" title="Link to this heading"></a></h4>
+<p>None</p>
+</section>
+<section id="id16">
+<h4>Returns<a class="headerlink" href="#id16" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Prints feature information to console</p>
+</dd>
+</dl>
+</section>
+<section id="id17">
+<h4>Examples<a class="headerlink" href="#id17" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">feature_data</span><span class="o">.</span><span class="n">print_info</span><span class="p">()</span>
+<span class="go">=== FeatureData ===</span>
+<span class="go">Feature Type: Distances</span>
+<span class="go">Original Data: 1000 frames x 250 features</span>
+<span class="go">Reduced Data: 1000 frames x 100 features (PCA)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mdxplain.feature.html" class="btn btn-neutral float-left" title="Feature" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="feature_type/mdxplain.feature.feature_type.html" class="btn btn-neutral float-right" title="Feature Types" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maximilian Salomon.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

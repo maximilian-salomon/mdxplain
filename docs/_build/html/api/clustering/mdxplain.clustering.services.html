@@ -1,0 +1,435 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cluster Type: Services &mdash; mdxplain 31.10.2025 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=55e8f53f"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Comparison" href="../comparison/mdxplain.comparison.html" />
+    <link rel="prev" title="Clustering Manager" href="mdxplain.clustering.managers.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mdxplain
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction.html">Introduction to mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting started with mdxplain</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/theory/theory.html">The Theory Behind mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/learning/learning.html">Learn mdxplain</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../analysis/mdxplain.analysis.html">Analysis</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="mdxplain.clustering.html">Clustering</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.clustering.cluster_type.html">Cluster Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.clustering.entities.html">Entities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.clustering.managers.html">Clustering Manager</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Cluster Type: Services</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#module-mdxplain.clustering.services.cluster_add_service">Services</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../comparison/mdxplain.comparison.html">Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_selector/mdxplain.data_selector.html">Data Selector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../decomposition/mdxplain.decomposition.html">Decomposition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature/mdxplain.feature.html">Feature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.html">Feature Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_selection/mdxplain.feature_selection.html">Feature Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pipeline/mdxplain.pipeline.html">Pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../trajectory/mdxplain.trajectory.html">Trajectory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/mdxplain.utils.html">Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mdxplain</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API Documentation</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.clustering.html">Clustering</a></li>
+      <li class="breadcrumb-item active">Cluster Type: Services</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api/clustering/mdxplain.clustering.services.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mdxplain.clustering.services">
+<span id="cluster-type-services"></span><h1>Cluster Type: Services<a class="headerlink" href="#module-mdxplain.clustering.services" title="Link to this heading"></a></h1>
+<p>Clustering service implementations for simplified API access.</p>
+<p>This module provides service classes that simplify clustering management
+by hiding explicit type instantiation from the user.</p>
+<section id="module-mdxplain.clustering.services.cluster_add_service">
+<span id="services"></span><h2>Services<a class="headerlink" href="#module-mdxplain.clustering.services.cluster_add_service" title="Link to this heading"></a></h2>
+<p>Factory for adding clustering algorithms with simplified syntax.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mdxplain.clustering.services.cluster_add_service.ClusterAddService">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mdxplain.clustering.services.cluster_add_service.</span></span><span class="sig-name descname"><span class="pre">ClusterAddService</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">manager</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="mdxplain.clustering.managers.html#mdxplain.clustering.managers.cluster_manager.ClusterManager" title="mdxplain.clustering.managers.cluster_manager.ClusterManager"><span class="pre">ClusterManager</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.clustering.services.cluster_add_service.ClusterAddService" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Service for adding clustering algorithms without explicit type instantiation.</p>
+<p>This service provides an intuitive interface for adding clustering algorithms
+without requiring users to import and instantiate cluster types directly.
+All cluster type parameters are combined with manager.add parameters.</p>
+<section id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">clustering</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">dbscan</span><span class="p">(</span><span class="s2">&quot;my_features&quot;</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">min_samples</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">clustering</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">hdbscan</span><span class="p">(</span><span class="s2">&quot;my_features&quot;</span><span class="p">,</span> <span class="n">min_cluster_size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">clustering</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">dpa</span><span class="p">(</span><span class="s2">&quot;my_features&quot;</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.clustering.services.cluster_add_service.ClusterAddService.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">manager</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="mdxplain.clustering.managers.html#mdxplain.clustering.managers.cluster_manager.ClusterManager" title="mdxplain.clustering.managers.cluster_manager.ClusterManager"><span class="pre">ClusterManager</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.clustering.services.cluster_add_service.ClusterAddService.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize factory with manager and pipeline data.</p>
+<section id="parameters">
+<h4>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>manager<span class="classifier">ClusterManager</span></dt><dd><p>Cluster manager instance</p>
+</dd>
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data container (injected by AutoInjectProxy)</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h4>Returns<a class="headerlink" href="#returns" title="Link to this heading"></a></h4>
+<p>None</p>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.clustering.services.cluster_add_service.ClusterAddService.dbscan">
+<span class="sig-name descname"><span class="pre">dbscan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">selection_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'standard'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_fraction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">knn_neighbors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_decomposed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_selector_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">override_cache</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.clustering.services.cluster_add_service.ClusterAddService.dbscan" title="Link to this definition"></a></dt>
+<dd><p>Add DBSCAN clustering algorithm.</p>
+<p>DBSCAN (Density-Based Spatial Clustering of Applications with Noise)
+groups together points that are closely packed while marking points
+in low-density regions as outliers.</p>
+<section id="id1">
+<h4>Parameters<a class="headerlink" href="#id1" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>selection_name<span class="classifier">str</span></dt><dd><p>Name of feature selection to cluster</p>
+</dd>
+<dt>eps<span class="classifier">float, default=0.5</span></dt><dd><p>Maximum distance between two samples for one to be considered
+in the neighborhood of the other</p>
+</dd>
+<dt>min_samples<span class="classifier">int, default=5</span></dt><dd><p>Minimum number of samples in a neighborhood for a point to be
+considered as a core point</p>
+</dd>
+<dt>method<span class="classifier">str, default=”standard”</span></dt><dd><p>Clustering method: ‘standard’ or ‘knn_sampling’</p>
+</dd>
+<dt>sample_fraction<span class="classifier">float, default=0.1</span></dt><dd><p>Fraction of data to sample for ‘knn_sampling’ method.</p>
+</dd>
+<dt>knn_neighbors<span class="classifier">int, default=5</span></dt><dd><p>Number of neighbors for k-NN sampling method.</p>
+</dd>
+<dt>use_decomposed<span class="classifier">bool, default=True</span></dt><dd><p>Whether to use decomposed data if available, otherwise use raw features</p>
+</dd>
+<dt>cluster_name<span class="classifier">str, optional</span></dt><dd><p>Name for the clustering result. If None, uses algorithm-based name</p>
+</dd>
+<dt>data_selector_name<span class="classifier">str, optional</span></dt><dd><p>Name of data selector to apply before clustering</p>
+</dd>
+<dt>force<span class="classifier">bool, default=False</span></dt><dd><p>Force recalculation or override automatic method selection</p>
+</dd>
+<dt>override_cache<span class="classifier">bool, default=False</span></dt><dd><p>Override cache settings for this clustering</p>
+</dd>
+</dl>
+</section>
+<section id="id2">
+<h4>Returns<a class="headerlink" href="#id2" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Adds DBSCAN clustering results to pipeline data</p>
+</dd>
+</dl>
+</section>
+<section id="id3">
+<h4>Examples<a class="headerlink" href="#id3" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Basic DBSCAN clustering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">clustering</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">dbscan</span><span class="p">(</span><span class="s2">&quot;my_features&quot;</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">min_samples</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># DBSCAN with custom parameters</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">clustering</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">dbscan</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="s2">&quot;distance_features&quot;</span><span class="p">,</span> 
+<span class="gp">... </span>    <span class="n">eps</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> 
+<span class="gp">... </span>    <span class="n">min_samples</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">cluster_name</span><span class="o">=</span><span class="s2">&quot;loose_clustering&quot;</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># DBSCAN on raw features instead of decomposed</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">clustering</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">dbscan</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="s2">&quot;contact_features&quot;</span><span class="p">,</span> 
+<span class="gp">... </span>    <span class="n">eps</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">use_decomposed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">data_selector_name</span><span class="o">=</span><span class="s2">&quot;folded_conformations&quot;</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="notes">
+<h4>Notes<a class="headerlink" href="#notes" title="Link to this heading"></a></h4>
+<p>DBSCAN automatically determines the number of clusters and can find
+clusters of arbitrary shape. Points that don’t belong to any cluster
+are labeled as noise (cluster label -1).</p>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.clustering.services.cluster_add_service.ClusterAddService.hdbscan">
+<span class="sig-name descname"><span class="pre">hdbscan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">selection_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_cluster_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_selection_epsilon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_selection_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'eom'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'standard'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_fraction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">knn_neighbors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_decomposed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_selector_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">override_cache</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.clustering.services.cluster_add_service.ClusterAddService.hdbscan" title="Link to this definition"></a></dt>
+<dd><p>Add HDBSCAN clustering algorithm.</p>
+<p>HDBSCAN (Hierarchical Density-Based Spatial Clustering of Applications
+with Noise) extends DBSCAN by converting it into a hierarchical clustering
+algorithm and extracting clusters based on the stability of clusters.</p>
+<section id="id4">
+<h4>Parameters<a class="headerlink" href="#id4" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>selection_name<span class="classifier">str</span></dt><dd><p>Name of feature selection to cluster</p>
+</dd>
+<dt>min_cluster_size<span class="classifier">int, default=5</span></dt><dd><p>Minimum size of clusters</p>
+</dd>
+<dt>min_samples<span class="classifier">int, optional</span></dt><dd><p>Number of samples in a neighborhood for a point to be considered
+a core point. Defaults to min_cluster_size</p>
+</dd>
+<dt>cluster_selection_epsilon<span class="classifier">float, default=0.0</span></dt><dd><p>Distance threshold for cluster extraction</p>
+</dd>
+<dt>cluster_selection_method<span class="classifier">str, default=”eom”</span></dt><dd><p>Method for cluster selection (‘eom’ or ‘leaf’)</p>
+</dd>
+<dt>method<span class="classifier">str, default=”standard”</span></dt><dd><p>Clustering method: ‘standard’, ‘approximate_predict’, or ‘knn_sampling’</p>
+</dd>
+<dt>sample_fraction<span class="classifier">float, default=0.1</span></dt><dd><p>Fraction of data to sample for sampling-based methods</p>
+</dd>
+<dt>knn_neighbors<span class="classifier">int, default=5</span></dt><dd><p>Number of neighbors for k-NN classifier in knn_sampling method</p>
+</dd>
+<dt>use_decomposed<span class="classifier">bool, default=True</span></dt><dd><p>Whether to use decomposed data if available</p>
+</dd>
+<dt>cluster_name<span class="classifier">str, optional</span></dt><dd><p>Name for the clustering result</p>
+</dd>
+<dt>data_selector_name<span class="classifier">str, optional</span></dt><dd><p>Name of data selector to apply before clustering</p>
+</dd>
+<dt>force<span class="classifier">bool, default=False</span></dt><dd><p>Force recalculation or override automatic method selection</p>
+</dd>
+<dt>override_cache<span class="classifier">bool, default=False</span></dt><dd><p>Override cache settings for this clustering</p>
+</dd>
+</dl>
+</section>
+<section id="id5">
+<h4>Returns<a class="headerlink" href="#id5" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Adds HDBSCAN clustering results to pipeline data</p>
+</dd>
+</dl>
+</section>
+<section id="id6">
+<h4>Examples<a class="headerlink" href="#id6" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Basic HDBSCAN clustering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">clustering</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">hdbscan</span><span class="p">(</span><span class="s2">&quot;my_features&quot;</span><span class="p">,</span> <span class="n">min_cluster_size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># HDBSCAN with custom parameters</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">clustering</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">hdbscan</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="s2">&quot;pca_features&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">min_cluster_size</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">min_samples</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">cluster_selection_epsilon</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">cluster_name</span><span class="o">=</span><span class="s2">&quot;stable_clusters&quot;</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># HDBSCAN with robust linkage</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">clustering</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">hdbscan</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="s2">&quot;torsion_features&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">min_cluster_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">data_selector_name</span><span class="o">=</span><span class="s2">&quot;active_conformations&quot;</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id7">
+<h4>Notes<a class="headerlink" href="#id7" title="Link to this heading"></a></h4>
+<p>HDBSCAN is more stable than DBSCAN across different parameter settings
+and provides a hierarchy of clusters. It’s particularly good at finding
+clusters of varying densities.</p>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.clustering.services.cluster_add_service.ClusterAddService.dpa">
+<span class="sig-name descname"><span class="pre">dpa</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">selection_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Z</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'euclidean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">affinity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'precomputed'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">density_algo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'PAk'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">D_thr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">23.92812698</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim_algo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'twoNN'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blockAn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_ratio</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frac</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">halos</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'standard'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_fraction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">knn_neighbors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_decomposed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_selector_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">override_cache</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.clustering.services.cluster_add_service.ClusterAddService.dpa" title="Link to this definition"></a></dt>
+<dd><p>Add DPA (Density Peak Analysis) clustering algorithm.</p>
+<p>DPA identifies cluster centers as points with high local density
+and high distance to points with higher density. It’s particularly
+effective for finding clusters with irregular shapes.</p>
+<section id="id8">
+<h4>Parameters<a class="headerlink" href="#id8" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>selection_name<span class="classifier">str</span></dt><dd><p>Name of feature selection to cluster</p>
+</dd>
+<dt>Z<span class="classifier">float, default=1.0</span></dt><dd><p>Number of standard deviations for statistical confidence</p>
+</dd>
+<dt>metric<span class="classifier">str, default=”euclidean”</span></dt><dd><p>Distance metric (‘euclidean’, ‘cosine’, ‘precomputed’)</p>
+</dd>
+<dt>affinity<span class="classifier">str, default=”precomputed”</span></dt><dd><p>How to construct affinity matrix (‘precomputed’, ‘rbf’, ‘nearest_neighbors’)</p>
+</dd>
+<dt>density_algo<span class="classifier">str, default=”PAk”</span></dt><dd><p>Density estimator algorithm (‘PAk’ or ‘kNN’)</p>
+</dd>
+<dt>k_max<span class="classifier">int, default=1000</span></dt><dd><p>Maximum number of nearest neighbors for density estimation</p>
+</dd>
+<dt>D_thr<span class="classifier">float, default=23.92812698</span></dt><dd><p>Confidence threshold for PAk density estimator</p>
+</dd>
+<dt>dim_algo<span class="classifier">str, default=”twoNN”</span></dt><dd><p>Intrinsic dimensionality calculation method (‘auto’ or ‘twoNN’)</p>
+</dd>
+<dt>blockAn<span class="classifier">bool, default=True</span></dt><dd><p>Whether to perform block analysis for twoNN dimensionality</p>
+</dd>
+<dt>block_ratio<span class="classifier">int, default=20</span></dt><dd><p>Minimum block size as n_samples/block_ratio for twoNN</p>
+</dd>
+<dt>frac<span class="classifier">float, default=1.0</span></dt><dd><p>Fraction of points used for dimensionality calculation</p>
+</dd>
+<dt>halos<span class="classifier">bool, default=False</span></dt><dd><p>Whether to return halo points (low-density outliers)</p>
+</dd>
+<dt>method<span class="classifier">str, default=”standard”</span></dt><dd><p>Clustering method (‘standard’, ‘sampling_approximate’, ‘sampling_knn’)</p>
+</dd>
+<dt>sample_fraction<span class="classifier">float, default=0.1</span></dt><dd><p>Fraction of data to sample for sampling-based methods</p>
+</dd>
+<dt>knn_neighbors<span class="classifier">int, default=5</span></dt><dd><p>Number of neighbors for k-NN classifier in sampling methods</p>
+</dd>
+<dt>use_decomposed<span class="classifier">bool, default=True</span></dt><dd><p>Whether to use decomposed data if available</p>
+</dd>
+<dt>cluster_name<span class="classifier">str, optional</span></dt><dd><p>Name for the clustering result</p>
+</dd>
+<dt>data_selector_name<span class="classifier">str, optional</span></dt><dd><p>Name of data selector to apply before clustering</p>
+</dd>
+<dt>force<span class="classifier">bool, default=False</span></dt><dd><p>Force recalculation or override automatic method selection</p>
+</dd>
+<dt>override_cache<span class="classifier">bool, default=False</span></dt><dd><p>Override cache settings for this clustering</p>
+</dd>
+</dl>
+</section>
+<section id="id9">
+<h4>Returns<a class="headerlink" href="#id9" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Adds DPA clustering results to pipeline data</p>
+</dd>
+</dl>
+</section>
+<section id="id10">
+<h4>Examples<a class="headerlink" href="#id10" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Basic DPA clustering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">clustering</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">dpa</span><span class="p">(</span><span class="s2">&quot;my_features&quot;</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># DPA with custom density algorithm</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">clustering</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">dpa</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="s2">&quot;distance_features&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">Z</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">density_algo</span><span class="o">=</span><span class="s2">&quot;kNN&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">k_max</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">cluster_name</span><span class="o">=</span><span class="s2">&quot;density_peaks&quot;</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># DPA with sampling for large datasets</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">clustering</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">dpa</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="s2">&quot;conformational_features&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">Z</span><span class="o">=</span><span class="mf">1.8</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;sampling_knn&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">sample_fraction</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">data_selector_name</span><span class="o">=</span><span class="s2">&quot;equilibrated_frames&quot;</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id11">
+<h4>Notes<a class="headerlink" href="#id11" title="Link to this heading"></a></h4>
+<p>DPA is in practice easy to use for molecular dynamics data and
+does not require extensive parameter tuning. It can find clusters
+of varying shapes and densities without prior knowledge of the
+data distribution. Just vary the Z parameter to adjust the number
+of clusters.</p>
+</section>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mdxplain.clustering.managers.html" class="btn btn-neutral float-left" title="Clustering Manager" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../comparison/mdxplain.comparison.html" class="btn btn-neutral float-right" title="Comparison" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maximilian Salomon.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

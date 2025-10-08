@@ -1,0 +1,685 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Feature Managers &mdash; mdxplain 31.10.2025 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=55e8f53f"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Feature Services" href="mdxplain.feature.services.html" />
+    <link rel="prev" title="Feature Helpers: Feature Validation Helper" href="mdxplain.feature.helper.feature_validation_helper.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mdxplain
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction.html">Introduction to mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting started with mdxplain</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/theory/theory.html">The Theory Behind mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/learning/learning.html">Learn mdxplain</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../analysis/mdxplain.analysis.html">Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering/mdxplain.clustering.html">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../comparison/mdxplain.comparison.html">Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_selector/mdxplain.data_selector.html">Data Selector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../decomposition/mdxplain.decomposition.html">Decomposition</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="mdxplain.feature.html">Feature</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature.entities.html">Feature Entities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="feature_type/mdxplain.feature.feature_type.html">Feature Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature.helper.html">Feature Helpers</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Feature Managers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#module-mdxplain.feature.managers.feature_manager">Manager</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature.services.html">Feature Services</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.html">Feature Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_selection/mdxplain.feature_selection.html">Feature Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pipeline/mdxplain.pipeline.html">Pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../trajectory/mdxplain.trajectory.html">Trajectory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/mdxplain.utils.html">Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mdxplain</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API Documentation</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.feature.html">Feature</a></li>
+      <li class="breadcrumb-item active">Feature Managers</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api/feature/mdxplain.feature.managers.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mdxplain.feature.managers">
+<span id="feature-managers"></span><h1>Feature Managers<a class="headerlink" href="#module-mdxplain.feature.managers" title="Link to this heading"></a></h1>
+<p>Feature management.</p>
+<section id="module-mdxplain.feature.managers.feature_manager">
+<span id="manager"></span><h2>Manager<a class="headerlink" href="#module-mdxplain.feature.managers.feature_manager" title="Link to this heading"></a></h2>
+<p>FeatureManager is a manager for feature data objects.</p>
+<p>It is used to add, reset, and reduce features to the pipeline data.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mdxplain.feature.managers.feature_manager.FeatureManager">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mdxplain.feature.managers.feature_manager.</span></span><span class="sig-name descname"><span class="pre">FeatureManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">use_memmap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'./cache'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.feature.managers.feature_manager.FeatureManager" title="Link to this definition"></a></dt>
+<dd><p>Manager for feature data objects.</p>
+<p>This class provides methods to add, reset, and reduce features in the
+pipeline data. It handles feature dependencies, computation, and storage.</p>
+<section id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_data</span> <span class="o">=</span> <span class="n">PipelineData</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feature_manager</span> <span class="o">=</span> <span class="n">FeatureManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feature_manager</span><span class="o">.</span><span class="n">add_feature</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="n">feature_type</span><span class="o">.</span><span class="n">Distances</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feature_manager</span><span class="o">.</span><span class="n">reduce_data</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="n">feature_type</span><span class="o">.</span><span class="n">Distances</span><span class="p">(),</span> <span class="n">metric</span><span class="o">=</span><span class="s2">&quot;cv&quot;</span><span class="p">,</span> <span class="n">threshold_min</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feature_manager</span><span class="o">.</span><span class="n">reset_features</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;distances&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feature_manager</span><span class="o">.</span><span class="n">print_info</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feature_manager</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s1">&#39;features.npy&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feature_manager</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s1">&#39;features.npy&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.managers.feature_manager.FeatureManager.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">use_memmap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'./cache'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature.managers.feature_manager.FeatureManager.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize feature manager.</p>
+<section id="parameters">
+<h4>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>use_memmap<span class="classifier">bool, default=False</span></dt><dd><p>Whether to use memory mapping for feature data</p>
+</dd>
+<dt>chunk_size<span class="classifier">int, optional</span></dt><dd><p>Processing chunk size</p>
+</dd>
+<dt>cache_dir<span class="classifier">str, default=”./cache”</span></dt><dd><p>Cache path for feature data</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h4>Returns<a class="headerlink" href="#returns" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Initializes FeatureManager instance with specified configuration</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.managers.feature_manager.FeatureManager.reset_features">
+<span class="sig-name descname"><span class="pre">reset_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature.managers.feature_manager.FeatureManager.reset_features" title="Link to this definition"></a></dt>
+<dd><p>Reset calculated features and clear feature data.</p>
+<p>This method removes computed features and their associated data,
+requiring features to be recalculated from scratch. Use this method
+after trajectory modifications that invalidate existing features.
+Can reset all features or specific feature types.</p>
+<section id="warning">
+<h4>Warning<a class="headerlink" href="#warning" title="Link to this heading"></a></h4>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.feature.reset_features()  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = FeatureManager()
+&gt;&gt;&gt; manager.reset_features(pipeline_data)  # pipeline_data required</p>
+</section>
+<section id="id1">
+<h4>Parameters<a class="headerlink" href="#id1" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data object</p>
+</dd>
+<dt>feature_type<span class="classifier">str, FeatureTypeBase, list, or None, default=None</span></dt><dd><p>Feature type(s) to reset. If None, resets all features.
+Supports following formats:</p>
+<ul class="simple">
+<li><p>“distances” (string)</p></li>
+<li><p>feature_type.Distances() (instance)</p></li>
+<li><p>feature_type.Distances (class)</p></li>
+<li><p>[“distances”, “contacts”] (list of any of above)</p></li>
+</ul>
+</dd>
+<dt>strict<span class="classifier">bool, default=False</span></dt><dd><p>Whether to raise ValueError if feature_type doesn’t exist.
+If False, non-existent features are silently ignored with warning.</p>
+</dd>
+</dl>
+</section>
+<section id="id2">
+<h4>Returns<a class="headerlink" href="#id2" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Clears specified feature data from pipeline_data.feature_data in-place</p>
+</dd>
+</dl>
+</section>
+<section id="id3">
+<h4>Examples<a class="headerlink" href="#id3" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_data</span> <span class="o">=</span> <span class="n">PipelineData</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feature_manager</span> <span class="o">=</span> <span class="n">FeatureManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feature_manager</span><span class="o">.</span><span class="n">add_feature</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="n">feature_type</span><span class="o">.</span><span class="n">Distances</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feature_manager</span><span class="o">.</span><span class="n">add_feature</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="n">feature_type</span><span class="o">.</span><span class="n">Contacts</span><span class="p">())</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Reset all features</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feature_manager</span><span class="o">.</span><span class="n">reset_features</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Reset specific feature type</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feature_manager</span><span class="o">.</span><span class="n">reset_features</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;distances&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Reset multiple feature types</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feature_manager</span><span class="o">.</span><span class="n">reset_features</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;distances&quot;</span><span class="p">,</span> <span class="s2">&quot;contacts&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Strict mode - raise error for non-existent features</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feature_manager</span><span class="o">.</span><span class="n">reset_features</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;nonexistent&quot;</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># Raises ValueError</span>
+</pre></div>
+</div>
+</section>
+<section id="notes">
+<h4>Notes<a class="headerlink" href="#notes" title="Link to this heading"></a></h4>
+<ul class="simple">
+<li><p>Selected feature data is permanently deleted</p></li>
+<li><p>Memory-mapped feature files remain on disk but are no longer referenced</p></li>
+<li><p>Features must be recalculated after reset</p></li>
+</ul>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.managers.feature_manager.FeatureManager.add_feature">
+<span class="sig-name descname"><span class="pre">add_feature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="feature_type/mdxplain.feature.feature_type.interfaces.feature_type_base.html#mdxplain.feature.feature_type.interfaces.feature_type_base.FeatureTypeBase" title="mdxplain.feature.feature_type.interfaces.feature_type_base.FeatureTypeBase"><span class="pre">FeatureTypeBase</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">traj_selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_original</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature.managers.feature_manager.FeatureManager.add_feature" title="Link to this definition"></a></dt>
+<dd><p>Add and compute a feature for the loaded trajectories.</p>
+<p>This method creates a FeatureData instance for the specified feature type,
+handles dependency checking, and computes the feature data. Features with
+dependencies (like Contacts depending on Distances) will automatically
+use the required input data.</p>
+<section id="id4">
+<h4>Warning<a class="headerlink" href="#id4" title="Link to this heading"></a></h4>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.feature.add_feature(feature_type.Distances())  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = FeatureManager()
+&gt;&gt;&gt; manager.add_feature(pipeline_data, feature_type.Distances())  # pipeline_data required</p>
+</section>
+<section id="id5">
+<h4>Parameters<a class="headerlink" href="#id5" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data object</p>
+</dd>
+<dt>feature_type<span class="classifier">FeatureTypeBase</span></dt><dd><p>Feature type instance(e.g., Distances(), Contacts()).
+The feature type determines what kind of analysis will be performed.</p>
+</dd>
+<dt>traj_selection<span class="classifier">int, str, list, or “all”, default=”all”</span></dt><dd><p>Selection of trajectories to compute features for:</p>
+<ul class="simple">
+<li><p>int: trajectory index</p></li>
+<li><p>str: trajectory name, tag (prefixed with “tag:”), or “all”</p></li>
+<li><p>list: list of indices/names/tags</p></li>
+<li><p>“all”: all trajectories (default)</p></li>
+</ul>
+</dd>
+<dt>force<span class="classifier">bool, default=False</span></dt><dd><p>Whether to force recomputation of the feature even if it already exists.</p>
+</dd>
+<dt>force_original<span class="classifier">bool, default=True</span></dt><dd><p>Whether to force using the original data as base for the calculation for
+features using other features as input instead of the reduced data</p>
+</dd>
+</dl>
+</section>
+<section id="id6">
+<h4>Returns<a class="headerlink" href="#id6" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Adds computed feature to pipeline data and creates analysis methods</p>
+</dd>
+</dl>
+</section>
+<section id="raises">
+<h4>Raises<a class="headerlink" href="#raises" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If the feature already exists with computed data, if required
+dependencies are missing, or if trajectories are not loaded.</p>
+</dd>
+</dl>
+</section>
+<section id="id7">
+<h4>Examples<a class="headerlink" href="#id7" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_data</span> <span class="o">=</span> <span class="n">PipelineData</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feature_manager</span> <span class="o">=</span> <span class="n">FeatureManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feature_manager</span><span class="o">.</span><span class="n">add_feature</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="n">feature_type</span><span class="o">.</span><span class="n">Distances</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feature_manager</span><span class="o">.</span><span class="n">add_feature</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="n">feature_type</span><span class="o">.</span><span class="n">Contacts</span><span class="p">())</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.managers.feature_manager.FeatureManager.reset_reduction">
+<span class="sig-name descname"><span class="pre">reset_reduction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="feature_type/mdxplain.feature.feature_type.interfaces.feature_type_base.html#mdxplain.feature.feature_type.interfaces.feature_type_base.FeatureTypeBase" title="mdxplain.feature.feature_type.interfaces.feature_type_base.FeatureTypeBase"><span class="pre">FeatureTypeBase</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature.managers.feature_manager.FeatureManager.reset_reduction" title="Link to this definition"></a></dt>
+<dd><p>Reset to using full original data instead of reduced dataset.</p>
+<p>Supports all three input variants:</p>
+<ul class="simple">
+<li><p>feature_type.Distances() (instance)</p></li>
+<li><p>feature_type.Distances (class with metaclass)</p></li>
+<li><p>“distances” (string)</p></li>
+</ul>
+<section id="id8">
+<h4>Warning<a class="headerlink" href="#id8" title="Link to this heading"></a></h4>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.feature.reset_reduction(“distances”)  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = FeatureManager()
+&gt;&gt;&gt; manager.reset_reduction(pipeline_data, “distances”)  # pipeline_data required</p>
+</section>
+<section id="id9">
+<h4>Parameters<a class="headerlink" href="#id9" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data object</p>
+</dd>
+<dt>feature_type<span class="classifier">FeatureTypeBase, FeatureTypeBase class, or str</span></dt><dd><p>Feature type instance, class, or string
+E.g. Distances(), Distances, “distances”</p>
+</dd>
+</dl>
+</section>
+<section id="id10">
+<h4>Returns<a class="headerlink" href="#id10" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Clears reduced_data and prints confirmation with shape info</p>
+</dd>
+</dl>
+</section>
+<section id="id11">
+<h4>Examples<a class="headerlink" href="#id11" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_data</span> <span class="o">=</span> <span class="n">PipelineData</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feature_manager</span> <span class="o">=</span> <span class="n">FeatureManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feature_manager</span><span class="o">.</span><span class="n">add_feature</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="n">feature_type</span><span class="o">.</span><span class="n">Distances</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feature_manager</span><span class="o">.</span><span class="n">reduce_data</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="n">feature_type</span><span class="o">.</span><span class="n">Distances</span><span class="p">,</span>
+<span class="go">                                metric=&quot;cv&quot;, threshold_min=0.1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feature_manager</span><span class="o">.</span><span class="n">reset_reduction</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s2">&quot;distances&quot;</span><span class="p">)</span>  <span class="c1"># string</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.managers.feature_manager.FeatureManager.reduce_data">
+<span class="sig-name descname"><span class="pre">reduce_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="feature_type/mdxplain.feature.feature_type.interfaces.feature_type_base.html#mdxplain.feature.feature_type.interfaces.feature_type_base.FeatureTypeBase" title="mdxplain.feature.feature_type.interfaces.feature_type_base.FeatureTypeBase"><span class="pre">FeatureTypeBase</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">np.ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">np.ndarray</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">traj_selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'window'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lag_time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cross_trajectory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature.managers.feature_manager.FeatureManager.reduce_data" title="Link to this definition"></a></dt>
+<dd><p>Filter features based on statistical criteria.</p>
+<p>Supports all three input variants:</p>
+<ul class="simple">
+<li><p>feature_type.Distances() (instance)</p></li>
+<li><p>feature_type.Distances (class with metaclass)</p></li>
+<li><p>“distances” (string)</p></li>
+</ul>
+<section id="id12">
+<h4>Warning<a class="headerlink" href="#id12" title="Link to this heading"></a></h4>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.feature.reduce_data(“distances”, metric=”cv”)  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = FeatureManager()
+&gt;&gt;&gt; manager.reduce_data(pipeline_data, “distances”, metric=”cv”)  # pipeline_data required</p>
+</section>
+<section id="id13">
+<h4>Parameters<a class="headerlink" href="#id13" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data object</p>
+</dd>
+<dt>feature_type<span class="classifier">FeatureTypeBase, FeatureTypeBase class, or str</span></dt><dd><p>Feature type instance, class, or string
+E.g. Distances(), Distances, “distances”</p>
+</dd>
+<dt>metric<span class="classifier">str or ReduceMetrics</span></dt><dd><p>Statistical filtering metric (‘cv’, ‘frequency’, ‘transitions’, etc.)</p>
+</dd>
+<dt>threshold_min<span class="classifier">float, optional</span></dt><dd><p>Minimum value to keep (features &gt;= threshold_min)</p>
+</dd>
+<dt>threshold_max<span class="classifier">float, optional</span></dt><dd><p>Maximum value to keep (features &lt;= threshold_max)</p>
+</dd>
+<dt>transition_threshold<span class="classifier">float, default=2.0</span></dt><dd><p>Distance change threshold for transition detection (Angstrom)</p>
+</dd>
+<dt>window_size<span class="classifier">int, default=10</span></dt><dd><p>Number of frames for transition window analysis</p>
+</dd>
+<dt>transition_mode<span class="classifier">str, default=”window”</span></dt><dd><p>Mode for transition detection (‘window’, ‘lag’)</p>
+</dd>
+<dt>lag_time<span class="classifier">int, default=1</span></dt><dd><p>Lag time for transition detection</p>
+</dd>
+<dt>cross_trajectory<span class="classifier">bool, default=False</span></dt><dd><p>If True, find common features across all selected trajectories.
+If False, reduce each trajectory independently.</p>
+</dd>
+</dl>
+</section>
+<section id="id14">
+<h4>Returns<a class="headerlink" href="#id14" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Stores filtered data in self.reduced_data and prints reduction summary</p>
+</dd>
+</dl>
+</section>
+<section id="id15">
+<h4>Raises<a class="headerlink" href="#id15" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If the feature has no data, if the reduction has already been performed,
+or if threshold parameters are invalid (threshold_min &gt; threshold_max)</p>
+</dd>
+</dl>
+</section>
+<section id="id16">
+<h4>Examples<a class="headerlink" href="#id16" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_data</span> <span class="o">=</span> <span class="n">PipelineData</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feature_manager</span> <span class="o">=</span> <span class="n">FeatureManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feature_manager</span><span class="o">.</span><span class="n">add_feature</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="n">feature_type</span><span class="o">.</span><span class="n">Distances</span><span class="p">())</span>  <span class="c1"># instance</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feature_manager</span><span class="o">.</span><span class="n">reduce_data</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="n">feature_type</span><span class="o">.</span><span class="n">Distances</span><span class="p">,</span>   <span class="c1"># class</span>
+<span class="go">                                metric=&quot;cv&quot;, threshold_min=0.1)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.managers.feature_manager.FeatureManager.print_info">
+<span class="sig-name descname"><span class="pre">print_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature.managers.feature_manager.FeatureManager.print_info" title="Link to this definition"></a></dt>
+<dd><p>Print feature information.</p>
+<section id="id17">
+<h4>Warning<a class="headerlink" href="#id17" title="Link to this heading"></a></h4>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.feature.print_info()  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = FeatureManager()
+&gt;&gt;&gt; manager.print_info(pipeline_data)  # pipeline_data required</p>
+</section>
+<section id="id18">
+<h4>Parameters<a class="headerlink" href="#id18" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data container with feature data</p>
+</dd>
+</dl>
+</section>
+<section id="id19">
+<h4>Returns<a class="headerlink" href="#id19" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Prints feature information to console</p>
+</dd>
+</dl>
+</section>
+<section id="id20">
+<h4>Examples<a class="headerlink" href="#id20" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_data</span> <span class="o">=</span> <span class="n">PipelineData</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feature_manager</span> <span class="o">=</span> <span class="n">FeatureManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feature_manager</span><span class="o">.</span><span class="n">print_info</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.managers.feature_manager.FeatureManager.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature.managers.feature_manager.FeatureManager.save" title="Link to this definition"></a></dt>
+<dd><p>Save all feature data to single file.</p>
+<section id="id21">
+<h4>Warning<a class="headerlink" href="#id21" title="Link to this heading"></a></h4>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.feature.save(‘features.npy’)  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = FeatureManager()
+&gt;&gt;&gt; manager.save(pipeline_data, ‘features.npy’)  # pipeline_data required</p>
+</section>
+<section id="id22">
+<h4>Parameters<a class="headerlink" href="#id22" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data container with feature data</p>
+</dd>
+<dt>save_path<span class="classifier">str</span></dt><dd><p>Path where to save all feature data in one file</p>
+</dd>
+</dl>
+</section>
+<section id="id23">
+<h4>Returns<a class="headerlink" href="#id23" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Saves all feature data to the specified file</p>
+</dd>
+</dl>
+</section>
+<section id="id24">
+<h4>Examples<a class="headerlink" href="#id24" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">feature_manager</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s1">&#39;features.npy&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature.managers.feature_manager.FeatureManager.load">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="mdxplain.pipeline.entities.pipeline_data.PipelineData"><span class="pre">PipelineData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature.managers.feature_manager.FeatureManager.load" title="Link to this definition"></a></dt>
+<dd><p>Load all feature data from single file.</p>
+<section id="id25">
+<h4>Warning<a class="headerlink" href="#id25" title="Link to this heading"></a></h4>
+<p>When using PipelineManager, do NOT provide the pipeline_data parameter.
+The PipelineManager automatically injects this parameter.</p>
+<p>Pipeline mode:
+&gt;&gt;&gt; pipeline = PipelineManager()
+&gt;&gt;&gt; pipeline.feature.load(‘features.npy’)  # NO pipeline_data parameter</p>
+<p>Standalone mode:
+&gt;&gt;&gt; pipeline_data = PipelineData()
+&gt;&gt;&gt; manager = FeatureManager()
+&gt;&gt;&gt; manager.load(pipeline_data, ‘features.npy’)  # pipeline_data required</p>
+</section>
+<section id="id26">
+<h4>Parameters<a class="headerlink" href="#id26" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>pipeline_data<span class="classifier">PipelineData</span></dt><dd><p>Pipeline data container to load feature data into</p>
+</dd>
+<dt>load_path<span class="classifier">str</span></dt><dd><p>Path to saved feature data file</p>
+</dd>
+</dl>
+</section>
+<section id="id27">
+<h4>Returns<a class="headerlink" href="#id27" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Loads all feature data from the specified file</p>
+</dd>
+</dl>
+</section>
+<section id="id28">
+<h4>Examples<a class="headerlink" href="#id28" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">feature_manager</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s1">&#39;features.npy&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.feature.managers.feature_manager.FeatureManager.add">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">add</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="mdxplain.feature.services.feature_add_service.html#mdxplain.feature.services.feature_add_service.FeatureAddService" title="mdxplain.feature.services.feature_add_service.FeatureAddService"><span class="pre">FeatureAddService</span></a></em><a class="headerlink" href="#mdxplain.feature.managers.feature_manager.FeatureManager.add" title="Link to this definition"></a></dt>
+<dd><p>Service for adding features with simplified syntax.</p>
+<p>Provides an intuitive interface for adding features without requiring
+explicit feature type instantiation or imports.</p>
+<section id="id29">
+<h4>Returns<a class="headerlink" href="#id29" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>FeatureAddService</dt><dd><p>Service instance for adding features with combined parameters</p>
+</dd>
+</dl>
+</section>
+<section id="id30">
+<h4>Examples<a class="headerlink" href="#id30" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Add different feature types</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">distances</span><span class="p">(</span><span class="n">excluded_neighbors</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">contacts</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span> <span class="n">traj_selection</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">torsions</span><span class="p">(</span><span class="n">calculate_chi</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">dssp</span><span class="p">(</span><span class="n">simplified</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">sasa</span><span class="p">(</span><span class="n">probe_radius</span><span class="o">=</span><span class="mf">0.12</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">coordinates</span><span class="p">(</span><span class="n">atom_selection</span><span class="o">=</span><span class="s2">&quot;backbone&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id31">
+<h4>Notes<a class="headerlink" href="#id31" title="Link to this heading"></a></h4>
+<p>Pipeline data is automatically injected by AutoInjectProxy.
+All feature type parameters are combined with add_feature parameters.</p>
+</section>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.feature.managers.feature_manager.FeatureManager.reduce">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">reduce</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="mdxplain.feature.services.feature_reduce_service.html#mdxplain.feature.services.feature_reduce_service.FeatureReduceService" title="mdxplain.feature.services.feature_reduce_service.FeatureReduceService"><span class="pre">FeatureReduceService</span></a></em><a class="headerlink" href="#mdxplain.feature.managers.feature_manager.FeatureManager.reduce" title="Link to this definition"></a></dt>
+<dd><p>Service for reducing features with type-specific metrics.</p>
+<p>Provides type-specific reduction metrics tailored to each feature type,
+such as coefficient of variation for distances or frequency for contacts.</p>
+<section id="id32">
+<h4>Returns<a class="headerlink" href="#id32" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>FeatureReduceService</dt><dd><p>Service instance for feature reduction with type-specific metrics</p>
+</dd>
+</dl>
+</section>
+<section id="id33">
+<h4>Examples<a class="headerlink" href="#id33" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Distance-specific metrics</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">distances</span><span class="o">.</span><span class="n">cv</span><span class="p">(</span><span class="n">threshold_min</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">distances</span><span class="o">.</span><span class="n">transitions</span><span class="p">(</span><span class="n">window_size</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Contact-specific metrics</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">contacts</span><span class="o">.</span><span class="n">frequency</span><span class="p">(</span><span class="n">threshold_min</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">contacts</span><span class="o">.</span><span class="n">stability</span><span class="p">(</span><span class="n">threshold_max</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Torsion-specific metrics (circular statistics)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">reduce</span><span class="o">.</span><span class="n">torsions</span><span class="o">.</span><span class="n">circular_std</span><span class="p">(</span><span class="n">threshold_max</span><span class="o">=</span><span class="mf">30.0</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id34">
+<h4>Notes<a class="headerlink" href="#id34" title="Link to this heading"></a></h4>
+<p>Pipeline data is automatically injected by AutoInjectProxy.
+Each feature type has its own specialized metrics.</p>
+</section>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.feature.managers.feature_manager.FeatureManager.analysis">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">analysis</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="mdxplain.feature.services.feature_analysis_service.html#mdxplain.feature.services.feature_analysis_service.FeatureAnalysisService" title="mdxplain.feature.services.feature_analysis_service.FeatureAnalysisService"><span class="pre">FeatureAnalysisService</span></a></em><a class="headerlink" href="#mdxplain.feature.managers.feature_manager.FeatureManager.analysis" title="Link to this definition"></a></dt>
+<dd><p>Service for analyzing features with type-specific methods.</p>
+<p>Provides analysis operations tailored to each feature type,
+such as circular statistics for torsions or contact frequency analysis.</p>
+<section id="id35">
+<h4>Parameters<a class="headerlink" href="#id35" title="Link to this heading"></a></h4>
+<p>None</p>
+</section>
+<section id="id36">
+<h4>Returns<a class="headerlink" href="#id36" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>FeatureAnalysisService</dt><dd><p>Service instance for feature analysis with type-specific methods</p>
+</dd>
+</dl>
+</section>
+<section id="id37">
+<h4>Examples<a class="headerlink" href="#id37" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Analyze distances</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">analysis</span><span class="o">.</span><span class="n">distances</span><span class="o">.</span><span class="n">compute_mean</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">analysis</span><span class="o">.</span><span class="n">distances</span><span class="o">.</span><span class="n">compute_std</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mdxplain.feature.helper.feature_validation_helper.html" class="btn btn-neutral float-left" title="Feature Helpers: Feature Validation Helper" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mdxplain.feature.services.html" class="btn btn-neutral float-right" title="Feature Services" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maximilian Salomon.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,886 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pipeline Entities &mdash; mdxplain 31.10.2025 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=55e8f53f"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Pipeline: Helpers" href="mdxplain.pipeline.helper.html" />
+    <link rel="prev" title="Pipeline" href="mdxplain.pipeline.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mdxplain
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction.html">Introduction to mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting started with mdxplain</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/theory/theory.html">The Theory Behind mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/learning/learning.html">Learn mdxplain</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../analysis/mdxplain.analysis.html">Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering/mdxplain.clustering.html">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../comparison/mdxplain.comparison.html">Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_selector/mdxplain.data_selector.html">Data Selector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../decomposition/mdxplain.decomposition.html">Decomposition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature/mdxplain.feature.html">Feature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.html">Feature Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_selection/mdxplain.feature_selection.html">Feature Selection</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="mdxplain.pipeline.html">Pipeline</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Pipeline Entities</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#module-mdxplain.pipeline.entities.pipeline_data">Data</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.pipeline.helper.html">Pipeline: Helpers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.pipeline.managers.html">Pipeline Managers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../trajectory/mdxplain.trajectory.html">Trajectory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/mdxplain.utils.html">Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mdxplain</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API Documentation</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.pipeline.html">Pipeline</a></li>
+      <li class="breadcrumb-item active">Pipeline Entities</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api/pipeline/mdxplain.pipeline.entities.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mdxplain.pipeline.entities">
+<span id="pipeline-entities"></span><h1>Pipeline Entities<a class="headerlink" href="#module-mdxplain.pipeline.entities" title="Link to this heading"></a></h1>
+<p>Pipeline entities module.</p>
+<p>Contains data container classes for the pipeline orchestration system.</p>
+<section id="module-mdxplain.pipeline.entities.pipeline_data">
+<span id="data"></span><h2>Data<a class="headerlink" href="#module-mdxplain.pipeline.entities.pipeline_data" title="Link to this heading"></a></h2>
+<p>Central data container for the Pipeline orchestration system.</p>
+<p>This module provides the PipelineData class that serves as the central
+data container orchestrating all analysis data including trajectories,
+features, clustering results, and decomposition results.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mdxplain.pipeline.entities.pipeline_data.PipelineData">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mdxplain.pipeline.entities.pipeline_data.</span></span><span class="sig-name descname"><span class="pre">PipelineData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">use_memmap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'./cache'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.pipeline.entities.pipeline_data.PipelineData" title="Link to this definition"></a></dt>
+<dd><p>Central data container orchestrating all analysis data.</p>
+<p>This class serves as the central data hub for the pipeline system,
+containing all trajectory data, computed features, clustering results,
+decomposition results, and future analysis modules.</p>
+<p>The PipelineData serves as the central “God-Object”
+that gets passed around to managers, following the
+builder pattern while providing separation of concerns.</p>
+<section id="attributes">
+<h3>Attributes<a class="headerlink" href="#attributes" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>use_memmap<span class="classifier">bool</span></dt><dd><p>Whether to use memory mapping for large datasets</p>
+</dd>
+<dt>cache_dir<span class="classifier">str</span></dt><dd><p>Directory for cache files when using memory mapping</p>
+</dd>
+<dt>chunk_size<span class="classifier">int</span></dt><dd><p>Chunk size for memory-efficient processing</p>
+</dd>
+<dt>max_memory_gb<span class="classifier">float</span></dt><dd><p>Estimated maximum memory usage in GB for current data</p>
+</dd>
+<dt>trajectory_data<span class="classifier">TrajectoryData</span></dt><dd><p>Container for trajectory data and metadata</p>
+</dd>
+<dt>feature_data<span class="classifier">Dict[str, Dict[int, FeatureData]]</span></dt><dd><p>Nested dictionary of computed features by type and trajectory index</p>
+</dd>
+<dt>selected_feature_data<span class="classifier">Dict[str, FeatureSelectorData]</span></dt><dd><p>Dictionary of feature selection results by selection name</p>
+</dd>
+<dt>decomposition_data<span class="classifier">Dict[str, DecompositionData]</span></dt><dd><p>Dictionary of decomposition results by selection name</p>
+</dd>
+<dt>cluster_data<span class="classifier">Dict[str, ClusterData]</span></dt><dd><p>Dictionary of clustering results by cluster name</p>
+</dd>
+<dt>data_selector_data<span class="classifier">Dict[str, DataSelectorData]</span></dt><dd><p>Dictionary of data selector results by selector name</p>
+</dd>
+<dt>comparison_data<span class="classifier">Dict[str, ComparisonData]</span></dt><dd><p>Dictionary of comparison results by comparison name</p>
+</dd>
+<dt>feature_importance_data<span class="classifier">Dict[str, FeatureImportanceData]</span></dt><dd><p>Dictionary of feature importance results by analysis name</p>
+</dd>
+</dl>
+</section>
+<section id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h3>
+<p>Pipeline mode (automatic):</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span> <span class="o">=</span> <span class="n">PipelineManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># PipelineData is managed automatically</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span><span class="o">.</span><span class="n">trajectory</span><span class="o">.</span><span class="n">load_trajectories</span><span class="p">(</span><span class="s1">&#39;../data&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Standalone mode (manual):</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_data</span> <span class="o">=</span> <span class="n">PipelineData</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span> <span class="o">=</span> <span class="n">TrajectoryManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span><span class="o">.</span><span class="n">load_trajectories</span><span class="p">(</span><span class="n">pipeline_data</span><span class="p">,</span> <span class="s1">&#39;../data&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.pipeline.entities.pipeline_data.PipelineData.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">use_memmap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'./cache'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.pipeline.entities.pipeline_data.PipelineData.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize the central pipeline data container.</p>
+<p>Creates empty containers for all analysis data types that will
+be populated through the respective manager interfaces.</p>
+<section id="parameters">
+<h4>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>use_memmap<span class="classifier">bool, default=False</span></dt><dd><p>Whether to use memory mapping for large datasets</p>
+</dd>
+<dt>cache_dir<span class="classifier">str, default=”./cache”</span></dt><dd><p>Directory for cache files when using memory mapping</p>
+</dd>
+<dt>chunk_size<span class="classifier">int, default=10000</span></dt><dd><p>Chunk size for memory-efficient processing</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h4>Returns<a class="headerlink" href="#returns" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Initializes PipelineData instance with empty data containers</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.pipeline.entities.pipeline_data.PipelineData.clear_all_data">
+<span class="sig-name descname"><span class="pre">clear_all_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.pipeline.entities.pipeline_data.PipelineData.clear_all_data" title="Link to this definition"></a></dt>
+<dd><p>Clear all stored analysis data.</p>
+<p>Resets all data containers to empty state, effectively clearing
+all computed results while preserving the container structure.
+Useful for starting fresh analysis or freeing memory.</p>
+<section id="id1">
+<h4>Returns<a class="headerlink" href="#id1" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Clears all data containers in-place</p>
+</dd>
+</dl>
+</section>
+<section id="id2">
+<h4>Examples<a class="headerlink" href="#id2" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_data</span> <span class="o">=</span> <span class="n">PipelineData</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># ... after computations ...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_data</span><span class="o">.</span><span class="n">clear_all_data</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.pipeline.entities.pipeline_data.PipelineData.update_max_memory_from_trajectories">
+<span class="sig-name descname"><span class="pre">update_max_memory_from_trajectories</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_atoms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.pipeline.entities.pipeline_data.PipelineData.update_max_memory_from_trajectories" title="Link to this definition"></a></dt>
+<dd><p>Update memory estimate after trajectory loading.</p>
+<section id="id3">
+<h4>Parameters<a class="headerlink" href="#id3" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>max_atoms<span class="classifier">int</span></dt><dd><p>Maximum number of atoms across all trajectories</p>
+</dd>
+</dl>
+</section>
+<section id="id4">
+<h4>Returns<a class="headerlink" href="#id4" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Updates max_memory_gb based on atom count</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.pipeline.entities.pipeline_data.PipelineData.update_max_memory_from_features">
+<span class="sig-name descname"><span class="pre">update_max_memory_from_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.pipeline.entities.pipeline_data.PipelineData.update_max_memory_from_features" title="Link to this definition"></a></dt>
+<dd><p>Update memory estimate after feature computation.</p>
+<section id="id5">
+<h4>Parameters<a class="headerlink" href="#id5" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>n_features<span class="classifier">int</span></dt><dd><p>Actual number of features computed</p>
+</dd>
+</dl>
+</section>
+<section id="id6">
+<h4>Returns<a class="headerlink" href="#id6" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Updates max_memory_gb based on actual feature count</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.pipeline.entities.pipeline_data.PipelineData.get_data_summary">
+<span class="sig-name descname"><span class="pre">get_data_summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mdxplain.pipeline.entities.pipeline_data.PipelineData.get_data_summary" title="Link to this definition"></a></dt>
+<dd><p>Get summary information about all stored data.</p>
+<p>Provides an overview of all data containers with counts and
+availability information. Useful for debugging and monitoring
+the state of the pipeline.</p>
+<section id="id7">
+<h4>Returns<a class="headerlink" href="#id7" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>dict</dt><dd><p>Summary dictionary with data container information</p>
+</dd>
+</dl>
+</section>
+<section id="id8">
+<h4>Examples<a class="headerlink" href="#id8" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_data</span> <span class="o">=</span> <span class="n">PipelineData</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">summary</span> <span class="o">=</span> <span class="n">pipeline_data</span><span class="o">.</span><span class="n">get_data_summary</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">summary</span><span class="p">[</span><span class="s1">&#39;trajectories_loaded&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">summary</span><span class="p">[</span><span class="s1">&#39;features_computed&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.pipeline.entities.pipeline_data.PipelineData.has_trajectories">
+<span class="sig-name descname"><span class="pre">has_trajectories</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#mdxplain.pipeline.entities.pipeline_data.PipelineData.has_trajectories" title="Link to this definition"></a></dt>
+<dd><p>Check if trajectory data is available.</p>
+<section id="id9">
+<h4>Returns<a class="headerlink" href="#id9" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>bool</dt><dd><p>True if trajectories are loaded, False otherwise</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.pipeline.entities.pipeline_data.PipelineData.has_features">
+<span class="sig-name descname"><span class="pre">has_features</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#mdxplain.pipeline.entities.pipeline_data.PipelineData.has_features" title="Link to this definition"></a></dt>
+<dd><p>Check if any feature data is available.</p>
+<section id="id10">
+<h4>Returns<a class="headerlink" href="#id10" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>bool</dt><dd><p>True if features are computed, False otherwise</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.pipeline.entities.pipeline_data.PipelineData.has_clusterings">
+<span class="sig-name descname"><span class="pre">has_clusterings</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#mdxplain.pipeline.entities.pipeline_data.PipelineData.has_clusterings" title="Link to this definition"></a></dt>
+<dd><p>Check if any clustering results are available.</p>
+<section id="id11">
+<h4>Returns<a class="headerlink" href="#id11" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>bool</dt><dd><p>True if clustering results exist, False otherwise</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.pipeline.entities.pipeline_data.PipelineData.has_decompositions">
+<span class="sig-name descname"><span class="pre">has_decompositions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#mdxplain.pipeline.entities.pipeline_data.PipelineData.has_decompositions" title="Link to this definition"></a></dt>
+<dd><p>Check if any decomposition results are available.</p>
+<section id="id12">
+<h4>Returns<a class="headerlink" href="#id12" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>bool</dt><dd><p>True if decomposition results exist, False otherwise</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.pipeline.entities.pipeline_data.PipelineData.get_feature">
+<span class="sig-name descname"><span class="pre">get_feature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#mdxplain.pipeline.entities.pipeline_data.PipelineData.get_feature" title="Link to this definition"></a></dt>
+<dd><p>Retrieve a computed feature by its type.</p>
+<p>This method returns the FeatureData instance for a previously computed
+feature. The returned object provides access to the computed data,
+feature names, analysis methods, and data reduction capabilities.</p>
+<p>Supports three input variants:</p>
+<ul class="simple">
+<li><p>feature_type.Distances() (instance)</p></li>
+<li><p>feature_type.Distances (class with metaclass)</p></li>
+<li><p>“distances” (string)</p></li>
+</ul>
+<section id="id13">
+<h4>Parameters<a class="headerlink" href="#id13" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>feature_type<span class="classifier">FeatureTypeBase, FeatureTypeBase class, or str</span></dt><dd><p>Feature type instance, class, or string (e.g., Distances(), Distances, “distances”)</p>
+</dd>
+</dl>
+</section>
+<section id="id14">
+<h4>Returns<a class="headerlink" href="#id14" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>FeatureData</dt><dd><p>The FeatureData instance containing computed data and analysis methods</p>
+</dd>
+</dl>
+</section>
+<section id="raises">
+<h4>Raises<a class="headerlink" href="#raises" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If the requested feature type has not been computed yet</p>
+</dd>
+</dl>
+</section>
+<section id="id15">
+<h4>Examples<a class="headerlink" href="#id15" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Get distances feature - all variants work:</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">distances</span> <span class="o">=</span> <span class="n">pipeline_data</span><span class="o">.</span><span class="n">get_feature</span><span class="p">(</span><span class="s2">&quot;distances&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">distance_data</span> <span class="o">=</span> <span class="n">distances</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feature_names</span> <span class="o">=</span> <span class="n">distances</span><span class="o">.</span><span class="n">get_feature_names</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Get contacts and apply analysis</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">contacts</span> <span class="o">=</span> <span class="n">pipeline_data</span><span class="o">.</span><span class="n">get_feature</span><span class="p">(</span><span class="s2">&quot;contacts&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">frequency</span> <span class="o">=</span> <span class="n">contacts</span><span class="o">.</span><span class="n">analysis</span><span class="o">.</span><span class="n">compute_frequency</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.pipeline.entities.pipeline_data.PipelineData.get_decomposition">
+<span class="sig-name descname"><span class="pre">get_decomposition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">decomposition_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.pipeline.entities.pipeline_data.PipelineData.get_decomposition" title="Link to this definition"></a></dt>
+<dd><p>Retrieve a computed decomposition by selection name.</p>
+<p>This method returns the DecompositionData instance for a previously
+computed decomposition. The returned object provides access to the
+decomposed data, metadata, hyperparameters, and transformation details.</p>
+<section id="id16">
+<h4>Parameters<a class="headerlink" href="#id16" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>decomposition_name<span class="classifier">str</span></dt><dd><p>Name of the decomposition</p>
+</dd>
+</dl>
+</section>
+<section id="id17">
+<h4>Returns<a class="headerlink" href="#id17" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>DecompositionData</dt><dd><p>The DecompositionData instance containing decomposed data and metadata</p>
+</dd>
+</dl>
+</section>
+<section id="id18">
+<h4>Raises<a class="headerlink" href="#id18" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If the requested decomposition has not been computed yet</p>
+</dd>
+</dl>
+</section>
+<section id="id19">
+<h4>Examples<a class="headerlink" href="#id19" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Get decomposition for a selection</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">decomp_data</span> <span class="o">=</span> <span class="n">pipeline_data</span><span class="o">.</span><span class="n">get_decomposition</span><span class="p">(</span><span class="s2">&quot;feature_sel&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">transformed</span> <span class="o">=</span> <span class="n">decomp_data</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metadata</span> <span class="o">=</span> <span class="n">decomp_data</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Get decomposition type from metadata</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">decomp_type</span> <span class="o">=</span> <span class="n">decomp_data</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;decomposition_type&#39;</span><span class="p">,</span> <span class="s1">&#39;unknown&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Decomposition type: </span><span class="si">{</span><span class="n">decomp_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.pipeline.entities.pipeline_data.PipelineData.list_decompositions">
+<span class="sig-name descname"><span class="pre">list_decompositions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.pipeline.entities.pipeline_data.PipelineData.list_decompositions" title="Link to this definition"></a></dt>
+<dd><p>List all computed decompositions.</p>
+<p>Returns a list of all computed decompositions with their selection
+names and decomposition types for easy overview.</p>
+<section id="id20">
+<h4>Parameters<a class="headerlink" href="#id20" title="Link to this heading"></a></h4>
+<p>None</p>
+</section>
+<section id="id21">
+<h4>Returns<a class="headerlink" href="#id21" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>list</dt><dd><p>List of dictionaries containing decomposition information</p>
+</dd>
+</dl>
+</section>
+<section id="id22">
+<h4>Examples<a class="headerlink" href="#id22" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">decompositions</span> <span class="o">=</span> <span class="n">pipeline_data</span><span class="o">.</span><span class="n">list_decompositions</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">decomp</span> <span class="ow">in</span> <span class="n">decompositions</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Selection: </span><span class="si">{</span><span class="n">decomp</span><span class="p">[</span><span class="s1">&#39;decomposition_name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">, Type: </span><span class="si">{</span><span class="n">decomp</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.pipeline.entities.pipeline_data.PipelineData.get_cluster">
+<span class="sig-name descname"><span class="pre">get_cluster</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cluster_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.pipeline.entities.pipeline_data.PipelineData.get_cluster" title="Link to this definition"></a></dt>
+<dd><p>Retrieve a computed clustering result by cluster name.</p>
+<p>This method returns the ClusterData instance for a previously
+computed clustering analysis. The returned object provides access to the
+cluster labels, metadata, and clustering parameters.</p>
+<section id="id23">
+<h4>Parameters<a class="headerlink" href="#id23" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>cluster_name<span class="classifier">str</span></dt><dd><p>Name of the clustering result to retrieve</p>
+</dd>
+</dl>
+</section>
+<section id="id24">
+<h4>Returns<a class="headerlink" href="#id24" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>ClusterData</dt><dd><p>The ClusterData instance containing cluster labels and metadata</p>
+</dd>
+</dl>
+</section>
+<section id="id25">
+<h4>Raises<a class="headerlink" href="#id25" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If the requested clustering result has not been computed yet</p>
+</dd>
+</dl>
+</section>
+<section id="id26">
+<h4>Examples<a class="headerlink" href="#id26" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Get clustering result by name</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cluster_data</span> <span class="o">=</span> <span class="n">pipeline_data</span><span class="o">.</span><span class="n">get_cluster</span><span class="p">(</span><span class="s2">&quot;dbscan_analysis&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">labels</span> <span class="o">=</span> <span class="n">cluster_data</span><span class="o">.</span><span class="n">labels</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metadata</span> <span class="o">=</span> <span class="n">cluster_data</span><span class="o">.</span><span class="n">metadata</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Get clustering result with default name</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cluster_data</span> <span class="o">=</span> <span class="n">pipeline_data</span><span class="o">.</span><span class="n">get_cluster</span><span class="p">(</span><span class="s2">&quot;dbscan_eps0.5_min5&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n_clusters</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">labels</span><span class="p">))</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="k">if</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">in</span> <span class="n">labels</span> <span class="k">else</span> <span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.pipeline.entities.pipeline_data.PipelineData.list_clusters">
+<span class="sig-name descname"><span class="pre">list_clusters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.pipeline.entities.pipeline_data.PipelineData.list_clusters" title="Link to this definition"></a></dt>
+<dd><p>List all computed clustering results.</p>
+<p>Returns a list of all computed clustering results with their names
+and basic information for easy overview.</p>
+<section id="id27">
+<h4>Parameters<a class="headerlink" href="#id27" title="Link to this heading"></a></h4>
+<p>None</p>
+</section>
+<section id="id28">
+<h4>Returns<a class="headerlink" href="#id28" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>list</dt><dd><p>List of dictionaries containing clustering information</p>
+</dd>
+</dl>
+</section>
+<section id="id29">
+<h4>Examples<a class="headerlink" href="#id29" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">clusters</span> <span class="o">=</span> <span class="n">pipeline_data</span><span class="o">.</span><span class="n">list_clusters</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">cluster</span> <span class="ow">in</span> <span class="n">clusters</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Name: </span><span class="si">{</span><span class="n">cluster</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">, Type: </span><span class="si">{</span><span class="n">cluster</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">, &quot;</span>
+<span class="gp">... </span>          <span class="sa">f</span><span class="s2">&quot;Clusters: </span><span class="si">{</span><span class="n">cluster</span><span class="p">[</span><span class="s1">&#39;n_clusters&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.pipeline.entities.pipeline_data.PipelineData.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.pipeline.entities.pipeline_data.PipelineData.save" title="Link to this definition"></a></dt>
+<dd><p>Save the complete PipelineData object to disk.</p>
+<p>This method serializes the entire PipelineData object including
+all computed features, trajectories, clusterings, decompositions,
+and metadata to a file. The saved object can be loaded later to
+restore the complete analysis state without recomputation.</p>
+<section id="id30">
+<h4>Parameters<a class="headerlink" href="#id30" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>save_path<span class="classifier">str</span></dt><dd><p>Path where to save the PipelineData object. Should have a
+.pkl extension. The directory will be created if it doesn’t exist.</p>
+</dd>
+</dl>
+</section>
+<section id="id31">
+<h4>Returns<a class="headerlink" href="#id31" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Saves the PipelineData object to the specified path</p>
+</dd>
+</dl>
+</section>
+<section id="id32">
+<h4>Examples<a class="headerlink" href="#id32" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Save after computing features</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_data</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;analysis_results/pipeline_data.pkl&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Save with specific path structure</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">save_dir</span> <span class="o">=</span> <span class="s1">&#39;project_results/session_001&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">save_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_data</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">save_dir</span><span class="si">}</span><span class="s1">/pipeline_analysis.pkl&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="notes">
+<h4>Notes<a class="headerlink" href="#notes" title="Link to this heading"></a></h4>
+<ul class="simple">
+<li><p>All computed features, clusterings, and decompositions are saved</p></li>
+<li><p>Memory-mapped data files remain separate and are referenced</p></li>
+<li><p>Complete pipeline state is preserved including configuration</p></li>
+</ul>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.pipeline.entities.pipeline_data.PipelineData.load">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.pipeline.entities.pipeline_data.PipelineData.load" title="Link to this definition"></a></dt>
+<dd><p>Load a previously saved PipelineData object from disk.</p>
+<p>This method deserializes a PipelineData object from a file,
+restoring all computed features, trajectories, and analysis state.
+After loading, the object is ready for immediate use without
+requiring recomputation.</p>
+<section id="id33">
+<h4>Parameters<a class="headerlink" href="#id33" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>load_path<span class="classifier">str</span></dt><dd><p>Path to the saved PipelineData file (.pkl).
+The file must have been created using the save() method.</p>
+</dd>
+</dl>
+</section>
+<section id="id34">
+<h4>Returns<a class="headerlink" href="#id34" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Loads the PipelineData object from the specified path</p>
+</dd>
+</dl>
+</section>
+<section id="id35">
+<h4>Examples<a class="headerlink" href="#id35" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Load previously saved analysis</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_data</span> <span class="o">=</span> <span class="n">PipelineData</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_data</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;analysis_results/pipeline_data.pkl&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Access loaded features immediately</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">distances</span> <span class="o">=</span> <span class="n">pipeline_data</span><span class="o">.</span><span class="n">get_feature</span><span class="p">(</span><span class="s2">&quot;distances&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">contacts</span> <span class="o">=</span> <span class="n">pipeline_data</span><span class="o">.</span><span class="n">get_feature</span><span class="p">(</span><span class="s2">&quot;contacts&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Continue analysis where you left off</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mean_distances</span> <span class="o">=</span> <span class="n">distances</span><span class="o">.</span><span class="n">analysis</span><span class="o">.</span><span class="n">compute_mean</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="id36">
+<h4>Raises<a class="headerlink" href="#id36" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>FileNotFoundError</dt><dd><p>If the specified file doesn’t exist</p>
+</dd>
+<dt>ValueError</dt><dd><p>If the file is corrupted or not a valid PipelineData save file</p>
+</dd>
+</dl>
+</section>
+<section id="id37">
+<h4>Notes<a class="headerlink" href="#id37" title="Link to this heading"></a></h4>
+<ul class="simple">
+<li><p>All previously computed features are restored</p></li>
+<li><p>Memory mapping settings and cache paths are preserved</p></li>
+<li><p>If memory-mapped data files are missing, an error will occur</p></li>
+<li><p>Complete pipeline state including configuration is restored</p></li>
+</ul>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.pipeline.entities.pipeline_data.PipelineData.get_selected_metadata">
+<span class="sig-name descname"><span class="pre">get_selected_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.pipeline.entities.pipeline_data.PipelineData.get_selected_metadata" title="Link to this definition"></a></dt>
+<dd><p>Return metadata for all selected features.</p>
+<p>This method retrieves the metadata for all features in a selection,
+providing detailed information about each column in the corresponding
+selected matrix. The metadata includes feature definitions and types,
+allowing for proper interpretation of the selected data.</p>
+<p>The reference trajectory for metadata is determined by the one specified
+during the FeatureSelector.select() operation.</p>
+<section id="id38">
+<h4>Parameters<a class="headerlink" href="#id38" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>name<span class="classifier">str</span></dt><dd><p>Name of the selection to retrieve</p>
+</dd>
+</dl>
+</section>
+<section id="id39">
+<h4>Returns<a class="headerlink" href="#id39" title="Link to this heading"></a></h4>
+<dl>
+<dt>numpy.ndarray</dt><dd><p>Array of dictionaries, one for each column in the selected matrix.
+Each dictionary has the structure:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s1">&#39;features&#39;</span><span class="p">:</span> <span class="n">original</span> <span class="n">feature</span> <span class="n">metadata</span> <span class="n">entry</span><span class="p">,</span>
+    <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="n">feature</span> <span class="nb">type</span> <span class="n">name</span> <span class="k">as</span> <span class="n">string</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</section>
+<section id="id40">
+<h4>Raises<a class="headerlink" href="#id40" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If selection not found or no metadata available</p>
+</dd>
+</dl>
+</section>
+<section id="id41">
+<h4>Examples<a class="headerlink" href="#id41" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Get metadata for a selection</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metadata</span> <span class="o">=</span> <span class="n">pipeline_data</span><span class="o">.</span><span class="n">get_selected_metadata</span><span class="p">(</span><span class="s2">&quot;ala_analysis&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of selected features: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">metadata</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Examine first feature</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">first_feature</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Feature type: </span><span class="si">{</span><span class="n">first_feature</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Feature details: </span><span class="si">{</span><span class="n">first_feature</span><span class="p">[</span><span class="s1">&#39;features&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.pipeline.entities.pipeline_data.PipelineData.validate_selection_exists">
+<span class="sig-name descname"><span class="pre">validate_selection_exists</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.pipeline.entities.pipeline_data.PipelineData.validate_selection_exists" title="Link to this definition"></a></dt>
+<dd><p>Validate that the selection exists.</p>
+<section id="id42">
+<h4>Parameters<a class="headerlink" href="#id42" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>name<span class="classifier">str</span></dt><dd><p>Name of the selection to validate</p>
+</dd>
+</dl>
+</section>
+<section id="id43">
+<h4>Returns<a class="headerlink" href="#id43" title="Link to this heading"></a></h4>
+<p>None</p>
+</section>
+<section id="id44">
+<h4>Raises<a class="headerlink" href="#id44" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If the selection does not exist</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.pipeline.entities.pipeline_data.PipelineData.get_selected_data">
+<span class="sig-name descname"><span class="pre">get_selected_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_selector</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_selector</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_frame_mapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.pipeline.entities.pipeline_data.PipelineData.get_selected_data" title="Link to this definition"></a></dt>
+<dd><p>Get data matrix with selected features and optionally selected frames.</p>
+<p>This method combines feature selection (columns) and data selection (rows)
+to create a matrix with the desired subset of data. Feature selection is
+required to define which columns to include.</p>
+<p>Frame mapping is ALWAYS created internally to simplify filtering logic,
+but only returned when requested.</p>
+<section id="id45">
+<h4>Parameters<a class="headerlink" href="#id45" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>feature_selector<span class="classifier">str</span></dt><dd><p>Name of the feature selector (which columns to include).
+Must be provided - cannot be None.</p>
+</dd>
+<dt>data_selector<span class="classifier">str, optional</span></dt><dd><p>Name of the data selector (which rows to include).
+If None, uses all available frames.</p>
+</dd>
+<dt>return_frame_mapping<span class="classifier">bool, default=False</span></dt><dd><p>Whether to return frame mapping along with the matrix</p>
+</dd>
+</dl>
+</section>
+<section id="id46">
+<h4>Returns<a class="headerlink" href="#id46" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>np.ndarray or Tuple[np.ndarray, Dict[int, tuple]]</dt><dd><p>If return_frame_mapping=False: Matrix with selected columns and optionally selected rows.
+If return_frame_mapping=True: Tuple of (matrix, frame_mapping).</p>
+<ul class="simple">
+<li><p>Matrix shapes:</p>
+<ul>
+<li><p>With data_selector: (n_selected_frames, n_selected_features)</p></li>
+<li><p>Without data_selector: (n_all_frames, n_selected_features)</p></li>
+</ul>
+</li>
+<li><p>Frame mapping: {global_frame_index: (trajectory_index, local_frame_index)}</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+<section id="id47">
+<h4>Raises<a class="headerlink" href="#id47" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If feature_selector doesn’t exist, data_selector doesn’t exist, or no data available</p>
+</dd>
+</dl>
+</section>
+<section id="id48">
+<h4>Examples<a class="headerlink" href="#id48" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Get data with both feature and frame selection</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">pipeline_data</span><span class="o">.</span><span class="n">get_selected_data</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">feature_selector</span><span class="o">=</span><span class="s2">&quot;key_distances&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">data_selector</span><span class="o">=</span><span class="s2">&quot;folded_frames&quot;</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Selected data shape: </span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Get all frames but only selected features with mapping</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="p">,</span> <span class="n">mapping</span> <span class="o">=</span> <span class="n">pipeline_data</span><span class="o">.</span><span class="n">get_selected_data</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">feature_selector</span><span class="o">=</span><span class="s2">&quot;important_features&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">return_frame_mapping</span><span class="o">=</span><span class="kc">True</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.pipeline.entities.pipeline_data.PipelineData.get_comparison_data">
+<span class="sig-name descname"><span class="pre">get_comparison_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">comparison_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub_comparison_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mdxplain.pipeline.entities.pipeline_data.PipelineData.get_comparison_data" title="Link to this definition"></a></dt>
+<dd><p>Get X (features) and y (labels) for a specific comparison sub-comparison.</p>
+<p>This method provides the central access point for comparison data,
+combining ComparisonData metadata with efficient data processing.
+Used by modules to get ready-to-use datasets for analysis.</p>
+<section id="id49">
+<h4>Parameters<a class="headerlink" href="#id49" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>comparison_name<span class="classifier">str</span></dt><dd><p>Name of the comparison to retrieve data from</p>
+</dd>
+<dt>sub_comparison_name<span class="classifier">str</span></dt><dd><p>Name of the specific sub-comparison within the comparison</p>
+</dd>
+</dl>
+</section>
+<section id="id50">
+<h4>Returns<a class="headerlink" href="#id50" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>Tuple[np.ndarray, np.ndarray]</dt><dd><p>Tuple of (X, y) where:</p>
+<ul class="simple">
+<li><p>X is the feature matrix with selected features and frames</p></li>
+<li><p>y is the label array for the comparison groups</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+<section id="id51">
+<h4>Raises<a class="headerlink" href="#id51" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If comparison not found, sub-comparison not found, or no data available</p>
+</dd>
+</dl>
+</section>
+<section id="id52">
+<h4>Examples<a class="headerlink" href="#id52" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Get data for a binary comparison</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">pipeline_data</span><span class="o">.</span><span class="n">get_comparison_data</span><span class="p">(</span><span class="s2">&quot;folded_vs_unfolded&quot;</span><span class="p">,</span> <span class="s2">&quot;main&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Features shape: </span><span class="si">{</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Labels: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Get data for one-vs-rest comparison</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">pipeline_data</span><span class="o">.</span><span class="n">get_comparison_data</span><span class="p">(</span><span class="s2">&quot;conformations&quot;</span><span class="p">,</span> <span class="s2">&quot;folded_vs_rest&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Data shape: </span><span class="si">{</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">, Labels: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.pipeline.entities.pipeline_data.PipelineData.get_config">
+<span class="sig-name descname"><span class="pre">get_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#mdxplain.pipeline.entities.pipeline_data.PipelineData.get_config" title="Link to this definition"></a></dt>
+<dd><p>Get current configuration parameters.</p>
+<p>Returns the current configuration settings for chunk_size,
+cache_dir, and use_memmap that are used across the pipeline.</p>
+<section id="id53">
+<h4>Returns<a class="headerlink" href="#id53" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>dict</dt><dd><p>Dictionary containing current configuration values</p>
+</dd>
+</dl>
+</section>
+<section id="id54">
+<h4>Examples<a class="headerlink" href="#id54" title="Link to this heading"></a></h4>
+<p>Check current configuration:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline_data</span> <span class="o">=</span> <span class="n">PipelineData</span><span class="p">(</span><span class="n">chunk_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">use_memmap</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">config</span> <span class="o">=</span> <span class="n">pipeline_data</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;chunk_size&#39;</span><span class="p">])</span>  <span class="c1"># 1000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;use_memmap&#39;</span><span class="p">])</span>   <span class="c1"># True</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mdxplain.pipeline.html" class="btn btn-neutral float-left" title="Pipeline" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mdxplain.pipeline.helper.html" class="btn btn-neutral float-right" title="Pipeline: Helpers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maximilian Salomon.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

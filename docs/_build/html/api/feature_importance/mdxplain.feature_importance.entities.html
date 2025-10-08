@@ -1,0 +1,505 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Feature Importance Entities &mdash; mdxplain 31.10.2025 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=55e8f53f"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Feature Importance Helpers" href="mdxplain.feature_importance.helpers.html" />
+    <link rel="prev" title="Feature Importance Analyzer Types: Interface Calculator Base" href="mdxplain.feature_importance.analyzer_types.interfaces.calculator_base.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mdxplain
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction.html">Introduction to mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting started with mdxplain</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/theory/theory.html">The Theory Behind mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/learning/learning.html">Learn mdxplain</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../analysis/mdxplain.analysis.html">Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering/mdxplain.clustering.html">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../comparison/mdxplain.comparison.html">Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data_selector/mdxplain.data_selector.html">Data Selector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../decomposition/mdxplain.decomposition.html">Decomposition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature/mdxplain.feature.html">Feature</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="mdxplain.feature_importance.html">Feature Importance</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature_importance.html#examples">Examples:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature_importance.analyzer_types.html">Feature Importance Analyzer Types</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Feature Importance Entities</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#module-mdxplain.feature_importance.entities.feature_importance_data">Entities</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature_importance.helpers.html">Feature Importance Helpers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature_importance.managers.html">Feature Importance Managers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.feature_importance.services.html">Feature Importance Services</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_selection/mdxplain.feature_selection.html">Feature Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pipeline/mdxplain.pipeline.html">Pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../trajectory/mdxplain.trajectory.html">Trajectory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/mdxplain.utils.html">Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mdxplain</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API Documentation</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.feature_importance.html">Feature Importance</a></li>
+      <li class="breadcrumb-item active">Feature Importance Entities</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api/feature_importance/mdxplain.feature_importance.entities.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mdxplain.feature_importance.entities">
+<span id="feature-importance-entities"></span><h1>Feature Importance Entities<a class="headerlink" href="#module-mdxplain.feature_importance.entities" title="Link to this heading"></a></h1>
+<p>Feature importance entities for storing analysis results.</p>
+<section id="module-mdxplain.feature_importance.entities.feature_importance_data">
+<span id="entities"></span><h2>Entities<a class="headerlink" href="#module-mdxplain.feature_importance.entities.feature_importance_data" title="Link to this heading"></a></h2>
+<p>Feature importance data entity for storing ML analysis results.</p>
+<p>This module contains the FeatureImportanceData class that stores feature
+importance analysis results from various ML algorithms. It provides
+separated data and metadata storage with flexible access methods.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mdxplain.feature_importance.entities.feature_importance_data.FeatureImportanceData">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mdxplain.feature_importance.entities.feature_importance_data.</span></span><span class="sig-name descname"><span class="pre">FeatureImportanceData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.feature_importance.entities.feature_importance_data.FeatureImportanceData" title="Link to this definition"></a></dt>
+<dd><p>Data entity for storing feature importance analysis results.</p>
+<p>Stores feature importance results from ML algorithms, 
+in this case mainly classifiers with separated
+data and metadata storage. Each FeatureImportanceData contains results
+for all sub-comparisons from a single analysis run.</p>
+<section id="attributes">
+<h3>Attributes<a class="headerlink" href="#attributes" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>name<span class="classifier">str</span></dt><dd><p>Name identifier for this analysis</p>
+</dd>
+<dt>analyzer_type<span class="classifier">str</span></dt><dd><p>Type of analyzer used (e.g., “decision_tree”)</p>
+</dd>
+<dt>comparison_name<span class="classifier">str</span></dt><dd><p>Name of the comparison this analysis was run on</p>
+</dd>
+<dt>data<span class="classifier">List[np.ndarray]</span></dt><dd><p>List of feature importance arrays (one per sub-comparison)</p>
+</dd>
+<dt>metadata<span class="classifier">List[Dict[str, Any]]</span></dt><dd><p>List of metadata dictionaries (parallel to data list)</p>
+</dd>
+</dl>
+</section>
+<section id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fi_data</span> <span class="o">=</span> <span class="n">FeatureImportanceData</span><span class="p">(</span><span class="s2">&quot;tree_analysis&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fi_data</span><span class="o">.</span><span class="n">analyzer_type</span> <span class="o">=</span> <span class="s2">&quot;decision_tree&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fi_data</span><span class="o">.</span><span class="n">comparison_name</span> <span class="o">=</span> <span class="s2">&quot;folded_vs_unfolded&quot;</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Access by index</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">importance_0</span><span class="p">,</span> <span class="n">meta_0</span> <span class="o">=</span> <span class="n">fi_data</span><span class="o">.</span><span class="n">get_comparison</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Access by name</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">importance</span><span class="p">,</span> <span class="n">meta</span> <span class="o">=</span> <span class="n">fi_data</span><span class="o">.</span><span class="n">get_comparison</span><span class="p">(</span><span class="s2">&quot;folded_vs_rest&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_importance.entities.feature_importance_data.FeatureImportanceData.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.feature_importance.entities.feature_importance_data.FeatureImportanceData.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize feature importance data with given name.</p>
+<section id="parameters">
+<h4>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>name<span class="classifier">str</span></dt><dd><p>Name identifier for this analysis</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h4>Returns<a class="headerlink" href="#returns" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Initializes FeatureImportanceData with given name</p>
+</dd>
+</dl>
+</section>
+<section id="id1">
+<h4>Examples<a class="headerlink" href="#id1" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fi_data</span> <span class="o">=</span> <span class="n">FeatureImportanceData</span><span class="p">(</span><span class="s2">&quot;my_analysis&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">fi_data</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+<span class="go">&#39;my_analysis&#39;</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_importance.entities.feature_importance_data.FeatureImportanceData.add_comparison_result">
+<span class="sig-name descname"><span class="pre">add_comparison_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">importance_scores</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature_importance.entities.feature_importance_data.FeatureImportanceData.add_comparison_result" title="Link to this definition"></a></dt>
+<dd><p>Add results for a sub-comparison.</p>
+<section id="id2">
+<h4>Parameters<a class="headerlink" href="#id2" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>importance_scores<span class="classifier">np.ndarray</span></dt><dd><p>Feature importance scores from ML algorithm</p>
+</dd>
+<dt>metadata<span class="classifier">Dict[str, Any]</span></dt><dd><p>Metadata for this sub-comparison</p>
+</dd>
+</dl>
+</section>
+<section id="id3">
+<h4>Returns<a class="headerlink" href="#id3" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Adds results to data and metadata lists</p>
+</dd>
+</dl>
+</section>
+<section id="id4">
+<h4>Examples<a class="headerlink" href="#id4" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">importance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s2">&quot;comparison&quot;</span><span class="p">:</span> <span class="s2">&quot;folded_vs_unfolded&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s2">&quot;n_samples&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s2">&quot;accuracy&quot;</span><span class="p">:</span> <span class="mf">0.85</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fi_data</span><span class="o">.</span><span class="n">add_comparison_result</span><span class="p">(</span><span class="n">importance</span><span class="p">,</span> <span class="n">meta</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_importance.entities.feature_importance_data.FeatureImportanceData.get_comparison">
+<span class="sig-name descname"><span class="pre">get_comparison</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">identifier</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mdxplain.feature_importance.entities.feature_importance_data.FeatureImportanceData.get_comparison" title="Link to this definition"></a></dt>
+<dd><p>Get comparison results by index or name.</p>
+<section id="id5">
+<h4>Parameters<a class="headerlink" href="#id5" title="Link to this heading"></a></h4>
+<p>identifier : int or str</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>int: Index of the comparison (0-based)</p></li>
+<li><p>str: Name of the comparison from metadata</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="id6">
+<h4>Returns<a class="headerlink" href="#id6" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>Tuple[np.ndarray, Dict[str, Any]]</dt><dd><p>Tuple of (importance_scores, metadata)</p>
+</dd>
+</dl>
+</section>
+<section id="raises">
+<h4>Raises<a class="headerlink" href="#raises" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If identifier not found</p>
+</dd>
+<dt>TypeError</dt><dd><p>If identifier is neither int nor str</p>
+</dd>
+</dl>
+</section>
+<section id="id7">
+<h4>Examples<a class="headerlink" href="#id7" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Access by index</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scores</span><span class="p">,</span> <span class="n">meta</span> <span class="o">=</span> <span class="n">fi_data</span><span class="o">.</span><span class="n">get_comparison</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Access by name</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scores</span><span class="p">,</span> <span class="n">meta</span> <span class="o">=</span> <span class="n">fi_data</span><span class="o">.</span><span class="n">get_comparison</span><span class="p">(</span><span class="s2">&quot;folded_vs_rest&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_importance.entities.feature_importance_data.FeatureImportanceData.get_all_comparisons">
+<span class="sig-name descname"><span class="pre">get_all_comparisons</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mdxplain.feature_importance.entities.feature_importance_data.FeatureImportanceData.get_all_comparisons" title="Link to this definition"></a></dt>
+<dd><p>Get all comparison results.</p>
+<section id="id8">
+<h4>Parameters<a class="headerlink" href="#id8" title="Link to this heading"></a></h4>
+<p>None</p>
+</section>
+<section id="id9">
+<h4>Returns<a class="headerlink" href="#id9" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>List[Tuple[np.ndarray, Dict[str, Any]]]</dt><dd><p>List of (importance_scores, metadata) tuples</p>
+</dd>
+</dl>
+</section>
+<section id="id10">
+<h4>Examples<a class="headerlink" href="#id10" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">all_results</span> <span class="o">=</span> <span class="n">fi_data</span><span class="o">.</span><span class="n">get_all_comparisons</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">scores</span><span class="p">,</span> <span class="n">meta</span> <span class="ow">in</span> <span class="n">all_results</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;comparison&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">scores</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_importance.entities.feature_importance_data.FeatureImportanceData.list_comparisons">
+<span class="sig-name descname"><span class="pre">list_comparisons</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mdxplain.feature_importance.entities.feature_importance_data.FeatureImportanceData.list_comparisons" title="Link to this definition"></a></dt>
+<dd><p>List all available comparison names.</p>
+<section id="id11">
+<h4>Parameters<a class="headerlink" href="#id11" title="Link to this heading"></a></h4>
+<p>None</p>
+</section>
+<section id="id12">
+<h4>Returns<a class="headerlink" href="#id12" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>List[str]</dt><dd><p>List of comparison names from metadata</p>
+</dd>
+</dl>
+</section>
+<section id="id13">
+<h4>Examples<a class="headerlink" href="#id13" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">names</span> <span class="o">=</span> <span class="n">fi_data</span><span class="o">.</span><span class="n">list_comparisons</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Available comparisons: </span><span class="si">{</span><span class="n">names</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_importance.entities.feature_importance_data.FeatureImportanceData.get_top_features">
+<span class="sig-name descname"><span class="pre">get_top_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">identifier</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mdxplain.feature_importance.entities.feature_importance_data.FeatureImportanceData.get_top_features" title="Link to this definition"></a></dt>
+<dd><p>Get top N most important features for a comparison.</p>
+<section id="id14">
+<h4>Parameters<a class="headerlink" href="#id14" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>identifier<span class="classifier">int or str</span></dt><dd><p>Comparison identifier (index or name)</p>
+</dd>
+<dt>n<span class="classifier">int, default=10</span></dt><dd><p>Number of top features to return</p>
+</dd>
+</dl>
+</section>
+<section id="id15">
+<h4>Returns<a class="headerlink" href="#id15" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>List[Tuple[int, float]]</dt><dd><p>List of (feature_index, importance_score) tuples, sorted by importance</p>
+</dd>
+</dl>
+</section>
+<section id="id16">
+<h4>Examples<a class="headerlink" href="#id16" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">top_features</span> <span class="o">=</span> <span class="n">fi_data</span><span class="o">.</span><span class="n">get_top_features</span><span class="p">(</span><span class="s2">&quot;folded_vs_rest&quot;</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">feat_idx</span><span class="p">,</span> <span class="n">score</span> <span class="ow">in</span> <span class="n">top_features</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Feature </span><span class="si">{</span><span class="n">feat_idx</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">score</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_importance.entities.feature_importance_data.FeatureImportanceData.get_average_importance">
+<span class="sig-name descname"><span class="pre">get_average_importance</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mdxplain.feature_importance.entities.feature_importance_data.FeatureImportanceData.get_average_importance" title="Link to this definition"></a></dt>
+<dd><p>Get average feature importance across all comparisons.</p>
+<section id="id17">
+<h4>Parameters<a class="headerlink" href="#id17" title="Link to this heading"></a></h4>
+<p>None</p>
+</section>
+<section id="id18">
+<h4>Returns<a class="headerlink" href="#id18" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>np.ndarray</dt><dd><p>Average importance scores across all sub-comparisons</p>
+</dd>
+</dl>
+</section>
+<section id="id19">
+<h4>Examples<a class="headerlink" href="#id19" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">avg_importance</span> <span class="o">=</span> <span class="n">fi_data</span><span class="o">.</span><span class="n">get_average_importance</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">top_overall</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">avg_importance</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Most important feature overall: </span><span class="si">{</span><span class="n">top_overall</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_importance.entities.feature_importance_data.FeatureImportanceData.get_analysis_info">
+<span class="sig-name descname"><span class="pre">get_analysis_info</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mdxplain.feature_importance.entities.feature_importance_data.FeatureImportanceData.get_analysis_info" title="Link to this definition"></a></dt>
+<dd><p>Get summary information about this analysis.</p>
+<section id="id20">
+<h4>Parameters<a class="headerlink" href="#id20" title="Link to this heading"></a></h4>
+<p>None</p>
+</section>
+<section id="id21">
+<h4>Returns<a class="headerlink" href="#id21" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>Dict[str, Any]</dt><dd><p>Dictionary with analysis summary information</p>
+</dd>
+</dl>
+</section>
+<section id="id22">
+<h4>Examples<a class="headerlink" href="#id22" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">info</span> <span class="o">=</span> <span class="n">fi_data</span><span class="o">.</span><span class="n">get_analysis_info</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Analyzer: </span><span class="si">{</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;analyzer_type&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Comparisons: </span><span class="si">{</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;n_comparisons&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_importance.entities.feature_importance_data.FeatureImportanceData.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature_importance.entities.feature_importance_data.FeatureImportanceData.save" title="Link to this definition"></a></dt>
+<dd><p>Save FeatureImportanceData object to disk.</p>
+<section id="id23">
+<h4>Parameters<a class="headerlink" href="#id23" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>save_path<span class="classifier">str</span></dt><dd><p>Path where to save the FeatureImportanceData object</p>
+</dd>
+</dl>
+</section>
+<section id="id24">
+<h4>Returns<a class="headerlink" href="#id24" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Saves the FeatureImportanceData object to the specified path</p>
+</dd>
+</dl>
+</section>
+<section id="id25">
+<h4>Examples<a class="headerlink" href="#id25" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">feature_importance_data</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;analysis_results/tree_importance.pkl&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_importance.entities.feature_importance_data.FeatureImportanceData.load">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature_importance.entities.feature_importance_data.FeatureImportanceData.load" title="Link to this definition"></a></dt>
+<dd><p>Load FeatureImportanceData object from disk.</p>
+<section id="id26">
+<h4>Parameters<a class="headerlink" href="#id26" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>load_path<span class="classifier">str</span></dt><dd><p>Path to the saved FeatureImportanceData file</p>
+</dd>
+</dl>
+</section>
+<section id="id27">
+<h4>Returns<a class="headerlink" href="#id27" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Loads the FeatureImportanceData object from the specified path</p>
+</dd>
+</dl>
+</section>
+<section id="id28">
+<h4>Examples<a class="headerlink" href="#id28" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">feature_importance_data</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;analysis_results/tree_importance.pkl&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.feature_importance.entities.feature_importance_data.FeatureImportanceData.print_info">
+<span class="sig-name descname"><span class="pre">print_info</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.feature_importance.entities.feature_importance_data.FeatureImportanceData.print_info" title="Link to this definition"></a></dt>
+<dd><p>Print comprehensive feature importance information.</p>
+<section id="id29">
+<h4>Parameters<a class="headerlink" href="#id29" title="Link to this heading"></a></h4>
+<p>None</p>
+</section>
+<section id="id30">
+<h4>Returns<a class="headerlink" href="#id30" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Prints feature importance information to console</p>
+</dd>
+</dl>
+</section>
+<section id="id31">
+<h4>Examples<a class="headerlink" href="#id31" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">feature_importance_data</span><span class="o">.</span><span class="n">print_info</span><span class="p">()</span>
+<span class="go">=== FeatureImportanceData ===</span>
+<span class="go">Name: tree_analysis</span>
+<span class="go">Analyzer Type: RandomForest</span>
+<span class="go">Comparison: folded_vs_unfolded</span>
+<span class="go">Sub-Comparisons: 3 (folded_vs_rest, intermediate_vs_rest, unfolded_vs_rest)</span>
+<span class="go">Features Analyzed: 150</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mdxplain.feature_importance.analyzer_types.interfaces.calculator_base.html" class="btn btn-neutral float-left" title="Feature Importance Analyzer Types: Interface Calculator Base" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mdxplain.feature_importance.helpers.html" class="btn btn-neutral float-right" title="Feature Importance Helpers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maximilian Salomon.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

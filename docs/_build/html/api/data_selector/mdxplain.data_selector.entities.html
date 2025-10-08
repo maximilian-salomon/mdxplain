@@ -1,0 +1,541 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Selection Entities &mdash; mdxplain 31.10.2025 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=55e8f53f"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Data Selector Helpers" href="mdxplain.data_selector.helpers.html" />
+    <link rel="prev" title="Data Selector" href="mdxplain.data_selector.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mdxplain
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction.html">Introduction to mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting started with mdxplain</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/theory/theory.html">The Theory Behind mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/learning/learning.html">Learn mdxplain</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../analysis/mdxplain.analysis.html">Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering/mdxplain.clustering.html">Clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../comparison/mdxplain.comparison.html">Comparison</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="mdxplain.data_selector.html">Data Selector</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.data_selector.html#examples">Examples:</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Data Selection Entities</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#module-mdxplain.data_selector.entities.data_selector_data">Entities</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.data_selector.helpers.html">Data Selector Helpers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.data_selector.managers.html">Data Selector Managers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../decomposition/mdxplain.decomposition.html">Decomposition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature/mdxplain.feature.html">Feature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.html">Feature Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_selection/mdxplain.feature_selection.html">Feature Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pipeline/mdxplain.pipeline.html">Pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../trajectory/mdxplain.trajectory.html">Trajectory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/mdxplain.utils.html">Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mdxplain</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API Documentation</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.data_selector.html">Data Selector</a></li>
+      <li class="breadcrumb-item active">Data Selection Entities</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api/data_selector/mdxplain.data_selector.entities.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mdxplain.data_selector.entities">
+<span id="data-selection-entities"></span><h1>Data Selection Entities<a class="headerlink" href="#module-mdxplain.data_selector.entities" title="Link to this heading"></a></h1>
+<p>Data selector entities for storing selection configurations.</p>
+<section id="module-mdxplain.data_selector.entities.data_selector_data">
+<span id="entities"></span><h2>Entities<a class="headerlink" href="#module-mdxplain.data_selector.entities.data_selector_data" title="Link to this heading"></a></h2>
+<p>Data selector data entity for storing frame selection configurations.</p>
+<p>This module contains the DataSelectorData class that stores frame
+selection configurations including selected frame indices and
+selection criteria. This is the row-selection counterpart to
+FeatureSelectorData (which selects columns).</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mdxplain.data_selector.entities.data_selector_data.DataSelectorData">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mdxplain.data_selector.entities.data_selector_data.</span></span><span class="sig-name descname"><span class="pre">DataSelectorData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.data_selector.entities.data_selector_data.DataSelectorData" title="Link to this definition"></a></dt>
+<dd><p>Data entity for storing trajectory-specific data selector configurations.</p>
+<p>Stores frame indices per trajectory and selection criteria for trajectory
+frame selection. This entity serves as the counterpart to FeatureSelectorData,
+focusing on row selection instead of column selection.</p>
+<p>The DataSelectorData works with the 2-level dictionary structure where
+each trajectory has its own frame indices, supporting the new trajectory-
+specific architecture.</p>
+<section id="attributes">
+<h3>Attributes<a class="headerlink" href="#attributes" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>name<span class="classifier">str</span></dt><dd><p>Name identifier for this data selector configuration</p>
+</dd>
+<dt>trajectory_frames<span class="classifier">Dict[int, List[int]]</span></dt><dd><p>Dictionary mapping trajectory indices to lists of selected frame indices</p>
+</dd>
+<dt>selection_criteria<span class="classifier">Dict[str, Any]</span></dt><dd><p>Dictionary containing selection criteria and operations history</p>
+</dd>
+</dl>
+</section>
+<section id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">selector_data</span> <span class="o">=</span> <span class="n">DataSelectorData</span><span class="p">(</span><span class="s2">&quot;folded_frames&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">selector_data</span><span class="o">.</span><span class="n">set_trajectory_frames</span><span class="p">({</span><span class="mi">0</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">12</span><span class="p">],</span> <span class="mi">1</span><span class="p">:</span> <span class="p">[</span><span class="mi">18</span><span class="p">,</span> <span class="mi">25</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Selected </span><span class="si">{</span><span class="n">selector_data</span><span class="o">.</span><span class="n">n_selected_frames</span><span class="si">}</span><span class="s2"> frames&quot;</span><span class="p">)</span>
+<span class="go">5</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># With selection criteria</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">criteria</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;cluster&quot;</span><span class="p">,</span> <span class="s2">&quot;clustering&quot;</span><span class="p">:</span> <span class="s2">&quot;conformations&quot;</span><span class="p">,</span> <span class="s2">&quot;cluster_ids&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">selector_data</span><span class="o">.</span><span class="n">append_selection_criteria</span><span class="p">(</span><span class="n">criteria</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">selector_data</span><span class="o">.</span><span class="n">get_selection_info</span><span class="p">())</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.data_selector.entities.data_selector_data.DataSelectorData.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.data_selector.entities.data_selector_data.DataSelectorData.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize data selector data with given name.</p>
+<section id="parameters">
+<h4>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>name<span class="classifier">str</span></dt><dd><p>Name identifier for this data selector configuration</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h4>Returns<a class="headerlink" href="#returns" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Initializes empty DataSelectorData with given name</p>
+</dd>
+</dl>
+</section>
+<section id="id1">
+<h4>Examples<a class="headerlink" href="#id1" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">selector_data</span> <span class="o">=</span> <span class="n">DataSelectorData</span><span class="p">(</span><span class="s2">&quot;active_site_frames&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">selector_data</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+<span class="go">&#39;active_site_frames&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">selector_data</span><span class="o">.</span><span class="n">trajectory_frames</span><span class="p">))</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mdxplain.data_selector.entities.data_selector_data.DataSelectorData.n_selected_frames">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_selected_frames</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#mdxplain.data_selector.entities.data_selector_data.DataSelectorData.n_selected_frames" title="Link to this definition"></a></dt>
+<dd><p>Get total number of selected frames across all trajectories.</p>
+<section id="id2">
+<h4>Returns<a class="headerlink" href="#id2" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>int</dt><dd><p>Total number of frames in the selection</p>
+</dd>
+</dl>
+</section>
+<section id="id3">
+<h4>Examples<a class="headerlink" href="#id3" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">selector_data</span><span class="o">.</span><span class="n">set_trajectory_frames</span><span class="p">({</span><span class="mi">0</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="mi">1</span><span class="p">:</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">7</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">selector_data</span><span class="o">.</span><span class="n">n_selected_frames</span><span class="p">)</span>
+<span class="go">5</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.data_selector.entities.data_selector_data.DataSelectorData.set_trajectory_frames">
+<span class="sig-name descname"><span class="pre">set_trajectory_frames</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trajectory_frames</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.data_selector.entities.data_selector_data.DataSelectorData.set_trajectory_frames" title="Link to this definition"></a></dt>
+<dd><p>Set the selected frame indices per trajectory.</p>
+<section id="id4">
+<h4>Parameters<a class="headerlink" href="#id4" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>trajectory_frames<span class="classifier">Dict[int, List[int]]</span></dt><dd><p>Dictionary mapping trajectory indices to frame indices</p>
+</dd>
+</dl>
+</section>
+<section id="id5">
+<h4>Returns<a class="headerlink" href="#id5" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Updates the trajectory_frames attribute</p>
+</dd>
+</dl>
+</section>
+<section id="id6">
+<h4>Examples<a class="headerlink" href="#id6" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">selector_data</span> <span class="o">=</span> <span class="n">DataSelectorData</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">selector_data</span><span class="o">.</span><span class="n">set_trajectory_frames</span><span class="p">({</span><span class="mi">0</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">],</span> <span class="mi">1</span><span class="p">:</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">15</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">selector_data</span><span class="o">.</span><span class="n">trajectory_frames</span><span class="p">)</span>
+<span class="go">{0: [0, 10, 20], 1: [5, 15]}</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.data_selector.entities.data_selector_data.DataSelectorData.get_trajectory_frames">
+<span class="sig-name descname"><span class="pre">get_trajectory_frames</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mdxplain.data_selector.entities.data_selector_data.DataSelectorData.get_trajectory_frames" title="Link to this definition"></a></dt>
+<dd><p>Get the selected frame indices per trajectory.</p>
+<section id="id7">
+<h4>Returns<a class="headerlink" href="#id7" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>Dict[int, List[int]]</dt><dd><p>Dictionary mapping trajectory indices to frame indices</p>
+</dd>
+</dl>
+</section>
+<section id="id8">
+<h4>Examples<a class="headerlink" href="#id8" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">traj_frames</span> <span class="o">=</span> <span class="n">selector_data</span><span class="o">.</span><span class="n">get_trajectory_frames</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Trajectory 0 frames: </span><span class="si">{</span><span class="n">traj_frames</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="p">[])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.data_selector.entities.data_selector_data.DataSelectorData.append_selection_criteria">
+<span class="sig-name descname"><span class="pre">append_selection_criteria</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">criteria</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.data_selector.entities.data_selector_data.DataSelectorData.append_selection_criteria" title="Link to this definition"></a></dt>
+<dd><p>Add selection criteria to chronological operations list.</p>
+<p>Creates operations list on first call, appends to existing list on
+subsequent calls. Maintains chronological order of operations for
+full reproducibility of frame selection process.</p>
+<section id="id9">
+<h4>Parameters<a class="headerlink" href="#id9" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>criteria<span class="classifier">Dict[str, Any]</span></dt><dd><p>Dictionary containing selection criteria for this operation</p>
+</dd>
+</dl>
+</section>
+<section id="id10">
+<h4>Returns<a class="headerlink" href="#id10" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Updates the selection_criteria attribute with operations list</p>
+</dd>
+</dl>
+</section>
+<section id="id11">
+<h4>Examples<a class="headerlink" href="#id11" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># First operation - creates operations list</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">selector_data</span><span class="o">.</span><span class="n">append_selection_criteria</span><span class="p">({</span>
+<span class="gp">... </span>    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;cluster&quot;</span><span class="p">,</span> <span class="s2">&quot;clustering&quot;</span><span class="p">:</span> <span class="s2">&quot;conformations&quot;</span><span class="p">,</span> 
+<span class="gp">... </span>    <span class="s2">&quot;cluster_ids&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;mode&quot;</span><span class="p">:</span> <span class="s2">&quot;add&quot;</span>
+<span class="gp">... </span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Second operation - appends to list</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">selector_data</span><span class="o">.</span><span class="n">append_selection_criteria</span><span class="p">({</span>
+<span class="gp">... </span>    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;tags&quot;</span><span class="p">,</span> <span class="s2">&quot;tags&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;system_A&quot;</span><span class="p">],</span> <span class="s2">&quot;mode&quot;</span><span class="p">:</span> <span class="s2">&quot;intersect&quot;</span>
+<span class="gp">... </span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Result: {&quot;operations&quot;: [operation1, operation2]}</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.data_selector.entities.data_selector_data.DataSelectorData.get_selection_criteria">
+<span class="sig-name descname"><span class="pre">get_selection_criteria</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mdxplain.data_selector.entities.data_selector_data.DataSelectorData.get_selection_criteria" title="Link to this definition"></a></dt>
+<dd><p>Get the selection criteria.</p>
+<section id="id12">
+<h4>Returns<a class="headerlink" href="#id12" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>Dict[str, Any]</dt><dd><p>Dictionary containing selection criteria</p>
+</dd>
+</dl>
+</section>
+<section id="id13">
+<h4>Examples<a class="headerlink" href="#id13" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">criteria</span> <span class="o">=</span> <span class="n">selector_data</span><span class="o">.</span><span class="n">get_selection_criteria</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Selection type: </span><span class="si">{</span><span class="n">criteria</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;unknown&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.data_selector.entities.data_selector_data.DataSelectorData.add_trajectory_frames">
+<span class="sig-name descname"><span class="pre">add_trajectory_frames</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trajectory_frames</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.data_selector.entities.data_selector_data.DataSelectorData.add_trajectory_frames" title="Link to this definition"></a></dt>
+<dd><p>Add additional frame indices to existing trajectories.</p>
+<section id="id14">
+<h4>Parameters<a class="headerlink" href="#id14" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>trajectory_frames<span class="classifier">Dict[int, List[int]]</span></dt><dd><p>Dictionary mapping trajectory indices to additional frame indices</p>
+</dd>
+</dl>
+</section>
+<section id="id15">
+<h4>Returns<a class="headerlink" href="#id15" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Extends existing trajectory frame lists with new indices</p>
+</dd>
+</dl>
+</section>
+<section id="id16">
+<h4>Examples<a class="headerlink" href="#id16" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">selector_data</span><span class="o">.</span><span class="n">set_trajectory_frames</span><span class="p">({</span><span class="mi">0</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">selector_data</span><span class="o">.</span><span class="n">add_trajectory_frames</span><span class="p">({</span><span class="mi">0</span><span class="p">:</span> <span class="p">[</span><span class="mi">15</span><span class="p">,</span> <span class="mi">20</span><span class="p">],</span> <span class="mi">1</span><span class="p">:</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">7</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">selector_data</span><span class="o">.</span><span class="n">trajectory_frames</span><span class="p">)</span>
+<span class="go">{0: [0, 5, 10, 15, 20], 1: [2, 7]}</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.data_selector.entities.data_selector_data.DataSelectorData.remove_duplicates">
+<span class="sig-name descname"><span class="pre">remove_duplicates</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.data_selector.entities.data_selector_data.DataSelectorData.remove_duplicates" title="Link to this definition"></a></dt>
+<dd><p>Remove duplicate frame indices and sort the lists for each trajectory.</p>
+<section id="id17">
+<h4>Returns<a class="headerlink" href="#id17" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Removes duplicates from trajectory frame lists and sorts them</p>
+</dd>
+</dl>
+</section>
+<section id="id18">
+<h4>Examples<a class="headerlink" href="#id18" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">selector_data</span><span class="o">.</span><span class="n">trajectory_frames</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="mi">1</span><span class="p">:</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">selector_data</span><span class="o">.</span><span class="n">remove_duplicates</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">selector_data</span><span class="o">.</span><span class="n">trajectory_frames</span><span class="p">)</span>
+<span class="go">{0: [1, 3, 5], 1: [1, 8]}</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.data_selector.entities.data_selector_data.DataSelectorData.clear_selection">
+<span class="sig-name descname"><span class="pre">clear_selection</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.data_selector.entities.data_selector_data.DataSelectorData.clear_selection" title="Link to this definition"></a></dt>
+<dd><p>Clear all selected frame indices and criteria.</p>
+<section id="id19">
+<h4>Returns<a class="headerlink" href="#id19" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Resets trajectory_frames and selection_criteria to empty</p>
+</dd>
+</dl>
+</section>
+<section id="id20">
+<h4>Examples<a class="headerlink" href="#id20" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">selector_data</span><span class="o">.</span><span class="n">clear_selection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">selector_data</span><span class="o">.</span><span class="n">n_selected_frames</span><span class="p">)</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">selector_data</span><span class="o">.</span><span class="n">selection_criteria</span><span class="p">)</span>
+<span class="go">{}</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.data_selector.entities.data_selector_data.DataSelectorData.get_selection_info">
+<span class="sig-name descname"><span class="pre">get_selection_info</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mdxplain.data_selector.entities.data_selector_data.DataSelectorData.get_selection_info" title="Link to this definition"></a></dt>
+<dd><p>Get summary information about this selection.</p>
+<section id="id21">
+<h4>Returns<a class="headerlink" href="#id21" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>Dict[str, Any]</dt><dd><p>Dictionary with selection summary information</p>
+</dd>
+</dl>
+</section>
+<section id="id22">
+<h4>Examples<a class="headerlink" href="#id22" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">info</span> <span class="o">=</span> <span class="n">selector_data</span><span class="o">.</span><span class="n">get_selection_info</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Name: </span><span class="si">{</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Frames: </span><span class="si">{</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;n_frames&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Type: </span><span class="si">{</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;selection_type&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.data_selector.entities.data_selector_data.DataSelectorData.is_empty">
+<span class="sig-name descname"><span class="pre">is_empty</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#mdxplain.data_selector.entities.data_selector_data.DataSelectorData.is_empty" title="Link to this definition"></a></dt>
+<dd><p>Check if the selection is empty.</p>
+<section id="id23">
+<h4>Returns<a class="headerlink" href="#id23" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>bool</dt><dd><p>True if no frames are selected, False otherwise</p>
+</dd>
+</dl>
+</section>
+<section id="id24">
+<h4>Examples<a class="headerlink" href="#id24" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">empty_selector</span> <span class="o">=</span> <span class="n">DataSelectorData</span><span class="p">(</span><span class="s2">&quot;empty&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">empty_selector</span><span class="o">.</span><span class="n">is_empty</span><span class="p">())</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.data_selector.entities.data_selector_data.DataSelectorData.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.data_selector.entities.data_selector_data.DataSelectorData.save" title="Link to this definition"></a></dt>
+<dd><p>Save DataSelectorData object to disk.</p>
+<section id="id25">
+<h4>Parameters<a class="headerlink" href="#id25" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>save_path<span class="classifier">str</span></dt><dd><p>Path where to save the DataSelectorData object</p>
+</dd>
+</dl>
+</section>
+<section id="id26">
+<h4>Returns<a class="headerlink" href="#id26" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Saves the DataSelectorData object to the specified path</p>
+</dd>
+</dl>
+</section>
+<section id="id27">
+<h4>Examples<a class="headerlink" href="#id27" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">data_selector_data</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;analysis_results/folded_frames.pkl&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.data_selector.entities.data_selector_data.DataSelectorData.load">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.data_selector.entities.data_selector_data.DataSelectorData.load" title="Link to this definition"></a></dt>
+<dd><p>Load DataSelectorData object from disk.</p>
+<section id="id28">
+<h4>Parameters<a class="headerlink" href="#id28" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>load_path<span class="classifier">str</span></dt><dd><p>Path to the saved DataSelectorData file</p>
+</dd>
+</dl>
+</section>
+<section id="id29">
+<h4>Returns<a class="headerlink" href="#id29" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Loads the DataSelectorData object from the specified path</p>
+</dd>
+</dl>
+</section>
+<section id="id30">
+<h4>Examples<a class="headerlink" href="#id30" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">data_selector_data</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;analysis_results/folded_frames.pkl&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.data_selector.entities.data_selector_data.DataSelectorData.print_info">
+<span class="sig-name descname"><span class="pre">print_info</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.data_selector.entities.data_selector_data.DataSelectorData.print_info" title="Link to this definition"></a></dt>
+<dd><p>Print comprehensive data selector information.</p>
+<section id="id31">
+<h4>Parameters<a class="headerlink" href="#id31" title="Link to this heading"></a></h4>
+<p>None</p>
+</section>
+<section id="id32">
+<h4>Returns<a class="headerlink" href="#id32" title="Link to this heading"></a></h4>
+<dl class="simple">
+<dt>None</dt><dd><p>Prints data selector information to console</p>
+</dd>
+</dl>
+</section>
+<section id="id33">
+<h4>Examples<a class="headerlink" href="#id33" title="Link to this heading"></a></h4>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">data_selector_data</span><span class="o">.</span><span class="n">print_info</span><span class="p">()</span>
+<span class="go">=== DataSelectorData ===</span>
+<span class="go">Name: folded_frames</span>
+<span class="go">Selected Frames: 250 frames from 3 trajectories</span>
+<span class="go">Selection Type: cluster</span>
+<span class="go">Frame Distribution: traj0:0-45 (15), traj1:10-89 (20), traj2:5-95 (15)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mdxplain.data_selector.html" class="btn btn-neutral float-left" title="Data Selector" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mdxplain.data_selector.helpers.html" class="btn btn-neutral float-right" title="Data Selector Helpers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maximilian Salomon.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
