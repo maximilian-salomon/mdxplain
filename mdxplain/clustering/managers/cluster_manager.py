@@ -371,6 +371,7 @@ class ClusterManager:
         data_selector_name: Optional[str] = None,
         force: bool = False,
         override_cache: bool = False,
+        center_method: str = "centroid",
     ) -> None:
         """
         Add clustering analysis to trajectory data.
@@ -415,6 +416,16 @@ class ClusterManager:
             Whether to force recomputation if clustering already exists, default=False
         override_cache : bool, optional
             Whether to clear entire cluster_name subdirectory before computation, default=False
+        center_method : str, optional
+            Method for calculating cluster centers, default="centroid":
+            - "centroid": Representative point (medoid - closest to mean)
+            - "mean": Average of cluster members
+            - "median": Coordinate-wise median (robust to outliers)
+            - "density_peak": Point with highest local density
+            - "median_centroid": Medoid from median (more robust to outliers)
+            - "rmsd_centroid": Centroid using RMSD metric (better for structural comparisons)
+            NOTE: If algorithm has built-in centers, those are
+            ALWAYS used regardless of this parameter.
 
         Returns
         -------
@@ -468,11 +479,14 @@ class ClusterManager:
         data_matrix, frame_mapping = self._prepare_data_for_clustering(
             pipeline_data, selection_name, use_decomposed, data_selector_name
         )
-        cluster_labels, metadata = self._perform_clustering(cluster_type, data_matrix)
+        cluster_labels, metadata = self._perform_clustering(
+            cluster_type, data_matrix, center_method
+        )
 
         cluster_data = self._create_cluster_data(
             cluster_type, cluster_labels, metadata, selection_name, frame_mapping
         )
+
         self._store_clustering_results(pipeline_data, cluster_name, cluster_data)
 
     def _determine_cluster_name(self, cluster_name: Optional[str], cluster_type: ClusterTypeBase) -> str:
@@ -544,7 +558,12 @@ class ClusterManager:
         self._validate_data_matrix(data_matrix, selection_name)
         return data_matrix, frame_mapping
 
-    def _perform_clustering(self, cluster_type: ClusterTypeBase, data_matrix: np.ndarray) -> Tuple[np.ndarray, Dict]:
+    def _perform_clustering(
+        self,
+        cluster_type: ClusterTypeBase,
+        data_matrix: np.ndarray,
+        center_method: str
+    ) -> Tuple[np.ndarray, Dict]:
         """
         Perform clustering computation with error handling.
 
@@ -554,13 +573,17 @@ class ClusterManager:
             Initialized cluster type instance
         data_matrix : numpy.ndarray
             Data matrix to cluster
+        center_method : str
+            Method for calculating cluster centers
 
         Returns
         -------
         tuple
-            Tuple containing (cluster_labels, metadata)
+            Tuple containing (cluster_labels, metadata with centers)
         """
-        cluster_labels, metadata = cluster_type.compute(data_matrix)
+        cluster_labels, metadata = cluster_type.compute(
+            data_matrix, center_method=center_method
+        )
         self._validate_cluster_labels(cluster_labels, data_matrix)
 
         return cluster_labels, metadata
