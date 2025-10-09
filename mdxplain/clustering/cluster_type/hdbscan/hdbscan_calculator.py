@@ -79,7 +79,7 @@ class HDBSCANCalculator(CalculatorBase):
         """
         super().__init__(cache_path, max_memory_gb, chunk_size, use_memmap)
 
-    def compute(self, data: np.ndarray, **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
+    def compute(self, data: np.ndarray, center_method: str = "centroid", **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Compute HDBSCAN clustering.
 
@@ -87,6 +87,14 @@ class HDBSCANCalculator(CalculatorBase):
         ----------
         data : numpy.ndarray
             Input data matrix to cluster, shape (n_samples, n_features)
+        center_method : str, optional
+            Method for calculating cluster centers, default="centroid":
+            - "centroid": Representative point (medoid - closest to mean)
+            - "mean": Average of cluster members
+            - "median": Coordinate-wise median (robust to outliers)
+            - "density_peak": Point with highest local density
+            - "median_centroid": Medoid from median (more robust to outliers)
+            - "rmsd_centroid": Centroid using RMSD metric (better for structural comparisons)
         kwargs : dict
             HDBSCAN parameters including:
             - min_cluster_size : int, minimum size of clusters
@@ -111,14 +119,14 @@ class HDBSCANCalculator(CalculatorBase):
         """
         self._validate_input_data(data)
         parameters = self._extract_parameters(kwargs, data)
-        
+
         self._validate_memory_and_dimensionality(data, parameters)
 
         cluster_labels, hdbscan_model, computation_time = self._perform_clustering(
             data, parameters
         )
         metadata = self._build_metadata(
-            data, cluster_labels, hdbscan_model, parameters, computation_time
+            data, cluster_labels, hdbscan_model, parameters, computation_time, center_method
         )
 
         return cluster_labels, metadata
@@ -143,10 +151,10 @@ class HDBSCANCalculator(CalculatorBase):
         # Calculate sample size directly
         sample_fraction = kwargs.get("sample_fraction", 0.1)
         sample_size = self._calculate_sample_size(
-            data.shape[0], sample_fraction, 
+            data.shape[0], sample_fraction,
             min_samples=50000, max_samples=100000
         )
-        
+
         return {
             "min_cluster_size": kwargs.get("min_cluster_size", 5),
             "min_samples": kwargs.get("min_samples", None),
@@ -307,7 +315,8 @@ class HDBSCANCalculator(CalculatorBase):
         return full_labels, clusterer
 
     def _build_metadata(
-        self, data: np.ndarray, cluster_labels: np.ndarray, hdbscan_model: hdbscan.HDBSCAN, parameters: Dict[str, Any], computation_time: float
+        self, data: np.ndarray, cluster_labels: np.ndarray, hdbscan_model: hdbscan.HDBSCAN,
+        parameters: Dict[str, Any], computation_time: float, center_method: str
     ) -> Dict[str, Any]:
         """
         Build comprehensive metadata dictionary.
@@ -324,11 +333,13 @@ class HDBSCANCalculator(CalculatorBase):
             HDBSCAN parameters used
         computation_time : float
             Time taken for computation
+        center_method : str
+            Method for calculating cluster centers
 
         Returns
         -------
         dict
-            Complete metadata dictionary
+            Complete metadata dictionary including centers
         """
         n_clusters = self._count_clusters(cluster_labels)
         n_noise = self._count_noise_points(cluster_labels)
@@ -345,6 +356,13 @@ class HDBSCANCalculator(CalculatorBase):
                 "outlier_scores": self._get_outlier_scores(hdbscan_model),
             }
         )
+
+        # Calculate cluster centers using base class method
+        centers, method_used = self._calculate_centers(
+            data, cluster_labels, center_method, hdbscan_model
+        )
+        metadata["centers"] = centers
+        metadata["center_method"] = method_used
 
         return metadata
 

@@ -81,7 +81,7 @@ class DPACalculator(CalculatorBase):
         """
         super().__init__(cache_path, max_memory_gb, chunk_size, use_memmap)
 
-    def compute(self, data: np.ndarray, **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
+    def compute(self, data: np.ndarray, center_method: str = "centroid", **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Compute DPA clustering.
 
@@ -89,6 +89,14 @@ class DPACalculator(CalculatorBase):
         ----------
         data : numpy.ndarray
             Input data matrix to cluster, shape (n_samples, n_features)
+        center_method : str, optional
+            Method for calculating cluster centers, default="centroid":
+            - "centroid": Representative point (medoid - closest to mean)
+            - "mean": Average of cluster members
+            - "median": Coordinate-wise median (robust to outliers)
+            - "density_peak": Point with highest local density
+            - "median_centroid": Medoid from median (more robust to outliers)
+            - "rmsd_centroid": Centroid using RMSD metric (better for structural comparisons)
         kwargs : dict
             DPA parameters including:
             See DPA init docstring for more information or
@@ -122,14 +130,14 @@ class DPACalculator(CalculatorBase):
         """
         self._validate_input_data(data)
         parameters = self._extract_parameters(kwargs, data)
-        
+
         self._validate_memory_and_dimensionality(data, parameters)
 
         cluster_labels, dpa_model, computation_time = self._perform_clustering(
             data, parameters
         )
         metadata = self._build_metadata(
-            data, cluster_labels, dpa_model, parameters, computation_time
+            data, cluster_labels, dpa_model, parameters, computation_time, center_method
         )
 
         return cluster_labels, metadata
@@ -171,7 +179,7 @@ class DPACalculator(CalculatorBase):
         # Calculate sample size directly for DPA (smaller limits due to complexity)
         sample_fraction = kwargs.get("sample_fraction", 0.1)
         sample_size = self._calculate_sample_size(
-            data.shape[0], sample_fraction, 
+            data.shape[0], sample_fraction,
             min_samples=10000, max_samples=50000
         )
 
@@ -342,12 +350,13 @@ class DPACalculator(CalculatorBase):
             raise ValueError("DPA model does not have expected label attributes")
 
     def _build_metadata(
-        self, 
-        data: np.ndarray, 
-        cluster_labels: np.ndarray, 
-        dpa_model: DensityPeakAdvanced, 
-        parameters: Dict[str, Any], 
-        computation_time: float
+        self,
+        data: np.ndarray,
+        cluster_labels: np.ndarray,
+        dpa_model: DensityPeakAdvanced,
+        parameters: Dict[str, Any],
+        computation_time: float,
+        center_method: str
     ) -> Dict[str, Any]:
         """
         Build comprehensive metadata dictionary.
@@ -364,11 +373,13 @@ class DPACalculator(CalculatorBase):
             DPA parameters used
         computation_time : float
             Time taken for computation
+        center_method : str
+            Method for calculating cluster centers
 
         Returns
         -------
         dict
-            Complete metadata dictionary
+            Complete metadata dictionary including centers
         """
         n_clusters = self._count_clusters(cluster_labels)
         if parameters["halos"]:
@@ -384,7 +395,7 @@ class DPACalculator(CalculatorBase):
                     data, cluster_labels, sample_size=parameters["sample_size"]
                 ),
                 "computation_time": computation_time,
-                "cluster_centers": self._get_cluster_centers(dpa_model),
+                "center_indices": self._get_cluster_centers(dpa_model),
                 "densities": self._get_densities(dpa_model),
                 "nn_distances": self._get_nn_distances(dpa_model),
                 "nn_indices": self._get_nn_indices(dpa_model),
@@ -392,6 +403,13 @@ class DPACalculator(CalculatorBase):
                 "error_densities": self._get_error_densities(dpa_model),
             }
         )
+
+        # Calculate cluster centers using base class method (coordinates, not indices)
+        centers, method_used = self._calculate_centers(
+            data, cluster_labels, center_method, dpa_model
+        )
+        metadata["centers"] = centers
+        metadata["center_method"] = method_used
 
         return metadata
 

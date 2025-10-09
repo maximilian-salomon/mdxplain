@@ -168,7 +168,7 @@ class HDBSCAN(ClusterTypeBase):
             use_memmap=use_memmap
         )
 
-    def compute(self, data: np.ndarray) -> Tuple[np.ndarray, Dict[str, Any]]:
+    def compute(self, data: np.ndarray, center_method: str = "centroid") -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Compute HDBSCAN clustering.
 
@@ -176,6 +176,8 @@ class HDBSCAN(ClusterTypeBase):
         ----------
         data : numpy.ndarray
             Input data matrix to cluster, shape (n_samples, n_features)
+        center_method : str, optional
+            Method for calculating cluster centers, default="centroid"
 
         Returns
         -------
@@ -196,6 +198,7 @@ class HDBSCAN(ClusterTypeBase):
 
         return self.calculator.compute(
             data,
+            center_method=center_method,
             min_cluster_size=self.min_cluster_size,
             min_samples=self.min_samples,
             cluster_selection_epsilon=self.cluster_selection_epsilon,

@@ -265,6 +265,27 @@ class ClusterData:
         """
         self.frame_mapping = frame_mapping
 
+    def get_centers(self) -> Optional[np.ndarray]:
+        """
+        Get cluster centers from metadata.
+
+        Returns
+        -------
+        numpy.ndarray or None
+            Array of cluster centers, shape (n_clusters, n_features), or None
+            if centers have not been calculated
+
+        Examples
+        --------
+        >>> cluster_data = ClusterData("dbscan")
+        >>> centers = cluster_data.get_centers()
+        >>> if centers is not None:
+        ...     print(f"Number of centers: {len(centers)}")
+        """
+        if self.metadata is None:
+            return None
+        return self.metadata.get("centers")
+
     def save(self, save_path: str) -> None:
         """
         Save ClusterData object to disk.
