@@ -96,8 +96,9 @@ class PCACalculator(CalculatorBase):
         ----------
         data : numpy.ndarray
             Input data matrix to decompose, shape (n_samples, n_features)
-        **kwargs : dict
+        \*\*kwargs : dict
             PCA parameters:
+
             - n_components : int, optional
                 Number of components to keep (default: min(n_samples, n_features))
             - random_state : int, optional
@@ -107,6 +108,7 @@ class PCACalculator(CalculatorBase):
         -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
+            
             - transformed_data: PCA-transformed data (n_samples, n_components)
             - metadata: Dictionary with PCA information including components,
               explained variance ratio, and hyperparameters

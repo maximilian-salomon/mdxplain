@@ -190,8 +190,10 @@ class PCA(DecompositionTypeBase):
         -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
+
             - transformed_data: PCA-transformed data matrix (n_samples, n_components)
             - metadata: Dictionary with PCA information including:
+            
               * hyperparameters: Used parameters
               * explained_variance_ratio: Variance explained by each component
               * components: Principal components (eigenvectors)

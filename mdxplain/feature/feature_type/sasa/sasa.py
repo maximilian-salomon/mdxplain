@@ -72,10 +72,12 @@ class SASA(FeatureTypeBase):
         ----------
         mode : str, default='residue'
             Level of SASA calculation:
+            
             - 'residue': SASA per residue (sum of constituent atoms)
             - 'atom': SASA per individual atom
         probe_radius : float, default=0.14
             Probe sphere radius in nanometers. Common values:
+            
             - 0.14 nm: Water molecule (default, most common)
             - 0.12 nm: Small probe for tight cavities  
             - 0.20 nm: Large probe for detecting large cavities

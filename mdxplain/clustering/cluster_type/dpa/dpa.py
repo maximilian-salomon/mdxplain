@@ -104,14 +104,15 @@ class DPA(ClusterTypeBase):
 
         affinity : string or callable, default='precomputed'
             How to construct the affinity matrix.
+
             - "nearest_neighbors": construct the affinity matrix by computing a
-            graph of nearest neighbors.
+              graph of nearest neighbors.
             - "rbf": construct the affinity matrix using a radial basis function
-            (RBF) kernel.
+              (RBF) kernel.
             - "precomputed": interpret X as a precomputed affinity matrix.
             - "precomputed_nearest_neighbors": interpret X as a sparse graph
-            of precomputed nearest neighbors, and constructs the affinity matrix
-            by selecting the n_neighbors nearest neighbors.
+              of precomputed nearest neighbors, and constructs the affinity matrix
+              by selecting the n_neighbors nearest neighbors.
             - one of the kernels supported by sklearn.metrics.pairwise_kernels.
 
         density_algo : string, default="PAk"
@@ -167,6 +168,7 @@ class DPA(ClusterTypeBase):
 
         method : str, default="standard"
             Clustering method:
+
             - "standard": Load all data into memory (default)
             - "sampling_knn": Sample data + k-NN classifier fallback
 
@@ -296,6 +298,7 @@ class DPA(ClusterTypeBase):
         -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
+            
             - cluster_labels: Cluster labels for each sample
             - metadata: Dictionary with clustering information
 

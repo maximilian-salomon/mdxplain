@@ -57,6 +57,7 @@ class PipelineManager:
     clustering, and decomposition processes in a cohesive manner.
 
     It is the single entry point for:
+    
     - Trajectory loading and validation
     - Feature computation
     - Feature selection

@@ -89,10 +89,11 @@ class DPACalculator(CalculatorBase):
         ----------
         data : numpy.ndarray
             Input data matrix to cluster, shape (n_samples, n_features)
-        kwargs : dict
+        \*\*kwargs : dict
             DPA parameters including:
             See DPA init docstring for more information or
             https://github.com/mariaderrico/DPA and https://github.com/mariaderrico/DPA/blob/master/DPA_analysis.ipynb
+
             - Z : float, density threshold parameter
             - affinity : str, affinity metric for distance calculation
             - nn_distances : int, number of nearest neighbors
@@ -110,6 +111,7 @@ class DPACalculator(CalculatorBase):
         -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
+            
             - cluster_labels: Cluster labels for each sample
             - metadata: Dictionary with clustering information
 

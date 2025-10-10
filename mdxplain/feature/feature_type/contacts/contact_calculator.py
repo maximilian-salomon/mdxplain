@@ -100,6 +100,7 @@ class ContactCalculator(CalculatorBase):
             Distance array in condensed format (NxP) in Angstrom
         \*\*kwargs : dict
             Additional parameters:
+            
             - cutoff : float, default=4.5 - Distance cutoff for contact determination
 
         Returns
@@ -245,6 +246,7 @@ class ContactCalculator(CalculatorBase):
             Binary contact array to analyze (n_frames x n_pairs)
         metric : str, default='frequency'
             Statistical metric for filtering contacts:
+
             - 'frequency': Contact frequency (fraction of frames in contact)
             - 'stability': Contact stability (persistence over time)
             - 'transitions': Number of contact formation/breaking events

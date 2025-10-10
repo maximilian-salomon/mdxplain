@@ -48,11 +48,13 @@ class FeatureSelectorData:
     selections : Dict[str, List[dict]]
         Dictionary mapping feature type keys to lists of selection dictionaries.
         Each selection dict contains:
+
         - 'selection': Selection criteria string (e.g., "res ALA", "resid 123-140")
         - 'use_reduced': Boolean flag for data type preference
     selection_results : Dict[str, dict]
         Dictionary mapping feature type keys to computed selection results.
         Each result dict contains:
+        
         - 'indices': List of selected column indices
         - 'use_reduced': List of boolean flags for reduced data usage
     reference_trajectory : int, optional
@@ -289,6 +291,7 @@ class FeatureSelectorData:
             Feature type key to store results for
         result_data : dict
             Result dictionary containing:
+            
             - 'indices': List of selected column indices
             - 'use_reduced': List of boolean flags for reduced data usage
 

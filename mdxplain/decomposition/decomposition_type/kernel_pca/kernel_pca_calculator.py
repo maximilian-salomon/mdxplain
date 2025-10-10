@@ -111,8 +111,9 @@ class KernelPCACalculator(CalculatorBase):
         ----------
         data : numpy.ndarray
             Input data matrix to decompose, shape (n_samples, n_features)
-        **kwargs : dict
+        \*\*kwargs : dict
             KernelPCA parameters:
+
             - n_components : int, required
                 Number of components to keep
             - gamma : float, optional
@@ -128,6 +129,7 @@ class KernelPCACalculator(CalculatorBase):
         -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
+            
             - transformed_data: KernelPCA-transformed data (n_samples, n_components)
             - metadata: Dictionary with KernelPCA information including kernel
               parameters and hyperparameters

@@ -144,7 +144,7 @@ class ParallelOperationsHelper:
             Function to apply to each frame chunk
         result_store : zarr.Group
             Pre-configured zarr store to write results to
-        **operation_kwargs
+        \*\*operation_kwargs
             Additional arguments for operation_func
 
         Returns
@@ -190,7 +190,7 @@ class ParallelOperationsHelper:
             Pre-configured zarr store to write results to
         atom_indices : np.ndarray
             Indices of atoms to process (operation decides what to do with them)
-        **operation_kwargs
+        \*\*operation_kwargs
             Additional arguments for operation_func
 
         Returns
@@ -282,7 +282,7 @@ class ParallelOperationsHelper:
             Chunking strategy: 'frame', 'atom', or 'reshape'
         result_topology : md.Topology, optional
             New topology for reshape operations (e.g., atom_slice)
-        **operation_kwargs
+        \*\*operation_kwargs
             Additional arguments for operation_func
             
         Returns

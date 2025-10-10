@@ -121,6 +121,7 @@ class FeatureManager:
         feature_type : str, FeatureTypeBase, list, or None, default=None
             Feature type(s) to reset. If None, resets all features.
             Supports following formats:
+
             - "distances" (string)
             - feature_type.Distances() (instance)
             - feature_type.Distances (class)
@@ -210,6 +211,7 @@ class FeatureManager:
             The feature type determines what kind of analysis will be performed.
         traj_selection : int, str, list, or "all", default="all"
             Selection of trajectories to compute features for:
+
             - int: trajectory index
             - str: trajectory name, tag (prefixed with "tag:"), or "all"
             - list: list of indices/names/tags
@@ -285,6 +287,7 @@ class FeatureManager:
         Reset to using full original data instead of reduced dataset.
 
         Supports all three input variants:
+
         - feature_type.Distances() (instance)
         - feature_type.Distances (class with metaclass)
         - "distances" (string)
@@ -346,6 +349,7 @@ class FeatureManager:
         Filter features based on statistical criteria.
 
         Supports all three input variants:
+        
         - feature_type.Distances() (instance)
         - feature_type.Distances (class with metaclass)
         - "distances" (string)

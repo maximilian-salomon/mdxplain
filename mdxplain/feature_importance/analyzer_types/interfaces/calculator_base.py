@@ -92,6 +92,7 @@ class CalculatorBase(ABC):
         -------
         Dict[str, Any]
             Dictionary containing:
+            
             - 'importances': np.ndarray of feature importance scores
             - 'model': Trained ML model object
             - 'metadata': Dict with additional information (scores, parameters, etc.)

@@ -51,6 +51,7 @@ class FeatureImportanceManager:
     distinguishing between different data groups. So basically classifiers.
 
     The manager follows the same pattern as DecompositionManager:
+    
     - Uses analyzer_type objects similar to decomposition_type
     - Creates FeatureImportanceData objects similar to DecompositionData
     - Integrates with pipeline via AutoInjectProxy

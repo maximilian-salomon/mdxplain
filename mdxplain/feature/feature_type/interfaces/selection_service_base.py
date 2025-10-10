@@ -34,11 +34,13 @@ class SelectionServiceBase(ABC):
     Base class for all feature type selection services.
 
     Provides common functionality for feature selection services including:
+    
     - Standard initialization with manager and pipeline_data
     - Common reduction configuration handling
     - Abstract __call__ method that must be implemented by subclasses
 
     Subclasses must implement:
+
     - __call__: Main selection method for the feature type
     - Set self._feature_type: String identifier for the feature type
 

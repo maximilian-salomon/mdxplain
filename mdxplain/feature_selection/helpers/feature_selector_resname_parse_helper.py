@@ -46,6 +46,7 @@ class FeatureSelectorResnameParseHelper:
         Uses amino acid names from metadata (residue.aaa_code, residue.a_code).
         
         Supports both:
+
         - "ALA" → all alanines (any seqid)
         - "ALA13" → specific alanine at seqid 13
 
@@ -95,6 +96,7 @@ class FeatureSelectorResnameParseHelper:
         Parse residue specification and extract name and optional seqid.
         
         Supports patterns like:
+        
         - "ALA" → ("ALA", None)
         - "ALA13" → ("ALA", 13) 
         - "A" → ("A", None)

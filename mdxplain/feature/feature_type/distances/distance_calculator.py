@@ -110,7 +110,6 @@ class DistanceCalculator(CalculatorBase):
             - excluded_neighbors : int, default=1 - Diagonal offset (excluded_neighbors=1 excludes diagonal,
               excluded_neighbors=2 excludes first two diagonals)
               Chain Breaks are automatically excluded. Meassured by jump in the seqid of a residue.
-            
             - res_metadata : dict - Residue metadata for feature naming
 
         Returns

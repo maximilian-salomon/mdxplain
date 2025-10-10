@@ -98,7 +98,6 @@ class CoordinatesCalculator(CalculatorBase):
             Additional parameters:
             
             - selection : str, default='ca' - Atom selection string
-            
             - res_metadata : dict - Residue metadata for naming
 
         Returns
@@ -324,6 +323,7 @@ class CoordinatesCalculator(CalculatorBase):
             Coordinate array (n_frames, n_coordinates)
         metric : str, default='cv'
             Metric to use for selection:
+            
             - 'cv': Coefficient of variation
             - 'std': Standard deviation
             - 'variance': Variance

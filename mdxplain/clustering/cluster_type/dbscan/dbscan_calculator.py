@@ -85,8 +85,9 @@ class DBSCANCalculator(CalculatorBase):
         ----------
         data : numpy.ndarray
             Input data matrix to cluster, shape (n_samples, n_features)
-        kwargs : dict
+        \*\*kwargs : dict
             DBSCAN parameters including:
+
             - eps : float, maximum distance between samples
             - min_samples : int, minimum samples in neighborhood
             - method : str, clustering method ('standard', 'precomputed', 'knn_sampling')
@@ -97,6 +98,7 @@ class DBSCANCalculator(CalculatorBase):
         -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
+            
             - cluster_labels: Cluster labels for each sample (-1 for noise)
             - metadata: Dictionary with clustering information
 

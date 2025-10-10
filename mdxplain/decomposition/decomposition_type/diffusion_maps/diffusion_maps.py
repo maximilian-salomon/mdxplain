@@ -75,7 +75,7 @@ class DiffusionMaps(DecompositionTypeBase):
         diffusion coordinates.
         `M * v_k = λ_k * v_k`
 
-    This method also allows for out-of-sample extension using the Nyström method [5].
+    This method also allows for out-of-sample extension using the Nyström method [5]_.
     The Nyström method approximates the kernel matrix using a subset of the data,
     significantly reducing memory usage and computation time. This is particularly
     beneficial for large datasets common in molecular dynamics simulations.
@@ -285,15 +285,17 @@ class DiffusionMaps(DecompositionTypeBase):
         ----------
         data : numpy.ndarray
             Input coordinate matrix (n_frames, n_features) where n_features = n_atoms * 3
-        **kwargs : dict
+        \*\*kwargs : dict
             Additional optional parameters (currently none supported)
 
         Returns
         -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
+
             - diffusion_coords: Diffusion coordinates (n_frames, n_components)
             - metadata: Dictionary with Diffusion Maps information including:
+            
               * hyperparameters: Used parameters
               * method: computation method used
               * eigenvalues: Eigenvalues of diffusion operator

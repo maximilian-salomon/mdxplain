@@ -149,6 +149,7 @@ class FeatureSelectorManager:
         4. Returns FeatureSelectorAddService(self, pipeline_data) to the user
 
         This design provides:
+
         - Clean API without users needing to pass pipeline_data
         - Proper type hints for IDE autocomplete support
         - Consistent parameter passing across all manager services
@@ -222,6 +223,7 @@ class FeatureSelectorManager:
             If False, union of all features from selected trajectories is used.
         traj_selection : int, str, list, or "all", default="all"
             Selection of trajectories to process:
+            
             - int: trajectory index
             - str: trajectory name, tag (prefixed with "tag:"), or "all"
             - list: list of indices/names/tags
@@ -230,6 +232,7 @@ class FeatureSelectorManager:
             For pairwise features, require all partners to be present in selection
         reduction : dict, optional
             Post-selection reduction configuration with keys:
+            
             - metric : str - Reduction metric (e.g., "max", "min", "mean", "std")
             - threshold_min : float, optional - Minimum threshold
             - threshold_max : float, optional - Maximum threshold
