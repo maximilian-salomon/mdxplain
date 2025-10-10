@@ -45,7 +45,9 @@ env/
 Thumbs.db 
 
 # TODO: temporary blocked
-/data/
+/data/2RJY_concat/
+/data/3sn6/
+/data/9mqh.pdb
 /notebooks/
 CLAUDE.md
 RULES.md

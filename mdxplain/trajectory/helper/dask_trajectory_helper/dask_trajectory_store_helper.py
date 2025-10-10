@@ -114,7 +114,7 @@ class DaskMDTrajectoryStoreHelper:
         )
         
         # Handle unitcell data
-        if dask_traj._has_unitcell:
+        if dask_traj._have_unitcell:
             temp_store.create_array(
                 'unitcell_vectors',
                 data=dask_traj._dask_unitcell_vectors[key].compute(),

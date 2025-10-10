@@ -363,7 +363,7 @@ class DaskMDTrajectory:
         >>> if vectors is not None:
         ...     print(f"Unit cell shape: {vectors.shape}")
         """
-        if not self._has_unitcell:
+        if not self._have_unitcell:
             return None
         return self._dask_unitcell_vectors.compute()
     
@@ -384,7 +384,7 @@ class DaskMDTrajectory:
         >>> if lengths is not None:
         ...     print(f"Average box size: {lengths.mean(axis=0)} nm")
         """
-        if not self._has_unitcell:
+        if not self._have_unitcell:
             return None
         return self._dask_unitcell_lengths.compute()
     
@@ -405,7 +405,7 @@ class DaskMDTrajectory:
         >>> if angles is not None:
         ...     print(f"Box angles: {angles[0]} degrees")
         """
-        if not self._has_unitcell:
+        if not self._have_unitcell:
             return None
         return self._dask_unitcell_angles.compute()
     
@@ -793,7 +793,7 @@ class DaskMDTrajectory:
         tuple
             Tuple containing (unitcell_vectors, unitcell_lengths, unitcell_angles) or (None, None, None)
         """
-        if self._has_unitcell:
+        if self._have_unitcell:
             unitcell_vectors = self._dask_unitcell_vectors[key].compute()
             unitcell_lengths = self._dask_unitcell_lengths[key].compute()
             unitcell_angles = self._dask_unitcell_angles[key].compute()
@@ -962,7 +962,7 @@ class DaskMDTrajectory:
             target_store['time'][target_start:target_end] = time_chunk
             
             # Copy unitcell data if present
-            if self._has_unitcell:
+            if self._have_unitcell:
                 target_store['unitcell_vectors'][target_start:target_end] = \
                     self._dask_unitcell_vectors[start_idx:end_idx].compute()
                 target_store['unitcell_lengths'][target_start:target_end] = \
@@ -1020,8 +1020,8 @@ class DaskMDTrajectory:
         new_instance.metadata['n_frames'] = len(indices)
         
         # Handle unitcell data if present
-        new_instance._has_unitcell = self._has_unitcell
-        if self._has_unitcell:
+        new_instance._have_unitcell = self._have_unitcell
+        if self._have_unitcell:
             new_instance._dask_unitcell_vectors = self._dask_unitcell_vectors[indices]
             new_instance._dask_unitcell_lengths = self._dask_unitcell_lengths[indices]
             new_instance._dask_unitcell_angles = self._dask_unitcell_angles[indices]
@@ -1082,8 +1082,8 @@ class DaskMDTrajectory:
         new_instance._dask_time = da.from_zarr(config['zarr_path'], component='time')
         
         # Optional unitcell data
-        new_instance._has_unitcell = config['has_unitcell']
-        if new_instance._has_unitcell:
+        new_instance._have_unitcell = config['has_unitcell']
+        if new_instance._have_unitcell:
             new_instance._dask_unitcell_vectors = da.from_zarr(config['zarr_path'], component='unitcell_vectors')
             new_instance._dask_unitcell_lengths = da.from_zarr(config['zarr_path'], component='unitcell_lengths')
             new_instance._dask_unitcell_angles = da.from_zarr(config['zarr_path'], component='unitcell_angles')

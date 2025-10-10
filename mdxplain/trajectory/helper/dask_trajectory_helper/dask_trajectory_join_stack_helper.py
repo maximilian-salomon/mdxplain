@@ -121,7 +121,7 @@ class DaskMDTrajectoryJoinStackHelper:
         self._create_combined_store_arrays(temp_store, final_frames, traj1.n_atoms, traj1.chunk_size)
         
         # Create unitcell arrays if needed
-        if traj1._has_unitcell:
+        if traj1._have_unitcell:
             self._create_unitcell_arrays(temp_store, final_frames, traj1.chunk_size)
         
         # Copy first trajectory chunk-wise (frame offset 0)
