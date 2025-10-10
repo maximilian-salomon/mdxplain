@@ -4,7 +4,8 @@ Clustering
 .. automodule:: mdxplain.clustering
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 3
+   :titlesonly:
 
    mdxplain.clustering.cluster_type
    mdxplain.clustering.entities

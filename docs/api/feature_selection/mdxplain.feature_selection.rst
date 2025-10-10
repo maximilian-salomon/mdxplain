@@ -4,7 +4,8 @@ Feature Selection
 .. automodule:: mdxplain.feature_selection
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
+   :titlesonly:
 
    mdxplain.feature_selection.entities
    mdxplain.feature_selection.helpers

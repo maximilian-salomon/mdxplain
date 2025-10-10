@@ -4,7 +4,8 @@ Decomposition Types
 .. automodule:: mdxplain.decomposition.decomposition_type
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
+   :titlesonly:
 
    mdxplain.decomposition.decomposition_type.contact_kernel_pca
    mdxplain.decomposition.decomposition_type.diffusion_maps

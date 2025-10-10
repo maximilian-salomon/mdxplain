@@ -4,7 +4,8 @@ Feature
 .. automodule:: mdxplain.feature
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
+   :titlesonly:
 
    mdxplain.feature.entities
    feature_type/mdxplain.feature.feature_type

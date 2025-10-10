@@ -1,4 +1,4 @@
-Decomposition Types: interfaces
+Decomposition Types: Interfaces
 ===============================
 
 .. automodule:: mdxplain.decomposition.decomposition_type.interfaces

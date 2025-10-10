@@ -3,11 +3,9 @@ Analysis
 
 .. automodule:: mdxplain.analysis
 
-Module contents
----------------
-
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 3
+   :titlesonly:
 
    mdxplain.analysis.managers
    mdxplain.analysis.services

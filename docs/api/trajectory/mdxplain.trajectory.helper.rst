@@ -4,7 +4,8 @@ Trajectory: Helpers
 .. automodule:: mdxplain.trajectory.helper
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
+   :titlesonly:
 
    mdxplain.trajectory.helper.dask_trajectory_helper
    mdxplain.trajectory.helper.metadata_helper
