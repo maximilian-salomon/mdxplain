@@ -67,7 +67,7 @@ class FeatureCrossTrajectoryReductionHelper:
             Minimum threshold for feature retention
         threshold_max : float, optional
             Maximum threshold for feature retention
-        kwargs : dict
+        \*\*kwargs : dict
             Additional parameters for reduction metric calculation
 
         Returns

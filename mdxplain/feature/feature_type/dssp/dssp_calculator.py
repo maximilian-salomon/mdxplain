@@ -106,6 +106,7 @@ class DSSPCalculator(CalculatorBase):
             MDTraj trajectory object to process
         \*\*kwargs : dict
             Additional parameters:
+
             - simplified : bool - Use simplified (3-class) or full (8-class) DSSP
             - encoding : str - Output encoding ('onehot', 'integer', 'char')
             - res_metadata : dict - Residue metadata for naming
@@ -448,6 +449,7 @@ class DSSPCalculator(CalculatorBase):
             DSSP array (n_frames, n_residues) with encoded secondary structure classes
         metric : str, default='transitions'
             Metric to use for selection:
+            
             - 'transitions': Number of secondary structure class transitions
             - 'transition_frequency': Frequency of transitions (same as transitions)
             - 'stability': Secondary structure stability (1 - transition_frequency)

@@ -104,6 +104,7 @@ class TorsionsCalculator(CalculatorBase):
             MDTraj trajectory object to process
         \*\*kwargs : dict
             Additional parameters:
+
             - calculate_phi : bool - Whether to compute phi backbone angles
             - calculate_psi : bool - Whether to compute psi backbone angles
             - calculate_omega : bool - Whether to compute omega backbone angles
@@ -393,6 +394,7 @@ class TorsionsCalculator(CalculatorBase):
             Torsion angle array (n_frames, n_angles) in degrees
         metric : str, default='cv'
             Metric to use for selection:
+            
             - 'cv': Coefficient of variation (circular)
             - 'std': Standard deviation (circular)
             - 'variance': Variance (circular)

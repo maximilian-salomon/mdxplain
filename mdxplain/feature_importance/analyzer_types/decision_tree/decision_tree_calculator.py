@@ -193,6 +193,7 @@ class DecisionTreeCalculator(CalculatorBase):
         -------
         Dict[str, Any]
             Dictionary containing:
+            
             - 'importances': np.ndarray of feature importance scores
             - 'model': Trained DecisionTreeClassifier instance
             - 'metadata': Dict with training metrics and parameters

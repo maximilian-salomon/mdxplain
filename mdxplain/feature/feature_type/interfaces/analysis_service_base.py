@@ -34,11 +34,13 @@ class AnalysisServiceBase:
     Base class for all feature type analysis services.
     
     Provides common functionality for all feature analysis services including:
+
     - Automatic method forwarding via __getattr__ for calculator methods
     - Consistent parameter handling (feature_selector, traj_selection)
     - Data selection and validation logic
     
     Subclasses must set:
+    
     - self._feature_type: String identifier for the feature type
     - self._calculator: Calculator instance with analysis methods
     
@@ -118,7 +120,7 @@ class AnalysisServiceBase:
                     Name of feature selector for column selection
                 traj_selection : str, int, list, optional
                     Trajectory selection criteria for row selection
-                **kwargs
+                \*\*kwargs
                     Additional arguments passed to the calculator method
                     
                 Returns

@@ -367,7 +367,7 @@ class CalculatorStatHelper:
             Function to apply (default: np.mean)
         chunk_size : int, optional
             Number of columns to process per chunk
-        **func_kwargs : dict
+        \*\*func_kwargs : dict
             Additional arguments for the function
 
         Returns

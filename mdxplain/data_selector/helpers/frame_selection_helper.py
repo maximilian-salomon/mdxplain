@@ -328,20 +328,25 @@ class FrameSelectionHelper:
         input_data : Dict[traj_selection, frame_selection]
         
         traj_selection:
+
             - int: trajectory index (0, 1, 2...)
             - str: trajectory name ("system_A"), tag ("tag:biased"), pattern ("system_*")
             - Can resolve to multiple trajectories (e.g., tags apply frames to all matching)
         
         frame_selection:
+
             - int: single frame (42)
             - List[int]: explicit frames ([10, 20, 30])
             - str: various formats:
+
                 * Single: "42"
                 * Range: "10-20" → [10, 11, ..., 20]
                 * Comma list: "10,20,30" → [10, 20, 30]
                 * Combined: "10-20,30-40,50" → [10...20, 30...40, 50]
                 * All: "all" → all frames in trajectory
+
             - dict: with stride support:
+
                 * {"frames": frame_selection, "stride": N}
                 * stride = minimum distance between consecutive frames
                 * Example: {"frames": "0-100", "stride": 10} → [0, 10, 20, ..., 100]
@@ -465,6 +470,7 @@ class FrameSelectionHelper:
         ----------
         traj_key : Union[int, str, List]
             Trajectory selection key to resolve:
+            
             - int: single trajectory index
             - str: trajectory name, tag, or pattern
             - List: list of indices/names/tags

@@ -72,10 +72,12 @@ class DSSP(FeatureTypeBase):
         ----------
         simplified : bool, default=False
             Secondary structure classification level:
+
             - True: Simplified 3-class (H=helix, E=sheet, C=coil/other)
             - False: Full 8-class DSSP (H, B, E, G, I, T, S, C)
         encoding : str, default='char'
             Output encoding format:
+            
             - 'onehot': One-hot encoded binary vectors
             - 'integer': Integer class indices (0, 1, 2, ...)
             - 'char': Character codes ('H', 'E', 'C', etc.)
@@ -161,6 +163,7 @@ class DSSP(FeatureTypeBase):
         tuple[numpy.ndarray, dict]
             Tuple containing (dssp_array, feature_metadata) where dssp_array
             format depends on encoding:
+            
             - 'onehot': (n_frames, n_residues * n_classes) 
             - 'integer': (n_frames, n_residues)
             - 'char': (n_frames, n_residues) with string dtype

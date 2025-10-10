@@ -40,6 +40,7 @@ class ContactsSelectionService(SelectionServiceBase):
     Service for selecting contacts features with contacts-specific reduction methods.
 
     Knows ALL reduction metrics from ContactsReduceService:
+    
     - frequency, stability, transitions
 
     This service provides methods to add contact feature selections with

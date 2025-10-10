@@ -87,8 +87,9 @@ class HDBSCANCalculator(CalculatorBase):
         ----------
         data : numpy.ndarray
             Input data matrix to cluster, shape (n_samples, n_features)
-        kwargs : dict
+        \*\*kwargs : dict
             HDBSCAN parameters including:
+
             - min_cluster_size : int, minimum size of clusters
             - min_samples : int, minimum samples in neighborhood
             - cluster_selection_epsilon : float, distance threshold
@@ -101,6 +102,7 @@ class HDBSCANCalculator(CalculatorBase):
         -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
+            
             - cluster_labels: Cluster labels for each sample (-1 for noise)
             - metadata: Dictionary with clustering information
 

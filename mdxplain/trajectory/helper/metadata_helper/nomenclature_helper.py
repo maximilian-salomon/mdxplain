@@ -31,6 +31,7 @@ This module uses mdciao consensus nomenclature systems:
         https://proteinformatics.uni-leipzig.de/mdciao/api/generated/mdciao.nomenclature.html  # noqa: E501
 
         Supported fragment types:
+
         - gpcr: https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerGPCR.html#mdciao.nomenclature.LabelerGPCR  # noqa: E501
         - cgn: https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerCGN.html#mdciao.nomenclature.LabelerCGN  # noqa: E501
         - klifs: https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerKLIFS.html#mdciao.nomenclature.LabelerKLIFS  # noqa: E501
@@ -132,6 +133,7 @@ class NomenclatureHelper:
         https://proteinformatics.uni-leipzig.de/mdciao/api/generated/mdciao.nomenclature.html
 
         Supported fragment types:
+        
         - gpcr: https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerGPCR.html#mdciao.nomenclature.LabelerGPCR
         - cgn: https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerCGN.html#mdciao.nomenclature.LabelerCGN
         - klifs: https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerKLIFS.html#mdciao.nomenclature.LabelerKLIFS

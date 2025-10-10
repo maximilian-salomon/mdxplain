@@ -152,6 +152,7 @@ class DecompositionTypeBase(ABC, metaclass=DecompositionTypeMeta):
         -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
+            
             - transformed_data: Decomposed data matrix (n_samples, n_components)
             - metadata: Dictionary with transformation information including
               hyperparameters, explained variance, components, etc.

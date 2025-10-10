@@ -83,6 +83,7 @@ class HDBSCAN(ClusterTypeBase):
             Method for cluster selection ('eom' or 'leaf'). Default is 'eom'.
         method : str, default="standard"
             Clustering method:
+
             - "standard": Load all data into memory (default)
             - "sampling_approximate": Sample data + approximate_predict for large datasets
             - "sampling_knn": Sample data + k-NN classifier fallback
@@ -181,6 +182,7 @@ class HDBSCAN(ClusterTypeBase):
         -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
+            
             - cluster_labels: Cluster labels for each sample (-1 for noise)
             - metadata: Dictionary with clustering information
 

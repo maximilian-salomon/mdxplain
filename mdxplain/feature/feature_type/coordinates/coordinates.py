@@ -70,6 +70,7 @@ class Coordinates(FeatureTypeBase):
         ----------
         selection : str, default='name CA'
             Atom selection string using MDTraj syntax. Examples:
+            
             - 'all': All atoms in trajectory
             - 'name CA': Alpha carbon atoms only  
             - 'backbone': Backbone atoms (N, CA, C, O)

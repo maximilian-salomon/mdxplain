@@ -76,6 +76,7 @@ class DBSCAN(ClusterTypeBase):
             Minimum samples in neighborhood for core point. Default is 5.
         method : str, default="standard"
             Clustering method:
+
             - "standard": Load all data into memory (default)
             - "sampling_approximate": Sample data + approximate_predict for large datasets
             - "precomputed": Use precomputed distance matrix (data must be square)
@@ -174,6 +175,7 @@ class DBSCAN(ClusterTypeBase):
         -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
+            
             - cluster_labels: Cluster labels for each sample (-1 for noise)
             - metadata: Dictionary with clustering information
 

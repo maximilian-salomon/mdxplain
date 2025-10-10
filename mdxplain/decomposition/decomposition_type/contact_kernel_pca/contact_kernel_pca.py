@@ -235,9 +235,11 @@ class ContactKernelPCA(DecompositionTypeBase):
         -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
+
             - transformed_data: ContactKernelPCA-transformed data matrix
               (n_samples, n_components)
             - metadata: Dictionary with ContactKernelPCA information including:
+            
               * hyperparameters: Used parameters (kernel 'rbf' equivalent to Hamming)
               * contact_kernel: True (indicates contact-specific kernel)
               * binary_data: True (indicates binary data validation)

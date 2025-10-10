@@ -281,6 +281,7 @@ class FeatureAddService:
             If False, uses full 8-state DSSP classification
         encoding : str, default='char'
             Output encoding format:
+
             - 'char': Character codes ('H', 'E', 'C', etc.)
             - 'onehot': One-hot encoded binary vectors
             - 'integer': Integer class indices (0, 1, 2, ...)
@@ -347,6 +348,7 @@ class FeatureAddService:
         ----------
         mode : str, default='residue'
             Level of SASA calculation:
+            
             - 'residue': SASA per residue (sum of constituent atoms)
             - 'atom': SASA per individual atom
         probe_radius : float, default=0.14

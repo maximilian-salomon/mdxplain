@@ -34,6 +34,7 @@ class TorsionsSelectionService(SelectionServiceBase):
     Service for selecting torsions features with torsions-specific reduction methods.
 
     Knows ALL reduction metrics from TorsionsReduceService:
+    
     - transitions, std, mad, mean, range, min, max, cv, variance
 
     This service provides methods to add torsions (dihedral angles) feature
