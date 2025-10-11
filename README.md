@@ -661,7 +661,7 @@ Structural metrics provide quantitative measures of protein dynamics and conform
   - Protein-wide flexibility overview
   - Domain mobility comparison
   - Experimental B-factor comparison
-  - Publication-ready flexibility profiles
+  - Flexibility profiles
 - **Example**: Identify flexible loops vs. rigid helices
 
 **Per-Residue Aggregation Methods:**

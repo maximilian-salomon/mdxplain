@@ -362,7 +362,7 @@ class DBSCANCalculator(CalculatorBase):
 
         # Calculate cluster centers using base class method
         centers, method_used = self._calculate_centers(
-            data, cluster_labels, center_method, dbscan_model
+            data, cluster_labels, dbscan_model, center_method
         )
         metadata["centers"] = centers
         metadata["center_method"] = method_used

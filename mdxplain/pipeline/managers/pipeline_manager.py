@@ -41,6 +41,7 @@ from ...data_selector.managers.data_selector_manager import DataSelectorManager
 from ...comparison.managers.comparison_manager import ComparisonManager
 from ...feature_importance.managers.feature_importance_manager import FeatureImportanceManager
 from ...analysis import AnalysisManager
+from ...plots.manager.plots_manager import PlotsManager
 
 
 class PipelineManager:
@@ -66,6 +67,7 @@ class PipelineManager:
     - Comparison management
     - Feature importance analysis
     - General analysis operations
+    - Visualization and plotting
 
     Examples
     --------
@@ -157,6 +159,9 @@ class PipelineManager:
             use_memmap=use_memmap, chunk_size=chunk_size, cache_dir=cache_dir
         )
         self._analysis_manager = AnalysisManager()
+        self._plots_manager = PlotsManager(
+            use_memmap=use_memmap, chunk_size=chunk_size, cache_dir=cache_dir
+        )
 
     @property
     def trajectory(self) -> TrajectoryManager:
@@ -291,6 +296,35 @@ class PipelineManager:
             All methods that expect pipeline_data parameter will receive it automatically.
         """
         return cast(AnalysisManager, AutoInjectProxy(self._analysis_manager, self._data))
+
+    @property
+    def plots(self) -> PlotsManager:
+        """
+        Access plotting and visualization operations.
+
+        Returns
+        -------
+        PlotsManager
+            Plots manager for creating visualizations.
+            Provides three access patterns:
+            - Direct: pipeline.plots.landscape(...)
+            - Decomposition-focused: pipeline.plots.decomposition.landscape(...)
+            - Clustering-focused: pipeline.plots.clustering.landscape(...)
+
+        Examples
+        --------
+        >>> # Direct landscape plot
+        >>> pipeline.plots.landscape("pca", [0, 1])
+
+        >>> # Decomposition-focused
+        >>> pipeline.plots.decomposition.landscape("pca", [0, 1])
+
+        >>> # Clustering-focused with centers
+        >>> pipeline.plots.clustering.landscape(
+        ...     "dbscan", "pca", [0, 1], show_centers=True
+        ... )
+        """
+        return cast(PlotsManager, AutoInjectProxy(self._plots_manager, self._data))
 
     @property
     def data(self):
@@ -572,6 +606,14 @@ class PipelineManager:
             self._feature_importance_manager.cache_dir = cache_dir
         if use_memmap is not None:
             self._feature_importance_manager.use_memmap = use_memmap
+
+        # Update PlotsManager
+        if chunk_size is not None:
+            self._plots_manager.chunk_size = chunk_size
+        if cache_dir is not None:
+            self._plots_manager.cache_dir = cache_dir
+        if use_memmap is not None:
+            self._plots_manager.use_memmap = use_memmap
 
         print("Configuration updated successfully:")
         if chunk_size is not None:
