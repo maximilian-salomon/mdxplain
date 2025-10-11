@@ -26,7 +26,6 @@ DPA clustering computation using the DPA package from conda environment.
 """
 
 import time
-import warnings
 from typing import Dict, Tuple, Any, Optional, List
 import numpy as np
 from Pipeline.DPA import DensityPeakAdvanced
@@ -406,7 +405,7 @@ class DPACalculator(CalculatorBase):
 
         # Calculate cluster centers using base class method (coordinates, not indices)
         centers, method_used = self._calculate_centers(
-            data, cluster_labels, center_method, dpa_model
+            data, cluster_labels, dpa_model, center_method
         )
         metadata["centers"] = centers
         metadata["center_method"] = method_used
