@@ -34,124 +34,49 @@ from mdxplain.pipeline.entities.pipeline_data import PipelineData
 
 class ValidationHelper:
     """
-    Helper class for input validation in plots.
+    Helper class for atomic input validation in plots.
 
-    Provides static methods for validating plot parameters to ensure
-    data consistency and provide clear error messages before plot generation.
+    Provides static methods for validating individual plot parameters.
+    Each method validates ONE specific aspect and can be composed together.
 
     Examples
     --------
-    >>> # Validate landscape inputs
-    >>> ValidationHelper.validate_landscape_inputs(
-    ...     pipeline_data, "pca", [0, 1], "dbscan", False
+    >>> # Validate decomposition exists
+    >>> decomp = ValidationHelper.validate_decomposition_exists(
+    ...     pipeline_data, "pca"
     ... )
 
-    >>> # Validate dimension layout
+    >>> # Validate dimensions
+    >>> ValidationHelper.validate_dimensions_list([0, 1], "pca", 10)
+
+    >>> # Validate clustering exists
+    >>> cluster = ValidationHelper.validate_clustering_exists(
+    ...     pipeline_data, "dbscan"
+    ... )
+
+    >>> # Validate trajectory selection
+    >>> indices = ValidationHelper.validate_trajectory_selection(
+    ...     pipeline_data, "all"
+    ... )
+
+    >>> # Validate dimension layout for grid
     >>> ValidationHelper.validate_dimensions_for_layout([0, 1, 2, 3])
     """
 
     @staticmethod
-    def validate_landscape_inputs(
-        pipeline_data: PipelineData,
-        decomposition_name: str,
-        dimensions: List[int],
-        clustering_name: Optional[str] = None,
-        show_centers: bool = False
-    ) -> None:
-        """
-        Validate inputs for landscape plot generation.
-
-        Checks decomposition existence, dimension validity, clustering
-        requirements, and consistency between parameters.
-
-        Parameters
-        ----------
-        pipeline_data : PipelineData
-            Pipeline data container
-        decomposition_name : str
-            Name of decomposition to plot
-        dimensions : List[int]
-            Dimension indices to plot
-        clustering_name : Optional[str], default=None
-            Name of clustering (if overlay requested)
-        show_centers : bool, default=False
-            Whether to show cluster centers
-
-        Returns
-        -------
-        None
-            Raises ValueError if validation fails
-
-        Raises
-        ------
-        ValueError
-            If decomposition not found
-        ValueError
-            If dimensions invalid or out of range
-        ValueError
-            If show_centers=True but no clustering specified
-        ValueError
-            If clustering not found
-        ValueError
-            If clustering incompatible with decomposition
-
-        Examples
-        --------
-        >>> # Valid inputs
-        >>> ValidationHelper.validate_landscape_inputs(
-        ...     pipeline_data, "pca", [0, 1], "dbscan", False
-        ... )
-
-        >>> # Missing clustering for centers
-        >>> ValidationHelper.validate_landscape_inputs(
-        ...     pipeline_data, "pca", [0, 1], None, show_centers=True
-        ... )
-        ValueError: show_centers=True requires clustering_name to be specified
-
-        >>> # Invalid dimension
-        >>> ValidationHelper.validate_landscape_inputs(
-        ...     pipeline_data, "pca", [0, 15], None, False
-        ... )
-        ValueError: Dimension 15 out of range for decomposition 'pca' (max: 9)
-        """
-        # Validate decomposition exists and get components
-        decomp_obj = ValidationHelper._validate_decomposition_exists(
-            pipeline_data, decomposition_name
-        )
-        n_components = decomp_obj.data.shape[1]
-
-        # Validate dimensions list (format, range, duplicates)
-        ValidationHelper._validate_dimensions_list(
-            dimensions, decomposition_name, n_components
-        )
-
-        # Validate show_centers requirement
-        ValidationHelper._validate_show_centers_requirement(
-            show_centers, clustering_name
-        )
-
-        # Validate clustering compatibility if specified
-        if clustering_name:
-            n_frames_decomp = decomp_obj.data.shape[0]
-            ValidationHelper._validate_clustering_compatibility(
-                pipeline_data, clustering_name,
-                decomposition_name, n_frames_decomp
-            )
-
-    @staticmethod
-    def _validate_decomposition_exists(
+    def validate_decomposition_exists(
         pipeline_data: PipelineData,
         decomposition_name: str
     ):
         """
-        Check if decomposition exists in pipeline data.
+        Validate that decomposition exists in pipeline data.
 
         Parameters
         ----------
         pipeline_data : PipelineData
             Pipeline data container
         decomposition_name : str
-            Name of decomposition to check
+            Name of decomposition to validate
 
         Returns
         -------
@@ -162,6 +87,12 @@ class ValidationHelper:
         ------
         ValueError
             If decomposition not found
+
+        Examples
+        --------
+        >>> decomp = ValidationHelper.validate_decomposition_exists(
+        ...     pipeline_data, "pca"
+        ... )
         """
         if decomposition_name not in pipeline_data.decomposition_data:
             available = list(pipeline_data.decomposition_data.keys())
@@ -172,7 +103,7 @@ class ValidationHelper:
         return pipeline_data.decomposition_data[decomposition_name]
 
     @staticmethod
-    def _validate_dimensions_list(
+    def validate_dimensions_list(
         dimensions: List[int],
         decomposition_name: str,
         n_components: int
@@ -197,6 +128,11 @@ class ValidationHelper:
         ------
         ValueError
             If dimensions empty, wrong type, out of range, or duplicates
+
+        Examples
+        --------
+        >>> ValidationHelper.validate_dimensions_list([0, 1], "pca", 10)  # OK
+        >>> ValidationHelper.validate_dimensions_list([0, 15], "pca", 10)  # ValueError
         """
         if not dimensions:
             raise ValueError("dimensions cannot be empty")
@@ -225,7 +161,7 @@ class ValidationHelper:
             )
 
     @staticmethod
-    def _validate_show_centers_requirement(
+    def validate_show_centers_requirement(
         show_centers: bool,
         clustering_name: Optional[str]
     ) -> None:
@@ -247,6 +183,11 @@ class ValidationHelper:
         ------
         ValueError
             If show_centers=True but clustering_name not specified
+
+        Examples
+        --------
+        >>> ValidationHelper.validate_show_centers_requirement(True, "dbscan")  # OK
+        >>> ValidationHelper.validate_show_centers_requirement(True, None)  # ValueError
         """
         if show_centers and not clustering_name:
             raise ValueError(
@@ -254,7 +195,7 @@ class ValidationHelper:
             )
 
     @staticmethod
-    def _validate_clustering_compatibility(
+    def validate_clustering_compatibility(
         pipeline_data: PipelineData,
         clustering_name: str,
         decomposition_name: str,
@@ -282,6 +223,12 @@ class ValidationHelper:
         ------
         ValueError
             If clustering not found or frame count mismatch
+
+        Examples
+        --------
+        >>> ValidationHelper.validate_clustering_compatibility(
+        ...     pipeline_data, "dbscan", "pca", 1000
+        ... )
         """
         if clustering_name not in pipeline_data.cluster_data:
             available = list(pipeline_data.cluster_data.keys())
@@ -300,6 +247,86 @@ class ValidationHelper:
                 f"but decomposition '{decomposition_name}' has {n_frames_decomp} frames. "
                 "They must match for overlay plotting."
             )
+
+    @staticmethod
+    def validate_clustering_exists(
+        pipeline_data: PipelineData,
+        clustering_name: str
+    ):
+        """
+        Validate that clustering exists in pipeline data.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data container
+        clustering_name : str
+            Name of clustering to validate
+
+        Returns
+        -------
+        ClusterData
+            Clustering object if found
+
+        Raises
+        ------
+        ValueError
+            If clustering not found
+
+        Examples
+        --------
+        >>> cluster = ValidationHelper.validate_clustering_exists(
+        ...     pipeline_data, "dbscan"
+        ... )
+        """
+        if clustering_name not in pipeline_data.cluster_data:
+            available = list(pipeline_data.cluster_data.keys())
+            raise ValueError(
+                f"Clustering '{clustering_name}' not found. "
+                f"Available: {available}"
+            )
+        return pipeline_data.cluster_data[clustering_name]
+
+    @staticmethod
+    def validate_trajectory_selection(
+        pipeline_data: PipelineData,
+        traj_selection
+    ):
+        """
+        Validate trajectory selection and return indices.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data container
+        traj_selection : int, str, list, or "all"
+            Trajectory selection to validate
+
+        Returns
+        -------
+        List[int]
+            List of trajectory indices
+
+        Raises
+        ------
+        ValueError
+            If no trajectories match selection
+
+        Examples
+        --------
+        >>> indices = ValidationHelper.validate_trajectory_selection(
+        ...     pipeline_data, "all"
+        ... )
+        >>> indices = ValidationHelper.validate_trajectory_selection(
+        ...     pipeline_data, [0, 1, 2]
+        ... )
+        """
+        indices = pipeline_data.trajectory_data.get_trajectory_indices(traj_selection)
+        if len(indices) == 0:
+            raise ValueError(
+                f"No trajectories match selection: {traj_selection}"
+            )
+        return indices
 
     @staticmethod
     def validate_dimensions_for_layout(dimensions: List[int]) -> None:

@@ -18,9 +18,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""Plot type implementations."""
+"""Helper modules for membership plotter."""
 
-from . import landscape
-from . import membership
+from .block_optimizer_helper import BlockOptimizerHelper
 
-__all__ = ['landscape', 'membership']
+__all__ = ["BlockOptimizerHelper"]

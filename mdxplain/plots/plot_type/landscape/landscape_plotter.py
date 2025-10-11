@@ -203,18 +203,29 @@ class LandscapePlotter:
         ...     ylim=(-3, 3)
         ... )
         """
-        # Validate all inputs
-        ValidationHelper.validate_landscape_inputs(
-            self.pipeline_data,
-            decomposition_name,
-            dimensions,
-            clustering_name,
-            show_centers
+        # Validate all inputs using atomic validation methods
+        decomp_obj = ValidationHelper.validate_decomposition_exists(
+            self.pipeline_data, decomposition_name
+        )
+        n_components = decomp_obj.data.shape[1]
+
+        ValidationHelper.validate_dimensions_list(
+            dimensions, decomposition_name, n_components
         )
         ValidationHelper.validate_dimensions_for_layout(dimensions)
+        ValidationHelper.validate_show_centers_requirement(
+            show_centers, clustering_name
+        )
+
+        if clustering_name:
+            n_frames_decomp = decomp_obj.data.shape[0]
+            ValidationHelper.validate_clustering_compatibility(
+                self.pipeline_data, clustering_name,
+                decomposition_name, n_frames_decomp
+            )
 
         # Load decomposition data
-        decomp_data = self.pipeline_data.decomposition_data[decomposition_name].data
+        decomp_data = decomp_obj.data
 
         # Load clustering data if specified
         if clustering_name:
