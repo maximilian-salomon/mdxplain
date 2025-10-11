@@ -32,6 +32,7 @@ from matplotlib.figure import Figure
 from ..service.decomposition_facade import DecompositionFacade
 from ..service.clustering_facade import ClusteringFacade
 from ..plot_type.landscape import LandscapePlotter
+from ..plot_type.membership import MembershipPlotter
 
 
 class PlotsManager:
@@ -303,6 +304,112 @@ class PlotsManager:
             xlim=xlim,
             ylim=ylim,
             subplot_size=subplot_size,
+            save_fig=save_fig,
+            filename=filename,
+            file_format=file_format,
+            dpi=dpi
+        )
+
+    def membership(
+        self,
+        pipeline_data,
+        clustering_name: str,
+        traj_selection: Union[int, str, List, "all"] = "all",
+        height_per_trajectory: float = 0.3,
+        show_frame_numbers: bool = True,
+        show_legend: bool = True,
+        title: Optional[str] = None,
+        save_fig: bool = False,
+        filename: Optional[str] = None,
+        file_format: str = "png",
+        dpi: int = 300
+    ) -> Figure:
+        """
+        Create cluster membership timeline plot.
+
+        Visualizes cluster assignment over time as horizontal colored bars,
+        with each trajectory on a separate row. Uses efficient block-based
+        rendering for performance.
+
+        Parameters
+        ----------
+        clustering_name : str
+            Name of clustering to visualize
+        traj_selection : int, str, list, or "all", default="all"
+            Trajectory selection (uses TrajectoryData.get_trajectory_indices()).
+            Controls which trajectories to plot AND their order.
+        height_per_trajectory : float, default=0.3
+            Height in inches per trajectory bar
+        show_frame_numbers : bool, default=True
+            Show frame numbers on x-axis
+        show_legend : bool, default=True
+            Show cluster color legend
+        title : Optional[str], default=None
+            Custom title (auto-generated if None)
+        save_fig : bool, default=False
+            Save figure to file
+        filename : Optional[str], default=None
+            Custom filename (auto-generated if None)
+        file_format : str, default="png"
+            File format for saving
+        dpi : int, default=300
+            Resolution for saved figure
+
+        Returns
+        -------
+        matplotlib.figure.Figure
+            Created figure object
+
+        Raises
+        ------
+        ValueError
+            If clustering not found or no trajectories selected
+
+        Examples
+        --------
+        >>> # All trajectories in original order
+        >>> fig = pipeline.plots.membership("dbscan")
+
+        >>> # Specific trajectories in custom order
+        >>> fig = pipeline.plots.membership(
+        ...     "dbscan",
+        ...     traj_selection=[2, 0, 5]
+        ... )
+
+        >>> # By tag selection
+        >>> fig = pipeline.plots.membership(
+        ...     "hdbscan",
+        ...     traj_selection="tag:system_A"
+        ... )
+
+        >>> # Customized appearance with saving
+        >>> fig = pipeline.plots.membership(
+        ...     "dpa",
+        ...     traj_selection=[0, 1, 2],
+        ...     height_per_trajectory=0.5,
+        ...     title="DPA Clustering Timeline",
+        ...     save_fig=True,
+        ...     filename="dpa_membership.pdf",
+        ...     file_format="pdf"
+        ... )
+
+        Notes
+        -----
+        - Uses block-based rendering: O(transitions) not O(frames)
+        - Trajectory order in plot matches order in traj_selection
+        - Colors consistent with other plots via ColorMappingHelper
+        - Noise points (-1) shown in black
+        - Best for visualizing temporal dynamics of cluster assignments
+        """
+        plotter = MembershipPlotter(pipeline_data, cache_dir=self.cache_dir)
+
+        return plotter.plot(
+            clustering_name=clustering_name,
+            traj_selection=traj_selection,
+            height_per_trajectory=height_per_trajectory,
+            show_frame_numbers=show_frame_numbers,
+            show_legend=show_legend,
+            title=title,
             save_fig=save_fig,
             filename=filename,
             file_format=file_format,

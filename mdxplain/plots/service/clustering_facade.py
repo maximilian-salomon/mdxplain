@@ -29,6 +29,7 @@ from typing import List, Optional, Dict, Tuple, Union
 from matplotlib.figure import Figure
 
 from ..plot_type.landscape import LandscapePlotter
+from ..plot_type.membership import MembershipPlotter
 
 
 class ClusteringFacade:
@@ -239,6 +240,110 @@ class ClusteringFacade:
             xlim=xlim,
             ylim=ylim,
             subplot_size=subplot_size,
+            save_fig=save_fig,
+            filename=filename,
+            file_format=file_format,
+            dpi=dpi
+        )
+
+    def membership(
+        self,
+        clustering_name: str,
+        traj_selection: Union[str, List[int]] = "all",
+        height_per_trajectory: float = 0.3,
+        show_frame_numbers: bool = True,
+        show_legend: bool = True,
+        title: Optional[str] = None,
+        save_fig: bool = False,
+        filename: Optional[str] = None,
+        file_format: str = "png",
+        dpi: int = 300
+    ) -> Figure:
+        """
+        Create cluster membership timeline plot.
+
+        Visualizes cluster assignment over time as horizontal colored bars,
+        with each trajectory on a separate row. Clustering-focused method
+        for analyzing temporal dynamics of cluster membership.
+
+        Parameters
+        ----------
+        clustering_name : str
+            Name of clustering to visualize
+        traj_selection : int, str, list, or "all", default="all"
+            Trajectory selection. Controls which trajectories to plot
+            AND their order.
+        height_per_trajectory : float, default=0.3
+            Height in inches per trajectory bar
+        show_frame_numbers : bool, default=True
+            Show frame numbers on x-axis
+        show_legend : bool, default=True
+            Show cluster color legend
+        title : Optional[str], default=None
+            Custom title (auto-generated if None)
+        save_fig : bool, default=False
+            Save figure to file
+        filename : Optional[str], default=None
+            Custom filename (auto-generated if None)
+        file_format : str, default="png"
+            File format for saving
+        dpi : int, default=300
+            Resolution for saved figure
+
+        Returns
+        -------
+        matplotlib.figure.Figure
+            Created figure object
+
+        Raises
+        ------
+        ValueError
+            If clustering not found
+        ValueError
+            If no trajectories match selection
+
+        Examples
+        --------
+        >>> # All trajectories for DBSCAN clustering
+        >>> fig = pipeline.plots.clustering.membership("dbscan")
+
+        >>> # Specific trajectories in custom order
+        >>> fig = pipeline.plots.clustering.membership(
+        ...     "hdbscan",
+        ...     traj_selection=[2, 0, 5]
+        ... )
+
+        >>> # Filter by tag
+        >>> fig = pipeline.plots.clustering.membership(
+        ...     "dpa",
+        ...     traj_selection="tag:system_A"
+        ... )
+
+        >>> # Full customization
+        >>> fig = pipeline.plots.clustering.membership(
+        ...     "dbscan",
+        ...     traj_selection=[0, 1, 2],
+        ...     height_per_trajectory=0.5,
+        ...     title="DBSCAN Cluster Membership Over Time",
+        ...     save_fig=True
+        ... )
+
+        Notes
+        -----
+        - Efficient block-based rendering for large trajectories
+        - Trajectory order in plot follows traj_selection order
+        - Colors match cluster colors from landscape plots
+        - Ideal for identifying conformational transitions and stability
+        """
+        plotter = MembershipPlotter(self.pipeline_data, cache_dir=self.cache_dir)
+
+        return plotter.plot(
+            clustering_name=clustering_name,
+            traj_selection=traj_selection,
+            height_per_trajectory=height_per_trajectory,
+            show_frame_numbers=show_frame_numbers,
+            show_legend=show_legend,
+            title=title,
             save_fig=save_fig,
             filename=filename,
             file_format=file_format,

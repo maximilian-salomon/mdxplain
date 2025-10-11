@@ -18,9 +18,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""Plot type implementations."""
+"""Cluster membership timeline plotter."""
 
-from . import landscape
-from . import membership
+from .membership_plotter import MembershipPlotter
 
-__all__ = ['landscape', 'membership']
+__all__ = ["MembershipPlotter"]
