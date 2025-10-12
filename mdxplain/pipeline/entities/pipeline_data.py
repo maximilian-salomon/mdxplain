@@ -149,7 +149,11 @@ class PipelineData:
         self.data_selector_data: Dict[str, DataSelectorData] = {}
         self.comparison_data: Dict[str, ComparisonData] = {}
         self.feature_importance_data: Dict[str, FeatureImportanceData] = {}
-        
+
+        # Matrix caching for memmap (only used when use_memmap=True)
+        # Stores: {cache_key: (memmap_path, frame_mapping)}
+        self._matrix_cache: Dict[str, Tuple[str, Dict[int, Tuple[int, int]]]] = {}
+
         # Dynamic memory management
         self.max_memory_gb = max(2.0, (10000 * chunk_size * 8) / (1024**3))
 
@@ -930,3 +934,109 @@ class PipelineData:
             for attr_value in obj.__dict__.values():
                 if not isinstance(attr_value, (str, int, float, bool, type(None))):
                     self._repair_bound_methods_recursive(attr_value, FeatureData, FeatureBindingHelper, visited)
+
+    # =============================================================================
+    # MATRIX CACHING METHODS
+    # =============================================================================
+
+    def _get_matrix_cache_key(
+        self, feature_selector: str, data_selector: Optional[str]
+    ) -> str:
+        """
+        Generate unique cache key for feature+data selector combination.
+
+        Parameters
+        ----------
+        feature_selector : str
+            Name of feature selector
+        data_selector : str, optional
+            Name of data selector (None for all frames)
+
+        Returns
+        -------
+        str
+            Unique cache key
+
+        Examples
+        --------
+        >>> key1 = pipeline_data._get_matrix_cache_key("contacts", "cluster_0")
+        >>> key2 = pipeline_data._get_matrix_cache_key("contacts", None)
+        """
+        if data_selector:
+            return f"{feature_selector}_{data_selector}"
+        return feature_selector
+
+    def clear_matrix_cache(
+        self,
+        feature_selector: Optional[str] = None,
+        data_selector: Optional[str] = None
+    ) -> None:
+        """
+        Clear matrix cache when data changes.
+
+        This method clears cached memmap matrices to ensure fresh data
+        is used after modifications. Only affects cached matrices when
+        use_memmap=True.
+
+        Parameters
+        ----------
+        feature_selector : str, optional
+            If provided, only clear cache for this feature selector.
+        data_selector : str, optional
+            If provided, only clear cache using this data selector.
+
+        Returns
+        -------
+        None
+            Clears matching cache entries
+
+        Examples
+        --------
+        >>> # Clear specific combination
+        >>> pipeline_data.clear_matrix_cache("contacts_only", "folded")
+
+        >>> # Clear all with feature selector
+        >>> pipeline_data.clear_matrix_cache("contacts_only")
+
+        >>> # Clear all with data selector
+        >>> pipeline_data.clear_matrix_cache(data_selector="folded")
+
+        >>> # Clear all cached matrices
+        >>> pipeline_data.clear_matrix_cache()
+
+        Notes
+        -----
+        - Both None: clears entire cache
+        - Only feature_selector: clears all with this feature_selector
+        - Only data_selector: clears all using this data_selector
+        - Both specified: clears specific combination
+        """
+        if not self.use_memmap:
+            return
+
+        if feature_selector and data_selector:
+            # Clear specific combination
+            key = self._get_matrix_cache_key(feature_selector, data_selector)
+            if key in self._matrix_cache:
+                del self._matrix_cache[key]
+        elif feature_selector:
+            # Clear all with this feature_selector
+            # Matches: "selector", "selector_data1", "selector_data2"
+            keys_to_remove = [
+                k for k in self._matrix_cache.keys()
+                if k == feature_selector or k.startswith(f"{feature_selector}_")
+            ]
+            for key in keys_to_remove:
+                del self._matrix_cache[key]
+        elif data_selector:
+            # Clear all with this data_selector
+            # Matches: "feat1_data", "feat2_data", "feat3_data"
+            keys_to_remove = [
+                k for k in self._matrix_cache.keys()
+                if k.endswith(f"_{data_selector}")
+            ]
+            for key in keys_to_remove:
+                del self._matrix_cache[key]
+        else:
+            # Clear all
+            self._matrix_cache.clear()

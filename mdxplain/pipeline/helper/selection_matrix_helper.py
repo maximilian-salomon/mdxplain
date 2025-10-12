@@ -21,13 +21,16 @@
 """
 Matrix operations helper for feature selection system.
 
-Provides efficient matrix construction directly with proper shape calculation, 
+Provides efficient matrix construction directly with proper shape calculation,
 memory management, and frame mapping instead of collecting and merging matrices.
 """
 from __future__ import annotations
 
+import os
 import numpy as np
 from typing import Dict, Tuple, Optional, List, Any, TYPE_CHECKING
+
+from ...utils.data_utils import DataUtils
 
 if TYPE_CHECKING:
     from ..entities.pipeline_data import PipelineData
@@ -46,8 +49,10 @@ class SelectionMatrixHelper:
         pipeline_data: PipelineData, feature_selector_name: str, data_selector_name: Optional[str] = None
     ) -> Tuple[np.ndarray, Dict[int, Tuple[int, int]]]:
         """
-        Build selection matrix directly with efficient memory usage.
-        
+        Build selection matrix with efficient memory usage and caching.
+
+        Uses caching when use_memmap=True to avoid rebuilding identical matrices.
+
         Parameters
         ----------
         pipeline_data : PipelineData
@@ -56,29 +61,28 @@ class SelectionMatrixHelper:
             Name of the feature selection
         data_selector_name : str, optional
             Name of data selector for frame filtering
-            
+
         Returns
         -------
         Tuple[np.ndarray, Dict[int, Tuple[int, int]]]
             Complete matrix and frame mapping
         """
-        # Calculate matrix shape
-        n_rows, n_cols = SelectionMatrixHelper._calculate_matrix_shape(
-            pipeline_data, feature_selector_name, data_selector_name
+        cache_key = pipeline_data._get_matrix_cache_key(
+            feature_selector_name, data_selector_name
         )
-        
-        # Create matrix with correct shape
-        matrix = SelectionMatrixHelper._create_matrix(
-            (n_rows, n_cols), pipeline_data.use_memmap, 
-            pipeline_data.cache_dir, feature_selector_name
+
+        # Try loading from cache
+        if pipeline_data.use_memmap and cache_key in pipeline_data._matrix_cache:
+            result = SelectionMatrixHelper._load_from_cache(
+                pipeline_data, cache_key, feature_selector_name, data_selector_name
+            )
+            if result is not None:
+                return result
+
+        # Cache miss - build new matrix
+        return SelectionMatrixHelper._build_new_matrix(
+            pipeline_data, cache_key, feature_selector_name, data_selector_name
         )
-        
-        # Fill matrix and create frame mapping
-        frame_mapping = SelectionMatrixHelper._fill_matrix(
-            matrix, pipeline_data, feature_selector_name, data_selector_name
-        )
-        
-        return matrix, frame_mapping
     
     @staticmethod
     def _calculate_matrix_shape(
@@ -129,14 +133,106 @@ class SelectionMatrixHelper:
             n_rows = data_selector.n_selected_frames
         
         return n_rows, n_cols
-    
+
+    @staticmethod
+    def _load_from_cache(
+        pipeline_data: PipelineData,
+        cache_key: str,
+        feature_selector_name: str,
+        data_selector_name: Optional[str]
+    ) -> Optional[Tuple[np.ndarray, Dict[int, Tuple[int, int]]]]:
+        """
+        Load matrix and frame mapping from cache.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data object
+        cache_key : str
+            Cache key for lookup
+        feature_selector_name : str
+            Feature selector name
+        data_selector_name : str, optional
+            Data selector name
+
+        Returns
+        -------
+        Optional[Tuple[np.ndarray, Dict[int, Tuple[int, int]]]]
+            Matrix and frame mapping, or None if cache invalid
+        """
+        memmap_path, frame_mapping = pipeline_data._matrix_cache[cache_key]
+
+        # Verify cached file exists
+        if not os.path.exists(memmap_path):
+            return None
+
+        # Calculate shape for loading
+        n_rows, n_cols = SelectionMatrixHelper._calculate_matrix_shape(
+            pipeline_data, feature_selector_name, data_selector_name
+        )
+
+        # Load cached memmap
+        matrix = np.memmap(
+            memmap_path, dtype=np.float64, mode='r+', shape=(n_rows, n_cols)
+        )
+
+        return matrix, frame_mapping
+
+    @staticmethod
+    def _build_new_matrix(
+        pipeline_data: PipelineData,
+        cache_key: str,
+        feature_selector_name: str,
+        data_selector_name: Optional[str]
+    ) -> Tuple[np.ndarray, Dict[int, Tuple[int, int]]]:
+        """
+        Build new matrix and frame mapping, store in cache.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data object
+        cache_key : str
+            Cache key for storage
+        feature_selector_name : str
+            Feature selector name
+        data_selector_name : str, optional
+            Data selector name
+
+        Returns
+        -------
+        Tuple[np.ndarray, Dict[int, Tuple[int, int]]]
+            Matrix and frame mapping
+        """
+        # Calculate matrix shape
+        n_rows, n_cols = SelectionMatrixHelper._calculate_matrix_shape(
+            pipeline_data, feature_selector_name, data_selector_name
+        )
+
+        # Create matrix
+        matrix, memmap_path = SelectionMatrixHelper._create_matrix(
+            (n_rows, n_cols), pipeline_data.use_memmap,
+            pipeline_data.cache_dir, feature_selector_name
+        )
+
+        # Fill matrix and create frame mapping
+        frame_mapping = SelectionMatrixHelper._fill_matrix(
+            matrix, pipeline_data, feature_selector_name, data_selector_name
+        )
+
+        # Store in cache if memmap enabled
+        if pipeline_data.use_memmap and cache_key and memmap_path:
+            pipeline_data._matrix_cache[cache_key] = (memmap_path, frame_mapping)
+
+        return matrix, frame_mapping
+
     @staticmethod
     def _create_matrix(
         shape: Tuple[int, int], use_memmap: bool, cache_dir: str, name: str
-    ) -> np.ndarray:
+    ) -> Tuple[np.ndarray, Optional[str]]:
         """
         Create matrix with optimal memory management.
-        
+
         Parameters
         ----------
         shape : Tuple[int, int]
@@ -147,27 +243,31 @@ class SelectionMatrixHelper:
             Cache directory for memmap files
         name : str
             Matrix name for memmap filename
-            
+
         Returns
         -------
-        np.ndarray
-            Empty matrix ready for filling
+        Tuple[np.ndarray, Optional[str]]
+            Matrix and memmap path (None if not using memmap)
         """
         if use_memmap:
-            # Use DataUtils for consistent path handling
-            from ...utils.data_utils import DataUtils
+            # Generate memmap path
             memmap_path = DataUtils.get_cache_file_path(
                 cache_path=cache_dir,
                 cache_name=f"selection_matrix_{name}.dat"
             )
-            return np.memmap(
+
+            # Create new memmap
+            matrix = np.memmap(
                 memmap_path, dtype=np.float64, mode='w+', shape=shape
             )
-        return np.zeros(shape, dtype=np.float64)
-    
+
+            return matrix, memmap_path
+
+        return np.zeros(shape, dtype=np.float64), None
+
     @staticmethod
     def _fill_matrix(
-        matrix: np.ndarray, pipeline_data: PipelineData, name: str, 
+        matrix: np.ndarray, pipeline_data: PipelineData, name: str,
         data_selector_name: Optional[str]
     ) -> Dict[int, Tuple[int, int]]:
         """

@@ -369,6 +369,9 @@ class FeatureSelectorManager:
         # Store reference trajectory in selector data
         selector_data.set_reference_trajectory(reference_traj)
 
+        # Invalidate specific matrix cache since feature selection changed
+        pipeline_data.clear_matrix_cache(feature_selector=name)
+
         print(f"Applied feature selector '{name}' with reference trajectory {reference_traj} successfully")
 
     def list_selectors(self, pipeline_data: PipelineData) -> List[str]:
