@@ -4,7 +4,8 @@ API Documentation
 .. automodule:: mdxplain
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
+   :titlesonly:
 
    analysis/mdxplain.analysis
    clustering/mdxplain.clustering
@@ -16,8 +17,4 @@ API Documentation
    feature_selection/mdxplain.feature_selection
    pipeline/mdxplain.pipeline
    trajectory/mdxplain.trajectory
-
-.. toctree::
-   :maxdepth: 1
-   
    utils/mdxplain.utils

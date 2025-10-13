@@ -7,23 +7,12 @@ Welcome to mdxplain's documentation!
 ====================================
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Contents:
+   :titlesonly:
 
    introduction
    getting_started
-
-.. toctree::
-   :maxdepth: 2
-
    tutorials/theory/theory
    tutorials/learning/learning
    api/api
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
