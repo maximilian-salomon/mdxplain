@@ -372,3 +372,73 @@ class ValidationHelper:
                 "Landscape plots require consecutive dimension pairs. "
                 "Please provide an even number of dimensions."
             )
+
+    @staticmethod
+    def validate_feature_importance_exists(pipeline_data: PipelineData, fi_name: str):
+        """
+        Validate that feature importance analysis exists in pipeline data.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data container
+        fi_name : str
+            Name of feature importance analysis to validate
+
+        Returns
+        -------
+        FeatureImportanceData
+            Feature importance data object if found
+
+        Raises
+        ------
+        ValueError
+            If feature importance analysis not found
+
+        Examples
+        --------
+        >>> fi_data = ValidationHelper.validate_feature_importance_exists(
+        ...     pipeline_data, "tree_analysis"
+        ... )
+        """
+        if fi_name not in pipeline_data.feature_importance_data:
+            available = list(pipeline_data.feature_importance_data.keys())
+            raise ValueError(
+                f"Feature importance analysis '{fi_name}' not found. "
+                f"Available: {available}"
+            )
+        return pipeline_data.feature_importance_data[fi_name]
+
+    @staticmethod
+    def validate_positive_integer(value: int, param_name: str) -> None:
+        """
+        Validate that parameter is a positive integer.
+
+        Parameters
+        ----------
+        value : int
+            Value to validate
+        param_name : str
+            Name of parameter for error messages
+
+        Returns
+        -------
+        None
+            Raises ValueError if validation fails
+
+        Raises
+        ------
+        ValueError
+            If value is not positive integer
+
+        Examples
+        --------
+        >>> ValidationHelper.validate_positive_integer(10, "n_top")  # OK
+        >>> ValidationHelper.validate_positive_integer(0, "n_top")  # ValueError
+        >>> ValidationHelper.validate_positive_integer(-5, "n_top")  # ValueError
+        """
+        if not isinstance(value, int) or value <= 0:
+            raise ValueError(
+                f"Parameter '{param_name}' must be a positive integer, "
+                f"got {value}"
+            )

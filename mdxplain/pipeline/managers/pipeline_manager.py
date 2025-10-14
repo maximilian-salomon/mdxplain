@@ -28,18 +28,23 @@ to automatically inject PipelineData into manager methods that need it.
 
 from typing import Any, Dict, Optional, cast
 import os
+import numpy as np
 
 from ..entities.pipeline_data import PipelineData
 from .auto_inject_proxy import AutoInjectProxy
 
 from ...trajectory import TrajectoryManager
 from ...feature import FeatureManager
-from ...feature_selection.managers.feature_selector_manager import FeatureSelectorManager
+from ...feature_selection.managers.feature_selector_manager import (
+    FeatureSelectorManager,
+)
 from ...clustering import ClusterManager
 from ...decomposition import DecompositionManager
 from ...data_selector.managers.data_selector_manager import DataSelectorManager
 from ...comparison.managers.comparison_manager import ComparisonManager
-from ...feature_importance.managers.feature_importance_manager import FeatureImportanceManager
+from ...feature_importance.managers.feature_importance_manager import (
+    FeatureImportanceManager,
+)
 from ...analysis import AnalysisManager
 from ...plots.manager.plots_manager import PlotsManager
 
@@ -100,6 +105,7 @@ class PipelineManager:
         # Feature/Decomposition parameters
         use_memmap: bool = True,
         chunk_size: int = 2000,
+        dtype: type = np.float32,
         # Cache directory for all managers
         cache_dir: str = "./cache",
     ):
@@ -116,8 +122,12 @@ class PipelineManager:
             Default MDTraj selection string for trajectories
         use_memmap : bool, default=False
             Whether to use memory mapping for feature and decomposition data
-        chunk_size : int, default=10000
+        chunk_size : int, default=2000
             Processing chunk size for feature and decomposition computation
+        dtype : type, default=np.float32
+            Data type for feature matrices (float32 or float64).
+            float32 saves 50% memory and is sufficient for most MD analysis.
+            Use float64 only if extreme numerical precision required.
         cache_dir : str, default="./cache"
             Cache directory path for all managers
 
@@ -136,13 +146,20 @@ class PipelineManager:
 
         # Central data container
         self._data = PipelineData(
-            use_memmap=use_memmap, cache_dir=cache_dir, chunk_size=chunk_size
+            use_memmap=use_memmap,
+            cache_dir=cache_dir,
+            chunk_size=chunk_size,
+            dtype=dtype,
         )
 
         # Create manager instances with their configurations
         self._trajectory_manager = TrajectoryManager(
-            stride=stride, concat=concat, selection=selection, cache_dir=cache_dir,
-            use_memmap=use_memmap, chunk_size=chunk_size
+            stride=stride,
+            concat=concat,
+            selection=selection,
+            cache_dir=cache_dir,
+            use_memmap=use_memmap,
+            chunk_size=chunk_size,
         )
         self._feature_manager = FeatureManager(
             use_memmap=use_memmap, chunk_size=chunk_size, cache_dir=cache_dir
@@ -152,7 +169,7 @@ class PipelineManager:
             use_memmap=use_memmap, chunk_size=chunk_size, cache_dir=cache_dir
         )
         self._feature_selector_manager = FeatureSelectorManager()
-        
+
         self._data_selector_manager = DataSelectorManager()
         self._comparison_manager = ComparisonManager()
         self._feature_importance_manager = FeatureImportanceManager(
@@ -175,7 +192,8 @@ class PipelineManager:
             All methods that expect pipeline_data parameter will receive it automatically.
         """
         return cast(
-            TrajectoryManager, AutoInjectProxy(self._trajectory_manager, self._data)
+            TrajectoryManager,
+            AutoInjectProxy(self._trajectory_manager, self._data),
         )
 
     @property
@@ -189,7 +207,9 @@ class PipelineManager:
             Feature manager with automatic PipelineData injection.
             All methods that expect pipeline_data parameter will receive it automatically.
         """
-        return cast(FeatureManager, AutoInjectProxy(self._feature_manager, self._data))
+        return cast(
+            FeatureManager, AutoInjectProxy(self._feature_manager, self._data)
+        )
 
     @property
     def clustering(self) -> ClusterManager:
@@ -202,7 +222,9 @@ class PipelineManager:
             Cluster manager with automatic PipelineData injection.
             All methods that expect pipeline_data parameter will receive it automatically.
         """
-        return cast(ClusterManager, AutoInjectProxy(self._cluster_manager, self._data))
+        return cast(
+            ClusterManager, AutoInjectProxy(self._cluster_manager, self._data)
+        )
 
     @property
     def decomposition(self) -> DecompositionManager:
@@ -295,7 +317,9 @@ class PipelineManager:
             Analysis manager with automatic PipelineData injection.
             All methods that expect pipeline_data parameter will receive it automatically.
         """
-        return cast(AnalysisManager, AutoInjectProxy(self._analysis_manager, self._data))
+        return cast(
+            AnalysisManager, AutoInjectProxy(self._analysis_manager, self._data)
+        )
 
     @property
     def plots(self) -> PlotsManager:
@@ -324,7 +348,9 @@ class PipelineManager:
         ...     "dbscan", "pca", [0, 1], show_centers=True
         ... )
         """
-        return cast(PlotsManager, AutoInjectProxy(self._plots_manager, self._data))
+        return cast(
+            PlotsManager, AutoInjectProxy(self._plots_manager, self._data)
+        )
 
     @property
     def data(self):
@@ -410,7 +436,7 @@ class PipelineManager:
         self._data.load(load_path)
 
     @staticmethod
-    def load_pipeline(load_path: str) -> 'PipelineManager':
+    def load_pipeline(load_path: str) -> "PipelineManager":
         """
         Load complete pipeline from disk as a static constructor.
 
@@ -452,60 +478,62 @@ class PipelineManager:
         --------
         >>> pipeline.print_info()
         ======= PIPELINE INFORMATION =======
-        
+
         --- Trajectory Data ---
         Loaded 3 trajectories:
             [0] system1_traj1: 1000 frames
             [1] system1_traj2: 1500 frames
             [2] system2_traj1: 800 frames
-          
+
         --- Feature Data ---
         Feature Types: 2 (distances, contacts)
-        
+
         --- Clustering Data ---
         Clustering Names: 1 (conformations)
-        
+
         (... information from all managers ...)
         """
         print("======= PIPELINE INFORMATION =======")
-        
+
         print("\n--- Trajectory Data ---")
         self.trajectory.print_info()
-        
+
         print("\n--- Feature Data ---")
         self.feature.print_info()
-        
+
         print("\n--- Feature Selection Data ---")
         self.feature_selector.print_info()
-        
+
         print("\n--- Clustering Data ---")
         self.clustering.print_info()
-        
+
         print("\n--- Decomposition Data ---")
         self.decomposition.print_info()
-        
+
         print("\n--- Data Selector Data ---")
         self.data_selector.print_info()
-        
+
         print("\n--- Comparison Data ---")
         self.comparison.print_info()
-        
+
         print("\n--- Feature Importance Data ---")
         self.feature_importance.print_info()
-        
+
         print("\n======= END PIPELINE INFORMATION =======")
-        
+
         # Summary at the end
         summary = self.summary()
-        print(f"\nPipeline Summary: {summary['trajectories_loaded']} trajectories, "
-              f"{summary['features_computed']} feature types, "
-              f"{summary['clusterings_performed']} clusterings")
+        print(
+            f"\nPipeline Summary: {summary['trajectories_loaded']} trajectories, "
+            f"{summary['features_computed']} feature types, "
+            f"{summary['clusterings_performed']} clusterings"
+        )
 
     def update_config(
         self,
         chunk_size: int = None,
         cache_dir: str = None,
-        use_memmap: bool = None
+        use_memmap: bool = None,
     ):
         """
         Update pipeline configuration parameters at runtime.
@@ -557,7 +585,9 @@ class PipelineManager:
             try:
                 os.makedirs(cache_dir, exist_ok=True)
             except OSError as e:
-                raise OSError(f"Cannot create cache directory '{cache_dir}': {e}")
+                raise OSError(
+                    f"Cannot create cache directory '{cache_dir}': {e}"
+                )
 
         if use_memmap is not None:
             if not isinstance(use_memmap, bool):

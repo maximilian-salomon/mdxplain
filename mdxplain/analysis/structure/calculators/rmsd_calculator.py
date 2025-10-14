@@ -47,7 +47,9 @@ class RMSDCalculator:
     frames happens in :class:`mdxplain.analysis.structure.services.rmsd_variant_service.RMSDVariantService`.
     """
 
-    def __init__(self, trajectories: Iterable, chunk_size: int, use_memmap: bool) -> None:
+    def __init__(
+        self, trajectories: Iterable, chunk_size: int, use_memmap: bool
+    ) -> None:
         """Initialise the calculator with shared runtime settings.
 
         The calculator stores the trajectory collection alongside the streaming
@@ -127,7 +129,11 @@ class RMSDCalculator:
 
         results: List[np.ndarray] = []
         reference_coords = reference_frame.xyz[0]
-        atom_indices_array = None if atom_indices is None else np.asarray(atom_indices, dtype=int)
+        atom_indices_array = (
+            None
+            if atom_indices is None
+            else np.asarray(atom_indices, dtype=int)
+        )
 
         for trajectory in self.trajectories:
             chunk_arrays: List[np.ndarray] = []
@@ -138,7 +144,11 @@ class RMSDCalculator:
                     atom_indices=atom_indices_array,
                 )
                 chunk_arrays.append(self._apply_metric(squared, metric))
-            results.append(np.concatenate(chunk_arrays) if chunk_arrays else np.array([], dtype=np.float32))
+            results.append(
+                np.concatenate(chunk_arrays)
+                if chunk_arrays
+                else np.array([], dtype=np.float32)
+            )
 
         return results
 
@@ -182,7 +192,11 @@ class RMSDCalculator:
             raise ValueError("lag must be positive.")
 
         results: List[np.ndarray] = []
-        atom_indices_array = None if atom_indices is None else np.asarray(atom_indices, dtype=int)
+        atom_indices_array = (
+            None
+            if atom_indices is None
+            else np.asarray(atom_indices, dtype=int)
+        )
 
         for trajectory in self.trajectories:
             if trajectory.n_frames <= lag:
@@ -204,7 +218,11 @@ class RMSDCalculator:
                 )
                 pair_values.append(self._apply_metric(squared, metric))
 
-            results.append(np.concatenate(pair_values) if pair_values else np.array([], dtype=np.float32))
+            results.append(
+                np.concatenate(pair_values)
+                if pair_values
+                else np.array([], dtype=np.float32)
+            )
 
         return results
 
@@ -261,14 +279,20 @@ class RMSDCalculator:
         """
 
         if mode not in {"frame_to_start", "frame_to_frame"}:
-            raise ValueError("mode must be 'frame_to_start' or 'frame_to_frame'")
+            raise ValueError(
+                "mode must be 'frame_to_start' or 'frame_to_frame'"
+            )
 
         if mode == "frame_to_frame" and lag is None:
             raise ValueError("lag must be provided for frame_to_frame mode")
 
         if mode == "frame_to_frame":
-            return self._window_frame_to_frame(atom_indices, window_size, stride, lag, metric)
-        return self._window_frame_to_start(atom_indices, window_size, stride, metric)
+            return self._window_frame_to_frame(
+                atom_indices, window_size, stride, lag, metric
+            )
+        return self._window_frame_to_start(
+            atom_indices, window_size, stride, metric
+        )
 
     def _window_frame_to_start(
         self,
@@ -303,14 +327,20 @@ class RMSDCalculator:
             raise ValueError("stride must be positive.")
 
         results: List[np.ndarray] = []
-        atom_indices_array = None if atom_indices is None else np.asarray(atom_indices, dtype=int)
+        atom_indices_array = (
+            None
+            if atom_indices is None
+            else np.asarray(atom_indices, dtype=int)
+        )
 
         for trajectory in self.trajectories:
             if trajectory.n_frames < window_size:
                 raise ValueError("window_size exceeds trajectory length.")
 
             window_values: List[float] = []
-            for start in range(0, trajectory.n_frames - window_size + 1, stride):
+            for start in range(
+                0, trajectory.n_frames - window_size + 1, stride
+            ):
                 value = self._process_window_frame_to_start(
                     trajectory, start, window_size, atom_indices_array, metric
                 )
@@ -358,7 +388,11 @@ class RMSDCalculator:
             raise ValueError("lag must be positive.")
 
         results: List[np.ndarray] = []
-        atom_indices_array = None if atom_indices is None else np.asarray(atom_indices, dtype=int)
+        atom_indices_array = (
+            None
+            if atom_indices is None
+            else np.asarray(atom_indices, dtype=int)
+        )
 
         for trajectory in self.trajectories:
             if trajectory.n_frames < window_size:
@@ -367,9 +401,16 @@ class RMSDCalculator:
                 raise ValueError("window_size must be greater than lag.")
 
             window_values: List[float] = []
-            for start in range(0, trajectory.n_frames - window_size + 1, stride):
+            for start in range(
+                0, trajectory.n_frames - window_size + 1, stride
+            ):
                 value = self._process_window_frame_to_frame(
-                    trajectory, start, window_size, lag, atom_indices_array, metric
+                    trajectory,
+                    start,
+                    window_size,
+                    lag,
+                    atom_indices_array,
+                    metric,
                 )
                 window_values.append(value)
 
@@ -429,7 +470,9 @@ class RMSDCalculator:
             return 0.0
 
         if self._should_chunk_window(window_size):
-            reference_coords = trajectory[window_start : window_start + 1].xyz[0]
+            reference_coords = trajectory[window_start : window_start + 1].xyz[
+                0
+            ]
             squared = self._compute_window_rmsd_chunked(
                 trajectory,
                 window_start + 1,
@@ -527,7 +570,9 @@ class RMSDCalculator:
         """
         chunk_arrays: List[np.ndarray] = []
 
-        for start in range(window_start, window_start + window_size, self.chunk_size):
+        for start in range(
+            window_start, window_start + window_size, self.chunk_size
+        ):
             end = min(start + self.chunk_size, window_start + window_size)
             chunk = trajectory[start:end]
             squared = self._compute_squared_differences(
@@ -629,7 +674,9 @@ class RMSDCalculator:
             ref_coords = reference_batch
         else:
             if reference is None:
-                raise ValueError("reference must be provided when reference_batch is None")
+                raise ValueError(
+                    "reference must be provided when reference_batch is None"
+                )
             ref_coords = np.broadcast_to(reference, coords.shape)
 
         if atom_indices is not None:
@@ -640,10 +687,12 @@ class RMSDCalculator:
         return np.sum(diff * diff, axis=-1)
 
     @staticmethod
-    def _apply_metric(squared: np.ndarray, metric: Literal["mean", "median", "mad"]) -> np.ndarray:
+    def _apply_metric(
+        squared: np.ndarray, metric: Literal["mean", "median", "mad"]
+    ) -> np.ndarray:
         """
         Apply the requested metric to atom-wise squared deviations.
-        
+
         Parameters
         ----------
         squared : np.ndarray
@@ -660,22 +709,26 @@ class RMSDCalculator:
         """
 
         if metric == "mad":
-            distances = np.sqrt(np.clip(squared, a_min=0.0, a_max=None), dtype=np.float64)
+            distances = np.sqrt(
+                np.clip(squared, a_min=0.0, a_max=None), dtype=np.float32
+            )
             med = np.median(distances, axis=-1, keepdims=True)
             mad = np.median(np.abs(distances - med), axis=-1)
             return mad.astype(np.float32)
 
         if metric == "mean":
-            values = np.mean(squared, axis=-1, dtype=np.float64)
+            values = np.mean(squared, axis=-1, dtype=np.float32)
         elif metric == "median":
             values = np.median(squared, axis=-1)
         else:
             raise ValueError(f"Unknown metric '{metric}'")
 
-        return np.sqrt(np.clip(values, a_min=0.0, a_max=None), dtype=np.float64).astype(np.float32)
+        return np.sqrt(np.clip(values, a_min=0.0, a_max=None), dtype=np.float32)
 
     @staticmethod
-    def _aggregate_series(values: np.ndarray, metric: Literal["mean", "median", "mad"]) -> float:
+    def _aggregate_series(
+        values: np.ndarray, metric: Literal["mean", "median", "mad"]
+    ) -> float:
         """
         Aggregate a one-dimensional RMSD series according to the metric.
 
@@ -695,12 +748,12 @@ class RMSDCalculator:
         if values.size == 0:
             return 0.0
         if metric == "mean":
-            return float(np.mean(values, dtype=np.float64))
+            return float(np.mean(values, dtype=np.float32))
         if metric == "median":
             return float(np.median(values))
         if metric == "mad":
             return float(np.median(np.abs(values - np.median(values))))
-        
+
         raise ValueError(f"Unknown metric '{metric}'")
 
     def _chunk_iterator(
@@ -709,7 +762,7 @@ class RMSDCalculator:
     ) -> Iterator[Tuple[md.Trajectory, int, int]]:
         """
         Yield trajectory chunks respecting memmap configuration.
-        
+
         Parameters
         ----------
         trajectory : md.Trajectory
@@ -722,7 +775,9 @@ class RMSDCalculator:
         """
 
         if self.use_memmap and self.chunk_size and self.chunk_size > 0:
-            yield from StructureCalculationHelper.iterate_chunks(trajectory, self.chunk_size)
+            yield from StructureCalculationHelper.iterate_chunks(
+                trajectory, self.chunk_size
+            )
         else:
             yield trajectory, 0, trajectory.n_frames
 

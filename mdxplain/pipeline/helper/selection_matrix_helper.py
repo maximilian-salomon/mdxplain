@@ -166,14 +166,24 @@ class SelectionMatrixHelper:
         if not os.path.exists(memmap_path):
             return None
 
-        # Calculate shape for loading
+        # Calculate expected shape
         n_rows, n_cols = SelectionMatrixHelper._calculate_matrix_shape(
             pipeline_data, feature_selector_name, data_selector_name
         )
 
+        # Validate shape matches file size (prevent reading stale cache with wrong shape)
+        file_size = os.path.getsize(memmap_path)
+        dtype_size = np.dtype(pipeline_data.dtype).itemsize
+        expected_size = n_rows * n_cols * dtype_size
+
+        if file_size != expected_size:
+            # Shape mismatch - invalidate cache (will be overwritten on rebuild)
+            del pipeline_data._matrix_cache[cache_key]
+            return None
+
         # Load cached memmap
         matrix = np.memmap(
-            memmap_path, dtype=np.float64, mode='r+', shape=(n_rows, n_cols)
+            memmap_path, dtype=pipeline_data.dtype, mode='r+', shape=(n_rows, n_cols)
         )
 
         return matrix, frame_mapping
@@ -212,7 +222,7 @@ class SelectionMatrixHelper:
         # Create matrix
         matrix, memmap_path = SelectionMatrixHelper._create_matrix(
             (n_rows, n_cols), pipeline_data.use_memmap,
-            pipeline_data.cache_dir, feature_selector_name
+            pipeline_data.cache_dir, feature_selector_name, pipeline_data.dtype
         )
 
         # Fill matrix and create frame mapping
@@ -228,7 +238,7 @@ class SelectionMatrixHelper:
 
     @staticmethod
     def _create_matrix(
-        shape: Tuple[int, int], use_memmap: bool, cache_dir: str, name: str
+        shape: Tuple[int, int], use_memmap: bool, cache_dir: str, name: str, dtype: type
     ) -> Tuple[np.ndarray, Optional[str]]:
         """
         Create matrix with optimal memory management.
@@ -243,6 +253,8 @@ class SelectionMatrixHelper:
             Cache directory for memmap files
         name : str
             Matrix name for memmap filename
+        dtype : type
+            Data type for matrix (float32 or float64)
 
         Returns
         -------
@@ -258,12 +270,12 @@ class SelectionMatrixHelper:
 
             # Create new memmap
             matrix = np.memmap(
-                memmap_path, dtype=np.float64, mode='w+', shape=shape
+                memmap_path, dtype=dtype, mode='w+', shape=shape
             )
 
             return matrix, memmap_path
 
-        return np.zeros(shape, dtype=np.float64), None
+        return np.zeros(shape, dtype=dtype), None
 
     @staticmethod
     def _fill_matrix(
