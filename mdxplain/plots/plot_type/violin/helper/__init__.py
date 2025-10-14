@@ -18,10 +18,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""Plotting facades for decomposition, clustering, and feature importance visualization."""
+"""Helper modules for violin plotting."""
 
-from .decomposition_facade import DecompositionFacade
-from .clustering_facade import ClusteringFacade
-from .feature_importance_facade import FeatureImportanceFacade
+from .violin_data_preparer import ViolinDataPreparer
 
-__all__ = ['DecompositionFacade', 'ClusteringFacade', 'FeatureImportanceFacade']
+__all__ = ["ViolinDataPreparer"]

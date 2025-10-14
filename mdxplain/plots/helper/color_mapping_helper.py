@@ -26,7 +26,8 @@ dynamically generated cluster colors and colormap selection for landscapes.
 """
 
 import colorsys
-from typing import Dict
+import re
+from typing import Dict, List
 
 
 # Color for noise points (cluster label -1)
@@ -158,3 +159,129 @@ class ColorMappingHelper:
         if energy_values:
             return "viridis_r"  # Inverted: dark = low energy
         return "viridis"
+
+    @staticmethod
+    def parse_cluster_id(name: str) -> int:
+        """
+        Parse cluster ID from name string (case-insensitive).
+
+        Searches for pattern "cluster_X" or "Cluster X" anywhere in the
+        name. Returns first cluster ID found, -1 if none.
+
+        Parameters
+        ----------
+        name : str
+            Name to parse (e.g., comparison name, DataSelector name)
+
+        Returns
+        -------
+        int
+            Cluster ID (>=0) if found, -1 if no cluster pattern found
+
+        Examples
+        --------
+        >>> ColorMappingHelper.parse_cluster_id("cluster_0_vs_rest")
+        0
+        >>> ColorMappingHelper.parse_cluster_id("Cluster_5_vs_rest")
+        5
+        >>> ColorMappingHelper.parse_cluster_id("cluster 3 analysis")
+        3
+        >>> ColorMappingHelper.parse_cluster_id("my_cluster_7_vs_cluster_2")
+        7
+        >>> ColorMappingHelper.parse_cluster_id("folded")
+        -1
+
+        Notes
+        -----
+        Uses regex pattern r'cluster[_\s]*(\d+)' with re.IGNORECASE:
+        - Matches "cluster" (case-insensitive)
+        - Followed by optional underscore or space
+        - Followed by one or more digits
+
+        Returns first match found. Useful for distinguishing cluster-based
+        from non-cluster entities across all visualization types.
+        """
+        match = re.search(r'cluster[_\s]*(\d+)', name, re.IGNORECASE)
+        if match:
+            return int(match.group(1))
+        return -1
+
+    @staticmethod
+    def create_data_selector_color_mapping(
+        data_selector_names: List[str]
+    ) -> Dict[str, str]:
+        """
+        Create color mapping for DataSelectors with cluster consistency.
+
+        Cluster-based DataSelectors retain their exact cluster colors.
+        Non-cluster DataSelectors get free colors from the same palette.
+        Ensures color consistency across all visualizations.
+
+        Parameters
+        ----------
+        data_selector_names : List[str]
+            List of DataSelector names (e.g., ["cluster_0", "cluster_1", "folded"])
+
+        Returns
+        -------
+        Dict[str, str]
+            Mapping of data_selector_name -> color_hex
+
+        Examples
+        --------
+        >>> selector_names = ["cluster_1", "cluster_3", "folded", "unfolded"]
+        >>> colors = ColorMappingHelper.create_data_selector_color_mapping(selector_names)
+        >>> # cluster_1 gets color_1, cluster_3 gets color_3
+        >>> # folded gets color_0, unfolded gets color_2 (free colors)
+
+        Notes
+        -----
+        Algorithm:
+        1. Parse all DataSelector names to extract cluster IDs
+        2. Determine max_cluster_id and total DataSelectors
+        3. Generate sufficient colors from get_cluster_colors()
+        4. Assign cluster-DataSelectors their exact cluster color
+        5. Assign non-cluster DataSelectors free colors (not used by clusters)
+
+        Ensures consistency with cluster plots across all visualizations.
+        Used in violin plots, comparison visualizations, etc.
+        """
+        sorted_names = sorted(data_selector_names)
+
+        # Phase 1: Identify cluster DataSelectors and their IDs
+        cluster_selectors = {}  # {selector_name: cluster_id}
+        non_cluster_selectors = []
+        max_cluster_id = -1
+
+        for selector_name in sorted_names:
+            cluster_id = ColorMappingHelper.parse_cluster_id(selector_name)
+            if cluster_id >= 0:
+                cluster_selectors[selector_name] = cluster_id
+                max_cluster_id = max(max_cluster_id, cluster_id)
+            else:
+                non_cluster_selectors.append(selector_name)
+
+        # Phase 2: Generate enough colors
+        n_colors_needed = max(max_cluster_id + 1, len(sorted_names))
+        all_colors = ColorMappingHelper.get_cluster_colors(n_colors_needed)
+
+        # Phase 3: Assign colors
+        selector_colors = {}
+        used_color_indices = set()
+
+        # 3a: Cluster DataSelectors get their exact cluster color
+        for selector_name, cluster_id in cluster_selectors.items():
+            selector_colors[selector_name] = all_colors[cluster_id]
+            used_color_indices.add(cluster_id)
+
+        # 3b: Non-cluster DataSelectors get free colors
+        free_color_indices = [
+            i for i in range(n_colors_needed)
+            if i not in used_color_indices
+        ]
+
+        for i, selector_name in enumerate(non_cluster_selectors):
+            color_idx = free_color_indices[i]
+            selector_colors[selector_name] = all_colors[color_idx]
+
+        return selector_colors

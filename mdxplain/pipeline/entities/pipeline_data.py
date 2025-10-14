@@ -31,17 +31,22 @@ import numpy as np
 
 from ...trajectory.entities.trajectory_data import TrajectoryData
 from ...feature.entities.feature_data import FeatureData
-from ...feature_selection.entities.feature_selector_data import FeatureSelectorData
+from ...feature_selection.entities.feature_selector_data import (
+    FeatureSelectorData,
+)
 from ...clustering.entities.cluster_data import ClusterData
 from ...decomposition.entities.decomposition_data import DecompositionData
 from ...data_selector.entities.data_selector_data import DataSelectorData
 from ...comparison.entities.comparison_data import ComparisonData
-from ...feature_importance.entities.feature_importance_data import FeatureImportanceData
+from ...feature_importance.entities.feature_importance_data import (
+    FeatureImportanceData,
+)
 from ...utils.data_utils import DataUtils
 from ..helper.selection_matrix_helper import SelectionMatrixHelper
 from ..helper.selection_metadata_helper import SelectionMetadataHelper
 from ..helper.comparison_data_helper import ComparisonDataHelper
 from ...feature.helper.feature_binding_helper import FeatureBindingHelper
+
 
 class PipelineData:
     """
@@ -63,6 +68,8 @@ class PipelineData:
         Directory for cache files when using memory mapping
     chunk_size : int
         Chunk size for memory-efficient processing
+    dtype : type
+        Data type for feature matrices (float32 or float64)
     max_memory_gb : float
         Estimated maximum memory usage in GB for current data
     trajectory_data : TrajectoryData
@@ -102,6 +109,7 @@ class PipelineData:
         use_memmap: bool = False,
         cache_dir: str = "./cache",
         chunk_size: int = 2000,
+        dtype: type = np.float32,
     ):
         """
         Initialize the central pipeline data container.
@@ -115,8 +123,12 @@ class PipelineData:
             Whether to use memory mapping for large datasets
         cache_dir : str, default="./cache"
             Directory for cache files when using memory mapping
-        chunk_size : int, default=10000
+        chunk_size : int, default=2000
             Chunk size for memory-efficient processing
+        dtype : type, default=np.float32
+            Data type for feature matrices (float32 or float64).
+            float32 saves 50% memory and is sufficient for most MD analysis.
+            Use float64 only if extreme numerical precision required.
 
         Returns
         -------
@@ -135,6 +147,7 @@ class PipelineData:
         self.use_memmap = use_memmap
         self.cache_dir = cache_dir
         self.chunk_size = chunk_size
+        self.dtype = dtype
 
         # Core trajectory data
         self.trajectory_data: TrajectoryData = TrajectoryData()
@@ -152,7 +165,9 @@ class PipelineData:
 
         # Matrix caching for memmap (only used when use_memmap=True)
         # Stores: {cache_key: (memmap_path, frame_mapping)}
-        self._matrix_cache: Dict[str, Tuple[str, Dict[int, Tuple[int, int]]]] = {}
+        self._matrix_cache: Dict[
+            str, Tuple[str, Dict[int, Tuple[int, int]]]
+        ] = {}
 
         # Dynamic memory management
         self.max_memory_gb = max(2.0, (10000 * chunk_size * 8) / (1024**3))
@@ -431,7 +446,9 @@ class PipelineData:
             # Get decomposition type from metadata
             decomp_type = "unknown"
             if hasattr(decomp_data, "metadata") and decomp_data.metadata:
-                decomp_type = decomp_data.metadata.get("decomposition_type", "unknown")
+                decomp_type = decomp_data.metadata.get(
+                    "decomposition_type", "unknown"
+                )
             elif hasattr(decomp_data, "decomposition_type"):
                 decomp_type = decomp_data.decomposition_type
 
@@ -518,7 +535,9 @@ class PipelineData:
 
         for cluster_name, cluster_data in self.cluster_data.items():
             # Get basic information from cluster data
-            labels = cluster_data.labels if hasattr(cluster_data, "labels") else None
+            labels = (
+                cluster_data.labels if hasattr(cluster_data, "labels") else None
+            )
             cluster_type = (
                 cluster_data.cluster_type
                 if hasattr(cluster_data, "cluster_type")
@@ -529,7 +548,9 @@ class PipelineData:
             n_clusters = 0
             if labels is not None:
                 unique_labels = set(labels)
-                n_clusters = len(unique_labels) - (1 if -1 in unique_labels else 0)
+                n_clusters = len(unique_labels) - (
+                    1 if -1 in unique_labels else 0
+                )
 
             cluster_list.append(
                 {
@@ -683,10 +704,12 @@ class PipelineData:
         >>> print(f"Feature details: {first_feature['features']}")
         """
         self.validate_selection_exists(name)
-        selected_metadata = SelectionMetadataHelper.collect_metadata_for_selection(
-            self, name
+        selected_metadata = (
+            SelectionMetadataHelper.collect_metadata_for_selection(self, name)
         )
-        return SelectionMetadataHelper.finalize_metadata_result(selected_metadata, name)
+        return SelectionMetadataHelper.finalize_metadata_result(
+            selected_metadata, name
+        )
 
     def validate_selection_exists(self, name: str):
         """
@@ -714,12 +737,12 @@ class PipelineData:
             raise ValueError(
                 f"Selection '{name}' has not been processed yet. Run select() first."
             )
-        
+
     def get_selected_data(
         self,
         feature_selector: str,
         data_selector: Optional[str] = None,
-        return_frame_mapping: bool = False
+        return_frame_mapping: bool = False,
     ):
         """
         Get data matrix with selected features and optionally selected frames.
@@ -779,7 +802,7 @@ class PipelineData:
         matrix, frame_mapping = SelectionMatrixHelper.build_selection_matrix(
             self, feature_selector, data_selector
         )
-        
+
         if return_frame_mapping:
             return matrix, frame_mapping
         return matrix
@@ -847,18 +870,20 @@ class PipelineData:
     def _repair_bound_methods_after_load(self) -> None:
         """
         Repair BoundMethod objects after loading from disk.
-        
+
         This method recursively searches for FeatureData objects and repairs their
         BoundMethod analysis objects that were unpickled without their
         feature_data and original_method references.
-        
+
         Returns
         -------
         None
             Repairs BoundMethod objects in-place throughout the pipeline data
         """
-        self._repair_bound_methods_recursive(self, FeatureData, FeatureBindingHelper, set())
-        
+        self._repair_bound_methods_recursive(
+            self, FeatureData, FeatureBindingHelper, set()
+        )
+
     def get_config(self) -> dict:
         """
         Get current configuration parameters.
@@ -883,17 +908,23 @@ class PipelineData:
         return {
             "chunk_size": self.chunk_size,
             "cache_dir": self.cache_dir,
-            "use_memmap": self.use_memmap
+            "use_memmap": self.use_memmap,
         }
 
-    def _repair_bound_methods_recursive(self, obj: Any, FeatureData: type, FeatureBindingHelper: type, visited: set) -> None:
+    def _repair_bound_methods_recursive(
+        self,
+        obj: Any,
+        FeatureData: type,
+        FeatureBindingHelper: type,
+        visited: set,
+    ) -> None:
         """
         Recursively repair BoundMethod objects.
 
         This method traverses the entire object graph starting from `obj`,
         searching for FeatureData instances. When found, it calls the
         FeatureBindingHelper to repair their BoundMethod analysis objects.
-        
+
         Parameters
         ----------
         obj : Any
@@ -915,7 +946,7 @@ class PipelineData:
         if obj_id in visited:
             return
         visited.add(obj_id)
-        
+
         if isinstance(obj, FeatureData):
             # Found a FeatureData object - repair its bound methods
             FeatureBindingHelper.repair_bound_methods(obj)
@@ -923,17 +954,25 @@ class PipelineData:
             # Search in dictionary values
             for value in obj.values():
                 if not isinstance(value, (str, int, float, bool, type(None))):
-                    self._repair_bound_methods_recursive(value, FeatureData, FeatureBindingHelper, visited)
+                    self._repair_bound_methods_recursive(
+                        value, FeatureData, FeatureBindingHelper, visited
+                    )
         elif isinstance(obj, (list, tuple)):
             # Search in list/tuple items
             for item in obj:
                 if not isinstance(item, (str, int, float, bool, type(None))):
-                    self._repair_bound_methods_recursive(item, FeatureData, FeatureBindingHelper, visited)
-        elif hasattr(obj, '__dict__'):
+                    self._repair_bound_methods_recursive(
+                        item, FeatureData, FeatureBindingHelper, visited
+                    )
+        elif hasattr(obj, "__dict__"):
             # Search in object attributes
             for attr_value in obj.__dict__.values():
-                if not isinstance(attr_value, (str, int, float, bool, type(None))):
-                    self._repair_bound_methods_recursive(attr_value, FeatureData, FeatureBindingHelper, visited)
+                if not isinstance(
+                    attr_value, (str, int, float, bool, type(None))
+                ):
+                    self._repair_bound_methods_recursive(
+                        attr_value, FeatureData, FeatureBindingHelper, visited
+                    )
 
     # =============================================================================
     # MATRIX CACHING METHODS
@@ -969,7 +1008,7 @@ class PipelineData:
     def clear_matrix_cache(
         self,
         feature_selector: Optional[str] = None,
-        data_selector: Optional[str] = None
+        data_selector: Optional[str] = None,
     ) -> None:
         """
         Clear matrix cache when data changes.
@@ -1023,7 +1062,8 @@ class PipelineData:
             # Clear all with this feature_selector
             # Matches: "selector", "selector_data1", "selector_data2"
             keys_to_remove = [
-                k for k in self._matrix_cache.keys()
+                k
+                for k in self._matrix_cache.keys()
                 if k == feature_selector or k.startswith(f"{feature_selector}_")
             ]
             for key in keys_to_remove:
@@ -1032,7 +1072,8 @@ class PipelineData:
             # Clear all with this data_selector
             # Matches: "feat1_data", "feat2_data", "feat3_data"
             keys_to_remove = [
-                k for k in self._matrix_cache.keys()
+                k
+                for k in self._matrix_cache.keys()
                 if k.endswith(f"_{data_selector}")
             ]
             for key in keys_to_remove:

@@ -31,6 +31,7 @@ from matplotlib.figure import Figure
 
 from ..service.decomposition_facade import DecompositionFacade
 from ..service.clustering_facade import ClusteringFacade
+from ..service.feature_importance_facade import FeatureImportanceFacade
 from ..plot_type.landscape import LandscapePlotter
 from ..plot_type.membership import MembershipPlotter
 
@@ -39,10 +40,11 @@ class PlotsManager:
     """
     Manager for all plotting operations.
 
-    Provides three access patterns:
-    1. Direct: pipeline.plots.landscape(...)
+    Provides four access patterns:
+    1. Direct: pipeline.plots.landscape(...), pipeline.plots.membership(...)
     2. Decomposition-focused: pipeline.plots.decomposition.landscape(...)
     3. Clustering-focused: pipeline.plots.clustering.landscape(...)
+    4. Feature importance: pipeline.plots.feature_importance.violins(...)
 
     Examples
     --------
@@ -64,13 +66,19 @@ class PlotsManager:
     ...     decomposition_name="pca",
     ...     dimensions=[0, 1]
     ... )
+
+    >>> # Feature importance violin plots
+    >>> pipeline.plots.feature_importance.violins(
+    ...     feature_importance_name="tree_analysis",
+    ...     n_top=10
+    ... )
     """
 
     def __init__(
         self,
         use_memmap: bool = True,
         chunk_size: int = 2000,
-        cache_dir: str = "./cache"
+        cache_dir: str = "./cache",
     ) -> None:
         """
         Initialize plots manager.
@@ -144,6 +152,40 @@ class PlotsManager:
         """
         return ClusteringFacade(self, None)
 
+    @property
+    def feature_importance(self) -> FeatureImportanceFacade:
+        """
+        Access feature importance visualization methods.
+
+        Returns
+        -------
+        FeatureImportanceFacade
+            Feature importance plotting interface
+
+        Note
+        ----
+        Pipeline data is passed as None here because it will be
+        automatically injected later when the facade methods are called.
+
+        Examples
+        --------
+        >>> # Create violin plots for top features
+        >>> pipeline.plots.feature_importance.violins(
+        ...     feature_importance_name="tree_analysis",
+        ...     n_top=10,
+        ...     split_features=False
+        ... )
+
+        >>> # Split view with individual points
+        >>> pipeline.plots.feature_importance.violins(
+        ...     feature_importance_name="tree_analysis",
+        ...     n_top=5,
+        ...     split_features=True,
+        ...     show_points=True
+        ... )
+        """
+        return FeatureImportanceFacade(self, None)
+
     def landscape(
         self,
         pipeline_data,
@@ -159,7 +201,7 @@ class PlotsManager:
         cluster_contour_voronoi: bool = False,
         data_scatter: bool = True,
         show_clusters: Union[str, List[int]] = "all",
-        center_marker: str = 'X',
+        center_marker: str = "X",
         center_size: int = 200,
         title: Optional[str] = None,
         xaxis_label: Optional[str] = None,
@@ -170,7 +212,7 @@ class PlotsManager:
         save_fig: bool = False,
         filename: Optional[str] = None,
         file_format: str = "png",
-        dpi: int = 300
+        dpi: int = 300,
     ) -> Figure:
         """
         Create landscape plot directly from plots manager.
@@ -307,7 +349,7 @@ class PlotsManager:
             save_fig=save_fig,
             filename=filename,
             file_format=file_format,
-            dpi=dpi
+            dpi=dpi,
         )
 
     def membership(
@@ -322,7 +364,7 @@ class PlotsManager:
         save_fig: bool = False,
         filename: Optional[str] = None,
         file_format: str = "png",
-        dpi: int = 300
+        dpi: int = 300,
     ) -> Figure:
         """
         Create cluster membership timeline plot.
@@ -413,5 +455,5 @@ class PlotsManager:
             save_fig=save_fig,
             filename=filename,
             file_format=file_format,
-            dpi=dpi
+            dpi=dpi,
         )
