@@ -26,6 +26,7 @@ for analyzing molecular dynamics trajectories.
 """
 
 from typing import List, Dict, Tuple, Any
+import copy
 import numpy as np
 
 from ..distances.distances import Distances
@@ -155,12 +156,32 @@ class Contacts(FeatureTypeBase):
             raise ValueError(
                 "Calculator not initialized. Call init_calculator() first."
             )
+
+        # Annotate metadata with contact cutoff for downstream visualization
+        annotated_metadata = copy.deepcopy(feature_metadata)
+
+        # Store computation parameters in standardized structure
+        # All FeatureTypes should use 'computation_params' dict for their parameters
+        # SelectionMetadataHelper will pack this into result's top_level automatically
+        annotated_metadata['computation_params'] = {'cutoff': self.cutoff}
+
+        # Add visualization metadata for plot modules
+        annotated_metadata['visualization'] = {
+            'is_discrete': True,
+            'is_binary': True,
+            'axis_label': 'Contact State',
+            'tick_labels': {
+                'short': ['NC', 'C'],
+                'long': ['Non\nContact', 'Contact']
+            }
+        }
+
         return (
             self.calculator.compute(
                 input_data=input_data,
                 cutoff=self.cutoff,
             ),
-            feature_metadata,  # Pass through the metadata unchanged
+            annotated_metadata
         )
 
     def get_dependencies(self) -> List[str]:

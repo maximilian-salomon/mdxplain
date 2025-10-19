@@ -25,39 +25,30 @@ Creates violin plots showing the distribution of feature values for
 the most important features identified in feature importance analysis.
 """
 
-from typing import Optional, Dict, Tuple, List
-import matplotlib.pyplot as plt
+from typing import Optional, Dict, List, Tuple
 from matplotlib.figure import Figure
 from matplotlib.gridspec import GridSpec
-from matplotlib.patches import Patch
 import numpy as np
 
+from ...helper.title_legend_helper import TitleLegendHelper
 from ...helper.validation_helper import ValidationHelper
-from ...helper.grid_layout_helper import GridLayoutHelper
 from .helper.violin_data_preparer import ViolinDataPreparer
+from ..feature_importance_base.feature_importance_base_plotter import FeatureImportanceBasePlotter
 
 
-# Feature-Type Y-Axis Labels
-FEATURE_TYPE_LABELS = {
-    "distances": "Distance (Å)",
-    # "contacts": "Distance (Å)",  # Not used due to conversion
-    "torsions": "Angle (°)",
-    "sasa": "SASA (Å²)",
-    "coordinates": "Position (Å)",
-    "dssp": "Secondary Structure Code",
-}
-
-# Default contact threshold for distance plots
-DEFAULT_CONTACT_THRESHOLD = 4.5  # Å
-
-
-class ViolinPlotter:
+class ViolinPlotter(FeatureImportanceBasePlotter):
     """
     Create violin plots for feature importance visualization.
 
     Visualizes the distribution of feature values for top-ranked features
-    from feature importance analysis. Shows separate violins for each
-    comparison, allowing visual comparison of feature distributions.
+    from feature importance analysis. Each subplot shows side-by-side violins
+    for all DataSelectors of one feature, allowing visual comparison of
+    distributions across different states/clusters.
+
+    Similar architecture to DensityPlotter but uses violin shapes instead of
+    overlaid density curves.
+
+    Also can be used in manual mode to plot user-selected features and DataSelectors.
 
     Examples
     --------
@@ -66,28 +57,9 @@ class ViolinPlotter:
     >>> fig = plotter.plot(
     ...     feature_importance_name="tree_analysis",
     ...     n_top=10,
-    ...     split_features=False
+    ...     max_cols=4
     ... )
     """
-
-    def __init__(self, pipeline_data, cache_dir: str) -> None:
-        """
-        Initialize violin plotter.
-
-        Parameters
-        ----------
-        pipeline_data : PipelineData
-            Pipeline data container
-        cache_dir : str
-            Cache directory path
-
-        Returns
-        -------
-        None
-            Initializes ViolinPlotter instance
-        """
-        self.pipeline_data = pipeline_data
-        self.cache_dir = cache_dir
 
     def plot(
         self,
@@ -95,8 +67,10 @@ class ViolinPlotter:
         n_top: int = 10,
         feature_selector: Optional[str] = None,
         data_selectors: Optional[List[str]] = None,
-        split_features: bool = False,
-        contact_threshold: Optional[float] = None,
+        contact_transformation: bool = True,
+        max_cols: int = 4,
+        long_labels: bool = False,
+        contact_threshold: Optional[float] = 4.5,
         title: Optional[str] = None,
         legend_title: Optional[str] = None,
         legend_labels: Optional[Dict[str, str]] = None,
@@ -112,9 +86,9 @@ class ViolinPlotter:
         1. Feature Importance mode: Automatic selection from feature importance
         2. Manual mode: User-defined feature and DataSelector selection
 
-        Creates intelligent grid layout with feature-type grouping,
-        automatic Y-axis labels, cluster-consistent colors, and
-        contact threshold lines for distance plots.
+        Creates grid layout where each subplot shows side-by-side violins for
+        all DataSelectors of one feature. Similar to density plots but with
+        violin shapes instead of overlaid curves.
 
         Parameters
         ----------
@@ -126,12 +100,21 @@ class ViolinPlotter:
             Name of feature selector (Manual mode)
         data_selectors : List[str], optional
             DataSelector names to plot (Manual mode)
-        split_features : bool, default=False
-            If True, create separate subplot per feature.
-            If False, group by feature type in grid layout.
+        contact_transformation : bool, default=True
+            If True, automatically convert contact features to distances.
+            If False, plot contacts as discrete values with Gaussian smoothing.
+        max_cols : int, default=4
+            Maximum number of grid columns per row
+        long_labels : bool, default=False
+            If True, use long descriptive labels for discrete features
+            (e.g., "Contact"/"Non-Contact", "Alpha helix"/"Loop").
+            If False, use short labels (e.g., "C"/"NC", "H"/"C").
+            Automatically increases wspace when True to prevent label overlap.
         contact_threshold : float, optional
-            Contact distance threshold for horizontal line in distance plots.
-            If None, auto-detects from contacts feature metadata (default: 4.5 Å).
+            Distance threshold in Angstrom for drawing contact threshold line
+            on distance features. If provided, draws a red dashed horizontal line
+            at this distance value for features that were transformed from contacts.
+            Default is None (no threshold line). Common value: 4.5 Å.
         title : str, optional
             Custom plot title
         legend_title : str, optional
@@ -152,7 +135,7 @@ class ViolinPlotter:
         Returns
         -------
         matplotlib.figure.Figure
-            Created figure object with intelligent grid layout
+            Created figure object with grid layout
 
         Raises
         ------
@@ -162,22 +145,35 @@ class ViolinPlotter:
         Examples
         --------
         >>> # Feature Importance mode
-        >>> fig = plotter.plot(feature_importance_name="tree_analysis", n_top=10)
+        >>> fig = plotter.plot(
+        ...     feature_importance_name="tree_analysis",
+        ...     n_top=10,
+        ...     max_cols=4
+        ... )
 
         >>> # Manual mode
         >>> fig = plotter.plot(
         ...     feature_selector="my_selector",
-        ...     data_selectors=["cluster_0", "cluster_1"]
+        ...     data_selectors=["cluster_0", "cluster_1"],
+        ...     max_cols=5
+        ... )
+
+        >>> # With long descriptive labels for discrete features
+        >>> fig = plotter.plot(
+        ...     feature_importance_name="tree_analysis",
+        ...     n_top=10,
+        ...     long_labels=True
         ... )
 
         Notes
         -----
-        - Features grouped by type (distances, torsions, sasa, etc.)
-        - Contacts automatically converted to distances
-        - Grid layout optimized for quadratic figure shape
-        - Y-axis labels automatically set per feature type
+        - One subplot per feature
+        - All DataSelectors shown side-by-side as separate violins in each subplot
+        - Grid layout with max_cols columns per row
+        - X-axis shows DataSelector names
+        - Y-axis shows feature values with appropriate units
         - Colors consistent with clustering via ColorMappingHelper
-        - Contact threshold line only shown for distance features
+        - Similar architecture to density plots for code consistency
         """
         # 1. Determine mode and validate parameters
         mode_type, mode_name = self._validate_and_determine_mode(
@@ -185,88 +181,51 @@ class ViolinPlotter:
         )
 
         # 2. Prepare violin plot data
-        violin_data, data_selector_colors = self._prepare_violin_data(
+        violin_data, metadata_map, data_selector_colors, contact_cutoff = self._prepare_violin_data(
             mode_type, mode_name, n_top,
-            feature_selector, data_selectors
+            feature_selector, data_selectors, contact_transformation
         )
 
-        # 3. Create plot
-        fig = self._create_plot(
-            violin_data,
-            data_selector_colors,
-            split_features,
-            contact_threshold,
-            title,
-            legend_title,
-            legend_labels,
+        # 3. Flatten to feature list
+        all_features = self._flatten_features(violin_data)
+
+        # 4. Setup layout and figure
+        layout, n_rows, n_cols, fig = self._setup_layout_and_figure(
+            all_features, max_cols
         )
 
-        # 4. Save if requested
-        self._save_if_requested(
-            fig,
-            save_fig,
-            filename,
-            mode_type,
-            mode_name,
-            n_top,
-            split_features,
-            file_format,
-            dpi,
+        # 5. Configure spacing
+        _, wspace, hspace = self._configure_plot_spacing(
+            all_features, metadata_map, long_labels
         )
+
+        # 6. Create GridSpec with title
+        gs, wrapped_title, top = self._create_gridspec_with_title(
+            fig, n_rows, n_cols, wspace, hspace,
+            title, "Feature Importance Violin Plot"
+        )
+
+        # 7. Plot all features
+        first_ax, rightmost_ax_first_row, active_threshold = self._plot_all_features(
+            fig, gs, all_features, layout,
+            violin_data, metadata_map, data_selector_colors,
+            long_labels, contact_threshold, contact_cutoff
+        )
+
+        # 8. Add title and legend
+        self._add_title_and_legend_positioned(
+            fig, wrapped_title, top, rightmost_ax_first_row,
+            data_selector_colors, legend_title, legend_labels, active_threshold
+        )
+
+        # 9. Save if requested
+        if save_fig:
+            self._save_figure(
+                fig, filename, mode_type, mode_name,
+                n_top, file_format, dpi, prefix="violin"
+            )
 
         return fig
-
-    def _validate_and_determine_mode(
-        self,
-        feature_importance_name: Optional[str],
-        feature_selector: Optional[str],
-        data_selectors: Optional[List[str]],
-    ) -> Tuple[str, str]:
-        """
-        Validate parameters and determine operational mode.
-
-        Checks for mode conflicts, validates required parameters,
-        and determines whether Feature Importance or Manual mode.
-
-        Parameters
-        ----------
-        feature_importance_name : str, optional
-            Feature importance analysis name
-        feature_selector : str, optional
-            Feature selector name
-        data_selectors : List[str], optional
-            DataSelector names
-
-        Returns
-        -------
-        mode_type : str
-            "feature_importance" or "manual"
-        mode_name : str
-            Name for this mode (fi_name or feature_selector_name)
-
-        Raises
-        ------
-        ValueError
-            If both modes specified or required parameters missing
-        """
-        if feature_importance_name is not None:
-            # Feature Importance mode
-            if feature_selector is not None or data_selectors is not None:
-                raise ValueError(
-                    "Cannot mix Feature Importance and Manual modes. "
-                    "Provide either feature_importance_name OR "
-                    "(feature_selector + data_selectors)."
-                )
-            return "feature_importance", feature_importance_name
-
-        # Manual mode
-        if feature_selector is None or data_selectors is None:
-            raise ValueError(
-                "Manual mode requires both feature_selector and data_selectors. "
-                "Provide these parameters or use feature_importance_name for "
-                "Feature Importance mode."
-            )
-        return "manual", feature_selector
 
     def _prepare_violin_data(
         self,
@@ -275,7 +234,8 @@ class ViolinPlotter:
         n_top: int,
         feature_selector: Optional[str],
         data_selectors: Optional[List[str]],
-    ) -> Tuple[Dict[str, Dict[str, Dict[str, np.ndarray]]], Dict[str, str]]:
+        contact_transformation: bool,
+    ) -> Tuple[Dict[str, Dict[str, Dict[str, np.ndarray]]], Dict[str, Dict[str, Dict[str, any]]], Dict[str, str], Optional[float]]:
         """
         Prepare violin plot data based on mode.
 
@@ -294,684 +254,415 @@ class ViolinPlotter:
             Feature selector name (Manual mode)
         data_selectors : List[str], optional
             DataSelector names (Manual mode)
+        contact_transformation : bool
+            If True, convert contacts to distances. If False, use raw contacts.
 
         Returns
         -------
         violin_data : Dict[str, Dict[str, Dict[str, np.ndarray]]]
             Three-level nested structure
+        metadata_map : Dict[str, Dict[str, Dict[str, any]]]
+            Feature metadata for discrete feature support
         data_selector_colors : Dict[str, str]
             DataSelector color mapping
+        contact_cutoff : Optional[float]
+            Contact cutoff value if converted from contacts, None otherwise
         """
         if mode_type == "feature_importance":
             ValidationHelper.validate_positive_integer(n_top, "n_top")
-            return ViolinDataPreparer.prepare_from_feature_importance(
-                self.pipeline_data, mode_name, n_top
+            violin_data, metadata_map, data_selector_colors, contact_cutoff = (
+                ViolinDataPreparer.prepare_from_feature_importance(
+                    self.pipeline_data, mode_name, n_top, contact_transformation
+                )
             )
         else:
-            return ViolinDataPreparer.prepare_from_manual_selection(
-                self.pipeline_data, feature_selector, data_selectors
+            violin_data, metadata_map, data_selector_colors, contact_cutoff = (
+                ViolinDataPreparer.prepare_from_manual_selection(
+                    self.pipeline_data, feature_selector, data_selectors,
+                    contact_transformation
+                )
             )
 
-    def _create_plot(
-        self,
-        violin_data: Dict[str, Dict[str, Dict[str, np.ndarray]]],
-        data_selector_colors: Dict[str, str],
-        split_features: bool,
-        contact_threshold: Optional[float],
-        title: Optional[str],
-        legend_title: Optional[str],
-        legend_labels: Optional[Dict[str, str]],
-    ) -> Figure:
-        """
-        Create violin plot figure.
+        return violin_data, metadata_map, data_selector_colors, contact_cutoff
 
-        Auto-detects contact threshold if not provided, then routes
-        to split or combined plot creation based on split_features flag.
-
-        Parameters
-        ----------
-        violin_data : Dict[str, Dict[str, Dict[str, np.ndarray]]]
-            Three-level nested structure
-        data_selector_colors : Dict[str, str]
-            DataSelector color mapping
-        split_features : bool
-            Create separate subplot per feature
-        contact_threshold : float, optional
-            Contact distance threshold
-        title : str, optional
-            Custom plot title
-        legend_title : str, optional
-            Custom legend title
-        legend_labels : Dict[str, str], optional
-            Custom DataSelector labels for legend
-
-        Returns
-        -------
-        Figure
-            Created matplotlib figure
-        """
-        if contact_threshold is None:
-            contact_threshold = self._get_contact_threshold(self.pipeline_data)
-
-        if split_features:
-            return self._plot_split(
-                violin_data, data_selector_colors, title, contact_threshold,
-                legend_title, legend_labels
-            )
-        else:
-            return self._plot_combined(
-                violin_data, data_selector_colors, title, contact_threshold,
-                legend_title, legend_labels
-            )
-
-    def _save_if_requested(
+    def _plot_all_features(
         self,
         fig: Figure,
-        save_fig: bool,
-        filename: Optional[str],
-        mode_type: str,
-        mode_name: str,
-        n_top: int,
-        split_features: bool,
-        file_format: str,
-        dpi: int,
-    ) -> None:
+        gs: GridSpec,
+        all_features: List[Tuple[str, str]],
+        layout: List,
+        violin_data: Dict[str, Dict[str, Dict[str, np.ndarray]]],
+        metadata_map: Dict[str, Dict[str, Dict[str, any]]],
+        data_selector_colors: Dict[str, str],
+        long_labels: bool,
+        contact_threshold: Optional[float],
+        contact_cutoff: Optional[float]
+    ) -> Tuple:
         """
-        Save figure if requested.
-
-        Generates filename if not provided, then saves figure
-        with specified format and resolution.
+        Plot all features in grid layout.
 
         Parameters
         ----------
         fig : Figure
-            Figure to save
-        save_fig : bool
-            Whether to save figure
-        filename : str, optional
-            Custom filename (auto-generated if None)
-        mode_type : str
-            "feature_importance" or "manual"
-        mode_name : str
-            Name identifier for mode
-        n_top : int
-            Number of top features (for filename generation)
-        split_features : bool
-            Whether plot is split (for filename generation)
-        file_format : str
-            File format extension
-        dpi : int
-            Resolution in dots per inch
-
-        Returns
-        -------
-        None
-            Saves figure to file if save_fig=True
-        """
-        if not save_fig:
-            return
-
-        if filename is None:
-            split_str = "_split" if split_features else ""
-            if mode_type == "feature_importance":
-                filename = (
-                    f"violin_{mode_name}_top{n_top}{split_str}.{file_format}"
-                )
-            else:
-                filename = f"violin_{mode_name}{split_str}.{file_format}"
-
-        fig.savefig(filename, dpi=dpi, bbox_inches="tight")
-
-    def _plot_combined(
-        self,
-        violin_data: Dict[str, Dict[str, Dict[str, np.ndarray]]],
-        data_selector_colors: Dict[str, str],
-        title: Optional[str],
-        contact_threshold: Optional[float],
-        legend_title: Optional[str],
-        legend_labels: Optional[Dict[str, str]],
-    ) -> Figure:
-        """
-        Create combined plot with intelligent multi-row layout.
-
-        Creates subplot grid with max 45 violins per row. Features are
-        never split across rows - if a feature doesn't fit in current row,
-        it starts on a new row.
-
-        Parameters
-        ----------
-        violin_data : Dict[str, Dict[str, Dict[str, np.ndarray]]]
-            Three-level nested dict: {feat_type: {feat_name: {data_selector: values}}}
-        data_selector_colors : Dict[str, str]
-            DataSelector name to color mapping (cluster-consistent)
-        title : str, optional
-            Custom overall title
+            Figure to plot on
+        gs : GridSpec
+            Grid specification
+        all_features : List[Tuple[str, str]]
+            List of (feature_type, feature_name)
+        layout : List
+            Layout from GridLayoutHelper
+        violin_data : Dict
+            Feature data
+        metadata_map : Dict
+            Feature metadata
+        data_selector_colors : Dict
+            Color mapping
+        long_labels : bool
+            Use long descriptive labels
         contact_threshold : float, optional
-            Contact distance threshold for horizontal line
-        legend_title : str, optional
-            Custom legend title
-        legend_labels : Dict[str, str], optional
-            Custom DataSelector labels for legend
+            Distance threshold line
+        contact_cutoff : float, optional
+            Contact cutoff from conversion
 
         Returns
         -------
-        Figure
-            Created figure with multi-row layout
-
-        Notes
-        -----
-        - Max 45 violins per row, features never split across rows
-        - Each feature type in separate subplot with appropriate Y-label
-        - Contact threshold line only shown for distance features
-        - Larger fonts for better readability
-        - Single-line title
-        - Colors consistent with cluster plots via data_selector_colors mapping
+        Tuple
+            (first_ax, rightmost_ax_first_row, active_threshold)
         """
-        # 1. Collect DataSelector names for consistent ordering
-        selector_names = []
-        for features in violin_data.values():
-            for selector_data in features.values():
-                for selector_name in selector_data.keys():
-                    if selector_name not in selector_names:
-                        selector_names.append(selector_name)
-        selector_names.sort()
-        n_selectors = len(selector_names)
-
-        # 2. Compute multi-row layout (max 45 violins per row)
-        row_layouts = self._compute_multi_row_layout(
-            violin_data, n_selectors, max_violins_per_row=45
-        )
-        n_rows = len(row_layouts)
-
-        # 3. Create figure with appropriate size
-        fig_width = min(40, max(12, n_rows * 20))  # Max 40 inches
-        fig_height = min(20, n_rows * 8)  # Max 20 inches (safety limit)
-        fig = plt.figure(figsize=(fig_width, fig_height))
-
-        # 4. Create GridSpec for rows
-        gs = GridSpec(n_rows, 1, figure=fig, hspace=0.6)
-
-        # 5. Plot each row
         first_ax = None
-        for row_idx, row_features in enumerate(row_layouts):
-            ax = fig.add_subplot(gs[row_idx, 0])
+        rightmost_ax_first_row = None
+        active_threshold = None
 
-            # Store first axes for legend positioning
-            if row_idx == 0:
-                first_ax = ax
-
-            # Combine all features in this row
-            row_data = {}
-            for feat_type, feat_name in row_features:
-                row_data[feat_name] = violin_data[feat_type][feat_name]
-
-            # Draw violins for this row
-            self._plot_feature_type_violins(
-                ax, row_data, data_selector_colors, selector_names
-            )
-
-            # Y-axis label with units (use first feature type for label)
-            first_feat_type = row_features[0][0]
-            ylabel = FEATURE_TYPE_LABELS.get(first_feat_type, "Feature Value")
-            ax.set_ylabel(ylabel, fontsize=32, fontweight="bold", labelpad=15)
-
-            ax.tick_params(axis="both", which="major", labelsize=28)
-
-            # Add contact threshold line for distances
-            if first_feat_type == "distances" and contact_threshold is not None:
-                self._add_contact_threshold(ax, contact_threshold)
-                ax.legend(loc="upper right", fontsize=28)
-
-        # Overall title (single line)
-        title_text = title if title else "Feature Importance Violin Plot"
-        fig.suptitle(title_text, fontsize=40, fontweight="bold", y=0.98)
-
-        # Add figure-wide legend for DataSelector colors (larger)
-        legend_handles = []
-        for selector_name in sorted(selector_names):
-            # Use custom label if provided, otherwise use original name
-            display_name = (
-                legend_labels.get(selector_name, selector_name) 
-                if legend_labels 
-                else selector_name
-            )
-
-            patch = Patch(
-                facecolor=data_selector_colors[selector_name],
-                alpha=0.7,
-                label=display_name,
-            )
-            legend_handles.append(patch)
-
-        # Use custom legend title if provided, otherwise use default
-        legend_title_text = legend_title if legend_title else "DataSelectors"
-
-        # Get y-position of first row's top edge for legend anchoring
-        pos = first_ax.get_position()
-        legend_y = pos.y1 + 0.01  # Slightly above first row top edge
-
-        fig.legend(
-            handles=legend_handles,
-            loc="upper right",
-            bbox_to_anchor=(0.98, legend_y),
-            fontsize=24,
-            title=legend_title_text,
-            title_fontsize=28,
-            framealpha=0.9,
-        )
-
-        return fig
-
-    def _compute_multi_row_layout(
-        self,
-        violin_data: Dict[str, Dict[str, Dict[str, np.ndarray]]],
-        n_selectors: int,
-        max_violins_per_row: int = 45,
-    ) -> List[List[Tuple[str, str]]]:
-        """
-        Compute multi-row layout for features.
-
-        Distributes features across rows with max violins per row.
-        Features are NEVER split across rows. If a feature doesn't fit
-        in current row, it starts on a new row.
-
-        Parameters
-        ----------
-        violin_data : Dict[str, Dict[str, Dict[str, np.ndarray]]]
-            Three-level nested structure
-        n_selectors : int
-            Number of DataSelectors (violins per feature)
-        max_violins_per_row : int, default=45
-            Maximum violins per row
-
-        Returns
-        -------
-        List[List[Tuple[str, str]]]
-            List of rows, each row is list of (feat_type, feat_name) tuples
-
-        Examples
-        --------
-        >>> row_layouts = self._compute_multi_row_layout(data, 6, 30)
-        >>> # Returns: [
-        >>> #   [("distances", "feat1"), ("distances", "feat2")],
-        >>> #   [("distances", "feat3"), ("torsions", "feat4")]
-        >>> # ]
-
-        Notes
-        -----
-        Each feature has n_selectors violins. Features are added to rows
-        until adding next feature would exceed max_violins_per_row.
-        """
-        rows = []
-        current_row = []
-        current_violins = 0
-
-        for feat_type, features in violin_data.items():
-            for feat_name in features.keys():
-                feature_violins = n_selectors
-
-                # Check if feature fits in current row
-                if current_violins + feature_violins > max_violins_per_row:
-                    # Start new row if current row not empty
-                    if current_row:
-                        rows.append(current_row)
-                        current_row = []
-                        current_violins = 0
-
-                # Add feature to current row
-                current_row.append((feat_type, feat_name))
-                current_violins += feature_violins
-
-        # Add last row if not empty
-        if current_row:
-            rows.append(current_row)
-
-        return rows
-
-    def _plot_split(
-        self,
-        violin_data: Dict[str, Dict[str, Dict[str, np.ndarray]]],
-        data_selector_colors: Dict[str, str],
-        title: Optional[str],
-        contact_threshold: Optional[float],
-        legend_title: Optional[str],
-        legend_labels: Optional[Dict[str, str]],
-    ) -> Figure:
-        """
-        Create split plot with intelligent grid layout per feature.
-
-        Creates one subplot per feature with grid layout optimized
-        for quadratic figure shape. Each subplot shows violins for
-        all DataSelectors of that feature.
-
-        Parameters
-        ----------
-        violin_data : Dict[str, Dict[str, Dict[str, np.ndarray]]]
-            Three-level nested dict: {feat_type: {feat_name: {data_selector: values}}}
-        data_selector_colors : Dict[str, str]
-            DataSelector name to color mapping (cluster-consistent)
-        title : str, optional
-            Custom overall title
-        contact_threshold : float, optional
-            Contact distance threshold for horizontal line
-        legend_title : str, optional
-            Custom legend title
-        legend_labels : Dict[str, str], optional
-            Custom DataSelector labels for legend
-
-        Returns
-        -------
-        Figure
-            Created figure with grid layout
-
-        Notes
-        -----
-        - One subplot per feature (not per feature type)
-        - Grid layout optimized for quadratic overall shape
-        - Y-axis labels automatically set per feature type
-        - Contact threshold line shown for distance/contact features
-        - Colors consistent with cluster plots via data_selector_colors mapping
-        """
-        # 1. Flatten to all features with type info
-        all_features = []
-        for feat_type, features in violin_data.items():
-            for feat_name in features.keys():
-                all_features.append((feat_type, feat_name))
-
-        # 2. Compute grid layout (treat each feature as 1 unit)
-        feature_counts = {f"{ft}_{fn}": 1 for ft, fn in all_features}
-        layout, n_rows, n_cols = GridLayoutHelper.compute_grid_layout(
-            feature_counts
-        )
-
-        # 3. Collect DataSelector names for consistent ordering
-        selector_names = []
-        for features in violin_data.values():
-            for selector_data in features.values():
-                for selector_name in selector_data.keys():
-                    if selector_name not in selector_names:
-                        selector_names.append(selector_name)
-        selector_names.sort()
-
-        # 4. Create figure (2.5x wider for better visibility)
-        fig = plt.figure(figsize=(max(10, n_cols * 3) * 2.5, n_rows * 5))
-        gs = GridSpec(n_rows, n_cols, figure=fig, hspace=0.5, wspace=0.4)
-
-        # 5. Place subplots (one per feature)
         for i, (feat_type, feat_name) in enumerate(all_features):
             if i >= len(layout):
-                break
+                raise ValueError(
+                    "Layout does not have enough entries for all features."
+                    "This indicates an internal error."
+                )
 
-            _, row, col, colspan = layout[i]
-            ax = fig.add_subplot(gs[row, col : col + colspan])
-
-            # Draw violins for this single feature
-            single_feature_data = {feat_name: violin_data[feat_type][feat_name]}
-            self._plot_feature_type_violins(
-                ax, single_feature_data, data_selector_colors, selector_names
+            ax, first_ax, rightmost_ax_first_row = self._create_subplot_axes(
+                fig, gs, layout[i], i, first_ax, rightmost_ax_first_row
             )
 
-            # Y-axis label with units
-            ylabel = FEATURE_TYPE_LABELS.get(feat_type, "Feature Value")
-            ax.set_ylabel(ylabel, fontsize=11)
-
-            # Title = feature name
-            ax.set_title(feat_name, fontsize=12, pad=8)
-
-            # Add contact threshold line for distances
-            if feat_type == "distances" and contact_threshold is not None:
-                self._add_contact_threshold(ax, contact_threshold)
-                ax.legend(loc="upper right", fontsize=9)
-
-        # Overall title
-        if title:
-            fig.suptitle(title, fontsize=16, y=0.998)
-        else:
-            fig.suptitle("Violin Plot (Split)", fontsize=16, y=0.998)
-
-        # Add figure-wide legend for DataSelector colors
-        legend_handles = []
-        for selector_name in sorted(selector_names):
-            # Use custom label if provided, otherwise use original name
-            display_name = (
-                legend_labels.get(selector_name, selector_name)
-                if legend_labels
-                else selector_name
+            active_threshold = self._plot_single_feature(
+                ax, feat_type, feat_name, violin_data, metadata_map,
+                data_selector_colors, long_labels,
+                contact_threshold, active_threshold, contact_cutoff
             )
-            patch = Patch(
-                facecolor=data_selector_colors[selector_name],
-                alpha=0.7,
-                label=display_name,
-            )
-            legend_handles.append(patch)
 
-        # Use custom legend title if provided, otherwise use default
-        legend_title_text = legend_title if legend_title else "DataSelectors"
+        return first_ax, rightmost_ax_first_row, active_threshold
 
-        fig.legend(
-            handles=legend_handles,
-            loc="upper right",
-            bbox_to_anchor=(0.98, 0.98),
-            fontsize=10,
-            title=legend_title_text,
-            framealpha=0.9,
-        )
-
-        return fig
-
-    def _get_contact_threshold(self, pipeline_data) -> float:
+    def _create_subplot_axes(
+        self,
+        fig: Figure,
+        gs: GridSpec,
+        layout_item: Tuple,
+        index: int,
+        first_ax,
+        rightmost_ax_first_row
+    ) -> Tuple:
         """
-        Extract contact cutoff from feature metadata.
-
-        Attempts to find the cutoff value used for contact feature
-        computation. Falls back to DEFAULT_CONTACT_THRESHOLD if not found.
+        Create subplot and track special axes.
 
         Parameters
         ----------
-        pipeline_data : PipelineData
-            Pipeline data container
+        fig : Figure
+            Figure object
+        gs : GridSpec
+            Grid specification
+        layout_item : Tuple
+            Layout item (idx, row, col, colspan)
+        index : int
+            Feature index
+        first_ax
+            Current first axes
+        rightmost_ax_first_row
+            Current rightmost axes
 
         Returns
         -------
-        float
-            Contact threshold in Ångström
-
-        Examples
-        --------
-        >>> threshold = plotter._get_contact_threshold(pipeline_data)
-        >>> print(threshold)  # e.g., 4.5
-
-        Notes
-        -----
-        Searches contacts feature metadata for cutoff parameter.
-        If contacts feature not computed or cutoff not found,
-        returns DEFAULT_CONTACT_THRESHOLD (4.5 Å).
+        Tuple
+            (ax, first_ax, rightmost_ax_first_row)
         """
-        if "contacts" not in pipeline_data.feature_data:
-            return DEFAULT_CONTACT_THRESHOLD
+        _, row, col, colspan = layout_item
+        ax = fig.add_subplot(gs[row, col:col + colspan])
 
-        contacts_data = pipeline_data.feature_data["contacts"]
+        if index == 0:
+            first_ax = ax
+        if row == 0:
+            rightmost_ax_first_row = ax
 
-        # Search through trajectory-specific metadata
-        # contacts_data is Dict[int, FeatureData]
-        for traj_idx, feature_data in contacts_data.items():
-            metadata = feature_data.feature_metadata
-            if isinstance(metadata, dict) and "cutoff" in metadata:
-                return metadata["cutoff"]
+        return ax, first_ax, rightmost_ax_first_row
 
-        return DEFAULT_CONTACT_THRESHOLD
-
-    def _add_contact_threshold(self, ax, threshold: float):
-        """
-        Add horizontal line for contact threshold.
-
-        Draws a horizontal dashed line at the contact cutoff distance
-        to provide visual reference for distance values.
-
-        Parameters
-        ----------
-        ax : matplotlib.axes.Axes
-            Axes to add line to
-        threshold : float
-            Contact threshold value in Ångström
-
-        Returns
-        -------
-        None
-            Modifies axes in-place
-
-        Notes
-        -----
-        Line is styled as red dashed line with 70% opacity.
-        Only added to distance feature plots.
-        """
-        ax.axhline(
-            y=threshold,
-            color="red",
-            linestyle="--",
-            linewidth=1.5,
-            alpha=0.7,
-            zorder=100,
-            label=f"Contact threshold ({threshold:.1f} Å)",
-        )
-
-    def _plot_feature_type_violins(
+    def _plot_single_feature(
         self,
         ax,
-        features_data: Dict[str, Dict[str, np.ndarray]],
+        feat_type: str,
+        feat_name: str,
+        violin_data: Dict,
+        metadata_map: Dict,
         data_selector_colors: Dict[str, str],
-        selector_names: List[str],
-    ):
+        long_labels: bool,
+        contact_threshold: Optional[float],
+        active_threshold: Optional[float],
+        contact_cutoff: Optional[float]
+    ) -> Optional[float]:
         """
-        Plot violins for all features of a specific type in one subplot.
-
-        Draws violin plots for all features of a given type, using consistent
-        DataSelector colors across all plots. Features are arranged left-to-right
-        with gaps between them.
+        Plot single feature with violins.
 
         Parameters
         ----------
-        ax : matplotlib.axes.Axes
+        ax
             Axes to plot on
-        features_data : Dict[str, Dict[str, np.ndarray]]
-            Nested dict: {feature_name: {data_selector_name: values}}
+        feat_type : str
+            Feature type
+        feat_name : str
+            Feature name
+        violin_data : Dict
+            All violin data
+        metadata_map : Dict
+            All metadata
         data_selector_colors : Dict[str, str]
-            Mapping of data_selector_name -> color hex code
-        selector_names : List[str]
-            Ordered list of DataSelector names for consistent ordering
+            Color mapping
+        long_labels : bool
+            Use long labels
+        contact_threshold : float, optional
+            User threshold
+        active_threshold : float, optional
+            Currently active threshold
+        contact_cutoff : float, optional
+            Contact cutoff from conversion
+
+        Returns
+        -------
+        Optional[float]
+            Updated active threshold
+        """
+        feat_metadata = metadata_map.get(feat_type, {}).get(feat_name, {})
+
+        # Only draw threshold for distances
+        resolved_threshold = None
+        if feat_type == "distances":
+            resolved_threshold = contact_cutoff if contact_cutoff is not None else contact_threshold
+
+        if resolved_threshold is not None and active_threshold is None:
+            active_threshold = resolved_threshold
+
+        self._plot_feature_violins(
+            ax, violin_data[feat_type][feat_name],
+            data_selector_colors, resolved_threshold
+        )
+
+        self._style_subplot(
+            ax, feat_name, feat_metadata, long_labels
+        )
+
+        return active_threshold
+
+    def _plot_feature_violins(
+        self,
+        ax,
+        selector_data: Dict[str, np.ndarray],
+        data_selector_colors: Dict[str, str],
+        resolved_threshold: Optional[float]
+    ) -> None:
+        """
+        Plot side-by-side violins for one feature.
+
+        Parameters
+        ----------
+        ax
+            Subplot axes
+        selector_data : Dict[str, np.ndarray]
+            {data_selector_name: values}
+        data_selector_colors : Dict[str, str]
+            Color mapping
+        resolved_threshold : float, optional
+            Threshold value to draw
 
         Returns
         -------
         None
-            Modifies axes in-place
-
-        Notes
-        -----
-        - Uses data_selector_colors for cluster-consistent coloring
-        - Adds small gap (1 unit) between feature groups
-        - X-ticks placed at center of each feature's violin group
+            Modifies ax in place
         """
-        position = 0
-        xticks = []
-        xlabels = []
-        separator_positions = []  # Positions for vertical separator lines
-        feature_names_list = list(features_data.keys())
+        selector_names, data_arrays = self._prepare_violin_arrays(selector_data)
+        positions = list(range(len(selector_names)))
 
-        for idx, (feat_name, selector_data) in enumerate(features_data.items()):
-            # Prepare data in consistent DataSelector order
-            data_list = []
-            colors_list = []
+        parts = ax.violinplot(
+            data_arrays, positions=positions,
+            showmeans=False, showmedians=False,
+            showextrema=False, widths=0.7
+        )
 
-            for selector_name in selector_names:
-                if selector_name in selector_data:
-                    data_list.append(selector_data[selector_name])
+        self._apply_violin_colors(
+            parts, selector_names, data_selector_colors
+        )
+        self._draw_threshold_line(ax, resolved_threshold)
 
-                    # Get color for this DataSelector (cluster-consistent)
-                    colors_list.append(data_selector_colors[selector_name])
+    @staticmethod
+    def _prepare_violin_arrays(
+        selector_data: Dict[str, np.ndarray]
+    ) -> Tuple[List[str], List[np.ndarray]]:
+        """
+        Prepare data arrays for violin plot.
 
-            if not data_list:
-                continue
+        Adds small noise to constant data to avoid flat violins.
 
-            n_selectors = len(data_list)
-            positions = list(range(position, position + n_selectors))
+        Parameters
+        ----------
+        selector_data : Dict[str, np.ndarray]
+            {selector_name: values}
 
-            # Plot violins (width 0.8 to prevent overlap at adjacent positions)
-            parts = ax.violinplot(
-                data_list, positions=positions, showmeans=True, widths=0.8
+        Returns
+        -------
+        Tuple[List[str], List[np.ndarray]]
+            (selector_names, data_arrays)
+        """
+        selector_names = sorted(selector_data.keys())
+        data_arrays = []
+
+        for name in selector_names:
+            data = selector_data[name].copy()
+            if np.var(data) == 0:
+                noise = np.random.normal(0, 0.01, len(data))
+                data = data + noise
+            data_arrays.append(data)
+
+        return selector_names, data_arrays
+
+    @staticmethod
+    def _apply_violin_colors(parts, selector_names: List[str],
+                             data_selector_colors: Dict[str, str]) -> None:
+        """
+        Apply colors to violin bodies.
+
+        Parameters
+        ----------
+        parts
+            Matplotlib violin parts
+        selector_names : List[str]
+            DataSelector names
+        data_selector_colors : Dict[str, str]
+            Color mapping
+
+        Returns
+        -------
+        None
+            Modifies parts in place
+        """
+        for i, pc in enumerate(parts['bodies']):
+            color = data_selector_colors[selector_names[i]]
+            pc.set_facecolor(color)
+            pc.set_alpha(0.7)
+            pc.set_edgecolor('black')
+            pc.set_linewidth(1)
+
+    @staticmethod
+    def _draw_threshold_line(ax, threshold: Optional[float]) -> None:
+        """
+        Draw threshold line if provided.
+
+        Parameters
+        ----------
+        ax
+            Axes to draw on
+        threshold : float, optional
+            Threshold value
+
+        Returns
+        -------
+        None
+            Modifies ax in place
+        """
+        if threshold is not None:
+            ax.axhline(
+                y=threshold, color='red',
+                linestyle='--', linewidth=1.5,
+                alpha=0.7, zorder=5
             )
 
-            # Apply cluster colors
-            for i, pc in enumerate(parts["bodies"]):
-                pc.set_facecolor(colors_list[i])
-                pc.set_alpha(0.7)
+    def _style_subplot(
+        self,
+        ax,
+        feat_name: str,
+        feat_metadata: Dict[str, any],
+        long_labels: bool
+    ) -> None:
+        """
+        Apply styling to subplot.
 
-            # Hide default min/max lines (we'll draw quartiles instead)
-            for key in ["cmins", "cmaxes", "cbars"]:
-                if key in parts:
-                    parts[key].set_visible(False)
+        Parameters
+        ----------
+        ax
+            Subplot to style
+        feat_name : str
+            Feature name
+        feat_metadata : dict
+            Feature metadata
+        long_labels : bool
+            Use long labels for discrete features
 
-            # Style mean line
-            if "cmeans" in parts:
-                parts["cmeans"].set_edgecolor("black")
-                parts["cmeans"].set_linewidth(1.5)
+        Returns
+        -------
+        None
+            Modifies ax in place
+        """
+        wrapped_title = TitleLegendHelper.wrap_title(
+            feat_name, max_chars_per_line=40
+        )
+        ax.set_title(wrapped_title, fontsize=14, pad=10, fontweight='bold')
 
-            # Add quartile lines (Q1=25%, Median=50%, Q3=75%)
-            for i, (pos, data) in enumerate(zip(positions, data_list)):
-                quartiles = np.percentile(data, [25, 50, 75])
+        # Get visualization metadata from feature
+        type_metadata = feat_metadata.get("type_metadata", {})
+        viz = type_metadata.get("visualization", {})
 
-                # Q1 and Q3 as shorter lines
-                ax.hlines(
-                    quartiles[0],
-                    pos - 0.15,
-                    pos + 0.15,
-                    colors="black",
-                    linewidth=1.5,
-                    zorder=100,
-                )
-                ax.hlines(
-                    quartiles[2],
-                    pos - 0.15,
-                    pos + 0.15,
-                    colors="black",
-                    linewidth=1.5,
-                    zorder=100,
-                )
+        # Set Y-axis label
+        ylabel = viz.get("axis_label", "Feature Value")
+        ax.set_ylabel(ylabel, fontsize=13)
 
-                # Median as thicker line
-                ax.hlines(
-                    quartiles[1],
-                    pos - 0.2,
-                    pos + 0.2,
-                    colors="black",
-                    linewidth=2.0,
-                    zorder=100,
-                )
+        # Configure discrete features with tick labels
+        if viz.get("is_discrete", False):
+            self._configure_discrete_y_axis(ax, viz, long_labels)
 
-            # Store separator position (except after last feature)
-            if idx < len(feature_names_list) - 1:
-                separator_x = position + n_selectors  # Center of gap
-                separator_positions.append(separator_x)
+        ax.set_xlabel("")
+        ax.set_xticks([])
+        ax.grid(True, alpha=0.3, axis='y')
+        ax.tick_params(axis='both', labelsize=12)
 
-            # Update position and labels
-            position += n_selectors + 1  # Gap between features
-            xticks.append(
-                positions[len(positions) // 2] if positions else position
-            )
-            xlabels.append(feat_name)
+    @staticmethod
+    def _configure_discrete_y_axis(
+        ax, viz: Dict, long_labels: bool
+    ) -> None:
+        """
+        Configure Y-axis for discrete features using visualization metadata.
 
-        # Format x-axis with larger fonts
-        ax.set_xticks(xticks)
-        rotation = 90 if any(len(label) > 40 for label in xlabels) else 45
-        ax.set_xticklabels(xlabels, rotation=rotation, ha="right", fontsize=24)
-        ax.grid(True, alpha=0.3, axis="y")
+        Parameters
+        ----------
+        ax
+            Axes to configure
+        viz : dict
+            Visualization metadata from feature
+        long_labels : bool
+            Use long labels
 
-        # Draw vertical separator lines between features
-        for sep_x in separator_positions:
-            ax.axvline(
-                x=sep_x,
-                color="black",
-                linestyle="--",
-                linewidth=1,
-                alpha=0.3,
-                zorder=1,
-            )
+        Returns
+        -------
+        None
+            Modifies ax in place
+        """
+        # Get tick labels from visualization metadata
+        tick_labels_dict = viz.get("tick_labels", {})
+        label_key = "long" if long_labels else "short"
+        tick_labels = tick_labels_dict.get(label_key, [])
+
+        if not tick_labels:
+            return
+
+        # Compute positions and limits from tick_labels length
+        n_ticks = len(tick_labels)
+        positions = list(range(n_ticks))
+        ylim = (-0.3, n_ticks - 1 + 0.3)
+
+        ax.set_yticks(positions)
+        ax.set_yticklabels(tick_labels)
+        ax.set_ylim(ylim)

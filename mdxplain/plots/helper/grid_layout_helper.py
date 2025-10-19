@@ -25,131 +25,107 @@ Provides intelligent grid layout algorithms for arranging subplots
 in a quadratic figure with proportional spacing based on content counts.
 """
 
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 
 class GridLayoutHelper:
     """
-    Helper class for intelligent grid layout computation.
+    Helper class for grid layout computation.
 
-    Provides static methods for computing optimal subplot arrangements
-    in matplotlib figures. Arranges subplots in a roughly quadratic
-    grid with proportional widths based on content counts.
+    Provides static methods for computing uniform subplot arrangements
+    in matplotlib figures. Creates grids where each item occupies
+    equal width (colspan=1), arranged in rows and columns.
 
     Examples
     --------
-    >>> # Compute layout for feature types
-    >>> feature_counts = {"distances": 15, "torsions": 5, "sasa": 3}
-    >>> layout, n_rows, n_cols = GridLayoutHelper.compute_grid_layout(feature_counts)
+    >>> # Compute uniform layout for 10 features with max 4 columns
+    >>> layout, n_rows, n_cols = GridLayoutHelper.compute_uniform_grid_layout(10, 4)
     >>> print(f"Grid: {n_rows}x{n_cols}")
-    Grid: 2x24
-    >>> for feat_type, row, col, colspan in layout:
-    ...     print(f"{feat_type}: row {row}, cols {col}-{col+colspan-1}")
-    distances: row 0, cols 0-23
-    torsions: row 1, cols 0-7
-    sasa: row 1, cols 8-12
+    Grid: 3x4
+    >>> print(layout[0])  # First item
+    (0, 0, 0, 1)  # item_index=0, row=0, col=0, colspan=1
+    >>> print(layout[4])  # Start of second row
+    (4, 1, 0, 1)  # item_index=4, row=1, col=0, colspan=1
     """
 
     @staticmethod
-    def compute_grid_layout(
-        feature_counts: Dict[str, int]
-    ) -> Tuple[List[Tuple[str, int, int, int]], int, int]:
+    def compute_uniform_grid_layout(
+        n_items: int,
+        max_cols: int
+    ) -> Tuple[List[Tuple[int, int, int, int]], int, int]:
         """
-        Compute intelligent grid layout for quadratic figure arrangement.
+        Compute uniform grid layout with equal-width items.
 
-        Determines optimal grid dimensions and subplot positions to create
-        a roughly quadratic overall figure with proportional subplot widths
-        based on feature counts.
+        Creates grid layout where each item occupies exactly one cell
+        (colspan=1), arranged left-to-right, top-to-bottom, with
+        maximum of max_cols columns per row.
 
         Parameters
         ----------
-        feature_counts : Dict[str, int]
-            Mapping of feature_type -> number of features
+        n_items : int
+            Total number of items to arrange
+        max_cols : int
+            Maximum columns per row
 
         Returns
         -------
-        layout : List[Tuple[str, int, int, int]]
-            List of (feature_type, row, col, colspan) tuples
+        layout : List[Tuple[int, int, int, int]]
+            List of (item_index, row, col, colspan) tuples
         n_rows : int
             Number of grid rows
         n_cols : int
-            Number of grid columns
+            Number of grid columns (actual columns used, <= max_cols)
 
         Examples
         --------
-        >>> # Simple layout with three feature types
-        >>> feature_counts = {"distances": 15, "torsions": 5, "sasa": 3}
-        >>> layout, n_rows, n_cols = GridLayoutHelper.compute_grid_layout(feature_counts)
+        >>> # 10 items with max 4 columns
+        >>> layout, n_rows, n_cols = GridLayoutHelper.compute_uniform_grid_layout(10, 4)
         >>> print(f"Grid: {n_rows}x{n_cols}")
-        Grid: 2x24
+        Grid: 3x4
+        >>> print(layout[0])  # First item
+        (0, 0, 0, 1)  # item_index=0, row=0, col=0, colspan=1
+        >>> print(layout[4])  # Fifth item (start of second row)
+        (4, 1, 0, 1)  # item_index=4, row=1, col=0, colspan=1
 
-        >>> # Check layout assignments
-        >>> for feat_type, row, col, colspan in layout:
-        ...     print(f"{feat_type}: row {row}, cols {col}-{col+colspan-1}")
-        distances: row 0, cols 0-23
-        torsions: row 1, cols 0-7
-        sasa: row 1, cols 8-12
-
-        >>> # Single feature type
-        >>> single_counts = {"distances": 8}
-        >>> layout, n_rows, n_cols = GridLayoutHelper.compute_grid_layout(single_counts)
+        >>> # 3 items with max 5 columns
+        >>> layout, n_rows, n_cols = GridLayoutHelper.compute_uniform_grid_layout(3, 5)
         >>> print(f"Grid: {n_rows}x{n_cols}")
-        Grid: 1x12
+        Grid: 1x3
 
-        >>> # Empty input
-        >>> empty_layout, n_rows, n_cols = GridLayoutHelper.compute_grid_layout({})
-        >>> print(len(empty_layout))
-        0
+        >>> # Empty case
+        >>> layout, n_rows, n_cols = GridLayoutHelper.compute_uniform_grid_layout(0, 4)
+        >>> print(n_rows, n_cols)
+        0 1
 
         Notes
         -----
         Algorithm:
-        1. Sort feature types by count (largest first)
-        2. Calculate grid columns (min 12, max 24)
-        3. Pack feature types row-by-row with proportional colspan
-        4. Start new row when current row full
+        1. Determine actual columns used: min(n_items, max_cols)
+        2. Calculate rows needed: ceil(n_items / n_cols)
+        3. Pack items left-to-right, top-to-bottom
 
-        Grid columns are scaled based on the largest feature count:
-        - Minimum 12 columns for small counts
-        - Maximum 24 columns for large counts
-        - Proportional to largest feature count
+        Each item gets:
+        - Unique position (row, col)
+        - colspan=1 (uniform width)
+        - Sequential item_index for tracking
 
-        Colspan is proportional to feature count relative to maximum:
-        - Larger feature types get more columns
-        - Minimum 1 column per feature type
-        - Rounds to nearest integer for balanced layout
-
-        Used for creating intelligent subplot arrangements in violin plots,
-        heatmaps, and other multi-panel visualizations.
+        Used for density and violin plots where each subplot shows
+        one feature or one feature+DataSelector combination.
         """
-        # Sort by feature count (largest first)
-        sorted_types = sorted(feature_counts.items(), key=lambda x: -x[1])
-
-        if not sorted_types:
+        if n_items == 0:
             return [], 0, 1
 
-        # Calculate grid parameters
-        max_features = sorted_types[0][1]  # Largest feature count
-        n_cols = min(max(12, max_features), 24)  # Between 12 and 24
+        # Actual columns used (don't exceed items count)
+        n_cols = min(max_cols, n_items)
 
-        # Pack feature types into grid rows
+        # Calculate rows needed (ceiling division)
+        n_rows = (n_items + n_cols - 1) // n_cols
+
+        # Create layout: pack left-to-right, top-to-bottom
         layout = []
-        current_row = 0
-        current_col = 0
+        for item_idx in range(n_items):
+            row = item_idx // n_cols
+            col = item_idx % n_cols
+            layout.append((item_idx, row, col, 1))  # colspan=1 for all
 
-        for feat_type, n_features in sorted_types:
-            # Calculate colspan (proportional to feature count)
-            colspan = max(1, round(n_features / max_features * n_cols))
-            colspan = min(colspan, n_cols)  # Don't exceed grid width
-
-            # Check if fits in current row
-            if current_col + colspan > n_cols:
-                # Start new row
-                current_row += 1
-                current_col = 0
-
-            layout.append((feat_type, current_row, current_col, colspan))
-            current_col += colspan
-
-        n_rows = current_row + 1
         return layout, n_rows, n_cols

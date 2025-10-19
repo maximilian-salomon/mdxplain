@@ -29,7 +29,7 @@ continuous value visualization.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Tuple
+from typing import TYPE_CHECKING, Tuple, Optional
 
 if TYPE_CHECKING:
     from ...pipeline.entities.pipeline_data import PipelineData
@@ -84,10 +84,11 @@ class ContactToDistancesConverter:
 
         Returns
         -------
-        Tuple[str, bool]
-            Tuple of (selector_name, is_temporary)
+        Tuple[str, bool, Optional[float]]
+            Tuple of (selector_name, is_temporary, contact_cutoff)
             - selector_name: Name of continuous feature selector
             - is_temporary: True if temporary selector was created, False otherwise
+            - contact_cutoff: Contact cutoff value if converted from contacts, None otherwise
 
         Raises
         ------
@@ -128,16 +129,19 @@ class ContactToDistancesConverter:
 
         # Check if selector contains contacts
         if "contacts" not in selector_data.selections:
-            # Already continuous - return original name, not temporary
-            return feature_selector_name, False
+            # Already continuous - return original name, not temporary, no cutoff
+            return feature_selector_name, False, None
 
         # Need to create distances version
         new_selector_name = f"{feature_selector_name}_distances"
 
         # Check if distances version already exists
         if new_selector_name in pipeline_data.selected_feature_data:
-            # Already exists, not temporary (created elsewhere)
-            return new_selector_name, False
+            # Already exists, not temporary (created elsewhere), extract cutoff
+            contact_cutoff = ContactToDistancesConverter._extract_contact_cutoff(
+                pipeline_data
+            )
+            return new_selector_name, False, contact_cutoff
 
         # Check if distances feature exists
         if "distances" not in pipeline_data.feature_data:
@@ -153,32 +157,106 @@ class ContactToDistancesConverter:
             manager.create(pipeline_data, new_selector_name)
 
             # Copy all feature selections (convert contacts to distances, keep rest)
-            for feature_key, selections_list in selector_data.selections.items():
-                # Contacts zu Distances konvertieren, Rest unverändert
-                if feature_key == "contacts":
-                    target_feature_key = "distances"
-                else:
-                    target_feature_key = feature_key
-
-                # Alle Selections kopieren
-                for selection_dict in selections_list:
-                    manager.add_selection(
-                        pipeline_data,
-                        new_selector_name,
-                        target_feature_key,  # contacts→distances, rest bleibt
-                        selection_dict["selection"],
-                        use_reduced=selection_dict["use_reduced"],
-                        common_denominator=selection_dict.get("common_denominator", True),
-                        traj_selection=selection_dict.get("traj_selection", "all"),
-                        require_all_partners=selection_dict.get("require_all_partners", False)
-                    )
+            ContactToDistancesConverter._copy_selections_to_new_selector(
+                pipeline_data, selector_data, new_selector_name, manager
+            )
 
             # Execute selection with same reference trajectory
             reference_traj = selector_data.reference_trajectory
             manager.select(pipeline_data, new_selector_name, reference_traj=reference_traj)
 
-        # Return selector name and indicate it's temporary
-        return new_selector_name, True
+        # Extract contact cutoff for threshold visualization
+        contact_cutoff = ContactToDistancesConverter._extract_contact_cutoff(
+            pipeline_data
+        )
+
+        # Return selector name, temporary flag, and cutoff
+        return new_selector_name, True, contact_cutoff
+
+    @staticmethod
+    def _copy_selections_to_new_selector(
+        pipeline_data,
+        selector_data,
+        new_selector_name: str,
+        manager
+    ) -> None:
+        """
+        Copy selections from original selector to new selector.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data container
+        selector_data : SelectedFeatureData
+            Original selector data
+        new_selector_name : str
+            Name of new selector
+        manager : FeatureSelectorManager
+            Manager for adding selections
+
+        Returns
+        -------
+        None
+            Adds selections to new selector via manager
+        """
+        for feature_key, selections_list in selector_data.selections.items():
+            # Convert contacts to distances, keep rest unchanged
+            target_feature_key = "distances" if feature_key == "contacts" else feature_key
+
+            # Copy all selections for this feature
+            for selection_dict in selections_list:
+                manager.add_selection(
+                    pipeline_data,
+                    new_selector_name,
+                    target_feature_key,
+                    selection_dict["selection"],
+                    use_reduced=selection_dict["use_reduced"],
+                    common_denominator=selection_dict.get("common_denominator", True),
+                    traj_selection=selection_dict.get("traj_selection", "all"),
+                    require_all_partners=selection_dict.get("require_all_partners", False)
+                )
+
+    @staticmethod
+    def _extract_contact_cutoff(pipeline_data: PipelineData) -> Optional[float]:
+        """
+        Extract contact cutoff from contacts metadata.
+
+        Retrieves the cutoff value used when computing contact features.
+        All trajectories use the same cutoff (scientific best practice).
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data container
+
+        Returns
+        -------
+        Optional[float]
+            Contact cutoff value in Angstroms, or None if not found
+
+        Examples
+        --------
+        >>> cutoff = ContactToDistancesConverter._extract_contact_cutoff(
+        ...     pipeline_data
+        ... )
+        >>> print(cutoff)  # 4.5
+
+        Notes
+        -----
+        Extracts from first trajectory's contacts metadata. Assumes all
+        trajectories use the same cutoff (which is scientifically correct).
+        """
+        if "contacts" not in pipeline_data.feature_data:
+            return None
+
+        # Get cutoff from contacts metadata (first trajectory)
+        contacts_feature_data = pipeline_data.feature_data["contacts"]
+        first_traj_idx = next(iter(contacts_feature_data.keys()))
+        contacts_metadata = contacts_feature_data[first_traj_idx].feature_metadata
+
+        # Extract cutoff from computation_params
+        computation_params = contacts_metadata.get("computation_params", {})
+        return computation_params.get("cutoff")
 
     @staticmethod
     def cleanup_temporary_selector(

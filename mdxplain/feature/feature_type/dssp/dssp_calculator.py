@@ -256,34 +256,21 @@ class DSSPCalculator(CalculatorBase):
 
         Notes
         -----
-        Delegates to DSSPEncodingHelper for clean separation of concerns.
+        Always uses direct encoding methods, not chunked variants.
+        This is correct because:
+        - When use_memmap=False: Data is small, called once for full array
+        - When use_memmap=True: Data is chunk, called per chunk in loop
+        The *_chunked methods are only for encoding large arrays in one call,
+        but here we either have small arrays or are already processing chunks.
         Only converts space to C for char encoding when simplified=False.
         """
         if encoding == 'char':
-            if self.use_memmap:
-                return DSSPEncodingHelper.encode_char_chunked(
-                    dssp_data, self.chunk_size, self.dssp_path
-                )
-            else:
-                dssp_data = np.where(dssp_data == '', 'C', dssp_data)
-                return dssp_data.astype('U1')
-        
+            dssp_data = np.where(dssp_data == '', 'C', dssp_data)
+            return dssp_data.astype('U1')
         elif encoding == 'integer':
-            if self.use_memmap:
-                return DSSPEncodingHelper.encode_integer_chunked(
-                    dssp_data, classes, self.chunk_size, self.dssp_path
-                )
-            else:
-                return DSSPEncodingHelper.encode_integer(dssp_data, classes)
-        
-        else:
-            if self.use_memmap:
-                return DSSPEncodingHelper.encode_onehot_chunked(
-                    dssp_data, classes, self.chunk_size, 
-                    self.dssp_path
-                )
-            else:
-                return DSSPEncodingHelper.encode_onehot_direct(dssp_data, classes)
+            return DSSPEncodingHelper.encode_integer(dssp_data, classes)
+        else:  # onehot
+            return DSSPEncodingHelper.encode_onehot_direct(dssp_data, classes)
 
     def _generate_feature_metadata(self, trajectory: md.Trajectory, simplified: bool, encoding: str, 
                                   classes: list, res_metadata: Dict[str, Any]) -> Dict[str, Any]:
@@ -317,15 +304,30 @@ class DSSPCalculator(CalculatorBase):
         else:
             features = self._create_standard_features(trajectory, res_metadata)
         
+        # Prepare visualization metadata
+        is_onehot = (encoding == 'onehot')
+        axis_label = "Secondary Structure State" if is_onehot else "Secondary Structure"
+
+        # Prepare tick labels for discrete features
+        tick_labels = self._create_tick_labels(encoding, classes)
+
         return {
             "is_pair": False,
             "features": features,
-            "classification_type": "simplified" if simplified else "full",
-            "encoding": encoding,
-            "classes": classes,
+            "computation_params": {
+                "simplified": simplified,
+                "encoding": encoding,
+                "classes": classes
+            },
             "n_classes": len(classes),
             "n_features": len(features),
-            "algorithm": "dssp"
+            "algorithm": "dssp",
+            "visualization": {
+                "is_discrete": True,
+                "is_binary": is_onehot,
+                "axis_label": axis_label,
+                "tick_labels": tick_labels
+            }
         }
 
     def _create_onehot_features(self, trajectory: md.Trajectory, classes: list, res_metadata: Dict[str, Any]) -> list:
@@ -424,6 +426,54 @@ class DSSPCalculator(CalculatorBase):
                 "name": residue.name,
                 "id": residue.resSeq,
                 "full_name": f"{residue.name}{residue.resSeq}"
+            }
+
+    def _create_tick_labels(self, encoding: str, classes: list) -> Dict[str, list]:
+        """
+        Create tick labels for DSSP visualization.
+
+        Parameters
+        ----------
+        encoding : str
+            Encoding format ('onehot', 'integer', 'char')
+        classes : list
+            List of DSSP class labels
+
+        Returns
+        -------
+        dict
+            Dictionary with 'short' and 'long' label lists
+
+        Notes
+        -----
+        For onehot encoding, creates binary labels.
+        For integer/char encoding, creates full class labels with long descriptive names.
+        """
+        # Filter out 'NA' if present
+        classes = [c for c in classes if c != 'NA']
+
+        if encoding == 'onehot':
+            # Binary labels (will be per-class specific in actual use)
+            # This is generic, actual labels depend on specific dssp_class in feature_info
+            return {
+                'short': ['N', 'Y'],  # Generic placeholder
+                'long': ['Not', 'Is']  # Generic placeholder
+            }
+        else:
+            # Multi-class labels
+            dssp_long_names = {
+                'H': 'Alpha helix',
+                'B': 'Isolated\nbeta-bridge',
+                'E': 'Extended\nstrand',
+                'G': '3/10 helix',
+                'I': 'Pi helix',
+                'T': 'Hydrogen\nbonded turn',
+                'S': 'Bend',
+                'C': 'Loop'
+            }
+            return {
+                'short': classes,
+                'long': [dssp_long_names.get(c, c) for c in classes]
             }
 
     def compute_dynamic_values(

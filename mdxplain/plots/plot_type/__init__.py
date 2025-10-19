@@ -22,5 +22,7 @@
 
 from . import landscape
 from . import membership
+from . import violin
+from . import density
 
-__all__ = ['landscape', 'membership']
+__all__ = ['landscape', 'membership', 'violin', 'density']

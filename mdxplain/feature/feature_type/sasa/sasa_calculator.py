@@ -244,11 +244,17 @@ class SASACalculator(CalculatorBase):
         return {
             "is_pair": False,
             "features": features,
-            "calculation_mode": mode,
-            "probe_radius_nm": probe_radius,
+            "computation_params": {
+                "mode": mode,
+                "probe_radius_nm": probe_radius
+            },
             "algorithm": "shrake_rupley",
             "units": "nm²",
-            "n_features": len(features)
+            "n_features": len(features),
+            "visualization": {
+                "is_discrete": False,
+                "axis_label": "SASA (Å²)"
+            }
         }
 
     def _generate_residue_feature(self, res_idx: int, residue, res_metadata: Dict[str, Any]) -> Dict[str, Any]:
