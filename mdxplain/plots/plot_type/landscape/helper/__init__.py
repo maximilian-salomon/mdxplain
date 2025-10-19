@@ -21,14 +21,19 @@
 """
 Helper classes for landscape plot calculations.
 
-This module provides helper classes for energy landscape calculations
-and layout computations for multi-dimensional landscape plots.
+This module provides helper classes for energy landscape calculations,
+layout computations, rendering operations, and styling for multi-dimensional
+landscape plots.
 """
 
 from .energy_calculator_helper import EnergyCalculatorHelper
 from .layout_calculator_helper import LayoutCalculatorHelper
+from .landscape_rendering_helper import LandscapeRenderingHelper
+from .landscape_styling_helper import LandscapeStylingHelper
 
 __all__ = [
     "EnergyCalculatorHelper",
     "LayoutCalculatorHelper",
+    "LandscapeRenderingHelper",
+    "LandscapeStylingHelper",
 ]

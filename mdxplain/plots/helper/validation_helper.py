@@ -144,20 +144,51 @@ class ValidationHelper:
 
         # Check each dimension
         for dim in dimensions:
-            if not isinstance(dim, int):
-                raise ValueError(
-                    f"All dimensions must be integers, got {type(dim).__name__}"
-                )
-            if dim < 0 or dim >= n_components:
-                raise ValueError(
-                    f"Dimension {dim} out of range for decomposition "
-                    f"'{decomposition_name}' (valid range: 0-{n_components-1})"
-                )
+            ValidationHelper._validate_single_dimension(
+                dim, decomposition_name, n_components
+            )
 
         # Check for duplicates
         if len(dimensions) != len(set(dimensions)):
             raise ValueError(
                 f"Duplicate dimensions found in {dimensions}"
+            )
+
+    @staticmethod
+    def _validate_single_dimension(
+        dim: int,
+        decomposition_name: str,
+        n_components: int
+    ) -> None:
+        """
+        Validate single dimension value.
+
+        Parameters
+        ----------
+        dim : int
+            Dimension index to validate
+        decomposition_name : str
+            Name of decomposition (for error messages)
+        n_components : int
+            Number of available components
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError
+            If dimension wrong type or out of range
+        """
+        if not isinstance(dim, int):
+            raise ValueError(
+                f"All dimensions must be integers, got {type(dim).__name__}"
+            )
+        if dim < 0 or dim >= n_components:
+            raise ValueError(
+                f"Dimension {dim} out of range for decomposition "
+                f"'{decomposition_name}' (valid range: 0-{n_components-1})"
             )
 
     @staticmethod
@@ -442,3 +473,91 @@ class ValidationHelper:
                 f"Parameter '{param_name}' must be a positive integer, "
                 f"got {value}"
             )
+
+    @staticmethod
+    def validate_feature_selector_exists(
+        pipeline_data: PipelineData,
+        feature_selector_name: str
+    ):
+        """
+        Validate that feature selector exists in pipeline data.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data container
+        feature_selector_name : str
+            Name of feature selector to validate
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError
+            If feature selector not found
+
+        Examples
+        --------
+        >>> ValidationHelper.validate_feature_selector_exists(
+        ...     pipeline_data, "my_selector"
+        ... )
+        """
+        if feature_selector_name not in pipeline_data.selected_feature_data:
+            available = list(pipeline_data.selected_feature_data.keys())
+            raise ValueError(
+                f"Feature selector '{feature_selector_name}' not found. "
+                f"Available: {available}"
+            )
+
+    @staticmethod
+    def has_discrete_features(
+        all_features: List[tuple],
+        metadata_map: dict
+    ) -> bool:
+        """
+        Check if any feature in the list is discrete.
+
+        Examines visualization metadata of all features to determine
+        if at least one discrete feature is present. Used to adjust
+        plot spacing for discrete feature labels.
+
+        Parameters
+        ----------
+        all_features : List[tuple]
+            List of (feature_type, feature_name) tuples
+        metadata_map : dict
+            Nested dict structure: {feat_type: {feat_name: metadata}}
+
+        Returns
+        -------
+        bool
+            True if at least one discrete feature found, False otherwise
+
+        Examples
+        --------
+        >>> features = [("distances", "ALA1-VAL2"), ("contacts", "GLU3-ARG4")]
+        >>> metadata = {
+        ...     "distances": {
+        ...         "ALA1-VAL2": {"type_metadata": {"visualization": {"is_discrete": False}}}
+        ...     },
+        ...     "contacts": {
+        ...         "GLU3-ARG4": {"type_metadata": {"visualization": {"is_discrete": True}}}
+        ...     }
+        ... }
+        >>> ValidationHelper.has_discrete_features(features, metadata)
+        True
+
+        Notes
+        -----
+        Returns False if no features provided or if visualization metadata
+        is missing/incomplete for all features.
+        """
+        for feat_type, feat_name in all_features:
+            feat_metadata = metadata_map.get(feat_type, {}).get(feat_name, {})
+            type_metadata = feat_metadata.get("type_metadata", {})
+            viz = type_metadata.get("visualization", {})
+            if viz.get("is_discrete", False):
+                return True
+        return False

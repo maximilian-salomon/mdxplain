@@ -359,12 +359,18 @@ class TorsionsCalculator(CalculatorBase):
         return {
             "is_pair": False,
             "features": features,
-            "backbone_angles": backbone_angles,
-            "include_chi": chi_included,
+            "computation_params": {
+                "backbone_angles": backbone_angles,
+                "include_chi": chi_included
+            },
             "units": "degrees",
             "angle_range": "(-180, +180)",
             "n_features": len(features),
-            "algorithm": "mdtraj_dihedral"
+            "algorithm": "mdtraj_dihedral",
+            "visualization": {
+                "is_discrete": False,
+                "axis_label": "Angle (°)"
+            }
         }
 
     def compute_dynamic_values(

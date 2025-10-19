@@ -146,7 +146,7 @@ class DistanceCalculator(CalculatorBase):
         self._validate_pair_consistency(res_list)
 
         # Generate feature metadata using labels if available
-        feature_metadata = self._generate_feature_metadata(res_metadata)
+        feature_metadata = self._generate_feature_metadata(res_metadata, excluded_neighbors)
 
         # Finalize output (convert units, cleanup)
         distances = self._finalize_output(distances, total_frames)
@@ -447,19 +447,21 @@ class DistanceCalculator(CalculatorBase):
         else:
             distances *= 10
 
-    def _generate_feature_metadata(self, res_metadata: Dict[str, Any]) -> Dict[str, Any]:
+    def _generate_feature_metadata(self, res_metadata: Dict[str, Any], excluded_neighbors: int) -> Dict[str, Any]:
         """
         Generate feature metadata for residue pairs using structured labels.
 
         Parameters
         ----------
-        feature_metadata : dict, optional
+        res_metadata : dict
             Structured trajectory labels from res_label_data
+        excluded_neighbors : int
+            Diagonal offset parameter used for pair generation
 
         Returns
         -------
         dict
-            Feature metadata dictionary with 'is_pair' and 'features' keys
+            Feature metadata dictionary with computation params, features, and structural info
 
         Raises
         ------
@@ -490,7 +492,19 @@ class DistanceCalculator(CalculatorBase):
                     f"(length: {len(res_metadata)})"
                 )
 
-        return {"is_pair": True, "features": features}
+        return {
+            "is_pair": True,
+            "features": features,
+            "computation_params": {
+                "excluded_neighbors": excluded_neighbors,
+                "scheme": "closest-heavy"
+            },
+            "n_features": len(features),
+            "visualization": {
+                "is_discrete": False,
+                "axis_label": "Distance (Å)"
+            }
+        }
 
     def _process_trajectory(self, traj: md.Trajectory, distances: np.ndarray) -> None:
         """

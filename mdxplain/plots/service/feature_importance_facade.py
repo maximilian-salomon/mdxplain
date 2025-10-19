@@ -26,10 +26,11 @@ importance analysis results. Coordinates between feature importance
 data and specialized plotters.
 """
 
-from typing import Optional
+from typing import Optional, Union, List, Dict
 from matplotlib.figure import Figure
 
 from ..plot_type.violin.violin_plotter import ViolinPlotter
+from ..plot_type.density.density_plotter import DensityPlotter
 
 
 class FeatureImportanceFacade:
@@ -45,6 +46,7 @@ class FeatureImportanceFacade:
     >>> # Access via plots manager
     >>> facade = plots_manager.feature_importance
     >>> fig = facade.violins("tree_analysis", n_top=10)
+    >>> fig = facade.densities("tree_analysis", n_top=10)
     """
 
     def __init__(self, manager, pipeline_data) -> None:
@@ -72,8 +74,10 @@ class FeatureImportanceFacade:
         n_top: int = 10,
         feature_selector: Optional[str] = None,
         data_selectors: Optional[list] = None,
-        split_features: bool = False,
-        contact_threshold: Optional[float] = None,
+        contact_transformation: bool = True,
+        max_cols: int = 4,
+        long_labels: bool = False,
+        contact_threshold: Optional[float] = 4.5,
         title: Optional[str] = None,
         save_fig: bool = False,
         filename: Optional[str] = None,
@@ -100,12 +104,21 @@ class FeatureImportanceFacade:
             Name of feature selector (Manual mode)
         data_selectors : list of str, optional
             DataSelector names to plot (Manual mode)
-        split_features : bool, default=False
-            If True, create separate subplot for each feature.
-            If False, group by feature type in grid layout.
+        contact_transformation : bool, default=True
+            If True, automatically convert contact features to distances.
+            If False, plot contacts as binary values with Gaussian smoothing.
+        max_cols : int, default=4
+            Maximum number of columns in grid layout. Each (Feature, DataSelector)
+            combination gets its own subplot arranged in a grid.
+        long_labels : bool, default=False
+            If True, use long descriptive labels for discrete features
+            (e.g., "Contact"/"Non-Contact", "Alpha helix"/"Loop").
+            If False, use short labels (e.g., "C"/"NC", "H"/"C").
+            Automatically adjusts subplot spacing when True to prevent overlap.
         contact_threshold : float, optional
-            Contact distance threshold for horizontal line in distance plots.
-            If None, auto-detects from contacts feature metadata (default: 4.5 Å).
+            Distance threshold in Angstrom for drawing contact threshold line
+            on distance features. If provided, draws a red dashed horizontal line
+            at this distance value. Common value: 4.5 Å (default cutoff for contacts).
         title : str, optional
             Custom plot title. Auto-generated if None.
         save_fig : bool, default=False
@@ -138,12 +151,18 @@ class FeatureImportanceFacade:
         ...     data_selectors=["cluster_0", "cluster_1"]
         ... )
 
-        >>> # Manual mode with customization
+        >>> # Manual mode with custom grid layout
         >>> fig = facade.violins(
         ...     feature_selector="my_selector",
         ...     data_selectors=["cluster_0", "cluster_1"],
-        ...     split_features=True,
-        ...     show_points=True
+        ...     max_cols=3
+        ... )
+
+        >>> # With long descriptive labels for discrete features
+        >>> fig = facade.violins(
+        ...     feature_importance_name="tree_analysis",
+        ...     n_top=10,
+        ...     long_labels=True
         ... )
 
         >>> # Save to file
@@ -157,12 +176,15 @@ class FeatureImportanceFacade:
 
         Notes
         -----
-        - Automatically converts boolean contact features to continuous
-          distances for proper violin visualization
+        - Each (Feature, DataSelector) combination gets its own subplot
+        - contact_transformation=True: Converts boolean contacts to distances
+        - contact_transformation=False: Visualizes binary contacts with
+          Gaussian smoothing (tall+wide peaks for dominant states, short+narrow
+          for rare states)
         - Uses DataSelector-based color mapping for cluster consistency
-        - X-axis shows feature names, Y-axis shows feature values with units
-        - Each violin represents the distribution for one DataSelector group
-        - Features grouped by type (distances, torsions, etc.) in combined view
+        - Y-axis shows feature values with units (Distance, Angle, etc.)
+        - Each violin is centered in its subplot showing the full distribution
+        - Grid layout controlled by max_cols parameter (default: 4 columns)
         """
         plotter = ViolinPlotter(self.pipeline_data, self.cache_dir)
         return plotter.plot(
@@ -170,9 +192,194 @@ class FeatureImportanceFacade:
             n_top=n_top,
             feature_selector=feature_selector,
             data_selectors=data_selectors,
-            split_features=split_features,
+            contact_transformation=contact_transformation,
+            max_cols=max_cols,
+            long_labels=long_labels,
             contact_threshold=contact_threshold,
             title=title,
+            save_fig=save_fig,
+            filename=filename,
+            file_format=file_format,
+            dpi=dpi
+        )
+
+    def densities(
+        self,
+        feature_importance_name: Optional[str] = None,
+        n_top: int = 10,
+        feature_selector: Optional[str] = None,
+        data_selectors: Optional[List[str]] = None,
+        contact_transformation: bool = True,
+        max_cols: int = 4,
+        long_labels: bool = False,
+        kde_bandwidth: Union[str, float] = "scott",
+        base_sigma: float = 0.05,
+        max_sigma: float = 0.12,
+        alpha: float = 0.3,
+        line_width: float = 2.0,
+        contact_threshold: Optional[float] = 4.5,
+        title: Optional[str] = None,
+        legend_title: Optional[str] = None,
+        legend_labels: Optional[Dict[str, str]] = None,
+        save_fig: bool = False,
+        filename: Optional[str] = None,
+        file_format: str = "png",
+        dpi: int = 300
+    ) -> Figure:
+        """
+        Create density plots from feature importance or manual selection.
+
+        Supports two modes:
+        1. Feature Importance mode: Automatic selection from feature importance
+        2. Manual mode: User-defined feature and DataSelector selection
+
+        Visualizes feature distributions as overlaid density curves in grid
+        layout. Each feature gets one grid cell with curves for each
+        DataSelector group using cluster-consistent colors.
+
+        Parameters
+        ----------
+        feature_importance_name : str, optional
+            Name of feature importance analysis (Feature Importance mode)
+        n_top : int, default=10
+            Number of top features per comparison (Feature Importance mode)
+        feature_selector : str, optional
+            Name of feature selector (Manual mode)
+        data_selectors : list of str, optional
+            DataSelector names to plot (Manual mode)
+        contact_transformation : bool, default=True
+            If True, convert boolean contact features (0/1) to continuous
+            distances for smoother visualization. If False, plot contacts
+            using Gaussian smoothing with height-dependent widths.
+        max_cols : int, default=4
+            Maximum number of columns in grid layout. Actual layout may use
+            fewer columns to maintain roughly square overall shape.
+        long_labels : bool, default=False
+            If True, use long descriptive labels for discrete features
+            (e.g., "Contact"/"Non-Contact", "Alpha helix"/"Loop").
+            If False, use short labels (e.g., "C"/"NC", "H"/"C").
+        kde_bandwidth : str or float, default="scott"
+            KDE bandwidth for continuous features:
+            - "scott": Scott's rule (automatic bandwidth selection)
+            - "silverman": Silverman's rule
+            - float: Manual bandwidth value
+        base_sigma : float, default=0.05
+            Minimum Gaussian width for binary contact features (narrowest peak)
+        max_sigma : float, default=0.12
+            Maximum Gaussian width for binary contact features (widest peak)
+        alpha : float, default=0.3
+            Transparency for filled density curves (0=transparent, 1=opaque)
+        line_width : float, default=2.0
+            Width of density curve contour lines
+        contact_threshold : float, optional
+            Distance threshold in Angstrom for drawing contact threshold line.
+        title : str, optional
+            Custom plot title. Auto-generated if None.
+        legend_title : str, optional
+            Custom title for DataSelector legend. If None, uses "DataSelectors".
+        legend_labels : Dict[str, str], optional
+            Custom labels for DataSelectors in legend.
+            Maps original names to display names.
+            Example: {"cluster_0": "Inactive", "cluster_1": "Active"}
+        save_fig : bool, default=False
+            Save figure to file
+        filename : str, optional
+            Custom filename. Auto-generated if None.
+        file_format : str, default="png"
+            File format for saving (png, pdf, svg, etc.)
+        dpi : int, default=300
+            Resolution for saved figure in dots per inch
+
+        Returns
+        -------
+        matplotlib.figure.Figure
+            Figure object containing density plots in grid layout
+
+        Raises
+        ------
+        ValueError
+            If parameters invalid or required parameters missing for chosen mode
+
+        Examples
+        --------
+        >>> # Feature Importance mode with default settings
+        >>> fig = facade.densities(feature_importance_name="tree_analysis", n_top=10)
+
+        >>> # Manual mode with custom feature selection
+        >>> fig = facade.densities(
+        ...     feature_selector="my_selector",
+        ...     data_selectors=["cluster_0", "cluster_1"]
+        ... )
+
+        >>> # Plot binary contacts without distance transformation
+        >>> fig = facade.densities(
+        ...     feature_importance_name="tree_analysis",
+        ...     n_top=10,
+        ...     contact_transformation=False,
+        ...     base_sigma=0.04,
+        ...     max_sigma=0.15
+        ... )
+
+        >>> # Custom KDE bandwidth for continuous features
+        >>> fig = facade.densities(
+        ...     feature_selector="my_selector",
+        ...     data_selectors=["cluster_0", "cluster_1"],
+        ...     kde_bandwidth=0.5
+        ... )
+
+        >>> # Save to file with custom layout
+        >>> fig = facade.densities(
+        ...     feature_importance_name="tree_analysis",
+        ...     n_top=15,
+        ...     max_cols=5,
+        ...     save_fig=True,
+        ...     filename="density_plots.pdf",
+        ...     file_format="pdf"
+        ... )
+
+        Notes
+        -----
+        Binary Contact Features:
+        - When contact_transformation=True: Converts to distances (default)
+        - When contact_transformation=False: Uses Gaussian smoothing where:
+          - Dominant states (high probability) → tall AND wide peaks
+          - Rare states (low probability) → short AND narrow peaks
+          - This prevents visual overlap when multiple DataSelectors plotted
+
+        Continuous Features:
+        - Uses standard Kernel Density Estimation (KDE)
+        - Automatic bandwidth selection via Scott's or Silverman's rule
+        - Manual bandwidth control available via kde_bandwidth parameter
+
+        Grid Layout:
+        - Features grouped by type where possible
+        - max_cols controls maximum columns (default: 4)
+        - Layout algorithm maintains roughly square overall shape
+        - Each grid cell shows one feature with overlaid curves
+
+        Color Mapping:
+        - Uses DataSelector-based colors for cluster consistency
+        - Same colors across all plots in pipeline for same DataSelectors
+        - Filled curves with transparency (alpha) + solid contour lines
+        """
+        plotter = DensityPlotter(self.pipeline_data, self.cache_dir)
+        return plotter.plot(
+            feature_importance_name=feature_importance_name,
+            n_top=n_top,
+            feature_selector=feature_selector,
+            data_selectors=data_selectors,
+            contact_transformation=contact_transformation,
+            max_cols=max_cols,
+            long_labels=long_labels,
+            kde_bandwidth=kde_bandwidth,
+            base_sigma=base_sigma,
+            max_sigma=max_sigma,
+            alpha=alpha,
+            line_width=line_width,
+            contact_threshold=contact_threshold,
+            title=title,
+            legend_title=legend_title,
+            legend_labels=legend_labels,
             save_fig=save_fig,
             filename=filename,
             file_format=file_format,

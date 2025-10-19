@@ -293,11 +293,17 @@ class CoordinatesCalculator(CalculatorBase):
         return {
             "is_pair": False,
             "features": features,
-            "selection_string": selection,
+            "computation_params": {
+                "selection": selection
+            },
             "n_selected_atoms": len(indices),
             "n_features": len(features),
             "coordinate_system": "cartesian_xyz",
-            "units": "angstrom"
+            "units": "angstrom",
+            "visualization": {
+                "is_discrete": False,
+                "axis_label": "Position (Å)"
+            }
         }
 
     def compute_dynamic_values(

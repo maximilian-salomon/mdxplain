@@ -18,10 +18,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""Helper modules for violin plotting."""
+"""Density plot type for feature importance visualization."""
 
-from .violin_data_preparer import ViolinDataPreparer
+from .density_plotter import DensityPlotter
 
-__all__ = [
-    "ViolinDataPreparer",
-]
+__all__ = ["DensityPlotter"]

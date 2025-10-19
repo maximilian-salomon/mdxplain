@@ -18,10 +18,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""Helper modules for violin plotting."""
+"""Base plotter module for feature importance visualization."""
 
-from .violin_data_preparer import ViolinDataPreparer
+from .feature_importance_base_plotter import FeatureImportanceBasePlotter
 
-__all__ = [
-    "ViolinDataPreparer",
-]
+__all__ = ["FeatureImportanceBasePlotter"]

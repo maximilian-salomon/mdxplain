@@ -160,3 +160,40 @@ class FeatureMetadataUtils:
 
         metadata_entry = feature_metadata[feature_idx]
         return metadata_entry.get("type", "unknown")
+
+    @staticmethod
+    def create_feature_map(metadata_array: np.ndarray) -> dict:
+        """
+        Create feature index to name mapping from metadata array.
+
+        Extracts all feature names from metadata array and creates
+        a dictionary mapping feature indices to their names.
+
+        Parameters
+        ----------
+        metadata_array : np.ndarray
+            Feature metadata array from pipeline
+
+        Returns
+        -------
+        Dict[int, str]
+            Mapping of feature_index -> feature_name
+
+        Examples
+        --------
+        >>> metadata = pipeline_data.get_selected_metadata("my_selector")
+        >>> feature_map = FeatureMetadataUtils.create_feature_map(metadata)
+        >>> print(feature_map[42])  # "ALA_5_CA-GLU_10_CA"
+
+        Notes
+        -----
+        Uses get_feature_name() internally for consistent name extraction
+        across all feature types (pairs and non-pairs).
+        """
+        feature_map = {}
+        for idx in range(len(metadata_array)):
+            feature_name = FeatureMetadataUtils.get_feature_name(
+                metadata_array, idx
+            )
+            feature_map[idx] = feature_name
+        return feature_map
