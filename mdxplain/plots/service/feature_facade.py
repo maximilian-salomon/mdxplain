@@ -19,14 +19,13 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Facade for feature importance visualization.
+Facade for manual feature visualization.
 
-Provides simplified interface for creating plots based on feature
-importance analysis results. Coordinates between feature importance
-data and specialized plotters.
+Provides simplified interface for creating plots based on manual
+feature and DataSelector selection.
 """
 
-from typing import Optional, Union, List, Dict
+from typing import List, Dict, Optional, Union
 from matplotlib.figure import Figure
 
 from ..plot_type.violin.violin_plotter import ViolinPlotter
@@ -34,26 +33,26 @@ from ..plot_type.density.density_plotter import DensityPlotter
 from ..plot_type.time_series.time_series_plotter import TimeSeriesPlotter
 
 
-class FeatureImportanceFacade:
+class FeatureFacade:
     """
-    Facade for feature importance visualization.
+    Facade for manual feature visualization.
 
     Provides high-level interface for creating visualizations from
-    feature importance analysis results. Simplifies access to
+    manually selected features and DataSelectors. Simplifies access to
     specialized plotters while managing pipeline data and configuration.
 
     Examples
     --------
     >>> # Access via plots manager
-    >>> facade = plots_manager.feature_importance
-    >>> fig = facade.violins("tree_analysis", n_top=10)
-    >>> fig = facade.densities("tree_analysis", n_top=10)
-    >>> fig = facade.time_series("tree_analysis", n_top=5)
+    >>> facade = plots_manager.feature
+    >>> fig = facade.violins("my_selector", ["cluster_0", "cluster_1"])
+    >>> fig = facade.densities("my_selector", ["cluster_0", "cluster_1"])
+    >>> fig = facade.time_series("my_selector", ["cluster_0", "cluster_1"])
     """
 
     def __init__(self, manager, pipeline_data) -> None:
         """
-        Initialize feature importance facade.
+        Initialize feature facade.
 
         Parameters
         ----------
@@ -65,62 +64,64 @@ class FeatureImportanceFacade:
         Returns
         -------
         None
-            Initializes FeatureImportanceFacade instance
+            Initializes FeatureFacade instance
         """
         self.pipeline_data = pipeline_data
         self.cache_dir = manager.cache_dir
 
     def violins(
         self,
-        feature_importance_name: str,
-        n_top: int = 10,
+        feature_selector: str,
+        data_selectors: List[str],
         contact_transformation: bool = True,
         max_cols: int = 4,
         long_labels: bool = False,
         contact_threshold: Optional[float] = 4.5,
         title: Optional[str] = None,
+        legend_title: Optional[str] = None,
+        legend_labels: Optional[Dict[str, str]] = None,
         save_fig: bool = False,
         filename: Optional[str] = None,
         file_format: str = "png",
         dpi: int = 300
     ) -> Figure:
         """
-        Create violin plots from feature importance analysis.
+        Create violin plots from manual feature selection.
 
         Visualizes the distribution of feature values showing separate
         violins for each DataSelector group with cluster-consistent colors.
 
         Parameters
         ----------
-        feature_importance_name : str
-            Name of feature importance analysis
-        n_top : int, default=10
-            Number of top features per comparison
+        feature_selector : str
+            Name of feature selector
+        data_selectors : List[str]
+            DataSelector names to plot
         contact_transformation : bool, default=True
             If True, automatically convert contact features to distances.
             If False, plot contacts as binary values with Gaussian smoothing.
         max_cols : int, default=4
-            Maximum number of columns in grid layout. Each (Feature, DataSelector)
-            combination gets its own subplot arranged in a grid.
+            Maximum number of columns in grid layout
         long_labels : bool, default=False
             If True, use long descriptive labels for discrete features
             (e.g., "Contact"/"Non-Contact", "Alpha helix"/"Loop").
             If False, use short labels (e.g., "C"/"NC", "H"/"C").
-            Automatically adjusts subplot spacing when True to prevent overlap.
         contact_threshold : float, optional
             Distance threshold in Angstrom for drawing contact threshold line
-            on distance features. If provided, draws a red dashed horizontal line
-            at this distance value. Common value: 4.5 Å (default cutoff for contacts).
         title : str, optional
-            Custom plot title. Auto-generated if None.
+            Custom plot title
+        legend_title : str, optional
+            Custom legend title
+        legend_labels : Dict[str, str], optional
+            Custom labels for DataSelectors in legend
         save_fig : bool, default=False
             Save figure to file
         filename : str, optional
-            Custom filename. Auto-generated if None.
+            Custom filename
         file_format : str, default="png"
-            File format for saving (png, pdf, svg, etc.)
+            File format for saving
         dpi : int, default=300
-            Resolution for saved figure in dots per inch
+            Resolution for saved figure
 
         Returns
         -------
@@ -130,53 +131,49 @@ class FeatureImportanceFacade:
         Raises
         ------
         ValueError
-            If parameters invalid or required parameters missing for chosen mode
+            If feature selector or data selectors not found
 
         Examples
         --------
         >>> # Basic violin plot
         >>> fig = facade.violins(
-        ...     feature_importance_name="tree_analysis",
-        ...     n_top=10
+        ...     feature_selector="my_selector",
+        ...     data_selectors=["cluster_0", "cluster_1"]
         ... )
 
-        >>> # With long descriptive labels for discrete features
+        >>> # With custom layout
         >>> fig = facade.violins(
-        ...     feature_importance_name="tree_analysis",
-        ...     n_top=10,
-        ...     long_labels=True
+        ...     feature_selector="my_selector",
+        ...     data_selectors=["cluster_0", "cluster_1"],
+        ...     max_cols=3
         ... )
 
         >>> # Save to file
         >>> fig = facade.violins(
-        ...     feature_importance_name="tree_analysis",
-        ...     n_top=10,
+        ...     feature_selector="my_selector",
+        ...     data_selectors=["cluster_0", "cluster_1"],
         ...     save_fig=True,
-        ...     filename="important_features.pdf",
+        ...     filename="features.pdf",
         ...     file_format="pdf"
         ... )
 
         Notes
         -----
-        - Each (Feature, DataSelector) combination gets its own subplot
-        - contact_transformation=True: Converts boolean contacts to distances
-        - contact_transformation=False: Visualizes binary contacts with
-          Gaussian smoothing (tall+wide peaks for dominant states, short+narrow
-          for rare states)
-        - Uses DataSelector-based color mapping for cluster consistency
+        - Each feature gets its own subplot with violins for all DataSelectors
         - Y-axis shows feature values with units (Distance, Angle, etc.)
-        - Each violin is centered in its subplot showing the full distribution
-        - Grid layout controlled by max_cols parameter (default: 4 columns)
+        - Grid layout controlled by max_cols parameter
         """
         plotter = ViolinPlotter(self.pipeline_data, self.cache_dir)
         return plotter.plot(
-            feature_importance_name=feature_importance_name,
-            n_top=n_top,
+            feature_selector=feature_selector,
+            data_selectors=data_selectors,
             contact_transformation=contact_transformation,
             max_cols=max_cols,
             long_labels=long_labels,
             contact_threshold=contact_threshold,
             title=title,
+            legend_title=legend_title,
+            legend_labels=legend_labels,
             save_fig=save_fig,
             filename=filename,
             file_format=file_format,
@@ -185,8 +182,8 @@ class FeatureImportanceFacade:
 
     def densities(
         self,
-        feature_importance_name: str,
-        n_top: int = 10,
+        feature_selector: str,
+        data_selectors: List[str],
         contact_transformation: bool = True,
         max_cols: int = 4,
         long_labels: bool = False,
@@ -205,7 +202,7 @@ class FeatureImportanceFacade:
         dpi: int = 300
     ) -> Figure:
         """
-        Create density plots from feature importance analysis.
+        Create density plots from manual feature selection.
 
         Visualizes feature distributions as overlaid density curves in grid
         layout. Each feature gets one grid cell with curves for each
@@ -213,126 +210,89 @@ class FeatureImportanceFacade:
 
         Parameters
         ----------
-        feature_importance_name : str
-            Name of feature importance analysis
-        n_top : int, default=10
-            Number of top features per comparison
+        feature_selector : str
+            Name of feature selector
+        data_selectors : List[str]
+            DataSelector names to plot
         contact_transformation : bool, default=True
-            If True, convert boolean contact features (0/1) to continuous
-            distances for smoother visualization. If False, plot contacts
-            using Gaussian smoothing with height-dependent widths.
+            If True, convert contact features to distances.
+            If False, plot contacts with Gaussian smoothing.
         max_cols : int, default=4
-            Maximum number of columns in grid layout. Actual layout may use
-            fewer columns to maintain roughly square overall shape.
+            Maximum number of columns in grid layout
         long_labels : bool, default=False
             If True, use long descriptive labels for discrete features
-            (e.g., "Contact"/"Non-Contact", "Alpha helix"/"Loop").
-            If False, use short labels (e.g., "C"/"NC", "H"/"C").
         kde_bandwidth : str or float, default="scott"
-            KDE bandwidth for continuous features:
-            - "scott": Scott's rule (automatic bandwidth selection)
-            - "silverman": Silverman's rule
-            - float: Manual bandwidth value
+            KDE bandwidth for continuous features
         base_sigma : float, default=0.05
-            Minimum Gaussian width for binary contact features (narrowest peak)
+            Minimum Gaussian width for binary contact features
         max_sigma : float, default=0.12
-            Maximum Gaussian width for binary contact features (widest peak)
+            Maximum Gaussian width for binary contact features
         alpha : float, default=0.3
-            Transparency for filled density curves (0=transparent, 1=opaque)
+            Transparency for filled density curves
         line_width : float, default=2.0
             Width of density curve contour lines
         contact_threshold : float, optional
-            Distance threshold in Angstrom for drawing contact threshold line.
+            Distance threshold for contact threshold line
         title : str, optional
-            Custom plot title. Auto-generated if None.
+            Custom plot title
         legend_title : str, optional
-            Custom title for DataSelector legend. If None, uses "DataSelectors".
+            Custom legend title
         legend_labels : Dict[str, str], optional
-            Custom labels for DataSelectors in legend.
-            Maps original names to display names.
-            Example: {"cluster_0": "Inactive", "cluster_1": "Active"}
+            Custom labels for DataSelectors in legend
         save_fig : bool, default=False
             Save figure to file
         filename : str, optional
-            Custom filename. Auto-generated if None.
+            Custom filename
         file_format : str, default="png"
-            File format for saving (png, pdf, svg, etc.)
+            File format for saving
         dpi : int, default=300
-            Resolution for saved figure in dots per inch
+            Resolution for saved figure
 
         Returns
         -------
         matplotlib.figure.Figure
-            Figure object containing density plots in grid layout
+            Figure object containing density plots
 
         Raises
         ------
         ValueError
-            If parameters invalid or required parameters missing for chosen mode
+            If feature selector or data selectors not found
 
         Examples
         --------
         >>> # Basic density plot
         >>> fig = facade.densities(
-        ...     feature_importance_name="tree_analysis",
-        ...     n_top=10
+        ...     feature_selector="my_selector",
+        ...     data_selectors=["cluster_0", "cluster_1"]
         ... )
 
-        >>> # Plot binary contacts without distance transformation
+        >>> # Custom KDE bandwidth
         >>> fig = facade.densities(
-        ...     feature_importance_name="tree_analysis",
-        ...     n_top=10,
-        ...     contact_transformation=False,
-        ...     base_sigma=0.04,
-        ...     max_sigma=0.15
-        ... )
-
-        >>> # Custom KDE bandwidth for continuous features
-        >>> fig = facade.densities(
-        ...     feature_importance_name="tree_analysis",
-        ...     n_top=10,
+        ...     feature_selector="my_selector",
+        ...     data_selectors=["cluster_0", "cluster_1"],
         ...     kde_bandwidth=0.5
         ... )
 
-        >>> # Save to file with custom layout
+        >>> # Save to file
         >>> fig = facade.densities(
-        ...     feature_importance_name="tree_analysis",
-        ...     n_top=15,
-        ...     max_cols=5,
+        ...     feature_selector="my_selector",
+        ...     data_selectors=["cluster_0", "cluster_1"],
         ...     save_fig=True,
-        ...     filename="density_plots.pdf",
+        ...     filename="densities.pdf",
         ...     file_format="pdf"
         ... )
 
         Notes
         -----
-        Binary Contact Features:
-        - When contact_transformation=True: Converts to distances (default)
-        - When contact_transformation=False: Uses Gaussian smoothing where:
-          - Dominant states (high probability) → tall AND wide peaks
-          - Rare states (low probability) → short AND narrow peaks
-          - This prevents visual overlap when multiple DataSelectors plotted
-
-        Continuous Features:
-        - Uses standard Kernel Density Estimation (KDE)
-        - Automatic bandwidth selection via Scott's or Silverman's rule
-        - Manual bandwidth control available via kde_bandwidth parameter
-
-        Grid Layout:
-        - Features grouped by type where possible
-        - max_cols controls maximum columns (default: 4)
-        - Layout algorithm maintains roughly square overall shape
-        - Each grid cell shows one feature with overlaid curves
-
-        Color Mapping:
-        - Uses DataSelector-based colors for cluster consistency
-        - Same colors across all plots in pipeline for same DataSelectors
-        - Filled curves with transparency (alpha) + solid contour lines
+        - Features displayed in grid layout with max_cols per row
+        - Discrete features use Gaussian smoothing
+        - Continuous features use KDE
+        - Colors consistent with clustering via ColorMappingHelper
         """
         plotter = DensityPlotter(self.pipeline_data, self.cache_dir)
         return plotter.plot(
-            feature_importance_name=feature_importance_name,
-            n_top=n_top,
+            feature_selector=feature_selector,
+            data_selectors=data_selectors,
             contact_transformation=contact_transformation,
             max_cols=max_cols,
             long_labels=long_labels,
@@ -353,8 +313,7 @@ class FeatureImportanceFacade:
 
     def time_series(
         self,
-        feature_importance_name: str,
-        n_top: int = 5,
+        feature_selector: str,
         traj_selection: Union[int, str, List, "all"] = "all",
         use_time: bool = True,
         tags_for_coloring: Optional[List[str]] = None,
@@ -376,69 +335,54 @@ class FeatureImportanceFacade:
         dpi: int = 300
     ) -> Figure:
         """
-        Create time series plots from feature importance analysis.
+        Create time series plots from manual feature selection.
 
-        Visualizes temporal evolution of important features as line plots
+        Visualizes temporal evolution of selected features as line plots
         with one subplot per feature. Each trajectory is shown as a separate
-        line, optionally colored by trajectory number or tags. Can include
-        cluster membership visualization as colored bars below plots.
+        line, optionally colored by trajectory number or tags.
 
         Parameters
         ----------
-        feature_importance_name : str
-            Name of feature importance analysis
-        n_top : int, default=5
-            Number of top features per sub-comparison. Union taken across
-            all sub-comparisons to determine features to plot.
+        feature_selector : str
+            Name of feature selector
         traj_selection : int, str, list, or "all", default="all"
-            Trajectories to plot. Can be indices, names, tags, or "all".
+            Trajectories to plot
         use_time : bool, default=True
             If True, use Time (ns) for x-axis. If False, use frame numbers.
         tags_for_coloring : list of str, optional
-            Tags to use for trajectory coloring. If set, automatically enables
-            tag-based coloring. Trajectories grouped by shared tags from this list.
+            Tags to use for trajectory coloring
         allow_multi_tag_plotting : bool, default=False
-            How to handle trajectories with multiple matching tags:
-            - False: Exclude trajectories with multiple tags
-            - True: Plot such trajectories multiple times (once per tag)
+            Plot multi-tag trajectories multiple times
         clustering_name : str, optional
-            Name of clustering analysis for membership visualization.
-            If None, no membership bars shown.
+            Name of clustering for membership visualization
         membership_per_feature : bool, default=False
-            If True, show membership bar below each feature subplot.
-            If False, show single membership bar at bottom of figure.
+            Show membership bar below each feature subplot
         membership_traj_selection : int, str, list, or "all", default="all"
-            Trajectories to include in membership visualization.
-            Can differ from main traj_selection.
+            Trajectories to include in membership visualization
         contact_transformation : bool, default=True
-            If True, automatically convert contact features to distances.
+            Convert contact features to distances
         max_cols : int, default=2
-            Maximum number of columns in grid layout. Each feature gets
-            one grid cell arranged in rows and columns.
+            Maximum number of columns in grid layout
         long_labels : bool, default=False
-            If True, use long descriptive labels for discrete features
-            (e.g., "Contact"/"Non-Contact"). If False, use short labels
-            (e.g., "C"/"NC"). Applies to binary/discrete features only.
+            Use long descriptive labels for discrete features
         subplot_height : float, default=2.5
             Height per feature subplot in inches
         membership_bar_height : float, optional
-            Height per trajectory in membership bar in inches.
-            Default: 0.25 (membership_per_feature=True) or 0.5 (False)
+            Height per trajectory in membership bar
         show_legend : bool, default=True
             Show legend for trajectory/tag colors
         contact_threshold : Optional[float], default=4.5
-            Distance threshold in Angstrom for drawing contact threshold line
-            on distance features. If provided, draws a red dashed horizontal line.
+            Distance threshold for contact threshold line
         title : str, optional
-            Custom plot title. Auto-generated if None.
+            Custom plot title
         save_fig : bool, default=False
             Save figure to file
         filename : str, optional
-            Custom filename. Auto-generated if None.
+            Custom filename
         file_format : str, default="png"
-            File format for saving (png, pdf, svg, etc.)
+            File format for saving
         dpi : int, default=300
-            Resolution for saved figure in dots per inch
+            Resolution for saved figure
 
         Returns
         -------
@@ -448,58 +392,28 @@ class FeatureImportanceFacade:
         Raises
         ------
         ValueError
-            If color_by_tags=True but tags_for_coloring not specified,
-            or if no trajectories remain after filtering
+            If feature selector not found
 
         Examples
         --------
-        >>> # Basic time series plot with top 5 features
+        >>> # Basic time series plot
         >>> fig = facade.time_series(
-        ...     feature_importance_name="tree_analysis",
-        ...     n_top=5
+        ...     feature_selector="my_selector"
         ... )
 
-        >>> # Color by trajectory tags
+        >>> # With cluster membership visualization
         >>> fig = facade.time_series(
-        ...     feature_importance_name="tree_analysis",
-        ...     n_top=5,
-        ...     color_by_tags=True,
-        ...     tags_for_coloring=["system_A", "system_B"]
-        ... )
-
-        >>> # Add cluster membership visualization
-        >>> fig = facade.time_series(
-        ...     feature_importance_name="tree_analysis",
-        ...     n_top=5,
-        ...     clustering_name="dbscan_clustering",
+        ...     feature_selector="my_selector",
+        ...     clustering_name="dbscan",
         ...     membership_per_feature=True
         ... )
 
-        >>> # Plot specific trajectories with frame numbers
+        >>> # Save to file
         >>> fig = facade.time_series(
-        ...     feature_importance_name="tree_analysis",
-        ...     n_top=5,
-        ...     traj_selection=[0, 1, 2],
-        ...     use_time=False
-        ... )
-
-        >>> # Custom layout with long labels
-        >>> fig = facade.time_series(
-        ...     feature_importance_name="tree_analysis",
-        ...     n_top=10,
-        ...     max_cols=3,
-        ...     long_labels=True,
-        ...     subplot_height=3.0
-        ... )
-
-        >>> # Save high-resolution PDF
-        >>> fig = facade.time_series(
-        ...     feature_importance_name="tree_analysis",
-        ...     n_top=10,
+        ...     feature_selector="my_selector",
         ...     save_fig=True,
-        ...     filename="feature_timeseries.pdf",
-        ...     file_format="pdf",
-        ...     dpi=600
+        ...     filename="timeseries.pdf",
+        ...     file_format="pdf"
         ... )
 
         Notes
@@ -508,13 +422,10 @@ class FeatureImportanceFacade:
         - X-axis shows either Time (ns) or frame numbers
         - Contact features automatically converted to distances (default)
         - Cluster membership shown as colored horizontal bars
-        - Memory-efficient rendering using block optimization
-        - Supports trajectory filtering by index, name, or tags
         """
         plotter = TimeSeriesPlotter(self.pipeline_data, self.cache_dir)
         return plotter.plot(
-            feature_importance_name=feature_importance_name,
-            n_top=n_top,
+            feature_selector=feature_selector,
             traj_selection=traj_selection,
             use_time=use_time,
             tags_for_coloring=tags_for_coloring,

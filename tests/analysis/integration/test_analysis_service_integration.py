@@ -214,19 +214,20 @@ class TestAnalysisServiceIntegration:
         # Get raw coordinate data to verify linear pattern
         raw_coords = pipeline._data.feature_data['coordinates'][0].data
         
-        # create_linear_coordinates generates coordinates already converted to Angstrom:
-        # frame 0: atom 0 = [0, 0, 0], atom 1 = [10, 0, 20]
-        # frame 1: atom 0 = [10, 5, 0], atom 1 = [20, 5, 20]
-        # frame 2: atom 0 = [20, 10, 0], atom 1 = [30, 10, 20]
-        # frame 3: atom 0 = [30, 15, 0], atom 1 = [40, 15, 20]
-        # frame 4: atom 0 = [40, 20, 0], atom 1 = [50, 20, 20]
-        
+        # create_linear_coordinates generates coordinates with independent variance per atom:
+        # xyz[frame, atom] = [frame + atom, frame * 0.5 + atom * 0.3, frame * 0.2 + atom * 2.0]
+        # frame 0: atom 0 = [0, 0, 0], atom 1 = [10, 3, 20]
+        # frame 1: atom 0 = [10, 5, 2], atom 1 = [20, 8, 22]
+        # frame 2: atom 0 = [20, 10, 4], atom 1 = [30, 13, 24]
+        # frame 3: atom 0 = [30, 15, 6], atom 1 = [40, 18, 26]
+        # frame 4: atom 0 = [40, 20, 8], atom 1 = [50, 23, 28]
+
         expected_coords = np.array([
-            [0, 0, 0, 10, 0, 20],      # frame 0: [atom0_xyz, atom1_xyz]
-            [10, 5, 0, 20, 5, 20],     # frame 1
-            [20, 10, 0, 30, 10, 20],   # frame 2
-            [30, 15, 0, 40, 15, 20],   # frame 3
-            [40, 20, 0, 50, 20, 20]    # frame 4
+            [0, 0, 0, 10, 3, 20],      # frame 0: [atom0_xyz, atom1_xyz]
+            [10, 5, 2, 20, 8, 22],     # frame 1
+            [20, 10, 4, 30, 13, 24],   # frame 2
+            [30, 15, 6, 40, 18, 26],   # frame 3
+            [40, 20, 8, 50, 23, 28]    # frame 4
         ], dtype=float)
         
         np.testing.assert_array_almost_equal(raw_coords, expected_coords, decimal=1)

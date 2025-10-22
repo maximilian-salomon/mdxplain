@@ -36,6 +36,7 @@ from .....feature_importance.managers.feature_importance_manager import FeatureI
 from .....utils.feature_metadata_utils import FeatureMetadataUtils
 from ....helper.contact_to_distances_converter import ContactToDistancesConverter
 from ....helper.feature_metadata_helper import FeatureMetadataHelper
+from ....helper.validation_helper import ValidationHelper
 
 
 class TimeSeriesDataPreparer:
@@ -116,6 +117,76 @@ class TimeSeriesDataPreparer:
         )
 
         feature_metadata = pipeline_data.get_selected_metadata(continuous_selector)
+
+        feature_data, feature_indices = TimeSeriesDataPreparer._organize_features(
+            unique_features, feature_metadata
+        )
+
+        metadata_map = TimeSeriesDataPreparer._collect_feature_metadata(
+            feature_data, feature_metadata
+        )
+
+        return feature_data, feature_indices, metadata_map, contact_cutoff, continuous_selector, is_temporary
+
+    @staticmethod
+    def prepare_from_manual_selection(
+        pipeline_data: PipelineData,
+        feature_selector: str,
+        contact_transformation: bool = True
+    ) -> Tuple[Dict[str, Dict[str, Any]], Dict[int, str], Dict[str, Dict[str, Any]], Optional[float], str, bool]:
+        """
+        Prepare data for time series visualization from manual selection.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data container
+        feature_selector : str
+            Name of feature selector
+        contact_transformation : bool, default=True
+            Convert contacts to distances
+
+        Returns
+        -------
+        feature_data : Dict[str, Dict[str, Any]]
+            {feat_type: {feat_name: {metadata}}}
+        feature_indices : Dict[int, str]
+            Mapping feature_index -> feature_name
+        metadata_map : Dict[str, Dict[str, Any]]
+            Feature metadata: feat_type -> feat_name -> {type_metadata, features}
+        contact_cutoff : Optional[float]
+            Contact cutoff if transformed
+        feature_selector_name : str
+            Name of feature selector to use (may be transformed)
+        is_temporary : bool
+            True if temporary selector was created
+
+        Examples
+        --------
+        >>> data, indices, metadata_map, cutoff, selector, is_temp = TimeSeriesDataPreparer.prepare_from_manual_selection(
+        ...     pipeline_data, "my_selector"
+        ... )
+        """
+        # Validate feature selector
+        ValidationHelper.validate_feature_selector_exists(
+            pipeline_data, feature_selector
+        )
+
+        # Contact transformation using ContactToDistancesConverter
+        if contact_transformation:
+            continuous_selector, is_temporary, contact_cutoff = (
+                ContactToDistancesConverter.convert_contacts_to_distances(
+                    pipeline_data, feature_selector
+                )
+            )
+        else:
+            continuous_selector = feature_selector
+            is_temporary = False
+            contact_cutoff = None
+
+        # Get all features from selector
+        feature_metadata = pipeline_data.get_selected_metadata(continuous_selector)
+        unique_features = set(range(len(feature_metadata)))
 
         feature_data, feature_indices = TimeSeriesDataPreparer._organize_features(
             unique_features, feature_metadata

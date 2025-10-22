@@ -61,8 +61,9 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
 
     def plot(
         self,
-        feature_importance_name: str,
+        feature_importance_name: Optional[str] = None,
         n_top: int = 5,
+        feature_selector: Optional[str] = None,
         traj_selection: Union[int, str, List, "all"] = "all",
         use_time: bool = True,
         tags_for_coloring: Optional[List[str]] = None,
@@ -84,14 +85,20 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         dpi: int = 300
     ) -> Figure:
         """
-        Create time series plots for top features.
+        Create time series plots from feature importance or manual selection.
+
+        Supports two modes:
+        1. Feature Importance mode: Automatic selection from feature importance
+        2. Manual mode: User-defined feature selection
 
         Parameters
         ----------
-        feature_importance_name : str
-            Feature importance analysis name
+        feature_importance_name : str, optional
+            Name of feature importance analysis (Feature Importance mode)
         n_top : int, default=5
-            Top N features (union across sub-comparisons)
+            Number of top features per comparison (Feature Importance mode)
+        feature_selector : str, optional
+            Name of feature selector (Manual mode)
         traj_selection : int, str, list, or "all", default="all"
             Trajectory selection for lines
         use_time : bool, default=True
@@ -139,9 +146,15 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
 
         Examples
         --------
+        >>> # Feature Importance mode
         >>> fig = plotter.plot(
         ...     feature_importance_name="analysis",
         ...     n_top=5
+        ... )
+
+        >>> # Manual mode
+        >>> fig = plotter.plot(
+        ...     feature_selector="my_selector"
         ... )
 
         Notes
@@ -149,6 +162,11 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         Tag coloring is automatically enabled when tags_for_coloring is set.
         No need to manually set color_by_tags parameter.
         """
+        # 1. Determine mode and validate parameters
+        mode_type, mode_name = self._validate_and_determine_mode(
+            feature_importance_name, feature_selector, None
+        )
+
         # Apply mode-based defaults for membership_bar_height
         if membership_bar_height is None:
             membership_bar_height = 0.25 if membership_per_feature else 0.5
@@ -156,8 +174,11 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         # Create central configuration
         config = TimeSeriesPlotConfig(
             pipeline_data=self.pipeline_data,
+            mode_type=mode_type,
+            mode_name=mode_name,
             feature_importance_name=feature_importance_name,
             n_top=n_top,
+            feature_selector=feature_selector,
             traj_selection=traj_selection,
             use_time=use_time,
             tags_for_coloring=tags_for_coloring,
@@ -348,9 +369,16 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         --------
         >>> data = self._prepare_plot_data(config)
         """
-        feature_data, feature_indices, metadata_map, contact_cutoff, feature_selector_name, is_temporary = TimeSeriesDataPreparer.prepare(
-            config.pipeline_data, config.feature_importance_name, config.n_top, config.contact_transformation
-        )
+        # Route to appropriate preparation method based on mode
+        if config.mode_type == "feature_importance":
+            feature_data, feature_indices, metadata_map, contact_cutoff, feature_selector_name, is_temporary = TimeSeriesDataPreparer.prepare(
+                config.pipeline_data, config.mode_name, config.n_top, config.contact_transformation
+            )
+        else:
+            # Manual mode
+            feature_data, feature_indices, metadata_map, contact_cutoff, feature_selector_name, is_temporary = TimeSeriesDataPreparer.prepare_from_manual_selection(
+                config.pipeline_data, config.mode_name, config.contact_transformation
+            )
 
         traj_indices = self._get_trajectory_indices(config.traj_selection, feature_selector_name)
         tag_map = TimeSeriesTagColoringHelper.build_tag_map(
@@ -785,3 +813,101 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             width_ratios = [label_width_ratio] + [1.0] * config.n_cols
             return n_cols_grid, width_ratios
         return config.n_cols, None
+
+    def _validate_and_determine_mode(
+        self,
+        feature_importance_name: Optional[str],
+        feature_selector: Optional[str],
+        data_selectors: Optional[List[str]],
+    ) -> Tuple[str, str]:
+        """
+        Validate parameters and determine operational mode for time series.
+
+        Time series specific validation that does not require data_selectors
+        for manual mode (unlike violin/density plots).
+
+        Parameters
+        ----------
+        feature_importance_name : str, optional
+            Feature importance analysis name
+        feature_selector : str, optional
+            Feature selector name
+        data_selectors : List[str], optional
+            Ignored for time series (kept for API compatibility)
+
+        Returns
+        -------
+        mode_type : str
+            "feature_importance" or "manual"
+        mode_name : str
+            Name for this mode (fi_name or feature_selector_name)
+
+        Raises
+        ------
+        ValueError
+            If both modes specified or neither mode specified
+
+        Examples
+        --------
+        >>> # Feature Importance mode
+        >>> mode_type, mode_name = plotter._validate_and_determine_mode(
+        ...     "tree_analysis", None, None
+        ... )
+        >>> print(mode_type, mode_name)
+        feature_importance tree_analysis
+
+        >>> # Manual mode (no data_selectors needed)
+        >>> mode_type, mode_name = plotter._validate_and_determine_mode(
+        ...     None, "my_selector", None
+        ... )
+        >>> print(mode_type, mode_name)
+        manual my_selector
+        """
+        self._validate_exclusive_modes(feature_importance_name, feature_selector)
+
+        if feature_importance_name:
+            return "feature_importance", feature_importance_name
+
+        return "manual", feature_selector
+
+    @staticmethod
+    def _validate_exclusive_modes(
+        feature_importance_name: Optional[str],
+        feature_selector: Optional[str]
+    ) -> None:
+        """
+        Validate exclusive mode parameters.
+
+        Parameters
+        ----------
+        feature_importance_name : str, optional
+            Feature importance analysis name
+        feature_selector : str, optional
+            Feature selector name
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError
+            If both or neither mode specified
+
+        Examples
+        --------
+        >>> TimeSeriesPlotter._validate_exclusive_modes("fi", None)  # OK
+        >>> TimeSeriesPlotter._validate_exclusive_modes(None, "fs")  # OK
+        >>> TimeSeriesPlotter._validate_exclusive_modes("fi", "fs")  # Raises
+        >>> TimeSeriesPlotter._validate_exclusive_modes(None, None)  # Raises
+        """
+        if feature_importance_name and feature_selector:
+            raise ValueError(
+                "Cannot mix modes. "
+                "Provide either feature_importance_name OR feature_selector."
+            )
+
+        if not feature_importance_name and not feature_selector:
+            raise ValueError(
+                "Must provide either feature_importance_name or feature_selector."
+            )
