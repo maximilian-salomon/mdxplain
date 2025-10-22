@@ -4,7 +4,8 @@ Feature Importance
 .. automodule:: mdxplain.feature_importance
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
+   :titlesonly:
 
    mdxplain.feature_importance.analyzer_types
    mdxplain.feature_importance.entities

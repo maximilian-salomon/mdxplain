@@ -3,9 +3,6 @@ Analysis Structure: Calculators
 
 .. automodule:: mdxplain.analysis.structure.calculators
 
-Module contents
----------------
-
 .. toctree::
    :maxdepth: 1
 

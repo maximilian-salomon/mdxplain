@@ -1,0 +1,553 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Decomposition Types: Interface Calculator Base &mdash; mdxplain 31.10.2025 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=55e8f53f"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Decomposition Types: Interface Decomposition Types Base" href="mdxplain.decomposition.decomposition_type.interfaces.decomposition_type_base.html" />
+    <link rel="prev" title="Decomposition Types: Interfaces" href="mdxplain.decomposition.decomposition_type.interfaces.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mdxplain
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../introduction.html">Introduction to mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting started with mdxplain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/theory/theory.html">The Theory Behind mdxplain</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/theory/theory.clustering.html">Theory: clustering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/theory/theory.dimension_reduction.html">Theory: Dimension Reduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/theory/theory.features.html">Theory: Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/theory/theory.machine_learning.html">Theory: Machine Learning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/learning/learning.html">Learn mdxplain</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../analysis/mdxplain.analysis.html">Analysis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../analysis/mdxplain.analysis.managers.html">Analysis Managers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../analysis/mdxplain.analysis.services.html">Analysis Services</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../analysis/mdxplain.analysis.structure.html">Analysis Structure</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../analysis/mdxplain.analysis.structure.calculators.html">Analysis Structure: Calculators</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../analysis/mdxplain.analysis.structure.calculators.rmsd_calculator.html">RMSD Calculator</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../analysis/mdxplain.analysis.structure.calculators.rmsf_calculator.html">RMSF Calculator</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../analysis/mdxplain.analysis.structure.helpers.html">Analysis Structure Helpers</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../analysis/mdxplain.analysis.structure.helpers.reference_structure_helper.html">Reference Structure Helper</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../analysis/mdxplain.analysis.structure.helpers.residue_aggregation_helper.html">Residue Aggregation Helper</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../analysis/mdxplain.analysis.structure.helpers.structure_calculation_helper.html">Structure Calculation Helper</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../analysis/mdxplain.analysis.structure.helpers.trajectory_service_helper.html">Trajectory Service Helper</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../analysis/mdxplain.analysis.structure.services.html">Analysis Structure Services</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../analysis/mdxplain.analysis.structure.services.rmsd_facade.html">RMSD Facade</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../analysis/mdxplain.analysis.structure.services.rmsd_variant_service.html">RMSD Variant Service</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../analysis/mdxplain.analysis.structure.services.rmsf_facade.html">RMSF Facade</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../analysis/mdxplain.analysis.structure.services.rmsf_per_atom_service.html">RMSF Per Atom Service</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../analysis/mdxplain.analysis.structure.services.rmsf_per_residue_aggregation_facade.html">RMSF Per Residue Aggregation Facade</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../analysis/mdxplain.analysis.structure.services.rmsf_per_residue_service.html">RMSF Per Residue Service</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../analysis/mdxplain.analysis.structure.services.rmsf_variant_facade.html">RMSF Variant Facade</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../analysis/mdxplain.analysis.structure.services.structure_analysis_service.html">Structure Analysis Service</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../clustering/mdxplain.clustering.html">Clustering</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../clustering/mdxplain.clustering.cluster_type.html">Cluster Types</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../clustering/mdxplain.clustering.cluster_type.dbscan.html">Cluster Type: DBSCAN</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../clustering/mdxplain.clustering.cluster_type.dbscan.dbscan_module.html">DBSCAN Module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../clustering/mdxplain.clustering.cluster_type.dbscan.dbscan_calculator.html">DBSCAN Calculator</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../clustering/mdxplain.clustering.cluster_type.dpa.html">Cluster Type: DPA</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../clustering/mdxplain.clustering.cluster_type.dpa.dpa_module.html">DPA Module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../clustering/mdxplain.clustering.cluster_type.dpa.dba_calculator.html">DBA Calculator</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../clustering/mdxplain.clustering.cluster_type.hdbscan.html">Cluster Type: HDBSCAN</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../clustering/mdxplain.clustering.cluster_type.hdbscan.hdbscan_module.html">HDBSCAN Module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../clustering/mdxplain.clustering.cluster_type.hdbscan.hdbscan_calculator.html">HDBSCAN Calculator</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../clustering/mdxplain.clustering.cluster_type.interfaces.html">Cluster Types: Interface Packages</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../clustering/mdxplain.clustering.cluster_type.interfaces.calculator_base.html">Calculator Base</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../clustering/mdxplain.clustering.cluster_type.interfaces.cluster_type_base.html">Cluster Type Base</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../clustering/mdxplain.clustering.cluster_type.interfaces.cluster_type_meta.html">Cluster Type Meta</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../clustering/mdxplain.clustering.entities.html">Entities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../clustering/mdxplain.clustering.managers.html">Clustering Manager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../clustering/mdxplain.clustering.services.html">Cluster Type: Services</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../comparison/mdxplain.comparison.html">Comparison</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../comparison/mdxplain.comparison.entities.html">Comparison Entities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../comparison/mdxplain.comparison.helpers.html">Comparison Helpers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../comparison/mdxplain.comparison.helpers.comparison_validation_helper.html">Comparison Validation Helper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../comparison/mdxplain.comparison.helpers.sub_comparison_creation_helper.html">Sub Comparison Creation Helper</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../comparison/mdxplain.comparison.managers.html">Comparison Managers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../data_selector/mdxplain.data_selector.html">Data Selector</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../data_selector/mdxplain.data_selector.entities.html">Data Selection Entities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../data_selector/mdxplain.data_selector.helpers.html">Data Selector Helpers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../data_selector/mdxplain.data_selector.helpers.criteria_builder_helper.html">Criteria Builder Helper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../data_selector/mdxplain.data_selector.helpers.frame_selection_helper.html">Frame Selection Helper</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../data_selector/mdxplain.data_selector.managers.html">Data Selector Managers</a></li>
+</ul>
+</li>
+<li class="toctree-l2 current"><a class="reference internal" href="mdxplain.decomposition.html">Decomposition</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="mdxplain.decomposition.decomposition_type.html">Decomposition Types</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.decomposition.decomposition_type.contact_kernel_pca.html">Decomposition Type: Contact Kernel PCA</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="mdxplain.decomposition.decomposition_type.contact_kernel_pca.contact_kernel_pca_calculator.html">Decomposition Type: Contact Kernel PCA Calculator</a></li>
+<li class="toctree-l5"><a class="reference internal" href="mdxplain.decomposition.decomposition_type.contact_kernel_pca.contact_kernel_pca.html">Decomposition Type: Contact Kernel PCA Data</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.decomposition.decomposition_type.diffusion_maps.html">Decomposition Type: Diffusion Maps</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="mdxplain.decomposition.decomposition_type.diffusion_maps.diffusion_maps_calculator.html">Decomposition Type: Diffusion Maps Calculator</a></li>
+<li class="toctree-l5"><a class="reference internal" href="mdxplain.decomposition.decomposition_type.diffusion_maps.diffusion_maps.html">Decomposition Type: Diffusion Maps</a></li>
+</ul>
+</li>
+<li class="toctree-l4 current"><a class="reference internal" href="mdxplain.decomposition.decomposition_type.interfaces.html">Decomposition Types: Interfaces</a><ul class="current">
+<li class="toctree-l5 current"><a class="current reference internal" href="#">Decomposition Types: Interface Calculator Base</a></li>
+<li class="toctree-l5"><a class="reference internal" href="mdxplain.decomposition.decomposition_type.interfaces.decomposition_type_base.html">Decomposition Types: Interface Decomposition Types Base</a></li>
+<li class="toctree-l5"><a class="reference internal" href="mdxplain.decomposition.decomposition_type.interfaces.decomposition_type_meta.html">Decomposition Types: Interface Decomposition Types Meta</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.decomposition.decomposition_type.kernel_pca.html">Decomposition Type: Kernel PCA</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="mdxplain.decomposition.decomposition_type.kernel_pca.kernel_pca_calculator.html">Decomposition Type: Kernel PCA Calculator</a></li>
+<li class="toctree-l5"><a class="reference internal" href="mdxplain.decomposition.decomposition_type.kernel_pca.kernel_pca.html">Decomposition Type: Kernel PCA Data</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="mdxplain.decomposition.decomposition_type.pca.html">Decomposition Type: PCA</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="mdxplain.decomposition.decomposition_type.pca.pca_calculator.html">Decomposition Type: PCA Calculator</a></li>
+<li class="toctree-l5"><a class="reference internal" href="mdxplain.decomposition.decomposition_type.pca.pca.html">Decomposition Type: PCA Data</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.decomposition.entities.html">Decomposition Entities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.decomposition.managers.html">Decomposition Managers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdxplain.decomposition.services.html">Decomposition Services</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../feature/mdxplain.feature.html">Feature</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../feature/mdxplain.feature.entities.html">Feature Entities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.html">Feature Types</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.contacts.html">Feature Type: Contacts</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.contacts.services.html">Feature Type: Contact Services</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.contacts.services.contacts_analysis_service.html">Feature Type: Contacts Analysis Service</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.contacts.services.contacts_reduce_service.html">Feature Type: Contacts Reduce Service</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.contacts.services.contacts_selection_service.html">Feature Type: Contacts Selection Service</a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.contacts.contacts.html">Feature Type: Contacts Data</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.contacts.contact_calculator.html">Feature Type: Contact Calculator</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.contacts.contact_calculator_analysis.html">Feature Type: Contact Calculator Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.coordinates.html">Feature Type: Coordinates</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.coordinates.services.html">Feature Type: Coordinates Services</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.coordinates.services.coordinates_analysis_service.html">Feature Type: Coordinates Analysis Service</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.coordinates.services.coordinates_reduce_service.html">Feature Type: Coordinates Reduce Service</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.coordinates.services.coordinates_selection_service.html">Feature Type: Coordinates Selection Service</a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.coordinates.coordinates.html">Feature Type: Coordinates Data</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.coordinates.coordinates_calculator.html">Feature Type: Coordinates Calculator</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.coordinates.coordinates_calculator_analysis.html">Feature Type: Coordinates Calculator Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.distances.html">Feature Type: Distances</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.distances.services.html">Feature Type: Distances Services</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.distances.services.distances_analysis_service.html">Feature Type: Distances Analysis Service</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.distances.services.distances_reduce_service.html">Feature Type: Distances Reduce Service</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.distances.services.distances_selection_service.html">Feature Type: Distances Selection Service</a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.distances.distances.html">Feature Type: Distances Data</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.distances.distance_calculator.html">Feature Type: Distance Calculator</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.distances.distance_calculator_analysis.html">Feature Type: Distance Calculator Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.dssp.html">Feature Type: DSSP</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.dssp.helper.html">Feature Type: DSSP Helper</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.dssp.services.html">Feature Type: DSSP Services</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.dssp.services.dssp_analysis_service.html">Feature Type: DSSP Analysis Service</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.dssp.services.dssp_reduce_service.html">Feature Type: DSSP Reduce Service</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.dssp.services.dssp_selection_service.html">Feature Type: DSSP Selection Service</a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.dssp.dssp.html">Feature Type: DSSPs Data</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.dssp.dssp_calculator.html">Feature Type: DSSP Calculator</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.dssp.dssp_calculator_analysis.html">Feature Type: DSSP Calculator Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.helpers.html">Feature Types: Helpers</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.helper.calculator_compute_helper.html">Feature Type: Calculator Compute Helper</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.helper.calculator_stat_helper.html">Feature Type: Calculator Stat Helper</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.helper.feature_shape_helper.html">Feature Type: Feature Shape Helper</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.interfaces.html">Feature Types: Interfaces</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.interfaces.analysis_service_base.html">Feature Type: Interface Analysis Service Base</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.interfaces.calculator_base.html">Feature Type: Interface Calculator Base</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.interfaces.feature_type_base.html">Feature Type: Interface Feature Type Base</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.interfaces.feature_type_meta.html">Feature Type: Interface Feature Type Meta</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.interfaces.reduce_service_base.html">Feature Type: Interface Reduce Service Base</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.interfaces.selection_service_base.html">Feature Type: Interface Selection Service Base</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.sasa.html">Feature Type: SASA</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.sasa.services.html">Feature Type: SASA Services</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.sasa.services.sasa_analysis_service.html">Feature Type: SASA Analysis Service</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.sasa.services.sasa_reduce_service.html">Feature Type: SASA Reduce Service</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.sasa.services.sasa_selection_service.html">Feature Type: SASA Selection Service</a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.sasa.sasa.html">Feature Type: SASA Data</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.sasa.sasa_calculator.html">Feature Type: SASA Calculator</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.sasa.sasa_calculator_analysis.html">Feature Type: SASA Calculator Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.torsions.html">Feature Type: Torsions</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.torsions.services.html">Feature Type: Torsions Services</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.torsions.services.torsions_analysis_service.html">Feature Type: Torsions Analysis Service</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.torsions.services.torsions_reduce_service.html">Feature Type: Torsions Reduce Service</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.torsions.services.torsions_selection_service.html">Feature Type: Torsions Selection Service</a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.torsions.torsions.html">Feature Type: Torsions Data</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.torsions.torsions_calculator.html">Feature Type: Torsions Calculator</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../feature/feature_type/mdxplain.feature.feature_type.torsions.torsions_calculator_analysis.html">Feature Type: Torsions Calculator Analysis</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../feature/mdxplain.feature.helper.html">Feature Helpers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../feature/mdxplain.feature.helper.bound_method.html">Feature Helpers: Bound Method</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../feature/mdxplain.feature.helper.bound_stats.html">Feature Helpers: Bound Stats</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../feature/mdxplain.feature.helper.feature_binding_helper.html">Feature Helpers: Feature Binding Helper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../feature/mdxplain.feature.helper.feature_computation_helper.html">Feature Helpers: Feature Computation Helper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../feature/mdxplain.feature.helper.feature_cross_trajectory_reduction_helper.html">Feature Helpers: Feature Cross Trajectory Reduction Helper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../feature/mdxplain.feature.helper.feature_reduction_helper.html">Feature Helpers: Feature Reduction Helper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../feature/mdxplain.feature.helper.feature_reset_helper.html">Feature Helpers: Feature Reset Helper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../feature/mdxplain.feature.helper.feature_validation_helper.html">Feature Helpers: Feature Validation Helper</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../feature/mdxplain.feature.managers.html">Feature Managers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../feature/mdxplain.feature.services.html">Feature Services</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../feature/mdxplain.feature.services.helpers.html">Feature Services: Helpers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../feature/mdxplain.feature.services.feature_add_service.html">Feature Services: Feature Add Service</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../feature/mdxplain.feature.services.feature_analysis_service.html">Feature Services: Feature Analysis Service</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../feature/mdxplain.feature.services.feature_reduce_service.html">Feature Services: Feature Reduce Service</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../feature/mdxplain.feature.services.feature_selector_add_service.html">Feature Services: Feature Selector Add Service</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.html">Feature Importance</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.analyzer_types.html">Feature Importance Analyzer Types</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.analyzer_types.decision_tree.html">Feature Importance Analyzer Types: Decision Tree</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.analyzer_types.decision_tree.decision_tree.html">Feature Importance Analyzer Types: Decision Tree Data</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.analyzer_types.decision_tree.decision_tree_calculator.html">Feature Importance Analyzer Types: Decision Tree Calculator</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.analyzer_types.interfaces.html">Feature Importance Analyzer Types: Interfaces</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.analyzer_types.interfaces.analyzer_type_base.html">Feature Importance Analyzer Types: Interface Analyzer Type Base</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.analyzer_types.interfaces.anaylzer_type_meta.html">Feature Importance Analyzer Types: Interface Analyzer Type Meta</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.analyzer_types.interfaces.calculator_base.html">Feature Importance Analyzer Types: Interface Calculator Base</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.entities.html">Feature Importance Entities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.helpers.html">Feature Importance Helpers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.helpers.analysis_runner_helper.html">Feature Importance: Analysis Runner Helper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.helpers.feature_importance_validation_helper.html">Feature Importance: Validation Helper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.helpers.feature_name_mapping_helper.html">Feature Importance: Mapping Helper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.helpers.metadata_builder_helper.html">Feature Importance: Metadata Builder Helper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.helpers.top_features_helper.html">Feature Importance: Top Features Helper</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.managers.html">Feature Importance Managers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../feature_importance/mdxplain.feature_importance.services.html">Feature Importance Services</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../feature_selection/mdxplain.feature_selection.html">Feature Selection</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../feature_selection/mdxplain.feature_selection.entities.html">Feature Selection Entities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../feature_selection/mdxplain.feature_selection.helpers.html">Feature Selection: Helpers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../feature_selection/mdxplain.feature_selection.helpers.common_denominator_helper.html">Feature Selection: Common Denominator Helper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../feature_selection/mdxplain.feature_selection.helpers.feature_selector_consensus_parse_helper.html">Feature Selection: Consensus Parse Helper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../feature_selection/mdxplain.feature_selection.helpers.feature_selector_numeric_parse_helper.html">Feature Selection: Numeric Parse Helper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../feature_selection/mdxplain.feature_selection.helpers.feature_selector_parse_core_helper.html">Feature Selection: Parse Core Helper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../feature_selection/mdxplain.feature_selection.helpers.feature_selector_resid_parse_helper.html">Feature Selection: ResID Parse Helper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../feature_selection/mdxplain.feature_selection.helpers.feature_selector_resname_parse_helper.html">Feature Selection: ResName Parse Helper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../feature_selection/mdxplain.feature_selection.helpers.feature_selector_seqid_parse_helper.html">Feature Selection: SeqID Parse Helper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../feature_selection/mdxplain.feature_selection.helpers.post_selection_reduction_helper.html">Feature Selection: Post Selection Reduction Helper</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../feature_selection/mdxplain.feature_selection.managers.html">Feature Selection: Managers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../pipeline/mdxplain.pipeline.html">Pipeline</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../pipeline/mdxplain.pipeline.entities.html">Pipeline Entities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../pipeline/mdxplain.pipeline.helper.html">Pipeline: Helpers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../pipeline/mdxplain.pipeline.helper.comparison_data_helper.html">Pipeline: Comparison Data Helper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../pipeline/mdxplain.pipeline.helper.selection_matrix_helper.html">Pipeline: Selection Matrix Helper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../pipeline/mdxplain.pipeline.helper.selection_memmap_helper.html">Pipeline: Selection MemMap Helper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../pipeline/mdxplain.pipeline.helper.selection_metadata_helper.html">Pipeline: Selection Metadata Helper</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../pipeline/mdxplain.pipeline.managers.html">Pipeline Managers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../pipeline/mdxplain.pipeline.managers.auto_inject_proxy.html">Pipeline Managers: Auto Inject Proxy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../pipeline/mdxplain.pipeline.managers.pipeline_manager.html">Pipeline Managers: Manager</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../trajectory/mdxplain.trajectory.html">Trajectory</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../trajectory/mdxplain.trajectory.entities.html">Trajectory Entities</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../trajectory/mdxplain.trajectory.entities.dask_md_trajectory.html">Trajectory: Dask MD Trajectory</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../trajectory/mdxplain.trajectory.entities.trajectory_data.html">Trajectory: Data</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../trajectory/mdxplain.trajectory.helper.html">Trajectory: Helpers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../trajectory/mdxplain.trajectory.helper.dask_trajectory_helper.html">Trajectory: Dask Trajectory Helper</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../trajectory/mdxplain.trajectory.helper.dask_trajectory_helper.dask_trajectory_build_helper.html">Trajectory: Dask Trajectory Build Helper</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../trajectory/mdxplain.trajectory.helper.dask_trajectory_helper.dask_trajectory_join_stack_helper.html">Trajectory: Dask Trajectory Join Stack Helper</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../trajectory/mdxplain.trajectory.helper.dask_trajectory_helper.dask_trajectory_store_helper.html">Trajectory: Dask Trajectory Store Helper</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../trajectory/mdxplain.trajectory.helper.dask_trajectory_helper.parallel_operations_helper.html">Trajectory: Dask Trajectory Parallel Operations Helper</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../trajectory/mdxplain.trajectory.helper.dask_trajectory_helper.zarr_cache_helper.html">Trajectory: Dask Trajectory Zarr Cache Helper</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../trajectory/mdxplain.trajectory.helper.metadata_helper.html">Trajectory: Metadata Helpers</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../trajectory/mdxplain.trajectory.helper.metadata_helper.nomenclature_helper.html">Trajectory: Metadata Nomenclature Helper</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../trajectory/mdxplain.trajectory.helper.metadata_helper.tag_helper.html">Trajectory: Metadata Tag Helper</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../trajectory/mdxplain.trajectory.helper.process_helper.html">Trajectory: Process Helpers</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../trajectory/mdxplain.trajectory.helper.process_helper.label_operation_helper.html">Trajectory: Process Label Operation Helper</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../trajectory/mdxplain.trajectory.helper.process_helper.selection_resolve_helper.html">Trajectory: Process Selection Resolve Helper</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../trajectory/mdxplain.trajectory.helper.process_helper.trajectory_load_helper.html">Trajectory: Process Trajectory Load Helper</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../trajectory/mdxplain.trajectory.helper.process_helper.trajectory_process_helper.html">Trajectory: Process Trajectory Process Helper</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../trajectory/mdxplain.trajectory.helper.validation_helper.html">Trajectory: Validation Helpers</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../trajectory/mdxplain.trajectory.managers.html">Trajectory: Managers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/mdxplain.utils.html">Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mdxplain</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API Documentation</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.decomposition.html">Decomposition</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.decomposition.decomposition_type.html">Decomposition Types</a></li>
+          <li class="breadcrumb-item"><a href="mdxplain.decomposition.decomposition_type.interfaces.html">Decomposition Types: Interfaces</a></li>
+      <li class="breadcrumb-item active">Decomposition Types: Interface Calculator Base</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api/decomposition/mdxplain.decomposition.decomposition_type.interfaces.calculator_base.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mdxplain.decomposition.decomposition_type.interfaces.calculator_base">
+<span id="decomposition-types-interface-calculator-base"></span><h1>Decomposition Types: Interface Calculator Base<a class="headerlink" href="#module-mdxplain.decomposition.decomposition_type.interfaces.calculator_base" title="Link to this heading"></a></h1>
+<p>Abstract base class for decomposition calculators.</p>
+<p>Defines the interface that all decomposition calculators must implement
+for consistency across different dimensionality reduction methods.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mdxplain.decomposition.decomposition_type.interfaces.calculator_base.CalculatorBase">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mdxplain.decomposition.decomposition_type.interfaces.calculator_base.</span></span><span class="sig-name descname"><span class="pre">CalculatorBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">use_memmap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'./cache'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mdxplain.decomposition.decomposition_type.interfaces.calculator_base.CalculatorBase" title="Link to this definition"></a></dt>
+<dd><p>Abstract base class for decomposition calculators.</p>
+<p>Defines the interface that all decomposition calculators (PCA, KernelPCA,
+ContactKernelPCA) must implement for consistency across different
+dimensionality reduction methods.</p>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span><span class="w"> </span><span class="nc">MyCalculator</span><span class="p">(</span><span class="n">CalculatorBase</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_memmap</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">cache_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;./cache&quot;</span><span class="p">,</span> <span class="n">chunk_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2000</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">use_memmap</span><span class="p">,</span> <span class="n">cache_path</span><span class="p">,</span> <span class="n">chunk_size</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">def</span><span class="w"> </span><span class="nf">compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="c1"># Implement computation logic</span>
+<span class="gp">... </span>        <span class="k">return</span> <span class="n">transformed_data</span><span class="p">,</span> <span class="n">metadata</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.decomposition.decomposition_type.interfaces.calculator_base.CalculatorBase.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">use_memmap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'./cache'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2000</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mdxplain.decomposition.decomposition_type.interfaces.calculator_base.CalculatorBase.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize the decomposition calculator.</p>
+<section id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>use_memmap<span class="classifier">bool, default=False</span></dt><dd><p>Whether to use memory mapping for large datasets</p>
+</dd>
+<dt>cache_path<span class="classifier">str, optional</span></dt><dd><p>Path for memory-mapped cache files</p>
+</dd>
+<dt>chunk_size<span class="classifier">int, optional</span></dt><dd><p>Size of chunks for incremental processing</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h3>Returns<a class="headerlink" href="#returns" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>None</dt><dd><p>Initializes calculator with specified configuration</p>
+</dd>
+</dl>
+</section>
+<section id="id1">
+<h3>Examples<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Basic initialization</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">calc</span> <span class="o">=</span> <span class="n">MyCalculator</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># With memory mapping</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">calc</span> <span class="o">=</span> <span class="n">MyCalculator</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">use_memmap</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">cache_path</span><span class="o">=</span><span class="s2">&quot;./cache/decomp.dat&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">chunk_size</span><span class="o">=</span><span class="mi">1000</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mdxplain.decomposition.decomposition_type.interfaces.calculator_base.CalculatorBase.compute">
+<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mdxplain.decomposition.decomposition_type.interfaces.calculator_base.CalculatorBase.compute" title="Link to this definition"></a></dt>
+<dd><p>Compute decomposition of input data.</p>
+<p>This method performs the actual dimensionality reduction computation
+and returns the transformed data along with metadata about the
+transformation process.</p>
+<section id="id2">
+<h3>Parameters<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>data<span class="classifier">numpy.ndarray</span></dt><dd><p>Input data matrix to decompose, shape (n_samples, n_features)</p>
+</dd>
+<dt>**kwargs<span class="classifier">dict</span></dt><dd><p>Additional parameters specific to the decomposition method</p>
+</dd>
+</dl>
+</section>
+<section id="id3">
+<h3>Returns<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>Tuple[numpy.ndarray, Dict]</dt><dd><p>Tuple containing:</p>
+<ul class="simple">
+<li><p>transformed_data: Decomposed data matrix (n_samples, n_components)</p></li>
+<li><p>metadata: Dictionary with transformation information including
+hyperparameters, explained variance, components, etc.</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+<section id="id4">
+<h3>Examples<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Compute decomposition</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">calc</span> <span class="o">=</span> <span class="n">MyCalculator</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">transformed</span><span class="p">,</span> <span class="n">metadata</span> <span class="o">=</span> <span class="n">calc</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">n_components</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Transformed shape: </span><span class="si">{</span><span class="n">transformed</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Explained variance: </span><span class="si">{</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;explained_variance_ratio&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mdxplain.decomposition.decomposition_type.interfaces.html" class="btn btn-neutral float-left" title="Decomposition Types: Interfaces" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mdxplain.decomposition.decomposition_type.interfaces.decomposition_type_base.html" class="btn btn-neutral float-right" title="Decomposition Types: Interface Decomposition Types Base" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maximilian Salomon.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
