@@ -4,7 +4,8 @@ Comparison
 .. automodule:: mdxplain.comparison
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
+   :titlesonly:
 
    mdxplain.comparison.entities
    mdxplain.comparison.helpers

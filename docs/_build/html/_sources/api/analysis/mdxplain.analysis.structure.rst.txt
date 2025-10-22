@@ -3,9 +3,6 @@ Analysis Structure
 
 .. automodule:: mdxplain.analysis.structure
 
-Module contents
----------------
-
 .. toctree::
    :maxdepth: 1
 

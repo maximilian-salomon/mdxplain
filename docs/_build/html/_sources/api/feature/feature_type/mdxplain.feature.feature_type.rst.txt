@@ -4,7 +4,8 @@ Feature Types
 .. automodule:: mdxplain.feature.feature_type
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
+   :titlesonly:
    
    mdxplain.feature.feature_type.contacts
    mdxplain.feature.feature_type.coordinates
