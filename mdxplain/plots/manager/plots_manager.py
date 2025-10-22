@@ -32,6 +32,7 @@ from matplotlib.figure import Figure
 from ..service.decomposition_facade import DecompositionFacade
 from ..service.clustering_facade import ClusteringFacade
 from ..service.feature_importance_facade import FeatureImportanceFacade
+from ..service.feature_facade import FeatureFacade
 from ..plot_type.landscape import LandscapePlotter
 from ..plot_type.membership import MembershipPlotter
 
@@ -40,11 +41,12 @@ class PlotsManager:
     """
     Manager for all plotting operations.
 
-    Provides four access patterns:
+    Provides five access patterns:
     1. Direct: pipeline.plots.landscape(...), pipeline.plots.membership(...)
     2. Decomposition-focused: pipeline.plots.decomposition.landscape(...)
     3. Clustering-focused: pipeline.plots.clustering.landscape(...)
     4. Feature importance: pipeline.plots.feature_importance.violins(...)
+    5. Manual feature: pipeline.plots.feature.violins(...)
 
     Examples
     --------
@@ -71,6 +73,12 @@ class PlotsManager:
     >>> pipeline.plots.feature_importance.violins(
     ...     feature_importance_name="tree_analysis",
     ...     n_top=10
+    ... )
+
+    >>> # Manual feature violin plots
+    >>> pipeline.plots.feature.violins(
+    ...     feature_selector="my_selector",
+    ...     data_selectors=["cluster_0", "cluster_1"]
     ... )
     """
 
@@ -172,19 +180,53 @@ class PlotsManager:
         >>> # Create violin plots for top features
         >>> pipeline.plots.feature_importance.violins(
         ...     feature_importance_name="tree_analysis",
-        ...     n_top=10,
-        ...     split_features=False
+        ...     n_top=10
         ... )
 
-        >>> # Split view with individual points
-        >>> pipeline.plots.feature_importance.violins(
+        >>> # Create density plots
+        >>> pipeline.plots.feature_importance.densities(
         ...     feature_importance_name="tree_analysis",
-        ...     n_top=5,
-        ...     split_features=True,
-        ...     show_points=True
+        ...     n_top=10
         ... )
         """
         return FeatureImportanceFacade(self, None)
+
+    @property
+    def feature(self) -> FeatureFacade:
+        """
+        Access manual feature visualization methods.
+
+        Returns
+        -------
+        FeatureFacade
+            Manual feature plotting interface
+
+        Note
+        ----
+        Pipeline data is passed as None here because it will be
+        automatically injected later when the facade methods are called.
+
+        Examples
+        --------
+        >>> # Create violin plots for selected features
+        >>> pipeline.plots.feature.violins(
+        ...     feature_selector="my_selector",
+        ...     data_selectors=["cluster_0", "cluster_1"]
+        ... )
+
+        >>> # Create density plots
+        >>> pipeline.plots.feature.densities(
+        ...     feature_selector="my_selector",
+        ...     data_selectors=["cluster_0", "cluster_1"]
+        ... )
+
+        >>> # Create time series plots
+        >>> pipeline.plots.feature.time_series(
+        ...     feature_selector="my_selector",
+        ...     data_selectors=["cluster_0", "cluster_1"]
+        ... )
+        """
+        return FeatureFacade(self, None)
 
     def landscape(
         self,

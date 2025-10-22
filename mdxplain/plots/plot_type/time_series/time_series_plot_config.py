@@ -147,8 +147,11 @@ class TimeSeriesPlotConfig:
 
     # User input parameters
     pipeline_data: PipelineData
-    feature_importance_name: str
+    mode_type: str
+    mode_name: str
+    feature_importance_name: Optional[str]
     n_top: int
+    feature_selector: Optional[str]
     traj_selection: Union[int, str, List, "all"]
     use_time: bool
     tags_for_coloring: Optional[List[str]]

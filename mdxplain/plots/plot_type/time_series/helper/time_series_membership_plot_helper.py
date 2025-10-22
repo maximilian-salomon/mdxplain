@@ -133,6 +133,10 @@ class TimeSeriesMembershipPlotHelper:
             config.feature_selector_name
         )
 
+        # Skip membership plotting if no valid trajectories found in selector
+        if not membership_indices:
+            return
+
         prepared_data, cluster_colors, _ = MembershipBarRenderer.prepare_membership_data(
             config.pipeline_data, config.clustering_name, membership_indices,
             config.use_time

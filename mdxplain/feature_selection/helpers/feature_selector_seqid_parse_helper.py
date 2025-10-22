@@ -25,7 +25,7 @@ This module provides parsing functionality for seqid category selections,
 which are based on biological sequence IDs (residue.seqid) in the trajectory data.
 """
 
-from typing import List
+from typing import List, Tuple, Set
 from .feature_selector_numeric_parse_helper import FeatureSelectorNumericParseHelper
 
 
@@ -38,11 +38,9 @@ class FeatureSelectorSeqidParseHelper(FeatureSelectorNumericParseHelper):
     """
 
     @staticmethod
-    def parse_seqid_category(
-        param_parts: List[str], features_list: List[list], require_all_partners: bool = False
-    ) -> List[int]:
+    def parse_seqid_category(param_parts: List[str], features_list: List[list]) -> Tuple[List[int], Set[int]]:
         """
-        Parse 'seqid' category and return matching feature indices.
+        Parse 'seqid' category and return matching feature indices plus matched residue indices.
         Uses biological sequence ID from metadata (residue.seqid).
 
         Parameters
@@ -51,13 +49,11 @@ class FeatureSelectorSeqidParseHelper(FeatureSelectorNumericParseHelper):
             List of parameter parts for sequence ID selection
         features_list : List[list]
             List of features from metadata
-        require_all_partners : bool, default=False
-            If True, ALL partners must contain the sequence ID
 
         Returns
         -------
-        List[int]
-            List of feature indices matching the sequence ID criteria
+        Tuple[List[int], Set[int]]
+            Tuple of (feature_indices, matched_residue_indices)
 
         Raises
         ------
@@ -65,5 +61,5 @@ class FeatureSelectorSeqidParseHelper(FeatureSelectorNumericParseHelper):
             If the sequence ID specification is invalid
         """
         return FeatureSelectorNumericParseHelper.parse_numeric_category(
-            param_parts, features_list, "seqid", "seqid", require_all_partners
+            param_parts, features_list, "seqid", "seqid"
         )

@@ -18,10 +18,11 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""Plotting facades for decomposition, clustering, and feature importance visualization."""
+"""Plotting facades for decomposition, clustering, feature importance, and manual feature visualization."""
 
 from .decomposition_facade import DecompositionFacade
 from .clustering_facade import ClusteringFacade
 from .feature_importance_facade import FeatureImportanceFacade
+from .feature_facade import FeatureFacade
 
-__all__ = ['DecompositionFacade', 'ClusteringFacade', 'FeatureImportanceFacade']
+__all__ = ['DecompositionFacade', 'ClusteringFacade', 'FeatureImportanceFacade', 'FeatureFacade']
