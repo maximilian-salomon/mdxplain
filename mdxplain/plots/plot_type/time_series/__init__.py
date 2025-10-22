@@ -18,9 +18,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""Helper modules for density plot calculations."""
+"""Time series plotter for feature visualization."""
 
-from .density_calculation_helper import DensityCalculationHelper
-from .density_data_preparer import DensityDataPreparer
+from .time_series_plotter import TimeSeriesPlotter
 
-__all__ = ["DensityCalculationHelper", "DensityDataPreparer"]
+__all__ = ["TimeSeriesPlotter"]

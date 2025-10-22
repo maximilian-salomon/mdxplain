@@ -99,197 +99,29 @@ class CenterCalculationHelper:
 
         Examples
         --------
-        >>> # Fast processing for small data
+        >>> # Standard usage
         >>> centers = calculate_centers(data, labels, "centroid")
 
         >>> # Memory-safe processing for large data
         >>> centers = calculate_centers(data, labels, "centroid",
         ...                             chunk_size=1000, use_memmap=True, max_memory_gb=2.0)
         """
-        # Validate user method
-        if center_method not in CenterCalculationHelper.VALID_METHODS:
+        dispatch = {
+            "centroid": CenterCalculationHelper._calculate_centroids,
+            "mean": CenterCalculationHelper._calculate_means,
+            "median": CenterCalculationHelper._calculate_medians,
+            "density_peak": CenterCalculationHelper._calculate_density_peaks,
+            "median_centroid": CenterCalculationHelper._calculate_median_centroids,
+            "rmsd_centroid": CenterCalculationHelper._calculate_rmsd_centroids,
+        }
+
+        if center_method not in dispatch:
             raise ValueError(
                 f"Invalid center_method: '{center_method}'. "
-                f"Valid options: {CenterCalculationHelper.VALID_METHODS}"
+                f"Valid options: {list(dispatch.keys())}"
             )
 
-        # Calculate centers based on method
-        if center_method == "centroid":
-            centers = CenterCalculationHelper._calculate_centroids(
-                data, labels, chunk_size, use_memmap, max_memory_gb
-            )
-        elif center_method == "mean":
-            centers = CenterCalculationHelper._calculate_means(
-                data, labels, chunk_size, use_memmap, max_memory_gb
-            )
-        elif center_method == "median":
-            centers = CenterCalculationHelper._calculate_medians(
-                data, labels, chunk_size, use_memmap, max_memory_gb
-            )
-        elif center_method == "density_peak":
-            centers = CenterCalculationHelper._calculate_density_peaks(
-                data, labels, chunk_size, use_memmap, max_memory_gb
-            )
-        elif center_method == "median_centroid":
-            centers = CenterCalculationHelper._calculate_median_centroids(
-                data, labels, chunk_size, use_memmap, max_memory_gb
-            )
-        elif center_method == "rmsd_centroid":
-            centers = CenterCalculationHelper._calculate_rmsd_centroids(
-                data, labels, chunk_size, use_memmap, max_memory_gb
-            )
-
-        return centers
-
-    @staticmethod
-    def _iterate_cluster_data(
-        data: np.ndarray,
-        labels: np.ndarray,
-        label: int,
-        chunk_size: int,
-        use_memmap: bool
-    ):
-        """
-        Generator for cluster-specific data (chunk-wise or complete).
-
-        Yields cluster data either all at once (fast path) or chunk by chunk
-        (memory-safe path) depending on use_memmap flag.
-
-        Parameters
-        ----------
-        data : np.ndarray
-            Full dataset
-        labels : np.ndarray
-            Cluster labels
-        label : int
-            Current cluster label to extract
-        chunk_size : int
-            Chunk size for memmap processing
-        use_memmap : bool
-            Whether to use chunk-wise processing
-
-        Yields
-        ------
-        np.ndarray
-            Cluster data (complete or as chunk)
-
-        Examples
-        --------
-        >>> # Process all data at once
-        >>> for chunk in _iterate_cluster_data(data, labels, 0, 1000, False):
-        ...     # chunk contains all points from cluster 0
-
-        >>> # Process chunk by chunk
-        >>> for chunk in _iterate_cluster_data(data, labels, 0, 1000, True):
-        ...     # chunk contains up to 1000 points from cluster 0
-        """
-        if not use_memmap:
-            # Fast path: All data at once
-            mask = labels == label
-            yield data[mask]
-        else:
-            # Memory-safe path: Chunk by chunk
-            for start in range(0, len(data), chunk_size):
-                end = min(start + chunk_size, len(data))
-                chunk_mask = labels[start:end] == label
-                if np.any(chunk_mask):
-                    yield data[start:end][chunk_mask]
-
-    @staticmethod
-    def _compute_mean_for_label(
-        data: np.ndarray,
-        labels: np.ndarray,
-        label: int,
-        chunk_size: int,
-        use_memmap: bool
-    ) -> np.ndarray:
-        """
-        Helper to compute mean for a single cluster label.
-
-        Parameters
-        ----------
-        data : np.ndarray
-            Full dataset
-        labels : np.ndarray
-            Cluster labels
-        label : int
-            Cluster label to compute mean for
-        chunk_size : int
-            Chunk size for processing
-        use_memmap : bool
-            Whether to use chunk-wise processing
-
-        Returns
-        -------
-        np.ndarray
-            Mean vector for the cluster
-        """
-        sum_vec = np.zeros(data.shape[1])
-        count = 0
-
-        for chunk in CenterCalculationHelper._iterate_cluster_data(
-            data, labels, label, chunk_size, use_memmap
-        ):
-            sum_vec += np.sum(chunk, axis=0)
-            count += len(chunk)
-
-        return sum_vec / count if count > 0 else sum_vec
-
-    @staticmethod
-    def _compute_median_for_label(
-        data: np.ndarray,
-        labels: np.ndarray,
-        label: int,
-        chunk_size: int,
-        use_memmap: bool
-    ) -> np.ndarray:
-        """
-        Compute median using feature-by-feature streaming.
-
-        Processes one feature at a time to avoid loading entire cluster.
-        Always memory-safe, always exact.
-
-        Parameters
-        ----------
-        data : np.ndarray
-            Full dataset
-        labels : np.ndarray
-            Cluster labels
-        label : int
-            Cluster label to compute median for
-        chunk_size : int
-            Chunk size for processing
-        use_memmap : bool
-            Whether to use chunk-wise processing
-
-        Returns
-        -------
-        np.ndarray
-            Exact median vector for the cluster
-
-        Notes
-        -----
-        Memory usage: Only cluster_size x dtype.itemsize per feature
-        Example: 1M points, float32 → 4 MB per feature (always OK)
-        This is exact, not an approximation!
-        """
-        n_features = data.shape[1]
-        median = np.zeros(n_features, dtype=data.dtype)
-
-        # Process each feature independently
-        for feat_idx in range(n_features):
-            feature_values = []
-
-            # Collect ALL values for this ONE feature
-            for chunk in CenterCalculationHelper._iterate_cluster_data(
-                data, labels, label, chunk_size, use_memmap
-            ):
-                feature_values.extend(chunk[:, feat_idx].tolist())
-
-            # Compute exact median for this feature
-            median[feat_idx] = np.median(feature_values)
-
-        return median
+        return dispatch[center_method](data, labels, chunk_size, use_memmap, max_memory_gb)
 
     @staticmethod
     def _calculate_centroids(
@@ -300,10 +132,7 @@ class CenterCalculationHelper:
         max_memory_gb: float = 2.0
     ) -> Optional[np.ndarray]:
         """
-        Calculate centroids (medoids) using two-pass algorithm.
-
-        Pass 1: Compute mean
-        Pass 2: Find point closest to mean
+        Calculate centroids (medoids) for all clusters.
 
         Parameters
         ----------
@@ -325,34 +154,194 @@ class CenterCalculationHelper:
 
         Notes
         -----
-        Two-pass iteration required for medoid calculation.
-        Memory-safe but requires 2x I/O when using memmap.
+        Single pass over data processes all clusters simultaneously.
+        max_memory_gb parameter is not used by this method (kept for API consistency).
         """
         unique_labels = np.unique(labels[labels >= 0])
-        centers = []
+        if len(unique_labels) == 0:
+            return None
 
-        for label in unique_labels:
-            # Pass 1: Calculate mean using helper
-            mean = CenterCalculationHelper._compute_mean_for_label(
-                data, labels, label, chunk_size, use_memmap
+        n_clusters = len(unique_labels)
+        n_features = data.shape[1]
+
+        if not use_memmap:
+            return CenterCalculationHelper._calculate_centroids_generic_fast(
+                data, labels, unique_labels, metric='euclidean'
             )
 
-            # Pass 2: Find closest real point to mean
-            best_dist = float('inf')
-            best_point = None
+        means = CenterCalculationHelper._compute_means_chunked(
+            data, labels, unique_labels, chunk_size, n_clusters, n_features
+        )
+        centers = CenterCalculationHelper._find_centroids_generic_chunked(
+            data, labels, unique_labels, chunk_size, means, n_clusters, n_features, metric='euclidean'
+        )
+        return centers
 
-            for chunk in CenterCalculationHelper._iterate_cluster_data(
-                data, labels, label, chunk_size, use_memmap
-            ):
-                dists = np.linalg.norm(chunk - mean, axis=1)
+    @staticmethod
+    def _calculate_centroids_generic_fast(data, labels, unique_labels, metric='euclidean'):
+        """
+        Calculate centroids for all clusters without memmap using specified metric.
+
+        Parameters
+        ----------
+        data : numpy.ndarray
+            Full dataset
+        labels : numpy.ndarray
+            Cluster labels
+        unique_labels : numpy.ndarray
+            Unique cluster labels
+        metric : str, default='euclidean'
+            Distance metric ('euclidean' or 'rmsd')
+
+        Returns
+        -------
+        numpy.ndarray
+            Centroids for all clusters
+        """
+        n_clusters = len(unique_labels)
+        n_features = data.shape[1]
+        centers = np.zeros((n_clusters, n_features), dtype=data.dtype)
+
+        for cluster_idx, label in enumerate(unique_labels):
+            mask = labels == label
+            cluster_data = data[mask]
+            mean = cluster_data.mean(axis=0)
+
+            if metric == 'rmsd':
+                dists = np.sqrt(np.mean((cluster_data - mean)**2, axis=1))
+            else:
+                dists = np.linalg.norm(cluster_data - mean, axis=1)
+
+            centers[cluster_idx] = cluster_data[np.argmin(dists)]
+
+        return centers
+
+    @staticmethod
+    def _compute_means_chunked(data, labels, unique_labels, chunk_size, n_clusters, n_features):
+        """
+        Compute means for all clusters in chunked fashion.
+
+        Parameters
+        ----------
+        data : numpy.ndarray
+            Full dataset
+        labels : numpy.ndarray
+            Cluster labels
+        unique_labels : numpy.ndarray
+            Unique cluster labels
+        chunk_size : int
+            Chunk size
+        n_clusters : int
+            Number of clusters
+        n_features : int
+            Number of features
+
+        Returns
+        -------
+        numpy.ndarray
+            Mean vectors for all clusters
+        """
+        means = np.zeros((n_clusters, n_features), dtype=data.dtype)
+        counts = np.zeros(n_clusters, dtype=np.int64)
+
+        for start in range(0, len(data), chunk_size):
+            end = min(start + chunk_size, len(data))
+            chunk_data = data[start:end]
+            chunk_labels = labels[start:end]
+
+            for cluster_idx, label in enumerate(unique_labels):
+                mask = chunk_labels == label
+                if np.any(mask):
+                    means[cluster_idx] += chunk_data[mask].sum(axis=0)
+                    counts[cluster_idx] += np.sum(mask)
+
+        return means / counts[:, np.newaxis]
+
+    @staticmethod
+    def _find_centroids_generic_chunked(
+        data, labels, unique_labels, chunk_size, means, n_clusters, n_features, metric='euclidean'
+    ):
+        """
+        Find centroids in chunked fashion using specified metric.
+
+        Parameters
+        ----------
+        data : numpy.ndarray
+            Full dataset
+        labels : numpy.ndarray
+            Cluster labels
+        unique_labels : numpy.ndarray
+            Unique cluster labels
+        chunk_size : int
+            Chunk size
+        means : numpy.ndarray
+            Mean vectors for each cluster
+        n_clusters : int
+            Number of clusters
+        n_features : int
+            Number of features
+        metric : str, default='euclidean'
+            Distance metric ('euclidean' or 'rmsd')
+
+        Returns
+        -------
+        numpy.ndarray
+            Centroids for all clusters
+        """
+        centers = np.zeros((n_clusters, n_features), dtype=data.dtype)
+        best_dists = np.full(n_clusters, np.inf, dtype=data.dtype)
+
+        for start in range(0, len(data), chunk_size):
+            end = min(start + chunk_size, len(data))
+            CenterCalculationHelper._update_centroids_from_chunk(
+                data[start:end], labels[start:end], unique_labels, means,
+                centers, best_dists, metric
+            )
+
+        return centers
+
+    @staticmethod
+    def _update_centroids_from_chunk(
+        chunk_data, chunk_labels, unique_labels, means, centers, best_dists, metric
+    ):
+        """
+        Update centroids from a single chunk.
+
+        Parameters
+        ----------
+        chunk_data : np.ndarray
+            Data chunk
+        chunk_labels : np.ndarray
+            Labels for chunk
+        unique_labels : np.ndarray
+            Unique cluster labels
+        means : np.ndarray
+            Mean vectors for each cluster
+        centers : np.ndarray
+            Current best centroids (updated in-place)
+        best_dists : np.ndarray
+            Current best distances (updated in-place)
+        metric : str
+            Distance metric ('euclidean' or 'rmsd')
+
+        Returns
+        -------
+        None
+        """
+        for cluster_idx, label in enumerate(unique_labels):
+            mask = chunk_labels == label
+            if np.any(mask):
+                cluster_chunk = chunk_data[mask]
+
+                if metric == 'rmsd':
+                    dists = np.sqrt(np.mean((cluster_chunk - means[cluster_idx])**2, axis=1))
+                else:
+                    dists = np.linalg.norm(cluster_chunk - means[cluster_idx], axis=1)
+
                 min_idx = np.argmin(dists)
-                if dists[min_idx] < best_dist:
-                    best_dist = dists[min_idx]
-                    best_point = chunk[min_idx].copy()
-
-            centers.append(best_point)
-
-        return np.array(centers) if centers else None
+                if dists[min_idx] < best_dists[cluster_idx]:
+                    best_dists[cluster_idx] = dists[min_idx]
+                    centers[cluster_idx] = cluster_chunk[min_idx]
 
     @staticmethod
     def _calculate_means(
@@ -364,9 +353,6 @@ class CenterCalculationHelper:
     ) -> Optional[np.ndarray]:
         """
         Calculate centers as mean of cluster members.
-
-        Single-pass algorithm with chunk-wise accumulation.
-        Mean may not be an actual data point.
 
         Parameters
         ----------
@@ -388,18 +374,25 @@ class CenterCalculationHelper:
 
         Notes
         -----
-        Single-pass iteration, always memory-safe.
+        Single-pass over data, processes all clusters simultaneously.
         """
         unique_labels = np.unique(labels[labels >= 0])
-        centers = []
+        if len(unique_labels) == 0:
+            return None
 
-        for label in unique_labels:
-            mean = CenterCalculationHelper._compute_mean_for_label(
-                data, labels, label, chunk_size, use_memmap
-            )
-            centers.append(mean)
+        n_clusters = len(unique_labels)
+        n_features = data.shape[1]
 
-        return np.array(centers) if centers else None
+        if not use_memmap:
+            means = np.zeros((n_clusters, n_features), dtype=data.dtype)
+            for cluster_idx, label in enumerate(unique_labels):
+                mask = labels == label
+                means[cluster_idx] = data[mask].mean(axis=0)
+            return means
+
+        return CenterCalculationHelper._compute_means_chunked(
+            data, labels, unique_labels, chunk_size, n_clusters, n_features
+        )
 
     @staticmethod
     def _calculate_medians(
@@ -411,9 +404,6 @@ class CenterCalculationHelper:
     ) -> Optional[np.ndarray]:
         """
         Calculate centers as coordinate-wise median.
-
-        Uses feature-by-feature streaming for exact median computation.
-        More robust to outliers than mean.
 
         Parameters
         ----------
@@ -435,18 +425,70 @@ class CenterCalculationHelper:
 
         Notes
         -----
-        Processes one feature at a time, always memory-safe and exact.
+        Processes one feature at a time for all clusters simultaneously.
         """
         unique_labels = np.unique(labels[labels >= 0])
-        centers = []
+        if len(unique_labels) == 0:
+            return None
 
-        for label in unique_labels:
-            median = CenterCalculationHelper._compute_median_for_label(
-                data, labels, label, chunk_size, use_memmap
-            )
-            centers.append(median)
+        n_clusters = len(unique_labels)
+        n_features = data.shape[1]
 
-        return np.array(centers) if centers else None
+        if not use_memmap:
+            medians = np.zeros((n_clusters, n_features), dtype=data.dtype)
+            for cluster_idx, label in enumerate(unique_labels):
+                mask = labels == label
+                medians[cluster_idx] = np.median(data[mask], axis=0)
+            return medians
+
+        return CenterCalculationHelper._compute_medians_chunked(
+            data, labels, unique_labels, chunk_size, n_clusters, n_features
+        )
+
+    @staticmethod
+    def _compute_medians_chunked(
+        data: np.ndarray,
+        labels: np.ndarray,
+        unique_labels: np.ndarray,
+        chunk_size: int,
+        n_clusters: int,
+        n_features: int
+    ) -> np.ndarray:
+        """
+        Compute medians for all clusters feature-by-feature.
+
+        Parameters
+        ----------
+        data : np.ndarray
+            Full dataset
+        labels : np.ndarray
+            Cluster labels
+        unique_labels : np.ndarray
+            Unique cluster labels
+        chunk_size : int
+            Chunk size for processing (unused, kept for API consistency)
+        n_clusters : int
+            Number of clusters
+        n_features : int
+            Number of features
+
+        Returns
+        -------
+        np.ndarray
+            Medians for all clusters, shape (n_clusters, n_features)
+        """
+        medians = np.zeros((n_clusters, n_features), dtype=data.dtype)
+
+        for feat_idx in range(n_features):
+            feature_column = data[:, feat_idx]
+
+            for cluster_idx, label in enumerate(unique_labels):
+                mask = labels == label
+                cluster_values = feature_column[mask]
+                if len(cluster_values) > 0:
+                    medians[cluster_idx, feat_idx] = np.median(cluster_values)
+
+        return medians
 
     @staticmethod
     def _calculate_density_peaks(
@@ -492,62 +534,86 @@ class CenterCalculationHelper:
         centers = []
 
         for label in unique_labels:
-            # Check memory requirement
-            cluster_size = np.sum(labels == label)
-            n_features = data.shape[1]
-            dtype_size = data.dtype.itemsize
-
-            bytes_needed = cluster_size * n_features * dtype_size
-            gb_needed = bytes_needed / (1024**3)
-
-            if gb_needed <= max_memory_gb:
-                # Small cluster: Load all
-                mask = labels == label
-                cluster_points = data[mask]
-            else:
-                # Large cluster: Random sample 50k points
-                print(f"  Cluster {label}: {cluster_size:,} points ({gb_needed:.2f} GB)")
-                print(f"  Exceeds {max_memory_gb:.1f} GB limit, using 50k sample")
-
-                max_sample = min(50000, cluster_size)
-
-                # Get cluster indices
-                cluster_indices = np.where(labels == label)[0]
-
-                # Sample random indices
-                sample_indices = np.random.choice(cluster_indices, max_sample, replace=False)
-
-                # Load only sampled points
-                cluster_points = data[sample_indices]
-
-            # k-NN density calculation (same for both paths)
-            if len(cluster_points) < 8:
-                # Fallback for tiny clusters
-                cluster_mean = np.mean(cluster_points, axis=0)
-                distances = np.linalg.norm(cluster_points - cluster_mean, axis=1)
-                centers.append(cluster_points[np.argmin(distances)])
-                continue
-
-            # Estimate epsilon (median distance to 7th neighbor)
-            n_neighbors = min(8, len(cluster_points))
-            nbrs = NearestNeighbors(n_neighbors=n_neighbors)
-            nbrs.fit(cluster_points)
-            distances, _ = nbrs.kneighbors(cluster_points)
-            epsilon = np.median(distances[:, -1])
-
-            # Count neighbors for each point
-            nbrs_count = NearestNeighbors(radius=epsilon)
-            nbrs_count.fit(cluster_points)
-            neighbor_counts = [
-                len(nbrs_count.radius_neighbors([point], return_distance=False)[0])
-                for point in cluster_points
-            ]
-
-            # Point with most neighbors is density peak
-            peak_idx = np.argmax(neighbor_counts)
-            centers.append(cluster_points[peak_idx])
+            cluster_points = CenterCalculationHelper._load_cluster_for_density(
+                data, labels, label, max_memory_gb
+            )
+            center = CenterCalculationHelper._find_density_peak_from_cluster(cluster_points)
+            centers.append(center)
 
         return np.array(centers) if centers else None
+
+    @staticmethod
+    def _load_cluster_for_density(data, labels, label, max_memory_gb):
+        """
+        Load cluster data for density calculation with memory-aware sampling.
+
+        Parameters
+        ----------
+        data : np.ndarray
+            Full dataset
+        labels : np.ndarray
+            Cluster labels
+        label : int
+            Cluster label to load
+        max_memory_gb : float
+            Memory threshold
+
+        Returns
+        -------
+        np.ndarray
+            Cluster points (all or sampled)
+        """
+        cluster_size = np.sum(labels == label)
+        n_features = data.shape[1]
+        bytes_needed = cluster_size * n_features * data.dtype.itemsize
+        gb_needed = bytes_needed / (1024**3)
+
+        if gb_needed <= max_memory_gb:
+            mask = labels == label
+            return data[mask]
+
+        print(f"  Cluster {label}: {cluster_size:,} points ({gb_needed:.2f} GB)")
+        print(f"  Exceeds {max_memory_gb:.1f} GB limit, using 50k sample")
+        max_sample = min(50000, cluster_size)
+        cluster_indices = np.where(labels == label)[0]
+        sample_indices = np.random.choice(cluster_indices, max_sample, replace=False)
+        return data[sample_indices]
+
+    @staticmethod
+    def _find_density_peak_from_cluster(cluster_points):
+        """
+        Find density peak in cluster using k-NN.
+
+        Parameters
+        ----------
+        cluster_points : np.ndarray
+            Cluster data points
+
+        Returns
+        -------
+        np.ndarray
+            Density peak point
+        """
+        if len(cluster_points) < 8:
+            cluster_mean = np.mean(cluster_points, axis=0)
+            distances = np.linalg.norm(cluster_points - cluster_mean, axis=1)
+            return cluster_points[np.argmin(distances)]
+
+        n_neighbors = min(8, len(cluster_points))
+        nbrs = NearestNeighbors(n_neighbors=n_neighbors)
+        nbrs.fit(cluster_points)
+        distances, _ = nbrs.kneighbors(cluster_points)
+        epsilon = np.median(distances[:, -1])
+
+        nbrs_count = NearestNeighbors(radius=epsilon)
+        nbrs_count.fit(cluster_points)
+        neighbor_counts = [
+            len(nbrs_count.radius_neighbors([point], return_distance=False)[0])
+            for point in cluster_points
+        ]
+
+        peak_idx = np.argmax(neighbor_counts)
+        return cluster_points[peak_idx]
 
     @staticmethod
     def _calculate_median_centroids(
@@ -560,7 +626,7 @@ class CenterCalculationHelper:
         """
         Calculate median centroids using two-pass algorithm.
 
-        Pass 1: Compute median (feature-by-feature, always exact)
+        Pass 1: Compute median
         Pass 2: Find point closest to median
 
         More robust to outliers than regular centroid.
@@ -585,41 +651,69 @@ class CenterCalculationHelper:
 
         Notes
         -----
-        Median computation is feature-by-feature (memory-safe).
-        Finding closest point requires second iteration.
+        Two passes over data for all clusters simultaneously.
 
         Examples
         --------
-        >>> # More robust to outliers than centroid
         >>> centers = CenterCalculationHelper._calculate_median_centroids(
         ...     data, labels, chunk_size=1000, use_memmap=True
         ... )
         """
         unique_labels = np.unique(labels[labels >= 0])
-        centers = []
+        if len(unique_labels) == 0:
+            return None
 
-        for label in unique_labels:
-            # Pass 1: Calculate median using helper
-            median = CenterCalculationHelper._compute_median_for_label(
-                data, labels, label, chunk_size, use_memmap
+        n_clusters = len(unique_labels)
+        n_features = data.shape[1]
+
+        if not use_memmap:
+            return CenterCalculationHelper._calculate_median_centroids_fast(
+                data, labels, unique_labels
             )
 
-            # Pass 2: Find closest real point to median
-            best_dist = float('inf')
-            best_point = None
+        medians = CenterCalculationHelper._compute_medians_chunked(
+            data, labels, unique_labels, chunk_size, n_clusters, n_features
+        )
+        centers = CenterCalculationHelper._find_centroids_generic_chunked(
+            data, labels, unique_labels, chunk_size, medians, n_clusters, n_features, metric='euclidean'
+        )
+        return centers
 
-            for chunk in CenterCalculationHelper._iterate_cluster_data(
-                data, labels, label, chunk_size, use_memmap
-            ):
-                dists = np.linalg.norm(chunk - median, axis=1)
-                min_idx = np.argmin(dists)
-                if dists[min_idx] < best_dist:
-                    best_dist = dists[min_idx]
-                    best_point = chunk[min_idx].copy()
+    @staticmethod
+    def _calculate_median_centroids_fast(
+        data: np.ndarray,
+        labels: np.ndarray,
+        unique_labels: np.ndarray
+    ) -> np.ndarray:
+        """
+        Calculate median centroids for all clusters without memmap.
 
-            centers.append(best_point)
+        Parameters
+        ----------
+        data : np.ndarray
+            Full dataset
+        labels : np.ndarray
+            Cluster labels
+        unique_labels : np.ndarray
+            Unique cluster labels
 
-        return np.array(centers) if centers else None
+        Returns
+        -------
+        np.ndarray
+            Median centroids for all clusters, shape (n_clusters, n_features)
+        """
+        n_clusters = len(unique_labels)
+        n_features = data.shape[1]
+        centers = np.zeros((n_clusters, n_features), dtype=data.dtype)
+
+        for cluster_idx, label in enumerate(unique_labels):
+            mask = labels == label
+            cluster_data = data[mask]
+            median = np.median(cluster_data, axis=0)
+            dists = np.linalg.norm(cluster_data - median, axis=1)
+            centers[cluster_idx] = cluster_data[np.argmin(dists)]
+
+        return centers
 
     @staticmethod
     def _calculate_rmsd_centroids(
@@ -635,10 +729,8 @@ class CenterCalculationHelper:
         Pass 1: Compute mean
         Pass 2: Find point with minimum RMSD to mean
 
-        Uses RMSD (Root Mean Square Deviation) metric instead of Euclidean distance:
+        Uses RMSD (Root Mean Square Deviation) metric:
         RMSD = sqrt(mean((point - center)²))
-
-        More appropriate for structural comparisons in molecular dynamics.
 
         Parameters
         ----------
@@ -660,40 +752,30 @@ class CenterCalculationHelper:
 
         Notes
         -----
-        Two-pass iteration required (mean, then best RMSD).
-        RMSD metric is particularly useful for molecular dynamics trajectories
-        where structural similarity is more important than Euclidean distance.
+        Two passes over data for all clusters simultaneously.
 
         Examples
         --------
-        >>> # Better for structural comparisons
         >>> centers = CenterCalculationHelper._calculate_rmsd_centroids(
         ...     data, labels, chunk_size=1000, use_memmap=True
         ... )
         """
         unique_labels = np.unique(labels[labels >= 0])
-        centers = []
+        if len(unique_labels) == 0:
+            return None
 
-        for label in unique_labels:
-            # Pass 1: Calculate mean using helper
-            mean = CenterCalculationHelper._compute_mean_for_label(
-                data, labels, label, chunk_size, use_memmap
+        n_clusters = len(unique_labels)
+        n_features = data.shape[1]
+
+        if not use_memmap:
+            return CenterCalculationHelper._calculate_centroids_generic_fast(
+                data, labels, unique_labels, metric='rmsd'
             )
 
-            # Pass 2: Find point with smallest RMSD to mean
-            best_rmsd = float('inf')
-            best_point = None
-
-            for chunk in CenterCalculationHelper._iterate_cluster_data(
-                data, labels, label, chunk_size, use_memmap
-            ):
-                # RMSD instead of Euclidean distance
-                rmsds = np.sqrt(np.mean((chunk - mean)**2, axis=1))
-                min_idx = np.argmin(rmsds)
-                if rmsds[min_idx] < best_rmsd:
-                    best_rmsd = rmsds[min_idx]
-                    best_point = chunk[min_idx].copy()
-
-            centers.append(best_point)
-
-        return np.array(centers) if centers else None
+        means = CenterCalculationHelper._compute_means_chunked(
+            data, labels, unique_labels, chunk_size, n_clusters, n_features
+        )
+        centers = CenterCalculationHelper._find_centroids_generic_chunked(
+            data, labels, unique_labels, chunk_size, means, n_clusters, n_features, metric='rmsd'
+        )
+        return centers

@@ -396,10 +396,11 @@ class DPACalculator(CalculatorBase):
                 "computation_time": computation_time,
                 "center_indices": self._get_cluster_centers(dpa_model),
                 "densities": self._get_densities(dpa_model),
-                "nn_distances": self._get_nn_distances(dpa_model),
-                "nn_indices": self._get_nn_indices(dpa_model),
-                "topography": self._get_topography(dpa_model),
-                "error_densities": self._get_error_densities(dpa_model),
+                # Deactivated cause the need a lot of memory for large datasets and are not essential
+                #"nn_distances": self._get_nn_distances(dpa_model),
+                #"nn_indices": self._get_nn_indices(dpa_model),
+                #"topography": self._get_topography(dpa_model),
+                #"error_densities": self._get_error_densities(dpa_model),
             }
         )
 
