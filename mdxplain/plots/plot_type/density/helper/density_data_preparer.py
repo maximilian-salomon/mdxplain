@@ -19,10 +19,10 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Violin plot data preparer.
+Density plot data preparer.
 
 Thin wrapper around BaseFeatureImportancePlotDataPreparer providing
-violin-plot-specific data preparation. Inherits all core functionality
+density-plot-specific data preparation. Inherits all core functionality
 from the base class.
 """
 
@@ -31,32 +31,32 @@ from __future__ import annotations
 from ....helper.base_feature_importance_plot_data_preparer import BaseFeatureImportancePlotDataPreparer
 
 
-class ViolinDataPreparer(BaseFeatureImportancePlotDataPreparer):
+class DensityDataPreparer(BaseFeatureImportancePlotDataPreparer):
     """
-    Data preparer for violin plots.
+    Data preparer for density plots.
 
     Inherits all functionality from BaseFeatureImportancePlotDataPreparer.
-    Provides data preparation for violin plot visualizations from feature
+    Provides data preparation for density plot visualizations from feature
     importance analysis or manual feature selection.
 
-    Can be extended in the future with violin-specific customizations
+    Can be extended in the future with density-specific customizations
     by overriding base class methods.
 
     Examples
     --------
     >>> # Feature Importance mode
-    >>> data, metadata, colors, cutoff = ViolinDataPreparer.prepare_from_feature_importance(
+    >>> data, metadata, colors, cutoff = DensityDataPreparer.prepare_from_feature_importance(
     ...     pipeline_data, "tree_analysis", n_top=10
     ... )
 
     >>> # Manual Selection mode
-    >>> data, metadata, colors, cutoff = ViolinDataPreparer.prepare_from_manual_selection(
+    >>> data, metadata, colors, cutoff = DensityDataPreparer.prepare_from_manual_selection(
     ...     pipeline_data, "my_selector", ["cluster_0", "cluster_1"]
     ... )
 
     Notes
     -----
     This class currently inherits all methods from BaseFeatureImportancePlotDataPreparer
-    without modifications. Future violin-specific enhancements can be added here.
+    without modifications. Future density-specific enhancements can be added here.
     """
     pass

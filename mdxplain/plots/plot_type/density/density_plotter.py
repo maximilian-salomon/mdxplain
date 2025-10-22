@@ -32,7 +32,7 @@ import numpy as np
 
 from ...helper.validation_helper import ValidationHelper
 from ...helper.title_legend_helper import TitleLegendHelper
-from ..violin.helper.violin_data_preparer import ViolinDataPreparer
+from .helper.density_data_preparer import DensityDataPreparer
 from .helper.density_calculation_helper import DensityCalculationHelper
 from ..feature_importance_base.feature_importance_base_plotter import FeatureImportanceBasePlotter
 
@@ -294,17 +294,17 @@ class DensityPlotter(FeatureImportanceBasePlotter):
         contact_cutoff : Optional[float]
             Contact cutoff value if converted from contacts, None otherwise
         """
-        # Get data from ViolinDataPreparer
+        # Get data from DensityDataPreparer
         if mode_type == "feature_importance":
             ValidationHelper.validate_positive_integer(n_top, "n_top")
             density_data, metadata_map, data_selector_colors, contact_cutoff = (
-                ViolinDataPreparer.prepare_from_feature_importance(
+                DensityDataPreparer.prepare_from_feature_importance(
                     self.pipeline_data, mode_name, n_top, contact_transformation
                 )
             )
         else:
             density_data, metadata_map, data_selector_colors, contact_cutoff = (
-                ViolinDataPreparer.prepare_from_manual_selection(
+                DensityDataPreparer.prepare_from_manual_selection(
                     self.pipeline_data, feature_selector, data_selectors,
                     contact_transformation
                 )

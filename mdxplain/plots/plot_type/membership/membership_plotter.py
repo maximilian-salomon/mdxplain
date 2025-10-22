@@ -33,8 +33,9 @@ from typing import List, Optional, Tuple, Union, Dict
 from matplotlib.figure import Figure
 
 from .helper import BlockOptimizerHelper
-from ...helper.color_mapping_helper import ColorMappingHelper, NOISE_COLOR
+from ...helper.color_mapping_helper import NOISE_COLOR
 from ...helper.validation_helper import ValidationHelper
+from ...helper.clustering_data_helper import ClusteringDataHelper
 from ....utils.data_utils import DataUtils
 
 
@@ -166,7 +167,9 @@ class MembershipPlotter:
         )
 
         # Get clustering data
-        labels, cluster_colors = self._load_clustering_data(clustering_name)
+        labels, cluster_colors = ClusteringDataHelper.load_clustering_data(
+            self.pipeline_data, clustering_name
+        )
 
         # Setup figure with fixed width
         fig, ax = self._setup_figure(len(traj_indices), height_per_trajectory)
@@ -198,33 +201,6 @@ class MembershipPlotter:
             )
 
         return fig
-
-    def _load_clustering_data(
-        self, clustering_name: str
-    ) -> Tuple[np.ndarray, Dict[int, str]]:
-        """
-        Load clustering labels and colors.
-
-        Parameters
-        ----------
-        clustering_name : str
-            Name of clustering
-
-        Returns
-        -------
-        labels : numpy.ndarray
-            Cluster labels for all frames
-        cluster_colors : Dict[int, str]
-            Color mapping for clusters
-        """
-        cluster_obj = self.pipeline_data.cluster_data[clustering_name]
-        labels = cluster_obj.labels
-
-        # Get number of unique clusters (excluding noise)
-        n_clusters = len(np.unique(labels[labels >= 0]))
-        cluster_colors = ColorMappingHelper.get_cluster_colors(n_clusters)
-
-        return labels, cluster_colors
 
     def _setup_figure(
         self, n_trajectories: int, height_per_trajectory: float

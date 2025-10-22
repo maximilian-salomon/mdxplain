@@ -31,6 +31,7 @@ from matplotlib.figure import Figure
 
 from ..plot_type.violin.violin_plotter import ViolinPlotter
 from ..plot_type.density.density_plotter import DensityPlotter
+from ..plot_type.time_series.time_series_plotter import TimeSeriesPlotter
 
 
 class FeatureImportanceFacade:
@@ -47,6 +48,7 @@ class FeatureImportanceFacade:
     >>> facade = plots_manager.feature_importance
     >>> fig = facade.violins("tree_analysis", n_top=10)
     >>> fig = facade.densities("tree_analysis", n_top=10)
+    >>> fig = facade.time_series("tree_analysis", n_top=5)
     """
 
     def __init__(self, manager, pipeline_data) -> None:
@@ -380,6 +382,191 @@ class FeatureImportanceFacade:
             title=title,
             legend_title=legend_title,
             legend_labels=legend_labels,
+            save_fig=save_fig,
+            filename=filename,
+            file_format=file_format,
+            dpi=dpi
+        )
+
+    def time_series(
+        self,
+        feature_importance_name: str,
+        n_top: int = 5,
+        traj_selection: Union[int, str, List, "all"] = "all",
+        use_time: bool = True,
+        tags_for_coloring: Optional[List[str]] = None,
+        allow_multi_tag_plotting: bool = False,
+        clustering_name: Optional[str] = None,
+        membership_per_feature: bool = False,
+        membership_traj_selection: Union[str, int, List] = "all",
+        contact_transformation: bool = True,
+        max_cols: int = 2,
+        long_labels: bool = False,
+        subplot_height: float = 2.5,
+        membership_bar_height: Optional[float] = None,
+        show_legend: bool = True,
+        contact_threshold: Optional[float] = 4.5,
+        title: Optional[str] = None,
+        save_fig: bool = False,
+        filename: Optional[str] = None,
+        file_format: str = "png",
+        dpi: int = 300
+    ) -> Figure:
+        """
+        Create time series plots from feature importance analysis.
+
+        Visualizes temporal evolution of important features as line plots
+        with one subplot per feature. Each trajectory is shown as a separate
+        line, optionally colored by trajectory number or tags. Can include
+        cluster membership visualization as colored bars below plots.
+
+        Parameters
+        ----------
+        feature_importance_name : str
+            Name of feature importance analysis
+        n_top : int, default=5
+            Number of top features per sub-comparison. Union taken across
+            all sub-comparisons to determine features to plot.
+        traj_selection : int, str, list, or "all", default="all"
+            Trajectories to plot. Can be indices, names, tags, or "all".
+        use_time : bool, default=True
+            If True, use Time (ns) for x-axis. If False, use frame numbers.
+        tags_for_coloring : list of str, optional
+            Tags to use for trajectory coloring. If set, automatically enables
+            tag-based coloring. Trajectories grouped by shared tags from this list.
+        allow_multi_tag_plotting : bool, default=False
+            How to handle trajectories with multiple matching tags:
+            - False: Exclude trajectories with multiple tags
+            - True: Plot such trajectories multiple times (once per tag)
+        clustering_name : str, optional
+            Name of clustering analysis for membership visualization.
+            If None, no membership bars shown.
+        membership_per_feature : bool, default=False
+            If True, show membership bar below each feature subplot.
+            If False, show single membership bar at bottom of figure.
+        membership_traj_selection : int, str, list, or "all", default="all"
+            Trajectories to include in membership visualization.
+            Can differ from main traj_selection.
+        contact_transformation : bool, default=True
+            If True, automatically convert contact features to distances.
+        max_cols : int, default=2
+            Maximum number of columns in grid layout. Each feature gets
+            one grid cell arranged in rows and columns.
+        long_labels : bool, default=False
+            If True, use long descriptive labels for discrete features
+            (e.g., "Contact"/"Non-Contact"). If False, use short labels
+            (e.g., "C"/"NC"). Applies to binary/discrete features only.
+        subplot_height : float, default=2.5
+            Height per feature subplot in inches
+        membership_bar_height : float, optional
+            Height per trajectory in membership bar in inches.
+            Default: 0.25 (membership_per_feature=True) or 0.5 (False)
+        show_legend : bool, default=True
+            Show legend for trajectory/tag colors
+        contact_threshold : Optional[float], default=4.5
+            Distance threshold in Angstrom for drawing contact threshold line
+            on distance features. If provided, draws a red dashed horizontal line.
+        title : str, optional
+            Custom plot title. Auto-generated if None.
+        save_fig : bool, default=False
+            Save figure to file
+        filename : str, optional
+            Custom filename. Auto-generated if None.
+        file_format : str, default="png"
+            File format for saving (png, pdf, svg, etc.)
+        dpi : int, default=300
+            Resolution for saved figure in dots per inch
+
+        Returns
+        -------
+        matplotlib.figure.Figure
+            Figure object containing time series plots
+
+        Raises
+        ------
+        ValueError
+            If color_by_tags=True but tags_for_coloring not specified,
+            or if no trajectories remain after filtering
+
+        Examples
+        --------
+        >>> # Basic time series plot with top 5 features
+        >>> fig = facade.time_series(
+        ...     feature_importance_name="tree_analysis",
+        ...     n_top=5
+        ... )
+
+        >>> # Color by trajectory tags
+        >>> fig = facade.time_series(
+        ...     feature_importance_name="tree_analysis",
+        ...     n_top=5,
+        ...     color_by_tags=True,
+        ...     tags_for_coloring=["system_A", "system_B"]
+        ... )
+
+        >>> # Add cluster membership visualization
+        >>> fig = facade.time_series(
+        ...     feature_importance_name="tree_analysis",
+        ...     n_top=5,
+        ...     clustering_name="dbscan_clustering",
+        ...     membership_per_feature=True
+        ... )
+
+        >>> # Plot specific trajectories with frame numbers
+        >>> fig = facade.time_series(
+        ...     feature_importance_name="tree_analysis",
+        ...     n_top=5,
+        ...     traj_selection=[0, 1, 2],
+        ...     use_time=False
+        ... )
+
+        >>> # Custom layout with long labels
+        >>> fig = facade.time_series(
+        ...     feature_importance_name="tree_analysis",
+        ...     n_top=10,
+        ...     max_cols=3,
+        ...     long_labels=True,
+        ...     subplot_height=3.0
+        ... )
+
+        >>> # Save high-resolution PDF
+        >>> fig = facade.time_series(
+        ...     feature_importance_name="tree_analysis",
+        ...     n_top=10,
+        ...     save_fig=True,
+        ...     filename="feature_timeseries.pdf",
+        ...     file_format="pdf",
+        ...     dpi=600
+        ... )
+
+        Notes
+        -----
+        - Each feature gets its own subplot with all trajectories overlaid
+        - X-axis shows either Time (ns) or frame numbers
+        - Contact features automatically converted to distances (default)
+        - Cluster membership shown as colored horizontal bars
+        - Memory-efficient rendering using block optimization
+        - Supports trajectory filtering by index, name, or tags
+        """
+        plotter = TimeSeriesPlotter(self.pipeline_data, self.cache_dir)
+        return plotter.plot(
+            feature_importance_name=feature_importance_name,
+            n_top=n_top,
+            traj_selection=traj_selection,
+            use_time=use_time,
+            tags_for_coloring=tags_for_coloring,
+            allow_multi_tag_plotting=allow_multi_tag_plotting,
+            clustering_name=clustering_name,
+            membership_per_feature=membership_per_feature,
+            membership_traj_selection=membership_traj_selection,
+            contact_transformation=contact_transformation,
+            max_cols=max_cols,
+            long_labels=long_labels,
+            subplot_height=subplot_height,
+            membership_bar_height=membership_bar_height,
+            show_legend=show_legend,
+            contact_threshold=contact_threshold,
+            title=title,
             save_fig=save_fig,
             filename=filename,
             file_format=file_format,

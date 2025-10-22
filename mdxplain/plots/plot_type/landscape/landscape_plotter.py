@@ -33,8 +33,8 @@ from matplotlib.figure import Figure
 from .helper import LayoutCalculatorHelper
 from .helper.landscape_rendering_helper import LandscapeRenderingHelper
 from .helper.landscape_styling_helper import LandscapeStylingHelper
-from ...helper.color_mapping_helper import ColorMappingHelper
 from ...helper.validation_helper import ValidationHelper
+from ...helper.clustering_data_helper import ClusteringDataHelper
 from ....utils.data_utils import DataUtils
 
 
@@ -495,11 +495,11 @@ class LandscapePlotter:
         cluster_colors : Dict[int, str]
             Color mapping for clusters
         """
+        labels, cluster_colors = ClusteringDataHelper.load_clustering_data(
+            self.pipeline_data, clustering_name
+        )
         cluster_obj = self.pipeline_data.cluster_data[clustering_name]
-        labels = cluster_obj.labels
         centers = cluster_obj.get_centers() if show_centers else None
-        n_clusters = len(np.unique(labels[labels >= 0]))
-        cluster_colors = ColorMappingHelper.get_cluster_colors(n_clusters)
         return labels, centers, cluster_colors
 
     def _filter_clusters(
