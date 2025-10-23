@@ -234,8 +234,10 @@ class KernelPCA(DecompositionTypeBase):
         -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
+
             - transformed_data: KernelPCA-transformed data matrix (n_samples, n_components)
             - metadata: Dictionary with KernelPCA information including:
+            
               * hyperparameters: Used parameters
               * method: 'standard_kernel_pca' or 'incremental_kernel_pca'
               * optional: n_landmarks: Number of landmarks used in Nyström approximation

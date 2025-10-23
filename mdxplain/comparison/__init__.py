@@ -29,15 +29,6 @@ and binary comparisons.
 Main Components:
 - ComparisonData: Entity storing comparison definitions and sub-comparisons
 - ComparisonManager: Manager for creating and managing comparisons
-
-Examples:
----------
->>> from mdxplain.comparison import ComparisonManager
->>> manager = ComparisonManager()
->>> manager.create_comparison(
-...     pipeline_data, "folded_vs_unfolded", "binary",
-...     "key_features", ["folded_frames", "unfolded_frames"]
-... )
 """
 
 from .entities.comparison_data import ComparisonData

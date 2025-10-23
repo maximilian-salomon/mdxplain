@@ -324,6 +324,7 @@ class PipelineData:
         feature names, analysis methods, and data reduction capabilities.
 
         Supports three input variants:
+
         - feature_type.Distances() (instance)
         - feature_type.Distances (class with metaclass)
         - "distances" (string)
@@ -681,11 +682,12 @@ class PipelineData:
         -------
         numpy.ndarray
             Array of dictionaries, one for each column in the selected matrix.
-            Each dictionary has the structure:
-            {
-                'features': original feature metadata entry,
-                'type': feature type name as string
-            }
+            Each dictionary has the structure::
+            
+                {
+                    'features': original feature metadata entry,
+                    'type': feature type name as string
+                }
 
         Raises
         ------
@@ -770,9 +772,11 @@ class PipelineData:
         np.ndarray or Tuple[np.ndarray, Dict[int, tuple]]
             If return_frame_mapping=False: Matrix with selected columns and optionally selected rows.
             If return_frame_mapping=True: Tuple of (matrix, frame_mapping).
+
             - Matrix shapes:
-              - With data_selector: (n_selected_frames, n_selected_features)
-              - Without data_selector: (n_all_frames, n_selected_features)
+
+              * With data_selector: (n_selected_frames, n_selected_features)
+              * Without data_selector: (n_all_frames, n_selected_features)
             - Frame mapping: {global_frame_index: (trajectory_index, local_frame_index)}
 
         Raises
@@ -832,6 +836,7 @@ class PipelineData:
         -------
         Tuple[np.ndarray, np.ndarray]
             Tuple of (X, y) where:
+            
             - X is the feature matrix with selected features and frames
             - y is the label array for the comparison groups
 

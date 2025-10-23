@@ -85,13 +85,14 @@ class CalculatorBase(ABC):
             Feature matrix with shape (n_samples, n_features)
         y : np.ndarray
             Target labels with shape (n_samples,)
-        **kwargs : dict
+        '**'kwargs : dict
             Additional keyword arguments specific to the ML algorithm
 
         Returns
         -------
         Dict[str, Any]
             Dictionary containing:
+            
             - 'importances': np.ndarray of feature importance scores
             - 'model': Trained ML model object
             - 'metadata': Dict with additional information (scores, parameters, etc.)

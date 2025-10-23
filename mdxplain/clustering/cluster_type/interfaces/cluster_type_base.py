@@ -153,6 +153,7 @@ class ClusterTypeBase(ABC, metaclass=ClusterTypeMeta):
         -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
+            
             - cluster_labels: Cluster labels for each sample (n_samples,)
             - metadata: Dictionary with clustering information including hyperparameters, number of clusters, silhouette score, cluster centers, etc.
 

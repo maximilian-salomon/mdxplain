@@ -45,11 +45,13 @@ class FeatureSelectorAddService:
     Service providing feature-type-specific properties for adding selections.
 
     Module separation:
+
     - Knows feature types (distances, contacts, etc.)
     - Does NOT know reduction metrics
     - Each property returns a type-specific service
 
     Each feature type service provides:
+
     - Basic add method via __call__()
     - Reduction methods like with_cv_reduction(), with_std_reduction(), etc.
 
@@ -102,6 +104,7 @@ class FeatureSelectorAddService:
             Service with distances-specific reduction methods
 
         Available reduction methods:
+
         - with_cv_reduction(): Coefficient of variation filtering
         - with_std_reduction(): Standard deviation filtering
         - with_variance_reduction(): Variance filtering
@@ -138,6 +141,7 @@ class FeatureSelectorAddService:
             Service with contacts-specific reduction methods
 
         Available reduction methods:
+
         - with_frequency_reduction(): Contact frequency filtering
         - with_stability_reduction(): Contact stability filtering
         - with_transitions_reduction(): Contact transition filtering
@@ -168,6 +172,7 @@ class FeatureSelectorAddService:
             Service with coordinates-specific reduction methods
 
         Available reduction methods:
+
         - with_std_reduction(): Standard deviation filtering
         - with_rmsf_reduction(): Root mean square fluctuation filtering
         - with_cv_reduction(): Coefficient of variation filtering
@@ -204,6 +209,7 @@ class FeatureSelectorAddService:
             Service with torsions-specific reduction methods
 
         Available reduction methods:
+
         - with_transitions_reduction(): Angular transition filtering
         - with_std_reduction(): Standard deviation filtering
         - with_mad_reduction(): Median absolute deviation filtering
@@ -240,6 +246,7 @@ class FeatureSelectorAddService:
             Service with DSSP-specific reduction methods
 
         Available reduction methods:
+
         - with_transitions_reduction(): Secondary structure transition filtering
         - with_transition_frequency_reduction(): Transition frequency filtering
         - with_stability_reduction(): Structural stability filtering
@@ -271,6 +278,7 @@ class FeatureSelectorAddService:
             Service with SASA-specific reduction methods
 
         Available reduction methods:
+        
         - with_cv_reduction(): Coefficient of variation filtering
         - with_range_reduction(): Range filtering
         - with_std_reduction(): Standard deviation filtering

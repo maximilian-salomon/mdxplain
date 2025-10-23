@@ -94,8 +94,9 @@ class CoordinatesCalculator(CalculatorBase):
         ----------
         input_data : mdtraj.Trajectory
             MDTraj trajectory object to process
-        **kwargs : dict
+        '**'kwargs : dict
             Additional parameters:
+            
             - selection : str, default='ca' - Atom selection string
             - res_metadata : dict - Residue metadata for naming
 
@@ -328,6 +329,7 @@ class CoordinatesCalculator(CalculatorBase):
             Coordinate array (n_frames, n_coordinates)
         metric : str, default='cv'
             Metric to use for selection:
+            
             - 'cv': Coefficient of variation
             - 'std': Standard deviation
             - 'variance': Variance

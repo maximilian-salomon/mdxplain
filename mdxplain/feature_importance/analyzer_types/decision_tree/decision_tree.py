@@ -222,9 +222,11 @@ class DecisionTree(AnalyzerTypeBase):
         -------
         Dict[str, Any]
             Dictionary containing:
+            
             - importances: Feature importance scores (n_features,)
             - model: Trained DecisionTreeClassifier instance
             - metadata: Dictionary with analysis information including:
+              
               * hyperparameters: Used parameters
               * train_accuracy: Training accuracy score
               * classification_report: Detailed classification metrics

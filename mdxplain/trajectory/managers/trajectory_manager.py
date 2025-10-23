@@ -264,6 +264,7 @@ class TrajectoryManager:
         selection : str, optional
             MDTraj selection string to apply to all newly loaded trajectories.
             If None, uses manager default.
+        
         Returns
         -------
         None
@@ -337,6 +338,7 @@ class TrajectoryManager:
             Pipeline data object
         traj_selection : int, str, list, or "all"
             Trajectory selection (required). Options:
+
             - int: single trajectory by index (e.g., 0)
             - str: trajectory name or "all" for all trajectories
             - list: multiple indices/names (can be mixed)
@@ -411,15 +413,18 @@ class TrajectoryManager:
             Pipeline data object
         traj_selection : int, str, list, or "all", default="all"
             Selection of trajectories to process:
+
             - int: trajectory index
             - str: trajectory name or "all" for all trajectories
             - list: list of indices/names
             - "all": all loaded trajectories
         frames : int, slice, list, optional
             Frame specification for slicing:
+
             - int: include frames 0 to frames (e.g., frames=1000 → frames 0-999)
             - slice: direct slice object (e.g., slice(100, 500) → frames 100-499)
             - list: specific frame indices (e.g., [0, 10, 20, 30])
+
             Ignored if data_selector is provided.
         stride : int, optional
             Take every stride-th frame. Use values > 1 to subsample frames.
@@ -521,6 +526,7 @@ class TrajectoryManager:
             Pipeline data object
         traj_selection : int, str, list, or "all"
             Selection of trajectories to process:
+
             - int: trajectory index
             - str: trajectory name or "all" for all trajectories
             - list: list of indices/names
@@ -636,6 +642,7 @@ class TrajectoryManager:
             Pipeline data object
         traj_selection : int, str, list, or "all"
             Selection of trajectories to add labels to:
+
             - int: trajectory index
             - str: trajectory name or "all" for all trajectories
             - list: list of indices/names
@@ -677,7 +684,7 @@ class TrajectoryManager:
             Whether to write cache files to disk
         cache_folder : str, default "./cache"
             Folder for cache files
-        **nomenclature_kwargs
+        '**'nomenclature_kwargs
             Additional keyword arguments passed to the mdciao labelers
 
         Returns
@@ -711,6 +718,7 @@ class TrajectoryManager:
         https://proteinformatics.uni-leipzig.de/mdciao/api/generated/mdciao.nomenclature.html
 
         Supported fragment types:
+
         - gpcr: https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerGPCR.html#mdciao.nomenclature.LabelerGPCR
         - cgn: https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerCGN.html#mdciao.nomenclature.LabelerCGN
         - klifs: https://proteinformatics.uni-leipzig.de/mdciao/api/generated/generated/mdciao.nomenclature.LabelerKLIFS.html#mdciao.nomenclature.LabelerKLIFS
@@ -808,13 +816,15 @@ class TrajectoryManager:
             Pipeline data object
         trajectory_selector : int, str, list, range, dict
             Flexible selector for trajectories:
+            
             - int: single trajectory by index (e.g., 0)
             - str: single trajectory by name or pattern (e.g., "traj1", "system_*")
                 Supports multiple string formats:
-                - Range: "0-3", "id 0-3" → [0, 1, 2, 3]
-                - Comma list: "1,2,4,5", "id 1,2,4,5" → [1, 2, 4, 5]
-                - Single number: "7", "id 7" → [7]
-                - Pattern: "system_*" → fnmatch pattern matching
+                
+                * Range: "0-3", "id 0-3" → [0, 1, 2, 3]
+                * Comma list: "1,2,4,5", "id 1,2,4,5" → [1, 2, 4, 5]
+                * Single number: "7", "id 7" → [7]
+                * Pattern: "system_*" → fnmatch pattern matching
             - list: multiple selectors (e.g., [0, 1, "special_traj", range(5,8)])
             - range: range of indices (e.g., range(0, 4))
             - dict: bulk assignment {selector: tags, ...}
@@ -905,13 +915,15 @@ class TrajectoryManager:
             Pipeline data object
         trajectory_selector : int, str, list, range, dict
             Flexible selector for trajectories:
+            
             - int: single trajectory by index (e.g., 0)
             - str: single trajectory by name or pattern (e.g., "traj1", "system_*")
                 Supports multiple string formats:
-                - Range: "0-3", "id 0-3" → [0, 1, 2, 3]
-                - Comma list: "1,2,4,5", "id 1,2,4,5" → [1, 2, 4, 5]
-                - Single number: "7", "id 7" → [7]
-                - Pattern: "system_*" → fnmatch pattern matching
+                
+                * Range: "0-3", "id 0-3" → [0, 1, 2, 3]
+                * Comma list: "1,2,4,5", "id 1,2,4,5" → [1, 2, 4, 5]
+                * Single number: "7", "id 7" → [7]
+                * Pattern: "system_*" → fnmatch pattern matching
             - list: multiple selectors (e.g., [0, 1, "special_traj", range(5,8)])
             - range: range of indices (e.g., range(0, 4))
             - dict: bulk assignment {selector: tags, ...}
@@ -1016,6 +1028,7 @@ class TrajectoryManager:
             Pipeline data object
         name_mapping : dict or list
             Mapping for trajectory names:
+
             - dict: {old_name_or_index: new_name, ...} for selective renaming
             - list: [new_name1, new_name2, ...] for positional assignment
 
@@ -1348,6 +1361,7 @@ class TrajectoryManager:
             Frame index within reference trajectory to use as alignment reference
         traj_selection : int, str, list, or "all", default="all"
             Selection of trajectories to align:
+            
             - int: single trajectory by index
             - str: trajectory name, tag, or pattern (e.g., "tag:system_A", "traj_*")
             - list: multiple indices/names/tags

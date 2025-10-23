@@ -92,7 +92,7 @@ class CalculatorBase(ABC):
         ----------
         input_data : Any
             Input data for computation (trajectories for distances, distances for contacts, etc.)
-        **kwargs : dict
+        '**'kwargs : dict
             Additional calculator-specific parameters
 
         Returns

@@ -59,24 +59,29 @@ class DiffusionMapsCalculator(CalculatorBase):
 
     References
     ----------
-    .. [1] Coifman, R. R.; Lafon, S. Diffusion maps.
-           Appl. Comput. Harmon. Anal. 2006, 21 (1), 5–30.
-           (See Section 3, "The Diffusion Map," for the reasoning on
-           discarding the first eigenvector).
-    .. [2] Michaud-Agrawal, N.; Denning, E. J.; Woolf, T. B.; Beckstein, O.
-           MDAnalysis: A Toolkit for the Analysis of Molecular Dynamics
-           Simulations. J. Comput. Chem. 2011, 32, 2319–2327.
-    .. [3] de la Porte, J.; Herbst, B. M.; Hereman, W.; van der Walt, S. J.
-           An introduction to diffusion maps. In The 19th Symposium of the
-           Pattern Recognition Association of South Africa. 2008.
-    .. [4] Ferguson, A. L.; Panagiotopoulos, A. Z.; Debenedetti, P. G.;
-           Kevrekidis, I. G. Nonlinear dimensionality reduction in molecular
-           simulation: The diffusion map approach. Chem. Phys. Lett. 2011,
-           509 (1-3), 1–11.
-    .. [5] Fowlkes, C., Belongie, S., Chung, F., & Malik, J. (2004). 
-           Spectral grouping using the nystrom method. 
-           IEEE transactions on pattern analysis and 
-           machine intelligence, 26(2), 214-225.
+
+    [1] Coifman, R. R.; Lafon, S. Diffusion maps.
+    Appl. Comput. Harmon. Anal. 2006, 21 (1), 5–30.
+    (See Section 3, "The Diffusion Map," for the reasoning on
+    discarding the first eigenvector).
+
+    [2] Michaud-Agrawal, N.; Denning, E. J.; Woolf, T. B.; Beckstein, O.
+    MDAnalysis: A Toolkit for the Analysis of Molecular Dynamics
+    Simulations. J. Comput. Chem. 2011, 32, 2319–2327.
+
+    [3] de la Porte, J.; Herbst, B. M.; Hereman, W.; van der Walt, S. J.
+    An introduction to diffusion maps. In The 19th Symposium of the
+    Pattern Recognition Association of South Africa. 2008.
+
+    [4] Ferguson, A. L.; Panagiotopoulos, A. Z.; Debenedetti, P. G.;
+    Kevrekidis, I. G. Nonlinear dimensionality reduction in molecular
+    simulation: The diffusion map approach. Chem. Phys. Lett. 2011,
+    509 (1-3), 1–11.
+    
+    [5] Fowlkes, C., Belongie, S., Chung, F., & Malik, J. (2004). 
+    Spectral grouping using the nystrom method. 
+    IEEE transactions on pattern analysis and 
+    machine intelligence, 26(2), 214-225.
            
     Examples
     --------
@@ -133,8 +138,9 @@ class DiffusionMapsCalculator(CalculatorBase):
         ----------
         data : numpy.ndarray
             Input coordinate matrix (n_frames, n_features) where n_features = n_atoms * 3
-        **kwargs : dict
+        '**'kwargs : dict
             Diffusion Maps parameters:
+
             - n_components : int, required
                 Number of diffusion coordinates to keep
             - epsilon : float, optional
@@ -150,6 +156,7 @@ class DiffusionMapsCalculator(CalculatorBase):
         -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
+
             - diffusion_coords: Diffusion coordinates (n_frames, n_components)
             - metadata: Dictionary with computation information and eigenvalues
 
@@ -409,6 +416,7 @@ class DiffusionMapsCalculator(CalculatorBase):
         Nyström approximation for Diffusion Maps using asymmetric normalization.
         
         Combines:
+        
         - Coifman & Lafon (2006): Diffusion Maps framework with Markov matrices
         - Fowlkes et al. (2004): Nyström method for spectral decomposition
         

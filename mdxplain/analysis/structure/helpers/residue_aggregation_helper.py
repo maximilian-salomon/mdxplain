@@ -68,6 +68,7 @@ def aggregate_residues_jit(
         Example: [0,3,5,6] means group 0: indices 0-2, group 1: indices 3-4, group 2: index 5
     aggregator_code : int
         Aggregation method code:
+        
         - 0: mean (arithmetic mean)
         - 1: median (50th percentile)
         - 2: rms (root mean square)

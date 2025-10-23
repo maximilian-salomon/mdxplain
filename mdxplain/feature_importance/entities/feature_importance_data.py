@@ -136,6 +136,7 @@ class FeatureImportanceData:
         Parameters
         ----------
         identifier : int or str
+        
             - int: Index of the comparison (0-based)
             - str: Name of the comparison from metadata
 

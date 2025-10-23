@@ -40,6 +40,7 @@ class CoordinatesSelectionService(SelectionServiceBase):
     Service for selecting coordinates features with coordinates-specific reduction methods.
 
     Knows ALL reduction metrics from CoordinatesReduceService:
+    
     - std, rmsf, cv, variance, range, mad, mean, min, max
 
     This service provides methods to add coordinate feature selections with

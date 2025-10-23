@@ -186,13 +186,14 @@ class DecisionTreeCalculator(CalculatorBase):
             Feature matrix with shape (n_samples, n_features)
         y : np.ndarray
             Target labels with shape (n_samples,)
-        **kwargs : dict
+        '**'kwargs : dict
             Decision Tree parameters (criterion, max_depth, random_state, etc.)
 
         Returns
         -------
         Dict[str, Any]
             Dictionary containing:
+            
             - 'importances': np.ndarray of feature importance scores
             - 'model': Trained DecisionTreeClassifier instance
             - 'metadata': Dict with training metrics and parameters
