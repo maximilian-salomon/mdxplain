@@ -1,5 +1,5 @@
-Trajectory: Data
-================
+Trajectory Data
+===============
 
 .. automodule:: mdxplain.trajectory.entities.trajectory_data
    :members:

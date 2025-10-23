@@ -1,5 +1,5 @@
-Feature Selection: Helpers
-==========================
+Feature Selection Helpers
+=========================
 
 .. automodule:: mdxplain.feature_selection.helpers
 

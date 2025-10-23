@@ -1,4 +1,4 @@
 Learn mdxplain
 ==============
 
-Smart text and categories.
+Tutorials on different aspects of mdxplain.

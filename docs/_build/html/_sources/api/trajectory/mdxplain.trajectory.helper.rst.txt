@@ -1,5 +1,5 @@
-Trajectory: Helpers
-===================
+Trajectory Helpers
+==================
 
 .. automodule:: mdxplain.trajectory.helper
 

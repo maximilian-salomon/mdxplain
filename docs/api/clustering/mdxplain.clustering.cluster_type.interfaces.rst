@@ -1,5 +1,5 @@
-Cluster Types: Interface Packages
-=================================
+Cluster Type: Interface Packages
+================================
 
 .. automodule:: mdxplain.clustering.cluster_type.interfaces
 

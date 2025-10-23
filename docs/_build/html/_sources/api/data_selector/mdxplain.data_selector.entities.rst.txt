@@ -3,8 +3,8 @@ Data Selection Entities
 
 .. automodule:: mdxplain.data_selector.entities
 
-Entities
---------
+Data
+----
 
 .. automodule:: mdxplain.data_selector.entities.data_selector_data
    :members:

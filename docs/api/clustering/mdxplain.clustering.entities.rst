@@ -3,8 +3,8 @@ Entities
 
 .. automodule:: mdxplain.clustering.entities
 
-Cluster Data
-------------
+Data
+----
 
 .. automodule:: mdxplain.clustering.entities.cluster_data
    :members:

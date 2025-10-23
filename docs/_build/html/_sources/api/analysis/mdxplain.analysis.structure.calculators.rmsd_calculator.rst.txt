@@ -1,5 +1,5 @@
-RMSD Calculator
-===============
+Analysis Structure: RMSD Calculator
+===================================
 
 .. automodule:: mdxplain.analysis.structure.calculators.rmsd_calculator
    :members:

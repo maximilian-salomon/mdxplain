@@ -1,5 +1,5 @@
-RMSF Variant Facade
-===================
+Analysis Structure Service: RMSF Variant Facade
+===============================================
 
 .. automodule:: mdxplain.analysis.structure.services.rmsf_variant_facade
    :members:

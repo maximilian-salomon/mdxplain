@@ -1,5 +1,5 @@
-Frame Selection Helper
-======================
+Data Selector: Frame Selection Helper
+=====================================
 
 .. automodule:: mdxplain.data_selector.helpers.frame_selection_helper
    :members:

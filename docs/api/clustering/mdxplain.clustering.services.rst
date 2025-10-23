@@ -1,10 +1,10 @@
-Cluster Type: Services
-======================
+Cluster Type Services
+=====================
 
 .. automodule:: mdxplain.clustering.services
 
-Services
---------
+Service
+-------
 
 .. automodule:: mdxplain.clustering.services.cluster_add_service
    :members:

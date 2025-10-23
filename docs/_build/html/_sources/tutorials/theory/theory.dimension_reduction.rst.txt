@@ -1,4 +1,4 @@
 Theory: Dimension Reduction
 ===========================
 
-Warten Sie auf's DLC.
+Article will be added at a later date.

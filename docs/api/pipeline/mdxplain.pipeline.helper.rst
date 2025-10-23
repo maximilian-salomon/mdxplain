@@ -1,5 +1,5 @@
-Pipeline: Helpers
-=================
+Pipeline Helpers
+================
 
 .. automodule:: mdxplain.pipeline.helper
 

@@ -1,5 +1,5 @@
 Feature Type: Distances Reduce Service
-========================================
+======================================
 
 .. automodule:: mdxplain.feature.feature_type.distances.services.distances_reduce_service
    :members:
