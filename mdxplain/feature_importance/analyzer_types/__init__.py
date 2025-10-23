@@ -26,14 +26,6 @@ importance analysis, following the same pattern as decomposition_types.
 
 Available Analyzers:
 - DecisionTree: Decision tree classifier for feature importance
-
-Examples:
----------
->>> from mdxplain.feature_importance import analyzer_types
->>> analyzer = analyzer_types.DecisionTree(max_depth=5, random_state=42)
->>> pipeline.feature_importance.add(
-...     "my_comparison", analyzer, "tree_analysis"
-... )
 """
 
 from .decision_tree.decision_tree import DecisionTree
