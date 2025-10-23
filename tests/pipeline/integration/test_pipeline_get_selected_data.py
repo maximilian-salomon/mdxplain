@@ -633,10 +633,11 @@ class TestGetSelectedDataComplexScenarios:
     
     def test_complex_multi_trajectory_selection(self):
         """
-        Test complex scenario: one DataSelector with 3 operations, one FeatureSelector with 4 adds.
+        Test complex scenario: one DataSelector with 3 operations, one FeatureSelector with 5 adds.
 
         Validates that complex multi-trajectory selection with various
-        data/feature selector combinations works correctly.
+        data/feature selector combinations works correctly, including mixed
+        feature types (distances and contacts) with different require_all_partners settings.
         """
         # === ONE DATA SELECTOR WITH 3 OPERATIONS ===
         
@@ -651,39 +652,63 @@ class TestGetSelectedDataComplexScenarios:
         # 3. Finally: intersect with cluster 0 frames (only trajectory 1, frames 20-40)
         self.pipeline.data_selector.select_by_cluster("complex_selector", "test_clusters", cluster_ids=[0], mode="add")
 
-        # Traj 0 frames 10-50, Traj 1 frames 20-40, Traj 2 all frames      
-        
-        # === ONE FEATURE SELECTOR WITH 4 COMPLEX ADDS ===
-        
+        # Traj 0 frames 10-50, Traj 1 frames 20-40, Traj 2 all frames
+
+        # === ONE FEATURE SELECTOR WITH 5 COMPLEX ADDS ===
+        #
+        # SETUP:
+        # Traj 0: VAL(0), GLY(1), ALA(2), ALA(3), GLY(4) | Consensus: 1.10, 2.10, 3.50, 4.10, 5.50
+        # Traj 1: VAL(0), ALA(1), ALA(2), VAL(3), ALA(4) | Consensus: 1.50, 2.50, 3.50, 4.50, 5.50
+        # Traj 2: VAL(0), VAL(1), ALA(2), GLY(3), VAL(4) | Consensus: 1.90, 2.90, 3.90, 4.90, 5.90
+        #
+        # DISTANCE FEATURES (excluded_neighbors=0, 10 pairs total):
+        # 0:(0,1), 1:(0,2), 2:(0,3), 3:(0,4), 4:(1,2), 5:(1,3), 6:(1,4), 7:(2,3), 8:(2,4), 9:(3,4)
+
         self.pipeline.feature_selector.create("complex_features")
         
         # 1. ALA residues with require_all_partners=False
-        # For all Trajs there is a common ALA at pos 2
+        # Traj 0 only: Residue 2 is ALA => Features with residue 2: [1, 4, 7, 8]
         self.pipeline.feature_selector.add_selection(
             "complex_features", "distances", "res ALA2",
             use_reduced=False, common_denominator=False, require_all_partners=False, traj_selection=[0]
         )
-        
+
         # 2. Consensus selection with specific range
-        # Traj 0: 2,3,4, Traj 1: 2,3,4 Traj 2: none
+        # Matches residues with consensus in seqid range from "3.50" to "5.50"
+        # Traj 0: residues {2,3,4}, require_all_partners=True => features [7, 8, 9]
+        # Traj 1: residues {2,3,4}, require_all_partners=True => features [7, 8, 9]
+        # Traj 2: no exact match for "3.50" or "5.50" => features []
         self.pipeline.feature_selector.add_selection(
             "complex_features", "distances", "consensus 3.50-5.50",
             use_reduced=False, common_denominator=False, require_all_partners=True
         )
-        
+
         # 3. Seqid range with trajectory selection
-        # Traj 2 -> positions 3,4
+        # Traj 2 only: residues {3,4} => features with at least one partner: [2, 3, 5, 6, 7, 8, 9]
         self.pipeline.feature_selector.add_selection(
             "complex_features", "distances", "seqid 3-4",
             use_reduced=False, common_denominator=False, traj_selection=[2]
         )
-        
-        # 4. VAL residues with require_all_partners=True for traj 2 only
-        # For all Trajs there is a common VAL at pos 0
+
+        # 4. VAL residues with require_all_partners=False
+        # Traj 1 only: Residue 0 is VAL => Features with residue 0: [0, 1, 2, 3]
         self.pipeline.feature_selector.add_selection(
             "complex_features", "distances", "res VAL0",
             use_reduced=False, common_denominator=False, require_all_partners=False, traj_selection=[1]
         )
+
+        # 5. Seqid multi-selection with require_all_partners=True
+        # Traj 0 only: residues {0,3,4}, require_all_partners=True => features where BOTH partners in {0,3,4}: [2, 3, 9]
+        self.pipeline.feature_selector.add_selection(
+            "complex_features", "distances", "seqid 0,3,4",
+            use_reduced=False, common_denominator=False, require_all_partners=True, traj_selection=[0]
+        )
+
+        # Expected features - UNION of all selections per trajectory:
+
+        # Traj 0: [1,4,7,8] (sel1: res ALA2) ∪ [7,8,9] (sel2: consensus) ∪ [2,3,9] (sel5: contacts seqid 0,3,4) = [1, 2, 3, 4, 7, 8, 9]
+        # Traj 1: [7,8,9] (sel2: consensus) ∪ [0,1,2,3] (sel4: res VAL0) = [0, 1, 2, 3, 7, 8, 9]
+        # Traj 2: [] (sel2: consensus) ∪ [2,3,5,6,7,8,9] (sel3: seqid 3-4) = [2, 3, 5, 6, 7, 8, 9]
         
         # Apply with reference trajectory 2 
         with warnings.catch_warnings():
@@ -722,7 +747,7 @@ class TestGetSelectedDataComplexScenarios:
         original_data_1 = self.pipeline.data.feature_data["distances"][1].data
         original_data_2 = self.pipeline.data.feature_data["distances"][2].data
         
-        # Expected features (now SORTED due to fix above)
+        # Expected features
         # Trajectory 0: frames 10-50, features [1, 2, 3, 4, 7, 8, 9] (SORTED)
         traj_0_indices = [1, 2, 3, 4, 7, 8, 9]
         for frame in range(10, 51):

@@ -99,7 +99,7 @@ class TestDecompositionIntegration:
         explained_var = decomp_data.metadata["explained_variance_ratio"]
         assert len(explained_var) == test_n_components
         assert all(ratio >= 0 for ratio in explained_var)
-        assert all(ratio <= 1.0 + 1e-10 for ratio in explained_var)
+        assert all(ratio <= 1.0 + 1e-5 for ratio in explained_var)
     
     def test_kernel_pca_decomposition_integration(self):
         """

@@ -130,7 +130,7 @@ class ClusterTypeBase(ABC, metaclass=ClusterTypeMeta):
         pass
 
     @abstractmethod
-    def compute(self, data: np.ndarray) -> Tuple[np.ndarray, Dict[str, Any]]:
+    def compute(self, data: np.ndarray, center_method: str = "centroid") -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Compute clustering using the initialized calculator.
 
@@ -138,6 +138,16 @@ class ClusterTypeBase(ABC, metaclass=ClusterTypeMeta):
         ----------
         data : numpy.ndarray
             Input data matrix to cluster, shape (n_samples, n_features)
+        center_method : str, optional
+            Method for calculating cluster centers, default="centroid":
+            - "centroid": Representative point (medoid - closest to mean)
+            - "mean": Average of cluster members
+            - "median": Coordinate-wise median (robust to outliers)
+            - "density_peak": Point with highest local density
+            - "median_centroid": Medoid from median (more robust to outliers)
+            - "rmsd_centroid": Centroid using RMSD metric (better for structural comparisons)
+            NOTE: If algorithm has built-in centers (e.g. some sklearn models),
+            those are ALWAYS used regardless of this parameter.
 
         Returns
         -------
@@ -145,16 +155,20 @@ class ClusterTypeBase(ABC, metaclass=ClusterTypeMeta):
             Tuple containing:
             
             - cluster_labels: Cluster labels for each sample (n_samples,)
-            - metadata: Dictionary with clustering information including hyperparameters, number of clusters, silhouette score, etc.
+            - metadata: Dictionary with clustering information including hyperparameters, number of clusters, silhouette score, cluster centers, etc.
 
         Examples
         --------
-        >>> # Compute DBSCAN clustering
+        >>> # Compute DBSCAN clustering with default center method
         >>> dbscan = DBSCAN(eps=0.5, min_samples=5)
         >>> dbscan.init_calculator()
         >>> data = np.random.rand(100, 50)
         >>> labels, metadata = dbscan.compute(data)
         >>> print(f"Number of clusters: {metadata['n_clusters']}")
+        >>> print(f"Centers shape: {metadata['centers'].shape}")
+
+        >>> # Compute with custom center method
+        >>> labels, metadata = dbscan.compute(data, center_method="mean")
 
         Raises
         ------

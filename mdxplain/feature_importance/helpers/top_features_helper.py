@@ -31,7 +31,7 @@ from typing import List, Dict, Any, Tuple, Optional, TYPE_CHECKING
 import numpy as np
 
 from ..entities.feature_importance_data import FeatureImportanceData
-from .feature_name_mapping_helper import FeatureNameMappingHelper
+from ...utils.feature_metadata_utils import FeatureMetadataUtils
 
 if TYPE_CHECKING:
     from ...pipeline.entities.pipeline_data import PipelineData
@@ -178,12 +178,15 @@ class TopFeaturesHelper:
                 "importance_score": importance_score,
                 "rank": len(result) + 1,
             }
-            
-            # Add feature name and type using helper
-            FeatureNameMappingHelper.add_feature_names(
-                feature_info, feature_metadata, feature_idx
+
+            # Add feature name and type using central utility
+            feature_info["feature_name"] = FeatureMetadataUtils.get_feature_name(
+                feature_metadata, feature_idx
             )
-            
+            feature_info["feature_type"] = FeatureMetadataUtils.get_feature_type(
+                feature_metadata, feature_idx
+            )
+
             result.append(feature_info)
         
         return result
@@ -240,12 +243,14 @@ class TopFeaturesHelper:
             indices_scores = TopFeaturesHelper.get_top_features_averaged(
                 fi_data, n
             )
-        
+
         # Get feature metadata for name mapping
-        feature_metadata = FeatureNameMappingHelper.get_feature_metadata(
-            pipeline_data, fi_data.feature_selector
-        )
-        
+        feature_metadata = None
+        if fi_data.feature_selector:
+            feature_metadata = pipeline_data.get_selected_metadata(
+                fi_data.feature_selector
+            )
+
         # Format with names and metadata
         return TopFeaturesHelper.format_features_with_names(
             indices_scores, feature_metadata

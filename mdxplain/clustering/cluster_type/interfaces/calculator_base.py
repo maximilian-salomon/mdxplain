@@ -35,6 +35,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from tqdm import tqdm
 
 from ....utils.data_utils import DataUtils
+from ...helper.center_calculation_helper import CenterCalculationHelper
 
 
 class CalculatorBase(ABC):
@@ -96,7 +97,7 @@ class CalculatorBase(ABC):
         self.use_memmap = use_memmap
 
     @abstractmethod
-    def compute(self, data: np.ndarray, **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
+    def compute(self, data: np.ndarray, center_method: str = "centroid", **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Compute clustering of input data.
 
@@ -108,25 +109,35 @@ class CalculatorBase(ABC):
         ----------
         data : numpy.ndarray
             Input data matrix to cluster, shape (n_samples, n_features)
-        '**'kwargs : dict
+        center_method : str, optional
+            Method for calculating cluster centers, default="centroid":
+            - "centroid": Representative point (medoid - closest to mean)
+            - "mean": Average of cluster members
+            - "median": Coordinate-wise median (robust to outliers)
+            - "density_peak": Point with highest local density
+            - "median_centroid": Medoid from median (more robust)
+            - "rmsd_centroid": Centroid using RMSD metric (structural)
+            NOTE: If algorithm has built-in centers (e.g. some sklearn models),
+            those are ALWAYS used regardless of this parameter.
+        kwargs : dict
             Additional parameters specific to the clustering method
 
         Returns
         -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
-            
             - cluster_labels: Cluster labels for each sample (n_samples,)
-            - metadata: Dictionary with clustering information including hyperparameters, number of clusters, silhouette score, etc.
+            - metadata: Dictionary with clustering information including hyperparameters, number of clusters, silhouette score, cluster centers, etc.
 
         Examples
         --------
         >>> # Compute clustering
         >>> calc = MyCalculator()
         >>> data = np.random.rand(100, 50)
-        >>> labels, metadata = calc.compute(data, eps=0.5, min_samples=5)
+        >>> labels, metadata = calc.compute(data, center_method="centroid", eps=0.5, min_samples=5)
         >>> print(f"Number of clusters: {metadata['n_clusters']}")
         >>> print(f"Silhouette score: {metadata['silhouette_score']}")
+        >>> print(f"Centers shape: {metadata['centers'].shape}")
         """
         pass
 
@@ -280,6 +291,62 @@ class CalculatorBase(ABC):
             non_noise_data = data[non_noise_mask]
             non_noise_labels = labels[non_noise_mask]
             return silhouette_score(non_noise_data, non_noise_labels)
+
+    def _calculate_centers(
+        self,
+        data: np.ndarray,
+        labels: np.ndarray,
+        cluster_model: Any,
+        center_method: str = "centroid",
+    ) -> Tuple[Optional[np.ndarray], str]:
+        """
+        Calculate cluster centers using built-in or helper method.
+
+        Checks if clustering algorithm has built-in centers (cluster_centers_).
+        Otherwise calculates centers using CenterCalculationHelper with automatic
+        memory-safe chunk-wise processing for large datasets.
+
+        Parameters
+        ----------
+        data : numpy.ndarray
+            Original data, shape (n_samples, n_features)
+        labels : numpy.ndarray
+            Cluster labels, shape (n_samples,)
+        cluster_model : Any
+            Fitted clustering model instance
+        center_method : str, default="centroid"
+            Method for calculating centers if not built-in:
+            - "centroid": Representative point (medoid)
+            - "mean": Average of cluster members
+            - "median": Coordinate-wise median
+            - "density_peak": Point with highest local density
+            - "median_centroid": Medoid from median (robust)
+            - "rmsd_centroid": Centroid using RMSD metric (structural)
+
+        Returns
+        -------
+        Tuple[Optional[numpy.ndarray], str]
+            - centers: Array of cluster centers or None
+            - method_used: "direct" if built-in, else center_method
+
+        Notes
+        -----
+        - Built-in centers are ALWAYS preferred if available
+        - Automatically uses chunk-wise processing if use_memmap=True
+        - Memory-safe for large datasets with memmap enabled
+        """
+        # Check for built-in centers (sklearn models have this)
+        if hasattr(cluster_model, 'cluster_centers_'):
+            return cluster_model.cluster_centers_, "direct"
+
+        # Fallback to CenterCalculationHelper
+        centers = CenterCalculationHelper.calculate_centers(
+            data, labels, center_method,
+            chunk_size=self.chunk_size,
+            use_memmap=self.use_memmap,
+            max_memory_gb=self.max_memory_gb
+        )
+        return centers, center_method
 
     def _calculate_sample_size(
         self, 

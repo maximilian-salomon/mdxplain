@@ -73,6 +73,8 @@ class TestSelectionStrings:
         
         # Create residue metadata
         residue_metadata = []
+        # Consensus labels: 1.50, 2.50, 3.50, 4.50, 5.50, 6.50, 7.50 (for indices 0-6)
+        consensus_labels = ["1.50", "2.50", "3.50", "4.50", "5.50", "6.50", "7.50"]
         for i, res in enumerate(self.test_traj.topology.residues):
             residue_metadata.append({
                 "resid": res.resSeq + 1,
@@ -80,7 +82,7 @@ class TestSelectionStrings:
                 "resname": res.name,
                 "aaa_code": res.name,
                 "a_code": res.name[0] if res.name else "X",
-                "consensus": None,
+                "consensus": consensus_labels[i],
                 "full_name": f"{res.name}{res.index + 1}",
                 "index": res.index
             })
@@ -441,8 +443,65 @@ class TestSelectionStrings:
                 if i != 2 and j != 2:  # Exclude residue 2 (VAL)
                     expected.append(pair_idx)
                 pair_idx += 1
-        
+
         assert sorted(indices) == sorted(expected)
+
+    @pytest.mark.parametrize("category,selection_values,expected_indices_any,expected_indices_all", [
+        # seqid: values 1,3,5 => seqid 1=index 0, seqid 3=index 2, seqid 5=index 4 => indices {0,2,4}
+        # Pairs: 0:(0,1), 1:(0,2), 2:(0,3), 3:(0,4), 4:(0,5), 5:(0,6), 6:(1,2), 7:(1,3), 8:(1,4),
+        #        9:(1,5), 10:(1,6), 11:(2,3), 12:(2,4), 13:(2,5), 14:(2,6), 15:(3,4), 16:(3,5),
+        #        17:(3,6), 18:(4,5), 19:(4,6), 20:(5,6)
+        ("seqid", ["1", "3", "5"],
+         [0, 1, 2, 3, 4, 5, 6, 8, 11, 12, 13, 14, 15, 18, 19],  # ANY partner in {0,2,4}
+         [1, 3, 12]),  # BOTH partners in {0,2,4}: (0,2), (0,4), (2,4)
+
+        # resid: values 0,2,4 => residue.index 0,2,4 (resid uses "index" field, not "resid"!)
+        # Same as seqid because both map to indices {0,2,4}
+        ("resid", ["0", "2", "4"],
+         [0, 1, 2, 3, 4, 5, 6, 8, 11, 12, 13, 14, 15, 18, 19],  # ANY partner in {0,2,4}
+         [1, 3, 12]),  # BOTH partners in {0,2,4}: (0,2), (0,4), (2,4)
+
+        # res: values ALA,VAL => ALA at {0,3}, VAL at {2} => indices {0,2,3}
+        ("res", ["ALA", "VAL"],
+         [0, 1, 2, 3, 4, 5, 6, 7, 11, 12, 13, 14, 15, 16, 17],  # ANY partner in {0,2,3}
+         [1, 2, 11]),  # BOTH partners in {0,2,3}: (0,2), (0,3), (2,3)
+
+        # consensus: values 1.50,3.50,5.50 => indices {0,2,4}
+        # Same as seqid/resid because consensus labels map 1.50=>0, 3.50=>2, 5.50=>4
+        ("consensus", ["1.50", "3.50", "5.50"],
+         [0, 1, 2, 3, 4, 5, 6, 8, 11, 12, 13, 14, 15, 18, 19],  # ANY partner in {0,2,4}
+         [1, 3, 12]),  # BOTH partners in {0,2,4}: (0,2), (0,4), (2,4)
+    ])
+    @pytest.mark.parametrize("separator", [",", " ", ";"])
+    @pytest.mark.parametrize("require_all", [False, True])
+    def test_multi_value_separators(self, category, selection_values, expected_indices_any, expected_indices_all, separator, require_all):
+        """
+        Test multi-value selections with different separators and require_all_partners.
+
+        Validates that comma, whitespace, and semicolon separators all work identically
+        for seqid, resid, res, and consensus categories with both require_all_partners settings.
+
+        Test matrix: 4 categories × 3 separators × 2 require_all_partners = 24 tests
+        """
+        # Build selection string with separator
+        selection_string = f"{category} {separator.join(selection_values)}"
+
+        # Create selector and get indices
+        name = self._create_selector_and_add(
+            f"test_{category}_{separator.replace(' ', 'space')}_{require_all}",
+            selection_string,
+            require_all_partners=require_all
+        )
+        indices = self._get_selected_indices(name)
+
+        # Select expected indices based on require_all_partners
+        expected = expected_indices_all if require_all else expected_indices_any
+
+        # Verify exact match
+        assert sorted(indices) == sorted(expected), (
+            f"Failed for {category} with separator '{separator}' and require_all_partners={require_all}. "
+            f"Expected {expected}, got {sorted(indices)}"
+        )
 
 
 class TestParameters:
@@ -843,12 +902,12 @@ class TestFeatureSelectorMatrixConsistency:
         """
         self.pipeline = PipelineManager()
         
-        # Trajectory 0: 3 residues (ALA-GLY-VAL) -> 3 pairs
+        # Trajectory 0: 3 residues (ALA-GLY-VAL) => 3 pairs
         traj0 = self._create_trajectory(["ALA", "GLY", "VAL"], 30)
         self.pipeline.data.trajectory_data.trajectories.append(traj0)
         self.pipeline.data.trajectory_data.trajectory_names.append("short")
         
-        # Trajectory 1: 5 residues (ALA-GLY-VAL-ALA-GLY) -> 10 pairs
+        # Trajectory 1: 5 residues (ALA-GLY-VAL-ALA-GLY) => 10 pairs
         traj1 = self._create_trajectory(["ALA", "GLY", "VAL", "ALA", "GLY"], 40)
         self.pipeline.data.trajectory_data.trajectories.append(traj1)
         self.pipeline.data.trajectory_data.trajectory_names.append("long")
@@ -915,8 +974,8 @@ class TestFeatureSelectorMatrixConsistency:
         self.pipeline.feature_selector.create("inconsistent")
         
         # Select "all" features with common_denominator=False - this will have different counts per trajectory
-        # Trajectory 0: 3 residues -> 3 pairs
-        # Trajectory 1: 5 residues -> 10 pairs
+        # Trajectory 0: 3 residues => 3 pairs
+        # Trajectory 1: 5 residues => 10 pairs
         self.pipeline.feature_selector.add_selection("inconsistent", "distances", "all", common_denominator=False)
         
         # Should trigger ValueError about inconsistent matrix dimensions

@@ -162,7 +162,7 @@ class DBSCAN(ClusterTypeBase):
             use_memmap=use_memmap
         )
 
-    def compute(self, data: np.ndarray) -> Tuple[np.ndarray, Dict[str, Any]]:
+    def compute(self, data: np.ndarray, center_method: str = "centroid") -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Compute DBSCAN clustering.
 
@@ -170,6 +170,8 @@ class DBSCAN(ClusterTypeBase):
         ----------
         data : numpy.ndarray
             Input data matrix to cluster, shape (n_samples, n_features)
+        center_method : str, optional
+            Method for calculating cluster centers, default="centroid"
 
         Returns
         -------
@@ -186,10 +188,11 @@ class DBSCAN(ClusterTypeBase):
         """
         if self.calculator is None:
             raise ValueError("Calculator not initialized. Call init_calculator() first.")
-        
+
         return self.calculator.compute(
-            data, 
-            eps=self.eps, 
+            data,
+            center_method=center_method,
+            eps=self.eps,
             min_samples=self.min_samples,
             method=self.method,
             sample_fraction=self.sample_fraction,

@@ -52,6 +52,16 @@ class TestStructureServicesIntegration:
         all service paths.
         """
         self.pipeline = self._create_mock_pipeline()
+        self._rmsf_patches = []
+        self._rmsd_patches = []
+
+        yield
+
+        # Cleanup: Stop all patches
+        for p in self._rmsf_patches:
+            p.stop()
+        for p in self._rmsd_patches:
+            p.stop()
 
     def _create_mock_pipeline(self):
         """Create mock pipeline with required structure.

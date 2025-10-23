@@ -221,9 +221,12 @@ class DataSelectorManager:
         )
         criteria["mode"] = mode  # Add mode to criteria
         criteria["stride"] = stride  # Add stride to criteria
-        
+
         # Use appropriate criteria method based on mode and existing data
         selector_data.append_selection_criteria(criteria)
+
+        # Invalidate caches using this data selector
+        pipeline_data.clear_matrix_cache(data_selector=name)
 
     def select_by_cluster(
         self,
@@ -337,6 +340,9 @@ class DataSelectorManager:
 
         # Use appropriate criteria method based on mode and existing data
         selector_data.append_selection_criteria(criteria)
+
+        # Invalidate caches using this data selector
+        pipeline_data.clear_matrix_cache(data_selector=name)
 
     def select_by_indices(
         self,
@@ -458,6 +464,9 @@ class DataSelectorManager:
 
         # Use appropriate criteria method based on mode and existing data
         selector_data.append_selection_criteria(criteria)
+
+        # Invalidate caches using this data selector
+        pipeline_data.clear_matrix_cache(data_selector=name)
 
 
     def get_selection_info(self, pipeline_data: PipelineData, name: str) -> Dict[str, Any]:
