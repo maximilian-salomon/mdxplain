@@ -40,6 +40,7 @@ class DistancesSelectionService(SelectionServiceBase):
     Service for selecting distances features with distances-specific reduction methods.
 
     Knows ALL reduction metrics from DistancesReduceService:
+    
     - cv, std, variance, range, transitions, min, mad, mean, max
 
     This service provides methods to add distance feature selections with

@@ -278,6 +278,7 @@ class DSSPCalculatorAnalysis:
         -------
         tuple[numpy.ndarray, numpy.ndarray]
             Tuple containing (frequencies, class_values) where:
+            
             - frequencies: shape (n_residues, n_classes) with class frequencies
             - class_values: array of class values
 

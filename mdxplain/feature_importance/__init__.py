@@ -30,15 +30,6 @@ Main Components:
 - FeatureImportanceData: Entity storing feature importance results
 - FeatureImportanceManager: Manager for running importance analyses
 - analyzer_types: Various ML algorithms for importance analysis
-
-Examples:
----------
->>> from mdxplain.feature_importance import FeatureImportanceManager, analyzer_types
->>> manager = FeatureImportanceManager()
->>> manager.add(
-...     pipeline_data, "folded_vs_unfolded",
-...     analyzer_types.DecisionTree(max_depth=5), "tree_analysis"
-... )
 """
 
 from .entities.feature_importance_data import FeatureImportanceData

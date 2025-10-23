@@ -84,8 +84,9 @@ class RMSDFacade:
         
         Provides the RMSD service that aggregates atom-wise deviations via the
         arithmetic mean. This is the default variant for most workflows.
+
         Parameters
-        -----
+        ----------
         None
             This property does not accept parameters.
 
@@ -117,6 +118,7 @@ class RMSDFacade:
         ----------
         None
             This property does not accept parameters.
+            
         Returns
         -------
         RMSDVariantService

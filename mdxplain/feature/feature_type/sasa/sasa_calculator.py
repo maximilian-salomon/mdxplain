@@ -96,8 +96,9 @@ class SASACalculator(CalculatorBase):
         ----------
         input_data : mdtraj.Trajectory
             MDTraj trajectory object to process
-        **kwargs : dict
+        '**'kwargs : dict
             Additional parameters:
+
             - mode : str - 'residue' or 'atom' level SASA
             - probe_radius : float - Probe sphere radius in nm
             - res_metadata : dict - Residue metadata for naming
@@ -345,6 +346,7 @@ class SASACalculator(CalculatorBase):
             SASA array (n_frames, n_features)
         metric : str, default='cv'
             Metric to use for selection:
+            
             - 'cv': Coefficient of variation
             - 'std': Standard deviation
             - 'variance': Variance

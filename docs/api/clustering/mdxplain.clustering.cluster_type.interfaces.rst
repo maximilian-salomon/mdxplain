@@ -1,13 +1,10 @@
-Cluster Types: Interface Packages
-=================================
+Cluster Type: Interface Packages
+================================
 
 .. automodule:: mdxplain.clustering.cluster_type.interfaces
 
-Module contents
----------------
-
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    mdxplain.clustering.cluster_type.interfaces.calculator_base
    mdxplain.clustering.cluster_type.interfaces.cluster_type_base

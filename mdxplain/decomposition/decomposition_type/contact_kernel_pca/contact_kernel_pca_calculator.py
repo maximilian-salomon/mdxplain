@@ -111,8 +111,9 @@ class ContactKernelPCACalculator(KernelPCACalculator):
         data : numpy.ndarray
             Binary contact matrix to decompose, shape (n_samples, n_features)
             Values should be 0 or 1
-        **kwargs : dict
+        '**'kwargs : dict
             ContactKernelPCA parameters:
+
             - n_components : int, required
                 Number of components to keep
             - gamma : float, default=1.0
@@ -128,6 +129,7 @@ class ContactKernelPCACalculator(KernelPCACalculator):
         -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
+            
             - transformed_data: ContactKernelPCA-transformed data (n_samples, n_components)
             - metadata: Dictionary with ContactKernelPCA information including
               kernel parameters, eigenvalues, and hyperparameters

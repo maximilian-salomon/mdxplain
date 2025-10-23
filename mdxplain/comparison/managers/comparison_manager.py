@@ -50,6 +50,7 @@ class ComparisonManager:
     generates the appropriate sub-comparisons.
 
     Supported modes:
+    
     - Binary: Simple A vs B comparison
     - Pairwise: All possible pairs from multiple selectors
     - One-vs-rest: Each selector vs all others combined

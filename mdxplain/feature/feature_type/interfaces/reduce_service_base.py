@@ -34,10 +34,12 @@ class ReduceServiceBase(ABC):
     Base class for all feature type reduce services.
 
     Provides common functionality for feature reduction services including:
+
     - Standard initialization with manager and pipeline_data
     - Common validation and error handling
 
     Subclasses must set:
+    
     - self._feature_type: String identifier for the feature type
 
     Examples

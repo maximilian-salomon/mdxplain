@@ -34,6 +34,7 @@ class DSSPSelectionService(SelectionServiceBase):
     Service for selecting DSSP features with DSSP-specific reduction methods.
 
     Knows ALL reduction metrics from DSSPReduceService:
+    
     - transitions, transition_frequency, stability, class_frequencies
 
     This service provides methods to add DSSP (secondary structure) feature

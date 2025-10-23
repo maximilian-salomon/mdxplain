@@ -42,6 +42,7 @@ class AnalyzerTypeBase(ABC, metaclass=AnalyzerTypeMeta):
     providing a consistent interface for different ML algorithms.
 
     All analyzer types must implement:
+
     - compute(): Main analysis method
     - get_type_name(): Unique identifier string
     - get_params(): Parameter dictionary
@@ -93,6 +94,7 @@ class AnalyzerTypeBase(ABC, metaclass=AnalyzerTypeMeta):
         -------
         Dict[str, Any]
             Dictionary containing:
+            
             - 'importances': np.ndarray of feature importance scores
             - 'model': Trained ML model object
             - 'metadata': Dict with additional information
