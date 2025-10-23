@@ -108,7 +108,7 @@ class CalculatorBase(ABC):
         ----------
         data : numpy.ndarray
             Input data matrix to cluster, shape (n_samples, n_features)
-        \*\*kwargs : dict
+        '**'kwargs : dict
             Additional parameters specific to the clustering method
 
         Returns

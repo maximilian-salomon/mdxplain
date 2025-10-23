@@ -85,7 +85,7 @@ class DBSCANCalculator(CalculatorBase):
         ----------
         data : numpy.ndarray
             Input data matrix to cluster, shape (n_samples, n_features)
-        \*\*kwargs : dict
+        '**'kwargs : dict
             DBSCAN parameters including:
 
             - eps : float, maximum distance between samples

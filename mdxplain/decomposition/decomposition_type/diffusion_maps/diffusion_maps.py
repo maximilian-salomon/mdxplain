@@ -285,7 +285,7 @@ class DiffusionMaps(DecompositionTypeBase):
         ----------
         data : numpy.ndarray
             Input coordinate matrix (n_frames, n_features) where n_features = n_atoms * 3
-        \*\*kwargs : dict
+        '**'kwargs : dict
             Additional optional parameters (currently none supported)
 
         Returns

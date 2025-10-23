@@ -65,9 +65,9 @@ class BoundMethod:
 
         Parameters
         ----------
-        \*args : Any
+        '*'args : Any
             Positional arguments for the original method
-        \*\*kwargs : Any
+        '**'kwargs : Any
             Keyword arguments for the original method
 
         Returns

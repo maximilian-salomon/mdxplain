@@ -87,7 +87,7 @@ class HDBSCANCalculator(CalculatorBase):
         ----------
         data : numpy.ndarray
             Input data matrix to cluster, shape (n_samples, n_features)
-        \*\*kwargs : dict
+        '**'kwargs : dict
             HDBSCAN parameters including:
 
             - min_cluster_size : int, minimum size of clusters
