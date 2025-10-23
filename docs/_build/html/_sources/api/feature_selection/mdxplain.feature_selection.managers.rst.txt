@@ -1,5 +1,5 @@
-Feature Selection: Managers
-===========================
+Feature Selection Managers
+==========================
 
 .. automodule:: mdxplain.feature_selection.managers
 

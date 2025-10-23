@@ -1,5 +1,5 @@
-Residue Aggregation Helper
-==========================
+Analysis Structure Helper: Residue Aggregation Helper
+=====================================================
 
 .. automodule:: mdxplain.analysis.structure.helpers.residue_aggregation_helper
    :members:

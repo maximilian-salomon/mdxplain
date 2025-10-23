@@ -1,5 +1,5 @@
 Feature Selection Entities
-===========================
+==========================
 
 .. automodule:: mdxplain.feature_selection.entities
 

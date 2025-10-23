@@ -1,7 +1,7 @@
-The Theory Behind mdxplain
+The Theory behind mdxplain
 ==========================
 
-Really smart text.
+Details will be added at a later date.
 
 .. toctree::
    :maxdepth: 1

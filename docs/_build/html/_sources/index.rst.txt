@@ -1,18 +1,17 @@
-.. mdxplain documentation master file, created by
-   sphinx-quickstart on Wed Sep 24 10:48:42 2025.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+Welcome to mdxplain
+===================
 
-Welcome to mdxplain's documentation!
-====================================
+What is mdxplain?
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Contents
    :titlesonly:
 
-   introduction
    getting_started
    tutorials/theory/theory
    tutorials/learning/learning
+   how_to_contribute
+   how_to_cite
+   license
    api/api

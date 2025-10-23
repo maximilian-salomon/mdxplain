@@ -1,5 +1,5 @@
-RMSF Per Atom Service
-=====================
+Analysis Structure Service: RMSF Per Atom Service
+=================================================
 
 .. automodule:: mdxplain.analysis.structure.services.rmsf_per_atom_service
    :members:

@@ -3,8 +3,8 @@ Feature Entities
 
 .. automodule:: mdxplain.feature.entities
 
-Entities
---------
+Data
+----
 
 .. automodule:: mdxplain.feature.entities.feature_data
    :members:

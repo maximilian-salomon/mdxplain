@@ -1,5 +1,5 @@
-RMSF Per Residue Aggregation Facade
-===================================
+Analysis Structure Service: RMSF Per Residue Aggregation Facade
+===============================================================
 
 .. automodule:: mdxplain.analysis.structure.services.rmsf_per_residue_aggregation_facade
    :members:

@@ -1,5 +1,5 @@
-Trajectory: Managers
-====================
+Trajectory Managers
+===================
 
 .. automodule:: mdxplain.trajectory.managers
 

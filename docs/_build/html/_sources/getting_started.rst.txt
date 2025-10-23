@@ -1,4 +1,4 @@
-Getting started with mdxplain
+Getting Started with mdxplain
 =============================
 
-How to install and other basics.
+How to install mdxplain and their dependencies.

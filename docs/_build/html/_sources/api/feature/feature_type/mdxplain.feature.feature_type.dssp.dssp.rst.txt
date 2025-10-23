@@ -1,5 +1,5 @@
-Feature Type: DSSPs Data
-========================
+Feature Type: DSSP Data
+=======================
 
 .. automodule:: mdxplain.feature.feature_type.dssp.dssp
    :members:

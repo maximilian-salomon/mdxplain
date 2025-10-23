@@ -1,5 +1,5 @@
-Decomposition Types: Interface Calculator Base
-==============================================
+Decomposition Type: Interface Calculator Base
+=============================================
 
 .. automodule:: mdxplain.decomposition.decomposition_type.interfaces.calculator_base
    :members:

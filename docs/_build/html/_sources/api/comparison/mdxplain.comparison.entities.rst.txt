@@ -3,8 +3,8 @@ Comparison Entities
 
 .. automodule:: mdxplain.comparison.entities
 
-Comparison Data
----------------
+Data
+----
 
 .. automodule:: mdxplain.comparison.entities.comparison_data
    :members:
