@@ -28,13 +28,6 @@ DataSelector chooses rows (frames) based on tags, clusters, or combinations.
 Main Components:
 - DataSelectorData: Entity storing frame indices and selection criteria
 - DataSelectorManager: Manager for creating and managing row selections
-
-Examples:
----------
->>> from mdxplain.data_selector import DataSelectorManager
->>> manager = DataSelectorManager()
->>> manager.create(pipeline_data, "folded_frames")
->>> manager.select_by_cluster(pipeline_data, "folded_frames", "conformations", [0])
 """
 
 from .entities.data_selector_data import DataSelectorData
