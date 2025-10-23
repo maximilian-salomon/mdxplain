@@ -18,390 +18,151 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""Factory for adding clustering algorithms with simplified syntax."""
+"""Service for adding clustering algorithms without explicit type instantiation."""
 
 from __future__ import annotations
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ..managers.cluster_manager import ClusterManager
     from ...pipeline.entities.pipeline_data import PipelineData
 
-from ..cluster_type import DBSCAN, HDBSCAN, DPA
+from .dbscan_add_service import DBSCANAddService
+from .hdbscan_add_service import HDBSCANAddService
+from .dpa_add_service import DPAAddService
 
 
 class ClusterAddService:
     """
     Service for adding clustering algorithms without explicit type instantiation.
-    
+
     This service provides an intuitive interface for adding clustering algorithms
     without requiring users to import and instantiate cluster types directly.
-    All cluster type parameters are combined with manager.add parameters.
-    
+    Provides both standard calls with default center method and explicit selection.
+
     Examples
     --------
+    >>> # Standard calls with default centroid centers
     >>> pipeline.clustering.add.dbscan("my_features", eps=0.5, min_samples=5)
     >>> pipeline.clustering.add.hdbscan("my_features", min_cluster_size=10)
     >>> pipeline.clustering.add.dpa("my_features", Z=2.0)
+
+    >>> # Explicit center method selection
+    >>> pipeline.clustering.add.dbscan.with_median_centers("my_features", eps=0.5)
+    >>> pipeline.clustering.add.hdbscan.with_density_peak_centers("my_features", min_cluster_size=10)
+    >>> pipeline.clustering.add.dpa.with_rmsd_centroid_centers("my_features", Z=2.0)
     """
-    
+
     def __init__(self, manager: ClusterManager, pipeline_data: PipelineData) -> None:
         """
-        Initialize factory with manager and pipeline data.
-        
+        Initialize service with manager and pipeline data.
+
         Parameters
         ----------
         manager : ClusterManager
             Cluster manager instance
         pipeline_data : PipelineData
             Pipeline data container (injected by AutoInjectProxy)
-            
+
         Returns
         -------
         None
         """
         self._manager = manager
         self._pipeline_data = pipeline_data
-    
-    def dbscan(
-        self,
-        selection_name: str,
-        eps: float = 0.5,
-        min_samples: int = 5,
-        method: str = "standard",
-        sample_fraction: float = 0.1,
-        knn_neighbors: int = 5,
-        use_decomposed: bool = True,
-        cluster_name: Optional[str] = None,
-        data_selector_name: Optional[str] = None,
-        force: bool = False,
-        override_cache: bool = False,
-    ) -> None:
+        self._dbscan_service = DBSCANAddService(manager, pipeline_data)
+        self._hdbscan_service = HDBSCANAddService(manager, pipeline_data)
+        self._dpa_service = DPAAddService(manager, pipeline_data)
+
+    @property
+    def dbscan(self) -> DBSCANAddService:
         """
-        Add DBSCAN clustering algorithm.
-        
-        DBSCAN (Density-Based Spatial Clustering of Applications with Noise)
-        groups together points that are closely packed while marking points
-        in low-density regions as outliers.
-        
-        Parameters
-        ----------
-        selection_name : str
-            Name of feature selection to cluster
-        eps : float, default=0.5
-            Maximum distance between two samples for one to be considered
-            in the neighborhood of the other
-        min_samples : int, default=5
-            Minimum number of samples in a neighborhood for a point to be
-            considered as a core point
-        method : str, default="standard"
-            Clustering method: 'standard' or 'knn_sampling'
-        sample_fraction : float, default=0.1
-            Fraction of data to sample for 'knn_sampling' method.
-        knn_neighbors : int, default=5
-            Number of neighbors for k-NN sampling method.
-        use_decomposed : bool, default=True
-            Whether to use decomposed data if available, otherwise use raw features
-        cluster_name : str, optional
-            Name for the clustering result. If None, uses algorithm-based name
-        data_selector_name : str, optional
-            Name of data selector to apply before clustering
-        force : bool, default=False
-            Force recalculation or override automatic method selection
-        override_cache : bool, default=False
-            Override cache settings for this clustering
-            
+        Service for adding DBSCAN clustering.
+
+        Uses centroid (medoid) center calculation by default. The centroid is the
+        actual data point closest to the cluster mean, ensuring the cluster center
+        is a real conformational state from the trajectory.
+
+        For alternative center methods, use:
+        - .with_mean_centers() - Arithmetic mean (may not be real state)
+        - .with_median_centers() - Feature-wise median (robust to outliers)
+        - .with_density_peak_centers() - Highest density point
+        - .with_median_centroid_centers() - Medoid from median
+        - .with_rmsd_centroid_centers() - RMSD-based centroid
+
         Returns
         -------
-        None
-            Adds DBSCAN clustering results to pipeline data
-            
+        DBSCANAddService
+            Service for DBSCAN clustering with flexible center method selection
+
         Examples
         --------
-        >>> # Basic DBSCAN clustering
-        >>> pipeline.clustering.add.dbscan("my_features", eps=0.5, min_samples=5)
-        
-        >>> # DBSCAN with custom parameters
-        >>> pipeline.clustering.add.dbscan(
-        ...     "distance_features", 
-        ...     eps=1.0, 
-        ...     min_samples=10,
-        ...     cluster_name="loose_clustering"
-        ... )
-        
-        >>> # DBSCAN on raw features instead of decomposed
-        >>> pipeline.clustering.add.dbscan(
-        ...     "contact_features", 
-        ...     eps=0.3,
-        ...     use_decomposed=False,
-        ...     data_selector_name="folded_conformations"
-        ... )
-        
-        Notes
-        -----
-        DBSCAN automatically determines the number of clusters and can find
-        clusters of arbitrary shape. Points that don't belong to any cluster
-        are labeled as noise (cluster label -1).
+        >>> # Standard call with default centroid centers
+        >>> pipeline.clustering.add.dbscan("features", eps=0.5, min_samples=5)
+
+        >>> # Explicit center method
+        >>> pipeline.clustering.add.dbscan.with_median_centers("features", eps=0.5)
         """
-        cluster_type = DBSCAN(
-            eps=eps, 
-            min_samples=min_samples, 
-            method=method,
-            sample_fraction=sample_fraction,
-            knn_neighbors=knn_neighbors,
-            force=force
-        )
-        return self._manager.add_clustering(
-            self._pipeline_data,
-            selection_name,
-            cluster_type,
-            use_decomposed=use_decomposed,
-            cluster_name=cluster_name,
-            data_selector_name=data_selector_name,
-            force=force,
-            override_cache=override_cache,
-        )
-    
-    def hdbscan(
-        self,
-        selection_name: str,
-        min_cluster_size: int = 5,
-        min_samples: Optional[int] = None,
-        cluster_selection_epsilon: float = 0.0,
-        cluster_selection_method: str = "eom",
-        method: str = "standard",
-        sample_fraction: float = 0.1,
-        knn_neighbors: int = 5,
-        use_decomposed: bool = True,
-        cluster_name: Optional[str] = None,
-        data_selector_name: Optional[str] = None,
-        force: bool = False,
-        override_cache: bool = False,
-    ) -> None:
+        return self._dbscan_service
+
+    @property
+    def hdbscan(self) -> HDBSCANAddService:
         """
-        Add HDBSCAN clustering algorithm.
-        
-        HDBSCAN (Hierarchical Density-Based Spatial Clustering of Applications
-        with Noise) extends DBSCAN by converting it into a hierarchical clustering
-        algorithm and extracting clusters based on the stability of clusters.
-        
-        Parameters
-        ----------
-        selection_name : str
-            Name of feature selection to cluster
-        min_cluster_size : int, default=5
-            Minimum size of clusters
-        min_samples : int, optional
-            Number of samples in a neighborhood for a point to be considered
-            a core point. Defaults to min_cluster_size
-        cluster_selection_epsilon : float, default=0.0
-            Distance threshold for cluster extraction
-        cluster_selection_method : str, default="eom"
-            Method for cluster selection ('eom' or 'leaf')
-        method : str, default="standard"
-            Clustering method: 'standard', 'approximate_predict', or 'knn_sampling'
-        sample_fraction : float, default=0.1
-            Fraction of data to sample for sampling-based methods
-        knn_neighbors : int, default=5
-            Number of neighbors for k-NN classifier in knn_sampling method
-        use_decomposed : bool, default=True
-            Whether to use decomposed data if available
-        cluster_name : str, optional
-            Name for the clustering result
-        data_selector_name : str, optional
-            Name of data selector to apply before clustering
-        force : bool, default=False
-            Force recalculation or override automatic method selection
-        override_cache : bool, default=False
-            Override cache settings for this clustering
-            
+        Service for adding HDBSCAN clustering.
+
+        Uses centroid (medoid) center calculation by default. The centroid is the
+        actual data point closest to the cluster mean, ensuring the cluster center
+        is a real conformational state from the trajectory.
+
+        For alternative center methods, use:
+        - .with_mean_centers() - Arithmetic mean (may not be real state)
+        - .with_median_centers() - Feature-wise median (robust to outliers)
+        - .with_density_peak_centers() - Highest density point
+        - .with_median_centroid_centers() - Medoid from median
+        - .with_rmsd_centroid_centers() - RMSD-based centroid
+
         Returns
         -------
-        None
-            Adds HDBSCAN clustering results to pipeline data
-            
+        HDBSCANAddService
+            Service for HDBSCAN clustering with flexible center method selection
+
         Examples
         --------
-        >>> # Basic HDBSCAN clustering
-        >>> pipeline.clustering.add.hdbscan("my_features", min_cluster_size=10)
-        
-        >>> # HDBSCAN with custom parameters
-        >>> pipeline.clustering.add.hdbscan(
-        ...     "pca_features",
-        ...     min_cluster_size=15,
-        ...     min_samples=20,
-        ...     cluster_selection_epsilon=0.5,
-        ...     cluster_name="stable_clusters"
-        ... )
-        
-        >>> # HDBSCAN with robust linkage
-        >>> pipeline.clustering.add.hdbscan(
-        ...     "torsion_features",
-        ...     min_cluster_size=8,
-        ...     alpha=0.5,
-        ...     data_selector_name="active_conformations"
-        ... )
-        
-        Notes
-        -----
-        HDBSCAN is more stable than DBSCAN across different parameter settings
-        and provides a hierarchy of clusters. It's particularly good at finding
-        clusters of varying densities.
+        >>> # Standard call with default centroid centers
+        >>> pipeline.clustering.add.hdbscan("features", min_cluster_size=10)
+
+        >>> # Explicit center method
+        >>> pipeline.clustering.add.hdbscan.with_density_peak_centers("features", min_cluster_size=10)
         """
-        cluster_type = HDBSCAN(
-            min_cluster_size=min_cluster_size,
-            min_samples=min_samples,
-            cluster_selection_epsilon=cluster_selection_epsilon,
-            cluster_selection_method=cluster_selection_method,
-            method=method,
-            sample_fraction=sample_fraction,
-            knn_neighbors=knn_neighbors,
-            force=force,
-        )
-        return self._manager.add_clustering(
-            self._pipeline_data,
-            selection_name,
-            cluster_type,
-            use_decomposed=use_decomposed,
-            cluster_name=cluster_name,
-            data_selector_name=data_selector_name,
-            force=force,
-            override_cache=override_cache,
-        )
-    
-    def dpa(
-        self,
-        selection_name: str,
-        Z: float = 1.0,
-        metric: str = "euclidean",
-        affinity: str = "precomputed",
-        density_algo: str = "PAk",
-        k_max: int = 1000,
-        D_thr: float = 23.92812698,
-        dim_algo: str = "twoNN",
-        blockAn: bool = True,
-        block_ratio: int = 20,
-        frac: float = 1.0,
-        halos: bool = False,
-        method: str = "standard",
-        sample_fraction: float = 0.1,
-        knn_neighbors: int = 5,
-        use_decomposed: bool = True,
-        cluster_name: Optional[str] = None,
-        data_selector_name: Optional[str] = None,
-        force: bool = False,
-        override_cache: bool = False,
-    ) -> None:
+        return self._hdbscan_service
+
+    @property
+    def dpa(self) -> DPAAddService:
         """
-        Add DPA (Density Peak Analysis) clustering algorithm.
-        
-        DPA identifies cluster centers as points with high local density
-        and high distance to points with higher density. It's particularly
-        effective for finding clusters with irregular shapes.
-        
-        Parameters
-        ----------
-        selection_name : str
-            Name of feature selection to cluster
-        Z : float, default=1.0
-            Number of standard deviations for statistical confidence
-        metric : str, default="euclidean"
-            Distance metric ('euclidean', 'cosine', 'precomputed')
-        affinity : str, default="precomputed"
-            How to construct affinity matrix ('precomputed', 'rbf', 'nearest_neighbors')
-        density_algo : str, default="PAk"
-            Density estimator algorithm ('PAk' or 'kNN')
-        k_max : int, default=1000
-            Maximum number of nearest neighbors for density estimation
-        D_thr : float, default=23.92812698
-            Confidence threshold for PAk density estimator
-        dim_algo : str, default="twoNN"
-            Intrinsic dimensionality calculation method ('auto' or 'twoNN')
-        blockAn : bool, default=True
-            Whether to perform block analysis for twoNN dimensionality
-        block_ratio : int, default=20
-            Minimum block size as n_samples/block_ratio for twoNN
-        frac : float, default=1.0
-            Fraction of points used for dimensionality calculation
-        halos : bool, default=False
-            Whether to return halo points (low-density outliers)
-        method : str, default="standard"
-            Clustering method ('standard', 'sampling_approximate', 'sampling_knn')
-        sample_fraction : float, default=0.1
-            Fraction of data to sample for sampling-based methods
-        knn_neighbors : int, default=5
-            Number of neighbors for k-NN classifier in sampling methods
-        use_decomposed : bool, default=True
-            Whether to use decomposed data if available
-        cluster_name : str, optional
-            Name for the clustering result
-        data_selector_name : str, optional
-            Name of data selector to apply before clustering
-        force : bool, default=False
-            Force recalculation or override automatic method selection
-        override_cache : bool, default=False
-            Override cache settings for this clustering
-            
+        Service for adding DPA clustering.
+
+        Uses centroid (medoid) center calculation by default. The centroid is the
+        actual data point closest to the cluster mean, ensuring the cluster center
+        is a real conformational state from the trajectory.
+
+        For alternative center methods, use:
+        - .with_mean_centers() - Arithmetic mean (may not be real state)
+        - .with_median_centers() - Feature-wise median (robust to outliers)
+        - .with_density_peak_centers() - Highest density point
+        - .with_median_centroid_centers() - Medoid from median
+        - .with_rmsd_centroid_centers() - RMSD-based centroid
+
         Returns
         -------
-        None
-            Adds DPA clustering results to pipeline data
-            
+        DPAAddService
+            Service for DPA clustering with flexible center method selection
+
         Examples
         --------
-        >>> # Basic DPA clustering
-        >>> pipeline.clustering.add.dpa("my_features", Z=2.0)
-        
-        >>> # DPA with custom density algorithm
-        >>> pipeline.clustering.add.dpa(
-        ...     "distance_features",
-        ...     Z=1.5,
-        ...     density_algo="kNN",
-        ...     k_max=500,
-        ...     cluster_name="density_peaks"
-        ... )
-        
-        >>> # DPA with sampling for large datasets
-        >>> pipeline.clustering.add.dpa(
-        ...     "conformational_features",
-        ...     Z=1.8,
-        ...     method="sampling_knn",
-        ...     sample_fraction=0.2,
-        ...     data_selector_name="equilibrated_frames"
-        ... )
-        
-        Notes
-        -----
-        DPA is in practice easy to use for molecular dynamics data and
-        does not require extensive parameter tuning. It can find clusters
-        of varying shapes and densities without prior knowledge of the
-        data distribution. Just vary the Z parameter to adjust the number
-        of clusters.
+        >>> # Standard call with default centroid centers
+        >>> pipeline.clustering.add.dpa("features", Z=2.0)
+
+        >>> # Explicit center method
+        >>> pipeline.clustering.add.dpa.with_rmsd_centroid_centers("features", Z=2.0)
         """
-        cluster_type = DPA(
-            Z=Z,
-            metric=metric,
-            affinity=affinity,
-            density_algo=density_algo,
-            k_max=k_max,
-            D_thr=D_thr,
-            dim_algo=dim_algo,
-            blockAn=blockAn,
-            block_ratio=block_ratio,
-            frac=frac,
-            halos=halos,
-            method=method,
-            sample_fraction=sample_fraction,
-            knn_neighbors=knn_neighbors,
-            force=force,
-        )
-        return self._manager.add_clustering(
-            self._pipeline_data,
-            selection_name,
-            cluster_type,
-            use_decomposed=use_decomposed,
-            cluster_name=cluster_name,
-            data_selector_name=data_selector_name,
-            force=force,
-            override_cache=override_cache,
-        )
+        return self._dpa_service

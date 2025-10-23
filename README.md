@@ -2,7 +2,7 @@
 
 A Python toolkit for scalable molecular dynamics trajectory analysis, combining modular workflows, memory-efficient processing and interpretable machine learning via decision trees to identify key conformational features and streamline complex pipelines.
 
-**Developer:** Maximilian Salomon (Software), Maeve Buttler (ReadTheDocs Documentation)
+**Developer:** Maximilian Salomon (Software), Maeve Butler (ReadTheDocs Documentation)
 
 **Version:** 1.0.0
 
@@ -661,7 +661,7 @@ Structural metrics provide quantitative measures of protein dynamics and conform
   - Protein-wide flexibility overview
   - Domain mobility comparison
   - Experimental B-factor comparison
-  - Publication-ready flexibility profiles
+  - Flexibility profiles
 - **Example**: Identify flexible loops vs. rigid helices
 
 **Per-Residue Aggregation Methods:**

@@ -580,13 +580,14 @@ class MockTrajectoryFactory:
         topology = MockTopology(n_atoms=n_atoms, atoms_per_residue=1)  # 1 atom per residue for testing
         xyz = np.zeros((n_frames, n_atoms, 3))
         
-        # Create linear pattern: frame 0=[0,0,0], frame 1=[1,1,1], etc.
+        # Create linear pattern with independent variance per atom
+        # Each atom moves differently to ensure multiple PCA components with variance
         for frame in range(n_frames):
             for atom in range(n_atoms):
                 xyz[frame, atom] = [
-                    frame + atom,      # x increases by frame + atom
-                    frame * 0.5,       # y increases by 0.5 per frame
-                    atom * 2.0         # z increases by 2.0 per atom
+                    frame + atom * 1.0,          # x increases by frame + atom offset
+                    frame * 0.5 + atom * 0.3,    # y varies with frame and atom
+                    frame * 0.2 + atom * 2.0     # z varies with frame and atom
                 ]
         
         return MockTrajectory(xyz, topology)

@@ -278,9 +278,14 @@ class FeatureManager:
                 feature_data = pipeline_data.feature_data[feature_key][traj_idx]
                 if feature_data.data is not None:
                     max_features = max(max_features, feature_data.data.shape[1])
-            
+
             if max_features > 0:
                 pipeline_data.update_max_memory_from_features(max_features)
+
+        # Invalidate only FeatureSelectors that use this feature
+        for selector_name, selector_data in pipeline_data.selected_feature_data.items():
+            if feature_key in selector_data.selections:
+                pipeline_data.clear_matrix_cache(feature_selector=selector_name)
 
     def reset_reduction(self, pipeline_data: PipelineData, feature_type: FeatureTypeBase) -> None:
         """

@@ -25,7 +25,7 @@ This module provides parsing functionality for resid category selections,
 which are based on array indices (residue.index) in the trajectory data.
 """
 
-from typing import List
+from typing import List, Tuple, Set
 from .feature_selector_numeric_parse_helper import FeatureSelectorNumericParseHelper
 
 
@@ -38,11 +38,9 @@ class FeatureSelectorResidParseHelper(FeatureSelectorNumericParseHelper):
     """
 
     @staticmethod
-    def parse_resid_category(
-        param_parts: List[str], features_list: List[list], require_all_partners: bool = False
-    ) -> List[int]:
+    def parse_resid_category(param_parts: List[str], features_list: List[list]) -> Tuple[List[int], Set[int]]:
         """
-        Parse 'resid' category and return matching feature indices.
+        Parse 'resid' category and return matching feature indices plus matched residue indices.
         Uses array index from metadata (residue.index).
 
         Parameters
@@ -51,13 +49,11 @@ class FeatureSelectorResidParseHelper(FeatureSelectorNumericParseHelper):
             List of parameter parts for residue ID selection
         features_list : List[list]
             List of features from metadata
-        require_all_partners : bool, default=False
-            If True, ALL partners must contain the residue ID
 
         Returns
         -------
-        List[int]
-            List of feature indices matching the residue ID criteria
+        Tuple[List[int], Set[int]]
+            Tuple of (feature_indices, matched_residue_indices)
 
         Raises
         ------
@@ -65,5 +61,5 @@ class FeatureSelectorResidParseHelper(FeatureSelectorNumericParseHelper):
             If the residue ID specification is invalid
         """
         return FeatureSelectorNumericParseHelper.parse_numeric_category(
-            param_parts, features_list, "index", "resid", require_all_partners
+            param_parts, features_list, "index", "resid"
         )

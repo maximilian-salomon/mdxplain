@@ -152,7 +152,7 @@ class SelectionMetadataHelper:
         name: str,
     ) -> Optional[Dict[str, Any]]:
         """
-        Get metadata entry for a single column.
+        Get metadata entry for a single column with type_metadata structure.
 
         Parameters
         ----------
@@ -170,7 +170,18 @@ class SelectionMetadataHelper:
         Returns
         -------
         Optional[dict]
-            Metadata entry for the column, or None if not available
+            Metadata entry with structure:
+            {
+                "features": feature-specific metadata (single entry),
+                "type": feature type string,
+                "type_metadata": {
+                    "computation_params": {...},
+                    "is_pair": bool,
+                    "algorithm": str,
+                    ...
+                }
+            }
+            Returns None if not available.
 
         Raises
         ------
@@ -182,7 +193,11 @@ class SelectionMetadataHelper:
         )
 
         if "features" in metadata:
-            return {"features": metadata["features"][col_idx], "type": feature_type}
+            return {
+                "features": metadata["features"][col_idx],
+                "type": feature_type,
+                "type_metadata": {k: v for k, v in metadata.items() if k != "features"}
+            }
         return None
 
     @staticmethod

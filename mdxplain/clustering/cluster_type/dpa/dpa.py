@@ -285,7 +285,7 @@ class DPA(ClusterTypeBase):
             use_memmap=use_memmap
         )
 
-    def compute(self, data: np.ndarray) -> Tuple[np.ndarray, Dict[str, Any]]:
+    def compute(self, data: np.ndarray, center_method: str = "centroid") -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Compute DPA clustering.
 
@@ -293,6 +293,8 @@ class DPA(ClusterTypeBase):
         ----------
         data : numpy.ndarray
             Input data matrix to cluster, shape (n_samples, n_features)
+        center_method : str, optional
+            Method for calculating cluster centers, default="centroid"
 
         Returns
         -------
@@ -314,6 +316,7 @@ class DPA(ClusterTypeBase):
 
         return self.calculator.compute(
             data,
+            center_method=center_method,
             Z=self.Z,
             metric=self.metric,
             affinity=self.affinity,
