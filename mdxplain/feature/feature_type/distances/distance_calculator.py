@@ -104,7 +104,7 @@ class DistanceCalculator(CalculatorBase):
         ----------
         input_data : mdtraj.Trajectory
             MDTraj trajectory object to process
-        \*\*kwargs : dict
+        '**'kwargs : dict
             Additional parameters:
             
             - excluded_neighbors : int, default=1 - Diagonal offset (excluded_neighbors=1 excludes diagonal,

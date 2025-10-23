@@ -684,7 +684,7 @@ class TrajectoryManager:
             Whether to write cache files to disk
         cache_folder : str, default "./cache"
             Folder for cache files
-        \*\*nomenclature_kwargs
+        '**'nomenclature_kwargs
             Additional keyword arguments passed to the mdciao labelers
 
         Returns

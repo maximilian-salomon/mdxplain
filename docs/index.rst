@@ -9,8 +9,8 @@ What is mdxplain?
    :titlesonly:
 
    getting_started
-   tutorials/theory/theory
-   tutorials/learning/learning
+   tutorials/learning
+   theory/theory
    how_to_contribute
    how_to_cite
    license

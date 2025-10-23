@@ -89,7 +89,7 @@ class DPACalculator(CalculatorBase):
         ----------
         data : numpy.ndarray
             Input data matrix to cluster, shape (n_samples, n_features)
-        \*\*kwargs : dict
+        '**'kwargs : dict
             DPA parameters including:
             See DPA init docstring for more information or
             https://github.com/mariaderrico/DPA and https://github.com/mariaderrico/DPA/blob/master/DPA_analysis.ipynb
