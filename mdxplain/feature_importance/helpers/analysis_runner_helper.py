@@ -125,32 +125,38 @@ class AnalysisRunnerHelper:
     ) -> None:
         """
         Store analysis result in FeatureImportanceData object.
-        
+
         Takes the analysis result and metadata and stores them properly
-        in the FeatureImportanceData container.
-        
+        in the FeatureImportanceData container. Enriches metadata with
+        model and analysis metadata for downstream visualization.
+
         Parameters
         ----------
         fi_data : FeatureImportanceData
             Feature importance data container to store result in
         result : Dict[str, Any]
-            Analysis result from analyzer containing importances
+            Analysis result from analyzer containing importances, model, metadata
         metadata : Dict[str, Any]
             Metadata dictionary describing the analysis
-            
+
         Returns
         -------
         None
             Stores result in the fi_data object
-            
+
         Examples
         --------
         >>> AnalysisRunnerHelper.store_analysis_result(
         ...     fi_data, analysis_result, metadata_dict
         ... )
         """
+        # Enrich metadata with model and analysis metadata for visualization
+        enriched_metadata = metadata.copy()
+        enriched_metadata["model"] = result.get("model")
+        enriched_metadata["analysis_metadata"] = result.get("metadata")
+
         # Store the result using the data object's method
-        fi_data.add_comparison_result(result["importances"], metadata)
+        fi_data.add_comparison_result(result["importances"], enriched_metadata)
     
     @staticmethod
     def run_comparison_analysis(
