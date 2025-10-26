@@ -535,3 +535,161 @@ class FeatureImportanceFacade:
             file_format=file_format,
             dpi=dpi
         )
+
+    def decision_trees(
+        self,
+        feature_importance_name: str,
+        max_depth_display: Optional[int] = None,
+        max_cols: int = 2,
+        subplot_width: float = 10.0,
+        subplot_height: float = 8.0,
+        title: Optional[str] = None,
+        save_fig: bool = False,
+        filename: Optional[str] = None,
+        file_format: str = "png",
+        dpi: int = 300,
+        render: bool = True,
+        separate_trees: Union[bool, str] = "auto",
+        width_scale_factor: float = 1.0,
+        height_scale_factor: float = 1.0,
+        short_labels: bool = False,
+        short_naming: bool = False,
+        short_layout: bool = False,
+        short_edge_labels: bool = False,
+        wrap_length: int = 40
+    ) -> Union[Figure, List[str], None]:
+        """
+        Create decision tree visualizations from feature importance analysis.
+
+        Plots the trained decision tree models from feature importance analysis
+        in a grid layout, with one tree per sub-comparison. Only works with
+        decision_tree analyzer type.
+
+        Parameters
+        ----------
+        feature_importance_name : str
+            Name of feature importance analysis (must use decision_tree analyzer)
+        max_depth_display : int, optional
+            Maximum tree depth to display for clarity. None shows full tree.
+            Useful for limiting visualization of very deep trees.
+        max_cols : int, default=2
+            Maximum number of columns in grid layout
+        subplot_width : float, default=10.0
+            Width of each tree subplot in inches
+        subplot_height : float, default=8.0
+            Height of each tree subplot in inches
+        title : str, optional
+            Custom plot title. Auto-generated if None.
+        save_fig : Union[bool, str], default="auto"
+            Whether to save figure/trees to file(s):
+            - "auto": True if render=False (prevents no output), else False
+            - True: Always save
+            - False: Never save (requires render=True)
+        filename : str, optional
+            Custom filename for grid mode. Auto-generated if None.
+        file_format : str, default="png"
+            File format for saving (png, pdf, svg, etc.)
+        dpi : int, default=300
+            Resolution for saved figure(s) in dots per inch
+        render : Union[bool, str], default="auto"
+            Whether to display in Jupyter:
+            - "auto": False if grid too large (>50"), True for separate trees
+            - True: Always display
+            - False: Never display (requires save_fig=True)
+        separate_trees : Union[bool, str], default="auto"
+            Tree layout mode:
+            - "auto": True if depth > 5 OR comparisons > 4
+            - True: Each tree as separate plot (prevents RAM issues)
+            - False: Grid layout (all trees in one figure)
+        width_scale_factor : float, default=1.0
+            Multiplicative factor for figure width (use >1.0 for wider boxes)
+        height_scale_factor : float, default=1.0
+            Multiplicative factor for figure height (use >1.0 for taller boxes)
+        short_labels : bool, default=False
+            Use short discrete labels (NC vs Non-Contact) for feature values
+        short_naming : bool, default=False
+            Truncate class/selector names to 16 chars with [...] pattern
+        short_layout : bool, default=False
+            Minimal tree layout (no path display) + enables all short options
+        short_edge_labels : bool, default=False
+            Show only values/conditions on edges (e.g., 'Contact' or '≤ 3.50 Å')
+            instead of full format 'contact: Leu13-ARG31 = Contact'
+        wrap_length : int, default=40
+            Maximum line length for text wrapping in node labels, class lines,
+            feature lines, and edge labels. Text longer than this will wrap
+            at spaces (colons, equals signs, etc.).
+
+        Returns
+        -------
+        matplotlib.figure.Figure, List[str], or None
+            - Figure: Grid mode with render=True
+            - List[str]: Separate trees with save_fig=True (filenames)
+            - None: render=False or separate trees without saving
+
+        Raises
+        ------
+        ValueError
+            If feature_importance_name not found, analyzer type is not
+            "decision_tree", models not available in metadata, or
+            both render and save_fig are False (no output method)
+
+        Examples
+        --------
+        >>> # Basic decision tree visualization
+        >>> fig = facade.decision_trees(
+        ...     feature_importance_name="tree_analysis"
+        ... )
+
+        >>> # Limit tree depth for clarity
+        >>> fig = facade.decision_trees(
+        ...     feature_importance_name="tree_analysis",
+        ...     max_depth_display=3
+        ... )
+
+        >>> # Custom layout with larger subplots
+        >>> fig = facade.decision_trees(
+        ...     feature_importance_name="tree_analysis",
+        ...     max_cols=3,
+        ...     subplot_width=12.0,
+        ...     subplot_height=10.0
+        ... )
+
+        >>> # Save as PDF
+        >>> fig = facade.decision_trees(
+        ...     feature_importance_name="tree_analysis",
+        ...     save_fig=True,
+        ...     filename="decision_trees.pdf",
+        ...     file_format="pdf"
+        ... )
+
+        Notes
+        -----
+        - Red-highlighted node shows the split with maximum discriminative score
+        - Edge labels are feature-type-specific (e.g., "Formed"/"Broken" for contacts)
+        - Node sizes automatically adjusted to prevent overlap
+        - Only available for decision_tree analyzer type
+        """
+        from ..plot_type.decision_trees.decision_tree_plotter import DecisionTreePlotter
+
+        plotter = DecisionTreePlotter(self.pipeline_data, self.cache_dir)
+        return plotter.plot(
+            feature_importance_name=feature_importance_name,
+            max_depth_display=max_depth_display,
+            max_cols=max_cols,
+            subplot_width=subplot_width,
+            subplot_height=subplot_height,
+            title=title,
+            save_fig=save_fig,
+            filename=filename,
+            file_format=file_format,
+            dpi=dpi,
+            render=render,
+            separate_trees=separate_trees,
+            width_scale_factor=width_scale_factor,
+            height_scale_factor=height_scale_factor,
+            short_labels=short_labels,
+            short_naming=short_naming,
+            short_layout=short_layout,
+            short_edge_labels=short_edge_labels,
+            wrap_length=wrap_length
+        )
