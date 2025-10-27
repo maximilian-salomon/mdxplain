@@ -1,4 +1,4 @@
-.PHONY: help setup-env setup-jupyter-env setup-dev-env setup-full-env setup-conda-env setup-conda-jupyter-env setup-conda-dev-env setup-conda-full-env install install-dev install-jupyter test lint format jupyter notebook clean
+.PHONY: help setup-env setup-jupyter-env setup-dev-env setup-full-env setup-conda-env setup-conda-jupyter-env setup-conda-dev-env setup-conda-full-env install install-dev install-jupyter test lint format jupyter notebook html clean
 
 # Default target
 help:
@@ -183,8 +183,18 @@ jupyter:
 notebook:
 	jupyter notebook
 
+
+# Set directions for docs build.
+SPHINXBUILD = sphinx-build
+SOURCEDIR = docs
+BUILDDIR = docs/build
+# Sphinx html build.
+html:
+	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(0)
+
 # Clean up
 clean:
+	@rm -rf "$(BUILDDIR)"
 	@echo "Removing virtual environment..."
 	rm -rf mdxplain-venv
 	@echo "Removing conda environment (if exists)..."
