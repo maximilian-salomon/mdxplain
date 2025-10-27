@@ -8,6 +8,5 @@ Feature Importance Helpers
 
    mdxplain.feature_importance.helpers.analysis_runner_helper
    mdxplain.feature_importance.helpers.feature_importance_validation_helper
-   mdxplain.feature_importance.helpers.feature_name_mapping_helper
    mdxplain.feature_importance.helpers.metadata_builder_helper
    mdxplain.feature_importance.helpers.top_features_helper

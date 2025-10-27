@@ -4,7 +4,8 @@ Feature Type: DSSP
 .. automodule:: mdxplain.feature.feature_type.dssp
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
+   :titlesonly:
    
    mdxplain.feature.feature_type.dssp.helper
    mdxplain.feature.feature_type.dssp.services

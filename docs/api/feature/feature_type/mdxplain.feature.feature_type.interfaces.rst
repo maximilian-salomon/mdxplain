@@ -5,6 +5,7 @@ Missing __init__.py mdxplain/feature/feature_type/interfaces
 
 .. toctree::
    :maxdepth: 1
+   :titlesonly:
    
    mdxplain.feature.feature_type.interfaces.analysis_service_base
    mdxplain.feature.feature_type.interfaces.calculator_base

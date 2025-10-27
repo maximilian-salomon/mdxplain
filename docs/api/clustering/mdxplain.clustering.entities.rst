@@ -1,5 +1,5 @@
-Entities
-========
+Clustering Entities
+===================
 
 .. automodule:: mdxplain.clustering.entities
 
