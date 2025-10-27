@@ -82,7 +82,11 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         save_fig: bool = False,
         filename: Optional[str] = None,
         file_format: str = "png",
-        dpi: int = 300
+        dpi: int = 300,
+        smoothing_method: Optional[str] = None,
+        smoothing_window: int = 51,
+        smoothing_polyorder: int = 3,
+        show_unsmoothed_background: bool = False
     ) -> Figure:
         """
         Create time series plots from feature importance or manual selection.
@@ -138,6 +142,14 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             File format (png, pdf, svg, etc.)
         dpi : int, default=300
             Resolution
+        smoothing_method : str, optional
+            Smoothing method ("moving_average", "savitzky", or None for no smoothing)
+        smoothing_window : int, default=51
+            Window size for smoothing in frames
+        smoothing_polyorder : int, default=3
+            Polynomial order for Savitzky-Golay filter (ignored for moving_average)
+        show_unsmoothed_background : bool, default=False
+            Show unsmoothed data as transparent background line
 
         Returns
         -------
@@ -197,7 +209,11 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             save_fig=save_fig,
             filename=filename,
             file_format=file_format,
-            dpi=dpi
+            dpi=dpi,
+            smoothing_method=smoothing_method,
+            smoothing_window=smoothing_window,
+            smoothing_polyorder=smoothing_polyorder,
+            show_unsmoothed_background=show_unsmoothed_background
         )
 
         # Prepare plot data and update config
