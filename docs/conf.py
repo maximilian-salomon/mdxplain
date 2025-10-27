@@ -12,6 +12,7 @@ sys.path.insert(0, os.path.abspath('../mdxplain'))
 
 extensions = [
     'sphinx.ext.autodoc',
+    'myst_nb',
 ]
 
 autodoc_member_order = 'bysource'
