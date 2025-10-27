@@ -81,6 +81,13 @@ jupyter = [
     "ipykernel",
     "ipywidgets",
 ]
+visualization = [
+    # 3D structure visualization with PyMOL
+    # Note: 3.2.0a0 required for numpy 2.x compatibility
+    "pymol-open-source>=3.2.0a0",
+    # Interactive 3D visualization for Jupyter notebooks
+    "nglview>=3.0.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/BioFreak95/mdxplain"

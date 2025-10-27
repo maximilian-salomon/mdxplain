@@ -28,7 +28,8 @@ and creating FeatureImportanceData objects.
 """
 from __future__ import annotations
 
-from typing import List, Dict, Any, Optional, TYPE_CHECKING
+import warnings
+from typing import List, Dict, Any, Optional, Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ...pipeline.entities.pipeline_data import PipelineData
@@ -39,6 +40,7 @@ from ..helpers.feature_importance_validation_helper import FeatureImportanceVali
 from ..helpers.top_features_helper import TopFeaturesHelper
 from ...utils.data_utils import DataUtils
 from ..services.feature_importance_add_service import FeatureImportanceAddService
+from ..helpers.representative_finder_helper import RepresentativeFinderHelper
 
 
 class FeatureImportanceManager:
@@ -543,30 +545,204 @@ class FeatureImportanceManager:
     def add(self):
         """
         Service for adding feature importance analyses with simplified syntax.
-        
+
         Provides an intuitive interface for adding feature importance analyses without
         requiring explicit analyzer type instantiation or imports.
-        
+
         Returns
         -------
         FeatureImportanceAddService
             Service instance for adding feature importance analyses with combined parameters
-            
+
         Examples
         --------
         >>> # Add different analyzer types
         >>> pipeline.feature_importance.add.decision_tree("my_comparison", "tree_analysis", max_depth=5)
         >>> pipeline.feature_importance.add.decision_tree(
-        ...     "folded_vs_unfolded", 
+        ...     "folded_vs_unfolded",
         ...     "deep_tree",
         ...     max_depth=10,
         ...     criterion="entropy",
         ...     random_state=42
         ... )
-        
+
         Notes
         -----
         Pipeline data is automatically injected by AutoInjectProxy.
         All analyzer type parameters are combined with add_analysis parameters.
         """
         return FeatureImportanceAddService(self, None)
+
+    def _validate_representative_analysis(
+        self,
+        pipeline_data: PipelineData,
+        analysis_name: str
+    ) -> Tuple:
+        """
+        Validate analysis exists and supports representative frame finding.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data object
+        analysis_name : str
+            Name of feature importance analysis
+
+        Returns
+        -------
+        Tuple
+            (fi_data, comp_data) for validated analysis
+
+        Raises
+        ------
+        ValueError
+            If analysis not found or not Decision Tree based
+        """
+        if analysis_name not in pipeline_data.feature_importance_data:
+            raise ValueError(
+                f"Analysis '{analysis_name}' not found. "
+                f"Available: {list(pipeline_data.feature_importance_data.keys())}"
+            )
+
+        fi_data = pipeline_data.feature_importance_data[analysis_name]
+
+        if fi_data.analyzer_type != "decision_tree":
+            raise ValueError(
+                f"get_representative_frames() currently only supports "
+                f"'decision_tree' analyzer, got '{fi_data.analyzer_type}'"
+            )
+
+        comp_data = pipeline_data.comparison_data[fi_data.comparison_name]
+        return fi_data, comp_data
+
+    def _get_representatives_multiclass(
+        self,
+        pipeline_data: PipelineData,
+        comp_data,
+        fi_data
+    ) -> Dict[str, List[int]]:
+        """
+        Find representative frames for multiclass mode using centroids.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data object
+        comp_data : ComparisonData
+            Comparison configuration
+        fi_data : FeatureImportanceData
+            Feature importance data
+
+        Returns
+        -------
+        Dict[str, List[int]]
+            Mapping from data_selector_name to [traj_idx, frame_idx]
+        """
+        result = {}
+        for ds_name in comp_data.data_selectors:
+            traj_idx, frame_idx = pipeline_data.get_centroid_frame(
+                fi_data.feature_selector, ds_name
+            )
+            result[ds_name] = [traj_idx, frame_idx]
+        return result
+
+    def _get_representatives_standard(
+        self,
+        pipeline_data: PipelineData,
+        fi_data,
+        n_top: int
+    ) -> Dict[str, List[int]]:
+        """
+        Find representative frames for standard modes using tree-based scoring.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data object
+        fi_data : FeatureImportanceData
+            Feature importance data
+        n_top : int
+            Number of top features to consider
+
+        Returns
+        -------
+        Dict[str, List[int]]
+            Mapping from sub_comparison_name to [traj_idx, frame_idx]
+        """
+        comparison_names = fi_data.list_comparisons()
+        result = {}
+
+        for sub_comp_name in comparison_names:
+            traj_idx, frame_idx = RepresentativeFinderHelper.find_best_tree_based(
+                pipeline_data, fi_data, sub_comp_name, n_top,
+                use_memmap=self.use_memmap, chunk_size=self.chunk_size
+            )
+            result[sub_comp_name] = [traj_idx, frame_idx]
+
+        return result
+
+    def get_representative_frames(
+        self,
+        pipeline_data: PipelineData,
+        analysis_name: str,
+        n_top: int = 10
+    ) -> Dict[str, List[int]]:
+        """
+        Find representative frames for each sub-comparison.
+
+        Finds frames that most strongly exhibit the top important features
+        identified by the decision tree. Uses tree split rules to determine
+        optimal feature values and scores frames based on how well they
+        match these criteria.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data object
+        analysis_name : str
+            Name of feature importance analysis
+        n_top : int, default=10
+            Number of top features to consider
+
+        Returns
+        -------
+        Dict[str, List[int]]
+            Mapping from sub_comparison_name to [traj_idx, frame_idx]
+
+        Examples
+        --------
+        >>> representatives = manager.get_representative_frames(
+        ...     pipeline_data, "dt_analysis", n_top=10
+        ... )
+        >>> print(representatives)
+        {'cluster_0_vs_rest': [1, 2341], 'cluster_1_vs_rest': [3, 156]}
+
+        Notes
+        -----
+        - Uses Decision Tree split rules to find characteristic frames
+        - Frames maximize expression of top important features
+        - Handles periodic features (torsions) with circular distance
+        - For multiclass mode, uses centroids instead
+
+        Raises
+        ------
+        ValueError
+            If analysis not found or not Decision Tree based
+        """
+        fi_data, comp_data = self._validate_representative_analysis(
+            pipeline_data, analysis_name
+        )
+
+        if comp_data.mode == "multiclass":
+            warnings.warn(
+                "get_representative_frames() does not support multiclass mode. "
+                "Finding centroids for each class instead.",
+                UserWarning
+            )
+            return self._get_representatives_multiclass(
+                pipeline_data, comp_data, fi_data
+            )
+
+        return self._get_representatives_standard(
+            pipeline_data, fi_data, n_top
+        )
