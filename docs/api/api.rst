@@ -16,5 +16,6 @@ API Documentation
    feature_importance/mdxplain.feature_importance
    feature_selection/mdxplain.feature_selection
    pipeline/mdxplain.pipeline
+   plots/mdxplain.plots
    trajectory/mdxplain.trajectory
    utils/mdxplain.utils

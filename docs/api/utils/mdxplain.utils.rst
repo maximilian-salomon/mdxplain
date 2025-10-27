@@ -3,10 +3,9 @@ Utilities
 
 .. automodule:: mdxplain.utils
 
-Data Utils
-----------
+.. toctree::
+   :maxdepth: 1
 
-.. automodule:: mdxplain.utils.data_utils
-   :members:
-   :special-members: __init__
-   :undoc-members:
+   mdxplain.utils.data_utils
+   mdxplain.utils.feature_metadata_utils
+   mdxplain.utils.output_utils

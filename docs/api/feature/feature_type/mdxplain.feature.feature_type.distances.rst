@@ -4,7 +4,8 @@ Feature Type: Distances
 .. automodule:: mdxplain.feature.feature_type.distances
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
+   :titlesonly:
    
    mdxplain.feature.feature_type.distances.services
    mdxplain.feature.feature_type.distances.distances

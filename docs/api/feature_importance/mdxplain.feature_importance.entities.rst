@@ -3,8 +3,8 @@ Feature Importance Entities
 
 .. automodule:: mdxplain.feature_importance.entities
 
-Entities
---------
+Data
+----
 
 .. automodule:: mdxplain.feature_importance.entities.feature_importance_data
    :members:

@@ -1,6 +1,6 @@
 License and Copyright
 =====================
 
-mdxplain is under the "" license.
+mdxplain is under the GNU Lesser General Public License.
 
-The copyright of the software product lies with "".
+The copyright of the software product lies with Maximilian Salomon (2025).
