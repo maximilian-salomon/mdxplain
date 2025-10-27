@@ -45,6 +45,7 @@ from ...utils.data_utils import DataUtils
 from ..helper.selection_matrix_helper import SelectionMatrixHelper
 from ..helper.selection_metadata_helper import SelectionMetadataHelper
 from ..helper.comparison_data_helper import ComparisonDataHelper
+from ..helpers.centroid_helper import CentroidHelper
 from ...feature.helper.feature_binding_helper import FeatureBindingHelper
 
 
@@ -810,6 +811,62 @@ class PipelineData:
         if return_frame_mapping:
             return matrix, frame_mapping
         return matrix
+
+    def get_centroid_frame(
+        self,
+        feature_selector: str,
+        data_selector: str
+    ) -> Tuple[int, int]:
+        """
+        Find frame closest to DataSelector centroid.
+
+        Computes the centroid (mean) of all frames in a DataSelector
+        and finds the frame closest to this centroid in feature space.
+        This is a generic operation used across multiple modules.
+
+        Uses pipeline_data's use_memmap and chunk_size settings for
+        processing configuration.
+
+        Parameters
+        ----------
+        feature_selector : str
+            Name of feature selector to use for distance calculation
+        data_selector : str
+            Name of DataSelector to find centroid for
+
+        Returns
+        -------
+        Tuple[int, int]
+            (trajectory_index, frame_index) of centroid frame
+
+        Examples
+        --------
+        >>> # Find centroid frame for a cluster
+        >>> traj_idx, frame_idx = pipeline_data.get_centroid_frame(
+        ...     "my_features", "cluster_0"
+        ... )
+
+        Notes
+        -----
+        - Centroid is the mean of all frames in the DataSelector
+        - Closest frame minimizes Euclidean distance to centroid
+        - Uses pipeline's use_memmap and chunk_size configuration
+        - Generic operation usable by clustering, feature importance, etc.
+        """
+        self.validate_selection_exists(feature_selector)
+
+        selected_data, frame_mapping = self.get_selected_data(
+            feature_selector, data_selector, return_frame_mapping=True
+        )
+
+        best_local_idx = CentroidHelper.find_centroid(
+            selected_data, self.use_memmap, self.chunk_size
+        )
+
+        if hasattr(selected_data, '_mmap') and selected_data._mmap is not None:
+            selected_data._mmap.close()
+
+        return frame_mapping[best_local_idx]
 
     # =============================================================================
     # COMPARISON DATA METHODS
