@@ -282,7 +282,8 @@ class StructureVizFeatureService:
 
         # Create NGLView widget
         ui, view = NGLViewHelper.create_widget(
-            pdb_info, features, feature_colors, feature_own_color
+            pdb_info, features, feature_colors, feature_own_color,
+            viz_name=structure_viz_name
         )
 
         # Automatically display in Jupyter
