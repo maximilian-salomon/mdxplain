@@ -477,21 +477,22 @@ class RepresentativeFinderHelper:
         ... )
         >>> is_periodic[42]  # True for torsion, False for distance
         """
-        selector_data = pipeline_data.feature_selector_data[feature_selector_name]
+        selector_data = pipeline_data.selected_feature_data[feature_selector_name]
         is_periodic_mapping = {}
         current_offset = 0
 
         for feature_key in selector_data.selection_results.keys():
-            feature_data = pipeline_data.feature_data[feature_key]
+            feature_data_dict = pipeline_data.feature_data[feature_key]
             ref_traj = selector_data.reference_trajectory
             if ref_traj is None:
                 ref_traj = 0
 
-            metadata = feature_data.feature_metadata.get(ref_traj, {})
-            is_periodic = metadata.get('is_periodic', False)
+            feature_data_obj = feature_data_dict[ref_traj]
+            is_periodic = feature_data_obj.feature_metadata.get('is_periodic', False)
 
             result = selector_data.selection_results[feature_key]
-            n_features = len(result['indices'])
+            traj_results = result['trajectory_indices'][ref_traj]
+            n_features = len(traj_results['indices'])
 
             for i in range(n_features):
                 is_periodic_mapping[current_offset + i] = is_periodic

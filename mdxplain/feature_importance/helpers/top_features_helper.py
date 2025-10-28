@@ -23,6 +23,9 @@ Top features helper for feature importance operations.
 
 This module provides helper methods for extracting and formatting
 top important features from feature importance analysis results.
+
+Uses central utils.top_features_utils for main functionality to avoid
+code redundancy across modules.
 """
 
 from __future__ import annotations
@@ -31,6 +34,7 @@ from typing import List, Dict, Any, Tuple, Optional, TYPE_CHECKING
 import numpy as np
 
 from ..entities.feature_importance_data import FeatureImportanceData
+from ...utils.top_features_utils import TopFeaturesUtils
 from ...utils.feature_metadata_utils import FeatureMetadataUtils
 
 if TYPE_CHECKING:
@@ -200,11 +204,11 @@ class TopFeaturesHelper:
     ) -> List[Dict[str, Any]]:
         """
         Get top features with complete name mapping and formatting.
-        
+
         Complete method that extracts top features, retrieves metadata,
         and formats the results with human-readable names and types.
-        This is the main entry point for top features processing.
-        
+        Uses central utils.top_features_utils to avoid code redundancy.
+
         Parameters
         ----------
         pipeline_data : PipelineData
@@ -216,42 +220,29 @@ class TopFeaturesHelper:
             If None, returns average across all sub-comparisons.
         n : int, default=10
             Number of top features to return
-            
+
         Returns
         -------
         List[Dict[str, Any]]
             List of dictionaries with complete feature information
-            
+
         Examples
         --------
         >>> # Get top features for specific comparison
         >>> top_features = TopFeaturesHelper.get_top_features_with_names(
         ...     pipeline_data, fi_data, "folded_vs_rest", 5
         ... )
-        
+
         >>> # Get top features averaged across all comparisons
         >>> top_features = TopFeaturesHelper.get_top_features_with_names(
         ...     pipeline_data, fi_data, n=10
         ... )
+
+        Notes
+        -----
+        Delegates to central TopFeaturesUtils.get_top_features_with_names()
+        to maintain consistency and avoid code duplication across modules.
         """
-        # Get raw indices and scores
-        if comparison_identifier is not None:
-            indices_scores = TopFeaturesHelper.get_top_features_for_comparison(
-                fi_data, comparison_identifier, n
-            )
-        else:
-            indices_scores = TopFeaturesHelper.get_top_features_averaged(
-                fi_data, n
-            )
-
-        # Get feature metadata for name mapping
-        feature_metadata = None
-        if fi_data.feature_selector:
-            feature_metadata = pipeline_data.get_selected_metadata(
-                fi_data.feature_selector
-            )
-
-        # Format with names and metadata
-        return TopFeaturesHelper.format_features_with_names(
-            indices_scores, feature_metadata
+        return TopFeaturesUtils.get_top_features_with_names(
+            pipeline_data, fi_data, comparison_identifier, n
         )

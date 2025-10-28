@@ -1,0 +1,153 @@
+# mdxplain - A Python toolkit for molecular dynamics trajectory analysis
+#
+# Author: Maximilian Salomon
+# Created with assistance from Claude Code (Claude Sonnet 4.0) and GitHub Copilot (Claude Sonnet 4.0).
+#
+# Copyright (C) 2025 Maximilian Salomon
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+"""
+Validation helper for structure visualization operations.
+
+This module provides validation utilities for structure visualization,
+including Jupyter environment checks and visualization data validation.
+"""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ...pipeline.entities.pipeline_data import PipelineData
+    from ..entities.structure_visualization_data import StructureVisualizationData
+
+from .environment_helper import EnvironmentHelper
+
+
+class ValidationHelper:
+    """
+    Helper class for structure visualization validation.
+
+    Provides static methods for validating environment requirements
+    and data availability for structure visualization operations.
+
+    Examples
+    --------
+    >>> ValidationHelper.validate_jupyter_environment()
+    >>> viz_data = ValidationHelper.validate_visualization_data(
+    ...     pipeline_data, "my_viz"
+    ... )
+    """
+
+    @staticmethod
+    def validate_jupyter_environment() -> None:
+        """
+        Validate that code is running in Jupyter environment.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+            Returns normally if running in Jupyter environment
+
+        Raises
+        ------
+        RuntimeError
+            If not running in Jupyter notebook environment
+
+        Examples
+        --------
+        >>> ValidationHelper.validate_jupyter_environment()
+        RuntimeError: NGLView visualization is only available in Jupyter notebooks...
+
+        Notes
+        -----
+        Uses EnvironmentHelper.is_jupyter_environment() to check
+        environment. Provides helpful error message for terminal usage.
+        """
+        if not EnvironmentHelper.is_jupyter_environment():
+            raise RuntimeError(
+                "NGLView visualization is only available in Jupyter notebooks. "
+                "For terminal/script usage, please use PyMOL visualization instead:\n"
+                "  pipeline.structure_visualization.visualize_pymol(...)"
+            )
+
+    @staticmethod
+    def validate_visualization_data(
+        pipeline_data: PipelineData,
+        structure_viz_name: str
+    ) -> StructureVisualizationData:
+        """
+        Validate visualization data exists and return it.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data object containing visualization data
+        structure_viz_name : str
+            Name of visualization session to validate
+
+        Returns
+        -------
+        StructureVisualizationData
+            Validated visualization data object
+
+        Raises
+        ------
+        KeyError
+            If structure_visualization_data attribute not found
+        KeyError
+            If specific visualization session name not found
+
+        Examples
+        --------
+        >>> viz_data = ValidationHelper.validate_visualization_data(
+        ...     pipeline_data, "my_viz"
+        ... )
+
+        >>> # Raises KeyError if not found
+        >>> viz_data = ValidationHelper.validate_visualization_data(
+        ...     pipeline_data, "nonexistent"
+        ... )
+        KeyError: Visualization 'nonexistent' not found...
+
+        Notes
+        -----
+        Provides detailed error messages listing available visualizations
+        if the requested one is not found.
+        """
+        # Check if structure_visualization_data exists
+        if not hasattr(pipeline_data, 'structure_visualization_data'):
+            raise KeyError(
+                "No structure visualization data found. "
+                "Run create_pdb_with_beta_factors() first."
+            )
+
+        # Get specific visualization data
+        viz_data = pipeline_data.structure_visualization_data.get(
+            structure_viz_name
+        )
+
+        if viz_data is None:
+            available = list(pipeline_data.structure_visualization_data.keys())
+            raise KeyError(
+                f"Visualization '{structure_viz_name}' not found. "
+                f"Available: {available}"
+            )
+
+        return viz_data

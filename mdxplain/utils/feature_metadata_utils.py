@@ -25,7 +25,7 @@ Provides generic methods for extracting feature names and types from
 pipeline metadata, usable across all modules (plots, feature_importance, etc.).
 """
 
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Dict
 import numpy as np
 
 
@@ -160,6 +160,80 @@ class FeatureMetadataUtils:
 
         metadata_entry = feature_metadata[feature_idx]
         return metadata_entry.get("type", "unknown")
+
+    @staticmethod
+    def get_feature_residues(
+        feature_metadata: Optional[List[Any]],
+        feature_idx: int
+    ) -> List[Dict[str, Any]]:
+        """
+        Get residue information directly from feature metadata.
+
+        Extracts structured residue information for a feature without
+        any string parsing. Returns list of residue dictionaries with
+        complete residue information (index, seqid, name, etc.).
+
+        Parameters
+        ----------
+        feature_metadata : list or None
+            Feature metadata list from pipeline
+        feature_idx : int
+            Index of the feature to get residues for
+
+        Returns
+        -------
+        List[Dict[str, Any]]
+            List of residue dictionaries. Each dict contains:
+            - index: int - Residue index in topology
+            - seqid: int - Residue sequence ID
+            - name: str - Residue name (e.g., "THR", "GLU")
+            - aaa_code: str - Three-letter code
+            - a_code: str - One-letter code
+            - consensus: str or None - Consensus label if available
+            Returns empty list if metadata unavailable.
+
+        Examples
+        --------
+        >>> # Get residues for distance feature (2 residues)
+        >>> residues = FeatureMetadataUtils.get_feature_residues(metadata, 10)
+        >>> len(residues)
+        2
+        >>> residues[0]["seqid"]
+        24
+        >>> residues[0]["name"]
+        'THR'
+
+        >>> # Get residues for torsion feature (1 residue)
+        >>> residues = FeatureMetadataUtils.get_feature_residues(metadata, 20)
+        >>> len(residues)
+        1
+
+        >>> # Returns empty list when metadata unavailable
+        >>> residues = FeatureMetadataUtils.get_feature_residues(None, 42)
+        >>> len(residues)
+        0
+
+        Notes
+        -----
+        - NO string parsing - reads structured metadata directly
+        - Typesafe - returns complete residue dictionaries
+        - Works for both pair features (distances) and single features (torsions)
+        - Replaces FeatureResidueParser.parse_residues_from_name()
+        """
+        # Return empty list if no metadata available
+        if feature_metadata is None or feature_idx >= len(feature_metadata):
+            return []
+
+        metadata_entry = feature_metadata[feature_idx]
+        features_data = metadata_entry.get("features", {})
+
+        residues = []
+        if isinstance(features_data, np.ndarray):
+            for element in features_data:
+                if isinstance(element, dict) and "residue" in element:
+                    residues.append(element["residue"])
+
+        return residues
 
     @staticmethod
     def create_feature_map(metadata_array: np.ndarray) -> dict:

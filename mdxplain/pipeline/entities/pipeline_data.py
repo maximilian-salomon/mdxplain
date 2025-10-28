@@ -41,6 +41,9 @@ from ...comparison.entities.comparison_data import ComparisonData
 from ...feature_importance.entities.feature_importance_data import (
     FeatureImportanceData,
 )
+from ...structure_visualization.entities.structure_visualization_data import (
+    StructureVisualizationData,
+)
 from ...utils.data_utils import DataUtils
 from ..helper.selection_matrix_helper import SelectionMatrixHelper
 from ..helper.selection_metadata_helper import SelectionMetadataHelper
@@ -89,6 +92,8 @@ class PipelineData:
         Dictionary of comparison results by comparison name
     feature_importance_data : Dict[str, FeatureImportanceData]
         Dictionary of feature importance results by analysis name
+    structure_visualization_data : Dict[str, StructureVisualizationData]
+        Dictionary of structure visualization data by session name
 
     Examples
     --------
@@ -163,6 +168,7 @@ class PipelineData:
         self.data_selector_data: Dict[str, DataSelectorData] = {}
         self.comparison_data: Dict[str, ComparisonData] = {}
         self.feature_importance_data: Dict[str, FeatureImportanceData] = {}
+        self.structure_visualization_data: Dict[str, StructureVisualizationData] = {}
 
         # Matrix caching for memmap (only used when use_memmap=True)
         # Stores: {cache_key: (memmap_path, frame_mapping)}
@@ -200,6 +206,7 @@ class PipelineData:
         self.data_selector_data.clear()
         self.comparison_data.clear()
         self.feature_importance_data.clear()
+        self.structure_visualization_data.clear()
 
     def update_max_memory_from_trajectories(self, max_atoms: int) -> None:
         """
