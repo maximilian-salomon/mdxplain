@@ -24,10 +24,12 @@ from .nglview_helper import NGLViewHelper
 from .pymol_script_generator import PyMolScriptGenerator
 from .color_conversion_helper import ColorConversionHelper
 from .feature_overlap_helper import FeatureOverlapHelper
+from .visualization_data_helper import VisualizationDataHelper
 
 __all__ = [
     "NGLViewHelper",
     "PyMolScriptGenerator",
     "ColorConversionHelper",
     "FeatureOverlapHelper",
+    "VisualizationDataHelper",
 ]

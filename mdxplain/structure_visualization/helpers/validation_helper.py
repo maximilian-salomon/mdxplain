@@ -229,3 +229,62 @@ class ValidationHelper:
                 "PyMOL Python module not found. Install with:\n"
                 "  conda install -c conda-forge pymol-open-source"
             )
+
+    @staticmethod
+    def validate_data_selectors(
+        pipeline_data: PipelineData,
+        data_selectors: list
+    ) -> None:
+        """
+        Validate that data selectors exist in pipeline data.
+
+        Checks that all provided data selector names are present in
+        pipeline_data.data_selector_data and raises errors for missing
+        or empty selector lists.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data object containing data selector data
+        data_selectors : list
+            List of data selector names to validate
+
+        Returns
+        -------
+        None
+            Returns normally if all data selectors are valid
+
+        Raises
+        ------
+        ValueError
+            If no data selectors provided or selector doesn't exist
+
+        Examples
+        --------
+        >>> ValidationHelper.validate_data_selectors(
+        ...     pipeline_data, ["cluster_0", "cluster_1"]
+        ... )
+
+        >>> # Raises ValueError if empty
+        >>> ValidationHelper.validate_data_selectors(pipeline_data, [])
+        ValueError: At least one data selector is required
+
+        >>> # Raises ValueError if not found
+        >>> ValidationHelper.validate_data_selectors(
+        ...     pipeline_data, ["nonexistent"]
+        ... )
+        ValueError: Data selector 'nonexistent' not found...
+
+        Notes
+        -----
+        This method is used by StructureVizFeatureService to validate
+        data selectors before creating representative PDFs.
+        """
+        if not data_selectors:
+            raise ValueError("At least one data selector is required")
+
+        for ds_name in data_selectors:
+            if ds_name not in pipeline_data.data_selector_data:
+                raise ValueError(
+                    f"Data selector '{ds_name}' not found in pipeline_data"
+                )

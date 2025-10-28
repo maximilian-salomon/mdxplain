@@ -57,7 +57,8 @@ class PyMolScriptGenerator:
         pdb_info: Dict[str, Dict[str, str]],
         top_features: List[Dict[str, Any]],
         feature_colors: Dict[str, str],
-        feature_own_color: bool = True
+        feature_own_color: bool = True,
+        use_putty: bool = True
     ) -> str:
         """
         Generate complete PyMOL script with focus groups.
@@ -77,6 +78,9 @@ class PyMolScriptGenerator:
         feature_own_color : bool, default=True
             If True, features use their own color from feature_colors.
             If False, features use the color of their structure.
+        use_putty : bool, default=True
+            If True, use putty cartoon with beta-factor thickness.
+            If False, use normal cartoon with uniform thickness.
 
         Returns
         -------
@@ -85,18 +89,22 @@ class PyMolScriptGenerator:
 
         Examples
         --------
+        >>> # With putty (beta-factor thickness)
         >>> script = PyMolScriptGenerator.generate_script(
-        ...     pdb_info, features, colors
+        ...     pdb_info, features, colors, use_putty=True
         ... )
-        >>> with open("viz.pml", "w") as f:
-        ...     f.write(script)
+        >>> # Without putty (uniform thickness)
+        >>> script = PyMolScriptGenerator.generate_script(
+        ...     pdb_info, features, colors, use_putty=False
+        ... )
 
         Notes
         -----
         - Only focus groups in script
         - First group enabled, rest disabled
         - Each group: 4 subobjekts (own/other, struct/features)
-        - Putty cartoons: thickness from beta-factor
+        - Putty cartoons: thickness from beta-factor (if use_putty=True)
+        - Normal cartoons: uniform thickness (if use_putty=False)
         - Color gradient: base_color → white
         """
         lines = []
@@ -107,12 +115,12 @@ class PyMolScriptGenerator:
 
         # Create single comparison group
         lines.append(PyMolScriptGenerator._add_single_comparison_group(
-            pdb_info, top_features, feature_colors, feature_own_color
+            pdb_info, top_features, feature_colors, feature_own_color, use_putty
         ))
 
         # Create focus groups (loads structures directly)
         lines.append(PyMolScriptGenerator._add_focus_groups(
-            pdb_info, top_features, feature_colors, feature_own_color
+            pdb_info, top_features, feature_colors, feature_own_color, use_putty
         ))
 
         return "\n".join(lines)
@@ -134,7 +142,8 @@ class PyMolScriptGenerator:
         pdb_info: Dict[str, Dict[str, str]],
         top_features: List[Dict[str, Any]],
         feature_colors: Dict[str, str],
-        feature_own_color: bool
+        feature_own_color: bool,
+        use_putty: bool
     ) -> str:
         """
         Create focus groups for each structure.
@@ -151,6 +160,8 @@ class PyMolScriptGenerator:
             Feature colors
         feature_own_color : bool
             If True, use feature colors; if False, use structure colors
+        use_putty : bool
+            If True, use putty cartoon; if False, use normal cartoon
 
         Returns
         -------
@@ -163,7 +174,7 @@ class PyMolScriptGenerator:
         for i, (struct_name, info) in enumerate(pdb_info.items()):
             PyMolScriptGenerator._create_single_focus_group(
                 lines, struct_name, info, struct_names,
-                top_features, feature_colors, pdb_info, feature_own_color
+                top_features, feature_colors, pdb_info, feature_own_color, use_putty
             )
             PyMolScriptGenerator._finalize_focus_group(
                 lines, struct_name, i
@@ -180,7 +191,8 @@ class PyMolScriptGenerator:
         top_features: List[Dict[str, Any]],
         feature_colors: Dict[str, str],
         pdb_info: Dict[str, Dict[str, str]],
-        feature_own_color: bool
+        feature_own_color: bool,
+        use_putty: bool
     ) -> None:
         """
         Create single focus group with own and context objects.
@@ -203,6 +215,8 @@ class PyMolScriptGenerator:
             All structure info
         feature_own_color : bool
             If True, use feature colors; if False, use structure colors
+        use_putty : bool
+            If True, use putty cartoon; if False, use normal cartoon
 
         Returns
         -------
@@ -216,7 +230,7 @@ class PyMolScriptGenerator:
 
         main_obj = f"{group_name}_main"
         PyMolScriptGenerator._add_own_structure(
-            lines, group_name, info['path'], info['color'], main_obj
+            lines, group_name, info['path'], info['color'], main_obj, use_putty
         )
         PyMolScriptGenerator._add_own_features(
             lines, group_name, main_obj, top_features, feature_colors,
@@ -226,7 +240,7 @@ class PyMolScriptGenerator:
         other_structs = [name for name in struct_names if name != struct_name]
         if other_structs:
             PyMolScriptGenerator._add_context_structures(
-                lines, group_name, main_obj, other_structs, pdb_info
+                lines, group_name, main_obj, other_structs, pdb_info, use_putty
             )
             PyMolScriptGenerator._add_context_features(
                 lines, group_name, other_structs, top_features, feature_colors,
@@ -267,7 +281,8 @@ class PyMolScriptGenerator:
         pdb_info: Dict[str, Dict[str, str]],
         top_features: List[Dict[str, Any]],
         feature_colors: Dict[str, str],
-        feature_own_color: bool
+        feature_own_color: bool,
+        use_putty: bool
     ) -> str:
         """
         Create single comparison group with individual structure objects.
@@ -285,6 +300,8 @@ class PyMolScriptGenerator:
             Feature colors
         feature_own_color : bool
             If True, use feature colors; if False, use structure colors
+        use_putty : bool
+            If True, use putty cartoon; if False, use normal cartoon
 
         Returns
         -------
@@ -301,7 +318,7 @@ class PyMolScriptGenerator:
         for struct_name in struct_names:
             PyMolScriptGenerator._create_single_comparison_object(
                 lines, struct_name, pdb_info[struct_name],
-                reference_struct, top_features, feature_colors, feature_own_color
+                reference_struct, top_features, feature_colors, feature_own_color, use_putty
             )
 
         lines.append("group single_comparison, close")
@@ -318,7 +335,8 @@ class PyMolScriptGenerator:
         reference_struct: str,
         top_features: List[Dict[str, Any]],
         feature_colors: Dict[str, str],
-        feature_own_color: bool
+        feature_own_color: bool,
+        use_putty: bool
     ) -> None:
         """
         Create combined object (structure + features) for single comparison.
@@ -339,6 +357,8 @@ class PyMolScriptGenerator:
             Feature colors
         feature_own_color : bool
             If True, use feature colors; if False, use structure colors
+        use_putty : bool
+            If True, use putty cartoon; if False, use normal cartoon
 
         Returns
         -------
@@ -361,7 +381,7 @@ class PyMolScriptGenerator:
         # Apply styling and coloring
         PyMolScriptGenerator._apply_combined_styling(
             lines, final_obj, struct_name, struct_info['color'],
-            top_features, feature_colors, feature_own_color
+            top_features, feature_colors, feature_own_color, use_putty
         )
 
         lines.append("")
@@ -374,7 +394,8 @@ class PyMolScriptGenerator:
         color_hex: str,
         top_features: List[Dict[str, Any]],
         feature_colors: Dict[str, str],
-        feature_own_color: bool
+        feature_own_color: bool,
+        use_putty: bool
     ) -> None:
         """
         Apply styling and coloring to combined object.
@@ -395,6 +416,8 @@ class PyMolScriptGenerator:
             Feature colors
         feature_own_color : bool
             If True, use feature colors; if False, use structure color
+        use_putty : bool
+            If True, use putty cartoon; if False, use normal cartoon
 
         Returns
         -------
@@ -415,8 +438,8 @@ class PyMolScriptGenerator:
         if all_residues:
             lines.append(f'show sticks, {obj_name} and resi {resi_selection}')
 
-        # Apply putty and colors
-        PyMolScriptGenerator._add_putty_cartoon(lines, obj_name)
+        # Apply cartoon and colors
+        PyMolScriptGenerator._add_cartoon(lines, obj_name, use_putty)
         PyMolScriptGenerator._add_color_gradient(
             lines, struct_name, color_hex, obj_name
         )
@@ -433,10 +456,11 @@ class PyMolScriptGenerator:
         group_name: str,
         pdb_path: str,
         color_hex: str,
-        main_obj: str
+        main_obj: str,
+        use_putty: bool
     ) -> None:
         """
-        Add own structure (opaque) with putty and gradient.
+        Add own structure (opaque) with cartoon and gradient.
 
         Loads structure directly from PDB file and assigns to group.
 
@@ -452,6 +476,8 @@ class PyMolScriptGenerator:
             HEX color for gradient
         main_obj : str
             PyMOL object name for structure
+        use_putty : bool
+            If True, use putty cartoon; if False, use normal cartoon
 
         Returns
         -------
@@ -462,7 +488,7 @@ class PyMolScriptGenerator:
         lines.append(f'load "{pdb_path}", {main_obj}')
         lines.append(f'group {group_name}, {main_obj}, add')
 
-        PyMolScriptGenerator._add_putty_cartoon(lines, main_obj)
+        PyMolScriptGenerator._add_cartoon(lines, main_obj, use_putty)
         PyMolScriptGenerator._add_color_gradient(
             lines, main_obj, color_hex, main_obj
         )
@@ -567,7 +593,8 @@ class PyMolScriptGenerator:
         group_name: str,
         main_obj: str,
         other_structs: List[str],
-        pdb_info: Dict[str, Dict[str, str]]
+        pdb_info: Dict[str, Dict[str, str]],
+        use_putty: bool
     ) -> None:
         """
         Add other structures (80% transparent) combined into one object.
@@ -587,6 +614,8 @@ class PyMolScriptGenerator:
             Other structure names
         pdb_info : Dict[str, Dict[str, str]]
             Structure info with paths and colors
+        use_putty : bool
+            If True, use putty cartoon; if False, use normal cartoon
 
         Returns
         -------
@@ -600,7 +629,7 @@ class PyMolScriptGenerator:
         )
 
         ctx_obj = PyMolScriptGenerator._combine_and_style_structures(
-            lines, group_name, temp_objs
+            lines, group_name, temp_objs, use_putty
         )
 
         PyMolScriptGenerator._color_structures_by_segi(
@@ -649,7 +678,8 @@ class PyMolScriptGenerator:
     def _combine_and_style_structures(
         lines: List[str],
         group_name: str,
-        temp_objs: List[str]
+        temp_objs: List[str],
+        use_putty: bool
     ) -> str:
         """
         Combine structures and apply styling.
@@ -662,6 +692,8 @@ class PyMolScriptGenerator:
             PyMOL group name
         temp_objs : List[str]
             Temp structure object names
+        use_putty : bool
+            If True, use putty cartoon; if False, use normal cartoon
 
         Returns
         -------
@@ -674,7 +706,7 @@ class PyMolScriptGenerator:
         lines.append(f"group {group_name}, {ctx_obj}, add")
         lines.append(f"hide everything, {ctx_obj}")
         lines.append(f"show cartoon, {ctx_obj}")
-        PyMolScriptGenerator._add_putty_cartoon(lines, ctx_obj)
+        PyMolScriptGenerator._add_cartoon(lines, ctx_obj, use_putty)
         return ctx_obj
 
     @staticmethod
@@ -955,9 +987,40 @@ class PyMolScriptGenerator:
                 lines.append(f"delete temp_ctx_feat_{other_name}")
 
     @staticmethod
+    def _add_cartoon(
+        lines: List[str],
+        object_name: str,
+        use_putty: bool
+    ) -> None:
+        """
+        Add cartoon representation to object.
+
+        Parameters
+        ----------
+        lines : List[str]
+            Command list to append to
+        object_name : str
+            PyMOL object name
+        use_putty : bool
+            If True, use putty cartoon; if False, use normal cartoon
+
+        Returns
+        -------
+        None
+            Appends commands to lines
+        """
+        if use_putty:
+            PyMolScriptGenerator._add_putty_cartoon(lines, object_name)
+        else:
+            PyMolScriptGenerator._add_normal_cartoon(lines, object_name)
+
+    @staticmethod
     def _add_putty_cartoon(lines: List[str], object_name: str) -> None:
         """
         Add putty cartoon settings to object.
+
+        Putty cartoon uses beta-factor values to control thickness.
+        Requires non-uniform beta-factors to avoid division by zero.
 
         Parameters
         ----------
@@ -970,10 +1033,44 @@ class PyMolScriptGenerator:
         -------
         None
             Appends commands to lines
+
+        Notes
+        -----
+        Only use with structures that have varying beta-factors.
+        For uniform beta-factors (all 0.0), use _add_normal_cartoon().
         """
         lines.append(f"cartoon putty, {object_name}")
         lines.append(f"set cartoon_putty_scale_min, 1.0, {object_name}")
         lines.append(f"set cartoon_putty_scale_max, 3.0, {object_name}")
+
+    @staticmethod
+    def _add_normal_cartoon(lines: List[str], object_name: str) -> None:
+        """
+        Add normal cartoon settings to object.
+
+        Normal cartoon has uniform thickness regardless of beta-factors.
+        Use this for structures with uniform beta-factors (all 0.0).
+
+        Parameters
+        ----------
+        lines : List[str]
+            Command list to append to
+        object_name : str
+            PyMOL object name
+
+        Returns
+        -------
+        None
+            Appends commands to lines
+
+        Notes
+        -----
+        Normal cartoon avoids PyMOL putty division-by-zero warnings
+        when all beta-factors are identical.
+        """
+        # Normal cartoon is already the default, no special settings needed
+        # Just ensure it's not in putty mode
+        lines.append(f"cartoon automatic, {object_name}")
 
     @staticmethod
     def _add_color_gradient(
