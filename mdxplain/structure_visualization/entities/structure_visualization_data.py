@@ -24,10 +24,10 @@ Structure visualization data entity for storing PDB paths.
 This module contains the StructureVisualizationData class that stores
 PDB file paths generated for structure visualization. Each instance
 represents a named visualization session with PDBs for different
-sub-comparisons.
+structures (from FI sub-comparisons or data selectors).
 """
 
-from typing import Dict, Optional
+from typing import Dict, Optional, List, Any
 
 
 class StructureVisualizationData:
@@ -35,37 +35,63 @@ class StructureVisualizationData:
     Data entity for storing structure visualization PDB paths.
 
     Stores paths to generated PDB files for structure visualization,
-    organized by sub-comparison identifiers. Each StructureVisualizationData
-    represents a single visualization session with potentially multiple
-    structures.
+    organized by structure identifiers. Supports two source types:
+    - "feature_importance": From FI analysis sub-comparisons
+    - "feature": From feature/data selectors
 
     Attributes
     ----------
     name : str
         Name identifier for this visualization session
-    feature_importance_name : str
-        Name of feature importance analysis used for beta-factors
+    source_type : str
+        Source type: "feature_importance" or "feature"
+    feature_importance_name : str | None
+        Name of FI analysis (for FI source type)
+    selector_centroid : str | None
+        Feature selector for centroids (for feature source type)
+    selector_features : str | None
+        Feature selector for highlights (for feature source type)
     pdb_paths : Dict[str, str]
-        Mapping from sub-comparison identifier to PDB file path
+        Mapping from structure identifier to PDB file path
+    feature_info : List[Dict[str, Any]]
+        List of feature dicts with metadata for visualization
 
     Examples
     --------
+    >>> # Feature importance mode
     >>> viz_data = StructureVisualizationData("my_viz", "dt_analysis")
     >>> viz_data.add_pdb("cluster_0_vs_rest", "/path/to/structure.pdb")
-    >>> path = viz_data.get_pdb("cluster_0_vs_rest")
-    >>> all_paths = viz_data.get_all_pdbs()
+
+    >>> # Feature mode
+    >>> viz_data = StructureVisualizationData.from_selectors(
+    ...     "my_viz", "coords_all", "distances"
+    ... )
+    >>> viz_data.add_pdb("cluster_0", "/path/to/c0.pdb")
     """
 
-    def __init__(self, name: str, feature_importance_name: str):
+    def __init__(
+        self,
+        name: str,
+        feature_importance_name: str = None,
+        selector_centroid: str = None,
+        selector_features: str = None
+    ):
         """
-        Initialize structure visualization data with given name.
+        Initialize structure visualization data.
+
+        Use either feature_importance_name (FI mode) OR selector_centroid
+        (feature mode), not both.
 
         Parameters
         ----------
         name : str
             Name identifier for this visualization session
-        feature_importance_name : str
-            Name of feature importance analysis used for beta-factors
+        feature_importance_name : str, optional
+            Name of FI analysis (for FI source type)
+        selector_centroid : str, optional
+            Feature selector for centroids (for feature source type)
+        selector_features : str, optional
+            Feature selector for highlights (for feature source type)
 
         Returns
         -------
@@ -74,15 +100,38 @@ class StructureVisualizationData:
 
         Examples
         --------
+        >>> # Feature importance mode
         >>> viz_data = StructureVisualizationData("my_viz", "dt_analysis")
-        >>> print(viz_data.name)
-        'my_viz'
-        >>> print(viz_data.feature_importance_name)
-        'dt_analysis'
+
+        >>> # Feature mode with features
+        >>> viz_data = StructureVisualizationData(
+        ...     "my_viz",
+        ...     selector_centroid="coords_all",
+        ...     selector_features="distances"
+        ... )
+
+        >>> # Feature mode without features
+        >>> viz_data = StructureVisualizationData(
+        ...     "my_viz",
+        ...     selector_centroid="coords_all"
+        ... )
         """
         self.name = name
-        self.feature_importance_name = feature_importance_name
+
+        # Determine source type
+        if feature_importance_name is not None:
+            self.source_type = "feature_importance"
+            self.feature_importance_name = feature_importance_name
+            self.selector_centroid = None
+            self.selector_features = None
+        else:
+            self.source_type = "feature"
+            self.feature_importance_name = None
+            self.selector_centroid = selector_centroid
+            self.selector_features = selector_features
+
         self.pdb_paths: Dict[str, str] = {}
+        self.feature_info: List[Dict[str, Any]] = []
 
     def add_pdb(self, sub_comparison: str, pdb_path: str) -> None:
         """
@@ -175,3 +224,51 @@ class StructureVisualizationData:
         False
         """
         return sub_comparison in self.pdb_paths
+
+    def add_feature_info(self, features: List[Dict[str, Any]]) -> None:
+        """
+        Add feature information for visualization.
+
+        Parameters
+        ----------
+        features : List[Dict[str, Any]]
+            List of feature dictionaries with metadata
+
+        Returns
+        -------
+        None
+            Stores feature info for later visualization
+
+        Examples
+        --------
+        >>> viz_data = StructureVisualizationData(
+        ...     "my_viz", selector_centroid="coords_all"
+        ... )
+        >>> features = [
+        ...     {"feature_name": "ALA_5_CA-GLU_10_CA", "residue_seqids": [5, 10]},
+        ...     {"feature_name": "GLY_3_phi", "residue_seqids": [3]}
+        ... ]
+        >>> viz_data.add_feature_info(features)
+        """
+        self.feature_info = features
+
+    def get_feature_info(self) -> List[Dict[str, Any]]:
+        """
+        Get stored feature information.
+
+        Returns
+        -------
+        List[Dict[str, Any]]
+            List of feature dictionaries with metadata
+
+        Examples
+        --------
+        >>> viz_data = StructureVisualizationData(
+        ...     "my_viz", selector_centroid="coords_all"
+        ... )
+        >>> viz_data.add_feature_info([{"feature_name": "test"}])
+        >>> features = viz_data.get_feature_info()
+        >>> len(features)
+        1
+        """
+        return self.feature_info
