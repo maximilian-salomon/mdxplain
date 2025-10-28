@@ -29,6 +29,7 @@ and feature highlighting.
 import nglview as nv
 import ipywidgets as widgets
 from typing import Dict, List, Any, Tuple
+from datetime import datetime
 
 from .color_conversion_helper import ColorConversionHelper
 from .feature_overlap_helper import FeatureOverlapHelper
@@ -59,7 +60,10 @@ class NGLViewHelper:
         pdb_info: Dict[str, Dict[str, str]],
         top_features: List[Dict[str, Any]],
         feature_colors: Dict[str, str],
-        feature_own_color: bool = True
+        feature_own_color: bool = True,
+        show_feature_legend: bool = True,
+        show_structure_legend: bool = True,
+        viz_name: str = "structure"
     ) -> Tuple:
         """
         Create NGLView widget with focus-based structure visualization.
@@ -80,6 +84,12 @@ class NGLViewHelper:
         feature_own_color : bool, default=True
             If True, features use their own color from feature_colors.
             If False, features use the color of their structure.
+        show_feature_legend : bool, default=True
+            If True, display feature color legend below controls
+        show_structure_legend : bool, default=True
+            If True, display structure color legend below controls
+        viz_name : str, default="structure"
+            Visualization name for filename generation in save buttons
 
         Returns
         -------
@@ -107,41 +117,34 @@ class NGLViewHelper:
         - 2x4 grid controls own/other structures and features separately
         - Each checkbox controls visibility and transparency independently
         """
-        view = nv.NGLWidget()
-        component_map = {}
+        # Setup view and load structures
+        view, component_map, overlaps = NGLViewHelper._setup_view_components(
+            pdb_info, top_features, feature_colors, feature_own_color
+        )
 
-        # Detect overlapping residues once (used throughout)
-        overlaps = FeatureOverlapHelper.detect_residue_overlaps(top_features)
-
-        # Load all structures and setup representations
-        for struct_name, info in pdb_info.items():
-            component = NGLViewHelper._load_structure_component(
-                view, info['path'], info['color'], top_features, feature_colors,
-                overlaps, feature_own_color
-            )
-            component_map[struct_name] = component
-
-        view.center()
-
-        # Create focus checkboxes (2x4 grid)
-        checkbox_grid = NGLViewHelper._create_focus_checkboxes()
-
-        # Create dropdown
-        dropdown = NGLViewHelper._create_dropdown(
-            component_map, checkbox_grid, pdb_info, top_features, feature_colors,
+        # Create control widgets (dropdown + checkbox grid)
+        dropdown, checkbox_grid = NGLViewHelper._create_control_widgets(
+            component_map, pdb_info, top_features, feature_colors,
             overlaps, feature_own_color
         )
 
-        # Set initial visibility (first structure only)
-        NGLViewHelper._set_initial_visibility(component_map)
-
-        # Create legend widget
-        legend_widget = NGLViewHelper._create_legend_widget(
-            top_features, feature_colors, overlaps, feature_own_color
+        # Setup legend widgets
+        legend_widgets = NGLViewHelper._setup_legend_widgets(
+            pdb_info, top_features, feature_colors, overlaps,
+            feature_own_color, show_structure_legend, show_feature_legend
         )
 
-        # Combine UI elements
-        ui = widgets.VBox([dropdown, checkbox_grid, legend_widget])
+        # Create download button
+        download_button, download_output = NGLViewHelper._create_download_button(
+            view, viz_name, dropdown
+        )
+
+        # Assemble final UI
+        ui = NGLViewHelper._assemble_ui(
+            dropdown, checkbox_grid, legend_widgets,
+            download_button, download_output
+        )
+
         return ui, view
 
     @staticmethod
@@ -815,6 +818,56 @@ class NGLViewHelper:
         return widgets.HTML(value=''.join(html_content))
 
     @staticmethod
+    def _create_structure_legend_widget(
+        pdb_info: Dict[str, Dict[str, str]]
+    ) -> widgets.HTML:
+        """
+        Create legend widget showing structure colors.
+
+        Creates HTML widget displaying a legend that maps structure
+        names to their assigned colors.
+
+        Parameters
+        ----------
+        pdb_info : Dict[str, Dict[str, str]]
+            Structure info with 'color' key per structure
+
+        Returns
+        -------
+        widgets.HTML
+            HTML widget with styled structure legend
+
+        Examples
+        --------
+        >>> pdb_info = {
+        ...     "cluster_0": {"path": "c0.pdb", "color": "#bf4040"},
+        ...     "cluster_1": {"path": "c1.pdb", "color": "#4040bf"}
+        ... }
+        >>> legend = NGLViewHelper._create_structure_legend_widget(pdb_info)
+        """
+        html_content = ['<div style="padding:10px; border:1px solid #ddd; '
+                       'background:#f9f9f9; margin-top:10px; border-radius:4px;">']
+        html_content.append('<b style="font-size:14px;">Structure Colors:</b>')
+        html_content.append('<div style="margin-top:8px;">')
+
+        for struct_name, info in pdb_info.items():
+            color = info['color']
+            html_content.append(
+                f'<div style="margin:4px 0; display:flex; align-items:center;">'
+                f'<span style="display:inline-block; width:20px; height:20px; '
+                f'background:{color}; margin-right:8px; border:1px solid #333; '
+                f'border-radius:2px;"></span>'
+                f'<span style="font-size:12px; font-family:monospace;">'
+                f'{struct_name}</span>'
+                f'</div>'
+            )
+
+        html_content.append('</div>')
+        html_content.append('</div>')
+
+        return widgets.HTML(value=''.join(html_content))
+
+    @staticmethod
     def _add_feature_legend_items(
         html_content: List[str],
         top_features: List[Dict[str, Any]],
@@ -902,3 +955,285 @@ class NGLViewHelper:
             )
 
         html_content.append('</div>')
+
+    @staticmethod
+    def _create_download_button(
+        view: nv.NGLWidget,
+        viz_name: str,
+        dropdown: widgets.Dropdown
+    ) -> Tuple[widgets.Button, widgets.Output]:
+        """
+        Create download button for exporting NGLView as PNG.
+
+        Creates a button that triggers browser download of the current
+        NGLView widget using NGLView's download_image() method.
+
+        Parameters
+        ----------
+        view : nv.NGLWidget
+            NGLView widget to download
+        viz_name : str
+            Visualization name for filename generation
+        dropdown : widgets.Dropdown
+            Dropdown widget to get selected structure name
+
+        Returns
+        -------
+        Tuple[widgets.Button, widgets.Output]
+            Download button and Output widget for status messages
+
+        Examples
+        --------
+        >>> button, output = NGLViewHelper._create_download_button(
+        ...     view, "my_viz", dropdown
+        ... )
+
+        Notes
+        -----
+        Uses NGLView.download_image() which opens browser download dialog.
+        Filename format: {viz_name}_{structure}_{timestamp}.png
+        """
+        # Create output widget for status messages
+        output = widgets.Output()
+
+        # Download button
+        download_btn = widgets.Button(
+            description='Download Image',
+            button_style='info',
+            icon='download',
+            tooltip='Download current view as PNG'
+        )
+
+        # Attach click handler
+        download_btn.on_click(
+            lambda _b: NGLViewHelper._handle_download_click(
+                view, output, viz_name, dropdown
+            )
+        )
+
+        return download_btn, output
+
+    @staticmethod
+    def _handle_download_click(
+        view: nv.NGLWidget,
+        output: widgets.Output,
+        viz_name: str,
+        dropdown: widgets.Dropdown
+    ):
+        """
+        Handle download button click event.
+
+        Generates filename and triggers browser download of NGLView widget.
+
+        Parameters
+        ----------
+        view : nv.NGLWidget
+            NGLView widget to download
+        output : widgets.Output
+            Output widget for status messages
+        viz_name : str
+            Visualization name for filename
+        dropdown : widgets.Dropdown
+            Dropdown to get current structure name
+
+        Notes
+        -----
+        Filename format: {viz_name}_{structure}_{timestamp}.png
+        """
+        with output:
+            # Get current structure name for filename
+            struct_name = dropdown.value if dropdown.value else "unknown"
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename = f"{viz_name}_{struct_name}_{timestamp}.png"
+
+            # Trigger browser download
+            view.download_image(filename=filename)
+
+    @staticmethod
+    def _setup_view_components(
+        pdb_info: Dict[str, Dict[str, str]],
+        top_features: List[Dict[str, Any]],
+        feature_colors: Dict[str, str],
+        feature_own_color: bool
+    ) -> Tuple[nv.NGLWidget, Dict, Dict]:
+        """
+        Setup NGLView widget with loaded structures.
+
+        Creates NGLView widget, detects overlapping features, loads all
+        structures with representations, and centers the view.
+
+        Parameters
+        ----------
+        pdb_info : Dict[str, Dict[str, str]]
+            Structure information with 'path' and 'color' keys
+        top_features : List[Dict[str, Any]]
+            Features to highlight
+        feature_colors : Dict[str, str]
+            Feature name to color mapping
+        feature_own_color : bool
+            If True, features use own colors; if False, use structure color
+
+        Returns
+        -------
+        Tuple[nv.NGLWidget, Dict, Dict]
+            NGLView widget, component map, and overlap dictionary
+        """
+        view = nv.NGLWidget()
+        component_map = {}
+
+        # Detect overlapping residues once (used throughout)
+        overlaps = FeatureOverlapHelper.detect_residue_overlaps(top_features)
+
+        # Load all structures and setup representations
+        for struct_name, info in pdb_info.items():
+            component = NGLViewHelper._load_structure_component(
+                view, info['path'], info['color'], top_features, feature_colors,
+                overlaps, feature_own_color
+            )
+            component_map[struct_name] = component
+
+        view.center()
+
+        return view, component_map, overlaps
+
+    @staticmethod
+    def _create_control_widgets(
+        component_map: Dict,
+        pdb_info: Dict[str, Dict[str, str]],
+        top_features: List[Dict[str, Any]],
+        feature_colors: Dict[str, str],
+        overlaps: Dict,
+        feature_own_color: bool
+    ) -> Tuple[widgets.Dropdown, widgets.GridBox]:
+        """
+        Create control widgets (dropdown and checkbox grid).
+
+        Creates focus checkboxes, dropdown for structure selection,
+        and sets initial visibility (first structure only).
+
+        Parameters
+        ----------
+        component_map : Dict
+            Mapping of structure names to NGLView components
+        pdb_info : Dict[str, Dict[str, str]]
+            Structure information
+        top_features : List[Dict[str, Any]]
+            Features to highlight
+        feature_colors : Dict[str, str]
+            Feature name to color mapping
+        overlaps : Dict
+            Overlap dictionary from feature detection
+        feature_own_color : bool
+            Color mode for features
+
+        Returns
+        -------
+        Tuple[widgets.Dropdown, widgets.GridBox]
+            Dropdown and checkbox grid widgets
+        """
+        # Create focus checkboxes (2x4 grid)
+        checkbox_grid = NGLViewHelper._create_focus_checkboxes()
+
+        # Create dropdown
+        dropdown = NGLViewHelper._create_dropdown(
+            component_map, checkbox_grid, pdb_info, top_features, feature_colors,
+            overlaps, feature_own_color
+        )
+
+        # Set initial visibility (first structure only)
+        NGLViewHelper._set_initial_visibility(component_map)
+
+        return dropdown, checkbox_grid
+
+    @staticmethod
+    def _setup_legend_widgets(
+        pdb_info: Dict[str, Dict[str, str]],
+        top_features: List[Dict[str, Any]],
+        feature_colors: Dict[str, str],
+        overlaps: Dict,
+        feature_own_color: bool,
+        show_structure_legend: bool,
+        show_feature_legend: bool
+    ) -> List[widgets.HTML]:
+        """
+        Setup legend widgets based on configuration.
+
+        Creates structure and/or feature legend widgets based on
+        show_structure_legend and show_feature_legend flags.
+
+        Parameters
+        ----------
+        pdb_info : Dict[str, Dict[str, str]]
+            Structure information
+        top_features : List[Dict[str, Any]]
+            Features to highlight
+        feature_colors : Dict[str, str]
+            Feature name to color mapping
+        overlaps : Dict
+            Overlap dictionary
+        feature_own_color : bool
+            Color mode for features
+        show_structure_legend : bool
+            If True, add structure legend
+        show_feature_legend : bool
+            If True, add feature legend
+
+        Returns
+        -------
+        List[widgets.HTML]
+            List of legend HTML widgets
+        """
+        legend_widgets = []
+
+        if show_structure_legend:
+            structure_legend = NGLViewHelper._create_structure_legend_widget(
+                pdb_info
+            )
+            legend_widgets.append(structure_legend)
+
+        if show_feature_legend:
+            feature_legend = NGLViewHelper._create_legend_widget(
+                top_features, feature_colors, overlaps, feature_own_color
+            )
+            legend_widgets.append(feature_legend)
+
+        return legend_widgets
+
+    @staticmethod
+    def _assemble_ui(
+        dropdown: widgets.Dropdown,
+        checkbox_grid: widgets.GridBox,
+        legend_widgets: List[widgets.HTML],
+        download_button: widgets.Button,
+        download_output: widgets.Output
+    ) -> widgets.VBox:
+        """
+        Assemble UI elements into final VBox layout.
+
+        Combines all UI elements (dropdown, checkbox grid, legends,
+        download button, and output) into a single VBox container.
+
+        Parameters
+        ----------
+        dropdown : widgets.Dropdown
+            Structure selection dropdown
+        checkbox_grid : widgets.GridBox
+            Focus control checkbox grid
+        legend_widgets : List[widgets.HTML]
+            Legend widgets
+        download_button : widgets.Button
+            Download button
+        download_output : widgets.Output
+            Download status output widget
+
+        Returns
+        -------
+        widgets.VBox
+            Combined UI container
+        """
+        ui_elements = [dropdown, checkbox_grid]
+        ui_elements.extend(legend_widgets)
+        ui_elements.append(download_button)
+        ui_elements.append(download_output)
+
+        return widgets.VBox(ui_elements)
