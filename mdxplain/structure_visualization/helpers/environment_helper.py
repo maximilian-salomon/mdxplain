@@ -75,3 +75,33 @@ class EnvironmentHelper:
             return ipython is not None and hasattr(ipython, 'kernel')
         except ImportError:
             return False
+
+    @staticmethod
+    def is_pymol_available() -> bool:
+        """
+        Detect if PyMOL Python module is available.
+
+        Attempts to import pymol module to check if PyMOL is
+        installed and accessible in the current environment.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        bool
+            True if pymol can be imported, False otherwise
+
+        Examples
+        --------
+        >>> if EnvironmentHelper.is_pymol_available():
+        ...     print("PyMOL is available")
+        ... else:
+        ...     print("PyMOL not found")
+        """
+        try:
+            import pymol
+            return True
+        except ImportError:
+            return False

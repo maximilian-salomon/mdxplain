@@ -151,3 +151,81 @@ class ValidationHelper:
             )
 
         return viz_data
+
+    @staticmethod
+    def validate_terminal_environment() -> None:
+        """
+        Validate that code is running in terminal, NOT Jupyter.
+
+        Checks if code is running in Jupyter notebook environment and
+        raises error if true. PyMOL visualization requires terminal
+        execution.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+            Returns normally if NOT in Jupyter environment
+
+        Raises
+        ------
+        RuntimeError
+            If running in Jupyter notebook environment
+
+        Examples
+        --------
+        >>> ValidationHelper.validate_terminal_environment()
+        RuntimeError: PyMOL visualization requires terminal execution...
+
+        Notes
+        -----
+        Uses EnvironmentHelper.is_jupyter_environment() to check
+        environment. Provides helpful message suggesting NGLView
+        for Jupyter usage.
+        """
+        if EnvironmentHelper.is_jupyter_environment():
+            raise RuntimeError(
+                "PyMOL visualization requires terminal/script execution. "
+                "Use visualize_nglview_jupyter() in Jupyter notebooks instead."
+            )
+
+    @staticmethod
+    def validate_pymol_available() -> None:
+        """
+        Validate that PyMOL Python module is available.
+
+        Checks if pymol module can be imported and raises error if not.
+        Provides installation instructions for conda.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+            Returns normally if pymol is available
+
+        Raises
+        ------
+        ImportError
+            If pymol Python module cannot be imported
+
+        Examples
+        --------
+        >>> ValidationHelper.validate_pymol_available()
+        ImportError: PyMOL Python module not found...
+
+        Notes
+        -----
+        Uses EnvironmentHelper.is_pymol_available() to check
+        availability. Suggests conda installation command if missing.
+        """
+        if not EnvironmentHelper.is_pymol_available():
+            raise ImportError(
+                "PyMOL Python module not found. Install with:\n"
+                "  conda install -c conda-forge pymol-open-source"
+            )

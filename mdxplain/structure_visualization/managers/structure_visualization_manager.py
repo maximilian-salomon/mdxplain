@@ -38,6 +38,7 @@ from ..entities.structure_visualization_data import StructureVisualizationData
 from ..helpers.residue_importance_calculator import ResidueImportanceCalculator
 from ..helpers.pdb_beta_factor_helper import PdbBetaFactorHelper
 from ..helpers.validation_helper import ValidationHelper
+from ..helpers.pymol_script_generator import PyMolScriptGenerator
 from ...utils.top_features_utils import TopFeaturesUtils
 from ...utils.color_utils import ColorUtils
 from ...utils.data_utils import DataUtils
@@ -206,7 +207,8 @@ class StructureVisualizationManager:
         self,
         pipeline_data: PipelineData,
         structure_viz_name: str,
-        n_top_global: int = 3
+        n_top_global: int = 3,
+        feature_own_color: bool = True
     ) -> Tuple:
         """
         Create interactive NGLView widget for Jupyter notebooks.
@@ -230,6 +232,9 @@ class StructureVisualizationManager:
             Name of visualization session (from create_pdb_with_beta_factors)
         n_top_global : int, default=3
             Number of global top features to highlight with licorice
+        feature_own_color : bool, default=True
+            If True, features use their own color from feature_colors.
+            If False, features use the color of their structure.
 
         Returns
         -------
@@ -295,7 +300,7 @@ class StructureVisualizationManager:
 
         # Create NGLView widget
         ui, view = NGLViewHelper.create_widget(
-            pdb_info, top_features, feature_colors
+            pdb_info, top_features, feature_colors, feature_own_color
         )
 
         # Automatically display in Jupyter
@@ -351,8 +356,8 @@ class StructureVisualizationManager:
         """
         Prepare PDB info dictionary with paths and colors.
 
-        Creates dictionary mapping sub-comparison names to PDB paths
-        and assigned colors for visualization.
+        Creates dictionary mapping sub-comparison names to absolute PDB
+        paths and assigned colors for visualization.
 
         Parameters
         ----------
@@ -366,7 +371,12 @@ class StructureVisualizationManager:
         Dict[str, Dict[str, str]]
             Dictionary with structure info:
             - Keys: sub-comparison identifiers
-            - Values: {"path": pdb_path, "color": hex_color}
+            - Values: {"path": absolute_pdb_path, "color": hex_color}
+
+        Notes
+        -----
+        Paths are converted to absolute paths using os.path.abspath()
+        to ensure PyMOL can locate files regardless of working directory.
         """
         pdb_info = {}
 
@@ -381,7 +391,7 @@ class StructureVisualizationManager:
 
             if pdb_path is not None:
                 pdb_info[comp_id] = {
-                    "path": pdb_path,
+                    "path": os.path.abspath(pdb_path),
                     "color": structure_colors[i]
                 }
 
@@ -429,3 +439,188 @@ class StructureVisualizationManager:
             feature_colors[feature_name] = colors_dict[i]
 
         return feature_colors
+
+    def create_pymol_script(
+        self,
+        pipeline_data: PipelineData,
+        structure_viz_name: str,
+        n_top_global: int = 3,
+        output_dir: str = None,
+        feature_own_color: bool = True
+    ) -> str:
+        """
+        Create PyMOL script (.pml) for structure visualization.
+
+        Generates PyMOL script with putty cartoons (thickness from
+        beta-factor), color gradients (base_color → white), and
+        feature objects as toggleable stick representations.
+
+        Warning
+        -------
+        When using PipelineManager, pipeline_data parameter is
+        automatically injected. Do NOT provide it manually.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data object (auto-injected by PipelineManager)
+        structure_viz_name : str
+            Name of visualization session (from create_pdb_with_beta_factors)
+        n_top_global : int, default=3
+            Number of top features to highlight
+        output_dir : str, optional
+            Output directory (defaults to cache_dir/structure_viz)
+        feature_own_color : bool, default=True
+            If True, features use their own color from feature_colors.
+            If False, features use the color of their structure.
+
+        Returns
+        -------
+        str
+            Path to created .pml script file
+
+        Examples
+        --------
+        >>> # First create PDFs
+        >>> pipeline.structure_visualization.create_pdb_with_beta_factors(
+        ...     "my_viz", "dt_analysis", n_top=10
+        ... )
+        >>> # Then create PyMOL script
+        >>> script_path = pipeline.structure_visualization.create_pymol_script(
+        ...     "my_viz", n_top_global=3
+        ... )
+        >>> print(f"Script saved to: {script_path}")
+
+        Notes
+        -----
+        - Focus groups named: all_focus_struct_{name}
+        - Each group contains:
+          * Own structure + features (opak)
+          * Other structures + features (80% transparent, context)
+        - Only first focus group enabled by default
+        - Toggle groups in PyMOL GUI to switch focus
+        - Script saved as: output_dir/structure_viz_name.pml
+        - Putty cartoons: thickness controlled by beta-factor
+        - Color gradient: base_color (low B) → white (high B)
+        - Stick colors independent of cartoon (beta-factor preserved)
+        """
+        # Get output_dir
+        if output_dir is None:
+            output_dir = self.output_dir
+
+        # Get viz_data
+        viz_data = ValidationHelper.validate_visualization_data(
+            pipeline_data, structure_viz_name
+        )
+
+        # Get feature importance data
+        fi_data = pipeline_data.feature_importance_data[viz_data.feature_importance_name]
+        comp_data = pipeline_data.comparison_data[fi_data.comparison_name]
+
+        # Prepare PDB info
+        pdb_info = self._prepare_pdb_info(viz_data, comp_data)
+
+        # Get top features + colors
+        top_features = TopFeaturesUtils.get_top_features_with_names(
+            pipeline_data, fi_data, None, n_top_global
+        )
+        feature_colors = self._assign_feature_colors(top_features, n_top_global)
+
+        # Generate script
+        script_content = PyMolScriptGenerator.generate_script(
+            pdb_info, top_features, feature_colors, feature_own_color
+        )
+
+        # Save script
+        script_path = DataUtils.get_cache_file_path(
+            f"{structure_viz_name}.pml", output_dir
+        )
+        with open(script_path, 'w') as f:
+            f.write(script_content)
+
+        return script_path
+
+    def visualize_pymol(
+        self,
+        pipeline_data: PipelineData,
+        structure_viz_name: str,
+        n_top_global: int = 3,
+        feature_own_color: bool = True
+    ) -> None:
+        """
+        Open PyMOL with structure visualization.
+
+        Validates environment (terminal, PyMOL available), creates
+        script if needed, and launches PyMOL with pymol Python module.
+
+        Warning
+        -------
+        - Only works in terminal/script, NOT in Jupyter notebooks
+        - Requires pymol Python module (conda install pymol-open-source)
+        - When using PipelineManager, pipeline_data parameter is
+          automatically injected. Do NOT provide it manually.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data object (auto-injected by PipelineManager)
+        structure_viz_name : str
+            Name of visualization session (from create_pdb_with_beta_factors)
+        n_top_global : int, default=3
+            Number of top features to highlight
+        feature_own_color : bool, default=True
+            If True, features use their own color from feature_colors.
+            If False, features use the color of their structure.
+
+        Returns
+        -------
+        None
+            Opens PyMOL with visualization
+
+        Raises
+        ------
+        RuntimeError
+            If running in Jupyter notebook
+        ImportError
+            If pymol Python module not available
+
+        Examples
+        --------
+        >>> # First create PDFs
+        >>> pipeline.structure_visualization.create_pdb_with_beta_factors(
+        ...     "my_viz", "dt_analysis", n_top=10
+        ... )
+        >>> # Then open in PyMOL (terminal only!)
+        >>> pipeline.structure_visualization.visualize_pymol(
+        ...     "my_viz", n_top_global=3
+        ... )
+
+        Notes
+        -----
+        - PyMOL opens with all structures and features visible
+        - Toggle structures: enable/disable struct_<name>
+        - Toggle features: enable/disable feat_<name>
+        - Putty cartoons: thickness controlled by beta-factor
+        - Color gradient: base_color (low B) → white (high B)
+        - Script created if not already exists
+        """
+        # Validate terminal environment
+        ValidationHelper.validate_terminal_environment()
+
+        # Validate PyMOL available
+        ValidationHelper.validate_pymol_available()
+
+        # Create script
+        script_path = self.create_pymol_script(
+            pipeline_data, structure_viz_name, n_top_global,
+            feature_own_color=feature_own_color
+        )
+
+        # Import pymol lazy cause optional dependency
+        import pymol
+
+        # Launch PyMOL in quiet mode
+        pymol.finish_launching(['pymol', '-q'])
+
+        # Load script
+        pymol.cmd.do(f"@{script_path}")
