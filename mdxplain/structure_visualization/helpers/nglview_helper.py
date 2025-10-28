@@ -30,14 +30,18 @@ import nglview as nv
 import ipywidgets as widgets
 from typing import Dict, List, Any, Tuple
 
+from .color_conversion_helper import ColorConversionHelper
+from .feature_overlap_helper import FeatureOverlapHelper
+
 
 class NGLViewHelper:
     """
-    Helper for creating NGLView widgets with advanced features.
+    Helper for creating NGLView widgets with focus-based visualization.
 
     Provides static methods to create interactive 3D molecular structure
     viewers with beta-factor gradient coloring, feature highlights,
-    structure selection dropdowns, and multi-view mode.
+    structure selection dropdowns, and 2x4 checkbox grid for independent
+    control of own vs other structures and features.
 
     Examples
     --------
@@ -54,14 +58,16 @@ class NGLViewHelper:
     def create_widget(
         pdb_info: Dict[str, Dict[str, str]],
         top_features: List[Dict[str, Any]],
-        feature_colors: Dict[str, str]
+        feature_colors: Dict[str, str],
+        feature_own_color: bool = True
     ) -> Tuple:
         """
-        Create NGLView widget with structure selection and features.
+        Create NGLView widget with focus-based structure visualization.
 
         Creates interactive 3D viewer with beta-factor gradient coloring
         and feature highlights. Includes dropdown for structure selection
-        and multi-view mode with checkboxes for opacity control.
+        and 2x4 checkbox grid for controlling visibility and transparency
+        of own vs other structures and features.
 
         Parameters
         ----------
@@ -71,11 +77,14 @@ class NGLViewHelper:
             Features to highlight with licorice representation
         feature_colors : Dict[str, str]
             Feature name to HEX color mapping
+        feature_own_color : bool, default=True
+            If True, features use their own color from feature_colors.
+            If False, features use the color of their structure.
 
         Returns
         -------
         Tuple[widgets.VBox, nv.NGLWidget]
-            UI container (dropdown + checkboxes) and NGLWidget
+            UI container (dropdown + checkbox grid + legend) and NGLWidget
 
         Examples
         --------
@@ -93,32 +102,34 @@ class NGLViewHelper:
         Notes
         -----
         - Beta-factors: 0.0 (base color) → 1.0 (white)
-        - PDBs must be pre-aligned if using multi-view mode
-        - Dropdown allows switching between individual structures or "multiple"
-        - Multi-view mode shows all structures with opacity checkboxes
+        - PDBs must be pre-aligned for multi-structure visualization
+        - Dropdown selects focus structure
+        - 2x4 grid controls own/other structures and features separately
+        - Each checkbox controls visibility and transparency independently
         """
         view = nv.NGLWidget()
         component_map = {}
 
         # Detect overlapping residues once (used throughout)
-        overlaps = NGLViewHelper._detect_residue_overlaps(top_features)
+        overlaps = FeatureOverlapHelper.detect_residue_overlaps(top_features)
 
         # Load all structures and setup representations
         for struct_name, info in pdb_info.items():
             component = NGLViewHelper._load_structure_component(
-                view, info['path'], info['color'], top_features, feature_colors, overlaps
+                view, info['path'], info['color'], top_features, feature_colors,
+                overlaps, feature_own_color
             )
             component_map[struct_name] = component
 
         view.center()
 
-        # Create UI widgets
-        checkbox_ui = NGLViewHelper._create_checkboxes(
-            component_map, pdb_info, top_features, feature_colors, overlaps
-        )
+        # Create focus checkboxes (2x4 grid)
+        checkbox_grid = NGLViewHelper._create_focus_checkboxes()
 
+        # Create dropdown
         dropdown = NGLViewHelper._create_dropdown(
-            component_map, checkbox_ui, pdb_info, top_features, feature_colors, overlaps
+            component_map, checkbox_grid, pdb_info, top_features, feature_colors,
+            overlaps, feature_own_color
         )
 
         # Set initial visibility (first structure only)
@@ -126,11 +137,11 @@ class NGLViewHelper:
 
         # Create legend widget
         legend_widget = NGLViewHelper._create_legend_widget(
-            top_features, feature_colors, overlaps
+            top_features, feature_colors, overlaps, feature_own_color
         )
 
         # Combine UI elements
-        ui = widgets.VBox([dropdown, checkbox_ui, legend_widget])
+        ui = widgets.VBox([dropdown, checkbox_grid, legend_widget])
         return ui, view
 
     @staticmethod
@@ -140,7 +151,8 @@ class NGLViewHelper:
         base_color: str,
         top_features: List[Dict[str, Any]],
         feature_colors: Dict[str, str],
-        overlaps: Dict[int, List[int]]
+        overlaps: Dict[int, List[int]],
+        feature_own_color: bool
     ):
         """
         Load single structure component with representations.
@@ -152,13 +164,15 @@ class NGLViewHelper:
         pdb_path : str
             Path to PDB file
         base_color : str
-            Base color for beta-factor gradient (HEX)
+            Base color for beta-factor gradient (HEX) and features
         top_features : List[Dict[str, Any]]
             Features to highlight
-        feature_colors : Dict[str, str]
+        feature_colors : Dict[str, str]]
             Feature color mapping
         overlaps : Dict[int, List[int]]
             Pre-computed overlapping residues
+        feature_own_color : bool
+            If True, use feature colors; if False, use base_color
 
         Returns
         -------
@@ -181,12 +195,14 @@ class NGLViewHelper:
         # Add feature highlights (non-overlapping residues only)
         for feature in top_features:
             NGLViewHelper._add_feature_highlight(
-                component, feature, feature_colors, overlaps
+                component, feature, feature_colors, overlaps,
+                1.0, base_color, feature_own_color
             )
 
         # Add overlap highlights with mixed colors
         NGLViewHelper._add_overlap_highlights(
-            component, overlaps, top_features, feature_colors
+            component, overlaps, top_features, feature_colors,
+            1.0, base_color, feature_own_color
         )
 
         return component
@@ -197,7 +213,9 @@ class NGLViewHelper:
         feature: Dict[str, Any],
         feature_colors: Dict[str, str],
         all_overlaps: Dict[int, List[int]],
-        opacity: float = 1.0
+        opacity: float,
+        struct_color: str,
+        feature_own_color: bool
     ) -> None:
         """
         Add licorice highlight for non-overlapping feature residues.
@@ -215,25 +233,27 @@ class NGLViewHelper:
             Feature color mapping
         all_overlaps : Dict[int, List[int]]
             Mapping of overlapping residues (to exclude)
-        opacity : float, default=1.0
+        opacity : float
             Opacity for licorice representation
+        struct_color : str
+            Structure color (used if feature_own_color=False)
+        feature_own_color : bool
+            If True, use feature colors; if False, use struct_color
 
         Returns
         -------
         None
             Adds representation to component
         """
-        residues = feature.get("residue_seqids", [])
-        if not residues:
-            return
-
-        # Filter out overlapping residues
-        non_overlap_residues = [s for s in residues if s not in all_overlaps]
+        non_overlap_residues = NGLViewHelper._filter_non_overlaps(
+            feature, all_overlaps
+        )
         if not non_overlap_residues:
             return
 
-        feature_name = feature.get('feature_name', '')
-        color_hex = feature_colors.get(feature_name, '#808080')
+        color_hex = NGLViewHelper._get_feature_color(
+            feature, feature_colors, struct_color, feature_own_color
+        )
         res_selection = ' or '.join(map(str, non_overlap_residues))
 
         component.add_representation(
@@ -244,112 +264,105 @@ class NGLViewHelper:
         )
 
     @staticmethod
-    def _create_checkboxes(
-        component_map: Dict,
-        pdb_info: Dict[str, Dict[str, str]],
-        top_features: List[Dict[str, Any]],
-        feature_colors: Dict[str, str],
-        overlaps: Dict[int, List[int]]
-    ) -> widgets.VBox:
+    def _filter_non_overlaps(
+        feature: Dict[str, Any],
+        all_overlaps: Dict[int, List[int]]
+    ) -> List[int]:
         """
-        Create checkboxes for multi-view opacity control.
+        Filter out overlapping residues from feature.
 
         Parameters
         ----------
-        component_map : Dict
-            Structure name to component mapping
-        pdb_info : Dict[str, Dict[str, str]]
-            Structure information
-        top_features : List[Dict[str, Any]]
-            Features to highlight
-        feature_colors : Dict[str, str]
-            Feature color mapping
-        overlaps : Dict[int, List[int]]
-            Pre-computed overlapping residues
+        feature : Dict[str, Any]
+            Feature dictionary with residue_seqids
+        all_overlaps : Dict[int, List[int]]
+            Mapping of overlapping residues
 
         Returns
         -------
-        widgets.VBox
-            Checkbox UI container
+        List[int]
+            Non-overlapping residue IDs
         """
-        checkbox_widgets = []
-
-        for name in component_map.keys():
-            checkbox = widgets.Checkbox(
-                value=True,
-                description=name,
-                indent=False
-            )
-            checkbox_widgets.append(checkbox)
-
-        checkbox_ui = widgets.VBox(checkbox_widgets)
-        checkbox_ui.layout.display = 'none'
-
-        # Attach change handler
-        def on_checkbox_change(change):
-            NGLViewHelper._handle_checkbox_change(
-                change, component_map,
-                pdb_info, top_features, feature_colors, overlaps
-            )
-
-        for checkbox in checkbox_widgets:
-            checkbox.observe(on_checkbox_change, names='value')
-
-        return checkbox_ui
+        residues = feature.get("residue_seqids", [])
+        return [s for s in residues if s not in all_overlaps]
 
     @staticmethod
-    def _handle_checkbox_change(
-        change: Dict,
-        component_map: Dict,
-        pdb_info: Dict[str, Dict[str, str]],
-        top_features: List[Dict[str, Any]],
+    def _get_feature_color(
+        feature: Dict[str, Any],
         feature_colors: Dict[str, str],
-        overlaps: Dict[int, List[int]]
-    ) -> None:
+        struct_color: str,
+        feature_own_color: bool
+    ) -> str:
         """
-        Handle checkbox state change by updating opacity.
+        Get color for feature based on settings.
 
         Parameters
         ----------
-        change : Dict
-            Change event dictionary
-        component_map : Dict
-            Structure name to component mapping
-        pdb_info : Dict[str, Dict[str, str]]
-            Structure information
-        top_features : List[Dict[str, Any]]
-            Features to highlight
+        feature : Dict[str, Any]
+            Feature dictionary
         feature_colors : Dict[str, str]
             Feature color mapping
-        overlaps : Dict[int, List[int]]
-            Pre-computed overlapping residues
+        struct_color : str
+            Structure color
+        feature_own_color : bool
+            If True, use feature color; if False, use struct_color
 
         Returns
         -------
-        None
-            Updates component representations
+        str
+            HEX color for feature
         """
-        checkbox = change['owner']
-        is_active = change['new']
-        struct_name = checkbox.description
-        component = component_map[struct_name]
-        info = pdb_info[struct_name]
+        if feature_own_color:
+            feature_name = feature.get('feature_name', '')
+            return feature_colors.get(feature_name, '#808080')
+        return struct_color
 
-        opacity_value = 1.0 if is_active else 0.2
+    @staticmethod
+    def _create_focus_checkboxes() -> widgets.GridBox:
+        """
+        Create 2x4 checkbox grid for focus visualization control.
 
-        # Recreate all representations with new opacity
-        NGLViewHelper._recreate_structure_representations(
-            component, info['color'], top_features, feature_colors, overlaps, opacity_value
+        Grid layout:
+        Row 1: [Own Struct Enabled] [Own Struct Trans] [Own Feat Enabled] [Own Feat Trans]
+        Row 2: [Other Struct Enabled] [Other Struct Trans] [Other Feat Enabled] [Other Feat Trans]
+
+        Returns
+        -------
+        widgets.GridBox
+            2x4 checkbox grid
+        """
+        checkboxes = [
+            widgets.Checkbox(value=True, description="Own Structure"),
+            widgets.Checkbox(value=False, description="Own Struct Transparent"),
+            widgets.Checkbox(value=True, description="Own Features"),
+            widgets.Checkbox(value=False, description="Own Feat Transparent"),
+            widgets.Checkbox(value=False, description="Other Structures"),
+            widgets.Checkbox(value=True, description="Other Struct Transparent"),
+            widgets.Checkbox(value=False, description="Other Features"),
+            widgets.Checkbox(value=True, description="Other Feat Transparent"),
+        ]
+
+        grid = widgets.GridBox(
+            checkboxes,
+            layout=widgets.Layout(
+                width='100%',
+                grid_template_columns='repeat(4, 25%)',
+                grid_template_rows='auto auto',
+                grid_gap='5px 5px'
+            )
         )
+
+        return grid
 
     @staticmethod
     def _create_dropdown(
         component_map: Dict,
-        checkbox_ui: widgets.VBox,
+        checkbox_grid: widgets.GridBox,
         pdb_info: Dict[str, Dict[str, str]],
         top_features: List[Dict[str, Any]],
         feature_colors: Dict[str, str],
-        overlaps: Dict[int, List[int]]
+        overlaps: Dict[int, List[int]],
+        feature_own_color: bool
     ) -> widgets.Dropdown:
         """
         Create dropdown for structure selection.
@@ -358,8 +371,8 @@ class NGLViewHelper:
         ----------
         component_map : Dict
             Structure name to component mapping
-        checkbox_ui : widgets.VBox
-            Checkbox UI container
+        checkbox_grid : widgets.GridBox
+            Checkbox grid container
         pdb_info : Dict[str, Dict[str, str]]
             Structure information with paths and colors
         top_features : List[Dict[str, Any]]
@@ -368,6 +381,8 @@ class NGLViewHelper:
             Feature color mapping
         overlaps : Dict[int, List[int]]
             Pre-computed overlapping residues
+        feature_own_color : bool
+            If True, use feature colors; if False, use structure colors
 
         Returns
         -------
@@ -375,10 +390,9 @@ class NGLViewHelper:
             Dropdown widget with change handler attached
         """
         structure_names = list(component_map.keys())
-        dropdown_options = structure_names + ["All structures"]
 
         dropdown = widgets.Dropdown(
-            options=dropdown_options,
+            options=structure_names,
             value=structure_names[0] if structure_names else None,
             description='Structure:',
             style={'description_width': 'initial'}
@@ -386,11 +400,22 @@ class NGLViewHelper:
 
         def on_structure_change(change):
             NGLViewHelper._handle_dropdown_change(
-                change, component_map, checkbox_ui,
-                pdb_info, top_features, feature_colors, overlaps
+                change, component_map, checkbox_grid,
+                pdb_info, top_features, feature_colors, overlaps, feature_own_color
             )
 
         dropdown.observe(on_structure_change, names='value')
+
+        # Attach change handlers to checkboxes
+        checkboxes = checkbox_grid.children
+        for checkbox in checkboxes:
+            checkbox.observe(
+                lambda change, cbs=checkboxes: NGLViewHelper._handle_checkbox_change(
+                    change, dropdown, component_map, cbs, pdb_info,
+                    top_features, feature_colors, overlaps, feature_own_color
+                ),
+                names='value'
+            )
 
         return dropdown
 
@@ -398,14 +423,15 @@ class NGLViewHelper:
     def _handle_dropdown_change(
         change: Dict,
         component_map: Dict,
-        checkbox_ui: widgets.VBox,
+        checkbox_grid: widgets.GridBox,
         pdb_info: Dict[str, Dict[str, str]],
         top_features: List[Dict[str, Any]],
         feature_colors: Dict[str, str],
-        overlaps: Dict[int, List[int]]
+        overlaps: Dict[int, List[int]],
+        feature_own_color: bool
     ) -> None:
         """
-        Handle dropdown selection change.
+        Handle dropdown selection change (focus structure).
 
         Parameters
         ----------
@@ -413,72 +439,208 @@ class NGLViewHelper:
             Change event dictionary
         component_map : Dict
             Structure name to component mapping
-        checkbox_ui : widgets.VBox
-            Checkbox UI container
+        checkbox_grid : widgets.GridBox
+            Checkbox grid container
         pdb_info : Dict[str, Dict[str, str]]
-            Structure information with paths and colors
+            Structure information
         top_features : List[Dict[str, Any]]
-            Features to highlight
+            Feature list
         feature_colors : Dict[str, str]
             Feature color mapping
         overlaps : Dict[int, List[int]]
             Pre-computed overlapping residues
+        feature_own_color : bool
+            If True, use feature colors; if False, use structure colors
 
         Returns
         -------
         None
-            Updates component visibility and checkbox visibility
+            Updates all components based on checkboxes
         """
-        selected = change['new']
-
-        if selected == "All structures":
-            # Multi-view mode: show all, display checkboxes
-            for component in component_map.values():
-                component.show()
-            checkbox_ui.layout.display = 'flex'
-        else:
-            # Single-view mode: show only selected, reset opacity to 1.0
-            for name, component in component_map.items():
-                if name == selected:
-                    # Reset representations with full opacity
-                    NGLViewHelper._recreate_structure_representations(
-                        component, pdb_info[name]['color'],
-                        top_features, feature_colors, overlaps, opacity=1.0
-                    )
-                    component.show()
-                else:
-                    component.hide()
-            checkbox_ui.layout.display = 'none'
+        NGLViewHelper._update_view_from_checkboxes(
+            change['owner'], component_map, checkbox_grid.children,
+            pdb_info, top_features, feature_colors, overlaps, feature_own_color
+        )
 
     @staticmethod
-    def _recreate_structure_representations(
+    def _handle_checkbox_change(
+        _change: Dict,
+        dropdown: widgets.Dropdown,
+        component_map: Dict,
+        checkboxes: Tuple,
+        pdb_info: Dict[str, Dict[str, str]],
+        top_features: List[Dict[str, Any]],
+        feature_colors: Dict[str, str],
+        overlaps: Dict[int, List[int]],
+        feature_own_color: bool
+    ) -> None:
+        """
+        Handle checkbox state change.
+
+        Parameters
+        ----------
+        _change : Dict
+            Change event dictionary (unused, required by ipywidgets)
+        dropdown : widgets.Dropdown
+            Dropdown widget for structure selection
+        component_map : Dict
+            Structure name to component mapping
+        checkboxes : Tuple
+            8 checkboxes from grid
+        pdb_info : Dict[str, Dict[str, str]]
+            Structure information
+        top_features : List[Dict[str, Any]]
+            Feature list
+        feature_colors : Dict[str, str]
+            Feature color mapping
+        overlaps : Dict[int, List[int]]
+            Pre-computed overlapping residues
+        feature_own_color : bool
+            If True, use feature colors; if False, use structure colors
+
+        Returns
+        -------
+        None
+            Updates all components based on checkboxes
+        """
+        NGLViewHelper._update_view_from_checkboxes(
+            dropdown, component_map, checkboxes,
+            pdb_info, top_features, feature_colors, overlaps, feature_own_color
+        )
+
+    @staticmethod
+    def _update_view_from_checkboxes(
+        dropdown: widgets.Dropdown,
+        component_map: Dict,
+        checkboxes: Tuple,
+        pdb_info: Dict[str, Dict[str, str]],
+        top_features: List[Dict[str, Any]],
+        feature_colors: Dict[str, str],
+        overlaps: Dict[int, List[int]],
+        feature_own_color: bool
+    ) -> None:
+        """
+        Update all components based on checkbox states.
+
+        Parameters
+        ----------
+        dropdown : widgets.Dropdown
+            Dropdown widget
+        component_map : Dict
+            Structure name to component mapping
+        checkboxes : Tuple
+            8 checkboxes from grid
+        pdb_info : Dict[str, Dict[str, str]]
+            Structure information
+        top_features : List[Dict[str, Any]]
+            Feature list
+        feature_colors : Dict[str, str]
+            Feature color mapping
+        overlaps : Dict[int, List[int]]
+            Pre-computed overlapping residues
+        feature_own_color : bool
+            If True, use feature colors; if False, use structure colors
+
+        Returns
+        -------
+        None
+            Updates all components
+        """
+        selected_struct = dropdown.value
+
+        # Extract checkbox values
+        own_struct_enabled = checkboxes[0].value
+        own_struct_trans = checkboxes[1].value
+        own_feat_enabled = checkboxes[2].value
+        own_feat_trans = checkboxes[3].value
+        other_struct_enabled = checkboxes[4].value
+        other_struct_trans = checkboxes[5].value
+        other_feat_enabled = checkboxes[6].value
+        other_feat_trans = checkboxes[7].value
+
+        # Calculate opacities
+        own_struct_opacity = NGLViewHelper._calc_opacity(
+            own_struct_enabled, own_struct_trans
+        )
+        own_feat_opacity = NGLViewHelper._calc_opacity(
+            own_feat_enabled, own_feat_trans
+        )
+        other_struct_opacity = NGLViewHelper._calc_opacity(
+            other_struct_enabled, other_struct_trans
+        )
+        other_feat_opacity = NGLViewHelper._calc_opacity(
+            other_feat_enabled, other_feat_trans
+        )
+
+        # Update all components
+        for struct_name, component in component_map.items():
+            is_own = (struct_name == selected_struct)
+            struct_opacity = own_struct_opacity if is_own else other_struct_opacity
+            feat_opacity = own_feat_opacity if is_own else other_feat_opacity
+
+            if struct_opacity == 0.0:
+                component.hide()
+            else:
+                NGLViewHelper._recreate_structure_with_focus(
+                    component, pdb_info[struct_name]['color'],
+                    top_features, feature_colors, overlaps,
+                    struct_opacity, feat_opacity, feature_own_color
+                )
+                component.show()
+
+    @staticmethod
+    def _calc_opacity(enabled: bool, transparent: bool) -> float:
+        """
+        Calculate opacity from enabled and transparent checkboxes.
+
+        Parameters
+        ----------
+        enabled : bool
+            Enabled checkbox value
+        transparent : bool
+            Transparent checkbox value
+
+        Returns
+        -------
+        float
+            Opacity value (0.0, 0.2, or 1.0)
+        """
+        if not enabled:
+            return 0.0
+        return 0.2 if transparent else 1.0
+
+    @staticmethod
+    def _recreate_structure_with_focus(
         component,
         base_color: str,
         top_features: List[Dict[str, Any]],
         feature_colors: Dict[str, str],
         overlaps: Dict[int, List[int]],
-        opacity: float = 1.0
+        struct_opacity: float,
+        feat_opacity: float,
+        feature_own_color: bool
     ) -> None:
         """
-        Recreate all representations for a component.
-
-        Clears existing representations and creates beta-factor cartoon,
-        feature highlights, and overlap highlights with specified opacity.
+        Recreate structure with separate opacities for structure and features.
 
         Parameters
         ----------
         component : nv.Component
             NGLView component
         base_color : str
-            Base color for beta-factor gradient (HEX)
+            Base color for beta-factor gradient and features
         top_features : List[Dict[str, Any]]
-            Features to highlight
+            Feature list
         feature_colors : Dict[str, str]
             Feature color mapping
         overlaps : Dict[int, List[int]]
             Pre-computed overlapping residues
-        opacity : float, default=1.0
-            Opacity value for all representations
+        struct_opacity : float
+            Opacity for structure (cartoon)
+        feat_opacity : float
+            Opacity for features (licorice)
+        feature_own_color : bool
+            If True, use feature colors; if False, use base_color
 
         Returns
         -------
@@ -487,26 +649,28 @@ class NGLViewHelper:
         """
         component.clear_representations()
 
-        # Add beta-factor cartoon
+        # Add cartoon with structure opacity
         component.add_representation(
             "cartoon",
             selection="not hydrogen",
             colorScheme="bfactor",
             colorScale=[base_color, "white"],
             colorDomain=[0.0, 1.0],
-            opacity=opacity
+            opacity=struct_opacity
         )
 
-        # Add feature highlights (non-overlapping)
-        for feature in top_features:
-            NGLViewHelper._add_feature_highlight(
-                component, feature, feature_colors, overlaps, opacity
+        # Add features with feature opacity
+        if feat_opacity > 0.0:
+            for feature in top_features:
+                NGLViewHelper._add_feature_highlight(
+                    component, feature, feature_colors, overlaps,
+                    feat_opacity, base_color, feature_own_color
+                )
+            NGLViewHelper._add_overlap_highlights(
+                component, overlaps, top_features, feature_colors,
+                feat_opacity, base_color, feature_own_color
             )
 
-        # Add overlap highlights
-        NGLViewHelper._add_overlap_highlights(
-            component, overlaps, top_features, feature_colors, opacity
-        )
 
     @staticmethod
     def _set_initial_visibility(component_map: Dict) -> None:
@@ -533,156 +697,14 @@ class NGLViewHelper:
                 component.hide()
 
     @staticmethod
-    def _hex_to_rgb(hex_color: str) -> tuple:
-        """
-        Convert HEX color to RGB tuple.
-
-        Parameters
-        ----------
-        hex_color : str
-            HEX color string (e.g., "#ff0000")
-
-        Returns
-        -------
-        tuple
-            RGB values (r, g, b) as integers
-        """
-        hex_clean = hex_color.lstrip('#')
-        r = int(hex_clean[0:2], 16)
-        g = int(hex_clean[2:4], 16)
-        b = int(hex_clean[4:6], 16)
-        return (r, g, b)
-
-    @staticmethod
-    def _calculate_average_rgb(rgb_values: List[tuple]) -> tuple:
-        """
-        Calculate average RGB values.
-
-        Parameters
-        ----------
-        rgb_values : List[tuple]
-            List of RGB tuples
-
-        Returns
-        -------
-        tuple
-            Average (r, g, b) values
-        """
-        n = len(rgb_values)
-        avg_r = sum(rgb[0] for rgb in rgb_values) // n
-        avg_g = sum(rgb[1] for rgb in rgb_values) // n
-        avg_b = sum(rgb[2] for rgb in rgb_values) // n
-        return (avg_r, avg_g, avg_b)
-
-    @staticmethod
-    def _mix_hex_colors(hex_colors: List[str]) -> str:
-        """
-        Calculate RGB average of multiple HEX colors.
-
-        Mixes multiple colors by averaging their RGB components.
-        Used for visualizing overlapping features.
-
-        Parameters
-        ----------
-        hex_colors : List[str]
-            List of HEX color strings (e.g., ["#ff0000", "#0000ff"])
-
-        Returns
-        -------
-        str
-            Mixed color as HEX (#RRGGBB)
-
-        Examples
-        --------
-        >>> # Mix red and blue
-        >>> mixed = NGLViewHelper._mix_hex_colors(["#ff0000", "#0000ff"])
-        >>> print(mixed)
-        '#7f007f'
-        """
-        if not hex_colors:
-            return "#808080"
-
-        rgb_values = [NGLViewHelper._hex_to_rgb(color) for color in hex_colors]
-        avg_r, avg_g, avg_b = NGLViewHelper._calculate_average_rgb(rgb_values)
-
-        return f"#{avg_r:02x}{avg_g:02x}{avg_b:02x}"
-
-    @staticmethod
-    def _build_residue_feature_map(
-        top_features: List[Dict[str, Any]]
-    ) -> Dict[int, List[int]]:
-        """
-        Build mapping from residue seqid to feature indices.
-
-        Parameters
-        ----------
-        top_features : List[Dict[str, Any]]
-            List of top feature dictionaries
-
-        Returns
-        -------
-        Dict[int, List[int]]
-            Mapping from seqid to list of feature indices
-        """
-        residue_to_features = {}
-
-        for feat_idx, feature in enumerate(top_features):
-            seqids = feature.get("residue_seqids", [])
-            for seqid in seqids:
-                if seqid not in residue_to_features:
-                    residue_to_features[seqid] = []
-                residue_to_features[seqid].append(feat_idx)
-
-        return residue_to_features
-
-    @staticmethod
-    def _detect_residue_overlaps(
-        top_features: List[Dict[str, Any]]
-    ) -> Dict[int, List[int]]:
-        """
-        Detect residues occurring in multiple features.
-
-        Identifies residues that appear in more than one feature,
-        which need mixed color representation.
-
-        Parameters
-        ----------
-        top_features : List[Dict[str, Any]]
-            List of top feature dictionaries with residue_seqids
-
-        Returns
-        -------
-        Dict[int, List[int]]
-            Mapping from seqid to list of feature indices.
-            Only includes residues appearing in 2+ features.
-
-        Examples
-        --------
-        >>> features = [
-        ...     {"residue_seqids": [16, 33]},
-        ...     {"residue_seqids": [27, 33]}
-        ... ]
-        >>> overlaps = NGLViewHelper._detect_residue_overlaps(features)
-        >>> print(overlaps)
-        {33: [0, 1]}
-        """
-        residue_to_features = NGLViewHelper._build_residue_feature_map(
-            top_features
-        )
-
-        return {
-            seqid: feat_indices
-            for seqid, feat_indices in residue_to_features.items()
-            if len(feat_indices) > 1
-        }
-
-    @staticmethod
     def _add_overlap_highlights(
         component,
         overlaps: Dict[int, List[int]],
         top_features: List[Dict[str, Any]],
         feature_colors: Dict[str, str],
-        opacity: float = 1.0
+        opacity: float,
+        struct_color: str,
+        feature_own_color: bool
     ) -> None:
         """
         Add licorice representations for overlapping residues with mixed colors.
@@ -697,8 +719,12 @@ class NGLViewHelper:
             List of top feature dictionaries
         feature_colors : Dict[str, str]
             Feature name to color mapping
-        opacity : float, default=1.0
+        opacity : float
             Opacity value for representations
+        struct_color : str
+            Structure color (used if feature_own_color=False)
+        feature_own_color : bool
+            If True, use mixed feature colors; if False, use struct_color
 
         Returns
         -------
@@ -706,12 +732,15 @@ class NGLViewHelper:
             Adds representations to component
         """
         for seqid, feature_indices in overlaps.items():
-            # Collect colors from all features containing this residue
-            colors = [
-                feature_colors[top_features[i]["feature_name"]]
-                for i in feature_indices
-            ]
-            mixed_color = NGLViewHelper._mix_hex_colors(colors)
+            if feature_own_color:
+                # Collect colors from all features containing this residue
+                colors = [
+                    feature_colors[top_features[i]["feature_name"]]
+                    for i in feature_indices
+                ]
+                mixed_color = ColorConversionHelper.mix_hex_colors(colors)
+            else:
+                mixed_color = struct_color
 
             # Add representation with mixed color
             component.add_representation(
@@ -725,7 +754,8 @@ class NGLViewHelper:
     def _create_legend_widget(
         top_features: List[Dict[str, Any]],
         feature_colors: Dict[str, str],
-        overlaps: Dict[int, List[int]]
+        overlaps: Dict[int, List[int]],
+        feature_own_color: bool
     ) -> widgets.HTML:
         """
         Create legend widget showing feature colors, types, and overlaps.
@@ -733,6 +763,8 @@ class NGLViewHelper:
         Creates HTML widget displaying a legend that maps licorice
         representation colors to their corresponding feature names with
         feature types. Also shows overlapping residues with mixed colors.
+        If feature_own_color is False, no legend is shown since features
+        use structure colors.
 
         Parameters
         ----------
@@ -742,11 +774,13 @@ class NGLViewHelper:
             Mapping from feature name to HEX color
         overlaps : Dict[int, List[int]]
             Mapping from residue seqid to list of feature indices
+        feature_own_color : bool
+            If False, no legend is shown
 
         Returns
         -------
         widgets.HTML
-            HTML widget with styled legend
+            HTML widget with styled legend or empty widget
 
         Examples
         --------
@@ -755,14 +789,54 @@ class NGLViewHelper:
         >>> colors = {"ALA_5_CA-GLU_10_CA": "#ff0000"}
         >>> overlaps = {33: [0, 1]}
         >>> legend = NGLViewHelper._create_legend_widget(
-        ...     features, colors, overlaps
+        ...     features, colors, overlaps, True
         ... )
         """
+        # No legend needed if features use structure colors
+        if not feature_own_color:
+            return widgets.HTML(value='')
+
         html_content = ['<div style="padding:10px; border:1px solid #ddd; '
                        'background:#f9f9f9; margin-top:10px; border-radius:4px;">']
         html_content.append('<b style="font-size:14px;">Feature Legend:</b>')
         html_content.append('<div style="margin-top:8px;">')
 
+        NGLViewHelper._add_feature_legend_items(
+            html_content, top_features, feature_colors
+        )
+
+        if overlaps:
+            NGLViewHelper._add_overlap_legend_items(
+                html_content, overlaps, top_features, feature_colors
+            )
+
+        html_content.append('</div>')
+
+        return widgets.HTML(value=''.join(html_content))
+
+    @staticmethod
+    def _add_feature_legend_items(
+        html_content: List[str],
+        top_features: List[Dict[str, Any]],
+        feature_colors: Dict[str, str]
+    ) -> None:
+        """
+        Add feature legend items to HTML content.
+
+        Parameters
+        ----------
+        html_content : List[str]
+            HTML content list to append to
+        top_features : List[Dict[str, Any]]
+            List of top feature dictionaries
+        feature_colors : Dict[str, str]
+            Feature color mapping
+
+        Returns
+        -------
+        None
+            Appends HTML to html_content
+        """
         for feature in top_features:
             feature_name = feature.get('feature_name', 'Unknown')
             feature_type = feature.get('feature_type', 'unknown').capitalize()
@@ -778,33 +852,53 @@ class NGLViewHelper:
                 f'</div>'
             )
 
-        # Add overlapping residues section if overlaps exist
-        if overlaps:
-            html_content.append('<hr style="margin:12px 0; border:0; '
-                              'border-top:1px solid #ddd;">')
-            html_content.append('<b style="font-size:14px;">Overlapping Residues:</b>')
-            html_content.append('<div style="margin-top:8px;">')
+    @staticmethod
+    def _add_overlap_legend_items(
+        html_content: List[str],
+        overlaps: Dict[int, List[int]],
+        top_features: List[Dict[str, Any]],
+        feature_colors: Dict[str, str]
+    ) -> None:
+        """
+        Add overlap legend items to HTML content.
 
-            for seqid, feature_indices in overlaps.items():
-                # Calculate mixed color
-                colors_to_mix = [
-                    feature_colors[top_features[i]["feature_name"]]
-                    for i in feature_indices
-                ]
-                mixed_color = NGLViewHelper._mix_hex_colors(colors_to_mix)
+        Parameters
+        ----------
+        html_content : List[str]
+            HTML content list to append to
+        overlaps : Dict[int, List[int]]
+            Mapping from seqid to feature indices
+        top_features : List[Dict[str, Any]]
+            List of top feature dictionaries
+        feature_colors : Dict[str, str]
+            Feature color mapping
 
-                html_content.append(
-                    f'<div style="margin:4px 0; display:flex; align-items:center;">'
-                    f'<span style="display:inline-block; width:20px; height:20px; '
-                    f'background:{mixed_color}; margin-right:8px; border:1px solid #333; '
-                    f'border-radius:2px;"></span>'
-                    f'<span style="font-size:12px; font-family:monospace;">'
-                    f'Residue {seqid} ({len(feature_indices)} features)</span>'
-                    f'</div>'
-                )
+        Returns
+        -------
+        None
+            Appends HTML to html_content
+        """
+        html_content.append('<hr style="margin:12px 0; border:0; '
+                          'border-top:1px solid #ddd;">')
+        html_content.append('<b style="font-size:14px;">Overlapping Residues:</b>')
+        html_content.append('<div style="margin-top:8px;">')
 
-            html_content.append('</div>')
+        for seqid, feature_indices in overlaps.items():
+            # Calculate mixed color
+            colors_to_mix = [
+                feature_colors[top_features[i]["feature_name"]]
+                for i in feature_indices
+            ]
+            mixed_color = ColorConversionHelper.mix_hex_colors(colors_to_mix)
+
+            html_content.append(
+                f'<div style="margin:4px 0; display:flex; align-items:center;">'
+                f'<span style="display:inline-block; width:20px; height:20px; '
+                f'background:{mixed_color}; margin-right:8px; border:1px solid #333; '
+                f'border-radius:2px;"></span>'
+                f'<span style="font-size:12px; font-family:monospace;">'
+                f'Residue {seqid} ({len(feature_indices)} features)</span>'
+                f'</div>'
+            )
 
         html_content.append('</div>')
-
-        return widgets.HTML(value=''.join(html_content))

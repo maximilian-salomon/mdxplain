@@ -21,5 +21,13 @@
 """Helper modules for structure visualization."""
 
 from .nglview_helper import NGLViewHelper
+from .pymol_script_generator import PyMolScriptGenerator
+from .color_conversion_helper import ColorConversionHelper
+from .feature_overlap_helper import FeatureOverlapHelper
 
-__all__ = ["NGLViewHelper"]
+__all__ = [
+    "NGLViewHelper",
+    "PyMolScriptGenerator",
+    "ColorConversionHelper",
+    "FeatureOverlapHelper",
+]
