@@ -1,5 +1,5 @@
-Pipeline Managers: Manager
-==========================
+Pipeline Manager
+================
 
 .. automodule:: mdxplain.pipeline.managers.pipeline_manager
    :members:

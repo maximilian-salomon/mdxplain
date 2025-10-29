@@ -1,5 +1,5 @@
-Feature Type: Interface Feature Type Meta
-=========================================
+Feature Type Meta
+=================
 
 .. automodule:: mdxplain.feature.feature_type.interfaces.feature_type_meta
    :members:

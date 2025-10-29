@@ -1,5 +1,5 @@
-Feature Type: Torsions
-======================
+Torsions
+========
 
 .. automodule:: mdxplain.feature.feature_type.torsions
 

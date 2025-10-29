@@ -1,5 +1,5 @@
-Analysis Structure Helper: Trajectory Service Helper
-====================================================
+Trajectory Service Helper
+=========================
 
 .. automodule:: mdxplain.analysis.structure.helpers.trajectory_service_helper
    :members:

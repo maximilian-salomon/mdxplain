@@ -1,5 +1,5 @@
-Cluster Type: HDPSCAN Add Service
-=================================
+HDBSCAN Add Service
+===================
 
 .. automodule:: mdxplain.clustering.services.hdbscan_add_service
    :members:

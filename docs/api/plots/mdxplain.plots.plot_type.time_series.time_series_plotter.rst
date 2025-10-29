@@ -1,5 +1,5 @@
-Plot Type: time Series Plotter
-==============================
+Time Series Plotter
+===================
 
 .. automodule:: mdxplain.plots.plot_type.time_series.time_series_plotter
    :members:

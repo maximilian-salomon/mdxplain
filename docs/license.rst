@@ -13,7 +13,7 @@ AI Usage
 --------
 
 This project was developed with the assistance of AI tools.
-For details on how AIwas used in the development process,
+For details on how AI was used in the development process,
 please refer to the :download:`AI_USAGE.md <../AI_USAGE.md>` file.
 
 License

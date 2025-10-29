@@ -1,5 +1,5 @@
-Pipeline: Selection Metadata Helper
-===================================
+Selection Metadata Helper
+=========================
 
 .. automodule:: mdxplain.pipeline.helper.selection_metadata_helper
    :members:

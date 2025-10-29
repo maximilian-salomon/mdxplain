@@ -1,5 +1,5 @@
-Comparison: Validation Helper
-=============================
+Validation Helper
+=================
 
 .. automodule:: mdxplain.comparison.helpers.comparison_validation_helper
    :members:

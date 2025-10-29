@@ -1,5 +1,5 @@
-Plot Helpers: Clustering Data Helper
-====================================
+Clustering Data Helper
+======================
 
 .. automodule:: mdxplain.plots.helper.clustering_data_helper
    :members:

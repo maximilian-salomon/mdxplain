@@ -1,5 +1,5 @@
-Pipeline: Selection MemMap Helper
-=================================
+Selection MemMap Helper
+=======================
 
 .. automodule:: mdxplain.pipeline.helper.selection_memmap_helper
    :members:

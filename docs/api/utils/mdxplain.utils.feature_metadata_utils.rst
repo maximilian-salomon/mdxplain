@@ -1,5 +1,5 @@
-Utilities: Feature Meta Data Utils
-==================================
+Feature Meta Data Utils
+=======================
 
 .. automodule:: mdxplain.utils.feature_metadata_utils
    :members:

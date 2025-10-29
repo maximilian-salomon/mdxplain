@@ -1,5 +1,5 @@
-Plot Type: Decision Tree Helpers
-================================
+Decision Tree Helpers
+=====================
 
 .. automodule:: mdxplain.plots.plot_type.decision_trees.helper
 

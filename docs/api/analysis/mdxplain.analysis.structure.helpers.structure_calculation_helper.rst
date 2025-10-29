@@ -1,5 +1,5 @@
-Analysis Structure Helper: Structure Calculation Helper
-=======================================================
+Structure Calculation Helper
+============================
 
 .. automodule:: mdxplain.analysis.structure.helpers.structure_calculation_helper
    :members:

@@ -1,5 +1,5 @@
-Feature Type: DSSP
-==================
+DSSP
+====
 
 .. automodule:: mdxplain.feature.feature_type.dssp
 

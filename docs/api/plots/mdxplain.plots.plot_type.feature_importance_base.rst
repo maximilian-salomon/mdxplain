@@ -1,10 +1,5 @@
-Plot Type: Feature Importance Base
-==================================
-
-.. automodule:: mdxplain.plots.plot_type.feature_importance_base
-
-Plotter
--------
+Feature Importance Base
+=======================
 
 .. automodule:: mdxplain.plots.plot_type.feature_importance_base.feature_importance_base_plotter
    :members:

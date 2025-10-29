@@ -1,5 +1,5 @@
-Plot Services: Feature Importance Facade
-========================================
+Feature Importance Facade
+=========================
 
 .. automodule:: mdxplain.plots.service.feature_importance_facade
    :members:

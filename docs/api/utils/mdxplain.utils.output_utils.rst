@@ -1,5 +1,5 @@
-Utilities: Output Utils
-=====================
+Output Utils
+============
 
 .. automodule:: mdxplain.utils.output_utils
    :members:

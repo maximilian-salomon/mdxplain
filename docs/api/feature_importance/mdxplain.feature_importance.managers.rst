@@ -1,10 +1,5 @@
-Feature Importance Managers
-===========================
-
-.. automodule:: mdxplain.feature_importance.managers
-
-Manager
--------
+Feature Importance Manager
+==========================
 
 .. automodule:: mdxplain.feature_importance.managers.feature_importance_manager
    :members:

@@ -1,5 +1,5 @@
-Plot Type: Decision Tree Plotter
-================================
+Decision Tree Plotter
+=====================
 
 .. automodule:: mdxplain.plots.plot_type.decision_trees.decision_tree_plotter
    :members:

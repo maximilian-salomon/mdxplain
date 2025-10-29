@@ -1,5 +1,5 @@
-Plot Type: Landscape Styling Helper
-===================================
+Landscape Styling Helper
+========================
 
 .. automodule:: mdxplain.plots.plot_type.landscape.helper.landscape_styling_helper
    :members:

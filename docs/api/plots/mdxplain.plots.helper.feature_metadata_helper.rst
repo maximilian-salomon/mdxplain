@@ -1,5 +1,5 @@
-Plot Helpers: feature Metadata Helper
-=====================================
+Feature Metadata Helper
+=======================
 
 .. automodule:: mdxplain.plots.helper.feature_metadata_helper
    :members:

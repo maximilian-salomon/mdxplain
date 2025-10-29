@@ -1,5 +1,5 @@
-Feature Selection: Parse Core Helper
-====================================
+Feature Selector Parse Core Helper
+==================================
 
 .. automodule:: mdxplain.feature_selection.helpers.feature_selector_parse_core_helper
    :members:

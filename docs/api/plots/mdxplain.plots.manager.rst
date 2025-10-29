@@ -1,10 +1,5 @@
-Plots Managers
-==============
-
-.. automodule:: mdxplain.plots.manager
-
-Manager
--------
+Plot Manager
+============
 
 .. automodule:: mdxplain.plots.manager.plots_manager
    :members:

@@ -1,5 +1,5 @@
-Cluster Type: DBSCAN
-====================
+DBSCAN
+======
 
 .. automodule:: mdxplain.clustering.cluster_type.dbscan
 

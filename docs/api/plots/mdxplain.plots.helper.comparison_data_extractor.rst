@@ -1,5 +1,5 @@
-Plot Helpers: Comparison Data Extractor
-=======================================
+Comparison Data Extractor
+=========================
 
 .. automodule:: mdxplain.plots.helper.comparison_data_extractor
    :members:

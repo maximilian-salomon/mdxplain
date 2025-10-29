@@ -1,5 +1,5 @@
-Feature Importance: Metadata Builder Helper
-===========================================
+Metadata Builder Helper
+=======================
 
 .. automodule:: mdxplain.feature_importance.helpers.metadata_builder_helper
    :members:

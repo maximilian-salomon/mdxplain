@@ -1,5 +1,5 @@
-Plot Type: Density Data Preparer
-================================
+Density Data Preparer
+=====================
 
 .. automodule:: mdxplain.plots.plot_type.density.helper.density_data_preparer
    :members:

@@ -1,5 +1,5 @@
-Feature Selection: ResID Parse Helper
-=====================================
+Feature Selector ResID Parse Helper
+===================================
 
 .. automodule:: mdxplain.feature_selection.helpers.feature_selector_resid_parse_helper
    :members:

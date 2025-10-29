@@ -1,5 +1,5 @@
-Plot Type: Membership
-=====================
+Membership
+==========
 
 .. automodule:: mdxplain.plots.plot_type.membership
 

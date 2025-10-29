@@ -1,5 +1,5 @@
-Decomposition Type: PCA Calculator
-==================================
+PCA Calculator
+==============
 
 .. automodule:: mdxplain.decomposition.decomposition_type.pca.pca_calculator
    :members:

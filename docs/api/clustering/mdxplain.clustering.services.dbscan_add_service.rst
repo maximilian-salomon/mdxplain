@@ -1,5 +1,5 @@
-Cluster Type: DPSCAN Add Service
-================================
+DBSCAN Add Service
+==================
 
 .. automodule:: mdxplain.clustering.services.dbscan_add_service
    :members:

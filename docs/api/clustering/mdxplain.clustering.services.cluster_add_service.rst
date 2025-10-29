@@ -1,5 +1,5 @@
-Cluster Type: Cluster Add Service
-=================================
+Cluster Add Service
+===================
 
 .. automodule:: mdxplain.clustering.services.cluster_add_service
    :members:

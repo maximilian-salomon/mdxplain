@@ -1,5 +1,5 @@
-Feature Type: Distance Calculator
-=================================
+Distance Calculator
+===================
 
 .. automodule:: mdxplain.feature.feature_type.distances.distance_calculator
    :members:

@@ -1,5 +1,5 @@
-Plot Type: Decision Trees
-=========================
+Decision Trees
+==============
 
 .. automodule:: mdxplain.plots.plot_type.decision_trees
 

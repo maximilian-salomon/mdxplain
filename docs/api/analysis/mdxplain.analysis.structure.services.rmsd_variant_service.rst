@@ -1,5 +1,5 @@
-Analysis Structure Service: RMSD Variant Service
-================================================
+RMSD Variant Service
+====================
 
 .. automodule:: mdxplain.analysis.structure.services.rmsd_variant_service
    :members:

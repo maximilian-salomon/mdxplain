@@ -1,10 +1,5 @@
-Trajectory: Validation Helpers
-==============================
-
-.. automodule:: mdxplain.trajectory.helper.validation_helper
-
-Helper
-------
+Validation Helpers
+==================
 
 .. automodule:: mdxplain.trajectory.helper.validation_helper.trajectory_validation_helper
    :members:

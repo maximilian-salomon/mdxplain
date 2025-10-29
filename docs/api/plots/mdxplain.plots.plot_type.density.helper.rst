@@ -1,5 +1,5 @@
-Plot Type: Density Helpers
-==========================
+Density Helpers
+===============
 
 .. automodule:: mdxplain.plots.plot_type.density.helper
 

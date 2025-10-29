@@ -1,5 +1,5 @@
-Plot Type: Violin Helpers
-=========================
+Violin Helper
+=============
 
 .. automodule:: mdxplain.plots.plot_type.violin.helper
 

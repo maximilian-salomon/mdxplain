@@ -1,5 +1,5 @@
-Plot Helpers: Contact to Distances Converter
-============================================
+Contact to Distances Converter
+==============================
 
 .. automodule:: mdxplain.plots.helper.contact_to_distances_converter
    :members:

@@ -1,5 +1,5 @@
-Trajectory: Process Helpers
-===========================
+Process Helpers
+===============
 
 .. automodule:: mdxplain.trajectory.helper.process_helper
 

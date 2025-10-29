@@ -1,5 +1,5 @@
-Feature Importance Analyzer Types: Decision Tree Data
-=====================================================
+Decision Tree Data
+==================
 
 .. automodule:: mdxplain.feature_importance.analyzer_types.decision_tree.decision_tree
    :members:

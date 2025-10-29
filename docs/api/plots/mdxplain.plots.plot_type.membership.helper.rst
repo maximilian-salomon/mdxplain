@@ -1,5 +1,5 @@
-Plot Type: Membership Helpers
-=============================
+Membership Helper
+=================
 
 .. automodule:: mdxplain.plots.plot_type.membership.helper
 

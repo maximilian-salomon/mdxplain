@@ -1,5 +1,5 @@
-Plot Helpers: Validation Helper
-===============================
+Validation Helper
+=================
 
 .. automodule:: mdxplain.plots.helper.validation_helper
    :members:

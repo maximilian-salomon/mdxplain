@@ -1,5 +1,5 @@
-Feature Importance: Validation Helper
-=====================================
+Validation Helper
+=================
 
 .. automodule:: mdxplain.feature_importance.helpers.feature_importance_validation_helper
    :members:

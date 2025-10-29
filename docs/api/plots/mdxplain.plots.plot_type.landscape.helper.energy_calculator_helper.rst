@@ -1,5 +1,5 @@
-Plot Type: Landscape Energy Calculator Helper
-=============================================
+Energy Calculator Helper
+========================
 
 .. automodule:: mdxplain.plots.plot_type.landscape.helper.energy_calculator_helper
    :members:

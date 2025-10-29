@@ -1,10 +1,5 @@
-Clustering Helper
-=================
-
-.. automodule:: mdxplain.clustering.helper
-
-Helper
-------
+Center Calculation Helper
+=========================
 
 .. automodule:: mdxplain.clustering.helper.center_calculation_helper
    :members:

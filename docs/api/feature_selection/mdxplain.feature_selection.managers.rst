@@ -1,10 +1,5 @@
-Feature Selection Managers
-==========================
-
-.. automodule:: mdxplain.feature_selection.managers
-
-Manager
--------
+Feature Selection Manager
+=========================
 
 .. automodule:: mdxplain.feature_selection.managers.feature_selector_manager
    :members:

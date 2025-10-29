@@ -1,5 +1,5 @@
-Feature Type: Contacts Analysis Service
-=======================================
+Contacts Analysis Service
+=========================
 
 .. automodule:: mdxplain.feature.feature_type.contacts.services.contacts_analysis_service
    :members:

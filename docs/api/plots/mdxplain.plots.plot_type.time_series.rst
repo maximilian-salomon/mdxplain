@@ -1,5 +1,5 @@
-Plot Type: Time Series
-======================
+Time Series
+===========
 
 .. automodule:: mdxplain.plots.plot_type.time_series
 

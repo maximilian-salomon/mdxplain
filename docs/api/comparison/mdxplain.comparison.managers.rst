@@ -1,10 +1,5 @@
-Comparison Managers
-===================
-
-.. automodule:: mdxplain.comparison.managers
-
-Manager
--------
+Comparison Manager
+==================
 
 .. automodule:: mdxplain.comparison.managers.comparison_manager
    :members:

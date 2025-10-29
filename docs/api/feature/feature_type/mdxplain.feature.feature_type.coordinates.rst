@@ -1,5 +1,5 @@
-Feature Type: Coordinates
-=========================
+Coordinates
+===========
 
 .. automodule:: mdxplain.feature.feature_type.coordinates
 

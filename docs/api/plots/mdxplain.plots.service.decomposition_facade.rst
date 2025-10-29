@@ -1,5 +1,5 @@
-Plot Services: Decomposition Facade
-===================================
+Decomposition Facade
+====================
 
 .. automodule:: mdxplain.plots.service.decomposition_facade
    :members:

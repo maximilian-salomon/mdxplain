@@ -1,5 +1,5 @@
-Feature Type: Interface Feature Type Base
-=========================================
+Feature Type Base
+=================
 
 .. automodule:: mdxplain.feature.feature_type.interfaces.feature_type_base
    :members:

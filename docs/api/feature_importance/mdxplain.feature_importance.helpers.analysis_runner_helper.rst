@@ -1,5 +1,5 @@
-Feature Importance: Analysis Runner Helper
-==========================================
+Analysis Runner Helper
+======================
 
 .. automodule:: mdxplain.feature_importance.helpers.analysis_runner_helper
    :members:

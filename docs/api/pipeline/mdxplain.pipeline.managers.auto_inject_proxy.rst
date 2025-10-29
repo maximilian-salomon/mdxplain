@@ -1,5 +1,5 @@
-Pipeline Managers: Auto Inject Proxy
-====================================
+Auto Inject Proxy
+=================
 
 .. automodule:: mdxplain.pipeline.managers.auto_inject_proxy
    :members:

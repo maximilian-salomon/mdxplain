@@ -1,5 +1,5 @@
-Plot Type: Landscape Rendering Helper
-=====================================
+Landscape Rendering Helper
+==========================
 
 .. automodule:: mdxplain.plots.plot_type.landscape.helper.landscape_rendering_helper
    :members:

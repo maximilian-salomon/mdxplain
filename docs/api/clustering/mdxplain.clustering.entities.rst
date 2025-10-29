@@ -1,11 +1,6 @@
 Clustering Entities
 ===================
 
-.. automodule:: mdxplain.clustering.entities
-
-Data
-----
-
 .. automodule:: mdxplain.clustering.entities.cluster_data
    :members:
    :special-members: __init__

@@ -1,5 +1,5 @@
-Plot Helpers: Grid Layout Helper
-================================
+Grid Layout Helper
+==================
 
 .. automodule:: mdxplain.plots.helper.grid_layout_helper
    :members:

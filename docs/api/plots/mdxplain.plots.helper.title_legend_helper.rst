@@ -1,5 +1,5 @@
-Plot Helpers: Title Legend Helper
-=================================
+Title Legend Helper
+===================
 
 .. automodule:: mdxplain.plots.helper.title_legend_helper
    :members:

@@ -1,5 +1,5 @@
-Decomposition Type: PCA Data
-============================
+PCA Data
+========
 
 .. automodule:: mdxplain.decomposition.decomposition_type.pca.pca
    :members:
