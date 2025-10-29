@@ -1,5 +1,5 @@
-Data Selector: Criteria Builder Helper
-======================================
+Criteria Builder Helper
+=======================
 
 .. automodule:: mdxplain.data_selector.helpers.criteria_builder_helper
    :members:

@@ -1,5 +1,5 @@
-Feature Importance Analyzer Types: Interface Analyzer Type Base
-===============================================================
+Analyzer Type Base
+==================
 
 .. automodule:: mdxplain.feature_importance.analyzer_types.interfaces.analyzer_type_base
    :members:

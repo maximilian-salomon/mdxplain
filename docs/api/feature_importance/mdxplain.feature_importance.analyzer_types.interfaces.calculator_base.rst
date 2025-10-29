@@ -1,5 +1,5 @@
-Feature Importance Analyzer Types: Interface Calculator Base
-============================================================
+Calculator Base
+===============
 
 .. automodule:: mdxplain.feature_importance.analyzer_types.interfaces.calculator_base
    :members:

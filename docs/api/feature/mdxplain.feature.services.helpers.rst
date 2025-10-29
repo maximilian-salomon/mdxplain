@@ -1,10 +1,10 @@
-Feature Services: Helpers
-=========================
+Services Helpers
+================
 
 .. automodule:: mdxplain.feature.services.helpers
 
-Helper
-------
+Analysis Data Helper
+--------------------
 
 .. automodule:: mdxplain.feature.services.helpers.analysis_data_helper
    :members:

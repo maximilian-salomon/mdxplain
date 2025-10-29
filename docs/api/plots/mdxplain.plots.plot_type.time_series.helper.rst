@@ -1,5 +1,5 @@
-Plot Type: Time Series Helpers
-==============================
+Time Series Helpers
+===================
 
 .. automodule:: mdxplain.plots.plot_type.time_series.helper
 

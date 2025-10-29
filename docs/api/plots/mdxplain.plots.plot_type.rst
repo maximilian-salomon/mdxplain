@@ -4,7 +4,7 @@ Plot Types
 .. automodule:: mdxplain.plots.plot_type
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :titlesonly:
 
    mdxplain.plots.plot_type.decision_trees

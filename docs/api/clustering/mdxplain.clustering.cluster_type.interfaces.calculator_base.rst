@@ -1,5 +1,5 @@
-Cluster Type: Interfaces Calculator Base
-========================================
+Calculator Base
+===============
 
 .. automodule:: mdxplain.clustering.cluster_type.interfaces.calculator_base
    :members:

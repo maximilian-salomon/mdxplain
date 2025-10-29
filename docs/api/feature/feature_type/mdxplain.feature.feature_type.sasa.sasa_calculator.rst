@@ -1,5 +1,5 @@
-Feature Type: SASA Calculator
-=============================
+SASA Calculator
+===============
 
 .. automodule:: mdxplain.feature.feature_type.sasa.sasa_calculator
    :members:

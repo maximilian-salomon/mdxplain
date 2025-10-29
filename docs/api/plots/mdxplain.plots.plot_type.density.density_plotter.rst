@@ -1,5 +1,5 @@
-Plot Type: Density Plotter
-==========================
+Density Plotter
+===============
 
 .. automodule:: mdxplain.plots.plot_type.density.density_plotter
    :members:

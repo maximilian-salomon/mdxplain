@@ -1,5 +1,5 @@
-Feature Type: Interfaces
-========================
+Interfaces
+==========
 
 Missing __init__.py mdxplain/feature/feature_type/interfaces
 

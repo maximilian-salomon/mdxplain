@@ -1,10 +1,5 @@
-Trajectory Managers
-===================
-
-.. automodule:: mdxplain.trajectory.managers
-
-Manager
--------
+Trajectory Manager
+==================
 
 .. automodule:: mdxplain.trajectory.managers.trajectory_manager
    :members:

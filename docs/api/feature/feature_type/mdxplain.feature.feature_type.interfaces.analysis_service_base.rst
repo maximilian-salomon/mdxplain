@@ -1,5 +1,5 @@
-Feature Type: Interface Analysis Service Base
-=============================================
+Analysis Service Base
+=====================
 
 .. automodule:: mdxplain.feature.feature_type.interfaces.analysis_service_base
    :members:

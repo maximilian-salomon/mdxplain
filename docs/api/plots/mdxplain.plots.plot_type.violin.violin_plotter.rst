@@ -1,5 +1,5 @@
-Plot Type: Violin Plotter
-=========================
+Violin Plotter
+==============
 
 .. automodule:: mdxplain.plots.plot_type.violin.violin_plotter
    :members:

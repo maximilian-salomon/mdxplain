@@ -1,5 +1,5 @@
-Plot Helpers: Discrete Feature Helper
-=====================================
+Discrete Feature Helper
+=======================
 
 .. automodule:: mdxplain.plots.helper.discrete_feature_helper
    :members:

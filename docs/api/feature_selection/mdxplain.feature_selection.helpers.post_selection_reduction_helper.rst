@@ -1,5 +1,5 @@
-Feature Selection: Post Selection Reduction Helper
-==================================================
+Post Selection Reduction Helper
+===============================
 
 .. automodule:: mdxplain.feature_selection.helpers.post_selection_reduction_helper
    :members:

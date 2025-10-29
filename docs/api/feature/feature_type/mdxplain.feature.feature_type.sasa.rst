@@ -1,5 +1,5 @@
-Feature Type: SASA
-==================
+SASA
+====
 
 .. automodule:: mdxplain.feature.feature_type.sasa
 

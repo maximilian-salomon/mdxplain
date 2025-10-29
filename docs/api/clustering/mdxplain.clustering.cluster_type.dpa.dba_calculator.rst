@@ -1,5 +1,5 @@
-Cluster Type: DBA Calculator
-============================
+DBA Calculator
+==============
 
 .. automodule:: mdxplain.clustering.cluster_type.dpa.dpa_calculator
    :members:

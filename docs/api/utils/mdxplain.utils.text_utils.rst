@@ -1,5 +1,5 @@
-Utilities: Text Utils
-=====================
+Text Utils
+==========
 
 .. automodule:: mdxplain.utils.text_utils
    :members:

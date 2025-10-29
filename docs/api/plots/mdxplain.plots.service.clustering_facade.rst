@@ -1,5 +1,5 @@
-Plot Services: Clustering Facade
-================================
+Clustering Facade
+=================
 
 .. automodule:: mdxplain.plots.service.clustering_facade
    :members:

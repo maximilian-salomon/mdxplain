@@ -1,5 +1,5 @@
-Utilities: Data Utils
-=====================
+Data Utils
+==========
 
 .. automodule:: mdxplain.utils.data_utils
    :members:

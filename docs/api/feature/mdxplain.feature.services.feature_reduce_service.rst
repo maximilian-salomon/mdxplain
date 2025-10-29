@@ -1,5 +1,5 @@
-Feature Services: Feature Reduce Service
-==========================================
+Feature Reduce Service
+======================
 
 .. automodule:: mdxplain.feature.services.feature_reduce_service
    :members:

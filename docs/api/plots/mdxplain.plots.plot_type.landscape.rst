@@ -1,5 +1,5 @@
-Plot Type: Landscape
-====================
+Landscape
+=========
 
 .. automodule:: mdxplain.plots.plot_type.landscape
 

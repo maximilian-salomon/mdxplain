@@ -1,5 +1,5 @@
-Feature Importance: Top Features Helper
-=======================================
+Top Features Helper
+===================
 
 .. automodule:: mdxplain.feature_importance.helpers.top_features_helper
    :members:

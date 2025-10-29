@@ -1,5 +1,5 @@
-Trajectory: Metadata Helpers
-============================
+Metadata Helpers
+================
 
 .. automodule:: mdxplain.trajectory.helper.metadata_helper
 

@@ -1,5 +1,5 @@
-Plot Type: Decision Tree Node Visualizer
-========================================
+Decision Tree Visualizer
+========================
 
 .. automodule:: mdxplain.plots.plot_type.decision_trees.helper.decision_tree_visualizer
    :members:

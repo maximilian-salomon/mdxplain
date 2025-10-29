@@ -1,5 +1,5 @@
-Feature Type: Contacts Data
-===========================
+Contacts Data
+=============
 
 .. automodule:: mdxplain.feature.feature_type.contacts.contacts
    :members:

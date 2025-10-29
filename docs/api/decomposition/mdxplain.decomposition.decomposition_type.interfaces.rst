@@ -1,5 +1,5 @@
-Decomposition Type: Interfaces
-==============================
+Interfaces
+==========
 
 .. automodule:: mdxplain.decomposition.decomposition_type.interfaces
 

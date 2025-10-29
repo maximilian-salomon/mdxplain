@@ -1,5 +1,5 @@
-Decomposition Type: Diffusion Maps
-==================================
+Diffusion Maps Data
+===================
 
 .. automodule:: mdxplain.decomposition.decomposition_type.diffusion_maps.diffusion_maps
    :members:

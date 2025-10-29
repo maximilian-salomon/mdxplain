@@ -1,5 +1,5 @@
-Feature Selection: Common Denominator Helper
-============================================
+Common Denominator Helper
+=========================
 
 .. automodule:: mdxplain.feature_selection.helpers.common_denominator_helper
    :members:

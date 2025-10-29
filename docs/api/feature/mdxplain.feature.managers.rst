@@ -1,10 +1,5 @@
-Feature Managers
-================
-
-.. automodule:: mdxplain.feature.managers
-
-Manager
--------
+Feature Manager
+===============
 
 .. automodule:: mdxplain.feature.managers.feature_manager
    :members:

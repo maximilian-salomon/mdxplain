@@ -1,5 +1,5 @@
-Plot Services: Feature Facade
-=============================
+Feature Facade
+==============
 
 .. automodule:: mdxplain.plots.service.feature_facade
    :members:

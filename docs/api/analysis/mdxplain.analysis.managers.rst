@@ -1,10 +1,5 @@
-Analysis Managers
-=================
-
-.. automodule:: mdxplain.analysis.managers
-
-Manager
--------
+Analysis Manager
+================
 
 .. automodule:: mdxplain.analysis.managers.analysis_manager
    :members:

@@ -1,5 +1,5 @@
-Trajectory: Process Selection Resolve Helper
-============================================
+Selection Resolve Helper
+========================
 
 .. automodule:: mdxplain.trajectory.helper.process_helper.selection_resolve_helper
    :members:

@@ -1,5 +1,5 @@
-Feature Type: Contacts
-======================
+Contacts
+========
 
 .. automodule:: mdxplain.feature.feature_type.contacts
 

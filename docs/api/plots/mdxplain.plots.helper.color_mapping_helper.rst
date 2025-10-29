@@ -1,5 +1,5 @@
-Plot Helpers: Color Mapping Helper
-==================================
+Color Mapping Helper
+====================
 
 .. automodule:: mdxplain.plots.helper.color_mapping_helper
    :members:

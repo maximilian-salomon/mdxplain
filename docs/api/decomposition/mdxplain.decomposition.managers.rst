@@ -1,10 +1,5 @@
-Decomposition Managers
-======================
-
-No init in folder.
-
-Manager
--------
+Decomposition Manager
+=====================
 
 .. automodule:: mdxplain.decomposition.managers.decomposition_manager
    :members:

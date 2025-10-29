@@ -1,5 +1,5 @@
-Plot Type: Density
-==================
+Density
+=======
 
 .. automodule:: mdxplain.plots.plot_type.density
 
