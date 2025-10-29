@@ -1,11 +1,13 @@
 How to Cite mdxplain
 ====================
 
-mdxplain is a scientific software. As such **please cite mdxplain** if you use it and the provided algorithms for puplications.
+mdxplain is an open-source scientific software.
+If you use it in your research, publications, or projects,
+please cite it.
 
 BibTeX reference:
 
-::
+.. parsed-literal::
 
     @article{mdxplain2025,
         title = {mdxplain},
@@ -17,5 +19,5 @@ BibTeX reference:
         year = {2025},
         doi = {},
         url = {https://github.com/BioFreak95/mdxplain},
-        version = {1.0}
+        version = {|release|}
     }
