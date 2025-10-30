@@ -819,8 +819,9 @@ class TrajectoryManager:
             
             - int: single trajectory by index (e.g., 0)
             - str: single trajectory by name or pattern (e.g., "traj1", "system_*")
+            
                 Supports multiple string formats:
-                
+            
                 * Range: "0-3", "id 0-3" → [0, 1, 2, 3]
                 * Comma list: "1,2,4,5", "id 1,2,4,5" → [1, 2, 4, 5]
                 * Single number: "7", "id 7" → [7]
@@ -918,6 +919,7 @@ class TrajectoryManager:
             
             - int: single trajectory by index (e.g., 0)
             - str: single trajectory by name or pattern (e.g., "traj1", "system_*")
+                
                 Supports multiple string formats:
                 
                 * Range: "0-3", "id 0-3" → [0, 1, 2, 3]

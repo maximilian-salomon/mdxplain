@@ -66,6 +66,7 @@ class ResidueImportanceCalculator:
         ----------
         top_features : List[Dict[str, Any]]
             List of top feature dictionaries with keys:
+            
             - "residue_indices": List[int]
             - "importance_score": float
 
