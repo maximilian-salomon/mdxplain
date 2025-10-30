@@ -168,12 +168,21 @@ class Coordinates(FeatureTypeBase):
             raise ValueError(
                 "Calculator not initialized. Call init_calculator() first."
             )
-        
-        return self.calculator.compute(
+
+        # Compute coordinates
+        coord_data, metadata = self.calculator.compute(
             input_data=input_data,
             selection=self.selection,
             res_metadata=feature_metadata
         )
+
+        # Add feature type information for representative frame finding
+        metadata['feature_type_name'] = self.get_type_name()
+        metadata['dependencies'] = self.get_dependencies()
+        metadata['input_feature'] = self.get_input()
+        metadata['is_periodic'] = False
+
+        return coord_data, metadata
 
     def get_dependencies(self) -> List[str]:
         """

@@ -22,15 +22,17 @@
 Helper class for color mapping in plots.
 
 Provides consistent color schemes across all visualizations, including
-dynamically generated cluster colors and colormap selection for landscapes.
+cluster-specific color mapping, colormap selection, and cluster ID parsing.
+Uses central ColorUtils for color generation to avoid code redundancy.
 """
 
-import colorsys
 import re
 from typing import Dict, List
 
+from ...utils.color_utils import ColorUtils
 
-# Color for noise points (cluster label -1)
+
+# Color for noise points in clustering (cluster label -1)
 NOISE_COLOR = "#000000"
 
 
@@ -59,7 +61,7 @@ class ColorMappingHelper:
         """
         Get color mapping for cluster labels with unlimited distinct colors.
 
-        Generates perceptually distinct colors using HSV color space.
+        Generates perceptually distinct colors using central color_utils.
         Colors are distributed evenly across the hue spectrum with
         variations in saturation and value for additional distinction.
 
@@ -96,35 +98,16 @@ class ColorMappingHelper:
 
         Notes
         -----
-        - Uses HSV color space for perceptually distinct colors
+        - Uses central ColorUtils.generate_distinct_colors() for consistency
         - Hue varies across full spectrum (0-1)
         - Saturation varies 0.65-0.85 for visual variety
         - Value (brightness) varies 0.75-0.90 for readability
         - Deterministic: same n_clusters always gives same colors
+        - Noise color (index -1) is black (#000000) when include_noise=True
         """
-        colors = {}
-
+        colors = ColorUtils.generate_distinct_colors(n_clusters)
         if include_noise:
-            colors[-1] = NOISE_COLOR
-
-        for i in range(n_clusters):
-            # Distribute hue evenly across color wheel
-            hue = i / max(n_clusters, 1)
-
-            # Vary saturation and value for additional distinction
-            saturation = 0.65 + (i % 3) * 0.1  # 0.65, 0.75, 0.85
-            value = 0.75 + (i % 2) * 0.15      # 0.75, 0.90
-
-            # Convert HSV to RGB
-            rgb = colorsys.hsv_to_rgb(hue, saturation, value)
-
-            # Convert to hex
-            colors[i] = '#{:02x}{:02x}{:02x}'.format(
-                int(rgb[0] * 255),
-                int(rgb[1] * 255),
-                int(rgb[2] * 255)
-            )
-
+            return ColorUtils.add_special_color(colors, -1, NOISE_COLOR)
         return colors
 
     @staticmethod
@@ -261,9 +244,11 @@ class ColorMappingHelper:
             else:
                 non_cluster_selectors.append(selector_name)
 
-        # Phase 2: Generate enough colors
+        # Phase 2: Generate enough colors (without noise color)
         n_colors_needed = max(max_cluster_id + 1, len(sorted_names))
-        all_colors = ColorMappingHelper.get_cluster_colors(n_colors_needed)
+        all_colors = ColorMappingHelper.get_cluster_colors(
+            n_colors_needed, include_noise=False
+        )
 
         # Phase 3: Assign colors
         selector_colors = {}

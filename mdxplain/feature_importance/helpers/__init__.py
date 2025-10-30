@@ -23,12 +23,14 @@ Helper classes for feature importance operations.
 
 This package contains helper classes that extract common logic from
 FeatureImportanceManager methods to improve code organization and reusability.
+
+Notes
+-----
+All helpers are internal to the feature_importance module and should be
+imported directly where needed. No exports to avoid circular import issues
+when helpers/__init__.py is executed during direct helper imports.
 """
 
-from .analysis_runner_helper import AnalysisRunnerHelper
-from .metadata_builder_helper import MetadataBuilderHelper
-
-__all__ = [
-    "AnalysisRunnerHelper",
-    "MetadataBuilderHelper",
-]
+# No imports or exports - all helpers are internal
+# Import directly: from .helpers.analysis_runner_helper import AnalysisRunnerHelper
+__all__ = []

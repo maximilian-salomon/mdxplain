@@ -26,10 +26,16 @@ importance analysis results from various ML algorithms. It provides
 separated data and metadata storage with flexible access methods.
 """
 
-from typing import List, Dict, Any, Tuple, Union, Optional
+from __future__ import annotations
+
+from typing import List, Dict, Any, Tuple, Union, Optional, TYPE_CHECKING
 import numpy as np
 
+if TYPE_CHECKING:
+    from ...pipeline.entities.pipeline_data import PipelineData
+
 from ...utils.data_utils import DataUtils
+from ..helpers.representative_finder_helper import RepresentativeFinderHelper
 
 
 class FeatureImportanceData:
@@ -529,7 +535,78 @@ class FeatureImportanceData:
             # Show top 3 features on average
             top_indices = np.argsort(avg_importance)[::-1][:3]
             top_3_str = ", ".join([
-                f"Feature {int(idx)} ({float(avg_importance[idx]):.3f})" 
+                f"Feature {int(idx)} ({float(avg_importance[idx]):.3f})"
                 for idx in top_indices
             ])
             print(f"Top 3 Features: {top_3_str}")
+
+    def get_representative_frame(
+        self,
+        pipeline_data: PipelineData,
+        comparison_identifier: str,
+        representative_mode: str = "best",
+        n_top: int = 10,
+        use_memmap: bool = False,
+        chunk_size: int = 2000
+    ) -> Tuple[int, int]:
+        """
+        Get representative frame for a sub-comparison.
+
+        Finds the most representative frame for a given sub-comparison
+        based on feature importance. Supports two modes: "best" (frame
+        maximizing top feature values) and "centroid" (frame closest to
+        cluster center).
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data object containing trajectories and features
+        comparison_identifier : str
+            Sub-comparison identifier
+        representative_mode : str, default="best"
+            Mode for frame selection:
+            - "best": Frame maximizing top important features
+            - "centroid": Frame closest to cluster centroid
+        n_top : int, default=10
+            Number of top features to consider (for "best" mode)
+        use_memmap : bool, default=False
+            Whether to use memory-mapped processing
+        chunk_size : int, default=2000
+            Chunk size for memory-mapped processing
+
+        Returns
+        -------
+        Tuple[int, int]
+            Trajectory index and frame index of representative frame
+
+        Examples
+        --------
+        >>> # Get best representative frame
+        >>> traj_idx, frame_idx = fi_data.get_representative_frame(
+        ...     pipeline_data, "cluster_0_vs_rest", representative_mode="best"
+        ... )
+
+        >>> # Get centroid frame
+        >>> traj_idx, frame_idx = fi_data.get_representative_frame(
+        ...     pipeline_data, "cluster_0_vs_rest", representative_mode="centroid"
+        ... )
+
+        Notes
+        -----
+        - "best" mode uses Decision Tree split rules for scoring
+        - "centroid" mode finds frame minimizing distance to mean
+        - Use memmap mode for large trajectories to save memory
+        """
+        comp_data = pipeline_data.comparison_data[self.comparison_name]
+        sub_comp = comp_data.get_sub_comparison(comparison_identifier)
+        ds_name = sub_comp["group1_selectors"][0]
+
+        if representative_mode == "best":
+            return RepresentativeFinderHelper.find_best_tree_based(
+                pipeline_data, self, comparison_identifier,
+                n_top, use_memmap, chunk_size
+            )
+        else:
+            return pipeline_data.get_centroid_frame(
+                self.feature_selector, ds_name
+            )

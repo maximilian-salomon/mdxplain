@@ -165,6 +165,12 @@ class Contacts(FeatureTypeBase):
         # SelectionMetadataHelper will pack this into result's top_level automatically
         annotated_metadata['computation_params'] = {'cutoff': self.cutoff}
 
+        # Add feature type information for representative frame finding
+        annotated_metadata['feature_type_name'] = self.get_type_name()
+        annotated_metadata['dependencies'] = self.get_dependencies()
+        annotated_metadata['input_feature'] = self.get_input()
+        annotated_metadata['is_periodic'] = False
+
         # Add visualization metadata for plot modules
         annotated_metadata['visualization'] = {
             'is_discrete': True,

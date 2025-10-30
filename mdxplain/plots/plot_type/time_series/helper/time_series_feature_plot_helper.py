@@ -197,12 +197,16 @@ class TimeSeriesFeaturePlotHelper:
         if config.use_tag_coloring:
             TimeSeriesTagColoringHelper.plot_feature_with_tag_colors(
                 ax, config.pipeline_data, feat_idx, config.tag_map,
-                config.tag_colors, config.feature_selector_name, config.use_time
+                config.tag_colors, config.feature_selector_name, config.use_time,
+                config.smoothing_method, config.smoothing_window,
+                config.smoothing_polyorder, config.show_unsmoothed_background
             )
         else:
             TimeSeriesTagColoringHelper.plot_feature_with_trajectory_colors(
                 ax, config.pipeline_data, feat_idx, config.tag_map,
-                config.traj_colors, config.feature_selector_name, config.use_time
+                config.traj_colors, config.feature_selector_name, config.use_time,
+                config.smoothing_method, config.smoothing_window,
+                config.smoothing_polyorder, config.show_unsmoothed_background
             )
 
     @staticmethod
