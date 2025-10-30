@@ -138,7 +138,7 @@ class DiffusionMapsCalculator(CalculatorBase):
         ----------
         data : numpy.ndarray
             Input coordinate matrix (n_frames, n_features) where n_features = n_atoms * 3
-        '**'kwargs : dict
+        kwargs : dict
             Diffusion Maps parameters:
 
             - n_components : int, required

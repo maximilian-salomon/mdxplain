@@ -68,7 +68,7 @@ class CalculatorStatHelper:
             Whether output is for memory-mapped arrays (enables intelligent chunking)
         preprocessing_func : callable, optional
             Function to apply before computing differences (default: mean per pair)
-        '**'func_kwargs : dict
+        func_kwargs : dict
             Additional arguments for preprocessing function
 
         Returns
@@ -117,7 +117,7 @@ class CalculatorStatHelper:
             Number of features to process per chunk
         use_memmap : bool, default=False
             Whether output is for memory-mapped arrays (enables intelligent chunking)
-        '**'func_kwargs : dict
+        func_kwargs : dict
             Additional arguments for the function
 
         Returns
@@ -327,7 +327,7 @@ class CalculatorStatHelper:
             Chunk size for processing
         use_memmap : bool, default=False
             Whether output is for memory-mapped arrays (enables intelligent chunking)
-        '**'func_kwargs : dict
+        func_kwargs : dict
             Additional arguments for the function
 
         Returns
@@ -367,7 +367,7 @@ class CalculatorStatHelper:
             Function to apply (default: np.mean)
         chunk_size : int, optional
             Number of columns to process per chunk
-        '**'func_kwargs : dict
+        func_kwargs : dict
             Additional arguments for the function
 
         Returns

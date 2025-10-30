@@ -64,6 +64,7 @@ class FeatureSelectorNumericParseHelper:
         -------
         Tuple[List[int], Set[int]]
             Tuple of (feature_indices, matched_residue_indices)
+            
             - feature_indices: List of feature indices matching the criteria
             - matched_residue_indices: Set of residue.index values that matched
 

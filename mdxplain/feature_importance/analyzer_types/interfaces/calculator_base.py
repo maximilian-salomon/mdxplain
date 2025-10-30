@@ -85,7 +85,7 @@ class CalculatorBase(ABC):
             Feature matrix with shape (n_samples, n_features)
         y : np.ndarray
             Target labels with shape (n_samples,)
-        '**'kwargs : dict
+        kwargs : dict
             Additional keyword arguments specific to the ML algorithm
 
         Returns

@@ -96,7 +96,7 @@ class PCACalculator(CalculatorBase):
         ----------
         data : numpy.ndarray
             Input data matrix to decompose, shape (n_samples, n_features)
-        '**'kwargs : dict
+        wargs : dict
             PCA parameters:
 
             - n_components : int, optional

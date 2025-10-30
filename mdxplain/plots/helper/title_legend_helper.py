@@ -144,6 +144,7 @@ class TitleLegendHelper:
         Notes
         -----
         Height calculation:
+
         - Converts fontsize from points to inches: fontsize / 72
         - Multiplies by 0.8 to account for line spacing factor
         - Total height = n_lines * (fontsize / 72) * 0.8
@@ -197,6 +198,7 @@ class TitleLegendHelper:
         Notes
         -----
         Character width estimation:
+
         - Assumes ~8 characters per inch at typical font sizes (conservative)
         - Includes safety margin to prevent text overflow
         - Clamps result to reasonable range [40, 150] characters
@@ -252,6 +254,7 @@ class TitleLegendHelper:
         Notes
         -----
         Title is added using fig.suptitle() with:
+
         - fontsize=18
         - fontweight='bold'
         - y=title_y for vertical positioning
@@ -323,6 +326,7 @@ class TitleLegendHelper:
         Notes
         -----
         Legend is created with:
+        
         - Sorted DataSelector names (alphabetical)
         - Colored patches (alpha=0.7)
         - Optional contact threshold line (red, dashed)

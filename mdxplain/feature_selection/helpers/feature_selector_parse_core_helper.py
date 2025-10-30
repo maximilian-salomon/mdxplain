@@ -391,6 +391,7 @@ class FeatureSelectorParseCoreHelper:
         Implements smart pattern detection for user-friendly syntax.
 
         Smart pattern detection:
+
         - '0-2' or '123' or '123-140' → 'seqid 0-2' or 'seqid 123' or 'seqid 123-140'  
         - 'ALA' or 'A' or 'LEU' → 'res ALA' or 'res A' or 'res LEU'
         - 'ALA13' or 'A13' → 'res ALA13' or 'res A13'
@@ -434,6 +435,7 @@ class FeatureSelectorParseCoreHelper:
         Apply smart pattern detection to a list of tokens.
 
         Enables complex patterns like:
+        
         - ['HIS'] -> ('res', 'HIS')
         - ['13'] -> ('seqid', '13')
         - ['res', 'ALA'] -> ('res', 'ALA')

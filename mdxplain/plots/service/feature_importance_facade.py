@@ -230,6 +230,7 @@ class FeatureImportanceFacade:
             If False, use short labels (e.g., "C"/"NC", "H"/"C").
         kde_bandwidth : str or float, default="scott"
             KDE bandwidth for continuous features:
+            
             - "scott": Scott's rule (automatic bandwidth selection)
             - "silverman": Silverman's rule
             - float: Manual bandwidth value
@@ -307,24 +308,29 @@ class FeatureImportanceFacade:
         Notes
         -----
         Binary Contact Features:
+
         - When contact_transformation=True: Converts to distances (default)
         - When contact_transformation=False: Uses Gaussian smoothing where:
+        
           - Dominant states (high probability) → tall AND wide peaks
           - Rare states (low probability) → short AND narrow peaks
           - This prevents visual overlap when multiple DataSelectors plotted
 
         Continuous Features:
+
         - Uses standard Kernel Density Estimation (KDE)
         - Automatic bandwidth selection via Scott's or Silverman's rule
         - Manual bandwidth control available via kde_bandwidth parameter
 
         Grid Layout:
+
         - Features grouped by type where possible
         - max_cols controls maximum columns (default: 4)
         - Layout algorithm maintains roughly square overall shape
         - Each grid cell shows one feature with overlaid curves
 
         Color Mapping:
+        
         - Uses DataSelector-based colors for cluster consistency
         - Same colors across all plots in pipeline for same DataSelectors
         - Filled curves with transparency (alpha) + solid contour lines
@@ -399,6 +405,7 @@ class FeatureImportanceFacade:
             tag-based coloring. Trajectories grouped by shared tags from this list.
         allow_multi_tag_plotting : bool, default=False
             How to handle trajectories with multiple matching tags:
+
             - False: Exclude trajectories with multiple tags
             - True: Plot such trajectories multiple times (once per tag)
         clustering_name : str, optional
@@ -582,6 +589,7 @@ class FeatureImportanceFacade:
             Custom plot title. Auto-generated if None.
         save_fig : Union[bool, str], default="auto"
             Whether to save figure/trees to file(s):
+
             - "auto": True if render=False (prevents no output), else False
             - True: Always save
             - False: Never save (requires render=True)
@@ -593,11 +601,13 @@ class FeatureImportanceFacade:
             Resolution for saved figure(s) in dots per inch
         render : Union[bool, str], default="auto"
             Whether to display in Jupyter:
+
             - "auto": False if grid too large (>50"), True for separate trees
             - True: Always display
             - False: Never display (requires save_fig=True)
         separate_trees : Union[bool, str], default="auto"
             Tree layout mode:
+            
             - "auto": True if depth > 5 OR comparisons > 4
             - True: Each tree as separate plot (prevents RAM issues)
             - False: Grid layout (all trees in one figure)
@@ -622,9 +632,10 @@ class FeatureImportanceFacade:
         Returns
         -------
         matplotlib.figure.Figure, List[str], or None
-            - Figure: Grid mode with render=True
-            - List[str]: Separate trees with save_fig=True (filenames)
-            - None: render=False or separate trees without saving
+        
+        - Figure: Grid mode with render=True
+        - List[str]: Separate trees with save_fig=True (filenames)
+        - None: render=False or separate trees without saving
 
         Raises
         ------

@@ -39,6 +39,7 @@ class DPAAddService:
     is a real conformational state from the trajectory.
 
     For alternative center methods, use:
+    
     - .with_mean_centers() - Arithmetic mean (may not be real state)
     - .with_median_centers() - Feature-wise median (robust to outliers)
     - .with_density_peak_centers() - Highest density point

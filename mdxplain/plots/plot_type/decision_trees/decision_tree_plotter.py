@@ -131,9 +131,11 @@ class DecisionTreePlotter:
             Whether to display in Jupyter
         separate_trees : Union[bool, str], default="auto"
             Tree layout mode:
+
             - "auto": depth ≤4: Grid, depth 5-6: Separate trees
             - True: Each tree as separate plot
             - False: Grid layout (all trees in one figure)
+            
             Note: depth > 6 raises ValueError (not visualizable)
         width_scale_factor : float, default=1.0
             Multiplicative factor for figure width (use >1.0 for wider boxes)
@@ -153,6 +155,7 @@ class DecisionTreePlotter:
         Returns
         -------
         Figure, List[str], or None
+        
             - Figure: Grid mode with render=True
             - List[str]: Separate trees with save_fig=True (filenames)
             - None: render=False or separate trees without saving
