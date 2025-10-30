@@ -39,6 +39,12 @@ exclude_patterns = [
     'AI_USAGE.md'   # Referenced via :download: directive, not part of documentation tree
     ]
 
+# Substitution for a literal backslash ("\ |bsol| ") in docstrings to allow "\" in build
+rst_prolog = """
+.. |bsol| unicode:: 0x005C
+    :trim:
+"""
+
 # html build configurations
 html_theme = 'sphinx_rtd_theme'
 html_search = True

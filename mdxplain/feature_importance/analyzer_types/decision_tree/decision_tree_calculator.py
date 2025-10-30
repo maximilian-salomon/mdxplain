@@ -186,7 +186,7 @@ class DecisionTreeCalculator(CalculatorBase):
             Feature matrix with shape (n_samples, n_features)
         y : np.ndarray
             Target labels with shape (n_samples,)
-        '**'kwargs : dict
+        kwargs : dict
             Decision Tree parameters (criterion, max_depth, random_state, etc.)
 
         Returns

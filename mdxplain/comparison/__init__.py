@@ -27,6 +27,7 @@ It supports various comparison modes like pairwise, one-vs-rest, multiclass,
 and binary comparisons.
 
 Main Components:
+
 - ComparisonData: Entity storing comparison definitions and sub-comparisons
 - ComparisonManager: Manager for creating and managing comparisons
 """

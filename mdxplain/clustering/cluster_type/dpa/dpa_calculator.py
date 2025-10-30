@@ -90,6 +90,7 @@ class DPACalculator(CalculatorBase):
             Input data matrix to cluster, shape (n_samples, n_features)
         center_method : str, optional
             Method for calculating cluster centers, default="centroid":
+
             - "centroid": Representative point (medoid - closest to mean)
             - "mean": Average of cluster members
             - "median": Coordinate-wise median (robust to outliers)
@@ -100,6 +101,7 @@ class DPACalculator(CalculatorBase):
             DPA parameters including:
             See DPA init docstring for more information or
             https://github.com/mariaderrico/DPA and https://github.com/mariaderrico/DPA/blob/master/DPA_analysis.ipynb
+
             - Z : float, density threshold parameter
             - affinity : str, affinity metric for distance calculation
             - nn_distances : int, number of nearest neighbors
@@ -117,6 +119,7 @@ class DPACalculator(CalculatorBase):
         -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
+            
             - cluster_labels: Cluster labels for each sample
             - metadata: Dictionary with clustering information
 

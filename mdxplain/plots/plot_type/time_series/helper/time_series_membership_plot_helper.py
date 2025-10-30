@@ -46,6 +46,7 @@ class TimeSeriesMembershipPlotHelper:
     Helper for membership bar plotting.
 
     Provides membership bar plotting with two modes:
+    
     - per_feature: Image-based replication (efficient for N features)
     - single: Standard bottom plot (simple for overview)
 

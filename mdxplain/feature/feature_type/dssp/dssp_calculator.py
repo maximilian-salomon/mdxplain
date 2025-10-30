@@ -104,7 +104,7 @@ class DSSPCalculator(CalculatorBase):
         ----------
         input_data : mdtraj.Trajectory
             MDTraj trajectory object to process
-        '**'kwargs : dict
+        kwargs : dict
             Additional parameters:
 
             - simplified : bool - Use simplified (3-class) or full (8-class) DSSP

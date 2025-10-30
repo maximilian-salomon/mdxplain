@@ -332,6 +332,7 @@ class PipelineManager:
         PlotsManager
             Plots manager for creating visualizations.
             Provides three access patterns:
+            
             - Direct: pipeline.plots.landscape(...)
             - Decomposition-focused: pipeline.plots.decomposition.landscape(...)
             - Clustering-focused: pipeline.plots.clustering.landscape(...)

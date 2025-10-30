@@ -38,6 +38,7 @@ class DensityCalculationHelper:
     Helper class for feature-type-aware density calculations.
 
     Provides methods to calculate probability densities using:
+
     - Discrete features (contacts, DSSP): Height-dependent Gaussian bells
     - Continuous features: Standard Kernel Density Estimation
 
@@ -80,6 +81,7 @@ class DensityCalculationHelper:
             If None, falls back to continuous density estimation.
         kde_bandwidth : str or float, default="scott"
             KDE bandwidth for continuous features only:
+
             - "scott": Scott's rule (automatic bandwidth selection)
             - "silverman": Silverman's rule
             - float: Manual bandwidth value
@@ -123,6 +125,7 @@ class DensityCalculationHelper:
         Notes
         -----
         Discrete features create natural-looking distributions where:
+
         - Dominant states (high probability) => Tall AND wide peaks
         - Rare states (low probability) => Short AND narrow peaks
 
@@ -227,6 +230,7 @@ class DensityCalculationHelper:
             σ = base_sigma + (max_sigma - base_sigma) x probability
 
         This ensures:
+
         - P=1.0 (100%) => σ = max_sigma (widest possible)
         - P=0.0 (0%)   => σ = base_sigma (narrowest possible)
         - P=0.5 (50%)  => σ = (base_sigma + max_sigma) / 2 (medium)
@@ -283,6 +287,7 @@ class DensityCalculationHelper:
             Continuous feature values (e.g., distances, angles, SASA)
         kde_bandwidth : str or float
             Bandwidth selection method:
+
             - "scott": Scott's rule (default, works well for most cases)
             - "silverman": Silverman's rule
             - float: Manual bandwidth factor
@@ -313,6 +318,7 @@ class DensityCalculationHelper:
         data range to show the full distribution tails without truncation.
 
         For the bandwidth parameter:
+        
         - "scott": Bandwidth = n^(-1/5) x σ (good default)
         - "silverman": Bandwidth = n^(-1/5) x min(σ, IQR/1.34)
         - float: Multiply default bandwidth by this factor

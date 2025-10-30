@@ -717,25 +717,25 @@ class DistanceCalculator(CalculatorBase):
 
         Examples
         --------
-        # Select highly variable distances (CV >= 0.5)
-        result = calculator.compute_dynamic_values(distances, metric='cv', threshold_min=0.5)
+        >>> # Select highly variable distances (CV >= 0.5)
+        >>> result = calculator.compute_dynamic_values(distances, metric='cv', threshold_min=0.5)
 
-        # Select moderately variable distances (0.2 <= CV <= 0.8)
-        result = calculator.compute_dynamic_values(distances, metric='cv',
+        >>> # Select moderately variable distances (0.2 <= CV <= 0.8)
+        >>> result = calculator.compute_dynamic_values(distances, metric='cv',
                                                  threshold_min=0.2, threshold_max=0.8)
 
-        # Select low variability distances (CV <= 0.3)
-        result = calculator.compute_dynamic_values(distances, metric='cv', threshold_max=0.3)
+        >>> # Select low variability distances (CV <= 0.3)
+        >>> result = calculator.compute_dynamic_values(distances, metric='cv', threshold_max=0.3)
 
-        # Select highly transitioning contacts with window mode
-        (>= 5 transitions, 3.0 Å change in 10 frame windows means transition)
-        result = calculator.compute_dynamic_values(distances, metric='transitions',
+        >>> # Select highly transitioning contacts with window mode
+        >>> (>= 5 transitions, 3.0 Å change in 10 frame windows means transition)
+        >>> result = calculator.compute_dynamic_values(distances, metric='transitions',
                                                  threshold_min=5, transition_threshold=3.0,
                                                  window_size=10, transition_mode='window')
 
-        # Select highly transitioning contacts with lag-time mode
-        (>= 5 transitions, 3.0 Å change in 10 frame lag-time means transition)
-        result = calculator.compute_dynamic_values(distances, metric='transitions',
+        >>> # Select highly transitioning contacts with lag-time mode
+        >>> (>= 5 transitions, 3.0 Å change in 10 frame lag-time means transition)
+        >>> result = calculator.compute_dynamic_values(distances, metric='transitions',
                                                     threshold_min=5, transition_threshold=3.0,
                                                     lag_time=10, transition_mode='lagtime')
         """

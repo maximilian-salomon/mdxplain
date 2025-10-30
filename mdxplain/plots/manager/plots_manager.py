@@ -362,6 +362,7 @@ class PlotsManager:
         -----
         This is a direct convenience method. For more specialized workflows,
         consider using:
+        
         - pipeline.plots.decomposition.landscape() for decomposition focus
         - pipeline.plots.clustering.landscape() for clustering focus
         """

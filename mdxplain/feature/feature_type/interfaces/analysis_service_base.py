@@ -120,7 +120,7 @@ class AnalysisServiceBase:
                     Name of feature selector for column selection
                 traj_selection : str, int, list, optional
                     Trajectory selection criteria for row selection
-                '**'kwargs
+                kwargs
                     Additional arguments passed to the calculator method
                     
                 Returns

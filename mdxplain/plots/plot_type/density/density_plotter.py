@@ -123,6 +123,7 @@ class DensityPlotter(FeatureImportanceBasePlotter):
             If False, use short labels (e.g., "C"/"NC", "H"/"C").
         kde_bandwidth : str, default="scott"
             KDE bandwidth for continuous features:
+            
             - "scott": Scott's rule (automatic)
             - "silverman": Silverman's rule
             - float: Manual bandwidth value

@@ -48,6 +48,7 @@ class ContactToDistancesConverter:
     selector with distances for the same atom pairs.
 
     The conversion preserves:
+
     - Exact same atom pairs
     - Same feature ordering
     - Same trajectory coverage
@@ -86,6 +87,7 @@ class ContactToDistancesConverter:
         -------
         Tuple[str, bool, Optional[float]]
             Tuple of (selector_name, is_temporary, contact_cutoff)
+            
             - selector_name: Name of continuous feature selector
             - is_temporary: True if temporary selector was created, False otherwise
             - contact_cutoff: Contact cutoff value if converted from contacts, None otherwise
