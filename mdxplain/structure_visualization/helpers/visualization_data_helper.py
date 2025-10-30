@@ -78,6 +78,7 @@ class VisualizationDataHelper:
         -------
         Dict[str, Dict[str, str]]
             Dictionary with structure info:
+
             - Keys: sub-comparison identifiers
             - Values: {"path": absolute_pdb_path, "color": hex_color}
 
@@ -133,6 +134,7 @@ class VisualizationDataHelper:
         -------
         Dict[str, Dict[str, str]]
             Dictionary with structure info:
+
             - Keys: structure identifiers
             - Values: {"path": absolute_pdb_path, "color": hex_color}
 
@@ -243,6 +245,7 @@ class VisualizationDataHelper:
         -------
         List[Dict[str, Any]]
             List of feature dicts with metadata:
+            
             - feature_index: int
             - feature_name: str
             - feature_type: str

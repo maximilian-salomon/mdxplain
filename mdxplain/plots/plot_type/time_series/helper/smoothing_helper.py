@@ -255,6 +255,7 @@ class SmoothingHelper:
         Notes
         -----
         Checks:
+        
         - Window must be positive
         - Window must be < data_length
         - For Savitzky-Golay: window must be odd

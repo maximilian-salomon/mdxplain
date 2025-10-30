@@ -312,10 +312,10 @@ class FeatureImportanceFacade:
         - When contact_transformation=True: Converts to distances (default)
         - When contact_transformation=False: Uses Gaussian smoothing where:
         
-          - Dominant states (high probability) → tall AND wide peaks
-          - Rare states (low probability) → short AND narrow peaks
-          - This prevents visual overlap when multiple DataSelectors plotted
-
+          * Dominant states (high probability) → tall AND wide peaks
+          * Rare states (low probability) → short AND narrow peaks
+          * This prevents visual overlap when multiple DataSelectors plotted
+          
         Continuous Features:
 
         - Uses standard Kernel Density Estimation (KDE)

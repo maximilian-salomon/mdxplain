@@ -184,12 +184,14 @@ class FeatureMetadataUtils:
         -------
         List[Dict[str, Any]]
             List of residue dictionaries. Each dict contains:
+
             - index: int - Residue index in topology
             - seqid: int - Residue sequence ID
             - name: str - Residue name (e.g., "THR", "GLU")
             - aaa_code: str - Three-letter code
             - a_code: str - One-letter code
             - consensus: str or None - Consensus label if available
+            
             Returns empty list if metadata unavailable.
 
         Examples

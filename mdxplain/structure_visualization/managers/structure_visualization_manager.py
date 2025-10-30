@@ -43,6 +43,7 @@ class StructureVisualizationManager:
     Manager for structure visualization workflows.
 
     Provides two specialized services:
+    
     - feature_importance: Visualizations based on feature importance analysis
     - feature: Visualizations based on feature and data selectors
 

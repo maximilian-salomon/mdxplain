@@ -565,6 +565,7 @@ class FeatureImportanceData:
             Sub-comparison identifier
         representative_mode : str, default="best"
             Mode for frame selection:
+            
             - "best": Frame maximizing top important features
             - "centroid": Frame closest to cluster centroid
         n_top : int, default=10
