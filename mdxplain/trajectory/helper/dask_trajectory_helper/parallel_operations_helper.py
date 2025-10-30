@@ -115,7 +115,7 @@ class ParallelOperationsHelper:
         >>> centered_store = parallel_ops.center_coordinates(mass_weighted=True)
         >>> print(f"Centered trajectory stored at {centered_store.path}")
         """
-        print(f"🎯 Centering coordinates (mass_weighted={mass_weighted})...")
+        print(f"Centering coordinates (mass_weighted={mass_weighted})...")
         
         # Create temporary file for result
         temp_fd, temp_path = tempfile.mkstemp(suffix='.zarr', dir=self.cache_dir)
@@ -163,14 +163,19 @@ class ParallelOperationsHelper:
             # Load chunk
             chunk_coords = self.dask_coords[start_idx:end_idx].compute()
             chunk_time = self.dask_time[start_idx:end_idx].compute()
-            
+
             # Create MDTraj trajectory
             chunk_traj = md.Trajectory(
                 xyz=chunk_coords,
                 topology=self.topology,
                 time=chunk_time
             )
-            
+
+            # Add unitcell data if present (set lengths/angles, NOT vectors directly!)
+            if self.has_unitcell:
+                chunk_traj.unitcell_lengths = self.dask_unitcell_lengths[start_idx:end_idx].compute()
+                chunk_traj.unitcell_angles = self.dask_unitcell_angles[start_idx:end_idx].compute()
+
             # Apply operation
             operation_func(chunk_traj, **operation_kwargs)
             
@@ -348,7 +353,7 @@ class ParallelOperationsHelper:
         >>> backbone_indices = topology.select('backbone')
         >>> aligned_store = parallel_ops.superpose(ref_traj, backbone_indices)
         """
-        print(f"🎯 Superposing to reference trajectory...")
+        print(f"Superposing to reference trajectory...")
         
         # Create temporary file for result
         temp_fd, temp_path = tempfile.mkstemp(suffix='.zarr', dir=self.cache_dir)
@@ -406,7 +411,7 @@ class ParallelOperationsHelper:
         >>> protein_indices = topology.select('protein')
         >>> smoothed_store = parallel_ops.smooth(5, atom_indices=protein_indices)
         """
-        print(f"🎯 Smoothing with width={width} (atom-wise chunking)...")
+        print(f"Smoothing with width={width} (atom-wise chunking)...")
         
         # Handle default parameters
         if order is None:
@@ -475,7 +480,7 @@ class ParallelOperationsHelper:
         >>> ca_indices = topology.select('name CA')
         >>> ca_store = parallel_ops.atom_slice(ca_indices)
         """
-        print(f"🎯 Creating atom slice ({len(atom_indices)} atoms)...")
+        print(f"Creating atom slice ({len(atom_indices)} atoms)...")
         
         # Create temporary file for result
         temp_fd, temp_path = tempfile.mkstemp(suffix='.zarr', dir=self.cache_dir)
@@ -502,7 +507,154 @@ class ParallelOperationsHelper:
             result_topology=new_topology,  # This will be used for metadata
             atom_indices=atom_indices
         )
-    
+
+    def image_molecules(self, anchor_molecules: Optional[np.ndarray] = None,
+                       other_molecules: Optional[np.ndarray] = None,
+                       sorted_bonds: Optional[np.ndarray] = None,
+                       make_whole: bool = True) -> zarr.Group:
+        """
+        Apply periodic boundary condition imaging to molecules.
+
+        Recenters molecules and applies PBC using MDTraj's image_molecules
+        method. Processes trajectory in chunks for memory efficiency.
+
+        Parameters
+        ----------
+        anchor_molecules : np.ndarray, optional
+            Indices of molecules to anchor at the origin
+        other_molecules : np.ndarray, optional
+            Indices of other molecules to image relative to anchors
+        sorted_bonds : np.ndarray, optional
+            Pre-sorted bond array for performance optimization
+        make_whole : bool, default=True
+            Make molecules whole across PBC before imaging
+
+        Returns
+        -------
+        zarr.Group
+            New Zarr store with imaged coordinates
+
+        Raises
+        ------
+        ValueError
+            If anchor_molecules or other_molecules contain invalid indices
+        OSError
+            If cache directory is not writable
+
+        Examples
+        --------
+        >>> helper = ParallelOperationsHelper('trajectory.zarr', topology)
+        >>> # Apply default imaging (all molecules)
+        >>> imaged_store = helper.image_molecules()
+        >>> # Image with specific anchor molecules
+        >>> protein_molecules = np.array([0, 1, 2])
+        >>> imaged_store = helper.image_molecules(anchor_molecules=protein_molecules)
+        """
+        print(f"Applying periodic boundary condition imaging...")
+
+        # Create temporary file for result
+        temp_fd, temp_path = tempfile.mkstemp(suffix='.zarr', dir=self.cache_dir)
+        os.close(temp_fd)
+        os.remove(temp_path)
+
+        # Define operation function for image_molecules
+        def image_operation(chunk_traj: md.Trajectory,
+                          anchor_molecules: Optional[np.ndarray],
+                          other_molecules: Optional[np.ndarray],
+                          sorted_bonds: Optional[np.ndarray],
+                          make_whole: bool) -> None:
+            chunk_traj.image_molecules(
+                inplace=True,
+                anchor_molecules=anchor_molecules,
+                other_molecules=other_molecules,
+                sorted_bonds=sorted_bonds,
+                make_whole=make_whole
+            )
+
+        # Use generic helper method
+        return self._process_trajectory_chunked(
+            operation_func=image_operation,
+            result_path=temp_path,
+            result_shape=(self.n_frames, self.n_atoms, 3),
+            anchor_molecules=anchor_molecules,
+            other_molecules=other_molecules,
+            sorted_bonds=sorted_bonds,
+            make_whole=make_whole
+        )
+
+    def remove_solvent(self, exclude: Optional[list] = None) -> zarr.Group:
+        """
+        Remove solvent atoms from trajectory.
+
+        Creates new trajectory without solvent atoms using MDTraj's
+        remove_solvent method. Processes trajectory in chunks for memory
+        efficiency.
+
+        Parameters
+        ----------
+        exclude : list, optional
+            List of solvent residue names to KEEP (not remove). If None,
+            removes all recognized solvent molecules.
+
+        Returns
+        -------
+        zarr.Group
+            New Zarr store with non-solvent atoms only
+
+        Raises
+        ------
+        ValueError
+            If exclude contains invalid residue names
+        OSError
+            If cache directory is not writable
+
+        Examples
+        --------
+        >>> helper = ParallelOperationsHelper('trajectory.zarr', topology)
+        >>> # Remove all solvent
+        >>> no_solvent_store = helper.remove_solvent()
+        >>> # Keep water but remove other solvent
+        >>> keep_water_store = helper.remove_solvent(exclude=['HOH', 'WAT'])
+        """
+        print(f"Removing solvent atoms...")
+
+        # Create temporary file for result
+        temp_fd, temp_path = tempfile.mkstemp(suffix='.zarr', dir=self.cache_dir)
+        os.close(temp_fd)
+        os.remove(temp_path)
+
+        # Create temporary trajectory to determine non-solvent atoms
+        # We need this to know the result topology
+        temp_coords = self.dask_coords[0:1].compute()
+        temp_traj = md.Trajectory(
+            xyz=temp_coords,
+            topology=self.topology,
+            time=self.dask_time[0:1].compute()
+        )
+
+        # Apply remove_solvent to get new topology
+        temp_result = temp_traj.remove_solvent(exclude=exclude, inplace=False)
+        new_topology = temp_result.topology
+        n_atoms_new = new_topology.n_atoms
+
+        # Define operation function for remove_solvent
+        def remove_solvent_operation(chunk_traj: md.Trajectory,
+                                    exclude: Optional[list]) -> None:
+            result_traj = chunk_traj.remove_solvent(exclude=exclude, inplace=False)
+            # IMPORTANT: Set topology first, then coordinates (MDTraj validation!)
+            chunk_traj._topology = result_traj.topology
+            chunk_traj._xyz = result_traj.xyz
+
+        # Use generic helper method with reshape mode and new topology
+        return self._process_trajectory_chunked(
+            operation_func=remove_solvent_operation,
+            result_path=temp_path,
+            result_shape=(self.n_frames, n_atoms_new, 3),
+            chunking_mode='reshape',
+            result_topology=new_topology,
+            exclude=exclude
+        )
+
     def _create_coordinate_array(self, store: zarr.Group, coords: np.ndarray, 
                                n_atoms: int, compressor: BloscCodec) -> None:
         """

@@ -626,7 +626,119 @@ class DaskMDTrajectory:
         if inplace:
             return self._replace_self_with_new(new_traj)
         return new_traj
-    
+
+    def image_molecules(self,
+                       inplace: bool = True,
+                       anchor_molecules: Optional[np.ndarray] = None,
+                       other_molecules: Optional[np.ndarray] = None,
+                       sorted_bonds: Optional[np.ndarray] = None,
+                       make_whole: bool = True) -> DaskMDTrajectory:
+        """
+        Apply periodic boundary condition imaging to molecules.
+
+        Recenters molecules and wraps them into the primary unit cell using
+        MDTraj's image_molecules method. This operation modifies coordinates
+        but does not change the number of atoms.
+
+        Parameters
+        ----------
+        inplace : bool, default=True
+            If True, modify trajectory in place and return self.
+            If False, return new trajectory instance.
+        anchor_molecules : np.ndarray, optional
+            Indices of molecules to anchor at the origin. If None, uses all
+            molecules.
+        other_molecules : np.ndarray, optional
+            Indices of other molecules to image relative to anchors. If None,
+            uses all molecules not in anchor_molecules.
+        sorted_bonds : np.ndarray, optional
+            Pre-sorted bond array for performance optimization. If None, bonds
+            are determined from topology.
+        make_whole : bool, default=True
+            Make molecules whole across periodic boundary conditions before
+            imaging.
+
+        Returns
+        -------
+        DaskMDTrajectory
+            Self if inplace=True, otherwise new trajectory with imaged coordinates
+
+        Examples
+        --------
+        >>> dask_traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
+        >>> # Apply default imaging in-place
+        >>> dask_traj.image_molecules()
+        >>> # Image with specific anchor molecules, create new trajectory
+        >>> protein_molecules = np.array([0, 1, 2])
+        >>> imaged = dask_traj.image_molecules(
+        ...     anchor_molecules=protein_molecules,
+        ...     inplace=False
+        ... )
+        """
+        # Clean up current temp store before creating new one
+        if self._is_temp_store:
+            self.cleanup()
+
+        new_zarr_store = self._parallel_ops.image_molecules(
+            anchor_molecules=anchor_molecules,
+            other_molecules=other_molecules,
+            sorted_bonds=sorted_bonds,
+            make_whole=make_whole
+        )
+        new_traj = self._create_from_zarr_store(new_zarr_store)
+
+        if inplace:
+            return self._replace_self_with_new(new_traj)
+        return new_traj
+
+    def remove_solvent(self,
+                      exclude: Optional[list] = None,
+                      inplace: bool = False) -> DaskMDTrajectory:
+        """
+        Remove solvent atoms from trajectory.
+
+        Creates new trajectory without solvent atoms using MDTraj's
+        remove_solvent method. This operation changes the number of atoms
+        and creates a new topology.
+
+        Parameters
+        ----------
+        exclude : list, optional
+            List of solvent residue names to KEEP (not remove). Common
+            values include ['HOH', 'WAT'] to keep water molecules. If None,
+            removes all recognized solvent molecules.
+        inplace : bool, default=False
+            If True, modify trajectory in place and return self.
+            If False, return new trajectory instance.
+
+        Returns
+        -------
+        DaskMDTrajectory
+            Self if inplace=True, otherwise new trajectory without solvent atoms
+
+        Examples
+        --------
+        >>> dask_traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
+        >>> # Remove all solvent, create new trajectory
+        >>> protein_only = dask_traj.remove_solvent()
+        >>> print(f"Atoms before: {dask_traj.n_atoms}")
+        >>> print(f"Atoms after: {protein_only.n_atoms}")
+        >>> # Keep water but remove other solvent
+        >>> keep_water = dask_traj.remove_solvent(exclude=['HOH', 'WAT'])
+        >>> # Remove solvent in-place (changes dask_traj)
+        >>> dask_traj.remove_solvent(inplace=True)
+        """
+        # Clean up current temp store before creating new one
+        if self._is_temp_store:
+            self.cleanup()
+
+        new_zarr_store = self._parallel_ops.remove_solvent(exclude=exclude)
+        new_traj = self._create_from_zarr_store(new_zarr_store)
+
+        if inplace:
+            return self._replace_self_with_new(new_traj)
+        return new_traj
+
     def join(self, other: DaskMDTrajectory, check_topology: bool = True) -> DaskMDTrajectory:
         """
         Combine trajectories along frame axis.
