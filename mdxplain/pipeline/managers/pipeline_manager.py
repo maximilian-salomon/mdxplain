@@ -26,12 +26,17 @@ orchestration point for all analysis workflows. It uses AutoInjectProxy
 to automatically inject PipelineData into manager methods that need it.
 """
 
+from __future__ import annotations
+
 from typing import Any, Dict, Optional, cast
 import os
+import shutil
 import numpy as np
+from pathlib import Path
 
 from ..entities.pipeline_data import PipelineData
 from .auto_inject_proxy import AutoInjectProxy
+from ...utils.archive_utils import ArchiveUtils
 
 from ...trajectory import TrajectoryManager
 from ...feature import FeatureManager
@@ -417,13 +422,13 @@ class PipelineManager:
         """
         self._data.clear_all_data()
 
-    def save(self, save_path: str) -> None:
+    def save_to_single_file(self, save_path: str) -> None:
         """
-        Save complete pipeline to disk.
+        Save complete pipeline to single pickle file.
 
         This method saves the entire PipelineData object including all
         computed features, trajectories, clusterings, decompositions,
-        and metadata to a file.
+        and metadata to a single file. Memmap files remain in cache directory.
 
         Parameters
         ----------
@@ -437,45 +442,40 @@ class PipelineManager:
 
         Examples
         --------
-        >>> pipeline.save('complete_analysis.pkl')
+        >>> pipeline.save_to_single_file('complete_analysis.pkl')
         """
         self._data.save(save_path)
 
-    def load(self, load_path: str) -> None:
-        """
-        Load complete pipeline from disk.
-
-        This method loads a complete PipelineData object from a file,
-        restoring all computed features, trajectories, and analysis state.
-
-        Parameters
-        ----------
-        load_path : str
-            Path to the saved pipeline file
-
-        Returns
-        -------
-        None
-            Loads the complete pipeline from the specified path
-
-        Examples
-        --------
-        >>> pipeline.load('complete_analysis.pkl')
-        """
-        self._data.load(load_path)
-
     @staticmethod
-    def load_pipeline(load_path: str) -> "PipelineManager":
+    def load_from_single_file(
+        load_path: str,
+        cache_dir: str = "./cache",
+        chunk_size: int = 1000,
+        stride: int = 1,
+        concat: bool = False,
+        selection: Optional[str] = None,
+    ) -> PipelineManager:
         """
-        Load complete pipeline from disk as a static constructor.
+        Load complete pipeline from single pickle file.
 
-        This static method creates a new PipelineManager instance and
-        loads a complete pipeline state from a file.
+        This static method creates a new PipelineManager instance with
+        specified cache directory and loads pipeline state from file.
+        Memmap files are expected in the cache directory.
 
         Parameters
         ----------
         load_path : str
-            Path to the saved pipeline file
+            Path to the saved pipeline pickle file
+        cache_dir : str, default="./cache"
+            Cache directory where memmap files are located
+        chunk_size : int, default=1000
+            Default chunk size for future operations
+        stride : int, default=1
+            Default stride for future trajectory loading
+        concat : bool, default=False
+            Default concat mode for future trajectory loading
+        selection : str, optional
+            Default MDTraj selection string for trajectories
 
         Returns
         -------
@@ -484,11 +484,192 @@ class PipelineManager:
 
         Examples
         --------
-        >>> loaded_pipeline = PipelineManager.load_pipeline('complete_analysis.pkl')
+        >>> loaded_pipeline = PipelineManager.load_from_single_file('analysis.pkl')
         >>> loaded_pipeline.print_info()
+
+        >>> # Load with custom cache directory
+        >>> loaded_pipeline = PipelineManager.load_from_single_file(
+        ...     'analysis.pkl',
+        ...     cache_dir='./my_cache'
+        ... )
+
+        >>> # Load with custom trajectory defaults for adding more data
+        >>> loaded_pipeline = PipelineManager.load_from_single_file(
+        ...     'analysis.pkl',
+        ...     stride=10
+        ... )
+        >>> # Now load additional trajectories with stride=10
+        >>> loaded_pipeline.trajectory.load_trajectories('new_data/')
         """
-        pipeline = PipelineManager()
-        pipeline.load(load_path)
+        pipeline = PipelineManager(
+            cache_dir=cache_dir,
+            chunk_size=chunk_size,
+            stride=stride,
+            concat=concat,
+            selection=selection
+        )
+        pipeline._data.load(load_path)
+        return pipeline
+
+    def create_sharable_archive(
+        self,
+        archive_path: str,
+        compression: str = "xz",
+        exclude_visualizations: bool = True,
+        include_structure_files: bool = True
+    ) -> str:
+        """
+        Create sharable compressed archive with pipeline and essential data.
+
+        Creates compressed tar archive containing pipeline pickle file
+        and all necessary memmap files from cache directory. Excludes
+        visualization outputs by default for smaller archive size.
+
+        Parameters
+        ----------
+        archive_path : str
+            Path for output archive (extension added automatically)
+        compression : str, default="xz"
+            Compression method: "xz", "bz2", or "gz"
+        exclude_visualizations : bool, default=True
+            If True, exclude PNG/PDF/SVG plot outputs
+        include_structure_files : bool, default=True
+            If True, include PDB/PML structure files
+
+        Returns
+        -------
+        str
+            Path to created archive file
+
+        Examples
+        --------
+        >>> # Minimal archive (only data)
+        >>> pipeline.create_sharable_archive("analysis.tar.xz")
+
+        >>> # Full archive (with visualizations)
+        >>> pipeline.create_sharable_archive(
+        ...     "analysis_full.tar.xz",
+        ...     exclude_visualizations=False
+        ... )
+
+        >>> # Data only (no structure files)
+        >>> pipeline.create_sharable_archive(
+        ...     "analysis_data.tar.xz",
+        ...     include_structure_files=False
+        ... )
+
+        Notes
+        -----
+        - xz compression provides best compression ratio
+        - With use_memmap=False: Archive contains only pipeline.pkl + optional PDB/PML
+        - With use_memmap=True: Archive contains pipeline.pkl + .dat files + zarr directories
+        - Paths are preserved relative to cache directory
+        - Memmap and zarr only included when use_memmap=True
+        """
+        return ArchiveUtils.create_archive(
+            self._data,
+            archive_path,
+            compression,
+            exclude_visualizations,
+            include_structure_files
+        )
+
+    @staticmethod
+    def load_from_archive(
+        archive_path: str,
+        cache_dir: str = "./cache",
+        chunk_size: int = 1000,
+        stride: int = 1,
+        concat: bool = False,
+        selection: Optional[str] = None,
+    ) -> PipelineManager:
+        """
+        Load pipeline from sharable archive.
+
+        Extracts compressed archive, moves cache files to specified
+        cache directory, and loads pipeline state. Automatically
+        repairs memmap file paths to point to new cache location.
+
+        Parameters
+        ----------
+        archive_path : str
+            Path to archive file
+        cache_dir : str, default="./cache"
+            Target cache directory for extracted files
+        chunk_size : int, default=1000
+            Default chunk size for future operations
+        stride : int, default=1
+            Default stride for future trajectory loading
+        concat : bool, default=False
+            Default concatenation setting for future trajectory loading
+        selection : str, optional
+            Default MDTraj selection string for trajectories
+
+        Returns
+        -------
+        PipelineManager
+            Loaded pipeline instance
+
+        Examples
+        --------
+        >>> # Load from archive (default cache_dir)
+        >>> pipeline = PipelineManager.load_from_archive("analysis.tar.xz")
+        >>> pipeline.print_info()
+
+        >>> # Load with custom cache directory
+        >>> pipeline = PipelineManager.load_from_archive(
+        ...     "analysis.tar.xz",
+        ...     cache_dir="./my_cache"
+        ... )
+
+        >>> # Load with trajectory defaults for adding more data
+        >>> pipeline = PipelineManager.load_from_archive(
+        ...     "analysis.tar.xz",
+        ...     cache_dir="./cache",
+        ...     chunk_size=500,
+        ...     stride=10
+        ... )
+
+        Notes
+        -----
+        - Extracts to temporary directory
+        - Moves cache files to specified cache_dir
+        - Automatically repairs memmap paths for portability
+        - Cache directory created if it doesn't exist
+        """
+        extract_dir = ArchiveUtils.extract_archive(archive_path)
+
+        pkl_path = extract_dir / "pipeline.pkl"
+        if not pkl_path.exists():
+            raise FileNotFoundError(
+                f"pipeline.pkl not found in extracted archive"
+            )
+
+        # Move cache files to target cache_dir
+        extracted_cache = extract_dir / "cache"
+        target_cache = Path(cache_dir)
+        target_cache.mkdir(parents=True, exist_ok=True)
+
+        if extracted_cache.exists():
+            for item in extracted_cache.iterdir():
+                target_item = target_cache / item.name
+                if target_item.exists():
+                    if target_item.is_dir():
+                        shutil.rmtree(target_item)
+                    else:
+                        target_item.unlink()
+                shutil.move(str(item), str(target_item))
+
+        # Load with custom cache_dir, chunk_size and trajectory defaults
+        pipeline = PipelineManager(
+            cache_dir=cache_dir,
+            chunk_size=chunk_size,
+            stride=stride,
+            concat=concat,
+            selection=selection
+        )
+        pipeline._data.load(str(pkl_path))
+
         return pipeline
 
     def print_info(self) -> None:
@@ -554,9 +735,15 @@ class PipelineManager:
         # Summary at the end
         summary = self.summary()
         print(
-            f"\nPipeline Summary: {summary['trajectories_loaded']} trajectories, "
+            f"\nPipeline Summary: "
+            f"{summary['trajectories_loaded']} trajectories, "
             f"{summary['features_computed']} feature types, "
-            f"{summary['clusterings_performed']} clusterings"
+            f"{summary['feature_selections']} feature selections, "
+            f"{summary['clusterings_performed']} clusterings, "
+            f"{summary['decompositions_computed']} decompositions, "
+            f"{summary['data_selectors_created']} data selectors, "
+            f"{summary['comparisons_created']} comparisons, "
+            f"{summary['feature_importance_analyses']} feature importance analyses"
         )
 
     def update_config(

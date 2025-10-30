@@ -71,51 +71,57 @@ class FeatureAddService:
     def distances(
         self,
         excluded_neighbors: int = 1,
+        use_pbc: bool = True,
         traj_selection: Union[str, int, List] = "all",
         force: bool = False,
         force_original: bool = True,
     ) -> None:
         """
         Add distances feature type.
-        
+
         Computes all pairwise distances from molecular dynamics trajectories.
         This is a base feature type with no dependencies.
-        
+
         Parameters
         ----------
         excluded_neighbors : int, default=1
             Number of nearest neighbors to exclude from distance calculation.
             Chain breaks are automatically excluded based on sequence ID jumps.
             0 = all pairs, 1 = exclude direct neighbors, 2 = exclude up to 2nd neighbors, etc.
+        use_pbc : bool, default=True
+            Use periodic boundary conditions when computing distances
         traj_selection : str, int, list, default="all"
             Which trajectories to compute features for ("all", index, list of indices, or trajectory names)
         force : bool, default=False
             Force recalculation even if feature already exists
         force_original : bool, default=True
             Whether to force using original trajectory data instead of reduced data
-            
+
         Returns
         -------
         None
             Adds distance features to pipeline data
-            
+
         Examples
         --------
         >>> # Basic distance calculation
         >>> pipeline.feature.add.distances()
-        
+
         >>> # With custom neighbor exclusion
         >>> pipeline.feature.add.distances(excluded_neighbors=2)
-        
+
+        >>> # Without periodic boundary conditions
+        >>> pipeline.feature.add.distances(use_pbc=False)
+
         >>> # For specific trajectories only
         >>> pipeline.feature.add.distances(traj_selection=[0,1,2], force=True)
-        
+
         Notes
         -----
         Distance features are computed using MDTraj and returned in Angstroms.
         Missing pairs (due to chain breaks) are handled automatically.
         """
-        feature_type = Distances(excluded_neighbors=excluded_neighbors)
+        feature_type = Distances(excluded_neighbors=excluded_neighbors, use_pbc=use_pbc)
         return self._manager.add_feature(
             self._pipeline_data,
             feature_type,
@@ -184,16 +190,17 @@ class FeatureAddService:
         calculate_psi: bool = True,
         calculate_omega: bool = True,
         calculate_chi: bool = True,
+        use_pbc: bool = True,
         traj_selection: Union[str, int, List] = "all",
         force: bool = False,
         force_original: bool = True,
     ) -> None:
         """
         Add torsions feature type.
-        
+
         Computes dihedral torsion angles including backbone (phi, psi, omega)
         and side chain angles (chi1-4). All angles are returned in degrees (-180 to +180).
-        
+
         Parameters
         ----------
         calculate_phi : bool, default=True
@@ -204,34 +211,39 @@ class FeatureAddService:
             Whether to compute omega backbone angles
         calculate_chi : bool, default=True
             Whether to compute side chain chi angles (chi1, chi2, chi3, chi4)
+        use_pbc : bool, default=True
+            Use periodic boundary conditions when computing torsion angles
         traj_selection : str, int, list, default="all"
             Which trajectories to compute features for
         force : bool, default=False
             Force recalculation even if feature already exists
         force_original : bool, default=True
             Whether to force using original trajectory data
-            
+
         Returns
         -------
         None
             Adds torsion features to pipeline data
-            
+
         Examples
         --------
         >>> # All angles (default)
         >>> pipeline.feature.add.torsions()
-        
+
         >>> # Only backbone angles
         >>> pipeline.feature.add.torsions(calculate_chi=False)
-        
+
+        >>> # Without periodic boundary conditions
+        >>> pipeline.feature.add.torsions(use_pbc=False)
+
         >>> # Only phi and psi
         >>> pipeline.feature.add.torsions(
-        ...     calculate_phi=True, 
+        ...     calculate_phi=True,
         ...     calculate_psi=True,
-        ...     calculate_omega=False, 
+        ...     calculate_omega=False,
         ...     calculate_chi=False
         ... )
-        
+
         >>> # Only side chain chi angles
         >>> pipeline.feature.add.torsions(
         ...     calculate_phi=False,
@@ -239,7 +251,7 @@ class FeatureAddService:
         ...     calculate_omega=False,
         ...     calculate_chi=True
         ... )
-        
+
         Notes
         -----
         All angles are computed and returned in degrees.
@@ -251,6 +263,7 @@ class FeatureAddService:
             calculate_psi=calculate_psi,
             calculate_omega=calculate_omega,
             calculate_chi=calculate_chi,
+            use_pbc=use_pbc,
         )
         return self._manager.add_feature(
             self._pipeline_data,

@@ -95,31 +95,6 @@ class RMSFPerAtomService:
         self._metric = metric
         self._helper = TrajectoryServiceHelper(pipeline_data)
 
-    @property
-    def metric(self) -> Literal["mean", "median", "mad"]:
-        """Return the configured deviation metric.
-
-        Provides access to the robust metric applied to squared deviations.
-
-        Parameters
-        ----------
-        None
-            This property does not accept parameters.
-
-        Returns
-        -------
-        {'mean', 'median', 'mad'}
-            The deviation metric configured during construction.
-
-        Examples
-        --------
-        >>> service = RMSFPerAtomService(pipeline_data, metric="mean")
-        >>> service.metric
-        'mean'
-        """
-
-        return self._metric
-
     def __call__(
         self,
         traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all",
@@ -219,7 +194,7 @@ class RMSFPerAtomService:
         # Calculate RMSF
         rmsf_arrays = calculator.calculate_per_atom(
             reference_mode=reference_mode,
-            metric=self.metric,
+            metric=self._metric,
             atom_indices=atom_indices,
             cross_trajectory=cross_trajectory,
         )

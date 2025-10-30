@@ -56,7 +56,7 @@ class MetadataBuilderHelper:
         sub_comp: Dict[str, Any],
         analyzer_type: AnalyzerTypeBase,
         X: np.ndarray,
-        y: np.ndarray,
+        _y: np.ndarray,
         result: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
@@ -74,8 +74,8 @@ class MetadataBuilderHelper:
             Analyzer instance used for the analysis
         X : np.ndarray
             Feature matrix used for analysis
-        y : np.ndarray
-            Label array used for analysis
+        _y : np.ndarray
+            Label array (unused, kept for API consistency)
         result : Dict[str, Any]
             Analysis result from the analyzer
 
@@ -293,12 +293,77 @@ class MetadataBuilderHelper:
             return sub_comp.get("name", "unknown_comparison")
 
     @staticmethod
+    def _extract_multiclass_names(sub_comp: Dict[str, Any]) -> list:
+        """
+        Extract class names for multiclass comparison.
+
+        Parameters
+        ----------
+        sub_comp : Dict[str, Any]
+            Sub-comparison dictionary
+
+        Returns
+        -------
+        list
+            List of selector names
+        """
+        return sub_comp["selectors"]
+
+    @staticmethod
+    def _extract_binary_names(sub_comp: Dict[str, Any]) -> list:
+        """
+        Extract class names for binary comparison.
+
+        Parameters
+        ----------
+        sub_comp : Dict[str, Any]
+            Sub-comparison dictionary
+
+        Returns
+        -------
+        list
+            List of two class names in correct label order
+        """
+        class1 = sub_comp["group1_selectors"][0]
+        class2 = sub_comp["group2_selectors"][0]
+        labels = sub_comp.get("labels", (0, 1))
+
+        if labels == (1, 0):
+            return [class2, class1]
+        return [class1, class2]
+
+    @staticmethod
+    def _extract_one_vs_rest_names(sub_comp: Dict[str, Any]) -> list:
+        """
+        Extract class names for one-vs-rest comparison.
+
+        Parameters
+        ----------
+        sub_comp : Dict[str, Any]
+            Sub-comparison dictionary
+
+        Returns
+        -------
+        list
+            List with one class and "all other classes" in label order [0, 1]
+        """
+        class1 = sub_comp["group1_selectors"][0]
+        class2 = "all other classes"
+        labels = sub_comp.get("labels", (0, 1))
+
+        if labels == (1, 0):
+            return [class2, class1]
+        return [class1, class2]
+
+    @staticmethod
     def extract_class_names(sub_comp: Dict[str, Any]) -> list:
         """
         Extract class names from sub-comparison data selectors.
 
         Extracts the data selector names that represent the classes
         in the comparison for use as human-readable class labels.
+        Handles one-vs-rest comparisons by using "all other classes"
+        label and ensures correct label-to-name mapping.
 
         Parameters
         ----------
@@ -308,18 +373,29 @@ class MetadataBuilderHelper:
         Returns
         -------
         list
-            List of class names (data selector names)
+            List of class names (data selector names) in correct label order
 
         Examples
         --------
         >>> # Binary comparison
         >>> sub_comp = {
         ...     "group1_selectors": ["folded"],
-        ...     "group2_selectors": ["unfolded"]
+        ...     "group2_selectors": ["unfolded"],
+        ...     "labels": (0, 1)
         ... }
         >>> names = MetadataBuilderHelper.extract_class_names(sub_comp)
         >>> print(names)
         ['folded', 'unfolded']
+
+        >>> # One-vs-rest comparison
+        >>> sub_comp = {
+        ...     "group1_selectors": ["cluster_0"],
+        ...     "group2_selectors": ["cluster_1", "cluster_2", "cluster_3"],
+        ...     "labels": (1, 0)
+        ... }
+        >>> names = MetadataBuilderHelper.extract_class_names(sub_comp)
+        >>> print(names)
+        ['all other classes', 'cluster_0']
 
         >>> # Multiclass comparison
         >>> sub_comp = {
@@ -329,14 +405,16 @@ class MetadataBuilderHelper:
         >>> print(names)
         ['folded', 'unfolded', 'intermediate']
         """
+        # Multiclass comparison
+        if "selectors" in sub_comp:
+            return MetadataBuilderHelper._extract_multiclass_names(sub_comp)
+
+        # Binary or one-vs-rest comparison (Note: Pairwise same structure as binary)
         if "group1_selectors" in sub_comp and "group2_selectors" in sub_comp:
-            # Binary or pairwise comparison
-            class1 = sub_comp["group1_selectors"][0]
-            class2 = sub_comp["group2_selectors"][0]
-            return [class1, class2]
-        elif "selectors" in sub_comp:
-            # Multiclass comparison
-            return sub_comp["selectors"]
-        else:
-            # Fallback
-            return ["Class 0", "Class 1"]
+            if len(sub_comp["group2_selectors"]) == 1:
+                return MetadataBuilderHelper._extract_binary_names(sub_comp)
+            else:
+                return MetadataBuilderHelper._extract_one_vs_rest_names(sub_comp)
+
+        # Fallback
+        return ["Class 0", "Class 1"]

@@ -31,7 +31,7 @@ import mdtraj as md
 
 from mdxplain.pipeline.managers.pipeline_manager import PipelineManager
 from mdxplain.analysis.structure.services.rmsf_per_atom_service import RMSFPerAtomService
-from mdxplain.analysis.structure.services.rmsd_variant_service import RMSDVariantService
+from mdxplain.analysis.structure.services.rmsd_mean_service import RMSDMeanService
 from mdxplain.analysis.structure.services.rmsf_per_residue_service import RMSFPerResidueService
 
 
@@ -337,8 +337,8 @@ class TestStructureServicesIntegration:
     def setup_rmsd_calculator_mock(self):
         """Setup RMSD Calculator mock with standard return values.
 
-        Patches RMSDCalculator in service module and the helper's _build_result_map
-        to ensure proper list-to-dictionary conversion.
+        Patches RMSDCalculator in all service modules (mean, median, mad) and the
+        helper's _build_result_map to ensure proper list-to-dictionary conversion.
 
         Parameters
         ----------
@@ -349,18 +349,31 @@ class TestStructureServicesIntegration:
         tuple[Mock, Mock]
             (mock_calculator_class, mock_calculator_instance)
         """
-        # Patch RMSDCalculator in service module
-        patch1 = patch('mdxplain.analysis.structure.services.rmsd_variant_service.RMSDCalculator', autospec=False)
+        # Create a shared Calculator mock that all services will use
+        shared_calc_mock = Mock()
+        shared_instance = Mock()
+        shared_calc_mock.return_value = shared_instance
 
-        # Patch the variant service's _build_result_map method
-        patch2 = patch('mdxplain.analysis.structure.services.rmsd_variant_service.RMSDVariantService._build_result_map')
+        # Patch RMSDCalculator in all service modules with the SAME mock object
+        patch1 = patch('mdxplain.analysis.structure.services.rmsd_mean_service.RMSDCalculator', new=shared_calc_mock)
+        patch3 = patch('mdxplain.analysis.structure.services.rmsd_median_service.RMSDCalculator', new=shared_calc_mock)
+        patch5 = patch('mdxplain.analysis.structure.services.rmsd_mad_service.RMSDCalculator', new=shared_calc_mock)
 
-        mock_calc = patch1.start()
+        # Patch the _build_result_map methods for all services
+        patch2 = patch('mdxplain.analysis.structure.services.rmsd_mean_service.RMSDMeanService._build_result_map')
+        patch4 = patch('mdxplain.analysis.structure.services.rmsd_median_service.RMSDMedianService._build_result_map')
+        patch6 = patch('mdxplain.analysis.structure.services.rmsd_mad_service.RMSDMadService._build_result_map')
+
+        patch1.start()
+        patch3.start()
+        patch5.start()
         mock_helper = patch2.start()
+        mock_helper_median = patch4.start()
+        mock_helper_mad = patch6.start()
 
-        # Create mock instance
-        mock_instance = Mock()
-        mock_calc.return_value = mock_instance
+        # Use the shared mocks for test verification
+        mock_calc = shared_calc_mock
+        mock_instance = shared_instance
 
         # Configure calculator return values as dictionaries (final service format)
         mock_instance.rmsd_to_reference.return_value = {
@@ -379,9 +392,11 @@ class TestStructureServicesIntegration:
             return arrays
 
         mock_helper.side_effect = mock_build_result_map
+        mock_helper_median.side_effect = mock_build_result_map
+        mock_helper_mad.side_effect = mock_build_result_map
 
         # Store patches for cleanup
-        self._rmsd_patches = [patch1, patch2]
+        self._rmsd_patches = [patch1, patch2, patch3, patch4, patch5, patch6]
 
         return mock_calc, mock_instance
 
@@ -2954,8 +2969,8 @@ class TestStructureServicesIntegration:
         Expected: Raises ValueError for None pipeline data.
         """
         # Verify raises ValueError during service construction
-        with pytest.raises(ValueError, match="RMSDVariantService requires pipeline_data"):
-            RMSDVariantService(pipeline_data=None, metric="mean")
+        with pytest.raises(ValueError, match="RMSDMeanService requires pipeline_data"):
+            RMSDMeanService(pipeline_data=None)
 
     # Inconsistent atom selection tests
     def test_rmsf_mean_per_atom_inconsistent_atom_selection(self):
@@ -3036,19 +3051,8 @@ class TestStructureServicesIntegration:
         with pytest.raises(ValueError, match="metric must be"):
             RMSFPerAtomService(pipeline_data=mock_pipeline_data, metric="invalid_metric")
 
-    def test_rmsd_invalid_metric_type(self):
-        """Test RMSD with invalid metric type.
-
-        Expected: Raises ValueError for unsupported metric.
-        """
-        # Create a minimal mock pipeline_data
-        mock_pipeline_data = Mock()
-        mock_pipeline_data.chunk_size = 1000
-        mock_pipeline_data.use_memmap = False
-
-        # Verify raises ValueError for invalid metric during service construction
-        with pytest.raises(ValueError, match="metric must be"):
-            RMSDVariantService(pipeline_data=mock_pipeline_data, metric="invalid_metric")
+    # NOTE: test_rmsd_invalid_metric_type removed - metric is now compile-time checked via type hints
+    # Invalid metric is caught at type-checking time with RMSDMeanService/RMSDMedianService/RMSDMadService
 
     # Empty trajectories tests
     def test_rmsf_mean_per_atom_empty_trajectories_list(self):
