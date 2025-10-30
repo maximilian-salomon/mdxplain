@@ -186,13 +186,22 @@ class SASA(FeatureTypeBase):
             raise ValueError(
                 "Calculator not initialized. Call init_calculator() first."
             )
-        
-        return self.calculator.compute(
+
+        # Compute SASA
+        sasa_data, metadata = self.calculator.compute(
             input_data=input_data,
             mode=self.mode,
             probe_radius=self.probe_radius,
             res_metadata=feature_metadata
         )
+
+        # Add feature type information for representative frame finding
+        metadata['feature_type_name'] = self.get_type_name()
+        metadata['dependencies'] = self.get_dependencies()
+        metadata['input_feature'] = self.get_input()
+        metadata['is_periodic'] = False
+
+        return sasa_data, metadata
 
     def get_dependencies(self) -> List[str]:
         """

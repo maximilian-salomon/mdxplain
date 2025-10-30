@@ -47,6 +47,9 @@ from ...feature_importance.managers.feature_importance_manager import (
 )
 from ...analysis import AnalysisManager
 from ...plots.manager.plots_manager import PlotsManager
+from ...structure_visualization.managers.structure_visualization_manager import (
+    StructureVisualizationManager,
+)
 
 
 class PipelineManager:
@@ -178,6 +181,9 @@ class PipelineManager:
         )
         self._analysis_manager = AnalysisManager()
         self._plots_manager = PlotsManager(
+            use_memmap=use_memmap, chunk_size=chunk_size, cache_dir=cache_dir
+        )
+        self._structure_visualization_manager = StructureVisualizationManager(
             use_memmap=use_memmap, chunk_size=chunk_size, cache_dir=cache_dir
         )
 
@@ -352,6 +358,28 @@ class PipelineManager:
         """
         return cast(
             PlotsManager, AutoInjectProxy(self._plots_manager, self._data)
+        )
+
+    @property
+    def structure_visualization(self) -> StructureVisualizationManager:
+        """
+        Access 3D structure visualization with automatic PipelineData injection.
+
+        Returns
+        -------
+        StructureVisualizationManager
+            Structure visualization manager with automatic PipelineData injection.
+
+        Examples
+        --------
+        >>> # Beta-factor visualization
+        >>> pipeline.structure_visualization.visualize_importance_beta_factors(
+        ...     "dt_analysis", "cluster_0_vs_rest", n_top=10
+        ... )
+        """
+        return cast(
+            StructureVisualizationManager,
+            AutoInjectProxy(self._structure_visualization_manager, self._data),
         )
 
     @property

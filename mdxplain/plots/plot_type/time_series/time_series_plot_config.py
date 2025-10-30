@@ -1,8 +1,22 @@
 # mdxplain - A Python toolkit for molecular dynamics trajectory analysis
 #
 # Author: Maximilian Salomon
+# Created with assistance from Claude Code (Claude Sonnet 4.0) and GitHub Copilot (Claude Sonnet 4.0).
 #
-# This program is free software under GNU LGPL v3.
+# Copyright (C) 2025 Maximilian Salomon
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """Central configuration dataclass for time series plotting."""
 
@@ -72,6 +86,14 @@ class TimeSeriesPlotConfig:
         File format (png, pdf, svg, etc.)
     dpi : int
         Resolution
+    smoothing_method : str, optional
+        Smoothing method ("moving_average", "savitzky", or None)
+    smoothing_window : int
+        Window size for smoothing (frames)
+    smoothing_polyorder : int
+        Polynomial order for Savitzky-Golay filter
+    show_unsmoothed_background : bool
+        Show unsmoothed data as transparent background
     feature_data : Dict
         Prepared feature data
     feature_indices : Dict[int, str]
@@ -171,6 +193,10 @@ class TimeSeriesPlotConfig:
     filename: Optional[str]
     file_format: str
     dpi: int
+    smoothing_method: Optional[str] = None
+    smoothing_window: int = 51
+    smoothing_polyorder: int = 3
+    show_unsmoothed_background: bool = False
 
     # Prepared data (set during plotting)
     feature_data: Dict = field(default_factory=dict)

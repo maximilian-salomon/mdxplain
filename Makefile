@@ -1,4 +1,4 @@
-.PHONY: help setup-env setup-jupyter-env setup-dev-env setup-full-env setup-conda-env setup-conda-jupyter-env setup-conda-dev-env setup-conda-full-env install install-dev install-jupyter test lint format jupyter notebook html clean
+.PHONY: help setup-env setup-jupyter-env setup-dev-env setup-full-env setup-conda-env setup-conda-jupyter-env setup-conda-dev-env setup-conda-full-env install install-dev install-jupyter install-visualization install-full test lint format jupyter notebook clean
 
 # Default target
 help:
@@ -8,19 +8,20 @@ help:
 	@echo "  setup-env           Create venv with production dependencies"
 	@echo "  setup-jupyter-env   Create venv with production + jupyter dependencies"
 	@echo "  setup-dev-env       Create venv with development dependencies"
-	@echo "  setup-full-env      Create venv with development + jupyter dependencies"
+	@echo "  setup-full-env      Create venv with development + jupyter + visualization"
 	@echo ""
 	@echo "Environment Setup (Conda):"
 	@echo "  setup-conda-env         Create conda env with production dependencies"
 	@echo "  setup-conda-jupyter-env Create conda env with production + jupyter dependencies"
 	@echo "  setup-conda-dev-env     Create conda env with development dependencies"
-	@echo "  setup-conda-full-env    Create conda env with development + jupyter dependencies"
+	@echo "  setup-conda-full-env    Create conda env with dev + jupyter + visualization"
 	@echo ""
 	@echo "Installation (in existing environment):"
 	@echo "  install             Install package in current environment"
 	@echo "  install-dev         Install package with dev dependencies"
 	@echo "  install-jupyter     Install package with jupyter dependencies"
-	@echo "  install-full       Install package with development + jupyter dependencies"
+	@echo "  install-visualization Install package with visualization dependencies (PyMOL)"
+	@echo "  install-full        Install package with dev + jupyter + visualization"
 	@echo ""
 	@echo "Jupyter:"
 	@echo "  jupyter             Start JupyterLab"
@@ -70,14 +71,14 @@ setup-dev-env:
 	mdxplain-venv/bin/pre-commit install
 	@echo "Development setup complete! Activate with: source mdxplain-venv/bin/activate"
 
-# Create fresh virtual environment with development + jupyter dependencies
+# Create fresh virtual environment with development + jupyter + visualization dependencies
 setup-full-env:
 	@echo "Creating new full virtual environment 'mdxplain-venv'..."
 	python -m venv mdxplain-venv
 	@echo "Upgrading pip..."
 	mdxplain-venv/bin/pip install --upgrade pip
-	@echo "Installing development + jupyter dependencies..."
-	mdxplain-venv/bin/pip install .[dev,jupyter]
+	@echo "Installing development + jupyter + visualization dependencies..."
+	mdxplain-venv/bin/pip install .[dev,jupyter,visualization]
 	@echo "Installing DPA with --no-deps..."
 	mdxplain-venv/bin/pip install --no-deps DPA
 	@echo "Installing pre-commit hooks..."
@@ -100,9 +101,14 @@ install-jupyter:
 	pip install .[jupyter]
 	pip install --no-deps DPA
 
-# Install package with development and jupyter dependencies in current environment
+# Install package with visualization dependencies in current environment
+install-visualization:
+	pip install .[visualization]
+	pip install --no-deps DPA
+
+# Install package with development, jupyter and visualization dependencies in current environment
 install-full:
-	pip install .[dev,jupyter]
+	pip install .[dev,jupyter,visualization]
 	pip install --no-deps DPA
 
 # Create fresh conda environment with production dependencies only
@@ -143,14 +149,14 @@ setup-conda-dev-env:
 	conda run -n mdxplain pre-commit install
 	@echo "Development setup complete! Activate with: conda activate mdxplain"
 
-# Create fresh conda environment with development + jupyter dependencies
+# Create fresh conda environment with development + jupyter + visualization dependencies
 setup-conda-full-env:
 	@echo "Creating new conda environment 'mdxplain' with full setup..."
 	conda create -n mdxplain python=3.12 -y
 	@echo "Installing pip in conda environment..."
 	conda run -n mdxplain conda install pip -y
-	@echo "Installing development + jupyter dependencies..."
-	conda run -n mdxplain pip install .[dev,jupyter]
+	@echo "Installing development + jupyter + visualization dependencies..."
+	conda run -n mdxplain pip install .[dev,jupyter,visualization]
 	@echo "Installing DPA with --no-deps..."
 	conda run -n mdxplain pip install --no-deps DPA
 	@echo "Installing pre-commit hooks..."
@@ -183,18 +189,8 @@ jupyter:
 notebook:
 	jupyter notebook
 
-
-# Set directions for docs build.
-SPHINXBUILD = sphinx-build
-SOURCEDIR = docs
-BUILDDIR = docs/build
-# Sphinx html build.
-html:
-	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(0)
-
 # Clean up
 clean:
-	@rm -rf "$(BUILDDIR)"
 	@echo "Removing virtual environment..."
 	rm -rf mdxplain-venv
 	@echo "Removing conda environment (if exists)..."

@@ -191,8 +191,9 @@ class Torsions(FeatureTypeBase):
             raise ValueError(
                 "Calculator not initialized. Call init_calculator() first."
             )
-        
-        return self.calculator.compute(
+
+        # Compute torsions
+        torsion_data, metadata = self.calculator.compute(
             input_data=input_data,
             calculate_phi=self.calculate_phi,
             calculate_psi=self.calculate_psi,
@@ -200,6 +201,14 @@ class Torsions(FeatureTypeBase):
             calculate_chi=self.calculate_chi,
             res_metadata=feature_metadata
         )
+
+        # Add feature type information for representative frame finding
+        metadata['feature_type_name'] = self.get_type_name()
+        metadata['dependencies'] = self.get_dependencies()
+        metadata['input_feature'] = self.get_input()
+        metadata['is_periodic'] = True
+
+        return torsion_data, metadata
 
     def get_dependencies(self) -> List[str]:
         """
