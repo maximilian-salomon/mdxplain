@@ -59,7 +59,7 @@ class DistanceCalculator(CalculatorBase):
     >>> distances, pairs = calculator.compute(trajectory)
     """
 
-    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000) -> None:
+    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000, use_pbc: bool = True) -> None:
         """
         Initialize distance calculator with configuration parameters.
 
@@ -71,6 +71,9 @@ class DistanceCalculator(CalculatorBase):
             Directory path for storing cache files
         chunk_size : int, optional
             Number of frames to process per chunk
+        use_pbc : bool, default=True
+            If True and the trajectory contains unitcell information,
+            distances are computed under the minimum image convention
 
         Returns
         -------
@@ -83,9 +86,13 @@ class DistanceCalculator(CalculatorBase):
 
         >>> # With memory mapping
         >>> calculator = DistanceCalculator(use_memmap=True, cache_path='./cache/')
+
+        >>> # Without periodic boundary conditions
+        >>> calculator = DistanceCalculator(use_pbc=False)
         """
         super().__init__(use_memmap, cache_path, chunk_size)
         self.distances_path = cache_path
+        self.use_pbc = use_pbc
 
         self.pairs = None  # Will be computed
         self.n_pairs = None  # Will be set after pairs are generated
@@ -528,6 +535,7 @@ class DistanceCalculator(CalculatorBase):
                 traj,
                 contacts=self.pairs,
                 scheme="closest-heavy",  # Use our generated pairs list
+                periodic=self.use_pbc,
             )
             distances[:] = dist  # Direct assignment
         else:
@@ -540,6 +548,7 @@ class DistanceCalculator(CalculatorBase):
                     traj[frame_start : frame_start + frames_to_process],
                     contacts=self.pairs,  # Use our generated pairs list
                     scheme="closest-heavy",
+                    periodic=self.use_pbc,
                 )
 
                 # Direct assignment - dist is already in condensed format
@@ -672,7 +681,6 @@ class DistanceCalculator(CalculatorBase):
         transition_mode: str = "window",
         lag_time: int = 1,
     ) -> Dict[str, Any]:
-        
         """
         Filter and select variable/dynamic distances based on specified criteria.
 
@@ -739,7 +747,6 @@ class DistanceCalculator(CalculatorBase):
                                                     threshold_min=5, transition_threshold=3.0,
                                                     lag_time=10, transition_mode='lagtime')
         """
-
         # Compute metric values using helper method
         metric_values = self._compute_metric_values(
             input_data,

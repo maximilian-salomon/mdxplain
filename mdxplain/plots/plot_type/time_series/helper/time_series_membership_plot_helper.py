@@ -38,8 +38,6 @@ if TYPE_CHECKING:
     from ..time_series_plot_config import TimeSeriesPlotConfig
 
 from .membership_bar_renderer import MembershipBarRenderer
-from ....helper.clustering_data_helper import ClusteringDataHelper
-
 
 class TimeSeriesMembershipPlotHelper:
     """
@@ -226,11 +224,21 @@ class TimeSeriesMembershipPlotHelper:
             # Use same extent and y-configuration as label axes for proper alignment
             first_traj_data = prepared_data[membership_indices[0]]
             x_values = first_traj_data['x_values']
-            extent = [x_values[0], x_values[-1], max_extent + 0.02, min_extent - 0.02]
+            extent = [
+                x_values[0],
+                x_values[-1],
+                max_extent + 0.02,
+                min_extent - 0.02
+            ]
 
             img_ax.imshow(membership_img, aspect='auto', extent=extent)
             img_ax.set_ylim(min_extent - 0.02, max_extent + 0.02)
             img_ax.invert_yaxis()
+
+            # Set xlim explicitly for exact alignment with feature plots
+            x_range = x_values[-1] - x_values[0]
+            x_margin = x_range * 0.05
+            img_ax.set_xlim(x_values[0] - x_margin, x_values[-1] + x_margin)
             img_ax.yaxis.set_visible(False)
             img_ax.spines['left'].set_visible(False)
             img_ax.spines['right'].set_visible(False)

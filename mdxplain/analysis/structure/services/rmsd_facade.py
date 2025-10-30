@@ -28,21 +28,23 @@ import numpy as np
 
 from mdxplain.pipeline.entities.pipeline_data import PipelineData
 
-from .rmsd_variant_service import RMSDVariantService
+from .rmsd_mean_service import RMSDMeanService
+from .rmsd_median_service import RMSDMedianService
+from .rmsd_mad_service import RMSDMadService
 
 
 class RMSDFacade:
     """Provide access to RMSD variants with a shared pipeline context.
 
-    The facade lazily creates :class:`RMSDVariantService` instances for the
-    ``mean``, ``median``, and ``mad`` metrics. Each variant reuses the pipeline
+    The facade provides access to concrete RMSD services for the ``mean``,
+    ``median``, and ``mad`` metrics. Each service reuses the pipeline
     configuration supplied via :class:`PipelineData`, ensuring consistent
     behaviour across helper methods.
 
     Examples
     --------
     >>> facade = RMSDFacade(pipeline_data)
-    >>> isinstance(facade.mean, RMSDVariantService)
+    >>> isinstance(facade.mean, RMSDMeanService)
     True
     """
 
@@ -50,8 +52,8 @@ class RMSDFacade:
         """
         Initialise the facade with shared pipeline data.
 
-        Ensures that pipeline data is available before any RMSD computations are
-        requested. The facade caches created variants for reuse.
+        Ensures that pipeline data is available before any RMSD computations
+        are requested.
 
         Parameters
         ----------
@@ -74,14 +76,12 @@ class RMSDFacade:
             raise ValueError("RMSDFacade requires pipeline_data")
 
         self._pipeline_data = pipeline_data
-        self._variants: Dict[str, RMSDVariantService] = {}
 
     @property
-    def mean(self) -> RMSDVariantService:
+    def mean(self) -> RMSDMeanService:
         """
-        Access the mean RMSD variant.
+        Access the mean RMSD service.
 
-        
         Provides the RMSD service that aggregates atom-wise deviations via the
         arithmetic mean. This is the default variant for most workflows.
 
@@ -92,7 +92,7 @@ class RMSDFacade:
 
         Returns
         -------
-        RMSDVariantService
+        RMSDMeanService
             Mean RMSD service exposing helpers such as :meth:`to_reference`,
             :meth:`frame_to_frame`, :meth:`window_frame_to_start`, and
             :meth:`window_frame_to_frame`.
@@ -104,26 +104,26 @@ class RMSDFacade:
         {...}
         """
 
-        return self._get_variant("mean")
+        return RMSDMeanService(self._pipeline_data)
 
     @property
-    def median(self) -> RMSDVariantService:
+    def median(self) -> RMSDMedianService:
         """
-        Access the median RMSD variant.
+        Access the median RMSD service.
 
-        Provides the RMSD service that aggregates atom-wise deviations using the
-        statistical median, offering robustness against outliers.
+        Provides the RMSD service that aggregates atom-wise deviations using
+        the statistical median, offering robustness against outliers.
 
         Parameters
         ----------
         None
             This property does not accept parameters.
-            
+
         Returns
         -------
-        RMSDVariantService
+        RMSDMedianService
             Median RMSD service exposing the same helper methods as the mean
-            variant.
+            service.
 
         Examples
         --------
@@ -132,15 +132,15 @@ class RMSDFacade:
         {...}
         """
 
-        return self._get_variant("median")
+        return RMSDMedianService(self._pipeline_data)
 
     @property
-    def mad(self) -> RMSDVariantService:
+    def mad(self) -> RMSDMadService:
         """
-        Access the MAD RMSD variant.
-    
-        Provides the RMSD service based on the median absolute deviation (MAD),
-        delivering outlier-resistant RMSD values.
+        Access the MAD RMSD service.
+
+        Provides the RMSD service based on the median absolute deviation
+        (MAD), delivering outlier-resistant RMSD values.
 
         Parameters
         ----------
@@ -149,7 +149,7 @@ class RMSDFacade:
 
         Returns
         -------
-        RMSDVariantService
+        RMSDMadService
             MAD RMSD service exposing helpers such as :meth:`to_reference` and
             the window-based calculations.
 
@@ -160,35 +160,7 @@ class RMSDFacade:
         {...}
         """
 
-        return self._get_variant("mad")
-
-    def _get_variant(self, metric: str) -> RMSDVariantService:
-        """
-        Return a cached variant for the requested metric.
-        Retrieves an existing variant service from the cache or instantiates a
-        new one when the metric is requested for the first time.
-
-        Parameters
-        ----------
-        metric : str
-            Name of the robust RMSD metric (``"mean"``, ``"median"``, or
-            ``"mad"``).
-
-        Returns
-        -------
-        RMSDVariantService
-            Variant service configured for the requested metric.
-
-        Examples
-        --------
-        >>> facade = RMSDFacade(pipeline_data)
-        >>> isinstance(facade._get_variant("mean"), RMSDVariantService)
-        True
-        """
-
-        if metric not in self._variants:
-            self._variants[metric] = RMSDVariantService(self._pipeline_data, metric)
-        return self._variants[metric]
+        return RMSDMadService(self._pipeline_data)
 
     def to_reference(
         self,

@@ -28,23 +28,27 @@ import numpy as np
 
 from mdxplain.pipeline.entities.pipeline_data import PipelineData
 
-from .rmsf_variant_facade import RMSFVariantFacade
+from .rmsf_mean_variant_facade import RMSFMeanVariantFacade
+from .rmsf_median_variant_facade import RMSFMedianVariantFacade
+from .rmsf_mad_variant_facade import RMSFMadVariantFacade
 from .rmsf_per_atom_service import RMSFPerAtomService
-from .rmsf_per_residue_aggregation_facade import RMSFPerResidueAggregationFacade
+from .rmsf_per_residue_aggregation_selection_facade import (
+    RMSFPerResidueAggregationSelectionFacade,
+)
 
 
 class RMSFFacade:
     """Provide access to RMSF variants with a shared pipeline context.
 
-    The facade lazily constructs :class:`RMSFVariantFacade` instances for the
-    ``mean``, ``median``, and ``mad`` deviation metrics. All variants reuse the
-    supplied pipeline configuration, ensuring consistent behaviour across the
-    per-atom and per-residue helper services.
+    The facade provides access to concrete RMSF variant facades for the
+    ``mean``, ``median``, and ``mad`` deviation metrics. Each facade reuses
+    the supplied pipeline configuration, ensuring consistent behaviour across
+    the per-atom and per-residue helper services.
 
     Examples
     --------
     >>> facade = RMSFFacade(pipeline_data)
-    >>> isinstance(facade.mean, RMSFVariantFacade)
+    >>> isinstance(facade.mean, RMSFMeanVariantFacade)
     True
     """
 
@@ -78,12 +82,12 @@ class RMSFFacade:
         self._pipeline_data = pipeline_data
 
     @property
-    def mean(self) -> RMSFVariantFacade:
+    def mean(self) -> RMSFMeanVariantFacade:
         """
-        Access the mean RMSF variant.
+        Access the mean RMSF variant facade.
 
-        Provides the RMSF variant that uses the mean for RMSF calculations.
-        So Root Mean Square Fluctuation.
+        Provides the RMSF variant facade that uses the mean for RMSF
+        calculations (Root Mean Square Fluctuation).
 
         Parameters
         ----------
@@ -92,25 +96,25 @@ class RMSFFacade:
 
         Returns
         -------
-        RMSFVariantFacade
-            Mean RMSF variant exposing per-atom and per-residue helpers.
+        RMSFMeanVariantFacade
+            Mean RMSF variant facade exposing per-atom and per-residue helpers.
 
         Examples
         --------
         >>> facade = RMSFFacade(pipeline_data)
-        >>> isinstance(facade.mean.per_atom, RMSFPerAtomService)
+        >>> isinstance(facade.mean, RMSFMeanVariantFacade)
         True
         """
 
-        return self._get_variant("mean")
+        return RMSFMeanVariantFacade(self._pipeline_data)
 
     @property
-    def median(self) -> RMSFVariantFacade:
+    def median(self) -> RMSFMedianVariantFacade:
         """
-        Access the median RMSF variant.
+        Access the median RMSF variant facade.
 
-        Provides the RMSF variant that uses the median for robust RMSF
-        calculations. So Root median Square Fluctuation.
+        Provides the RMSF variant facade that uses the median for robust RMSF
+        calculations (Root Median Square Fluctuation).
 
         Parameters
         ----------
@@ -119,26 +123,26 @@ class RMSFFacade:
 
         Returns
         -------
-        RMSFVariantFacade
-            Median RMSF variant exposing per-atom and per-residue helpers.
+        RMSFMedianVariantFacade
+            Median RMSF variant facade exposing per-atom and per-residue
+            helpers.
 
         Examples
         --------
         >>> facade = RMSFFacade(pipeline_data)
-        >>> facade.median.per_residue.with_median_aggregation.to_median_reference()
-        Traceback (most recent call last):
-        ...
+        >>> isinstance(facade.median, RMSFMedianVariantFacade)
+        True
         """
 
-        return self._get_variant("median")
+        return RMSFMedianVariantFacade(self._pipeline_data)
 
     @property
-    def mad(self) -> RMSFVariantFacade:
-        """Access the MAD RMSF variant.
+    def mad(self) -> RMSFMadVariantFacade:
+        """Access the MAD RMSF variant facade.
 
-        Provides the RMSF variant based on the median absolute deviation (MAD)
-        for outlier-resistant RMSF calculations.
-        So MAD Flucatuation.
+        Provides the RMSF variant facade based on the median absolute
+        deviation (MAD) for outlier-resistant RMSF calculations (MAD
+        Fluctuation).
 
         Parameters
         ----------
@@ -147,40 +151,17 @@ class RMSFFacade:
 
         Returns
         -------
-        RMSFVariantFacade
-            MAD RMSF variant exposing per-atom and per-residue helpers.
+        RMSFMadVariantFacade
+            MAD RMSF variant facade exposing per-atom and per-residue helpers.
 
         Examples
         --------
         >>> facade = RMSFFacade(pipeline_data)
-        >>> isinstance(facade.mad.per_atom, RMSFPerAtomService)
+        >>> isinstance(facade.mad, RMSFMadVariantFacade)
         True
         """
 
-        return self._get_variant("mad")
-
-    def _get_variant(self, metric: str) -> RMSFVariantFacade:
-        """Return a cached variant for the requested metric.
-
-        Retrieves an existing variant from the cache or creates a new one.
-
-        Parameters
-        ----------
-        metric : str
-            Name of the RMSF metric (``"mean"``, ``"median"``, or ``"mad"``).
-
-        Returns
-        -------
-        RMSFVariantFacade
-            Variant facade configured for the requested metric.
-
-        Examples
-        --------
-        >>> facade = RMSFFacade(pipeline_data)
-        >>> isinstance(facade._get_variant("mean"), RMSFVariantFacade)
-        True
-        """
-        return RMSFVariantFacade(self._pipeline_data, metric)
+        return RMSFMadVariantFacade(self._pipeline_data)
 
     @property
     def per_atom(self) -> RMSFPerAtomService:
@@ -204,7 +185,7 @@ class RMSFFacade:
         return self.mean.per_atom
 
     @property
-    def per_residue(self) -> RMSFPerResidueAggregationFacade:
+    def per_residue(self) -> RMSFPerResidueAggregationSelectionFacade:
         """Access the per-residue RMSF helper for the mean metric.
 
         Returns the residue aggregation facade supplied by the classical mean RMSF
@@ -217,7 +198,7 @@ class RMSFFacade:
 
         Returns
         -------
-        RMSFPerResidueAggregationFacade
+        RMSFPerResidueAggregationSelectionFacade
             Residue-level RMSF helper exposing aggregation variants.
 
         Examples

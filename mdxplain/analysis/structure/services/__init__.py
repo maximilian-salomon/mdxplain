@@ -27,18 +27,40 @@ services. All services expect a pipeline context injected via AutoInject.
 
 from .structure_analysis_service import StructureAnalysisService
 from .rmsd_facade import RMSDFacade
-from .rmsd_variant_service import RMSDVariantService
+from .rmsd_mean_service import RMSDMeanService
+from .rmsd_median_service import RMSDMedianService
+from .rmsd_mad_service import RMSDMadService
 from .rmsf_facade import RMSFFacade
-from .rmsf_variant_facade import RMSFVariantFacade
+from .rmsf_mean_variant_facade import RMSFMeanVariantFacade
+from .rmsf_median_variant_facade import RMSFMedianVariantFacade
+from .rmsf_mad_variant_facade import RMSFMadVariantFacade
 from .rmsf_per_atom_service import RMSFPerAtomService
 from .rmsf_per_residue_service import RMSFPerResidueService
+from .rmsf_per_residue_base_agg_facade import BaseRMSFPerResidueAggFacade
+from .rmsf_per_residue_aggregation_selection_facade import (
+    RMSFPerResidueAggregationSelectionFacade,
+)
+from .rmsf_per_residue_mean_agg_facade import RMSFPerResidueMeanAggFacade
+from .rmsf_per_residue_median_agg_facade import RMSFPerResidueMedianAggFacade
+from .rmsf_per_residue_rms_agg_facade import RMSFPerResidueRmsAggFacade
+from .rmsf_per_residue_rms_median_agg_facade import RMSFPerResidueRmsMedianAggFacade
 
 __all__ = [
     "StructureAnalysisService",
     "RMSDFacade",
-    "RMSDVariantService",
+    "RMSDMeanService",
+    "RMSDMedianService",
+    "RMSDMadService",
     "RMSFFacade",
-    "RMSFVariantFacade",
+    "RMSFMeanVariantFacade",
+    "RMSFMedianVariantFacade",
+    "RMSFMadVariantFacade",
     "RMSFPerAtomService",
     "RMSFPerResidueService",
+    "BaseRMSFPerResidueAggFacade",
+    "RMSFPerResidueAggregationSelectionFacade",
+    "RMSFPerResidueMeanAggFacade",
+    "RMSFPerResidueMedianAggFacade",
+    "RMSFPerResidueRmsAggFacade",
+    "RMSFPerResidueRmsMedianAggFacade",
 ]

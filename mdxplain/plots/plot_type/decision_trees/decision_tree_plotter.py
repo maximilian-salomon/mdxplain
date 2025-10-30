@@ -36,6 +36,7 @@ from .helper.decision_tree_visualizer import DecisionTreeVisualizer
 from .helper.decision_tree_visualization_config import DecisionTreeVisualizationConfig
 from .helper.separate_tree_mode_helper import SeparateTreeModeHelper
 from .helper.plot_configuration_helper import PlotConfigurationHelper
+from ....utils.data_utils import DataUtils
 
 # Global config instance
 TREE_CONFIG = DecisionTreeVisualizationConfig()
@@ -566,7 +567,7 @@ class DecisionTreePlotter:
         if save_fig:
             if filename is None:
                 filename = f"decision_trees_{feature_importance_name}.{file_format}"
-            filepath = os.path.join(self.cache_dir, filename)
+            filepath = DataUtils.get_cache_file_path(filename, self.cache_dir)
             fig.savefig(filepath, dpi=dpi, bbox_inches='tight')
             print(f"Figure saved: {filepath}")
 

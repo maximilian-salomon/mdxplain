@@ -38,6 +38,7 @@ if TYPE_CHECKING:
 
 from ...utils.color_utils import ColorUtils
 from ...utils.feature_metadata_utils import FeatureMetadataUtils
+from ...utils.top_features_utils import TopFeaturesUtils
 
 
 class VisualizationDataHelper:
@@ -172,7 +173,8 @@ class VisualizationDataHelper:
     @staticmethod
     def assign_feature_colors(
         top_features: List[Dict[str, Any]],
-        n_features: int
+        n_features: int,
+        offset: int = 0
     ) -> Dict[str, str]:
         """
         Assign distinct colors to top features.
@@ -187,6 +189,9 @@ class VisualizationDataHelper:
             List of top feature dictionaries with 'feature_name' key
         n_features : int
             Number of features to assign colors to
+        offset : int, default=0
+            Color offset for continuous coloring across feature groups.
+            Used to assign different colors to global vs local features.
 
         Returns
         -------
@@ -195,30 +200,103 @@ class VisualizationDataHelper:
 
         Examples
         --------
-        >>> features = [
-        ...     {"feature_name": "ALA_5_CA-GLU_10_CA"},
-        ...     {"feature_name": "GLY_3_phi"}
-        ... ]
-        >>> colors = VisualizationDataHelper.assign_feature_colors(
-        ...     features, 2
+        >>> # Global features get colors 0-2
+        >>> global_features = [{"feature_name": "ALA_5_CA-GLU_10_CA"}]
+        >>> global_colors = VisualizationDataHelper.assign_feature_colors(
+        ...     global_features, 3, offset=0
         ... )
-        >>> colors["ALA_5_CA-GLU_10_CA"]
-        '#bf4040'
+        >>> # Local features get colors 3-5
+        >>> local_features = [{"feature_name": "GLY_3_phi"}]
+        >>> local_colors = VisualizationDataHelper.assign_feature_colors(
+        ...     local_features, 3, offset=3
+        ... )
 
         Notes
         -----
         - Uses ColorUtils.generate_distinct_colors() for color generation
         - If feature_name missing, uses "feature_{i}" as fallback
         - Only first n_features are assigned colors
+        - Offset enables continuous coloring: global (0-N), local (N-M)
         """
-        colors_dict = ColorUtils.generate_distinct_colors(n_features)
+        colors_dict = ColorUtils.generate_distinct_colors(n_features + offset)
 
         feature_colors = {}
         for i, feature in enumerate(top_features[:n_features]):
             feature_name = feature.get("feature_name", f"feature_{i}")
-            feature_colors[feature_name] = colors_dict[i]
+            feature_colors[feature_name] = colors_dict[i + offset]
 
         return feature_colors
+
+    @staticmethod
+    def extract_local_features_and_colors(
+        pipeline_data: PipelineData,
+        fi_data: Any,
+        comp_data: Any,
+        n_top_local: int,
+        n_top_global: int,
+        feature_own_color: bool = True  # Kept for API compatibility
+    ) -> tuple:
+        """
+        Extract local top features and colors per cluster.
+
+        Extracts cluster-specific top features from feature importance data
+        and assigns colors with optional offset for continuous coloring.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data object
+        fi_data : FeatureImportanceData
+            Feature importance data
+        comp_data : ComparisonData
+            Comparison data with sub-comparisons
+        n_top_local : int
+            Number of local features per cluster
+        n_top_global : int
+            Number of global features (for color offset)
+        feature_own_color : bool
+            Not used for color assignment (kept for API compatibility).
+            Colors always use offset to avoid conflicts with global features.
+
+        Returns
+        -------
+        tuple
+            (top_features_local, feature_colors_local) where:
+            - top_features_local: Dict[str, List[Dict]] - features per cluster
+            - feature_colors_local: Dict[str, Dict[str, str]] - colors per cluster
+
+        Examples
+        --------
+        >>> local_feats, local_colors = VisualizationDataHelper.extract_local_features_and_colors(
+        ...     pipeline_data, fi_data, comp_data, n_top_local=3,
+        ...     n_top_global=3, feature_own_color=False
+        ... )
+        >>> local_feats["cluster_0"]
+        [{'feature_name': 'ALA_5-GLU_10', ...}]
+
+        Notes
+        -----
+        Returns empty dicts if n_top_local is 0.
+        Color offset enables continuous coloring: global (0-N), local (N-M).
+        """
+        top_features_local = {}
+        feature_colors_local = {}
+
+        if n_top_local > 0:
+            for sub_comp in comp_data.sub_comparisons:
+                comp_id = sub_comp["name"]
+
+                local_features = TopFeaturesUtils.get_top_features_with_names(
+                    pipeline_data, fi_data, comp_id, n_top_local
+                )
+                top_features_local[comp_id] = local_features
+
+                # Always use offset to avoid color conflicts with global features
+                feature_colors_local[comp_id] = VisualizationDataHelper.assign_feature_colors(
+                    local_features, n_top_local, offset=n_top_global
+                )
+
+        return top_features_local, feature_colors_local
 
     @staticmethod
     def extract_features_from_selector(

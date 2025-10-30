@@ -488,10 +488,15 @@ class ViolinPlotter(FeatureImportanceBasePlotter):
         selector_names, data_arrays = self._prepare_violin_arrays(selector_data)
         positions = list(range(len(selector_names)))
 
+        # Calculate 25% and 75% quantiles for each violin
+        quantiles_list = []
+        for data in data_arrays:
+            quantiles_list.append([0.25, 0.75])
+
         parts = ax.violinplot(
             data_arrays, positions=positions,
-            showmeans=False, showmedians=False,
-            showextrema=False, widths=0.7
+            showmeans=False, showmedians=True,
+            showextrema=False, quantiles=quantiles_list, widths=0.7
         )
 
         self._apply_violin_colors(
@@ -556,6 +561,19 @@ class ViolinPlotter(FeatureImportanceBasePlotter):
             pc.set_alpha(0.7)
             pc.set_edgecolor('black')
             pc.set_linewidth(1)
+
+        # Apply same colors to quantile lines (median and 25%/75%)
+        colors = [data_selector_colors[name] for name in selector_names]
+
+        # Median (50% quantile)
+        if 'cmedians' in parts and parts['cmedians']:
+            parts['cmedians'].set_colors(colors)
+            parts['cmedians'].set_linewidth(2)
+
+        # 25% and 75% quantiles
+        if 'cquantiles' in parts and parts['cquantiles']:
+            parts['cquantiles'].set_colors(colors)
+            parts['cquantiles'].set_linewidth(1.5)
 
     @staticmethod
     def _draw_threshold_line(ax, threshold: Optional[float]) -> None:
