@@ -210,10 +210,6 @@ class TrajectoryManager:
         new_trajectory_data.trajectories = result["trajectories"]
         new_trajectory_data.trajectory_names = result["names"]
         pipeline_data.trajectory_data = new_trajectory_data
-        
-        # Validate trajectory types match memmap setting
-        TrajectoryValidationHelper.validate_trajectory_types(pipeline_data)
-        
         # Update memory estimate based on max atoms
         if pipeline_data.trajectory_data.trajectories:
             max_atoms = max(traj.n_atoms for traj in pipeline_data.trajectory_data.trajectories)
@@ -302,8 +298,6 @@ class TrajectoryManager:
         pipeline_data.trajectory_data.trajectories.extend(new_trajectories)
         pipeline_data.trajectory_data.trajectory_names.extend(new_names)
         
-        TrajectoryValidationHelper.validate_trajectory_types(pipeline_data)
-        
         # Update memory estimate based on max atoms
         if pipeline_data.trajectory_data.trajectories:
             max_atoms = max(traj.n_atoms for traj in pipeline_data.trajectory_data.trajectories)
@@ -382,7 +376,7 @@ class TrajectoryManager:
     def slice_traj(
         self,
         pipeline_data: PipelineData,
-        traj_selection: Union[int, str, List[Union[int, str]], str] = "all",
+        traj_selection: Union[int, str, List[Union[int, str]], str],
         frames: Optional[Union[int, slice, List[int]]] = None,
         stride: Optional[int] = 1,
         cut: Optional[int] = None,
@@ -399,8 +393,8 @@ class TrajectoryManager:
 
         Pipeline mode:
         >>> pipeline = PipelineManager()
-        >>> pipeline.trajectory.slice_traj(frames=1000, traj_selection="all")  # NO pipeline_data parameter
-        >>> pipeline.trajectory.slice_traj(data_selector="folded_frames")  # Use DataSelector
+        >>> pipeline.trajectory.slice_traj(traj_selection="all", frames=1000)  # NO pipeline_data parameter
+        >>> pipeline.trajectory.slice_traj(traj_selection="all", data_selector="folded_frames")  # Use DataSelector
 
         Standalone mode:
         >>> pipeline_data = PipelineData()
@@ -411,8 +405,8 @@ class TrajectoryManager:
         ----------
         pipeline_data : PipelineData
             Pipeline data object
-        traj_selection : int, str, list, or "all", default="all"
-            Selection of trajectories to process:
+        traj_selection : int, str, list, or "all"
+            Selection of trajectories to process (required):
 
             - int: trajectory index
             - str: trajectory name or "all" for all trajectories
@@ -450,25 +444,26 @@ class TrajectoryManager:
         >>> pipeline_data = PipelineData()
         >>> traj_manager = TrajectoryManager()
         >>> traj_manager.load_trajectories(pipeline_data, '../data')
-        >>> traj_manager.slice_traj(pipeline_data, frames=1000, traj_selection="all")
+        >>> traj_manager.slice_traj(pipeline_data, traj_selection="all", frames=1000)
 
         >>> # Slice specific frames with stride for specific trajectories by index
-        >>> traj_manager.slice_traj(pipeline_data, frames=500, stride=5, traj_selection=[0, 2, 4])
+        >>> traj_manager.slice_traj(pipeline_data, traj_selection=[0, 2, 4], frames=500, stride=5)
 
         >>> # Use slice object for precise frame ranges
-        >>> traj_manager.slice_traj(pipeline_data, frames=slice(100, 500), stride=2, traj_selection="all")
+        >>> traj_manager.slice_traj(pipeline_data, traj_selection="all", frames=slice(100, 500), stride=2)
 
         >>> # Select specific frame indices by name selection
         >>> traj_manager.slice_traj(
-        ...     pipeline_data, frames=[0, 10, 20, 50, 100],
-        ...     traj_selection=['system1_prot_traj1', 'system2_prot_traj2']
+        ...     pipeline_data,
+        ...     traj_selection=['system1_prot_traj1', 'system2_prot_traj2'],
+        ...     frames=[0, 10, 20, 50, 100]
         ... )
-        
+
         >>> # Cut trajectory after 1000 frames with stride
-        >>> traj_manager.slice_traj(pipeline_data, cut=1000, stride=2, traj_selection="all")
-        
+        >>> traj_manager.slice_traj(pipeline_data, traj_selection="all", cut=1000, stride=2)
+
         >>> # Use DataSelector to slice trajectories to folded frames only
-        >>> traj_manager.slice_traj(pipeline_data, data_selector="folded_frames")
+        >>> traj_manager.slice_traj(pipeline_data, traj_selection="all", data_selector="folded_frames")
 
         Raises
         ------
@@ -493,8 +488,6 @@ class TrajectoryManager:
             pipeline_data, indices_to_process, frames, data_selector, stride, cut
         )
         
-        # Validate trajectory types match memmap setting
-        TrajectoryValidationHelper.validate_trajectory_types(pipeline_data)
     
     def select_atoms(
         self,
@@ -557,23 +550,20 @@ class TrajectoryManager:
         ValueError
             If trajectories are not loaded or if selection/trajs contain invalid values
         """
-        # Get trajectory indices first
+        # Get trajectory indices to process
         indices_to_process = pipeline_data.trajectory_data.get_trajectory_indices(traj_selection)
-        
-        # Check if features exist for trajectories to be modified
-        TrajectoryValidationHelper.check_features_before_trajectory_changes(
-            pipeline_data, force, "select_atoms", indices_to_process
-        )
 
-        # Validate and set defaults
+        # Validate and set default
         if selection is None:
             selection = self.default_selection
 
         if not pipeline_data.trajectory_data.trajectories:
             raise ValueError("Trajectories must be loaded before atom selection.")
 
-        # Determine which trajectories to process
-        indices_to_process = pipeline_data.trajectory_data.get_trajectory_indices(traj_selection)
+        # Check if features exist for trajectories to be modified
+        TrajectoryValidationHelper.check_features_before_trajectory_changes(
+            pipeline_data, force, "select_atoms", indices_to_process
+        )
 
         # Apply atom selection to selected trajectory
         original_residue_indices = {}
@@ -582,6 +572,10 @@ class TrajectoryManager:
 
             # Get atom indices matching the selection
             atom_indices = traj.topology.select(selection)
+            if len(atom_indices) == 0:
+                raise ValueError(
+                    f"Atom selection '{selection}' produced no atoms for trajectory {idx}"
+                )
 
             # BEFORE reducing trajectory: Get original residue indices for labels
             original_residue_indices[idx] = np.unique([
@@ -600,7 +594,6 @@ class TrajectoryManager:
             pipeline_data.trajectory_data, indices_to_process, original_residue_indices
         )
         
-        TrajectoryValidationHelper.validate_trajectory_types(pipeline_data)
 
     def add_labels(
         self,
@@ -978,14 +971,14 @@ class TrajectoryManager:
     def _merge_tags(self, existing_tags: List[str], new_tags: List[str]) -> List[str]:
         """
         Merge new tags with existing tags, avoiding duplicates.
-        
+
         Parameters
         ----------
         existing_tags : List[str]
             Current list of tags
         new_tags : List[str]
             New tags to add
-        
+
         Returns
         -------
         list
@@ -996,7 +989,7 @@ class TrajectoryManager:
             if tag not in updated_tags:
                 updated_tags.append(tag)
         return updated_tags
-    
+
 
     def rename_trajectories(
         self, pipeline_data: PipelineData, name_mapping: Union[Dict[Union[int, str], str], List[str]]
@@ -1308,25 +1301,16 @@ class TrajectoryManager:
             
             new_trajectories.append(new_traj)
             print(f"Created new trajectory from traj {traj_idx} with {len(frame_indices)} frames")
-        
-        # Validate that all types are correct
-        for traj in new_trajectories:
-            if pipeline_data.use_memmap:
-                if not isinstance(traj, DaskMDTrajectory):
-                    raise TypeError("Internal error: Non-DaskMDTrajectory created with memmap=True")
-            else:
-                if isinstance(traj, DaskMDTrajectory):
-                    raise TypeError("Internal error: DaskMDTrajectory created with memmap=False")
-        
+
         print(f"Created {len(new_trajectories)} trajectories from DataSelector '{data_selector}'")
         return new_trajectories
 
     def superpose(
         self,
         pipeline_data: PipelineData,
+        traj_selection: Union[int, str, List[Union[int, str]], str],
         reference_traj: int = 0,
         reference_frame: int = 0,
-        traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all",
         atom_selection: str = "backbone",
     ) -> None:
         """
@@ -1344,28 +1328,28 @@ class TrajectoryManager:
 
         Pipeline mode:
         >>> pipeline = PipelineManager()
-        >>> pipeline.trajectory.superpose(reference_traj=0, reference_frame=0)  # NO pipeline_data parameter
+        >>> pipeline.trajectory.superpose(traj_selection="all", reference_traj=0, reference_frame=0)  # NO pipeline_data parameter
 
         Standalone mode:
         >>> pipeline_data = PipelineData()
         >>> manager = TrajectoryManager()
-        >>> manager.superpose(pipeline_data, reference_traj=0, reference_frame=0)  # pipeline_data required
+        >>> manager.superpose(pipeline_data, traj_selection="all", reference_traj=0, reference_frame=0)  # pipeline_data required
 
         Parameters
         ----------
         pipeline_data : PipelineData
             Pipeline data container with trajectory data
-        reference_traj : int, default=0
-            Index of trajectory containing the reference frame
-        reference_frame : int, default=0
-            Frame index within reference trajectory to use as alignment reference
-        traj_selection : int, str, list, or "all", default="all"
-            Selection of trajectories to align:
-            
+        traj_selection : int, str, list, or "all"
+            Selection of trajectories to align (required):
+
             - int: single trajectory by index
             - str: trajectory name, tag, or pattern (e.g., "tag:system_A", "traj_*")
             - list: multiple indices/names/tags
             - "all": all loaded trajectories
+        reference_traj : int, default=0
+            Index of trajectory containing the reference frame
+        reference_frame : int, default=0
+            Frame index within reference trajectory to use as alignment reference
         atom_selection : str, default="backbone"
             MDTraj selection string for atoms to use in alignment calculation.
             Common selections: "backbone", "name CA", "protein", "resid 10 to 50"
@@ -1379,10 +1363,11 @@ class TrajectoryManager:
         Examples
         --------
         Basic alignment:
-        >>> pipeline.trajectory.superpose()  # Align all to first frame of first trajectory
+        >>> pipeline.trajectory.superpose(traj_selection="all")  # Align all to first frame of first trajectory
 
         Specific reference:
         >>> pipeline.trajectory.superpose(
+        ...     traj_selection="all",
         ...     reference_traj=2,
         ...     reference_frame=100,
         ...     atom_selection="name CA"
@@ -1422,7 +1407,7 @@ class TrajectoryManager:
             If atom_selection produces no atoms or incompatible atom counts
         """
         # Validate all parameters using TrajectoryValidationHelper
-        reference_trajectory, traj_indices, ref_frame, ref_atom_indices = (
+        _, traj_indices, ref_frame, ref_atom_indices = (
             TrajectoryValidationHelper.validate_superpose_parameters(
                 pipeline_data, reference_traj, reference_frame, atom_selection, traj_selection
             )
@@ -1449,3 +1434,871 @@ class TrajectoryManager:
             print(f"    ✓ Trajectory {idx} aligned successfully")
 
         print(f"Superposition completed successfully for {len(traj_indices)} trajectories")
+
+    def center_coordinates(
+        self,
+        pipeline_data: PipelineData,
+        traj_selection: Union[int, str, List[Union[int, str]], str],
+        mass_weighted: bool = False,
+        force: bool = False,
+    ) -> None:
+        """
+        Center trajectory coordinates at the origin (always in-place).
+
+        This method centers all frames of selected trajectories at the origin using
+        either geometric centering (default) or mass-weighted centering. The operation
+        is performed in-place, modifying the original trajectories. For memory-mapped
+        trajectories, the centering is performed chunk-wise to manage memory efficiently.
+
+        Warning
+        -------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.trajectory.center_coordinates(traj_selection="all")  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = TrajectoryManager()
+        >>> manager.center_coordinates(pipeline_data, traj_selection="all")  # pipeline_data required
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data container with trajectory data
+        traj_selection : int, str, list, or "all"
+            Selection of trajectories to center (required):
+
+            - int: single trajectory by index
+            - str: trajectory name, tag, or pattern (e.g., "tag:system_A", "traj_*")
+            - list: multiple indices/names/tags
+            - "all": all loaded trajectories
+        mass_weighted : bool, default=False
+            Use mass-weighted centering instead of geometric centering.
+            When True, the center of mass is used; when False, the geometric
+            center (centroid) is used.
+        force : bool, default=False
+            Whether to force centering even when features have been calculated.
+            When True, existing features become invalid and should be recalculated.
+
+        Returns
+        -------
+        None
+            Modifies trajectories in-place. No return value.
+
+        Examples
+        --------
+        Basic geometric centering:
+        >>> pipeline.trajectory.center_coordinates(traj_selection="all")
+
+        Mass-weighted centering:
+        >>> pipeline.trajectory.center_coordinates(
+        ...     traj_selection="all",
+        ...     mass_weighted=True
+        ... )
+
+        Center specific trajectories:
+        >>> pipeline.trajectory.center_coordinates(
+        ...     traj_selection=[0, 1, 2],
+        ...     mass_weighted=False
+        ... )
+
+        Tag-based selection:
+        >>> pipeline.trajectory.center_coordinates(
+        ...     traj_selection="tag:production",
+        ...     mass_weighted=True
+        ... )
+
+        Notes
+        -----
+        - Dask trajectories (use_memmap=True) handle memory management automatically
+        - Centering is useful before RMSD calculations or structural analysis
+        - Mass-weighted centering is more physically meaningful for biomolecules
+        - This operation modifies coordinates but preserves topology
+
+        Raises
+        ------
+        ValueError
+            If no trajectories are loaded
+        ValueError
+            If traj_selection contains invalid indices/names
+        """
+        # Get trajectory indices to process
+        indices_to_process = pipeline_data.trajectory_data.get_trajectory_indices(
+            traj_selection
+        )
+
+        # Check if features exist for trajectories to be centered
+        TrajectoryValidationHelper.check_features_before_trajectory_changes(
+            pipeline_data, force, "center_coordinates", indices_to_process
+        )
+
+        print(
+            f"Centering {len(indices_to_process)} trajectories "
+            f"({'mass-weighted' if mass_weighted else 'geometric'})"
+        )
+
+        # Center each selected trajectory
+        for idx in indices_to_process:
+            trajectory = pipeline_data.trajectory_data.trajectories[idx]
+
+            print(f"  Centering trajectory {idx} ({trajectory.n_frames} frames)...")
+
+            # Apply centering (in-place for both DaskMDTrajectory and md.Trajectory)
+            trajectory.center_coordinates(mass_weighted=mass_weighted)
+
+            print(f"    ✓ Trajectory {idx} centered successfully")
+
+        print(
+            f"Centering completed successfully for {len(indices_to_process)} trajectories"
+        )
+
+    def smooth(
+        self,
+        pipeline_data: PipelineData,
+        traj_selection: Union[int, str, List[Union[int, str]], str],
+        width: int,
+        order: Optional[int] = None,
+        atom_selection: Optional[str] = None,
+        force: bool = False,
+    ) -> None:
+        """
+        Apply Savitzky-Golay smoothing filter to trajectory coordinates (always in-place).
+
+        This method smooths trajectory coordinates using a Savitzky-Golay filter,
+        which fits successive sub-sets of adjacent data points with a low-degree
+        polynomial by linear least squares. The operation is performed in-place,
+        modifying the original trajectories. Smoothing can be applied to all atoms
+        or a subset selected via atom_selection.
+
+        Warning
+        -------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.trajectory.smooth(traj_selection="all", width=5)  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = TrajectoryManager()
+        >>> manager.smooth(pipeline_data, traj_selection="all", width=5)  # pipeline_data required
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data container with trajectory data
+        traj_selection : int, str, list, or "all"
+            Selection of trajectories to smooth (required):
+
+            - int: single trajectory by index
+            - str: trajectory name, tag, or pattern (e.g., "tag:system_A", "traj_*")
+            - list: multiple indices/names/tags
+            - "all": all loaded trajectories
+        width : int
+            Smoothing window width (must be odd). Larger values produce smoother
+            trajectories but may lose important structural details.
+        order : int, optional
+            Polynomial order for Savitzky-Golay filter. If None, uses default
+            from MDTraj implementation. Typical values: 2-4.
+        atom_selection : str, optional
+            MDTraj selection string for atoms to smooth. If None, smooths all atoms.
+            Common selections: "backbone", "name CA", "protein", "resid 10 to 50"
+            See: https://mdtraj.org/1.9.4/atom_selection.html
+        force : bool, default=False
+            Whether to force smoothing even when features have been calculated.
+            When True, existing features become invalid and should be recalculated.
+
+        Returns
+        -------
+        None
+            Modifies trajectories in-place. No return value.
+
+        Examples
+        --------
+        Basic smoothing of all atoms:
+        >>> pipeline.trajectory.smooth(traj_selection="all", width=5)
+
+        Smooth with specific polynomial order:
+        >>> pipeline.trajectory.smooth(
+        ...     traj_selection="all",
+        ...     width=7,
+        ...     order=3
+        ... )
+
+        Smooth only backbone atoms:
+        >>> pipeline.trajectory.smooth(
+        ...     traj_selection=[0, 1, 2],
+        ...     width=5,
+        ...     atom_selection="backbone"
+        ... )
+
+        Smooth CA atoms for specific trajectories:
+        >>> pipeline.trajectory.smooth(
+        ...     traj_selection="tag:production",
+        ...     width=3,
+        ...     atom_selection="name CA"
+        ... )
+
+        Notes
+        -----
+        - Dask trajectories (use_memmap=True) handle memory management automatically
+        - Smoothing reduces high-frequency noise but may obscure fast dynamics
+        - Window width should be odd; even values will be adjusted internally
+        - Larger windows create smoother trajectories but lose temporal resolution
+        - This operation modifies coordinates but preserves topology
+
+        Raises
+        ------
+        ValueError
+            If no trajectories are loaded
+        ValueError
+            If traj_selection contains invalid indices/names
+        ValueError
+            If width is not positive
+        ValueError
+            If atom_selection is invalid or produces no atoms
+        """
+        # Get trajectory indices to process
+        indices_to_process = pipeline_data.trajectory_data.get_trajectory_indices(
+            traj_selection
+        )
+
+        # Check if features exist for trajectories to be smoothed
+        TrajectoryValidationHelper.check_features_before_trajectory_changes(
+            pipeline_data, force, "smooth", indices_to_process
+        )
+
+        print(
+            f"Smoothing {len(indices_to_process)} trajectories "
+            f"(width={width}, order={order}, atoms={'all' if atom_selection is None else atom_selection})"
+        )
+
+        # Smooth each selected trajectory
+        for idx in indices_to_process:
+            trajectory = pipeline_data.trajectory_data.trajectories[idx]
+
+            print(f"  Smoothing trajectory {idx} ({trajectory.n_frames} frames)...")
+
+            # Get atom indices if selection specified
+            atom_indices = None
+            if atom_selection is not None:
+                atom_indices = trajectory.topology.select(atom_selection)
+                if len(atom_indices) == 0:
+                    raise ValueError(
+                        f"Atom selection '{atom_selection}' produced no atoms for trajectory {idx}"
+                    )
+
+            # Apply smoothing (in-place for both types)
+            trajectory.smooth(
+                width=width, order=order, atom_indices=atom_indices, inplace=True
+            )
+
+            print(f"    ✓ Trajectory {idx} smoothed successfully")
+
+        print(
+            f"Smoothing completed successfully for {len(indices_to_process)} trajectories"
+        )
+
+    def image_molecules(
+        self,
+        pipeline_data: PipelineData,
+        traj_selection: Union[int, str, List[Union[int, str]], str],
+        anchor_molecules: Optional[np.ndarray] = None,
+        other_molecules: Optional[np.ndarray] = None,
+        make_whole: bool = True,
+        force: bool = False,
+    ) -> None:
+        """
+        Apply periodic boundary condition imaging to molecules (always in-place).
+
+        This method recenters molecules and wraps them into the primary unit cell
+        using MDTraj's image_molecules method. This is essential for visualizing
+        trajectories with periodic boundary conditions correctly. The operation
+        modifies coordinates but does not change the number of atoms or topology.
+
+        Warning
+        -------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.trajectory.image_molecules(traj_selection="all")  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = TrajectoryManager()
+        >>> manager.image_molecules(pipeline_data, traj_selection="all")  # pipeline_data required
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data container with trajectory data
+        traj_selection : int, str, list, or "all"
+            Selection of trajectories to image (required):
+
+            - int: single trajectory by index
+            - str: trajectory name, tag, or pattern (e.g., "tag:system_A", "traj_*")
+            - list: multiple indices/names/tags
+            - "all": all loaded trajectories
+        anchor_molecules : np.ndarray, optional
+            Indices of molecules to anchor at the origin. If None, uses all
+            molecules. Molecules are typically defined by bonded groups in the
+            topology.
+        other_molecules : np.ndarray, optional
+            Indices of other molecules to image relative to anchors. If None,
+            uses all molecules not in anchor_molecules.
+        make_whole : bool, default=True
+            Make molecules whole across periodic boundary conditions before
+            imaging. This ensures molecules are not split across the box boundary.
+        force : bool, default=False
+            Whether to force imaging even when features have been calculated.
+            When True, existing features become invalid and should be recalculated.
+
+        Returns
+        -------
+        None
+            Modifies trajectories in-place. No return value.
+
+        Examples
+        --------
+        Basic imaging (default parameters):
+        >>> pipeline.trajectory.image_molecules(traj_selection="all")
+
+        Image without making molecules whole:
+        >>> pipeline.trajectory.image_molecules(
+        ...     traj_selection="all",
+        ...     make_whole=False
+        ... )
+
+        Image with specific anchor molecules:
+        >>> # Anchor protein (molecules 0-2), image solvent around it
+        >>> protein_molecules = np.array([0, 1, 2])
+        >>> pipeline.trajectory.image_molecules(
+        ...     traj_selection=[0, 1],
+        ...     anchor_molecules=protein_molecules,
+        ...     make_whole=True
+        ... )
+
+        Tag-based selection:
+        >>> pipeline.trajectory.image_molecules(
+        ...     traj_selection="tag:production",
+        ...     make_whole=True
+        ... )
+
+        Notes
+        -----
+        - Dask trajectories (use_memmap=True) handle memory management automatically
+        - Requires trajectory to have periodic boundary condition information
+        - Essential for correct visualization of periodic systems
+        - Does not change topology or number of atoms
+        - Make molecules whole first to prevent artifacts
+
+        Raises
+        ------
+        ValueError
+            If no trajectories are loaded
+        ValueError
+            If traj_selection contains invalid indices/names
+        ValueError
+            If trajectory lacks unit cell information
+        """
+        # Get trajectory indices to process
+        indices_to_process = pipeline_data.trajectory_data.get_trajectory_indices(
+            traj_selection
+        )
+
+        # Check if features exist for trajectories to be imaged
+        TrajectoryValidationHelper.check_features_before_trajectory_changes(
+            pipeline_data, force, "image_molecules", indices_to_process
+        )
+
+        print(
+            f"Imaging {len(indices_to_process)} trajectories "
+            f"(make_whole={make_whole})"
+        )
+
+        # Image each selected trajectory
+        for idx in indices_to_process:
+            trajectory = pipeline_data.trajectory_data.trajectories[idx]
+
+            print(f"  Imaging trajectory {idx} ({trajectory.n_frames} frames)...")
+
+            # Apply imaging (in-place for both DaskMDTrajectory and md.Trajectory)
+            trajectory.image_molecules(
+                anchor_molecules=anchor_molecules,
+                other_molecules=other_molecules,
+                make_whole=make_whole,
+                inplace=True,
+            )
+
+            print(f"    ✓ Trajectory {idx} imaged successfully")
+
+        print(
+            f"Imaging completed successfully for {len(indices_to_process)} trajectories"
+        )
+
+    def remove_solvent(
+        self,
+        pipeline_data: PipelineData,
+        traj_selection: Union[int, str, List[Union[int, str]], str],
+        exclude: Optional[list] = None,
+        force: bool = False,
+    ) -> None:
+        """
+        Remove solvent atoms from trajectories (always in-place).
+
+        This method removes solvent atoms using MDTraj's remove_solvent method,
+        which identifies and removes common solvent molecules (water, ions, etc.).
+        The operation modifies both coordinates AND topology, changing the number
+        of atoms in the trajectory. Labels are automatically adjusted to match the
+        new residue structure.
+
+        Warning
+        -------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.trajectory.remove_solvent(traj_selection="all")  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = TrajectoryManager()
+        >>> manager.remove_solvent(pipeline_data, traj_selection="all")  # pipeline_data required
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data container with trajectory data
+        traj_selection : int, str, list, or "all"
+            Selection of trajectories to process (required):
+
+            - int: single trajectory by index
+            - str: trajectory name, tag, or pattern (e.g., "tag:system_A", "traj_*")
+            - list: multiple indices/names/tags
+            - "all": all loaded trajectories
+        exclude : list, optional
+            List of solvent residue names to KEEP (not remove). Common values
+            include ['HOH', 'WAT'] to keep water molecules while removing other
+            solvents. If None, removes all recognized solvent molecules.
+        force : bool, default=False
+            Whether to force removal even when features have been calculated.
+            When True, existing features become invalid and should be recalculated.
+
+        Returns
+        -------
+        None
+            Modifies trajectories in-place. No return value.
+
+        Examples
+        --------
+        Remove all solvent:
+        >>> pipeline.trajectory.remove_solvent(traj_selection="all")
+
+        Keep water, remove other solvent:
+        >>> pipeline.trajectory.remove_solvent(
+        ...     traj_selection="all",
+        ...     exclude=['HOH', 'WAT']
+        ... )
+
+        Remove solvent from specific trajectories:
+        >>> pipeline.trajectory.remove_solvent(
+        ...     traj_selection=[0, 1, 2],
+        ...     exclude=None
+        ... )
+
+        Tag-based selection:
+        >>> pipeline.trajectory.remove_solvent(
+        ...     traj_selection="tag:production"
+        ... )
+
+        Notes
+        -----
+        - Dask trajectories (use_memmap=True) handle memory management automatically
+        - This operation CHANGES the number of atoms and topology
+        - Labels are automatically filtered to match new residue structure
+        - Features must be recalculated after this operation
+        - Common solvent names: HOH, WAT, SOL, Na+, Cl-, etc.
+
+        Raises
+        ------
+        ValueError
+            If no trajectories are loaded
+        ValueError
+            If traj_selection contains invalid indices/names
+        """
+        # Get trajectory indices to process
+        indices_to_process = pipeline_data.trajectory_data.get_trajectory_indices(
+            traj_selection
+        )
+
+        # Check if features exist for trajectories to be modified
+        TrajectoryValidationHelper.check_features_before_trajectory_changes(
+            pipeline_data, force, "remove_solvent", indices_to_process
+        )
+
+        print(
+            f"Removing solvent from {len(indices_to_process)} trajectories "
+            f"(exclude={exclude if exclude else 'none'})"
+        )
+
+        # Track kept residue indices for label filtering
+        kept_residue_indices = {}
+        # Store lightweight residue structure info for mapping
+        original_residue_info = {}
+
+        # Process each selected trajectory
+        for idx in indices_to_process:
+            trajectory = pipeline_data.trajectory_data.trajectories[idx]
+
+            print(
+                f"  Removing solvent from trajectory {idx} "
+                f"({trajectory.n_frames} frames, {trajectory.n_atoms} atoms)..."
+            )
+
+            # BEFORE removal: Store lightweight residue structure (name + atoms)
+            # This allows us to map remaining residues back to their original indices
+            # Note: resSeq is unreliable as MDTraj renumbers after remove_solvent()
+            original_residue_info[idx] = [
+                (res.name, tuple((a.name, a.element.symbol) for a in res.atoms))
+                for res in trajectory.topology.residues
+            ]
+
+            # Store counts before modification
+            original_n_atoms = trajectory.n_atoms
+            original_n_residues = trajectory.n_residues
+
+            # Apply solvent removal (Trajectory method decides what is solvent!)
+            trajectory.remove_solvent(exclude=exclude, inplace=True)
+
+            # AFTER removal: Map remaining residues back to their ORIGINAL indices
+            # Helper handles the matching of residues by name + atom composition
+            kept_residue_indices[idx] = LabelOperationHelper.map_residues_to_original_indices(
+                original_residue_info[idx], trajectory.topology
+            )
+
+            atoms_removed = original_n_atoms - trajectory.n_atoms
+            residues_removed = original_n_residues - trajectory.n_residues
+
+            print(
+                f"    ✓ Trajectory {idx} processed: "
+                f"{original_n_atoms} → {trajectory.n_atoms} atoms, "
+                f"{original_n_residues} → {trajectory.n_residues} residues "
+                f"({atoms_removed} atoms, {residues_removed} residues removed)"
+            )
+
+        # Apply same removal to labels for consistency
+        LabelOperationHelper.apply_atom_selection_to_labels(
+            pipeline_data.trajectory_data, indices_to_process, kept_residue_indices
+        )
+
+        print(
+            f"Solvent removal completed successfully for {len(indices_to_process)} trajectories"
+        )
+
+    def join(
+        self,
+        pipeline_data: PipelineData,
+        target_traj: Union[int, str],
+        source_traj: Union[int, str],
+        check_topology: bool = True,
+        remove_source: bool = True,
+        new_name: Optional[str] = None,
+        force: bool = False,
+    ) -> None:
+        """
+        Join two trajectories along the frame axis (in-place on target).
+
+        This method concatenates frames from source_traj to target_traj, creating
+        a single trajectory with combined frames. The target trajectory is modified
+        in-place to contain all frames. Optionally, the source trajectory can be
+        removed after joining, and the target can be renamed.
+
+        Warning
+        -------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.trajectory.join(target_traj=0, source_traj=1)  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = TrajectoryManager()
+        >>> manager.join(pipeline_data, target_traj=0, source_traj=1)  # pipeline_data required
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data container with trajectory data
+        target_traj : int or str
+            Target trajectory (receives joined frames). Can be index or name.
+        source_traj : int or str
+            Source trajectory (provides frames to join). Can be index or name.
+        check_topology : bool, default=True
+            Whether to check topology compatibility between trajectories.
+            When True, raises error if atom counts differ.
+        remove_source : bool, default=True
+            Whether to remove source trajectory after joining.
+            When True, source_traj is deleted from trajectory list.
+        new_name : str, optional
+            New name for target trajectory after joining.
+            If None, keeps original target name.
+        force : bool, default=False
+            Whether to force join even when features have been calculated.
+            When True, existing features become invalid and should be recalculated.
+
+        Returns
+        -------
+        None
+            Modifies target trajectory in-place and optionally removes source.
+
+        Examples
+        --------
+        Basic join (source removed):
+        >>> pipeline.trajectory.join(target_traj=0, source_traj=1)
+
+        Join and keep source:
+        >>> pipeline.trajectory.join(
+        ...     target_traj=0,
+        ...     source_traj=1,
+        ...     remove_source=False
+        ... )
+
+        Join with renaming:
+        >>> pipeline.trajectory.join(
+        ...     target_traj="system_A_rep1",
+        ...     source_traj="system_A_rep2",
+        ...     new_name="system_A_combined"
+        ... )
+
+        Join without topology check:
+        >>> pipeline.trajectory.join(
+        ...     target_traj=0,
+        ...     source_traj=1,
+        ...     check_topology=False
+        ... )
+
+        Notes
+        -----
+        - Dask trajectories (use_memmap=True) handle memory management automatically
+        - Both trajectories must have compatible topologies (same atoms)
+        - Time arrays are concatenated; check for time continuity separately
+        - Labels are preserved for target trajectory only
+        - Source trajectory labels are discarded
+
+        Raises
+        ------
+        ValueError
+            If no trajectories are loaded
+        ValueError
+            If target_traj or source_traj are invalid
+        ValueError
+            If target and source refer to same trajectory
+        ValueError
+            If topologies are incompatible (when check_topology=True)
+        """
+        # Resolve and validate trajectory indices
+        target_idx, source_idx = TrajectoryValidationHelper.resolve_and_validate_traj_pair(
+            pipeline_data.trajectory_data, target_traj, source_traj
+        )
+
+        # Check features for both trajectories
+        TrajectoryValidationHelper.check_features_before_trajectory_changes(
+            pipeline_data, force, "join", [target_idx, source_idx]
+        )
+
+        target_trajectory = pipeline_data.trajectory_data.trajectories[target_idx]
+        source_trajectory = pipeline_data.trajectory_data.trajectories[source_idx]
+
+        print(
+            f"Joining trajectories: target={target_idx} ({target_trajectory.n_frames} frames) + "
+            f"source={source_idx} ({source_trajectory.n_frames} frames)"
+        )
+
+        # Perform join operation
+        joined_traj = target_trajectory.join(source_trajectory, check_topology=check_topology)
+
+        # Update target trajectory with joined result
+        pipeline_data.trajectory_data.trajectories[target_idx] = joined_traj
+
+        print(
+            f"  ✓ Joined trajectory now has {joined_traj.n_frames} frames "
+            f"({target_trajectory.n_frames} + {source_trajectory.n_frames})"
+        )
+
+        # Optionally rename target
+        if new_name is not None:
+            pipeline_data.trajectory_data.trajectory_names[target_idx] = new_name
+            print(f"  ✓ Renamed target trajectory to '{new_name}'")
+
+        # Optionally remove source trajectory
+        if remove_source:
+            # Use remove_trajectory helper to handle cleanup
+            TrajectoryProcessHelper.execute_removal(
+                pipeline_data.trajectory_data, [source_idx]
+            )
+            print(f"  ✓ Removed source trajectory (index {source_idx})")
+
+        print("Join operation completed successfully")
+
+    def stack(
+        self,
+        pipeline_data: PipelineData,
+        target_traj: Union[int, str],
+        source_traj: Union[int, str],
+        remove_source: bool = True,
+        new_name: Optional[str] = None,
+        force: bool = False,
+    ) -> None:
+        """
+        Stack two trajectories along the atom axis (creates new trajectory).
+
+        This method combines atoms from source_traj with target_traj, creating
+        a single trajectory with combined atoms but requiring identical frame counts.
+        This is useful for combining protein and ligand trajectories or merging
+        different molecular components. The target trajectory is replaced with the
+        stacked result, and optionally the source can be removed.
+
+        Warning
+        -------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.trajectory.stack(target_traj=0, source_traj=1)  # NO pipeline_data parameter
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = TrajectoryManager()
+        >>> manager.stack(pipeline_data, target_traj=0, source_traj=1)  # pipeline_data required
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data container with trajectory data
+        target_traj : int or str
+            Target trajectory (receives stacked atoms). Can be index or name.
+        source_traj : int or str
+            Source trajectory (provides atoms to stack). Can be index or name.
+        remove_source : bool, default=True
+            Whether to remove source trajectory after stacking.
+            When True, source_traj is deleted from trajectory list.
+        new_name : str, optional
+            New name for target trajectory after stacking.
+            If None, keeps original target name.
+        force : bool, default=False
+            Whether to force stack even when features have been calculated.
+            When True, existing features become invalid and should be recalculated.
+
+        Returns
+        -------
+        None
+            Replaces target trajectory with stacked result and optionally removes source.
+
+        Examples
+        --------
+        Basic stack (source removed):
+        >>> pipeline.trajectory.stack(target_traj=0, source_traj=1)
+
+        Stack and keep source:
+        >>> pipeline.trajectory.stack(
+        ...     target_traj=0,
+        ...     source_traj=1,
+        ...     remove_source=False
+        ... )
+
+        Stack with renaming:
+        >>> pipeline.trajectory.stack(
+        ...     target_traj="protein",
+        ...     source_traj="ligand",
+        ...     new_name="complex"
+        ... )
+
+        Notes
+        -----
+        - Dask trajectories (use_memmap=True) handle memory management automatically
+        - Both trajectories MUST have same number of frames
+        - Topologies are merged to create combined system
+        - Labels from both trajectories are combined and renumbered
+        - Useful for combining protein + ligand, or multiple chains
+
+        Raises
+        ------
+        ValueError
+            If no trajectories are loaded
+        ValueError
+            If target_traj or source_traj are invalid
+        ValueError
+            If target and source refer to same trajectory
+        ValueError
+            If frame counts differ between trajectories
+        """
+        # Resolve and validate trajectory indices
+        target_idx, source_idx = TrajectoryValidationHelper.resolve_and_validate_traj_pair(
+            pipeline_data.trajectory_data, target_traj, source_traj
+        )
+
+        # Check features for both trajectories
+        TrajectoryValidationHelper.check_features_before_trajectory_changes(
+            pipeline_data, force, "stack", [target_idx, source_idx]
+        )
+
+        target_trajectory = pipeline_data.trajectory_data.trajectories[target_idx]
+        source_trajectory = pipeline_data.trajectory_data.trajectories[source_idx]
+
+        # Validate frame counts
+        if target_trajectory.n_frames != source_trajectory.n_frames:
+            raise ValueError(
+                f"Trajectories must have same number of frames for stacking. "
+                f"Target has {target_trajectory.n_frames}, source has {source_trajectory.n_frames}"
+            )
+
+        print(
+            f"Stacking trajectories: target={target_idx} ({target_trajectory.n_atoms} atoms) + "
+            f"source={source_idx} ({source_trajectory.n_atoms} atoms)"
+        )
+
+        # Store original atom/residue counts for label handling
+        target_n_residues = target_trajectory.n_residues
+
+        # Perform stack operation
+        stacked_traj = target_trajectory.stack(source_trajectory)
+
+        # Update target trajectory with stacked result
+        pipeline_data.trajectory_data.trajectories[target_idx] = stacked_traj
+
+        print(
+            f"  ✓ Stacked trajectory now has {stacked_traj.n_atoms} atoms "
+            f"({target_trajectory.n_atoms} + {source_trajectory.n_atoms})"
+        )
+
+        # Combine labels from both trajectories
+        LabelOperationHelper.combine_stack_labels(
+            pipeline_data.trajectory_data, target_idx, source_idx, target_n_residues
+        )
+
+        # Optionally rename target
+        if new_name is not None:
+            pipeline_data.trajectory_data.trajectory_names[target_idx] = new_name
+            print(f"  ✓ Renamed target trajectory to '{new_name}'")
+
+        # Optionally remove source trajectory
+        if remove_source:
+            # Use remove_trajectory helper to handle cleanup
+            TrajectoryProcessHelper.execute_removal(
+                pipeline_data.trajectory_data, [source_idx]
+            )
+            print(f"  ✓ Removed source trajectory (index {source_idx})")
+
+        # Validate trajectory types
+
+        print("Stack operation completed successfully")
