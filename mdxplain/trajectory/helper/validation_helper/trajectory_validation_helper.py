@@ -27,11 +27,12 @@ ensuring that existing features are properly handled before modifications.
 
 from __future__ import annotations
 
-from typing import Any, List, Optional, Union, TYPE_CHECKING
+from typing import Any, List, Optional, Tuple, Union, TYPE_CHECKING
 import numpy as np
 
 if TYPE_CHECKING:
     from ....pipeline.entities.pipeline_data import PipelineData
+    from ...entities.trajectory_data import TrajectoryData
 
 
 class TrajectoryValidationHelper:
@@ -199,44 +200,50 @@ class TrajectoryValidationHelper:
         return selector_data
 
     @staticmethod
-    def validate_trajectory_types(pipeline_data: PipelineData) -> None:
+    def resolve_and_validate_traj_pair(
+        trajectory_data: TrajectoryData,
+        target_traj: Union[int, str],
+        source_traj: Union[int, str],
+    ) -> Tuple[int, int]:
         """
-        Validate that all trajectories match the memmap setting.
-        
+        Resolve and validate trajectory pair for join/stack operations.
+
         Parameters
         ----------
-        pipeline_data : PipelineData
-            Pipeline data object
-            
+        trajectory_data : TrajectoryData
+            Trajectory data container
+        target_traj : int or str
+            Target trajectory selector
+        source_traj : int or str
+            Source trajectory selector
+
+        Returns
+        -------
+        tuple
+            (target_idx, source_idx) as integers
+
         Raises
         ------
-        TypeError
-            If trajectory types don't match use_memmap setting
-            
-        Examples
-        --------
-        >>> TrajectoryValidationHelper.validate_trajectory_types(pipeline_data)
-        """       
-        if not pipeline_data.trajectory_data.trajectories:
-            return  # No trajectories, nothing to validate
-        
-        use_memmap = pipeline_data.use_memmap
-        
-        for idx, traj in enumerate(pipeline_data.trajectory_data.trajectories):
-            if use_memmap:
-                if not hasattr(traj, '__class__') or traj.__class__.__name__ != 'DaskMDTrajectory':
-                    raise TypeError(
-                        f"Trajectory {idx} is {type(traj).__name__} but use_memmap=True. "
-                        f"All trajectories must be DaskMDTrajectory when memmap is enabled. "
-                        f"Please reload trajectories with use_memmap=True."
-                    )
-            else:
-                if hasattr(traj, '__class__') and traj.__class__.__name__ == 'DaskMDTrajectory':
-                    raise TypeError(
-                        f"Trajectory {idx} is DaskMDTrajectory but use_memmap=False. "
-                        f"All trajectories must be md.Trajectory when memmap is disabled. "
-                        f"Please reload trajectories with use_memmap=False."
-                    )
+        ValueError
+            If selectors don't resolve to exactly one trajectory each
+        ValueError
+            If target and source refer to same trajectory
+        """
+        target_indices = trajectory_data.get_trajectory_indices(target_traj)
+        source_indices = trajectory_data.get_trajectory_indices(source_traj)
+
+        if len(target_indices) != 1:
+            raise ValueError(f"target_traj must resolve to exactly 1 trajectory, got {len(target_indices)}")
+        if len(source_indices) != 1:
+            raise ValueError(f"source_traj must resolve to exactly 1 trajectory, got {len(source_indices)}")
+
+        target_idx = target_indices[0]
+        source_idx = source_indices[0]
+
+        if target_idx == source_idx:
+            raise ValueError("target_traj and source_traj must be different trajectories")
+
+        return target_idx, source_idx
 
     @staticmethod
     def _check_specific_trajectory_features(

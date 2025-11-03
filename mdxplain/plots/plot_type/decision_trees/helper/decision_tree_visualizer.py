@@ -348,7 +348,8 @@ class DecisionTreeVisualizer:
         width, height = TreePositionCalculator.get_text_size(node_text, self.fontsize, self.node_pad)
         self.node_sizes[node] = (width, height)
 
-        left_label, right_label = NodeTextFormatter.get_edge_labels(feature_idx, threshold, self.feature_metadata, self.short_labels, self.short_edge_labels, self.wrap_length)
+        # Path labels (in boxes) always use full format
+        left_label, right_label = NodeTextFormatter.get_edge_labels(feature_idx, threshold, self.feature_metadata, self.short_labels, False, self.wrap_length)
         self._recurse_to_children(node, depth, path, left_label, right_label)
 
     def _recurse_to_children(self, node, depth, path, left_label, right_label):

@@ -56,13 +56,13 @@ class TestPipelineSaveLoad:
         
         # Save pipeline
         save_path = temp_dir / "empty_pipeline.pkl"
-        pipeline.save(str(save_path))
+        pipeline.save_to_single_file(str(save_path))
         
         # Verify file exists
         assert save_path.exists()
         
         # Load pipeline
-        loaded = PipelineManager.load_pipeline(str(save_path))
+        loaded = PipelineManager.load_from_single_file(str(save_path))
         
         # Verify basic structure
         assert loaded is not None
@@ -90,10 +90,10 @@ class TestPipelineSaveLoad:
         
         # Save pipeline
         save_path = temp_dir / "trajectory_pipeline.pkl"
-        pipeline.save(str(save_path))
+        pipeline.save_to_single_file(str(save_path))
         
         # Load pipeline
-        loaded = PipelineManager.load_pipeline(str(save_path))
+        loaded = PipelineManager.load_from_single_file(str(save_path))
         
         # Verify trajectory data
         assert loaded._data.trajectory_data.n_frames == 50
@@ -136,10 +136,10 @@ class TestPipelineSaveLoad:
         
         # Save pipeline
         save_path = temp_dir / "features_pipeline.pkl"
-        pipeline.save(str(save_path))
+        pipeline.save_to_single_file(str(save_path))
         
         # Load pipeline
-        loaded = PipelineManager.load_pipeline(str(save_path))
+        loaded = PipelineManager.load_from_single_file(str(save_path))
         
         # Verify feature data exists
         assert "distances" in loaded._data.feature_data
@@ -192,10 +192,10 @@ class TestPipelineSaveLoad:
         
         # Save pipeline
         save_path = temp_dir / "clustering_pipeline.pkl"
-        pipeline.save(str(save_path))
+        pipeline.save_to_single_file(str(save_path))
         
         # Load pipeline
-        loaded = PipelineManager.load_pipeline(str(save_path))
+        loaded = PipelineManager.load_from_single_file(str(save_path))
         
         # Verify clustering data
         assert 'test_cluster' in loaded._data.cluster_data
@@ -247,10 +247,10 @@ class TestPipelineSaveLoad:
         
         # Save pipeline
         save_path = temp_dir / "decomposition_pipeline.pkl"
-        pipeline.save(str(save_path))
+        pipeline.save_to_single_file(str(save_path))
         
         # Load pipeline
-        loaded = PipelineManager.load_pipeline(str(save_path))
+        loaded = PipelineManager.load_from_single_file(str(save_path))
         
         # Verify decomposition data
         assert 'test_pca' in loaded._data.decomposition_data
@@ -315,14 +315,14 @@ class TestPipelineSaveLoad:
         
         # Save pipeline
         save_path = temp_dir / "complete_pipeline.pkl"
-        pipeline.save(str(save_path))
+        pipeline.save_to_single_file(str(save_path))
         
         # Verify file exists and has reasonable size
         assert save_path.exists()
         assert save_path.stat().st_size > 1000  # Should be substantial
         
         # Load pipeline
-        loaded = PipelineManager.load_pipeline(str(save_path))
+        loaded = PipelineManager.load_from_single_file(str(save_path))
         
         # Verify trajectory
         assert loaded._data.trajectory_data.n_frames == 25
@@ -375,8 +375,8 @@ class TestPipelineSaveLoad:
         
         # Save and load pipeline
         save_path = temp_dir / "bound_methods_pipeline.pkl"
-        pipeline.save(str(save_path))
-        loaded = PipelineManager.load_pipeline(str(save_path))
+        pipeline.save_to_single_file(str(save_path))
+        loaded = PipelineManager.load_from_single_file(str(save_path))
         
         # Test analysis method after load
         loaded_mean = loaded._data.feature_data['distances'][0].analysis.compute_mean()
@@ -403,11 +403,11 @@ class TestPipelineSaveLoad:
         """
         # Test loading non-existent file
         with pytest.raises(FileNotFoundError):
-            PipelineManager.load_pipeline(str(temp_dir / "nonexistent.pkl"))
+            PipelineManager.load_from_single_file(str(temp_dir / "nonexistent.pkl"))
             
         # Test saving to invalid path
         pipeline = PipelineManager()
         invalid_path = "/invalid/path/pipeline.pkl"
         
         with pytest.raises((OSError, PermissionError)):
-            pipeline.save(invalid_path)
+            pipeline.save_to_single_file(invalid_path)

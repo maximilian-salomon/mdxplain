@@ -18,11 +18,11 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""Metric-specific RMSD service implementation."""
+"""Mean RMSD service implementation."""
 
 from __future__ import annotations
 
-from typing import Dict, Iterable, List, Literal, Sequence, Union
+from typing import Dict, Iterable, List, Sequence, Union
 
 import mdtraj as md
 import numpy as np
@@ -31,37 +31,33 @@ from mdxplain.pipeline.entities.pipeline_data import PipelineData
 
 from ..calculators.rmsd_calculator import RMSDCalculator
 
-RMSDMetric = Literal["mean", "median", "mad"]
 
-
-class RMSDVariantService:
-    """Expose RMSD workflows for a concrete robust metric.
+class RMSDMeanService:
+    """Expose mean RMSD workflows.
 
     The service mediates between the pipeline-facing API and the numerical
-    :class:`RMSDCalculator`. It resolves trajectory selections and atom filters,
-    ensures consistent reference handling, and delegates the computation while
-    the chosen robust metric stays fixed for every helper method.
+    :class:`RMSDCalculator`. It resolves trajectory selections and atom
+    filters, ensures consistent reference handling, and delegates the
+    computation using the mean metric.
 
     Examples
     --------
-    >>> service = RMSDVariantService(pipeline_data, metric="mean")  # doctest: +SKIP
+    >>> service = RMSDMeanService(pipeline_data)  # doctest: +SKIP
     >>> service.metric  # doctest: +SKIP
     'mean'
     """
 
-    def __init__(self, pipeline_data: PipelineData | None, metric: RMSDMetric) -> None:
-        """Store pipeline context and the requested metric.
+    def __init__(self, pipeline_data: PipelineData | None) -> None:
+        """Store pipeline context with mean metric.
 
-        Ensures that valid pipeline data and a supported robust metric are
-        supplied before storing both configuration values for later use.
+        Ensures that valid pipeline data is supplied before storing
+        configuration values for later use.
 
         Parameters
         ----------
         pipeline_data : PipelineData | None
-            Pipeline configuration controlling chunk size and memmap usage. Must
-            not be ``None``.
-        metric : RMSDMetric
-            Robust aggregation metric (``"mean"``, ``"median"`` or ``"mad"``).
+            Pipeline configuration controlling chunk size and memmap usage.
+            Must not be ``None``.
 
         Returns
         -------
@@ -70,46 +66,18 @@ class RMSDVariantService:
 
         Examples
         --------
-        >>> service = RMSDVariantService(pipeline_data, metric="median")  # doctest: +SKIP
+        >>> service = RMSDMeanService(pipeline_data)  # doctest: +SKIP
         >>> service.metric  # doctest: +SKIP
-        'median'
+        'mean'
         """
 
         if pipeline_data is None:
-            raise ValueError("RMSDVariantService requires pipeline_data")
-        if metric not in {"mean", "median", "mad"}:
-            raise ValueError("metric must be 'mean', 'median' or 'mad'")
+            raise ValueError("RMSDMeanService requires pipeline_data")
 
         self._pipeline_data = pipeline_data
-        self._metric: RMSDMetric = metric
+        self._metric = "mean"
         self._chunk_size = getattr(pipeline_data, "chunk_size", None)
         self._use_memmap = getattr(pipeline_data, "use_memmap", False)
-
-    @property
-    def metric(self) -> RMSDMetric:
-        """Return the configured RMSD aggregation metric.
-
-        Provides direct access to the robust metric configured for this service
-        instance.
-
-        Parameters
-        ----------
-        None
-            This property does not accept parameters.
-
-        Returns
-        -------
-        RMSDMetric
-            The robust aggregation metric associated with the service instance.
-
-        Examples
-        --------
-        >>> service = RMSDVariantService(pipeline_data, metric="mad")  # doctest: +SKIP
-        >>> service.metric  # doctest: +SKIP
-        'mad'
-        """
-
-        return self._metric
 
     def to_reference(
         self,
@@ -118,25 +86,24 @@ class RMSDVariantService:
         traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all",
         atom_selection: str = "all",
     ) -> Dict[str, np.ndarray]:
-        """Calculate RMSD against a fixed reference frame.
+        """Calculate RMSD against a fixed reference frame using mean metric.
 
         Selects the requested trajectories, extracts the reference frame and
-        delegates the numerical work to the calculator using the configured
-        robust metric.
+        delegates the numerical work to the calculator using the mean metric.
 
         Parameters
         ----------
         reference_traj : int, optional
-            Index of the trajectory containing the reference frame. Defaults to
-            ``0``.
+            Index of the trajectory containing the reference frame. Defaults
+            to ``0``.
         reference_frame : int, optional
             Frame index within the reference trajectory. Defaults to ``0``.
         traj_selection : Union[int, str, list[Union[int, str]], 'all'], optional
             Selection describing the trajectories to process. Defaults to
             ``"all"``.
         atom_selection : str, optional
-            MDTraj atom selection string forwarded to the calculation. Defaults
-            to ``"all"``.
+            MDTraj atom selection string forwarded to the calculation.
+            Defaults to ``"all"``.
 
         Returns
         -------
@@ -145,7 +112,7 @@ class RMSDVariantService:
 
         Examples
         --------
-        >>> service = RMSDVariantService(pipeline_data, metric="mean")  # doctest: +SKIP
+        >>> service = RMSDMeanService(pipeline_data)  # doctest: +SKIP
         >>> service.to_reference()  # doctest: +SKIP
         {'traj_0': array([...])}
         """
@@ -173,7 +140,7 @@ class RMSDVariantService:
 
         reference_frame_traj = reference_trajectory[reference_frame]
         calculator = self._build_calculator(trajectories)
-        rmsd_arrays = calculator.rmsd_to_reference(reference_frame_traj, atom_indices, self.metric)
+        rmsd_arrays = calculator.rmsd_to_reference(reference_frame_traj, atom_indices, self._metric)
         return self._build_result_map(traj_indices, rmsd_arrays)
 
     def frame_to_frame(
@@ -182,11 +149,10 @@ class RMSDVariantService:
         traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all",
         atom_selection: str = "all",
     ) -> Dict[str, np.ndarray]:
-        """Calculate RMSD between lag-separated frames.
+        """Calculate RMSD between lag-separated frames using mean metric.
 
         Resolves the requested trajectories and atom selection, then evaluates
-        RMSD values between frames separated by ``lag`` using the configured
-        metric.
+        RMSD values between frames separated by ``lag`` using the mean metric.
 
         Parameters
         ----------
@@ -206,11 +172,10 @@ class RMSDVariantService:
 
         Examples
         --------
-        >>> service = RMSDVariantService(pipeline_data, metric="median")  # doctest: +SKIP
+        >>> service = RMSDMeanService(pipeline_data)  # doctest: +SKIP
         >>> service.frame_to_frame(lag=1)  # doctest: +SKIP
         {'traj_0': array([...])}
         """
-        # Validate parameters
         if lag <= 0:
             raise ValueError("lag must be positive")
 
@@ -219,7 +184,6 @@ class RMSDVariantService:
         atom_indices = self._resolve_atom_indices(trajectories[0], atom_selection)
         self._validate_atom_indices_for_all(trajectories, atom_selection, atom_indices)
 
-        # Validate lag against trajectory lengths
         min_trajectory_length = min(traj.n_frames for traj in trajectories)
         if lag >= min_trajectory_length:
             raise ValueError(
@@ -227,7 +191,7 @@ class RMSDVariantService:
             )
 
         calculator = self._build_calculator(trajectories)
-        rmsd_arrays = calculator.frame_to_frame(atom_indices, lag, self.metric)
+        rmsd_arrays = calculator.frame_to_frame(atom_indices, lag, self._metric)
         return self._build_result_map(traj_indices, rmsd_arrays)
 
     def window_frame_to_start(
@@ -237,18 +201,19 @@ class RMSDVariantService:
         traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all",
         atom_selection: str = "all",
     ) -> Dict[str, np.ndarray]:
-        """Calculate window-wise RMSD using the first frame as reference.
+        """Calculate window-wise RMSD using first frame as reference.
 
         Sliding windows are extracted per trajectory, aligned to the window's
-        first frame and condensed via the variant's metric into a single RMSD
-        value per window.
+        first frame and condensed via the mean metric into a single RMSD value
+        per window.
 
         Parameters
         ----------
         window_size : int
             Number of frames within each window.
         stride : int, optional
-            Step size between windows. Defaults to ``window_size`` when omitted.
+            Step size between windows. Defaults to ``window_size`` when
+            omitted.
         traj_selection : Union[int, str, list[Union[int, str]], 'all'], optional
             Selection describing the trajectories to process. Defaults to
             ``"all"``.
@@ -262,11 +227,10 @@ class RMSDVariantService:
 
         Examples
         --------
-        >>> service = RMSDVariantService(pipeline_data, metric="mad")  # doctest: +SKIP
+        >>> service = RMSDMeanService(pipeline_data)  # doctest: +SKIP
         >>> service.window_frame_to_start(window_size=3)  # doctest: +SKIP
         {'traj_0': array([...])}
         """
-        # Validate parameters
         self._validate_window_parameters(window_size=window_size, stride=stride)
 
         effective_stride = stride or window_size
@@ -275,7 +239,6 @@ class RMSDVariantService:
         atom_indices = self._resolve_atom_indices(trajectories[0], atom_selection)
         self._validate_atom_indices_for_all(trajectories, atom_selection, atom_indices)
 
-        # Validate window size against trajectory lengths
         min_trajectory_length = min(traj.n_frames for traj in trajectories)
         if window_size > min_trajectory_length:
             raise ValueError(
@@ -287,7 +250,7 @@ class RMSDVariantService:
             atom_indices,
             window_size,
             effective_stride,
-            self.metric,
+            self._metric,
             mode="frame_to_start",
         )
         return self._build_result_map(traj_indices, rmsd_arrays)
@@ -303,14 +266,15 @@ class RMSDVariantService:
         """Calculate window-wise RMSD between lag-separated frames.
 
         Sliding windows are processed with lag-separated frame pairs and
-        condensed using the variant's robust metric.
+        condensed using the mean metric.
 
         Parameters
         ----------
         window_size : int
             Number of frames within each window.
         stride : int, optional
-            Step size between windows. Defaults to ``window_size`` when omitted.
+            Step size between windows. Defaults to ``window_size`` when
+            omitted.
         lag : int, optional
             Lag between frames inside each window. Defaults to ``1``.
         traj_selection : Union[int, str, list[Union[int, str]], 'all'], optional
@@ -326,11 +290,10 @@ class RMSDVariantService:
 
         Examples
         --------
-        >>> service = RMSDVariantService(pipeline_data, metric="mean")  # doctest: +SKIP
+        >>> service = RMSDMeanService(pipeline_data)  # doctest: +SKIP
         >>> service.window_frame_to_frame(window_size=4, lag=1)  # doctest: +SKIP
         {'traj_0': array([...])}
         """
-        # Validate parameters
         self._validate_window_parameters(window_size=window_size, stride=stride, lag=lag)
 
         effective_stride = stride or window_size
@@ -339,7 +302,6 @@ class RMSDVariantService:
         atom_indices = self._resolve_atom_indices(trajectories[0], atom_selection)
         self._validate_atom_indices_for_all(trajectories, atom_selection, atom_indices)
 
-        # Validate window size and lag against trajectory lengths
         min_trajectory_length = min(traj.n_frames for traj in trajectories)
         if window_size > min_trajectory_length:
             raise ValueError(
@@ -355,14 +317,14 @@ class RMSDVariantService:
             atom_indices,
             window_size,
             effective_stride,
-            self.metric,
+            self._metric,
             mode="frame_to_frame",
             lag=lag,
         )
         return self._build_result_map(traj_indices, rmsd_arrays)
 
     def _build_calculator(self, trajectories: Iterable) -> RMSDCalculator:
-        """Instantiate an :class:`RMSDCalculator` for the given trajectories.
+        """Instantiate an :class:`RMSDCalculator` for given trajectories.
 
         Creates the calculator shared across helper methods so that streaming
         configuration is reused for every computation.
@@ -376,6 +338,13 @@ class RMSDVariantService:
         -------
         RMSDCalculator
             Calculator configured with the shared runtime settings.
+
+        Examples
+        --------
+        >>> service = RMSDMeanService(pipeline_data)  # doctest: +SKIP
+        >>> calc = service._build_calculator(trajectories)  # doctest: +SKIP
+        >>> isinstance(calc, RMSDCalculator)  # doctest: +SKIP
+        True
         """
 
         return RMSDCalculator(list(trajectories), self._chunk_size, self._use_memmap)
@@ -386,8 +355,8 @@ class RMSDVariantService:
     ) -> List[int]:
         """Resolve user selections into trajectory indices.
 
-        Converts user-provided selection specifications into concrete trajectory
-        indices understood by the calculator.
+        Converts user-provided selection specifications into concrete
+        trajectory indices understood by the calculator.
 
         Parameters
         ----------
@@ -398,6 +367,12 @@ class RMSDVariantService:
         -------
         list[int]
             Trajectory indices matching the selection.
+
+        Examples
+        --------
+        >>> service = RMSDMeanService(pipeline_data)  # doctest: +SKIP
+        >>> service._resolve_trajectory_indices("all")  # doctest: +SKIP
+        [0, 1, 2]
         """
 
         indices = self._pipeline_data.trajectory_data.get_trajectory_indices(selection)
@@ -409,8 +384,8 @@ class RMSDVariantService:
         """Return MDTraj atom indices for the requested selection.
 
         Translates an MDTraj atom selection string into a concrete array of
-        indices. When ``selection`` is ``"all"`` the method returns ``None`` to
-        signal that the full atom set should be used.
+        indices. When ``selection`` is ``"all"`` the method returns ``None``
+        to signal that the full atom set should be used.
 
         Parameters
         ----------
@@ -423,6 +398,13 @@ class RMSDVariantService:
         -------
         numpy.ndarray or None
             Array of atom indices or ``None`` when all atoms are requested.
+
+        Examples
+        --------
+        >>> service = RMSDMeanService(pipeline_data)  # doctest: +SKIP
+        >>> indices = service._resolve_atom_indices(traj, "name CA")  # doctest: +SKIP
+        >>> isinstance(indices, np.ndarray)  # doctest: +SKIP
+        True
         """
 
         if selection == "all":
@@ -439,10 +421,10 @@ class RMSDVariantService:
         selection: str,
         reference_indices: np.ndarray | None,
     ) -> None:
-        """Ensure the atom selection resolves consistently across trajectories.
+        """Ensure atom selection resolves consistently across trajectories.
 
-        Checks that the atom selection yields the same number of atoms for every
-        trajectory after the initial reference selection.
+        Checks that the atom selection yields the same number of atoms for
+        every trajectory after the initial reference selection.
 
         Parameters
         ----------
@@ -457,6 +439,11 @@ class RMSDVariantService:
         -------
         None
             This validator returns ``None``.
+
+        Examples
+        --------
+        >>> service = RMSDMeanService(pipeline_data)  # doctest: +SKIP
+        >>> service._validate_atom_indices_for_all(trajs, "name CA", indices)  # doctest: +SKIP
         """
 
         if selection == "all":
@@ -479,8 +466,8 @@ class RMSDVariantService:
     ) -> None:
         """Validate window analysis parameters.
 
-        Ensures that window_size, stride, and lag are positive integers
-        as required by the calculator.
+        Ensures that window_size, stride, and lag are positive integers as
+        required by the calculator.
 
         Parameters
         ----------
@@ -489,7 +476,8 @@ class RMSDVariantService:
         stride : int, optional
             Step size for window advancement. Must be positive if provided.
         lag : int, optional
-            Frame offset for frame-to-frame comparisons. Must be positive if provided.
+            Frame offset for frame-to-frame comparisons. Must be positive if
+            provided.
 
         Returns
         -------
@@ -500,6 +488,11 @@ class RMSDVariantService:
         ------
         ValueError
             If any parameter is zero or negative.
+
+        Examples
+        --------
+        >>> service = RMSDMeanService(pipeline_data)  # doctest: +SKIP
+        >>> service._validate_window_parameters(10, 5, 1)  # doctest: +SKIP
         """
         if window_size <= 0:
             raise ValueError("window_size must be positive")
@@ -517,8 +510,8 @@ class RMSDVariantService:
     ) -> Dict[str, np.ndarray]:
         """Create a mapping from trajectory names to result arrays.
 
-        Couples the computed RMSD arrays with the corresponding trajectory names
-        for convenient downstream consumption.
+        Couples the computed RMSD arrays with the corresponding trajectory
+        names for convenient downstream consumption.
 
         Parameters
         ----------
@@ -531,6 +524,13 @@ class RMSDVariantService:
         -------
         dict[str, np.ndarray]
             Mapping of trajectory names to RMSD arrays.
+
+        Examples
+        --------
+        >>> service = RMSDMeanService(pipeline_data)  # doctest: +SKIP
+        >>> result = service._build_result_map([0, 1], [arr1, arr2])  # doctest: +SKIP
+        >>> isinstance(result, dict)  # doctest: +SKIP
+        True
         """
 
         names = self._pipeline_data.trajectory_data.trajectory_names

@@ -122,7 +122,7 @@ class LandscapeRenderingHelper:
 
         # Add colorbar
         cbar = plt.colorbar(cf, ax=ax)
-        cbar.set_label('Free Energy (kcal/mol)', rotation=270, labelpad=15)
+        cbar.set_label('Free Energy Δ (kcal/mol)', rotation=270, labelpad=15)
 
     @staticmethod
     def plot_density_background(

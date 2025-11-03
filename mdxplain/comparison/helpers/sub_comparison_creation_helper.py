@@ -137,7 +137,7 @@ class SubComparisonCreationHelper:
             rest_selectors = data_selectors[:i] + data_selectors[i + 1 :]
             sub_name = f"{target_selector}_vs_rest"
             comp_data.add_sub_comparison(
-                sub_name, [target_selector], rest_selectors, (1, 0)  # target=1, rest=0
+                sub_name, [target_selector], rest_selectors, (0, 1)  # target=0, rest=1
             )
 
     @staticmethod

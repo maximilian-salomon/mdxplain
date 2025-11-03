@@ -37,6 +37,31 @@ from tqdm import tqdm
 from ...entities.dask_md_trajectory import DaskMDTrajectory
 
 
+# Supported trajectory formats (require separate topology file)
+TRAJECTORY_FORMATS = (
+    '.xtc', '.trr',  # GROMACS
+    '.dcd',  # CHARMM/NAMD
+    '.nc', '.ncdf', '.mdcrd', '.crd',  # AMBER
+    '.arc', '.lammpstrj', '.xyz',  # Others
+)
+
+# Supported topology/structure formats
+TOPOLOGY_FORMATS = (
+    '.pdb', '.pdb.gz',  # PDB
+    '.prmtop', '.parm7', '.prm7', '.top',  # AMBER
+    '.ncrst', '.rst', '.rst7',  # AMBER restart
+    '.psf',  # CHARMM/XPLOR
+    '.mol2', '.xml', '.gsd', '.stk',  # Others
+)
+
+# Self-contained formats (have embedded topology, don't need separate topology file)
+SELF_CONTAINED_FORMATS = (
+    '.h5', '.hdf5', '.lh5',  # HDF5
+    '.pdb', '.pdb.gz',  # PDB (can be both topology and trajectory)
+    '.dtr',  # DESRES
+)
+
+
 class TrajectoryLoadHelper:
     """
     Internal utility class for loading MD trajectories from files and directories.
@@ -509,33 +534,46 @@ class TrajectoryLoadHelper:
         dict
             Dictionary with 'trajectories' and 'names' keys
         """
-        pdb_files = TrajectoryLoadHelper._get_pdb_files_from_directory(subdir_path)
-        xtc_files = TrajectoryLoadHelper._get_xtc_files_from_directory(subdir_path)
+        top_files = TrajectoryLoadHelper._get_topology_files_from_directory(subdir_path)
+        traj_files = TrajectoryLoadHelper._get_trajectory_files_from_directory(subdir_path)
 
-        # Validate file combination
-        if not pdb_files:
-            warnings.warn(f"No PDB files found in {subdir_path}")
-            return {"trajectories": [], "names": []}
+        # Check if trajectory files are self-contained (have embedded topology)
+        if traj_files:
+            first_ext = os.path.splitext(traj_files[0])[1].lower()
+            is_self_contained = first_ext in SELF_CONTAINED_FORMATS
+        else:
+            is_self_contained = False
 
-        # Case 1: XTC files present - use single PDB as topology
-        if xtc_files:
-            if len(pdb_files) != 1:
+        # Case 1: Trajectory files present with separate topology
+        if traj_files and not is_self_contained:
+            if len(top_files) != 1:
                 raise ValueError(
                     f"Ambiguous file configuration in {subdir_path}: "
-                    f"Found {len(pdb_files)} PDB files and {len(xtc_files)} XTC files. "
+                    f"Found {len(top_files)} topology files and {len(traj_files)} trajectory files. "
                     f"Cannot determine topology-trajectory pairing. "
-                    f"Use either: 1 PDB + multiple XTCs, or multiple PDBs without XTCs."
+                    f"Need exactly 1 topology file for multiple trajectory files."
                 )
-            pdb_path = os.path.join(subdir_path, pdb_files[0])
+            top_path = os.path.join(subdir_path, top_files[0])
             result = TrajectoryLoadHelper._load_trajectory_files_from_directory(
-                xtc_files, pdb_path, subdir_path, subdir_name, stride, use_memmap, chunk_size, cache_dir
+                traj_files, top_path, subdir_path, subdir_name, stride, use_memmap, chunk_size, cache_dir
             )
 
-        # Case 2: No XTC files - load each PDB as separate trajectory
-        else:
+        # Case 2: Self-contained trajectory files (H5, PDB, DTR, etc.)
+        elif traj_files and is_self_contained:
             result = TrajectoryLoadHelper._load_pdb_files_from_directory(
-                pdb_files, subdir_path, subdir_name, stride, use_memmap, chunk_size, cache_dir
+                traj_files, subdir_path, subdir_name, stride, use_memmap, chunk_size, cache_dir
             )
+
+        # Case 3: Only topology files - load each as separate trajectory
+        elif top_files and not traj_files:
+            result = TrajectoryLoadHelper._load_pdb_files_from_directory(
+                top_files, subdir_path, subdir_name, stride, use_memmap, chunk_size, cache_dir
+            )
+
+        # Case 4: No files found
+        else:
+            warnings.warn(f"No trajectory or topology files found in {subdir_path}")
+            return {"trajectories": [], "names": []}
 
         # Apply selection to each trajectory before concatenation if provided
         if selection is not None:
@@ -546,9 +584,11 @@ class TrajectoryLoadHelper:
         )
 
     @staticmethod
-    def _get_pdb_files_from_directory(subdir_path: str) -> List[str]:
+    def _get_topology_files_from_directory(subdir_path: str) -> List[str]:
         """
-        Get list of PDB files in directory.
+        Get list of all supported topology/structure files in directory.
+
+        Supports PDB, PSF, PRMTOP, MOL2, XML, and other MDTraj-compatible formats.
 
         Parameters
         ----------
@@ -558,14 +598,18 @@ class TrajectoryLoadHelper:
         Returns
         -------
         list
-            List of PDB filenames (not full paths)
+            List of topology filenames (not full paths)
         """
-        return [f for f in os.listdir(subdir_path) if f.endswith(".pdb")]
+        return [f for f in os.listdir(subdir_path)
+                if f.lower().endswith(TOPOLOGY_FORMATS)]
 
     @staticmethod
-    def _get_xtc_files_from_directory(subdir_path: str) -> List[str]:
+    def _get_trajectory_files_from_directory(subdir_path: str) -> List[str]:
         """
-        Get list of XTC files in directory.
+        Get list of all supported trajectory files in directory.
+
+        Supports GROMACS (XTC, TRR), CHARMM/NAMD (DCD), AMBER (NC, MDCRD),
+        HDF5 (H5), and other MDTraj-compatible trajectory formats.
 
         Parameters
         ----------
@@ -575,24 +619,28 @@ class TrajectoryLoadHelper:
         Returns
         -------
         list
-            List of XTC filenames (not full paths)
+            List of trajectory filenames (not full paths)
         """
-        return [f for f in os.listdir(subdir_path) if f.endswith(".xtc")]
+        return [f for f in os.listdir(subdir_path)
+                if f.lower().endswith(TRAJECTORY_FORMATS)]
 
     @staticmethod
     def _load_trajectory_files_from_directory(
-        xtc_files: List[str], pdb_path: str, subdir_path: str, subdir_name: str, stride: int,
+        traj_files: List[str], top_path: str, subdir_path: str, subdir_name: str, stride: int,
         use_memmap: bool = False, chunk_size: int = 1000, cache_dir: str = "./cache"
     ) -> Dict[str, List[Any]]:
         """
-        Load XTC files with PDB topology.
+        Load trajectory files with topology.
+
+        Supports all MDTraj trajectory formats (XTC, DCD, TRR, NC, etc.)
+        with separate topology files (PDB, PSF, PRMTOP, etc.).
 
         Parameters
         ----------
-        xtc_files : list
-            List of XTC filenames (not full paths)
-        pdb_path : str
-            Path to PDB file
+        traj_files : list
+            List of trajectory filenames (not full paths)
+        top_path : str
+            Path to topology file
         subdir_path : str
             Path to directory containing trajectory files
         subdir_name : str
@@ -614,20 +662,20 @@ class TrajectoryLoadHelper:
         system_trajs = []
         names = []
 
-        # Extract PDB basename for naming
-        pdb_basename = os.path.splitext(os.path.basename(pdb_path))[0]
+        # Extract topology basename for naming
+        top_basename = os.path.splitext(os.path.basename(top_path))[0]
 
-        for xtc in tqdm(xtc_files, desc=f"Loading {subdir_name}", leave=False):
-            xtc_path = os.path.join(subdir_path, xtc)
-            xtc_basename = os.path.splitext(xtc)[0]
+        for traj_file in tqdm(traj_files, desc=f"Loading {subdir_name}", leave=False):
+            traj_path = os.path.join(subdir_path, traj_file)
+            traj_basename = os.path.splitext(traj_file)[0]
 
             traj = TrajectoryLoadHelper._load_single_trajectory(
-                xtc_path, pdb_path, stride, use_memmap, chunk_size, cache_dir
+                traj_path, top_path, stride, use_memmap, chunk_size, cache_dir
             )
             system_trajs.append(traj)
 
-            # Generate name: directory_pdbname_xtcname
-            name = f"{subdir_name}_{pdb_basename}_{xtc_basename}"
+            # Generate name: directory_topologyname_trajectoryname
+            name = f"{subdir_name}_{top_basename}_{traj_basename}"
             names.append(name)
 
         return {"trajectories": system_trajs, "names": names}

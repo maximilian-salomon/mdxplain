@@ -827,13 +827,13 @@ class ClusterManager:
             data.print_info()
     
     @property
-    def add(self):
+    def add(self) -> ClusterAddService:
         """
         Service for adding clustering algorithms with simplified syntax.
-        
+
         Provides an intuitive interface for adding clustering algorithms without
         requiring explicit cluster type instantiation or imports.
-        
+
         Returns
         -------
         ClusterAddService

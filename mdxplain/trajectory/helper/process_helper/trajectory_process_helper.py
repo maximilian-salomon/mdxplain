@@ -238,9 +238,10 @@ class TrajectoryProcessHelper:
             del traj_data.trajectories[idx]
             del traj_data.trajectory_names[idx]
 
-        # Also remove tags for removed trajectories
+        # Also remove tags and labels for removed trajectories
         for idx in indices_to_remove:
             traj_data.trajectory_tags.pop(idx, None)
+            traj_data.res_label_data.pop(idx, None)
 
         # Print removal summary
         for removed_info in removed_trajectories:

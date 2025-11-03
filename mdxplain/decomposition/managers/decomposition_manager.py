@@ -579,13 +579,13 @@ class DecompositionManager:
             )
     
     @property
-    def add(self):
+    def add(self) -> DecompositionAddService:
         """
         Service for adding decomposition algorithms with simplified syntax.
-        
+
         Provides an intuitive interface for adding decomposition algorithms without
         requiring explicit decomposition type instantiation or imports.
-        
+
         Returns
         -------
         DecompositionAddService

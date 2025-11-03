@@ -380,10 +380,11 @@ class FeatureImportanceFacade:
         filename: Optional[str] = None,
         file_format: str = "png",
         dpi: int = 300,
-        smoothing_method: Optional[str] = None,
+        smoothing: bool = True,
+        smoothing_method: str = "savitzky",
         smoothing_window: int = 51,
         smoothing_polyorder: int = 3,
-        show_unsmoothed_background: bool = False
+        show_unsmoothed_background: bool = True
     ) -> Figure:
         """
         Create time series plots from feature importance analysis.
@@ -450,14 +451,16 @@ class FeatureImportanceFacade:
             File format for saving (png, pdf, svg, etc.)
         dpi : int, default=300
             Resolution for saved figure in dots per inch
-        smoothing_method : str, optional
-            Smoothing method ("moving_average", "savitzky", or None for no smoothing)
+        smoothing : bool, default=True
+            Enable or disable data smoothing
+        smoothing_method : str, default="savitzky"
+            Smoothing method ("moving_average" or "savitzky")
         smoothing_window : int, default=51
             Window size for smoothing in frames
         smoothing_polyorder : int, default=3
             Polynomial order for Savitzky-Golay filter (ignored for moving_average)
-        show_unsmoothed_background : bool, default=False
-            Show unsmoothed data as transparent background line
+        show_unsmoothed_background : bool, default=True
+            Show unsmoothed data as transparent background line when smoothing is enabled
 
         Returns
         -------
@@ -553,6 +556,7 @@ class FeatureImportanceFacade:
             filename=filename,
             file_format=file_format,
             dpi=dpi,
+            smoothing=smoothing,
             smoothing_method=smoothing_method,
             smoothing_window=smoothing_window,
             smoothing_polyorder=smoothing_polyorder,

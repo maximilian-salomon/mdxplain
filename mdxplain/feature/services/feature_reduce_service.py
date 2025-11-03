@@ -44,31 +44,31 @@ class FeatureReduceService:
         self._pipeline_data = pipeline_data
     
     @property
-    def distances(self):
+    def distances(self) -> DistancesReduceService:
         """Access distance-specific reduce metrics."""
         return DistancesReduceService(self._manager, self._pipeline_data)
-    
+
     @property
-    def contacts(self):
+    def contacts(self) -> ContactsReduceService:
         """Access contact-specific reduce metrics."""
         return ContactsReduceService(self._manager, self._pipeline_data)
-    
+
     @property
-    def torsions(self):
+    def torsions(self) -> TorsionsReduceService:
         """Access torsion-specific reduce metrics."""
         return TorsionsReduceService(self._manager, self._pipeline_data)
-    
+
     @property
-    def dssp(self):
+    def dssp(self) -> DSSPReduceService:
         """Access DSSP-specific reduce metrics."""
         return DSSPReduceService(self._manager, self._pipeline_data)
-    
+
     @property
-    def sasa(self):
+    def sasa(self) -> SASAReduceService:
         """Access SASA-specific reduce metrics."""
         return SASAReduceService(self._manager, self._pipeline_data)
-    
+
     @property
-    def coordinates(self):
+    def coordinates(self) -> CoordinatesReduceService:
         """Access coordinates-specific reduce metrics."""
         return CoordinatesReduceService(self._manager, self._pipeline_data)

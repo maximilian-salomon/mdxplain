@@ -35,6 +35,7 @@ if TYPE_CHECKING:
     from ...pipeline.entities.pipeline_data import PipelineData
 
 from ...utils.data_utils import DataUtils
+from ...utils.feature_metadata_utils import FeatureMetadataUtils
 from ..helpers.representative_finder_helper import RepresentativeFinderHelper
 
 
@@ -367,7 +368,7 @@ class FeatureImportanceData:
 
     def __repr__(self) -> str:
         """
-        String representation of the FeatureImportanceData.
+        Return string representation of the FeatureImportanceData.
 
         Parameters
         ----------
@@ -428,13 +429,16 @@ class FeatureImportanceData:
         """
         DataUtils.load_object(self, load_path)
 
-    def print_info(self) -> None:
+    def print_info(self, pipeline_data: Optional[PipelineData] = None) -> None:
         """
         Print comprehensive feature importance information.
 
         Parameters
         ----------
-        None
+        pipeline_data : PipelineData, optional
+            Pipeline data object for extracting feature names.
+            If provided, top features will show actual feature names
+            instead of indices.
 
         Returns
         -------
@@ -450,6 +454,10 @@ class FeatureImportanceData:
         Comparison: folded_vs_unfolded
         Sub-Comparisons: 3 (folded_vs_rest, intermediate_vs_rest, unfolded_vs_rest)
         Features Analyzed: 150
+
+        >>> # With feature names
+        >>> feature_importance_data.print_info(pipeline_data)
+        Top Feature Overall: Res10-Res50 distance (avg importance: 0.1362)
         """
         if self._has_no_data():
             print("No feature importance data available.")
@@ -457,7 +465,7 @@ class FeatureImportanceData:
 
         self._print_importance_header()
         self._print_importance_details()
-        self._print_top_features_summary()
+        self._print_top_features_summary(pipeline_data)
 
     def _has_no_data(self) -> bool:
         """
@@ -510,13 +518,76 @@ class FeatureImportanceData:
         if info['n_features'] > 0:
             print(f"Features Analyzed: {info['n_features']}")
 
-    def _print_top_features_summary(self) -> None:
+    def _get_feature_metadata(self, pipeline_data: Optional['PipelineData']) -> Optional[list]:
+        """
+        Get feature metadata from pipeline data.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData, optional
+            Pipeline data object
+
+        Returns
+        -------
+        list or None
+            Feature metadata list or None if not available
+        """
+        if pipeline_data is None or self.feature_selector is None:
+            return None
+        return pipeline_data.get_selected_metadata(self.feature_selector)
+
+    def _print_top_feature(self, avg_importance: np.ndarray, feature_metadata: Optional[list]) -> None:
+        """
+        Print the single top feature.
+
+        Parameters
+        ----------
+        avg_importance : np.ndarray
+            Average importance values
+        feature_metadata : list, optional
+            Feature metadata
+
+        Returns
+        -------
+        None
+        """
+        top_idx = int(np.argmax(avg_importance))
+        top_importance = float(avg_importance[top_idx])
+        feature_name = FeatureMetadataUtils.get_feature_name(feature_metadata, top_idx)
+        print(f"Top Feature Overall: {feature_name} (avg importance: {top_importance:.4f})")
+
+    def _print_top_n_features(self, avg_importance: np.ndarray, feature_metadata: Optional[list], n: int = 3) -> None:
+        """
+        Print top N features.
+
+        Parameters
+        ----------
+        avg_importance : np.ndarray
+            Average importance values
+        feature_metadata : list, optional
+            Feature metadata
+        n : int, default=3
+            Number of top features to print
+
+        Returns
+        -------
+        None
+        """
+        top_indices = np.argsort(avg_importance)[::-1][:n]
+        top_parts = []
+        for idx in top_indices:
+            feat_name = FeatureMetadataUtils.get_feature_name(feature_metadata, int(idx))
+            top_parts.append(f"{feat_name} ({float(avg_importance[idx]):.3f})")
+        print(f"Top {n} Features: {', '.join(top_parts)}")
+
+    def _print_top_features_summary(self, pipeline_data: Optional['PipelineData'] = None) -> None:
         """
         Print summary of top features across comparisons.
 
         Parameters
         ----------
-        None
+        pipeline_data : PipelineData, optional
+            Pipeline data object for extracting feature names
 
         Returns
         -------
@@ -525,20 +596,13 @@ class FeatureImportanceData:
         if len(self.data) == 0:
             return
 
-        # Show average importance summary
         avg_importance = self.get_average_importance()
-        if len(avg_importance) > 0:
-            top_feature_idx = int(np.argmax(avg_importance))
-            top_importance = float(avg_importance[top_feature_idx])
-            print(f"Top Feature Overall: Feature {top_feature_idx} (avg importance: {top_importance:.4f})")
-            
-            # Show top 3 features on average
-            top_indices = np.argsort(avg_importance)[::-1][:3]
-            top_3_str = ", ".join([
-                f"Feature {int(idx)} ({float(avg_importance[idx]):.3f})"
-                for idx in top_indices
-            ])
-            print(f"Top 3 Features: {top_3_str}")
+        if len(avg_importance) == 0:
+            return
+
+        feature_metadata = self._get_feature_metadata(pipeline_data)
+        self._print_top_feature(avg_importance, feature_metadata)
+        self._print_top_n_features(avg_importance, feature_metadata, n=3)
 
     def get_representative_frame(
         self,

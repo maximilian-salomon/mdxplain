@@ -270,7 +270,7 @@ class KernelPCACalculator(CalculatorBase):
             row_end = min(row_start + used_chunk_size, n_samples)
             chunk_i = data[row_start:row_end]
 
-            for col_start in tqdm(range(0, n_samples, used_chunk_size), desc=f"Computing kernel row {row_start//used_chunk_size + 1}", unit="col_chunks", leave=False):
+            for col_start in tqdm(range(0, n_samples, used_chunk_size), desc=f"Computing kernel row {row_start//used_chunk_size + 1} of {n_samples//used_chunk_size}", unit="col_chunks", leave=False):
                 col_end = min(col_start + used_chunk_size, n_samples)
                 chunk_j = data[col_start:col_end]
 

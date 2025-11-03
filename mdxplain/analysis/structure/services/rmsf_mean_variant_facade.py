@@ -18,47 +18,49 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""Facade exposing per-atom and per-residue RMSF services."""
+"""Facade exposing per-atom and per-residue RMSF services using mean metric."""
 
 from __future__ import annotations
 
 from mdxplain.pipeline.entities.pipeline_data import PipelineData
 
 from .rmsf_per_atom_service import RMSFPerAtomService
-from .rmsf_per_residue_aggregation_facade import RMSFPerResidueAggregationFacade
+from .rmsf_per_residue_aggregation_selection_facade import (
+    RMSFPerResidueAggregationSelectionFacade,
+)
 
 
-class RMSFVariantFacade:
-    """Expose per-atom and per-residue RMSF services for a fixed metric.
+class RMSFMeanVariantFacade:
+    """Expose per-atom and per-residue RMSF services using mean metric.
 
-    Lazily initialises the per-atom service and the residue aggregation facade,
-    ensuring both reuse the same pipeline context and deviation metric.
+    Lazily initialises the per-atom service and the residue aggregation
+    facade, ensuring both reuse the same pipeline context and mean deviation
+    metric.
 
     Returns
     -------
-    RMSFVariantFacade
+    RMSFMeanVariantFacade
         Helper object that provides access to per-atom and per-residue RMSF
-        services for a specific deviation metric.
+        services using the mean metric.
 
     Examples
     --------
-    >>> facade = RMSFVariantFacade(pipeline_data, metric="mean")
+    >>> facade = RMSFMeanVariantFacade(pipeline_data)
     >>> isinstance(facade.per_atom, RMSFPerAtomService)
     True
     """
 
-    def __init__(self, pipeline_data: PipelineData | None, metric: str) -> None:
-        """Store the pipeline context and deviation metric for child services.
+    def __init__(self, pipeline_data: PipelineData | None) -> None:
+        """Store the pipeline context with mean metric for child services.
 
-        Ensures that pipeline data was injected prior to accessing RMSF services
-        and records the metric shared by per-atom and per-residue computations.
+        Ensures that pipeline data was injected prior to accessing RMSF
+        services and records the mean metric shared by per-atom and
+        per-residue computations.
 
         Parameters
         ----------
         pipeline_data : PipelineData | None
             Pipeline context injected by the analysis manager.
-        metric : str
-            Robust deviation metric (``"mean"``, ``"median"``, or ``"mad"``).
 
         Returns
         -------
@@ -67,23 +69,23 @@ class RMSFVariantFacade:
 
         Examples
         --------
-        >>> facade = RMSFVariantFacade(pipeline_data, metric="mean")
-        >>> isinstance(facade, RMSFVariantFacade)
+        >>> facade = RMSFMeanVariantFacade(pipeline_data)
+        >>> isinstance(facade, RMSFMeanVariantFacade)
         True
         """
 
         if pipeline_data is None:
-            raise ValueError("RMSFVariantFacade requires pipeline_data")
+            raise ValueError("RMSFMeanVariantFacade requires pipeline_data")
 
         self._pipeline_data = pipeline_data
-        self._metric = metric
+        self._metric = "mean"
 
     @property
     def per_atom(self) -> RMSFPerAtomService:
-        """Access the per-atom RMSF service for the configured metric.
+        """Access the per-atom RMSF service using the mean metric.
 
-        Lazily instantiates the per-atom RMSF service using the stored pipeline
-        data and deviation metric.
+        Lazily instantiates the per-atom RMSF service using the stored
+        pipeline data and mean deviation metric.
 
         Parameters
         ----------
@@ -93,24 +95,24 @@ class RMSFVariantFacade:
         Returns
         -------
         RMSFPerAtomService
-            Metric-specific per-atom RMSF service exposing ``to_*_reference``
+            Mean-specific per-atom RMSF service exposing ``to_*_reference``
             helpers.
 
         Examples
         --------
-        >>> facade = RMSFVariantFacade(pipeline_data, metric="median")
+        >>> facade = RMSFMeanVariantFacade(pipeline_data)
         >>> service = facade.per_atom
         >>> service.metric
-        'median'
+        'mean'
         """
         return RMSFPerAtomService(self._pipeline_data, self._metric)
 
     @property
-    def per_residue(self) -> RMSFPerResidueAggregationFacade:
-        """Access the per-residue RMSF helper for the configured metric.
+    def per_residue(self) -> RMSFPerResidueAggregationSelectionFacade:
+        """Access the per-residue RMSF helper using the mean metric.
 
-        Lazily instantiates the residue aggregation facade using the stored
-        pipeline data and deviation metric.
+        Lazily instantiates the residue aggregation selection facade using the
+        stored pipeline data and mean deviation metric.
 
         Parameters
         ----------
@@ -119,19 +121,16 @@ class RMSFVariantFacade:
 
         Returns
         -------
-        RMSFPerResidueAggregationFacade
-            Facade exposing residue-level RMSF aggregations for the configured
-            metric.
+        RMSFPerResidueAggregationSelectionFacade
+            Facade exposing residue-level RMSF aggregation selection for the
+            mean metric.
 
         Examples
         --------
-        >>> facade = RMSFVariantFacade(pipeline_data, metric="mad")
+        >>> facade = RMSFMeanVariantFacade(pipeline_data)
         >>> per_residue = facade.per_residue
-        >>> isinstance(per_residue.with_mean_aggregation, RMSFPerResidueService)
+        >>> isinstance(per_residue, RMSFPerResidueAggregationSelectionFacade)
         True
         """
 
-        return RMSFPerResidueAggregationFacade(
-                self._pipeline_data,
-                metric=self._metric,
-            )
+        return RMSFPerResidueAggregationSelectionFacade(self._pipeline_data, self._metric)

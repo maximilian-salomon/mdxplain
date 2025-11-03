@@ -69,8 +69,8 @@ class Torsions(FeatureTypeBase):
 
     """Available reduce metrics for torsion features."""
 
-    def __init__(self, calculate_phi: bool = True, calculate_psi: bool = True, 
-                 calculate_omega: bool = True, calculate_chi: bool = True) -> None:
+    def __init__(self, calculate_phi: bool = True, calculate_psi: bool = True,
+                 calculate_omega: bool = True, calculate_chi: bool = True, use_pbc: bool = True) -> None:
         """
         Initialize torsions feature type with angle selection parameters.
 
@@ -84,6 +84,10 @@ class Torsions(FeatureTypeBase):
             Whether to compute omega backbone angles
         calculate_chi : bool, default=True
             Whether to compute side chain chi angles (chi1, chi2, chi3, chi4)
+        use_pbc : bool, default=True
+            If True and the trajectory contains unitcell information,
+            angles are computed under the minimum image convention
+            (accounting for periodic boundary conditions).
 
         Returns
         -------
@@ -95,26 +99,30 @@ class Torsions(FeatureTypeBase):
         >>> torsions = Torsions()
 
         >>> # Only phi and psi angles
-        >>> torsions = Torsions(calculate_phi=True, calculate_psi=True, 
+        >>> torsions = Torsions(calculate_phi=True, calculate_psi=True,
         ...                     calculate_omega=False, calculate_chi=False)
 
         >>> # Only backbone angles
         >>> torsions = Torsions(calculate_chi=False)
 
         >>> # Only chi side chain angles
-        >>> torsions = Torsions(calculate_phi=False, calculate_psi=False, 
+        >>> torsions = Torsions(calculate_phi=False, calculate_psi=False,
         ...                     calculate_omega=False, calculate_chi=True)
+
+        >>> # Disable periodic boundary conditions
+        >>> torsions = Torsions(use_pbc=False)
 
         Notes
         -----
         All angles are computed and returned in degrees (-180 to +180).
         """
         super().__init__()
-        
+
         self.calculate_phi = calculate_phi
         self.calculate_psi = calculate_psi
         self.calculate_omega = calculate_omega
         self.calculate_chi = calculate_chi
+        self.use_pbc = use_pbc
 
     def init_calculator(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000) -> None:
         """
@@ -147,7 +155,8 @@ class Torsions(FeatureTypeBase):
         self.calculator = TorsionsCalculator(
             use_memmap=use_memmap,
             cache_path=cache_path,
-            chunk_size=chunk_size
+            chunk_size=chunk_size,
+            use_pbc=self.use_pbc
         )
 
     def compute(self, input_data: md.Trajectory, feature_metadata: Dict[str, Any]) -> Tuple[np.ndarray, Dict[str, Any]]:
