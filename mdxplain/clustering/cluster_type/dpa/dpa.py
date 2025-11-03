@@ -171,7 +171,6 @@ class DPA(ClusterTypeBase):
 
             - "standard": Load all data into memory (default)
             - "sampling_knn": Sample data + k-NN classifier fallback
-
         sample_fraction : float, default=0.1
             Fraction of data to sample for sampling-based methods (10%)
             Final sample size: max(50000, min(100000, sample_fraction * n_samples))

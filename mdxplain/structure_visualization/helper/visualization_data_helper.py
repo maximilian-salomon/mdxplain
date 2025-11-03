@@ -264,6 +264,7 @@ class VisualizationDataHelper:
         -------
         tuple
             (top_features_local, feature_colors_local) where:
+            
             - top_features_local: Dict[str, List[Dict]] - features per cluster
             - feature_colors_local: Dict[str, Dict[str, str]] - colors per cluster
 

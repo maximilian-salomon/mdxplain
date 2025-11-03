@@ -33,6 +33,7 @@ def create_mock_trajectory(name: str, n_frames: int = 10, n_atoms: int = 8, n_re
     """Create mock trajectory with specific properties for testing.
 
     Creates trajectory with deterministic atom/residue layout:
+    
     - Atoms: [CA, CB] per residue
     - Residue names: ALA1, VAL2, LEU3, GLY4
     - Residue IDs: 1, 2, 3, 4

@@ -177,6 +177,7 @@ class ColorMappingHelper:
         Notes
         -----
         Uses regex pattern r'cluster[_\ |bsol| s]*(\ |bsol| d+)' with re.IGNORECASE:
+        
         - Matches "cluster" (case-insensitive)
         - Followed by optional underscore or space
         - Followed by one or more digits
