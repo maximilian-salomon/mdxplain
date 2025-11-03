@@ -34,13 +34,13 @@ from typing import List, Dict, Any, Optional, Tuple, TYPE_CHECKING
 if TYPE_CHECKING:
     from ...pipeline.entities.pipeline_data import PipelineData
 
-from ..analyzer_types.interfaces.analyzer_type_base import AnalyzerTypeBase
-from ..helpers.analysis_runner_helper import AnalysisRunnerHelper
-from ..helpers.feature_importance_validation_helper import FeatureImportanceValidationHelper
-from ..helpers.top_features_helper import TopFeaturesHelper
+from ..analyzer_type.interfaces.analyzer_type_base import AnalyzerTypeBase
+from ..helper.analysis_runner_helper import AnalysisRunnerHelper
+from ..helper.feature_importance_validation_helper import FeatureImportanceValidationHelper
+from ..helper.top_features_helper import TopFeaturesHelper
 from ...utils.data_utils import DataUtils
 from ..services.feature_importance_add_service import FeatureImportanceAddService
-from ..helpers.representative_finder_helper import RepresentativeFinderHelper
+from ..helper.representative_finder_helper import RepresentativeFinderHelper
 
 
 class FeatureImportanceManager:

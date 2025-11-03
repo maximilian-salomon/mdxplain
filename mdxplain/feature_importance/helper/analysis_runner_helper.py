@@ -31,7 +31,7 @@ from __future__ import annotations
 from typing import Dict, Any, TYPE_CHECKING
 import numpy as np
 
-from ..analyzer_types.interfaces.analyzer_type_base import AnalyzerTypeBase
+from ..analyzer_type.interfaces.analyzer_type_base import AnalyzerTypeBase
 from ..entities.feature_importance_data import FeatureImportanceData
 from .metadata_builder_helper import MetadataBuilderHelper
 from ...pipeline.helper.comparison_data_helper import ComparisonDataHelper

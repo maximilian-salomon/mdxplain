@@ -24,7 +24,7 @@ import numpy as np
 from unittest.mock import patch, MagicMock, ANY
 from unittest.mock import PropertyMock
 
-from mdxplain.pipeline.managers.pipeline_manager import PipelineManager
+from mdxplain.pipeline.manager.pipeline_manager import PipelineManager
 from tests.fixtures.mock_trajectory_factory import MockTrajectoryFactory
 
 

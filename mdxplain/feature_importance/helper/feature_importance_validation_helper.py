@@ -30,7 +30,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ..analyzer_types.interfaces.analyzer_type_base import AnalyzerTypeBase
+from ..analyzer_type.interfaces.analyzer_type_base import AnalyzerTypeBase
 
 if TYPE_CHECKING:
     from ...pipeline.entities.pipeline_data import PipelineData

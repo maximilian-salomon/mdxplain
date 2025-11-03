@@ -40,19 +40,19 @@ from ...utils.archive_utils import ArchiveUtils
 
 from ...trajectory import TrajectoryManager
 from ...feature import FeatureManager
-from ...feature_selection.managers.feature_selector_manager import (
+from ...feature_selection.manager.feature_selector_manager import (
     FeatureSelectorManager,
 )
 from ...clustering import ClusterManager
 from ...decomposition import DecompositionManager
-from ...data_selector.managers.data_selector_manager import DataSelectorManager
-from ...comparison.managers.comparison_manager import ComparisonManager
-from ...feature_importance.managers.feature_importance_manager import (
+from ...data_selector.manager.data_selector_manager import DataSelectorManager
+from ...comparison.manager.comparison_manager import ComparisonManager
+from ...feature_importance.manager.feature_importance_manager import (
     FeatureImportanceManager,
 )
 from ...analysis import AnalysisManager
 from ...plots.manager.plots_manager import PlotsManager
-from ...structure_visualization.managers.structure_visualization_manager import (
+from ...structure_visualization.manager.structure_visualization_manager import (
     StructureVisualizationManager,
 )
 

@@ -28,8 +28,8 @@ import numpy as np
 if TYPE_CHECKING:
     from ....pipeline.entities.pipeline_data import PipelineData
 
-from ....data_selector.managers.data_selector_manager import DataSelectorManager
-from ....feature_selection.managers.feature_selector_manager import FeatureSelectorManager
+from ....data_selector.manager.data_selector_manager import DataSelectorManager
+from ....feature_selection.manager.feature_selector_manager import FeatureSelectorManager
         
 
 class AnalysisDataHelper:

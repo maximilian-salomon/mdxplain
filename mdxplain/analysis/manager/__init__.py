@@ -18,13 +18,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""
-Pipeline managers module.
+"""Analysis manager module."""
 
-Contains manager classes for the pipeline orchestration system.
-"""
+from .analysis_manager import AnalysisManager
 
-from .pipeline_manager import PipelineManager
-from .auto_inject_proxy import AutoInjectProxy
-
-__all__ = ["PipelineManager", "AutoInjectProxy"]
+__all__ = ["AnalysisManager"]

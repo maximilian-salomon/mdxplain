@@ -22,7 +22,7 @@
 import numpy as np
 import pytest
 
-from mdxplain.analysis.structure.helpers.residue_aggregation_helper import (
+from mdxplain.analysis.structure.helper.residue_aggregation_helper import (
     aggregate_residues_jit,
     AGGREGATOR_CODES
 )

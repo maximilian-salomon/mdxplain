@@ -18,8 +18,19 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""Analysis managers module."""
+"""
+Helper classes for feature importance operations.
 
-from .analysis_manager import AnalysisManager
+This package contains helper classes that extract common logic from
+FeatureImportanceManager methods to improve code organization and reusability.
 
-__all__ = ["AnalysisManager"]
+Notes
+-----
+All helpers are internal to the feature_importance module and should be
+imported directly where needed. No exports to avoid circular import issues
+when helpers/__init__.py is executed during direct helper imports.
+"""
+
+# No imports or exports - all helpers are internal
+# Import directly: from .helper.analysis_runner_helper import AnalysisRunnerHelper
+__all__ = []

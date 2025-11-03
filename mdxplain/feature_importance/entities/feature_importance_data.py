@@ -36,7 +36,7 @@ if TYPE_CHECKING:
 
 from ...utils.data_utils import DataUtils
 from ...utils.feature_metadata_utils import FeatureMetadataUtils
-from ..helpers.representative_finder_helper import RepresentativeFinderHelper
+from ..helper.representative_finder_helper import RepresentativeFinderHelper
 
 
 class FeatureImportanceData:

@@ -35,9 +35,9 @@ if TYPE_CHECKING:
 
 from ...feature.entities.feature_data import FeatureData
 from ..entities.feature_selector_data import FeatureSelectorData
-from ..helpers.feature_selector_parse_core_helper import FeatureSelectorParseCoreHelper
-from ..helpers.common_denominator_helper import CommonDenominatorHelper
-from ..helpers.post_selection_reduction_helper import PostSelectionReductionHelper
+from ..helper.feature_selector_parse_core_helper import FeatureSelectorParseCoreHelper
+from ..helper.common_denominator_helper import CommonDenominatorHelper
+from ..helper.post_selection_reduction_helper import PostSelectionReductionHelper
 from ...utils.data_utils import DataUtils
 from ...feature.services.feature_selector_add_service import FeatureSelectorAddService
 

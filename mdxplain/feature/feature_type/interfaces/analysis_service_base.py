@@ -26,7 +26,7 @@ from typing import Union, List, Optional, TYPE_CHECKING
 if TYPE_CHECKING:
     from ....pipeline.entities.pipeline_data import PipelineData
 
-from ...services.helpers.analysis_data_helper import AnalysisDataHelper
+from ...services.helper.analysis_data_helper import AnalysisDataHelper
 
 
 class AnalysisServiceBase:

@@ -27,9 +27,9 @@ from typing import Dict, Iterable, Iterator, List, Literal, Sequence, Tuple, Uni
 import mdtraj as md
 import numpy as np
 
-from ..helpers.reference_structure_helper import ReferenceStructureHelper
-from ..helpers.residue_aggregation_helper import AGGREGATOR_CODES, aggregate_residues_jit
-from ..helpers.structure_calculation_helper import StructureCalculationHelper
+from ..helper.reference_structure_helper import ReferenceStructureHelper
+from ..helper.residue_aggregation_helper import AGGREGATOR_CODES, aggregate_residues_jit
+from ..helper.structure_calculation_helper import StructureCalculationHelper
 
 
 class RMSFCalculator:

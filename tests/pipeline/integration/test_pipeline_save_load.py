@@ -26,7 +26,7 @@ from pathlib import Path
 import tempfile
 import shutil
 
-from mdxplain.pipeline.managers.pipeline_manager import PipelineManager
+from mdxplain.pipeline.manager.pipeline_manager import PipelineManager
 from mdxplain.feature.feature_type.distances import Distances
 from mdxplain.feature.feature_type.contacts import Contacts
 from mdxplain.clustering.cluster_type.dbscan import DBSCAN

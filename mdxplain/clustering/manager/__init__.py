@@ -19,18 +19,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Helper classes for feature importance operations.
+Clustering manager modules.
 
-This package contains helper classes that extract common logic from
-FeatureImportanceManager methods to improve code organization and reusability.
-
-Notes
------
-All helpers are internal to the feature_importance module and should be
-imported directly where needed. No exports to avoid circular import issues
-when helpers/__init__.py is executed during direct helper imports.
+Contains manager classes for clustering operations.
 """
-
-# No imports or exports - all helpers are internal
-# Import directly: from .helpers.analysis_runner_helper import AnalysisRunnerHelper
-__all__ = []

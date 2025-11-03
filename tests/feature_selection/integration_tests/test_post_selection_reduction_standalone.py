@@ -31,7 +31,7 @@ import mdtraj as md
 from typing import List
 
 from mdxplain.pipeline.entities.pipeline_data import PipelineData
-from mdxplain.feature_selection.managers.feature_selector_manager import FeatureSelectorManager
+from mdxplain.feature_selection.manager.feature_selector_manager import FeatureSelectorManager
 from mdxplain.feature.entities.feature_data import FeatureData
 from mdxplain.feature.feature_type.distances.distances import Distances
 

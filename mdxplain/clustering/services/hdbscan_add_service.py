@@ -24,7 +24,7 @@ from __future__ import annotations
 from typing import Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ..managers.cluster_manager import ClusterManager
+    from ..manager.cluster_manager import ClusterManager
     from ...pipeline.entities.pipeline_data import PipelineData
 
 from ..cluster_type import HDBSCAN

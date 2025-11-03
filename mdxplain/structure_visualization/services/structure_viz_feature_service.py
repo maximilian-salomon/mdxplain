@@ -33,14 +33,14 @@ from typing import List, Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ...pipeline.entities.pipeline_data import PipelineData
-    from ..managers.structure_visualization_manager import (
+    from ..manager.structure_visualization_manager import (
         StructureVisualizationManager,
     )
 
 from ..entities.structure_visualization_data import StructureVisualizationData
-from ..helpers.pdb_beta_factor_helper import PdbBetaFactorHelper
-from ..helpers.validation_helper import ValidationHelper
-from ..helpers.visualization_data_helper import VisualizationDataHelper
+from ..helper.pdb_beta_factor_helper import PdbBetaFactorHelper
+from ..helper.validation_helper import ValidationHelper
+from ..helper.visualization_data_helper import VisualizationDataHelper
 from ...utils.data_utils import DataUtils
 
 
@@ -266,7 +266,7 @@ class StructureVizFeatureService:
         )
 
         # Lazy import of Jupyter-specific dependencies
-        from ..helpers.nglview_helper import NGLViewHelper
+        from ..helper.nglview_helper import NGLViewHelper
         from IPython.display import display
 
         # Prepare PDB info with colors
@@ -352,7 +352,7 @@ class StructureVizFeatureService:
         )
 
         # Lazy import PyMOL helper
-        from ..helpers.pymol_script_generator import PyMolScriptGenerator
+        from ..helper.pymol_script_generator import PyMolScriptGenerator
 
         # Prepare PDB info
         pdb_info = VisualizationDataHelper.prepare_pdb_info_from_viz_data(

@@ -30,7 +30,7 @@ import mdtraj as md
 from mdxplain.pipeline.entities.pipeline_data import PipelineData
 
 from ..calculators.rmsf_calculator import RMSFCalculator
-from ..helpers.trajectory_service_helper import TrajectoryServiceHelper
+from ..helper.trajectory_service_helper import TrajectoryServiceHelper
 
 
 class RMSFPerAtomService:

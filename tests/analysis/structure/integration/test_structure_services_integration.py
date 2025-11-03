@@ -29,7 +29,7 @@ import numpy as np
 import pytest
 import mdtraj as md
 
-from mdxplain.pipeline.managers.pipeline_manager import PipelineManager
+from mdxplain.pipeline.manager.pipeline_manager import PipelineManager
 from mdxplain.analysis.structure.services.rmsf_per_atom_service import RMSFPerAtomService
 from mdxplain.analysis.structure.services.rmsd_mean_service import RMSDMeanService
 from mdxplain.analysis.structure.services.rmsf_per_residue_service import RMSFPerResidueService
@@ -286,7 +286,7 @@ class TestStructureServicesIntegration:
         patch2 = patch('mdxplain.analysis.structure.services.rmsf_per_residue_service.RMSFCalculator', autospec=False)
 
         # Patch the helper's build_result_map method to convert list to dict
-        patch3 = patch('mdxplain.analysis.structure.helpers.trajectory_service_helper.TrajectoryServiceHelper.build_result_map')
+        patch3 = patch('mdxplain.analysis.structure.helper.trajectory_service_helper.TrajectoryServiceHelper.build_result_map')
 
         mock_calc1 = patch1.start()
         mock_calc2 = patch2.start()

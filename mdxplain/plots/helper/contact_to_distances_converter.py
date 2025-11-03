@@ -34,7 +34,7 @@ from typing import TYPE_CHECKING, Tuple, Optional
 if TYPE_CHECKING:
     from ...pipeline.entities.pipeline_data import PipelineData
 
-from ...feature_selection.managers.feature_selector_manager import FeatureSelectorManager
+from ...feature_selection.manager.feature_selector_manager import FeatureSelectorManager
 from ...utils.output_utils import OutputUtils
 
 

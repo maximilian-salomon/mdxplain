@@ -32,8 +32,8 @@ from __future__ import annotations
 from typing import List, Dict, Any, TYPE_CHECKING
 
 from ..entities.comparison_data import ComparisonData
-from ..helpers.comparison_validation_helper import ComparisonValidationHelper
-from ..helpers.sub_comparison_creation_helper import SubComparisonCreationHelper
+from ..helper.comparison_validation_helper import ComparisonValidationHelper
+from ..helper.sub_comparison_creation_helper import SubComparisonCreationHelper
 from ...utils.data_utils import DataUtils
 
 if TYPE_CHECKING:
