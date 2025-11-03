@@ -1,5 +1,5 @@
-Feature Type Helpers
-====================
+Feature Type Helper
+===================
 
 Missing __init__.py mdxplain/feature/feature_type/helper
 

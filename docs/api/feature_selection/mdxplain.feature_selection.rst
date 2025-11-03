@@ -8,5 +8,5 @@ Feature Selection
    :titlesonly:
 
    mdxplain.feature_selection.entities
-   mdxplain.feature_selection.helpers
-   mdxplain.feature_selection.managers
+   mdxplain.feature_selection.helper
+   mdxplain.feature_selection.manager

@@ -7,8 +7,8 @@ Feature
    :maxdepth: 2
    :titlesonly:
 
-   mdxplain.feature.entities
    feature_type/mdxplain.feature.feature_type
+   mdxplain.feature.entities
    mdxplain.feature.helper
-   mdxplain.feature.managers
+   mdxplain.feature.manager
    mdxplain.feature.services
