@@ -21,7 +21,7 @@
 """Feature computation module for molecular dynamics trajectory analysis."""
 
 from .entities.feature_data import FeatureData
-from .managers.feature_manager import FeatureManager
+from .manager.feature_manager import FeatureManager
 
 __all__ = [
     "FeatureData", 

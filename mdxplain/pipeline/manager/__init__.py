@@ -19,7 +19,12 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Clustering managers module.
+Pipeline manager modules.
 
-Contains manager classes for clustering operations.
+Contains manager classes for the pipeline orchestration system.
 """
+
+from .pipeline_manager import PipelineManager
+from .auto_inject_proxy import AutoInjectProxy
+
+__all__ = ["PipelineManager", "AutoInjectProxy"]

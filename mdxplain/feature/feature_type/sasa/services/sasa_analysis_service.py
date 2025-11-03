@@ -24,7 +24,7 @@ from __future__ import annotations
 from typing import Union, List, Optional, TYPE_CHECKING
 import numpy as np
 
-from ....services.helpers.analysis_data_helper import AnalysisDataHelper
+from ....services.helper.analysis_data_helper import AnalysisDataHelper
 from ..sasa_calculator_analysis import SASACalculatorAnalysis
 from ...interfaces.analysis_service_base import AnalysisServiceBase
 

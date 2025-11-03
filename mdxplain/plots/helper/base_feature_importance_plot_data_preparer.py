@@ -38,7 +38,7 @@ from .validation_helper import ValidationHelper
 from .contact_to_distances_converter import ContactToDistancesConverter
 from .color_mapping_helper import ColorMappingHelper
 from .feature_metadata_helper import FeatureMetadataHelper
-from ...feature_importance.managers.feature_importance_manager import FeatureImportanceManager
+from ...feature_importance.manager.feature_importance_manager import FeatureImportanceManager
 from ...utils.feature_metadata_utils import FeatureMetadataUtils
 
 

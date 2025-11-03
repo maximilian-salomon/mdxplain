@@ -33,7 +33,7 @@ Main Components:
 """
 
 from .entities.comparison_data import ComparisonData
-from .managers.comparison_manager import ComparisonManager
+from .manager.comparison_manager import ComparisonManager
 
 __all__ = [
     "ComparisonData",

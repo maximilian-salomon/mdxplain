@@ -24,7 +24,7 @@ import mdtraj as md
 import numpy as np
 import pytest
 
-from mdxplain.analysis.structure.helpers.reference_structure_helper import ReferenceStructureHelper
+from mdxplain.analysis.structure.helper.reference_structure_helper import ReferenceStructureHelper
 
 
 class TestReferenceStructureHelper:

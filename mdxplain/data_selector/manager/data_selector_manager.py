@@ -32,8 +32,8 @@ from __future__ import annotations
 from typing import List, Union, Dict, Any, TYPE_CHECKING
 
 from ..entities.data_selector_data import DataSelectorData
-from ..helpers.frame_selection_helper import FrameSelectionHelper
-from ..helpers.criteria_builder_helper import CriteriaBuilderHelper
+from ..helper.frame_selection_helper import FrameSelectionHelper
+from ..helper.criteria_builder_helper import CriteriaBuilderHelper
 from ...utils.data_utils import DataUtils
 
 if TYPE_CHECKING:

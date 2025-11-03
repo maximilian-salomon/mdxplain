@@ -37,7 +37,7 @@ from unittest.mock import patch
 import shutil
 
 from mdxplain.pipeline.entities.pipeline_data import PipelineData
-from mdxplain.trajectory.managers.trajectory_manager import TrajectoryManager
+from mdxplain.trajectory.manager.trajectory_manager import TrajectoryManager
 from mdxplain.trajectory.entities.trajectory_data import TrajectoryData
 from mdxplain.trajectory.entities.dask_md_trajectory import DaskMDTrajectory
 

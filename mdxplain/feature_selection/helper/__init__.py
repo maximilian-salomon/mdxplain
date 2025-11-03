@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""Feature selection helpers module."""
+"""Feature selection helper modules."""
 
 from .feature_selector_parse_core_helper import FeatureSelectorParseCoreHelper
 from .feature_selector_consensus_parse_helper import FeatureSelectorConsensusParseHelper

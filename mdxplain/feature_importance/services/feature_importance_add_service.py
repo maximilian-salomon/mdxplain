@@ -24,10 +24,10 @@ from __future__ import annotations
 from typing import Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ..managers.feature_importance_manager import FeatureImportanceManager
+    from ..manager.feature_importance_manager import FeatureImportanceManager
     from ...pipeline.entities.pipeline_data import PipelineData
 
-from ..analyzer_types import DecisionTree
+from ..analyzer_type import DecisionTree
 
 
 class FeatureImportanceAddService:

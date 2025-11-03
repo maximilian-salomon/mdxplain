@@ -24,7 +24,7 @@ import mdtraj as md
 import numpy as np
 import pytest
 
-from mdxplain.analysis.structure.helpers.structure_calculation_helper import StructureCalculationHelper
+from mdxplain.analysis.structure.helper.structure_calculation_helper import StructureCalculationHelper
 
 
 class TestStructureCalculationHelper:

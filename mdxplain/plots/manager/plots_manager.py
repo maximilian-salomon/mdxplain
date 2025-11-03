@@ -29,10 +29,10 @@ as direct plotting capabilities.
 from typing import List, Optional, Tuple, Union
 from matplotlib.figure import Figure
 
-from ..service.decomposition_facade import DecompositionFacade
-from ..service.clustering_facade import ClusteringFacade
-from ..service.feature_importance_facade import FeatureImportanceFacade
-from ..service.feature_facade import FeatureFacade
+from ..services.decomposition_facade import DecompositionFacade
+from ..services.clustering_facade import ClusteringFacade
+from ..services.feature_importance_facade import FeatureImportanceFacade
+from ..services.feature_facade import FeatureFacade
 from ..plot_type.landscape import LandscapePlotter
 from ..plot_type.membership import MembershipPlotter
 

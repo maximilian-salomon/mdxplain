@@ -29,7 +29,7 @@ import numpy as np
 import mdtraj as md
 from typing import List
 
-from mdxplain.pipeline.managers.pipeline_manager import PipelineManager
+from mdxplain.pipeline.manager.pipeline_manager import PipelineManager
 from mdxplain.feature.feature_type.distances.distances import Distances
 from mdxplain.feature.entities.feature_data import FeatureData
 

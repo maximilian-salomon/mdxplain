@@ -25,7 +25,7 @@ import os
 from unittest.mock import patch, MagicMock
 from scipy.sparse.linalg import LinearOperator
 
-from mdxplain.pipeline.managers.pipeline_manager import PipelineManager
+from mdxplain.pipeline.manager.pipeline_manager import PipelineManager
 from mdxplain.decomposition.decomposition_type.pca import PCA
 from mdxplain.decomposition.decomposition_type.kernel_pca import KernelPCA
 from mdxplain.decomposition.decomposition_type.diffusion_maps import DiffusionMaps

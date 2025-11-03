@@ -25,7 +25,7 @@ import numpy as np
 import pytest
 import mdtraj as md
 
-from mdxplain.analysis.structure.helpers.trajectory_service_helper import TrajectoryServiceHelper
+from mdxplain.analysis.structure.helper.trajectory_service_helper import TrajectoryServiceHelper
 from mdxplain.pipeline.entities.pipeline_data import PipelineData
 
 

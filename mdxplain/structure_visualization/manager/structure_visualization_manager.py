@@ -33,8 +33,8 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from ...pipeline.entities.pipeline_data import PipelineData
 
-from ..helpers.residue_importance_calculator import ResidueImportanceCalculator
-from ..helpers.pdb_beta_factor_helper import PdbBetaFactorHelper
+from ..helper.residue_importance_calculator import ResidueImportanceCalculator
+from ..helper.pdb_beta_factor_helper import PdbBetaFactorHelper
 from ...utils.top_features_utils import TopFeaturesUtils
 
 
