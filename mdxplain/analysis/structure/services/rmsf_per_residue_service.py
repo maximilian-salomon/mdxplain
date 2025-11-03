@@ -69,7 +69,7 @@ class RMSFPerResidueService:
         Examples
         --------
         >>> service = RMSFPerResidueService(pipeline_data, metric="mean", aggregator="median")
-        >>> service.aggregator
+        >>> service._aggregator
         'median'
         """
 
@@ -90,33 +90,6 @@ class RMSFPerResidueService:
         self._metric = metric
         self._aggregator = aggregator
         self._helper = TrajectoryServiceHelper(pipeline_data)
-
-    @property
-    def aggregator(self) -> Literal["mean", "median", "rms", "rms_median"]:
-        """
-        Return the configured residue aggregator.
-
-        Exposes the residue-level aggregation strategy used when condensing
-        per-atom RMSF values.
-
-        Parameters
-        ----------
-        None
-            The property accepts no parameters.
-
-        Returns
-        -------
-        {'mean', 'median', 'rms', 'rms_median'}
-            The residue aggregator configured during construction.
-
-        Examples
-        --------
-        >>> service = RMSFPerResidueService(pipeline_data, metric="mean", aggregator="median")
-        >>> service.aggregator
-        'median'
-        """
-
-        return self._aggregator
 
     def to_mean_reference(
         self,
@@ -238,7 +211,7 @@ class RMSFPerResidueService:
         rmsf_arrays = calculator.calculate_per_residue(
             reference_mode=reference_mode,
             metric=self._metric,
-            residue_aggregator=self.aggregator,
+            residue_aggregator=self._aggregator,
             atom_indices=atom_indices,
             cross_trajectory=cross_trajectory,
             reference_trajectory_index=reference_idx,

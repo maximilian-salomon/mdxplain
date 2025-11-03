@@ -111,7 +111,6 @@ class StructureVizFeatureImportanceService:
             Number of top features to consider for beta-factors
         representative_mode : str, default="best"
             Mode for selecting representative frames:
-
             - "best": Frame maximizing top feature values
             - "centroid": Frame closest to cluster centroid
         output_dir : str, optional
@@ -180,6 +179,7 @@ class StructureVizFeatureImportanceService:
         self,
         structure_viz_name: str,
         n_top_global: int = 3,
+        n_top_local: int = 3,
         feature_own_color: bool = True
     ) -> Tuple:
         """
@@ -188,7 +188,8 @@ class StructureVizFeatureImportanceService:
         Creates 3D interactive visualization widget using NGLView with
         beta-factor gradient coloring and feature highlights. Requires
         PDFs to be created first via create_pdb_with_beta_factors().
-        Automatically displays the widget in Jupyter and returns it.
+        Supports both global features (averaged across all clusters) and
+        local features (cluster-specific top features).
 
         Warning
         -------
@@ -200,10 +201,13 @@ class StructureVizFeatureImportanceService:
         structure_viz_name : str
             Name of visualization session (from create_pdb_with_beta_factors)
         n_top_global : int, default=3
-            Number of global top features to highlight with licorice
+            Number of global top features (averaged across all clusters)
+        n_top_local : int, default=3
+            Number of local top features per cluster (cluster-specific)
         feature_own_color : bool, default=True
-            If True, features use their own color from feature_colors.
-            If False, features use the color of their structure.
+            If True, features use structure color for local features and
+            distinct colors for global features. If False, uses continuous
+            distinct colors (global 0-N, local N-M).
 
         Returns
         -------
@@ -225,9 +229,13 @@ class StructureVizFeatureImportanceService:
         >>> pipeline.structure_visualization.feature_importance.create_pdb_with_beta_factors(
         ...     "my_viz", "dt_analysis", n_top=10
         ... )
-        >>> # Then visualize in Jupyter (automatically displayed)
+        >>> # Visualize with global and local features
         >>> ui, view = pipeline.structure_visualization.feature_importance.visualize_nglview_jupyter(
-        ...     "my_viz", n_top_global=3
+        ...     "my_viz", n_top_global=3, n_top_local=3
+        ... )
+        >>> # Only global features (disable local)
+        >>> ui, view = pipeline.structure_visualization.feature_importance.visualize_nglview_jupyter(
+        ...     "my_viz", n_top_global=5, n_top_local=0
         ... )
 
         Notes
@@ -235,8 +243,10 @@ class StructureVizFeatureImportanceService:
         - Beta-factor gradient: base color (important) → white (unimportant)
         - Dropdown allows switching between structures or "multiple" mode
         - Multi-view mode shows all structures with opacity checkboxes
+        - Global features: Top N averaged across all clusters
+        - Local features: Top N cluster-specific features
+        - Both global and local features independently toggleable
         - Feature highlights use licorice representation
-        - Widget is automatically displayed via IPython.display.display()
         """
         # Validate environment and data
         ValidationHelper.validate_jupyter_environment()
@@ -261,17 +271,24 @@ class StructureVizFeatureImportanceService:
             viz_data, comp_data
         )
 
-        # Get top features and colors
-        top_features = TopFeaturesUtils.get_top_features_with_names(
+        # Get global top features and colors (averaged across all clusters)
+        top_features_global = TopFeaturesUtils.get_top_features_with_names(
             self._pipeline_data, fi_data, None, n_top_global
         )
-        feature_colors = VisualizationDataHelper.assign_feature_colors(
-            top_features, n_top_global
+        feature_colors_global = VisualizationDataHelper.assign_feature_colors(
+            top_features_global, n_top_global
+        )
+
+        # Get local top features and colors per cluster (cluster-specific)
+        top_features_local, feature_colors_local = VisualizationDataHelper.extract_local_features_and_colors(
+            self._pipeline_data, fi_data, comp_data, n_top_local,
+            n_top_global, feature_own_color
         )
 
         # Create NGLView widget
         ui, view = NGLViewHelper.create_widget(
-            pdb_info, top_features, feature_colors, feature_own_color,
+            pdb_info, top_features_global, feature_colors_global,
+            top_features_local, feature_colors_local, feature_own_color,
             viz_name=structure_viz_name
         )
 
@@ -284,6 +301,7 @@ class StructureVizFeatureImportanceService:
         self,
         structure_viz_name: str,
         n_top_global: int = 3,
+        n_top_local: int = 3,
         output_dir: str = None,
         feature_own_color: bool = True
     ) -> str:
@@ -292,19 +310,24 @@ class StructureVizFeatureImportanceService:
 
         Generates PyMOL script with putty cartoons (thickness from
         beta-factor), color gradients (base_color → white), and
-        feature objects as toggleable stick representations.
+        feature objects as toggleable stick representations. Supports
+        both global features (averaged across all clusters) and local
+        features (cluster-specific top features).
 
         Parameters
         ----------
         structure_viz_name : str
             Name of visualization session (from create_pdb_with_beta_factors)
         n_top_global : int, default=3
-            Number of top features to highlight
+            Number of global top features (averaged across all clusters)
+        n_top_local : int, default=3
+            Number of local top features per cluster (cluster-specific)
         output_dir : str, optional
             Output directory (defaults to cache_dir/structure_viz)
         feature_own_color : bool, default=True
-            If True, features use their own color from feature_colors.
-            If False, features use the color of their structure.
+            If True, features use structure color for local features and
+            distinct colors for global features. If False, uses continuous
+            distinct colors (global 0-N, local N-M).
 
         Returns
         -------
@@ -317,21 +340,28 @@ class StructureVizFeatureImportanceService:
         >>> pipeline.structure_visualization.feature_importance.create_pdb_with_beta_factors(
         ...     "my_viz", "dt_analysis", n_top=10
         ... )
-        >>> # Then create PyMOL script
+        >>> # Create PyMOL script with global and local features
         >>> script_path = pipeline.structure_visualization.feature_importance.create_pymol_script(
-        ...     "my_viz", n_top_global=3
+        ...     "my_viz", n_top_global=3, n_top_local=3
         ... )
-        >>> print(f"Script saved to: {script_path}")
+        >>> # Only global features (disable local)
+        >>> script_path = pipeline.structure_visualization.feature_importance.create_pymol_script(
+        ...     "my_viz", n_top_global=5, n_top_local=0
+        ... )
 
         Notes
         -----
         - Focus groups named: all_focus_struct_{name}
-        - Each group contains:
-        
-          * Own structure + features (opak)
-          * Other structures + features (80% transparent, context)
+        - Each group contains 6 objects (if local features enabled):
+          * Own structure (cartoon, opak)
+          * Own global features (sticks, opak)
+          * Own local features (sticks, opak)
+          * Other structures (cartoon, 80% transparent)
+          * Other global features (sticks, 80% transparent)
+          * Other local features (sticks, 80% transparent)
         - Only first focus group enabled by default
         - Toggle groups in PyMOL GUI to switch focus
+        - Global and local features independently toggleable
         - Script saved as: output_dir/structure_viz_name.pml
         - Putty cartoons: thickness controlled by beta-factor
         - Color gradient: base_color (low B) → white (high B)
@@ -355,17 +385,24 @@ class StructureVizFeatureImportanceService:
             viz_data, comp_data
         )
 
-        # Get top features + colors
-        top_features = TopFeaturesUtils.get_top_features_with_names(
+        # Get global top features and colors (averaged across all clusters)
+        top_features_global = TopFeaturesUtils.get_top_features_with_names(
             self._pipeline_data, fi_data, None, n_top_global
         )
-        feature_colors = VisualizationDataHelper.assign_feature_colors(
-            top_features, n_top_global
+        feature_colors_global = VisualizationDataHelper.assign_feature_colors(
+            top_features_global, n_top_global
+        )
+
+        # Get local top features and colors per cluster (cluster-specific)
+        top_features_local, feature_colors_local = VisualizationDataHelper.extract_local_features_and_colors(
+            self._pipeline_data, fi_data, comp_data, n_top_local,
+            n_top_global, feature_own_color
         )
 
         # Generate script (use_putty=True for beta-factor variation)
         script_content = PyMolScriptGenerator.generate_script(
-            pdb_info, top_features, feature_colors, feature_own_color,
+            pdb_info, top_features_global, feature_colors_global,
+            top_features_local, feature_colors_local, feature_own_color,
             use_putty=True
         )
 
@@ -382,6 +419,7 @@ class StructureVizFeatureImportanceService:
         self,
         structure_viz_name: str,
         n_top_global: int = 3,
+        n_top_local: int = 3,
         feature_own_color: bool = True
     ) -> None:
         """
@@ -389,6 +427,8 @@ class StructureVizFeatureImportanceService:
 
         Validates environment (terminal, PyMOL available), creates
         script if needed, and launches PyMOL with pymol Python module.
+        Supports both global features (averaged across all clusters) and
+        local features (cluster-specific top features).
 
         Warning
         -------
@@ -399,11 +439,14 @@ class StructureVizFeatureImportanceService:
         ----------
         structure_viz_name : str
             Name of visualization session (from create_pdb_with_beta_factors)
-        n_top_global : int = 3
-            Number of top features to highlight
+        n_top_global : int, default=3
+            Number of global top features (averaged across all clusters)
+        n_top_local : int, default=3
+            Number of local top features per cluster (cluster-specific)
         feature_own_color : bool, default=True
-            If True, features use their own color from feature_colors.
-            If False, features use the color of their structure.
+            If True, features use structure color for local features and
+            distinct colors for global features. If False, uses continuous
+            distinct colors (global 0-N, local N-M).
 
         Returns
         -------
@@ -425,14 +468,15 @@ class StructureVizFeatureImportanceService:
         ... )
         >>> # Then open in PyMOL (terminal only!)
         >>> pipeline.structure_visualization.feature_importance.visualize_pymol(
-        ...     "my_viz", n_top_global=3
+        ...     "my_viz", n_top_global=3, n_top_local=3
         ... )
 
         Notes
         -----
         - PyMOL opens with all structures and features visible
-        - Toggle structures: enable/disable struct_<name>
-        - Toggle features: enable/disable feat_<name>
+        - Toggle groups: enable/disable all_focus_struct_<name>
+        - Each focus group shows own structure + features, others transparent
+        - Global and local features independently toggleable
         - Putty cartoons: thickness controlled by beta-factor
         - Color gradient: base_color (low B) → white (high B)
         - Script created if not already exists
@@ -445,7 +489,7 @@ class StructureVizFeatureImportanceService:
 
         # Create script
         script_path = self.create_pymol_script(
-            structure_viz_name, n_top_global,
+            structure_viz_name, n_top_global, n_top_local,
             feature_own_color=feature_own_color
         )
 

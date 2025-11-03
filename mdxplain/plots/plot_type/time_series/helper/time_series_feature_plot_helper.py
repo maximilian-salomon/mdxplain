@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from typing import Dict, TYPE_CHECKING
 import matplotlib.pyplot as plt
+import numpy as np
 
 if TYPE_CHECKING:
     from matplotlib.figure import Figure
@@ -17,6 +18,7 @@ if TYPE_CHECKING:
     from ..time_series_plot_config import TimeSeriesPlotConfig
 
 from .time_series_tag_coloring_helper import TimeSeriesTagColoringHelper
+from .time_series_data_preparer import TimeSeriesDataPreparer
 
 
 class TimeSeriesFeaturePlotHelper:
@@ -167,9 +169,14 @@ class TimeSeriesFeaturePlotHelper:
 
         TimeSeriesFeaturePlotHelper._plot_feature_lines(ax, feat_idx, config)
 
+        # Get x_values from first trajectory for xlim synchronization
+        x_values = TimeSeriesDataPreparer.get_x_values(
+            config.pipeline_data, 0, config.use_time
+        )
+
         feature_metadata = config.metadata_map.get(feat_type, {}).get(feat_name, {})
         TimeSeriesFeaturePlotHelper._configure_axes(
-            ax, feat_type, feat_name, feature_metadata, config
+            ax, feat_type, feature_metadata, config, x_values
         )
 
     @staticmethod
@@ -198,19 +205,19 @@ class TimeSeriesFeaturePlotHelper:
             TimeSeriesTagColoringHelper.plot_feature_with_tag_colors(
                 ax, config.pipeline_data, feat_idx, config.tag_map,
                 config.tag_colors, config.feature_selector_name, config.use_time,
-                config.smoothing_method, config.smoothing_window,
+                config.smoothing, config.smoothing_method, config.smoothing_window,
                 config.smoothing_polyorder, config.show_unsmoothed_background
             )
         else:
             TimeSeriesTagColoringHelper.plot_feature_with_trajectory_colors(
                 ax, config.pipeline_data, feat_idx, config.tag_map,
                 config.traj_colors, config.feature_selector_name, config.use_time,
-                config.smoothing_method, config.smoothing_window,
+                config.smoothing, config.smoothing_method, config.smoothing_window,
                 config.smoothing_polyorder, config.show_unsmoothed_background
             )
 
     @staticmethod
-    def _configure_axes(ax, feat_type, feat_name, feature_metadata, config):
+    def _configure_axes(ax, feat_type, feature_metadata, config, x_values):
         """
         Configure axes labels and limits.
 
@@ -220,12 +227,12 @@ class TimeSeriesFeaturePlotHelper:
             Axes to configure
         feat_type : str
             Feature type
-        feat_name : str
-            Feature name
         feature_metadata : Dict
             Feature metadata
         config : TimeSeriesPlotConfig
             Configuration object
+        x_values : np.ndarray
+            X-axis values for xlim synchronization
 
         Returns
         -------
@@ -234,7 +241,7 @@ class TimeSeriesFeaturePlotHelper:
         Examples
         --------
         >>> TimeSeriesFeaturePlotHelper._configure_axes(
-        ...     ax, "distances", "CA-CB", metadata, config
+        ...     ax, "distances", metadata, config, x_values
         ... )
         """
         y_label = TimeSeriesFeaturePlotHelper._get_feature_y_label(
@@ -243,6 +250,11 @@ class TimeSeriesFeaturePlotHelper:
         ax.set_ylabel(y_label, fontsize=11)
         ax.set_xlabel("Time (ns)" if config.use_time else "Frame", fontsize=11)
         ax.grid(True, alpha=0.3)
+
+        # Set xlim explicitly for exact alignment with membership plots
+        x_range = x_values[-1] - x_values[0]
+        x_margin = x_range * 0.05
+        ax.set_xlim(x_values[0] - x_margin, x_values[-1] + x_margin)
 
         type_metadata = feature_metadata.get("type_metadata", {})
         viz = type_metadata.get("visualization", {})

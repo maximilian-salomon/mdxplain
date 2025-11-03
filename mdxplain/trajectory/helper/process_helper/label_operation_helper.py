@@ -22,6 +22,7 @@
 from __future__ import annotations
 
 import numpy as np
+import mdtraj as md
 from typing import Dict, List, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -82,3 +83,110 @@ class LabelOperationHelper:
                     
             # Update labels in trajectory data
             traj_data.res_label_data[traj_idx] = new_labels
+
+    @staticmethod
+    def combine_stack_labels(
+        traj_data: TrajectoryData,
+        target_idx: int,
+        source_idx: int,
+        target_n_residues: int,
+    ) -> None:
+        """
+        Combine and renumber labels from stacked trajectories.
+
+        Parameters
+        ----------
+        traj_data : TrajectoryData
+            Trajectory data containing labels
+        target_idx : int
+            Index of target trajectory
+        source_idx : int
+            Index of source trajectory
+        target_n_residues : int
+            Number of residues in target trajectory before stacking
+
+        Returns
+        -------
+        None
+            Updates labels in traj_data in-place
+        """
+        if (target_idx not in traj_data.res_label_data or
+            source_idx not in traj_data.res_label_data):
+            return
+
+        target_labels = traj_data.res_label_data[target_idx]
+        source_labels = traj_data.res_label_data[source_idx]
+
+        # Renumber source labels to append after target
+        renumbered_source_labels = []
+        for residue_dict in source_labels:
+            new_dict = residue_dict.copy()
+            new_dict['index'] = residue_dict['index'] + target_n_residues
+            renumbered_source_labels.append(new_dict)
+
+        # Combine labels
+        combined_labels = target_labels + renumbered_source_labels
+        traj_data.res_label_data[target_idx] = combined_labels
+
+    @staticmethod
+    def map_residues_to_original_indices(
+        original_residue_info: List[tuple],
+        current_topology: md.Topology
+    ) -> np.ndarray:
+        """
+        Map residues by sequential structure matching.
+
+        After operations like remove_solvent(), MDTraj may renumber residues,
+        making resSeq-based matching unreliable. We match residues sequentially
+        by name and atom composition, preserving order.
+
+        This method uses lightweight residue info (just names and atoms) instead
+        of full trajectory data to avoid memory overhead.
+
+        Parameters
+        ----------
+        original_residue_info : List[tuple]
+            Original residue structure as list of (name, atoms) tuples where
+            atoms is a tuple of (atom_name, element_symbol) tuples
+        current_topology : md.Topology
+            Topology after modification (e.g., after solvent removal)
+
+        Returns
+        -------
+        np.ndarray
+            Original residue indices of residues that were kept
+
+        Examples
+        --------
+        >>> # Prepare lightweight residue info
+        >>> original_info = [
+        ...     ('ALA', (('CA', 'C'), ('C', 'C'))),
+        ...     ('HOH', (('O', 'O'),)),
+        ...     ('GLY', (('CA', 'C'), ('C', 'C'))),
+        ...     ('HOH', (('O', 'O'),)),
+        ...     ('ALA', (('CA', 'C'), ('C', 'C')))
+        ... ]
+        >>> # After removal: 3 residues (ALA, GLY, ALA)
+        >>> # Returns: [0, 2, 4] - original indices of kept residues
+        >>> kept_indices = LabelOperationHelper.map_residues_to_original_indices(
+        ...     original_info, modified_topology
+        ... )
+        array([0, 2, 4])
+        """
+        kept_original_indices = []
+
+        original_idx = 0
+        for current_res in current_topology.residues:
+            current_atoms = tuple((a.name, a.element.symbol) for a in current_res.atoms)
+
+            while original_idx < len(original_residue_info):
+                orig_name, orig_atoms = original_residue_info[original_idx]
+
+                if orig_name == current_res.name and orig_atoms == current_atoms:
+                    kept_original_indices.append(original_idx)
+                    original_idx += 1
+                    break
+
+                original_idx += 1
+
+        return np.array(kept_original_indices)

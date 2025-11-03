@@ -62,7 +62,7 @@ class TorsionsCalculator(CalculatorBase):
     >>> torsions, metadata = calculator.compute(trajectory, calculate_chi=True)
     """
 
-    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000) -> None:
+    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000, use_pbc: bool = True) -> None:
         """
         Initialize torsions calculator with configuration parameters.
 
@@ -74,6 +74,9 @@ class TorsionsCalculator(CalculatorBase):
             Directory path for storing cache files (includes trajectory name)
         chunk_size : int, optional
             Number of frames to process per chunk
+        use_pbc : bool, default=True
+            If True and the trajectory contains unitcell information,
+            angles are computed under the minimum image convention
 
         Returns
         -------
@@ -86,9 +89,13 @@ class TorsionsCalculator(CalculatorBase):
 
         >>> # With memory mapping
         >>> calculator = TorsionsCalculator(use_memmap=True, cache_path='./cache/')
+
+        >>> # Without periodic boundary conditions
+        >>> calculator = TorsionsCalculator(use_pbc=False)
         """
         super().__init__(use_memmap, cache_path, chunk_size)
         self.torsions_path = cache_path
+        self.use_pbc = use_pbc
 
         self.analysis = TorsionsCalculatorAnalysis(
             use_memmap=self.use_memmap, chunk_size=self.chunk_size
@@ -258,21 +265,21 @@ class TorsionsCalculator(CalculatorBase):
 
         # Compute phi angles
         if calculate_phi:
-            indices, values = md.compute_phi(trajectory)
+            indices, values = md.compute_phi(trajectory, periodic=self.use_pbc)
             if values.size > 0:
                 angle_arrays.append(np.degrees(values))
                 angle_info.append(('phi', indices))
 
-        # Compute psi angles  
+        # Compute psi angles
         if calculate_psi:
-            indices, values = md.compute_psi(trajectory)
+            indices, values = md.compute_psi(trajectory, periodic=self.use_pbc)
             if values.size > 0:
                 angle_arrays.append(np.degrees(values))
                 angle_info.append(('psi', indices))
 
         # Compute omega angles
         if calculate_omega:
-            indices, values = md.compute_omega(trajectory)
+            indices, values = md.compute_omega(trajectory, periodic=self.use_pbc)
             if values.size > 0:
                 angle_arrays.append(np.degrees(values))
                 angle_info.append(('omega', indices))
@@ -281,14 +288,14 @@ class TorsionsCalculator(CalculatorBase):
         if calculate_chi:
             for chi_num in [1, 2, 3, 4]:
                 if chi_num == 1:
-                    indices, values = md.compute_chi1(trajectory)
+                    indices, values = md.compute_chi1(trajectory, periodic=self.use_pbc)
                 elif chi_num == 2:
-                    indices, values = md.compute_chi2(trajectory)
+                    indices, values = md.compute_chi2(trajectory, periodic=self.use_pbc)
                 elif chi_num == 3:
-                    indices, values = md.compute_chi3(trajectory)
+                    indices, values = md.compute_chi3(trajectory, periodic=self.use_pbc)
                 elif chi_num == 4:
-                    indices, values = md.compute_chi4(trajectory)
-                
+                    indices, values = md.compute_chi4(trajectory, periodic=self.use_pbc)
+
                 if values.size > 0:
                     angle_arrays.append(np.degrees(values))
                     angle_info.append((f'chi{chi_num}', indices))

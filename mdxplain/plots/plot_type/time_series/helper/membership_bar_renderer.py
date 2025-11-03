@@ -33,6 +33,7 @@ import matplotlib.pyplot as plt
 from ...membership.helper.block_optimizer_helper import BlockOptimizerHelper
 from ....helper.color_mapping_helper import NOISE_COLOR
 from ....helper.clustering_data_helper import ClusteringDataHelper
+from .time_series_data_preparer import TimeSeriesDataPreparer
 
 if TYPE_CHECKING:
     from .....pipeline.entities.pipeline_data import PipelineData
@@ -100,7 +101,7 @@ class MembershipBarRenderer:
                 pipeline_data, labels, traj_idx
             )
             blocks = BlockOptimizerHelper.labels_to_blocks(traj_labels)
-            x_values = MembershipBarRenderer._get_x_values(
+            x_values = TimeSeriesDataPreparer.get_x_values(
                 pipeline_data, traj_idx, use_time
             )
             prepared_data[traj_idx] = {
@@ -187,34 +188,6 @@ class MembershipBarRenderer:
         )
         end_frame = start_frame + pipeline_data.trajectory_data.trajectories[traj_idx].n_frames
         return labels[start_frame:end_frame]
-
-    @staticmethod
-    def _get_x_values(
-        pipeline_data: PipelineData,
-        traj_idx: int,
-        use_time: bool
-    ) -> np.ndarray:
-        """
-        Get X-axis values for trajectory.
-
-        Parameters
-        ----------
-        pipeline_data : PipelineData
-            Pipeline data container
-        traj_idx : int
-            Trajectory index
-        use_time : bool
-            Use time or frames
-
-        Returns
-        -------
-        numpy.ndarray
-            X-axis values
-        """
-        trajectory = pipeline_data.trajectory_data.trajectories[traj_idx]
-        if use_time:
-            return trajectory.time / 1000  # Convert ps to ns
-        return np.arange(trajectory.n_frames)
 
     @staticmethod
     def _render_blocks(

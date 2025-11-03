@@ -40,7 +40,7 @@ class TimeSeriesPlotConfig:
     Groups all parameters for time series plotting to avoid parameter explosion
     across multiple methods.
 
-    Parameters
+    Attributes
     ----------
     pipeline_data : PipelineData
         Pipeline data container
@@ -86,14 +86,16 @@ class TimeSeriesPlotConfig:
         File format (png, pdf, svg, etc.)
     dpi : int
         Resolution
-    smoothing_method : str, optional
-        Smoothing method ("moving_average", "savitzky", or None)
+    smoothing : bool
+        Enable or disable data smoothing
+    smoothing_method : str
+        Smoothing method ("moving_average" or "savitzky")
     smoothing_window : int
         Window size for smoothing (frames)
     smoothing_polyorder : int
         Polynomial order for Savitzky-Golay filter
     show_unsmoothed_background : bool
-        Show unsmoothed data as transparent background
+        Show unsmoothed data as transparent background when smoothing is enabled
     feature_data : Dict
         Prepared feature data
     feature_indices : Dict[int, str]
@@ -193,10 +195,11 @@ class TimeSeriesPlotConfig:
     filename: Optional[str]
     file_format: str
     dpi: int
-    smoothing_method: Optional[str] = None
+    smoothing: bool = True
+    smoothing_method: str = "savitzky"
     smoothing_window: int = 51
     smoothing_polyorder: int = 3
-    show_unsmoothed_background: bool = False
+    show_unsmoothed_background: bool = True
 
     # Prepared data (set during plotting)
     feature_data: Dict = field(default_factory=dict)

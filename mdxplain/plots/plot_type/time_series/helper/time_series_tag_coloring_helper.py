@@ -368,10 +368,11 @@ class TimeSeriesTagColoringHelper:
         tag_colors: Dict[str, str],
         feature_selector_name: str,
         use_time: bool,
-        smoothing_method: Optional[str] = None,
+        smoothing: bool = True,
+        smoothing_method: str = "savitzky",
         smoothing_window: int = 51,
         smoothing_polyorder: int = 3,
-        show_unsmoothed_background: bool = False
+        show_unsmoothed_background: bool = True
     ) -> None:
         """
         Plot feature lines colored by tags.
@@ -392,14 +393,16 @@ class TimeSeriesTagColoringHelper:
             Feature selector name
         use_time : bool
             Use time (True) or frames (False)
-        smoothing_method : str, optional
-            Smoothing method ("moving_average", "savitzky", or None)
+        smoothing : bool, default=True
+            Enable or disable data smoothing
+        smoothing_method : str, default="savitzky"
+            Smoothing method ("moving_average" or "savitzky")
         smoothing_window : int, default=51
             Window size for smoothing
         smoothing_polyorder : int, default=3
             Polynomial order for Savitzky-Golay
-        show_unsmoothed_background : bool, default=False
-            Show unsmoothed data as transparent background
+        show_unsmoothed_background : bool, default=True
+            Show unsmoothed data as transparent background when smoothing is enabled
 
         Returns
         -------
@@ -417,7 +420,7 @@ class TimeSeriesTagColoringHelper:
                 TimeSeriesTagColoringHelper._plot_single_line(
                     ax, pipeline_data, traj_idx, feat_idx,
                     feature_selector_name, use_time, color,
-                    smoothing_method, smoothing_window,
+                    smoothing, smoothing_method, smoothing_window,
                     smoothing_polyorder, show_unsmoothed_background
                 )
 
@@ -430,10 +433,11 @@ class TimeSeriesTagColoringHelper:
         traj_colors: Dict[str, str],
         feature_selector_name: str,
         use_time: bool,
-        smoothing_method: Optional[str] = None,
+        smoothing: bool = True,
+        smoothing_method: str = "savitzky",
         smoothing_window: int = 51,
         smoothing_polyorder: int = 3,
-        show_unsmoothed_background: bool = False
+        show_unsmoothed_background: bool = True
     ) -> None:
         """
         Plot feature lines colored by trajectory.
@@ -454,14 +458,16 @@ class TimeSeriesTagColoringHelper:
             Feature selector name
         use_time : bool
             Use time (True) or frames (False)
-        smoothing_method : str, optional
-            Smoothing method ("moving_average", "savitzky", or None)
+        smoothing : bool, default=True
+            Enable or disable data smoothing
+        smoothing_method : str, default="savitzky"
+            Smoothing method ("moving_average" or "savitzky")
         smoothing_window : int, default=51
             Window size for smoothing
         smoothing_polyorder : int, default=3
             Polynomial order for Savitzky-Golay
-        show_unsmoothed_background : bool, default=False
-            Show unsmoothed data as transparent background
+        show_unsmoothed_background : bool, default=True
+            Show unsmoothed data as transparent background when smoothing is enabled
 
         Returns
         -------
@@ -479,7 +485,7 @@ class TimeSeriesTagColoringHelper:
             TimeSeriesTagColoringHelper._plot_single_line(
                 ax, pipeline_data, traj_idx, feat_idx,
                 feature_selector_name, use_time, color,
-                smoothing_method, smoothing_window,
+                smoothing, smoothing_method, smoothing_window,
                 smoothing_polyorder, show_unsmoothed_background
             )
 
@@ -492,10 +498,11 @@ class TimeSeriesTagColoringHelper:
         feature_selector_name: str,
         use_time: bool,
         color: str,
-        smoothing_method: Optional[str] = None,
+        smoothing: bool = True,
+        smoothing_method: str = "savitzky",
         smoothing_window: int = 51,
         smoothing_polyorder: int = 3,
-        show_unsmoothed_background: bool = False
+        show_unsmoothed_background: bool = True
     ) -> None:
         """
         Plot single trajectory line.
@@ -516,14 +523,16 @@ class TimeSeriesTagColoringHelper:
             Use time or frames
         color : str
             Line color
-        smoothing_method : str, optional
-            Smoothing method ("moving_average", "savitzky", or None)
+        smoothing : bool, default=True
+            Enable or disable data smoothing
+        smoothing_method : str, default="savitzky"
+            Smoothing method ("moving_average" or "savitzky")
         smoothing_window : int, default=51
             Window size for smoothing
         smoothing_polyorder : int, default=3
             Polynomial order for Savitzky-Golay
-        show_unsmoothed_background : bool, default=False
-            Show unsmoothed data as transparent background
+        show_unsmoothed_background : bool, default=True
+            Show unsmoothed data as transparent background when smoothing is enabled
 
         Returns
         -------
@@ -552,14 +561,17 @@ class TimeSeriesTagColoringHelper:
         else:
             x_values = np.arange(len(y_values))
 
+        # Determine effective smoothing method based on smoothing flag
+        effective_smoothing_method = smoothing_method if smoothing else None
+
         # Plot unsmoothed background if requested
-        if smoothing_method and show_unsmoothed_background:
+        if effective_smoothing_method and show_unsmoothed_background:
             ax.plot(x_values, y_values, color=color, linewidth=1.0, alpha=0.15)
 
         # Plot smoothed or original data
-        if smoothing_method:
+        if effective_smoothing_method:
             y_smoothed = SmoothingHelper.apply_smoothing(
-                y_values, smoothing_method, smoothing_window, smoothing_polyorder
+                y_values, effective_smoothing_method, smoothing_window, smoothing_polyorder
             )
             ax.plot(x_values, y_smoothed, color=color, linewidth=1.0, alpha=0.8)
         else:

@@ -349,6 +349,65 @@ class FeatureImportanceManager:
         
         return result
 
+    def print_top_n_features(
+        self,
+        pipeline_data: PipelineData,
+        analysis_name: str,
+        n: int = 3
+    ) -> None:
+        """
+        Print top N features for all comparisons in analysis.
+
+        Uses get_all_top_features() internally and formats output for console display.
+
+        Warning
+        -------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Pipeline mode:
+        >>> pipeline = PipelineManager()
+        >>> pipeline.feature_importance.print_top_n_features("my_analysis", n=3)
+
+        Standalone mode:
+        >>> pipeline_data = PipelineData()
+        >>> manager = FeatureImportanceManager()
+        >>> manager.print_top_n_features(pipeline_data, "my_analysis", n=3)
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data object
+        analysis_name : str
+            Name of the feature importance analysis
+        n : int, default=3
+            Number of top features to print per comparison
+
+        Returns
+        -------
+        None
+            Prints to console
+
+        Examples
+        --------
+        >>> pipeline.feature_importance.print_top_n_features(
+        ...     "feature_importance", n=5
+        ... )
+        Top 5 features for cluster_0_vs_rest:
+          1. CA-CB: 0.456
+          2. CA-CG: 0.234
+          ...
+        """
+        all_top_features = self.get_all_top_features(
+            pipeline_data, analysis_name, n=n
+        )
+
+        for comparison_name, top_features in all_top_features.items():
+            print(f"\nTop {n} features for {comparison_name}:")
+            for j, feature_info in enumerate(top_features, 1):
+                print(f"  {j}. {feature_info['feature_name']}: "
+                      f"{feature_info['importance_score']:.3f}")
+
     def list_analyses(self, pipeline_data: PipelineData) -> List[str]:
         """
         List all available feature importance analyses.
@@ -539,7 +598,7 @@ class FeatureImportanceManager:
         
         for name, data in pipeline_data.feature_importance_data.items():
             print(f"\n--- {name} ---")
-            data.print_info()
+            data.print_info(pipeline_data)
 
     @property
     def add(self):

@@ -335,3 +335,46 @@ class TimeSeriesDataPreparer:
             )
 
         return result
+
+    @staticmethod
+    def get_x_values(
+        pipeline_data: PipelineData,
+        traj_idx: int,
+        use_time: bool
+    ) -> np.ndarray:
+        """
+        Get X-axis values for trajectory.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data container
+        traj_idx : int
+            Trajectory index
+        use_time : bool
+            Use time (True) or frames (False)
+
+        Returns
+        -------
+        np.ndarray
+            X-axis values (time in ns or frame indices)
+
+        Examples
+        --------
+        >>> # Get time values in nanoseconds
+        >>> x_values = TimeSeriesDataPreparer.get_x_values(pipeline_data, 0, True)
+        >>> print(x_values[0])  # First time point in ns
+
+        >>> # Get frame indices
+        >>> x_values = TimeSeriesDataPreparer.get_x_values(pipeline_data, 0, False)
+        >>> print(x_values[0])  # 0
+
+        Notes
+        -----
+        Central method for X-axis values used by all time series plotting helpers
+        to ensure consistent axis ranges across feature and membership plots.
+        """
+        trajectory = pipeline_data.trajectory_data.trajectories[traj_idx]
+        if use_time:
+            return trajectory.time / 1000  # Convert ps to ns
+        return np.arange(trajectory.n_frames)

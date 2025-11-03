@@ -63,13 +63,13 @@ class Distances(FeatureTypeBase):
     >>> traj_data.add_feature(Distances(ref=ref_traj))
     """
 
-    def __init__(self, excluded_neighbors: int = 1) -> None:
+    def __init__(self, excluded_neighbors: int = 1, use_pbc: bool = True) -> None:
         """
         Initialize distance feature type with optional reference trajectory.
 
         Parameters
         ----------
-        excluded_neighbors : int, default=0
+        excluded_neighbors : int, default=1
             Number of nearest neighbors to consider for distance calculation.
             Chain Breaks are automatically excluded. Meassured by jump in the seqid of a residue.
             If 0, all pairs are computed.
@@ -77,6 +77,10 @@ class Distances(FeatureTypeBase):
             If 2, only nearest neighbors and their neighbors are computed.
             If 3, only nearest neighbors and their neighbors and their neighbors are computed.
             etc.
+        use_pbc : bool, default=True
+            If True and the trajectory contains unitcell information,
+            distances are computed under the minimum image convention
+            (accounting for periodic boundary conditions).
 
         Returns
         -------
@@ -89,9 +93,13 @@ class Distances(FeatureTypeBase):
 
         >>> # Use custom diagonal offset
         >>> distances = Distances(excluded_neighbors=2)
+
+        >>> # Disable periodic boundary conditions
+        >>> distances = Distances(use_pbc=False)
         """
         super().__init__()
         self.excluded_neighbors = excluded_neighbors
+        self.use_pbc = use_pbc
 
     def init_calculator(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000) -> None:
         """
@@ -122,7 +130,7 @@ class Distances(FeatureTypeBase):
         >>> distances.init_calculator(chunk_size=500)
         """
         self.calculator = DistanceCalculator(
-            use_memmap=use_memmap, cache_path=cache_path, chunk_size=chunk_size
+            use_memmap=use_memmap, cache_path=cache_path, chunk_size=chunk_size, use_pbc=self.use_pbc
         )
 
     def compute(self, input_data: md.Trajectory, feature_metadata: Dict[str, Any]) -> Tuple[np.ndarray, Dict[str, Any]]:

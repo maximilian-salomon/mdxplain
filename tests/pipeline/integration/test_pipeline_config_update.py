@@ -23,6 +23,7 @@
 import pytest
 import tempfile
 import os
+import numpy as np
 
 from mdxplain.pipeline.managers.pipeline_manager import PipelineManager
 from tests.fixtures.mock_trajectory_factory import MockTrajectoryFactory
@@ -314,9 +315,19 @@ class TestPipelineConfigUpdate:
             cache_file_path = os.path.join(cache_dir, expected_cache_file)
             assert not os.path.exists(cache_file_path), f"Cache file should NOT exist when memmap disabled: {cache_file_path}"
 
-            # Verify cache directory is empty
+            # Verify no memmap cache files exist (other directories like structure_viz/ are OK)
             cache_files = os.listdir(cache_dir)
-            assert len(cache_files) == 0, f"Cache directory should be empty when memmap disabled, but contains: {cache_files}"
+            memmap_files = []
+            for f in cache_files:
+                fpath = os.path.join(cache_dir, f)
+                if os.path.isfile(fpath):
+                    try:
+                        arr = np.load(fpath, mmap_mode='r')
+                        if isinstance(arr, np.memmap):
+                            memmap_files.append(f)
+                    except:
+                        pass
+            assert len(memmap_files) == 0, f"No memmap cache files should exist when memmap disabled, but found: {memmap_files}"
 
             # Verify configuration was correctly updated
             config = pipeline.get_config()

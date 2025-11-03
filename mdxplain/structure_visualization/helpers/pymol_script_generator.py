@@ -55,8 +55,10 @@ class PyMolScriptGenerator:
     @staticmethod
     def generate_script(
         pdb_info: Dict[str, Dict[str, str]],
-        top_features: List[Dict[str, Any]],
-        feature_colors: Dict[str, str],
+        top_features_global: List[Dict[str, Any]],
+        feature_colors_global: Dict[str, str],
+        top_features_local: Dict[str, List[Dict[str, Any]]],
+        feature_colors_local: Dict[str, Dict[str, str]],
         feature_own_color: bool = True,
         use_putty: bool = True
     ) -> str:
@@ -64,17 +66,22 @@ class PyMolScriptGenerator:
         Generate complete PyMOL script with focus groups.
 
         Creates script with background and focus groups only.
-        Each group contains 4 objects: own structure, own features,
-        other structures (combined), other features (combined).
+        Each group contains up to 6 objects: own structure, own global features,
+        own local features, other structures (combined), other global features,
+        other local features (all transparent for context).
 
         Parameters
         ----------
         pdb_info : Dict[str, Dict[str, str]]
             Structure info: {name: {"path": pdb_path, "color": hex_color}}
-        top_features : List[Dict[str, Any]]
-            Top features with residue_seqids, feature_name, feature_type
-        feature_colors : Dict[str, str]
-            Mapping from feature_name to HEX color
+        top_features_global : List[Dict[str, Any]]
+            Global top features (averaged across all clusters)
+        feature_colors_global : Dict[str, str]
+            Mapping from global feature_name to HEX color
+        top_features_local : Dict[str, List[Dict[str, Any]]]
+            Local top features per structure {struct_name: features}
+        feature_colors_local : Dict[str, Dict[str, str]]
+            Mapping from struct_name to feature colors {struct_name: {feat_name: color}}
         feature_own_color : bool, default=True
             If True, features use their own color from feature_colors.
             If False, features use the color of their structure.
@@ -89,20 +96,23 @@ class PyMolScriptGenerator:
 
         Examples
         --------
-        >>> # With putty (beta-factor thickness)
+        >>> # With global and local features
         >>> script = PyMolScriptGenerator.generate_script(
-        ...     pdb_info, features, colors, use_putty=True
+        ...     pdb_info, global_features, global_colors,
+        ...     local_features, local_colors, use_putty=True
         ... )
-        >>> # Without putty (uniform thickness)
+        >>> # Only global features (empty dict for local)
         >>> script = PyMolScriptGenerator.generate_script(
-        ...     pdb_info, features, colors, use_putty=False
+        ...     pdb_info, global_features, global_colors,
+        ...     {}, {}, use_putty=True
         ... )
 
         Notes
         -----
         - Only focus groups in script
         - First group enabled, rest disabled
-        - Each group: 4 subobjekts (own/other, struct/features)
+        - Each group: up to 6 objects (struct, global/local features x own/other)
+        - Global and local features independently toggleable
         - Putty cartoons: thickness from beta-factor (if use_putty=True)
         - Normal cartoons: uniform thickness (if use_putty=False)
         - Color gradient: base_color → white
@@ -115,12 +125,14 @@ class PyMolScriptGenerator:
 
         # Create single comparison group
         lines.append(PyMolScriptGenerator._add_single_comparison_group(
-            pdb_info, top_features, feature_colors, feature_own_color, use_putty
+            pdb_info, top_features_global, feature_colors_global,
+            top_features_local, feature_colors_local, feature_own_color, use_putty
         ))
 
         # Create focus groups (loads structures directly)
         lines.append(PyMolScriptGenerator._add_focus_groups(
-            pdb_info, top_features, feature_colors, feature_own_color, use_putty
+            pdb_info, top_features_global, feature_colors_global,
+            top_features_local, feature_colors_local, feature_own_color, use_putty
         ))
 
         return "\n".join(lines)
@@ -140,24 +152,31 @@ class PyMolScriptGenerator:
     @staticmethod
     def _add_focus_groups(
         pdb_info: Dict[str, Dict[str, str]],
-        top_features: List[Dict[str, Any]],
-        feature_colors: Dict[str, str],
+        top_features_global: List[Dict[str, Any]],
+        feature_colors_global: Dict[str, str],
+        top_features_local: Dict[str, List[Dict[str, Any]]],
+        feature_colors_local: Dict[str, Dict[str, str]],
         feature_own_color: bool,
         use_putty: bool
     ) -> str:
         """
         Create focus groups for each structure.
 
-        Each group contains own (opaque) + others (transparent).
+        Each group contains own (opaque) + others (transparent) for both
+        global and local features.
 
         Parameters
         ----------
         pdb_info : Dict[str, Dict[str, str]]
             Structure info with paths and colors
-        top_features : List[Dict[str, Any]]
-            Feature list
-        feature_colors : Dict[str, str]
-            Feature colors
+        top_features_global : List[Dict[str, Any]]
+            Global feature list
+        feature_colors_global : Dict[str, str]
+            Global feature colors
+        top_features_local : Dict[str, List[Dict[str, Any]]]
+            Local features per structure
+        feature_colors_local : Dict[str, Dict[str, str]]
+            Local feature colors per structure
         feature_own_color : bool
             If True, use feature colors; if False, use structure colors
         use_putty : bool
@@ -174,11 +193,18 @@ class PyMolScriptGenerator:
         for i, (struct_name, info) in enumerate(pdb_info.items()):
             PyMolScriptGenerator._create_single_focus_group(
                 lines, struct_name, info, struct_names,
-                top_features, feature_colors, pdb_info, feature_own_color, use_putty
+                top_features_global, feature_colors_global,
+                top_features_local, feature_colors_local,
+                pdb_info, feature_own_color, use_putty
             )
             PyMolScriptGenerator._finalize_focus_group(
                 lines, struct_name, i
             )
+
+            # Cleanup temporary context structures (after group finalization)
+            other_structs = [name for name in struct_names if name != struct_name]
+            if other_structs:
+                PyMolScriptGenerator._cleanup_context_temps(lines, other_structs)
 
         return "\n".join(lines)
 
@@ -188,14 +214,20 @@ class PyMolScriptGenerator:
         struct_name: str,
         info: Dict[str, str],
         struct_names: List[str],
-        top_features: List[Dict[str, Any]],
-        feature_colors: Dict[str, str],
+        top_features_global: List[Dict[str, Any]],
+        feature_colors_global: Dict[str, str],
+        top_features_local: Dict[str, List[Dict[str, Any]]],
+        feature_colors_local: Dict[str, Dict[str, str]],
         pdb_info: Dict[str, Dict[str, str]],
         feature_own_color: bool,
         use_putty: bool
     ) -> None:
         """
         Create single focus group with own and context objects.
+
+        Creates up to 6 objects: own structure, own global features,
+        own local features, other structures, other global features,
+        other local features (all transparent for context).
 
         Parameters
         ----------
@@ -207,10 +239,14 @@ class PyMolScriptGenerator:
             Structure info with path and color
         struct_names : List[str]
             All structure names
-        top_features : List[Dict[str, Any]]
-            Feature list
-        feature_colors : Dict[str, str]
-            Feature colors
+        top_features_global : List[Dict[str, Any]]
+            Global feature list
+        feature_colors_global : Dict[str, str]
+            Global feature colors
+        top_features_local : Dict[str, List[Dict[str, Any]]]
+            Local features per structure
+        feature_colors_local : Dict[str, Dict[str, str]]
+            Local feature colors per structure
         pdb_info : Dict[str, Dict[str, str]]
             All structure info
         feature_own_color : bool
@@ -232,19 +268,40 @@ class PyMolScriptGenerator:
         PyMolScriptGenerator._add_own_structure(
             lines, group_name, info['path'], info['color'], main_obj, use_putty
         )
+
+        # Add own global features
         PyMolScriptGenerator._add_own_features(
-            lines, group_name, main_obj, top_features, feature_colors,
-            info['color'], feature_own_color
+            lines, group_name, main_obj, top_features_global, feature_colors_global,
+            info['color'], feature_own_color, suffix="_features_global"
         )
+
+        # Add own local features (if available for this structure)
+        if struct_name in top_features_local:
+            local_features = top_features_local[struct_name]
+            local_colors = feature_colors_local.get(struct_name, {})
+            PyMolScriptGenerator._add_own_features(
+                lines, group_name, main_obj, local_features, local_colors,
+                info['color'], feature_own_color, suffix="_features_local"
+            )
 
         other_structs = [name for name in struct_names if name != struct_name]
         if other_structs:
             PyMolScriptGenerator._add_context_structures(
                 lines, group_name, main_obj, other_structs, pdb_info, use_putty
             )
+
+            # Add context global features
             PyMolScriptGenerator._add_context_features(
-                lines, group_name, other_structs, top_features, feature_colors,
-                pdb_info, feature_own_color
+                lines, group_name, other_structs, top_features_global,
+                feature_colors_global, pdb_info, feature_own_color,
+                suffix="_context_feat_global"
+            )
+
+            # Add context local features
+            PyMolScriptGenerator._add_context_features(
+                lines, group_name, other_structs, top_features_local,
+                feature_colors_local, pdb_info, feature_own_color,
+                suffix="_context_feat_local", is_local=True
             )
 
     @staticmethod
@@ -279,8 +336,10 @@ class PyMolScriptGenerator:
     @staticmethod
     def _add_single_comparison_group(
         pdb_info: Dict[str, Dict[str, str]],
-        top_features: List[Dict[str, Any]],
-        feature_colors: Dict[str, str],
+        top_features_global: List[Dict[str, Any]],
+        feature_colors_global: Dict[str, str],
+        top_features_local: Dict[str, List[Dict[str, Any]]],
+        feature_colors_local: Dict[str, Dict[str, str]],
         feature_own_color: bool,
         use_putty: bool
     ) -> str:
@@ -289,15 +348,20 @@ class PyMolScriptGenerator:
 
         Each structure gets its own combined object (structure + features)
         for direct comparison. All structures are aligned to the first.
+        Only global features are shown in this view for simplicity.
 
         Parameters
         ----------
         pdb_info : Dict[str, Dict[str, str]]
             Structure info with paths and colors
-        top_features : List[Dict[str, Any]]
-            Feature list
-        feature_colors : Dict[str, str]
-            Feature colors
+        top_features_global : List[Dict[str, Any]]
+            Global feature list
+        feature_colors_global : Dict[str, str]
+            Global feature colors
+        top_features_local : Dict[str, List[Dict[str, Any]]]
+            Local features (unused in this view)
+        feature_colors_local : Dict[str, Dict[str, str]]
+            Local feature colors (unused in this view)
         feature_own_color : bool
             If True, use feature colors; if False, use structure colors
         use_putty : bool
@@ -307,6 +371,11 @@ class PyMolScriptGenerator:
         -------
         str
             PyMOL commands for single comparison group
+
+        Notes
+        -----
+        Only global features are displayed in single comparison view.
+        Local features are omitted for clarity in direct comparison mode.
         """
         lines = ["# === Single Comparison Group ===", ""]
         lines.append("group single_comparison, open")
@@ -318,7 +387,8 @@ class PyMolScriptGenerator:
         for struct_name in struct_names:
             PyMolScriptGenerator._create_single_comparison_object(
                 lines, struct_name, pdb_info[struct_name],
-                reference_struct, top_features, feature_colors, feature_own_color, use_putty
+                reference_struct, top_features_global, feature_colors_global,
+                feature_own_color, use_putty
             )
 
         lines.append("group single_comparison, close")
@@ -502,7 +572,8 @@ class PyMolScriptGenerator:
         top_features: List[Dict[str, Any]],
         feature_colors: Dict[str, str],
         struct_color_hex: str,
-        feature_own_color: bool
+        feature_own_color: bool,
+        suffix: str = "_features"
     ) -> None:
         """
         Add own features (opaque) with sticks.
@@ -525,13 +596,15 @@ class PyMolScriptGenerator:
             Structure color for features (if feature_own_color=False)
         feature_own_color : bool
             If True, use feature colors; if False, use structure color
+        suffix : str, default="_features"
+            Object name suffix (e.g., "_features_global", "_features_local")
 
         Returns
         -------
         None
             Appends commands to lines
         """
-        lines.append("# Own features (opak)")
+        lines.append(f"# Own {suffix.replace('_', ' ').strip()} (opak)")
 
         all_residues, resi_selection = PyMolScriptGenerator._collect_feature_residues(
             top_features
@@ -542,7 +615,7 @@ class PyMolScriptGenerator:
             return
 
         feat_obj = PyMolScriptGenerator._create_own_feature_object(
-            lines, group_name, main_obj, resi_selection
+            lines, group_name, main_obj, resi_selection, suffix
         )
 
         PyMolScriptGenerator._color_feature_sticks(
@@ -558,7 +631,8 @@ class PyMolScriptGenerator:
         lines: List[str],
         group_name: str,
         main_obj: str,
-        resi_selection: str
+        resi_selection: str,
+        suffix: str = "_features"
     ) -> str:
         """
         Create feature object from main structure.
@@ -573,13 +647,15 @@ class PyMolScriptGenerator:
             Main structure object name
         resi_selection : str
             Residue selection string
+        suffix : str, default="_features"
+            Object name suffix
 
         Returns
         -------
         str
             Feature object name
         """
-        feat_obj = f"{group_name}_features"
+        feat_obj = f"{group_name}{suffix}"
         lines.append(f"select temp_own_feat, {main_obj} and resi {resi_selection}")
         lines.append(f"create {feat_obj}, temp_own_feat")
         lines.append(f"group {group_name}, {feat_obj}, add")
@@ -748,16 +824,19 @@ class PyMolScriptGenerator:
         lines: List[str],
         group_name: str,
         other_structs: List[str],
-        top_features: List[Dict[str, Any]],
-        feature_colors: Dict[str, str],
+        top_features,
+        feature_colors,
         pdb_info: Dict[str, Dict[str, str]],
-        feature_own_color: bool
+        feature_own_color: bool,
+        suffix: str = "_context_feat",
+        is_local: bool = False
     ) -> None:
         """
         Add other features (80% transparent) combined into one object.
 
         Creates features from temp structures (which have segi), combines them,
-        then colors using segi to identify structure parts.
+        then colors using segi to identify structure parts. Supports both global
+        features (List) and local features (Dict per structure).
 
         Parameters
         ----------
@@ -767,24 +846,30 @@ class PyMolScriptGenerator:
             PyMOL group name for assignment
         other_structs : List[str]
             Other structure names
-        top_features : List[Dict[str, Any]]
-            Feature list
-        feature_colors : Dict[str, str]
-            Feature color mapping
+        top_features : List[Dict[str, Any]] or Dict[str, List[Dict[str, Any]]]
+            Global features (List) or local features per structure (Dict)
+        feature_colors : Dict[str, str] or Dict[str, Dict[str, str]]
+            Global feature colors (Dict) or local colors per structure (nested Dict)
         pdb_info : Dict[str, Dict[str, str]]
             Structure info with colors
         feature_own_color : bool
             If True, use feature colors; if False, use structure colors
+        suffix : str, default="_context_feat"
+            Object name suffix
+        is_local : bool, default=False
+            If True, top_features and feature_colors are per-structure dicts
 
         Returns
         -------
         None
             Appends commands to lines
         """
-        lines.append("# Other features (80% transparent)")
+        label = suffix.replace("_", " ").replace("context", "Other").strip()
+        lines.append(f"# {label} (80% transparent)")
 
-        all_residues, resi_selection = PyMolScriptGenerator._collect_feature_residues(
-            top_features
+        # Collect features
+        all_features, all_residues, resi_selection = PyMolScriptGenerator._collect_context_features(
+            top_features, other_structs, is_local
         )
 
         if not all_residues:
@@ -792,22 +877,64 @@ class PyMolScriptGenerator:
             lines.append("")
             return
 
+        # Create and combine feature objects
         temp_feat_objs = PyMolScriptGenerator._create_temp_feature_objects(
             lines, other_structs, resi_selection
         )
-
         ctx_feat = PyMolScriptGenerator._combine_context_features(
-            lines, group_name, temp_feat_objs
+            lines, group_name, temp_feat_objs, suffix
         )
 
+        # Color features
         PyMolScriptGenerator._color_context_features_by_segi(
-            lines, ctx_feat, other_structs, top_features, feature_colors,
-            pdb_info, not feature_own_color
+            lines, ctx_feat, other_structs, all_features, feature_colors,
+            pdb_info, not feature_own_color, is_local
         )
 
         lines.append(f"set stick_transparency, 0.8, {ctx_feat}")
-        PyMolScriptGenerator._cleanup_context_temps(lines, other_structs)
         lines.append("")
+
+    @staticmethod
+    def _collect_context_features(
+        top_features,
+        other_structs: List[str],
+        is_local: bool
+    ) -> tuple:
+        """
+        Collect features for context visualization.
+
+        Parameters
+        ----------
+        top_features : List[Dict] or Dict[str, List[Dict]]
+            Global features (List) or local features per structure (Dict)
+        other_structs : List[str]
+            Other structure names
+        is_local : bool
+            If True, collect from per-structure dicts
+
+        Returns
+        -------
+        tuple
+            (all_features, all_residues, resi_selection)
+
+        Examples
+        --------
+        >>> feats, residues, selection = PyMolScriptGenerator._collect_context_features(
+        ...     global_features, ["cluster_1"], is_local=False
+        ... )
+        """
+        if is_local:
+            all_features = []
+            for struct_name in other_structs:
+                if struct_name in top_features:
+                    all_features.extend(top_features[struct_name])
+        else:
+            all_features = top_features
+
+        all_residues, resi_selection = PyMolScriptGenerator._collect_feature_residues(
+            all_features
+        )
+        return all_features, all_residues, resi_selection
 
     @staticmethod
     def _collect_feature_residues(
@@ -877,7 +1004,8 @@ class PyMolScriptGenerator:
     def _combine_context_features(
         lines: List[str],
         group_name: str,
-        temp_feat_objs: List[str]
+        temp_feat_objs: List[str],
+        suffix: str = "_context_feat"
     ) -> str:
         """
         Combine temp features into single object.
@@ -890,13 +1018,15 @@ class PyMolScriptGenerator:
             PyMOL group name
         temp_feat_objs : List[str]
             Temp feature object names
+        suffix : str, default="_context_feat"
+            Object name suffix
 
         Returns
         -------
         str
             Combined feature object name
         """
-        ctx_feat = f"{group_name}_context_feat"
+        ctx_feat = f"{group_name}{suffix}"
         selection = " or ".join(temp_feat_objs)
         lines.append(f"create {ctx_feat}, {selection}")
         lines.append(f"group {group_name}, {ctx_feat}, add")
@@ -910,9 +1040,10 @@ class PyMolScriptGenerator:
         ctx_feat: str,
         other_structs: List[str],
         top_features: List[Dict[str, Any]],
-        feature_colors: Dict[str, str],
+        feature_colors,
         pdb_info: Dict[str, Dict[str, str]],
-        use_struct_color: bool
+        use_struct_color: bool,
+        is_local: bool = False
     ) -> None:
         """
         Color features using segi to identify structures.
@@ -927,12 +1058,14 @@ class PyMolScriptGenerator:
             Other structure names
         top_features : List[Dict[str, Any]]
             Feature list
-        feature_colors : Dict[str, str]
-            Feature color mapping
+        feature_colors : Dict[str, str] or Dict[str, Dict[str, str]]
+            Global color mapping (Dict) or local per structure (nested Dict)
         pdb_info : Dict[str, Dict[str, str]]
             Structure info with colors
         use_struct_color : bool
             If True, use structure colors; if False, use feature colors
+        is_local : bool, default=False
+            If True, feature_colors is nested dict per structure
 
         Returns
         -------
@@ -946,20 +1079,137 @@ class PyMolScriptGenerator:
                 continue
 
             resi_sel = "+".join(map(str, residues))
+            PyMolScriptGenerator._color_feature_for_structures(
+                lines, ctx_feat, other_structs, feature_name, resi_sel,
+                feature_colors, pdb_info, use_struct_color, is_local
+            )
 
-            for other_name in other_structs:
-                if use_struct_color:
-                    color_hex = pdb_info[other_name]['color']
-                else:
-                    color_hex = feature_colors.get(feature_name, "#808080")
+    @staticmethod
+    def _color_feature_for_structures(
+        lines: List[str],
+        ctx_feat: str,
+        other_structs: List[str],
+        feature_name: str,
+        resi_sel: str,
+        feature_colors,
+        pdb_info: Dict[str, Dict[str, str]],
+        use_struct_color: bool,
+        is_local: bool
+    ) -> None:
+        """
+        Color single feature for all structures.
 
-                color_pymol = ColorConversionHelper.hex_to_pymol_rgb(color_hex)
+        Parameters
+        ----------
+        lines : List[str]
+            Command list to append to
+        ctx_feat : str
+            Combined feature object name
+        other_structs : List[str]
+            Other structure names
+        feature_name : str
+            Feature name for color lookup
+        resi_sel : str
+            Residue selection string
+        feature_colors : Dict or nested Dict
+            Color mapping
+        pdb_info : Dict[str, Dict[str, str]]
+            Structure info
+        use_struct_color : bool
+            Color mode flag
+        is_local : bool
+            Local features flag
 
-                lines.append(
-                    f"select temp_feat_sel, {ctx_feat} and segi {other_name} and resi {resi_sel}"
-                )
-                lines.append(f"set stick_color, {color_pymol}, temp_feat_sel")
-                lines.append("delete temp_feat_sel")
+        Returns
+        -------
+        None
+            Appends commands to lines
+        """
+        for other_name in other_structs:
+            color_hex = PyMolScriptGenerator._get_feature_color_for_struct(
+                feature_name, other_name, feature_colors, pdb_info,
+                use_struct_color, is_local
+            )
+            PyMolScriptGenerator._apply_feature_color(
+                lines, ctx_feat, other_name, resi_sel, color_hex
+            )
+
+    @staticmethod
+    def _get_feature_color_for_struct(
+        feature_name: str,
+        struct_name: str,
+        feature_colors,
+        pdb_info: Dict[str, Dict[str, str]],
+        use_struct_color: bool,
+        is_local: bool
+    ) -> str:
+        """
+        Get color for feature in specific structure.
+
+        Parameters
+        ----------
+        feature_name : str
+            Feature name
+        struct_name : str
+            Structure name
+        feature_colors : Dict or nested Dict
+            Color mapping
+        pdb_info : Dict[str, Dict[str, str]]
+            Structure info
+        use_struct_color : bool
+            If True, use structure color
+        is_local : bool
+            If True, feature_colors is nested
+
+        Returns
+        -------
+        str
+            HEX color string
+        """
+        if use_struct_color:
+            return pdb_info[struct_name]['color']
+
+        if is_local:
+            struct_colors = feature_colors.get(struct_name, {})
+            return struct_colors.get(feature_name, "#808080")
+
+        return feature_colors.get(feature_name, "#808080")
+
+    @staticmethod
+    def _apply_feature_color(
+        lines: List[str],
+        ctx_feat: str,
+        struct_name: str,
+        resi_sel: str,
+        color_hex: str
+    ) -> None:
+        """
+        Apply color to feature selection.
+
+        Parameters
+        ----------
+        lines : List[str]
+            Command list to append to
+        ctx_feat : str
+            Feature object name
+        struct_name : str
+            Structure name
+        resi_sel : str
+            Residue selection
+        color_hex : str
+            HEX color
+
+        Returns
+        -------
+        None
+            Appends commands to lines
+        """
+        color_pymol = ColorConversionHelper.hex_to_pymol_rgb(color_hex)
+        lines.append(
+            f"select temp_feat_sel, {ctx_feat} and segi {struct_name} and resi {resi_sel}"
+        )
+        lines.append(f"set stick_color, {color_pymol}, temp_feat_sel")
+        lines.append("delete temp_feat_sel")
 
     @staticmethod
     def _cleanup_context_temps(
