@@ -1,5 +1,5 @@
-Plot Helpers
-============
+Plot Helper
+===========
 
 .. automodule:: mdxplain.plots.helper
 

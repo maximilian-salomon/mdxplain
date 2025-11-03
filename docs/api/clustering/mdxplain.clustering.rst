@@ -8,7 +8,7 @@ Clustering
    :titlesonly:
 
    mdxplain.clustering.cluster_type
-   mdxplain.clustering.helper
    mdxplain.clustering.entities
-   mdxplain.clustering.managers
+   mdxplain.clustering.helper
+   mdxplain.clustering.manager
    mdxplain.clustering.services

@@ -1,5 +1,5 @@
-Dask Trajectory Helpers
-=======================
+Dask Trajectory Helper
+======================
 
 .. automodule:: mdxplain.trajectory.helper.dask_trajectory_helper
 
