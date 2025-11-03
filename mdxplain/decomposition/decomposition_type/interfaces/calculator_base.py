@@ -97,7 +97,7 @@ class CalculatorBase(ABC):
         ----------
         data : numpy.ndarray
             Input data matrix to decompose, shape (n_samples, n_features)
-        '**'kwargs : dict
+        kwargs : dict
             Additional parameters specific to the decomposition method
 
         Returns

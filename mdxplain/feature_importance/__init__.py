@@ -33,11 +33,11 @@ Main Components:
 """
 
 from .entities.feature_importance_data import FeatureImportanceData
-from .managers.feature_importance_manager import FeatureImportanceManager
-from . import analyzer_types
+from .manager.feature_importance_manager import FeatureImportanceManager
+from . import analyzer_type
 
 __all__ = [
     "FeatureImportanceData",
     "FeatureImportanceManager",
-    "analyzer_types",
+    "analyzer_type",
 ]

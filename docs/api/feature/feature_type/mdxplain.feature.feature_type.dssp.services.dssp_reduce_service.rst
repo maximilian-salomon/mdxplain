@@ -1,5 +1,5 @@
-Feature Type: DSSP Reduce Service
-=================================
+DSSP Reduce Service
+===================
 
 .. automodule:: mdxplain.feature.feature_type.dssp.services.dssp_reduce_service
    :members:

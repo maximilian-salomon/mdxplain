@@ -9,4 +9,4 @@ Pipeline
 
    mdxplain.pipeline.entities
    mdxplain.pipeline.helper
-   mdxplain.pipeline.managers
+   mdxplain.pipeline.manager

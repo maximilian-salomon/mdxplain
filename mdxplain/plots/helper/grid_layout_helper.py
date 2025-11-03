@@ -105,6 +105,7 @@ class GridLayoutHelper:
         3. Pack items left-to-right, top-to-bottom
 
         Each item gets:
+        
         - Unique position (row, col)
         - colspan=1 (uniform width)
         - Sequential item_index for tracking

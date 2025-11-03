@@ -31,15 +31,15 @@ from typing import Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ...pipeline.entities.pipeline_data import PipelineData
-    from ..managers.structure_visualization_manager import (
+    from ..manager.structure_visualization_manager import (
         StructureVisualizationManager,
     )
 
 from ..entities.structure_visualization_data import StructureVisualizationData
-from ..helpers.pdb_beta_factor_helper import PdbBetaFactorHelper
-from ..helpers.validation_helper import ValidationHelper
-from ..helpers.visualization_data_helper import VisualizationDataHelper
-from ..helpers.pymol_script_generator import PyMolScriptGenerator
+from ..helper.pdb_beta_factor_helper import PdbBetaFactorHelper
+from ..helper.validation_helper import ValidationHelper
+from ..helper.visualization_data_helper import VisualizationDataHelper
+from ..helper.pymol_script_generator import PyMolScriptGenerator
 from ...utils.top_features_utils import TopFeaturesUtils
 from ...utils.data_utils import DataUtils
 
@@ -111,6 +111,7 @@ class StructureVizFeatureImportanceService:
             Number of top features to consider for beta-factors
         representative_mode : str, default="best"
             Mode for selecting representative frames:
+
             - "best": Frame maximizing top feature values
             - "centroid": Frame closest to cluster centroid
         output_dir : str, optional
@@ -256,7 +257,7 @@ class StructureVizFeatureImportanceService:
 
         # Lazy import of Jupyter-specific dependencies
         # Neccessary to avoid import errors outside Jupyter
-        from ..helpers.nglview_helper import NGLViewHelper
+        from ..helper.nglview_helper import NGLViewHelper
         from IPython.display import display
 
         # Get feature importance name from viz_data
@@ -353,6 +354,7 @@ class StructureVizFeatureImportanceService:
         -----
         - Focus groups named: all_focus_struct_{name}
         - Each group contains 6 objects (if local features enabled):
+        
           * Own structure (cartoon, opak)
           * Own global features (sticks, opak)
           * Own local features (sticks, opak)

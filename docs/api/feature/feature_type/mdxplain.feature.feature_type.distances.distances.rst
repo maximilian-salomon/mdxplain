@@ -1,5 +1,5 @@
-Feature Type: Distances Data
-============================
+Distances Data
+==============
 
 .. automodule:: mdxplain.feature.feature_type.distances.distances
    :members:

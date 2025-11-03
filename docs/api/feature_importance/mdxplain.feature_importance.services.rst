@@ -1,10 +1,5 @@
-Feature Importance Services
-===========================
-
-.. automodule:: mdxplain.feature_importance.services
-
-Add Service
------------
+Feature Importance Add Service
+==============================
 
 .. automodule:: mdxplain.feature_importance.services.feature_importance_add_service
    :members:

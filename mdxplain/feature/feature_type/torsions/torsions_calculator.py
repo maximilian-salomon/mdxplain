@@ -109,7 +109,7 @@ class TorsionsCalculator(CalculatorBase):
         ----------
         input_data : mdtraj.Trajectory
             MDTraj trajectory object to process
-        '**'kwargs : dict
+        kwargs : dict
             Additional parameters:
 
             - calculate_phi : bool - Whether to compute phi backbone angles

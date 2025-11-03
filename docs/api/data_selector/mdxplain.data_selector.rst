@@ -8,5 +8,5 @@ Data Selector
    :titlesonly:
 
    mdxplain.data_selector.entities
-   mdxplain.data_selector.helpers
-   mdxplain.data_selector.managers
+   mdxplain.data_selector.helper
+   mdxplain.data_selector.manager

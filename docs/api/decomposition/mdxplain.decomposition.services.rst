@@ -1,10 +1,5 @@
-Decomposition Services
-======================
-
-.. automodule:: mdxplain.decomposition.services
-
-Service
--------
+Decomposition Add Services
+==========================
 
 .. automodule:: mdxplain.decomposition.services.decomposition_add_service
    :members:

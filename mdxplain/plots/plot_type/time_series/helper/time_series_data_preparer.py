@@ -32,7 +32,7 @@ import numpy as np
 if TYPE_CHECKING:
     from .....pipeline.entities.pipeline_data import PipelineData
 
-from .....feature_importance.managers.feature_importance_manager import FeatureImportanceManager
+from .....feature_importance.manager.feature_importance_manager import FeatureImportanceManager
 from .....utils.feature_metadata_utils import FeatureMetadataUtils
 from ....helper.contact_to_distances_converter import ContactToDistancesConverter
 from ....helper.feature_metadata_helper import FeatureMetadataHelper

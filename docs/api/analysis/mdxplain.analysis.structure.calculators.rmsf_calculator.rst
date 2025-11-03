@@ -1,5 +1,5 @@
-Analysis Structure: RMSF Calculator
-===================================
+RMSF Calculator
+===============
 
 .. automodule:: mdxplain.analysis.structure.calculators.rmsf_calculator
    :members:

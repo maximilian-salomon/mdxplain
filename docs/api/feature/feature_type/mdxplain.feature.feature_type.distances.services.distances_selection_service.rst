@@ -1,5 +1,5 @@
-Feature Type: Distances Selection Service
-=========================================
+Distances Selection Service
+===========================
 
 .. automodule:: mdxplain.feature.feature_type.distances.services.distances_selection_service
    :members:

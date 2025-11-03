@@ -31,7 +31,7 @@ Main Components:
 """
 
 from .entities.data_selector_data import DataSelectorData
-from .managers.data_selector_manager import DataSelectorManager
+from .manager.data_selector_manager import DataSelectorManager
 
 __all__ = [
     "DataSelectorData",

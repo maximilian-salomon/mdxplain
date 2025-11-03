@@ -1,5 +1,5 @@
-Feature Type: Distances Analysis Service
-========================================
+Distances Analysis Service
+==========================
 
 .. automodule:: mdxplain.feature.feature_type.distances.services.distances_analysis_service
    :members:

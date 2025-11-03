@@ -1,5 +1,5 @@
-Feature Type: Contacts Reduce Service
-=====================================
+Contacts Reduce Service
+=======================
 
 .. automodule:: mdxplain.feature.feature_type.contacts.services.contacts_reduce_service
    :members:

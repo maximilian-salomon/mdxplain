@@ -36,7 +36,7 @@ from ..feature_type.dssp.services.dssp_selection_service import DSSPSelectionSer
 from ..feature_type.sasa.services.sasa_selection_service import SasaSelectionService
 
 if TYPE_CHECKING:
-    from ...feature_selection.managers.feature_selector_manager import FeatureSelectorManager
+    from ...feature_selection.manager.feature_selector_manager import FeatureSelectorManager
     from ...pipeline.entities.pipeline_data import PipelineData
 
 

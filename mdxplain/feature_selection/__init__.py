@@ -25,7 +25,7 @@ This module provides functionality for selecting and filtering features
 based on residue criteria, sequence positions, and amino acid names.
 """
 
-from .managers.feature_selector_manager import FeatureSelectorManager
+from .manager.feature_selector_manager import FeatureSelectorManager
 from .entities.feature_selector_data import FeatureSelectorData
 
 __all__ = ["FeatureSelectorManager", "FeatureSelectorData"]

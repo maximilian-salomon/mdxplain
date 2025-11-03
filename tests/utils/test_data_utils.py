@@ -430,6 +430,7 @@ class TestDataUtilsSaveObject:
         Test that private attributes are excluded from saving.
         
         Private attributes (_attr, __attr) are implementation details that:
+        
         - May change between versions (API stability)
         - Often contain sensitive data (security)  
         - May be non-serializable (file handles, connections)

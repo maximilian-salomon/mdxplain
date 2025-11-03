@@ -1,5 +1,5 @@
-Feature Helpers
-===============
+Feature Helper
+==============
 
 .. automodule:: mdxplain.feature.helper
 

@@ -173,6 +173,7 @@ class TestRMSFCalculator:
         -------
         md.Trajectory
             Trajectory with 2 atoms, 7 frames designed for MAD testing:
+
             - 30% baseline/small deviations
             - 30% medium deviations
             - 40% large outliers
@@ -225,10 +226,12 @@ class TestRMSFCalculator:
         -------
         md.Trajectory
             Trajectory with 6 atoms in 2 residues designed to show aggregator differences:
+
             - Residue 0: 3 atoms with RMSF values ~[0.1, 0.3, 0.9]
             - Residue 1: 3 atoms with RMSF values ~[0.2, 0.2, 0.8]
 
         Expected aggregator differences for Residue 0:
+
         - mean: (0.1+0.3+0.9)/3 = 0.43
         - median: median([0.1, 0.3, 0.9]) = 0.3
         - rms: sqrt((0.01+0.09+0.81)/3) = sqrt(0.303) = 0.55
@@ -2440,6 +2443,7 @@ class TestRMSFCalculator:
         """Test chunking processes multiple trajectories with correct atom batching.
 
         Calculation documentation:
+
         - 2 trajectories: traj1 (8 frames, 2 atoms), traj2 (6 frames, 2 atoms)
         - atom_batch_size=1 => 2 atom batches per trajectory
         - Total calls: 2 trajectories x 2 atom batches = 4 calls
@@ -2482,6 +2486,7 @@ class TestRMSFCalculator:
         """Test chunking for cross-trajectory calculation with atom batching.
 
         Calculation documentation:
+
         - Cross-trajectory mode: trajectories combined (8+6=14 total frames)
         - 2 atoms total, atom_batch_size=1 => 2 atom batches
         - Total calls: 1 combined trajectory x 2 atom batches = 2 calls
@@ -2514,6 +2519,7 @@ class TestRMSFCalculator:
         """Test chunking for per-residue calculations with atom batching.
 
         Calculation documentation:
+
         - 1 trajectory: 12 frames, 6 atoms
         - atom_batch_size=3 => 2 atom batches (6 atoms / 3 = 2)
         - Per-residue uses same chunking as per-atom internally
@@ -2545,6 +2551,7 @@ class TestRMSFCalculator:
         """Test chunking with memmap enabled preserves chunking behavior.
 
         Calculation documentation:
+
         - 1 trajectory: 10 frames, 3 atoms
         - atom_batch_size=2 => 2 atom batches (3 atoms: [0:2], [2:3])
         - Memmap setting should not affect atom chunking behavior
@@ -2576,6 +2583,7 @@ class TestRMSFCalculator:
         """Test chunking with very small chunk size and frame chunking.
 
         Calculation documentation:
+        
         - 1 trajectory: 5 frames, 2 atoms
         - chunk_size=1 => frame chunking creates very small frame chunks
         - atom_batch_size=1 => 2 atom batches
@@ -2607,6 +2615,7 @@ class TestRMSFCalculator:
         """Test chunking with very large chunk size processes all frames together.
 
         Calculation documentation:
+
         - 1 trajectory: 10 frames, 3 atoms
         - chunk_size=1000 => all frames processed in one chunk
         - atom_batch_size=2 => 2 atom batches (3 atoms: [0:2], [2:3])
@@ -2638,6 +2647,7 @@ class TestRMSFCalculator:
         """Test chunking when frames divide exactly by chunk size.
 
         Calculation documentation:
+
         - 1 trajectory: 12 frames, 3 atoms
         - chunk_size=4 => 12/4 = 3 frame chunks (exact division)
         - atom_batch_size=3 => 1 atom batch (all atoms together)
@@ -2666,6 +2676,7 @@ class TestRMSFCalculator:
         """Test chunking when frames don't divide exactly by chunk size.
 
         Calculation documentation:
+
         - 1 trajectory: 13 frames, 3 atoms
         - chunk_size=5 => 13/5 = 2 full chunks + 3 remainder frames
         - atom_batch_size=2 => 2 atom batches (3 atoms: [0:2], [2:3])
@@ -2697,6 +2708,7 @@ class TestRMSFCalculator:
         """Test chunking with single frame trajectory.
 
         Calculation documentation:
+
         - 1 trajectory: 1 frame, 3 atoms
         - Single frame => RMSF should be zeros (no fluctuation possible)
         - atom_batch_size=3 => 1 atom batch (all atoms together)
@@ -2725,6 +2737,7 @@ class TestRMSFCalculator:
         """Test chunking with atom indices selection.
 
         Calculation documentation:
+
         - 1 trajectory: 10 frames, 5 atoms total
         - atom_indices=[1, 3] => only process atoms 1 and 3 (2 selected atoms)
         - atom_batch_size=1 => 2 atom batches for the selected atoms
@@ -2749,6 +2762,7 @@ class TestRMSFCalculator:
         """Test chunking with different reference modes.
 
         Calculation documentation:
+
         - 1 trajectory: 8 frames, 3 atoms
         - Different reference modes (mean, median) should not affect chunking
         - atom_batch_size=3 => 1 atom batch per calculation
@@ -2775,6 +2789,7 @@ class TestRMSFCalculator:
         """Test chunking with different metrics.
 
         Calculation documentation:
+
         - 1 trajectory: 6 frames, 2 atoms
         - Different metrics (mean, median, MAD) should not affect chunking
         - atom_batch_size=2 => 1 atom batch per calculation
@@ -2803,6 +2818,7 @@ class TestRMSFCalculator:
         """Test that chunking processes atoms in correct order.
 
         Calculation documentation:
+
         - 1 trajectory: 15 frames, 4 atoms
         - atom_batch_size=2 => 2 atom batches ([0:2], [2:4])
         - Chunking should preserve order: first batch then second batch
@@ -2835,6 +2851,7 @@ class TestRMSFCalculator:
         """Test chunking for memory efficiency with large trajectory.
 
         Calculation documentation:
+
         - 1 large trajectory: 100 frames, 10 atoms
         - atom_batch_size=5 => 2 atom batches ([0:5], [5:10])
         - Small chunk_size=10 enables memory-efficient frame processing
@@ -2866,6 +2883,7 @@ class TestRMSFCalculator:
         """Test chunking error handling when computation fails.
 
         Calculation documentation:
+
         - Error in chunking computation should propagate correctly
         - Exception should be raised with appropriate message
         """
@@ -2882,6 +2900,7 @@ class TestRMSFCalculator:
         """Test chunking produces consistent results regardless of chunk size.
 
         Calculation documentation:
+
         - Same trajectory with different chunk_size values
         - atom_batch_size kept constant => chunking behavior should be identical
         - Different frame chunking should not affect final atom chunking calls
@@ -2909,6 +2928,7 @@ class TestRMSFCalculator:
         """Test chunking respects memmap setting throughout calculation.
 
         Calculation documentation:
+
         - 1 trajectory: 8 frames, 2 atoms
         - use_memmap=True should be preserved
         - atom_batch_size=1 => 2 atom batches
@@ -2941,6 +2961,7 @@ class TestRMSFCalculator:
         """Test chunking handles edge cases like single atom trajectories.
 
         Calculation documentation:
+
         - 1 trajectory: 7 frames, 1 atom (edge case: single atom)
         - atom_batch_size=1 => 1 atom batch
         - Odd number of frames with small chunk_size should work
@@ -2971,6 +2992,7 @@ class TestRMSFCalculator:
         """Test that frames are distributed into correct chunks.
 
         Calculation documentation:
+
         - 1 trajectory: 10 frames, 3 atoms
         - chunk_size=3 => 4 chunks: [0:3], [3:6], [6:9], [9:10]
         - Verify each chunk contains exact expected frames
@@ -3009,6 +3031,7 @@ class TestRMSFCalculator:
         """Test chunking when frames divide exactly into chunk_size.
 
         Calculation documentation:
+
         - 1 trajectory: 12 frames, 2 atoms
         - chunk_size=4 => 3 chunks exactly: [0:4], [4:8], [8:12]
         - Each chunk should have exactly 4 frames
@@ -3044,6 +3067,7 @@ class TestRMSFCalculator:
         """Test chunking with chunk_size=1 (one frame per chunk).
 
         Calculation documentation:
+
         - 1 trajectory: 5 frames, 3 atoms
         - chunk_size=1 => 5 chunks: [0:1], [1:2], [2:3], [3:4], [4:5]
         - Each chunk contains exactly 1 frame
@@ -3079,6 +3103,7 @@ class TestRMSFCalculator:
         """Test chunking when chunk_size > n_frames.
 
         Calculation documentation:
+
         - 1 trajectory: 6 frames, 2 atoms
         - chunk_size=10 > 6 frames => single chunk [0:6]
         - Should process entire trajectory as one chunk
@@ -3110,6 +3135,7 @@ class TestRMSFCalculator:
         """Test that frame chunking produces same results as no chunking.
 
         Calculation documentation:
+        
         - Same trajectory processed with different chunk sizes
         - chunk_size=None (no chunking) vs chunk_size=2 (with chunking)
         - Results should be numerically identical
@@ -3136,6 +3162,7 @@ class TestRMSFCalculator:
         """Test frame chunking combined with atom batching.
 
         Calculation documentation:
+
         - 1 trajectory: 10 frames, 6 atoms
         - chunk_size=3 => 4 frame chunks: [0:3], [3:6], [6:9], [9:10]
         - atom_batch_size=2 => 3 atom batches: [0:2], [2:4], [4:6]

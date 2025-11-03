@@ -7,6 +7,6 @@ Analysis
    :maxdepth: 3
    :titlesonly:
 
-   mdxplain.analysis.managers
+   mdxplain.analysis.manager
    mdxplain.analysis.services
    mdxplain.analysis.structure

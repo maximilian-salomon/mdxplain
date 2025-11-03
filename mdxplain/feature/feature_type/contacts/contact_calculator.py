@@ -98,7 +98,7 @@ class ContactCalculator(CalculatorBase):
         ----------
         input_data : numpy.ndarray
             Distance array in condensed format (NxP) in Angstrom
-        '**'kwargs : dict
+        kwargs : dict
             Additional parameters:
             
             - cutoff : float, default=4.5 - Distance cutoff for contact determination

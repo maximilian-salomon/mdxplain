@@ -38,6 +38,7 @@ class CenterCalculationHelper:
     Automatically handles memory-efficient chunk-wise processing for large datasets.
 
     Available calculation methods:
+
     - centroid: Representative point (medoid - closest to mean)
     - mean: Average of all cluster members
     - median: Coordinate-wise median (robust to outliers)
@@ -68,6 +69,7 @@ class CenterCalculationHelper:
             Cluster labels, shape (n_samples,)
         center_method : str, default="centroid"
             Method for calculating centers:
+
             - "centroid": Representative point (medoid - closest to mean)
             - "mean": Average of all points
             - "median": Coordinate-wise median (robust to outliers)
@@ -94,6 +96,7 @@ class CenterCalculationHelper:
         Notes
         -----
         Memory-safe processing:
+        
         - centroid, mean, median, median_centroid, rmsd_centroid: Always memory-safe
         - density_peak: Uses sampling if cluster exceeds max_memory_gb
 

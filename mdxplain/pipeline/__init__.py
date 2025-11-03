@@ -29,7 +29,7 @@ and future analysis modules.
 from __future__ import annotations
 
 from .entities.pipeline_data import PipelineData
-from .managers.pipeline_manager import PipelineManager
+from .manager.pipeline_manager import PipelineManager
 
 __all__ = [
     "PipelineManager",

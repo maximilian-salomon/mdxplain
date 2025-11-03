@@ -1,5 +1,5 @@
-Feature Type: SASA Analysis Service
-===================================
+SASA Analysis Service
+=====================
 
 .. automodule:: mdxplain.feature.feature_type.sasa.services.sasa_analysis_service
    :members:

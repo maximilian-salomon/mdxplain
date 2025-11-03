@@ -27,7 +27,7 @@ nomenclature systems.
 """
 
 from .entities.trajectory_data import TrajectoryData
-from .managers.trajectory_manager import TrajectoryManager
+from .manager.trajectory_manager import TrajectoryManager
 
 __all__ = [
     "TrajectoryData", 
