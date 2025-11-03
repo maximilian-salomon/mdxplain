@@ -111,6 +111,7 @@ class StructureVizFeatureImportanceService:
             Number of top features to consider for beta-factors
         representative_mode : str, default="best"
             Mode for selecting representative frames:
+
             - "best": Frame maximizing top feature values
             - "centroid": Frame closest to cluster centroid
         output_dir : str, optional
@@ -353,6 +354,7 @@ class StructureVizFeatureImportanceService:
         -----
         - Focus groups named: all_focus_struct_{name}
         - Each group contains 6 objects (if local features enabled):
+        
           * Own structure (cartoon, opak)
           * Own global features (sticks, opak)
           * Own local features (sticks, opak)

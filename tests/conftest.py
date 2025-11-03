@@ -30,6 +30,7 @@ def cleanup_test_artifacts():
     Auto-cleanup fixture that removes test artifacts after each test.
     
     This fixture runs automatically after every test to clean up:
+    
     - Cache directories and files
     - Temporary data files (.dat, .npy, .memmap)
     - Pipeline data remnants
