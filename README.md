@@ -96,6 +96,7 @@ make test          # Run tests
 make lint          # Run code quality checks
 make format        # Format code with black and isort
 make jupyter       # Start JupyterLab
+make build         # Make documentation html build
 make clean         # Remove environments and cache files
 ```
 
