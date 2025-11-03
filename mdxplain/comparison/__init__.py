@@ -27,12 +27,13 @@ It supports various comparison modes like pairwise, one-vs-rest, multiclass,
 and binary comparisons.
 
 Main Components:
+
 - ComparisonData: Entity storing comparison definitions and sub-comparisons
 - ComparisonManager: Manager for creating and managing comparisons
 """
 
 from .entities.comparison_data import ComparisonData
-from .managers.comparison_manager import ComparisonManager
+from .manager.comparison_manager import ComparisonManager
 
 __all__ = [
     "ComparisonData",

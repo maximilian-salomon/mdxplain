@@ -23,7 +23,7 @@ from __future__ import annotations
 from typing import Optional, Union, List, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .....feature_selection.managers.feature_selector_manager import FeatureSelectorManager
+    from .....feature_selection.manager.feature_selector_manager import FeatureSelectorManager
     from .....pipeline.entities.pipeline_data import PipelineData
 
 from ...interfaces.selection_service_base import SelectionServiceBase
@@ -75,7 +75,7 @@ class TorsionsSelectionService(SelectionServiceBase):
 
         Examples
         --------
-        >>> from mdxplain.pipeline.managers.pipeline_manager import PipelineManager
+        >>> from mdxplain.pipeline.manager.pipeline_manager import PipelineManager
         >>> pipeline = PipelineManager()
         >>> service = pipeline.feature_selector.add.torsions
         >>> # Service is now ready to add torsions selections

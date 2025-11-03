@@ -24,7 +24,7 @@ from __future__ import annotations
 from typing import Union, List, Optional, TYPE_CHECKING, Callable
 import numpy as np
 
-from ....services.helpers.analysis_data_helper import AnalysisDataHelper
+from ....services.helper.analysis_data_helper import AnalysisDataHelper
 from ..contact_calculator_analysis import ContactCalculatorAnalysis
 from ...interfaces.analysis_service_base import AnalysisServiceBase
 

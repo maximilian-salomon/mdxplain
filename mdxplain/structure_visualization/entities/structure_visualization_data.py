@@ -36,6 +36,7 @@ class StructureVisualizationData:
 
     Stores paths to generated PDB files for structure visualization,
     organized by structure identifiers. Supports two source types:
+    
     - "feature_importance": From FI analysis sub-comparisons
     - "feature": From feature/data selectors
 

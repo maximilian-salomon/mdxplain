@@ -24,7 +24,7 @@ from __future__ import annotations
 from typing import Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ..managers.decomposition_manager import DecompositionManager
+    from ..manager.decomposition_manager import DecompositionManager
     from ...pipeline.entities.pipeline_data import PipelineData
 
 from ..decomposition_type import PCA, KernelPCA, ContactKernelPCA, DiffusionMaps

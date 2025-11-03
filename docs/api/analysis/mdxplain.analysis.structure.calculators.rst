@@ -1,5 +1,5 @@
-Analysis Structure: Calculators
-===============================
+Analysis Structure Calculators
+==============================
 
 .. automodule:: mdxplain.analysis.structure.calculators
 

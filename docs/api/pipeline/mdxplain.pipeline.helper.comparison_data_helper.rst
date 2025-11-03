@@ -1,5 +1,5 @@
-Pipeline: Comparison Data Helper
-================================
+Comparison Data Helper
+======================
 
 .. automodule:: mdxplain.pipeline.helper.comparison_data_helper
    :members:

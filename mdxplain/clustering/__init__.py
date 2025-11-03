@@ -26,7 +26,7 @@ trajectory data following the established mdxplain architecture pattern.
 """
 
 # Import managers
-from .managers.cluster_manager import ClusterManager
+from .manager.cluster_manager import ClusterManager
 
 # Import cluster_type module
 from . import cluster_type

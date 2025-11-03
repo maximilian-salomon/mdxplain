@@ -5,7 +5,7 @@ Details will be added at a later date.
 
 .. toctree::
    :maxdepth: 1
-   :caption: Contents:
+   :caption: Contents
 
    theory.clustering
    theory.dimension_reduction

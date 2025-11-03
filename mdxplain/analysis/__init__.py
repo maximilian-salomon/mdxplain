@@ -25,6 +25,6 @@ structure, and future analysis types. Subpackages provide the concrete services
 and helper utilities for each analysis domain.
 """
 
-from .managers.analysis_manager import AnalysisManager
+from .manager.analysis_manager import AnalysisManager
 
 __all__ = ["AnalysisManager"]

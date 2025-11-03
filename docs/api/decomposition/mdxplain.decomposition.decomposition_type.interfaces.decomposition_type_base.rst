@@ -1,5 +1,5 @@
-Decomposition Type: Interface Decomposition Types Base
-======================================================
+Decomposition Types Base
+========================
 
 .. automodule:: mdxplain.decomposition.decomposition_type.interfaces.decomposition_type_base
    :members:

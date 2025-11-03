@@ -1,5 +1,5 @@
-Feature Type: Interface Reduce Service Base
-===========================================
+Reduce Service Base
+===================
 
 .. automodule:: mdxplain.feature.feature_type.interfaces.reduce_service_base
    :members:

@@ -1,5 +1,5 @@
-Feature Helpers: Feature Validation Helper
-==========================================
+Feature Validation Helper
+=========================
 
 .. automodule:: mdxplain.feature.helper.feature_validation_helper
    :members:

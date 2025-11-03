@@ -1,5 +1,5 @@
-Feature Type: SASA Data
-=======================
+SASA Data
+=========
 
 .. automodule:: mdxplain.feature.feature_type.sasa.sasa
    :members:

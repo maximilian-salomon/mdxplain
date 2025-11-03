@@ -7,5 +7,5 @@ Analysis Structure
    :maxdepth: 1
 
    mdxplain.analysis.structure.calculators
-   mdxplain.analysis.structure.helpers
+   mdxplain.analysis.structure.helper
    mdxplain.analysis.structure.services

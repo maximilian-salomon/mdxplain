@@ -111,12 +111,14 @@ class CalculatorBase(ABC):
             Input data matrix to cluster, shape (n_samples, n_features)
         center_method : str, optional
             Method for calculating cluster centers, default="centroid":
+
             - "centroid": Representative point (medoid - closest to mean)
             - "mean": Average of cluster members
             - "median": Coordinate-wise median (robust to outliers)
             - "density_peak": Point with highest local density
             - "median_centroid": Medoid from median (more robust)
             - "rmsd_centroid": Centroid using RMSD metric (structural)
+            
             NOTE: If algorithm has built-in centers (e.g. some sklearn models),
             those are ALWAYS used regardless of this parameter.
         kwargs : dict
@@ -126,6 +128,7 @@ class CalculatorBase(ABC):
         -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
+
             - cluster_labels: Cluster labels for each sample (n_samples,)
             - metadata: Dictionary with clustering information including hyperparameters, number of clusters, silhouette score, cluster centers, etc.
 
@@ -316,6 +319,7 @@ class CalculatorBase(ABC):
             Fitted clustering model instance
         center_method : str, default="centroid"
             Method for calculating centers if not built-in:
+
             - "centroid": Representative point (medoid)
             - "mean": Average of cluster members
             - "median": Coordinate-wise median
@@ -326,6 +330,7 @@ class CalculatorBase(ABC):
         Returns
         -------
         Tuple[Optional[numpy.ndarray], str]
+        
             - centers: Array of cluster centers or None
             - method_used: "direct" if built-in, else center_method
 

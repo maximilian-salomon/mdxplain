@@ -1,5 +1,5 @@
-Feature Services: Feature Add Service
-=====================================
+Feature Add Service
+===================
 
 .. automodule:: mdxplain.feature.services.feature_add_service
    :members:

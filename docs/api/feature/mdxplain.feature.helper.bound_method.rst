@@ -1,5 +1,5 @@
-Feature Helpers: Bound Method
-=============================
+Bound Method
+============
 
 .. automodule:: mdxplain.feature.helper.bound_method
    :members:

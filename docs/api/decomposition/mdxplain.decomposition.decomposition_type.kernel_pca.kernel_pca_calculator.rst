@@ -1,5 +1,5 @@
-Decomposition Type: Kernel PCA Calculator
-=========================================
+Kernel PCA Calculator
+=====================
 
 .. automodule:: mdxplain.decomposition.decomposition_type.kernel_pca.kernel_pca_calculator
    :members:

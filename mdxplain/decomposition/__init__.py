@@ -25,7 +25,7 @@ This module provides tools for performing dimensionality reduction on feature
 matrices from molecular dynamics trajectories.
 """
 
-from .managers.decomposition_manager import DecompositionManager
+from .manager.decomposition_manager import DecompositionManager
 
 __all__ = [
     "DecompositionManager",

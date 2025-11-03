@@ -26,6 +26,6 @@ as 3D structures in PyMOL, including beta-factor coloring and
 multi-structure comparisons.
 """
 
-from .managers.structure_visualization_manager import StructureVisualizationManager
+from .manager.structure_visualization_manager import StructureVisualizationManager
 
 __all__ = ["StructureVisualizationManager"]

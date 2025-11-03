@@ -48,7 +48,7 @@ from ...utils.data_utils import DataUtils
 from ..helper.selection_matrix_helper import SelectionMatrixHelper
 from ..helper.selection_metadata_helper import SelectionMetadataHelper
 from ..helper.comparison_data_helper import ComparisonDataHelper
-from ..helpers.centroid_helper import CentroidHelper
+from ..helper.centroid_helper import CentroidHelper
 from ...feature.helper.feature_binding_helper import FeatureBindingHelper
 
 

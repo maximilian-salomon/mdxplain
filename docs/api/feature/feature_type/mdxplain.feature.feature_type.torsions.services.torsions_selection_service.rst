@@ -1,5 +1,5 @@
-Feature Type: Torsions Selection Service
-========================================
+Torsions Selection Service
+==========================
 
 .. automodule:: mdxplain.feature.feature_type.torsions.services.torsions_selection_service
    :members:

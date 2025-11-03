@@ -511,6 +511,7 @@ class NodeTextFormatter:
         -------
         Tuple[str, str]
             Left and right edge labels in format:
+            
             - Default discrete: "feature_type: feature_name = class_label"
             - Default continuous: "feature_type: feature_name ≤ threshold unit"
             - Short discrete: "class_label"

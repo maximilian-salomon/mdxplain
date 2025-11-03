@@ -9,4 +9,4 @@ Trajectory
 
    mdxplain.trajectory.entities
    mdxplain.trajectory.helper
-   mdxplain.trajectory.managers
+   mdxplain.trajectory.manager

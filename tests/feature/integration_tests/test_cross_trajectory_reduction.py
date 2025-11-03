@@ -23,7 +23,7 @@
 import numpy as np
 import pytest
 import mdtraj as md
-from mdxplain.pipeline.managers.pipeline_manager import PipelineManager
+from mdxplain.pipeline.manager.pipeline_manager import PipelineManager
 from mdxplain.feature.entities.feature_data import FeatureData
 from mdxplain.feature.feature_type.distances.distances import Distances
 from mdxplain.feature.feature_type.contacts.contacts import Contacts
@@ -144,6 +144,7 @@ class TestCrossTrajectoryReduction:
         tuple: (traj1_data, traj2_data) with known max values
 
         Max values:
+        
         - Feature 0: max=10.1 (traj1), max=5.1 (traj2) → threshold > 7.0: Only traj1
         - Feature 1: max=8.0 (traj1), max=9.0 (traj2) → threshold > 7.0: Both pass
         - Feature 2: max=8.0 (traj1), max=2.1 (traj2) → threshold > 7.0: Only traj1

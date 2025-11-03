@@ -92,6 +92,7 @@ class TopFeaturesUtils:
         List[Dict[str, Any]]
             List of dictionaries with complete feature information.
             Each dictionary contains:
+            
             - feature_index: int - Feature index in feature array
             - importance_score: float - Importance score
             - rank: int - Rank (1-indexed)

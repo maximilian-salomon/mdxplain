@@ -97,6 +97,7 @@ class BlockOptimizerHelper:
         Notes
         -----
         Uses vectorized numpy operations for performance:
+        
         - np.diff() to detect label changes
         - np.where() to find transition points
         - O(n) time complexity, minimal memory overhead

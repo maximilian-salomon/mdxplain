@@ -31,7 +31,7 @@ import mdtraj as md
 from typing import List
 
 from mdxplain.pipeline.entities.pipeline_data import PipelineData
-from mdxplain.feature_selection.managers.feature_selector_manager import FeatureSelectorManager
+from mdxplain.feature_selection.manager.feature_selector_manager import FeatureSelectorManager
 from mdxplain.feature.entities.feature_data import FeatureData
 from mdxplain.feature.feature_type.distances.distances import Distances
 
@@ -413,6 +413,7 @@ class TestPostSelectionReductionStandalone:
 
         Verifies common denominator across trajectories.
         With max > 8.5 threshold:
+
         - Traj 0: features [8, 9] pass (max 9.4, 10.4)
         - Traj 1: features [7, 8, 9] pass (max 8.9, 9.9, 10.9)
         - Traj 2: features [6, 7, 8, 9] pass (max 8.9, 9.9, 10.9, 11.9)
@@ -454,6 +455,7 @@ class TestPostSelectionReductionStandalone:
 
         Validates exact indices per trajectory before ValueError.
         With max > 8.5 threshold:
+
         - Traj 0: keeps [8, 9] (max 9.4, 10.4) - 2 features
         - Traj 1: keeps [7, 8, 9] (max 8.9, 9.9, 10.9) - 3 features
         - Traj 2: keeps [6, 7, 8, 9] (max 8.9, 9.9, 10.9, 11.9) - 4 features
@@ -500,6 +502,7 @@ class TestPostSelectionReductionStandalone:
 
         Validates reduction applies only to selected trajectories.
         With traj_selection=[0, 1] and max > 8.5:
+
         - Only Traj 0 and Traj 1 participate in reduction
         - Traj 0: features [8, 9] pass (max 9.4, 10.4)
         - Traj 1: features [7, 8, 9] pass (max 8.9, 9.9, 10.9)
@@ -542,12 +545,15 @@ class TestPostSelectionReductionStandalone:
 
         Uses different selection strategies but consistent feature counts.
         Selection 1: "resid 0" on traj_selection=[0] (no reduction)
+
         - Traj 0: indices [0, 1, 2, 3] (4 features - pairs involving residue 0)
 
         Selection 2: "all" with min <= 4.5, cross_trajectory=False on traj_selection=[1]
+
         - Traj 1: indices [0, 1, 2, 3] (4 features)
 
         Selection 3: "all" with max >= 8.9, cross_trajectory=False on traj_selection=[2]
+        
         - Traj 2: indices [6, 7, 8, 9] (4 features)
 
         Result: All trajectories have exactly 4 features each
