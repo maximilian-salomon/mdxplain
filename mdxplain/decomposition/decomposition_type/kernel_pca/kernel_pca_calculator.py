@@ -111,7 +111,7 @@ class KernelPCACalculator(CalculatorBase):
         ----------
         data : numpy.ndarray
             Input data matrix to decompose, shape (n_samples, n_features)
-        '**'kwargs : dict
+        kwargs : dict
             KernelPCA parameters:
 
             - n_components : int, required

@@ -1,5 +1,5 @@
-Feature Services: Feature Analysis Service
-==========================================
+Feature Analysis Service
+========================
 
 .. automodule:: mdxplain.feature.services.feature_analysis_service
    :members:

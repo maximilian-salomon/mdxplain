@@ -26,7 +26,7 @@ from typing import Union, List, Optional, TYPE_CHECKING
 if TYPE_CHECKING:
     from ....pipeline.entities.pipeline_data import PipelineData
 
-from ...services.helpers.analysis_data_helper import AnalysisDataHelper
+from ...services.helper.analysis_data_helper import AnalysisDataHelper
 
 
 class AnalysisServiceBase:
@@ -120,7 +120,7 @@ class AnalysisServiceBase:
                     Name of feature selector for column selection
                 traj_selection : str, int, list, optional
                     Trajectory selection criteria for row selection
-                '**'kwargs
+                kwargs
                     Additional arguments passed to the calculator method
                     
                 Returns

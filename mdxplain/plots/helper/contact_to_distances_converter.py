@@ -34,7 +34,7 @@ from typing import TYPE_CHECKING, Tuple, Optional
 if TYPE_CHECKING:
     from ...pipeline.entities.pipeline_data import PipelineData
 
-from ...feature_selection.managers.feature_selector_manager import FeatureSelectorManager
+from ...feature_selection.manager.feature_selector_manager import FeatureSelectorManager
 from ...utils.output_utils import OutputUtils
 
 
@@ -48,6 +48,7 @@ class ContactToDistancesConverter:
     selector with distances for the same atom pairs.
 
     The conversion preserves:
+
     - Exact same atom pairs
     - Same feature ordering
     - Same trajectory coverage
@@ -86,6 +87,7 @@ class ContactToDistancesConverter:
         -------
         Tuple[str, bool, Optional[float]]
             Tuple of (selector_name, is_temporary, contact_cutoff)
+            
             - selector_name: Name of continuous feature selector
             - is_temporary: True if temporary selector was created, False otherwise
             - contact_cutoff: Contact cutoff value if converted from contacts, None otherwise

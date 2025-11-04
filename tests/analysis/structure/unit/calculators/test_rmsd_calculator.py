@@ -171,6 +171,7 @@ class TestRMSDCalculator:
         """Test RMSD to reference with known coordinate shifts.
 
         Expected RMSD values for uniform shifts:
+
         - Frame 0: 0.0 (identical to reference)
         - Frame 1: 0.1 (0.1 shift in X for both atoms)
         - Frame 2: 0.2 (0.2 shift in Y for both atoms)
@@ -197,6 +198,7 @@ class TestRMSDCalculator:
         """Test RMSD to reference with multiple trajectories.
 
         Expected RMSD values:
+
         - Trajectory 1: [0.0, 0.1, 0.2, 0.3, 0.4] (uniform shifts)
         - Trajectory 2: [0.5, 0.6, 0.7] (uniform shifts from 0.5)
         """
@@ -225,6 +227,7 @@ class TestRMSDCalculator:
         """Test RMSD to reference with median metric.
 
         Trajectory with different per-atom shifts:
+        
         - Frame 0: [0.0,0.0,0.0], [1.0,0.0,0.0] → RMSD = 0.0
         - Frame 1: [0.1,0.0,0.0], [1.2,0.0,0.0] → squared distances [0.01, 0.04], median = 0.025, RMSD = 0.158
         """

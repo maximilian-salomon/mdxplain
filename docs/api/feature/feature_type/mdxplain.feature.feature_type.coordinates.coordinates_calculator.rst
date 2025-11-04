@@ -1,5 +1,5 @@
-Feature Type: Coordinates Calculator
-====================================
+Coordinates Calculator
+======================
 
 .. automodule:: mdxplain.feature.feature_type.coordinates.coordinates_calculator
    :members:

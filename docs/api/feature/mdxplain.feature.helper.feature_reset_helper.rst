@@ -1,5 +1,5 @@
-Feature Helpers: Feature Reset Helper
-=====================================
+Feature Reset Helper
+====================
 
 .. automodule:: mdxplain.feature.helper.feature_reset_helper
    :members:

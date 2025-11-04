@@ -1,5 +1,5 @@
-Feature Helpers: Bound Stats
-============================
+Bound Stats
+===========
 
 .. automodule:: mdxplain.feature.helper.bound_stats
    :members:

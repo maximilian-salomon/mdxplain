@@ -31,7 +31,7 @@ import numpy as np
 import mdtraj as md
 
 from mdxplain.pipeline.entities.pipeline_data import PipelineData
-from mdxplain.trajectory.managers.trajectory_manager import TrajectoryManager
+from mdxplain.trajectory.manager.trajectory_manager import TrajectoryManager
 from mdxplain.trajectory.entities.trajectory_data import TrajectoryData
 
 

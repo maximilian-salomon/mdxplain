@@ -60,7 +60,7 @@ class TreePositionCalculator:
 
         Parameters
         ----------
-        tree_ : sklearn.tree._tree.Tree
+        tree\_ : sklearn.tree._tree.Tree
             The tree structure
         node_sizes : dict
             Dictionary mapping node indices to (width, height) tuples
@@ -159,7 +159,7 @@ class TreePositionCalculator:
 
         Parameters
         ----------
-        tree_ : sklearn.tree._tree.Tree
+        tree\_ : sklearn.tree._tree.Tree
             The tree structure
         node_sizes : dict
             Dictionary mapping node indices to (width, height) tuples

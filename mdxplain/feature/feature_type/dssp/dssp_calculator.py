@@ -104,7 +104,7 @@ class DSSPCalculator(CalculatorBase):
         ----------
         input_data : mdtraj.Trajectory
             MDTraj trajectory object to process
-        '**'kwargs : dict
+        kwargs : dict
             Additional parameters:
 
             - simplified : bool - Use simplified (3-class) or full (8-class) DSSP
@@ -259,8 +259,10 @@ class DSSPCalculator(CalculatorBase):
         -----
         Always uses direct encoding methods, not chunked variants.
         This is correct because:
+
         - When use_memmap=False: Data is small, called once for full array
         - When use_memmap=True: Data is chunk, called per chunk in loop
+        
         The *_chunked methods are only for encoding large arrays in one call,
         but here we either have small arrays or are already processing chunks.
         Only converts space to C for char encoding when simplified=False.

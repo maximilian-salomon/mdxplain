@@ -1,5 +1,5 @@
-Decomposition Type: Contact Kernel PCA Calculator
-=================================================
+Contact Kernel PCA Calculator
+=============================
 
 .. automodule:: mdxplain.decomposition.decomposition_type.contact_kernel_pca.contact_kernel_pca_calculator
    :members:

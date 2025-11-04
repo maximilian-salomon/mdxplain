@@ -1,5 +1,5 @@
-Feature Type: DSSP Selection Service
-====================================
+DSSP Selection Service
+======================
 
 .. automodule:: mdxplain.feature.feature_type.dssp.services.dssp_selection_service
    :members:

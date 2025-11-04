@@ -1,5 +1,5 @@
-Cluster Type: HDBSCAN Module
-============================
+HDBSCAN Module
+==============
 
 .. automodule:: mdxplain.clustering.cluster_type.hdbscan.hdbscan
    :members:

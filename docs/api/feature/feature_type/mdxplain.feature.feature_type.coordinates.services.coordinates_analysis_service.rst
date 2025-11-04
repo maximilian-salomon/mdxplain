@@ -1,5 +1,5 @@
-Feature Type: Coordinates Analysis Service
-==========================================
+Coordinates Analysis Service
+============================
 
 .. automodule:: mdxplain.feature.feature_type.coordinates.services.coordinates_analysis_service
    :members:

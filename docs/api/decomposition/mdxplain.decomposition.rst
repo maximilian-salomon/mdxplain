@@ -9,5 +9,5 @@ Decomposition
 
    mdxplain.decomposition.decomposition_type
    mdxplain.decomposition.entities
-   mdxplain.decomposition.managers
+   mdxplain.decomposition.manager
    mdxplain.decomposition.services

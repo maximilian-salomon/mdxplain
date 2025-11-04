@@ -155,6 +155,7 @@ class EnergyCalculatorHelper:
         Uses scipy.stats.gaussian_kde for smooth density estimation.
         The Boltzmann relation is: F = -kT * ln(P/P_max)
         where:
+        
         - F: Free energy
         - k: Boltzmann constant (0.001987204 kcal/(mol*K))
         - T: Temperature in Kelvin

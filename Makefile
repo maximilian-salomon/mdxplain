@@ -1,4 +1,4 @@
-.PHONY: help setup-env setup-jupyter-env setup-dev-env setup-full-env setup-conda-env setup-conda-jupyter-env setup-conda-dev-env setup-conda-full-env install install-dev install-jupyter install-visualization install-full test lint format jupyter notebook clean
+.PHONY: help setup-env setup-jupyter-env setup-dev-env setup-full-env setup-conda-env setup-conda-jupyter-env setup-conda-dev-env setup-conda-full-env install install-dev install-jupyter install-visualization install-full test lint format jupyter notebook html clean
 
 # Default target
 help:
@@ -180,6 +180,16 @@ jupyter:
 notebook:
 	jupyter notebook
 
+
+# Set directions for docs build.
+SPHINXBUILD = sphinx-build
+SOURCEDIR = docs
+BUILDDIR = docs/build
+
+# Sphinx html build.
+html:
+	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(0)
+
 # Clean up
 clean:
 	@echo "Removing virtual environment..."
@@ -193,4 +203,6 @@ clean:
 	find . -type f -name ".coverage" -delete
 	find . -type d -name ".pytest_cache" -exec rm -rf {} +
 	find . -type d -name ".mypy_cache" -exec rm -rf {} +
+	@echo "Removing docs html build..."
+	rm -rf "$(BUILDDIR)"
 	@echo "Cleanup complete!"

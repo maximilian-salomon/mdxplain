@@ -1,5 +1,5 @@
-Cluster Type: HDBSCAN Calculator
-================================
+HDBSCAN Calculator
+==================
 
 .. automodule:: mdxplain.clustering.cluster_type.hdbscan.hdbscan_calculator
    :members:

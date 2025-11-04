@@ -25,7 +25,7 @@ from abc import ABC, abstractmethod
 from typing import Union, List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ....feature_selection.managers.feature_selector_manager import FeatureSelectorManager
+    from ....feature_selection.manager.feature_selector_manager import FeatureSelectorManager
     from ....pipeline.entities.pipeline_data import PipelineData
 
 

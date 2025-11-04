@@ -1,5 +1,5 @@
-Feature Helpers: Feature Binding Helper
-=======================================
+Feature Binding Helper
+======================
 
 .. automodule:: mdxplain.feature.helper.feature_binding_helper
    :members:

@@ -1,5 +1,5 @@
-Trajectory: Process Label Operation Helper
-==========================================
+Label Operation Helper
+======================
 
 .. automodule:: mdxplain.trajectory.helper.process_helper.label_operation_helper
    :members:

@@ -1,5 +1,5 @@
-Cluster Type: Interface Cluster Type Meta
-=========================================
+Cluster Type Meta
+=================
 
 .. automodule:: mdxplain.clustering.cluster_type.interfaces.cluster_type_meta
    :members:
