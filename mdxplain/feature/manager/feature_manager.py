@@ -106,10 +106,12 @@ class FeatureManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.feature.reset_features()  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = FeatureManager()
         >>> manager.reset_features(pipeline_data)  # pipeline_data required
@@ -194,10 +196,12 @@ class FeatureManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.feature.add_feature(feature_type.Distances())  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = FeatureManager()
         >>> manager.add_feature(pipeline_data, feature_type.Distances())  # pipeline_data required
@@ -303,10 +307,12 @@ class FeatureManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.feature.reset_reduction("distances")  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = FeatureManager()
         >>> manager.reset_reduction(pipeline_data, "distances")  # pipeline_data required
@@ -365,10 +371,12 @@ class FeatureManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.feature.reduce_data("distances", metric="cv")  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = FeatureManager()
         >>> manager.reduce_data(pipeline_data, "distances", metric="cv")  # pipeline_data required
@@ -595,10 +603,12 @@ class FeatureManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.feature.print_info()  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = FeatureManager()
         >>> manager.print_info(pipeline_data)  # pipeline_data required
@@ -643,10 +653,12 @@ class FeatureManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+        
         >>> pipeline = PipelineManager()
         >>> pipeline.feature.save('features.npy')  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = FeatureManager()
         >>> manager.save(pipeline_data, 'features.npy')  # pipeline_data required
@@ -679,10 +691,12 @@ class FeatureManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.feature.load('features.npy')  # NO pipeline_data parameter
 
         Standalone mode:
+        
         >>> pipeline_data = PipelineData()
         >>> manager = FeatureManager()
         >>> manager.load(pipeline_data, 'features.npy')  # pipeline_data required
@@ -724,7 +738,7 @@ class FeatureManager:
         --------
         >>> # Add different feature types
         >>> pipeline.feature.add.distances(excluded_neighbors=2)
-        >>> pipeline.feature.add.contacts(threshold=5.0, traj_selection=[0,1,2])
+        >>> pipeline.feature.add.contacts(cutoff=4.5, traj_selection=[0,1,2])
         >>> pipeline.feature.add.torsions(calculate_chi=False, force=True)
         >>> pipeline.feature.add.dssp(simplified=True)
         >>> pipeline.feature.add.sasa(probe_radius=0.12)
