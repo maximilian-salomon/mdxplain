@@ -241,7 +241,7 @@ class ArchiveUtils:
     @staticmethod
     def _add_zarr_to_archive(
         zarr_path: Path,
-        cache_parent: Path,
+        cache_path: Path,
         items_list: list,
         processed_set: set
     ) -> None:
@@ -252,22 +252,23 @@ class ArchiveUtils:
         ----------
         zarr_path : Path
             Path to zarr directory
-        cache_parent : Path
-            Parent of cache directory
+        cache_path : Path
+            Cache directory path
         items_list : list
             List to append items to
         processed_set : set
             Set of processed zarr directories
         """
         if zarr_path not in processed_set:
-            relative_path = zarr_path.relative_to(cache_parent)
-            items_list.append((str(zarr_path), str(relative_path)))
+            relative_path = zarr_path.relative_to(cache_path)
+            archive_path = Path("cache") / relative_path
+            items_list.append((str(zarr_path), str(archive_path)))
             processed_set.add(zarr_path)
 
     @staticmethod
     def _process_item_for_archive(
         item_path: Path,
-        cache_parent: Path,
+        cache_path: Path,
         items_list: list,
         processed_zarr: set,
         exclude_viz: bool,
@@ -281,8 +282,8 @@ class ArchiveUtils:
         ----------
         item_path : Path
             Path to item
-        cache_parent : Path
-            Parent of cache directory
+        cache_path : Path
+            Cache directory path
         items_list : list
             List to append items to
         processed_zarr : set
@@ -297,18 +298,18 @@ class ArchiveUtils:
         if ArchiveUtils.is_zarr_directory(item_path):
             if use_memmap:
                 ArchiveUtils._add_zarr_to_archive(
-                    item_path, cache_parent, items_list, processed_zarr
+                    item_path, cache_path, items_list, processed_zarr
                 )
         elif item_path.is_file():
             ArchiveUtils._add_file_to_archive(
-                item_path, cache_parent, items_list,
+                item_path, cache_path, items_list,
                 exclude_viz, include_struct, use_memmap
             )
 
     @staticmethod
     def _add_file_to_archive(
         file_path: Path,
-        cache_parent: Path,
+        cache_path: Path,
         items_list: list,
         exclude_visualizations: bool,
         include_structure_files: bool,
@@ -321,8 +322,8 @@ class ArchiveUtils:
         ----------
         file_path : Path
             Path to file
-        cache_parent : Path
-            Parent of cache directory
+        cache_path : Path
+            Cache directory path
         items_list : list
             List to append items to
         exclude_visualizations : bool
@@ -339,8 +340,9 @@ class ArchiveUtils:
             file_path, exclude_visualizations, include_structure_files,
             use_memmap
         ):
-            relative_path = file_path.relative_to(cache_parent)
-            items_list.append((str(file_path), str(relative_path)))
+            relative_path = file_path.relative_to(cache_path)
+            archive_path = Path("cache") / relative_path
+            items_list.append((str(file_path), str(archive_path)))
 
     @staticmethod
     def collect_cache_files(
@@ -394,11 +396,9 @@ class ArchiveUtils:
         if not cache_path.exists():
             return items_to_archive
 
-        cache_parent = cache_path.parent
-
         for item_path in cache_path.rglob('*'):
             ArchiveUtils._process_item_for_archive(
-                item_path, cache_parent, items_to_archive,
+                item_path, cache_path, items_to_archive,
                 processed_zarr_dirs, exclude_visualizations,
                 include_structure_files, use_memmap
             )
