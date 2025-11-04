@@ -560,13 +560,13 @@ class TrajectoryLoadHelper:
 
         # Case 2: Self-contained trajectory files (H5, PDB, DTR, etc.)
         elif traj_files and is_self_contained:
-            result = TrajectoryLoadHelper._load_pdb_files_from_directory(
+            result = TrajectoryLoadHelper._load_self_contained_files_from_directory(
                 traj_files, subdir_path, subdir_name, stride, use_memmap, chunk_size, cache_dir
             )
 
         # Case 3: Only topology files - load each as separate trajectory
         elif top_files and not traj_files:
-            result = TrajectoryLoadHelper._load_pdb_files_from_directory(
+            result = TrajectoryLoadHelper._load_self_contained_files_from_directory(
                 top_files, subdir_path, subdir_name, stride, use_memmap, chunk_size, cache_dir
             )
 
@@ -681,15 +681,18 @@ class TrajectoryLoadHelper:
         return {"trajectories": system_trajs, "names": names}
 
     @staticmethod
-    def _load_pdb_files_from_directory(pdb_files: List[str], subdir_path: str, subdir_name: str, stride: int,
+    def _load_self_contained_files_from_directory(files: List[str], subdir_path: str, subdir_name: str, stride: int,
                                       use_memmap: bool = False, chunk_size: int = 1000, cache_dir: str = "./cache") -> Dict[str, List[Any]]:
         """
-        Load PDB files as separate trajectories.
+        Load self-contained trajectory files as separate trajectories.
+
+        Handles files that don't require separate topology files, including
+        PDB, H5, HDF5, DTR, and other self-contained formats.
 
         Parameters
         ----------
-        pdb_files : list
-            List of PDB filenames (not full paths)
+        files : list
+            List of self-contained trajectory filenames (not full paths)
         subdir_path : str
             Path to directory containing trajectory files
         subdir_name : str
@@ -711,17 +714,17 @@ class TrajectoryLoadHelper:
         system_trajs = []
         names = []
 
-        for pdb in tqdm(pdb_files, desc=f"Loading {subdir_name}", leave=False):
-            pdb_path = os.path.join(subdir_path, pdb)
-            pdb_basename = os.path.splitext(pdb)[0]
+        for file in tqdm(files, desc=f"Loading {subdir_name}", leave=False):
+            file_path = os.path.join(subdir_path, file)
+            file_basename = os.path.splitext(file)[0]
 
             traj = TrajectoryLoadHelper._load_single_trajectory(
-                pdb_path, None, stride, use_memmap, chunk_size, cache_dir
+                file_path, None, stride, use_memmap, chunk_size, cache_dir
             )
             system_trajs.append(traj)
 
-            # Generate name: directory_pdbname (no xtc for PDB-only trajectories)
-            name = f"{subdir_name}_{pdb_basename}"
+            # Generate name: directory_filename
+            name = f"{subdir_name}_{file_basename}"
             names.append(name)
 
         return {"trajectories": system_trajs, "names": names}
@@ -797,7 +800,7 @@ class TrajectoryLoadHelper:
         None
             Loads root directory files as separate system if present
         """
-        root_pdb_files = TrajectoryLoadHelper._get_pdb_files_from_directory(directory_path)
+        root_pdb_files = TrajectoryLoadHelper._get_topology_files_from_directory(directory_path)
         if root_pdb_files:
             root_system_name = os.path.basename(directory_path.rstrip("/\\"))
             root_result = TrajectoryLoadHelper._load_system_trajectories(
