@@ -26,10 +26,17 @@ visualizations using nglview in Jupyter notebooks with beta-factor coloring
 and feature highlighting.
 """
 
-import nglview as nv
-import ipywidgets as widgets
+from __future__ import annotations
+
 from typing import Dict, List, Any, Tuple
 from datetime import datetime
+
+try:
+    import nglview as nv
+    import ipywidgets as widgets
+    NGLVIEW_AVAILABLE = True
+except ImportError:
+    NGLVIEW_AVAILABLE = False
 
 from .color_conversion_helper import ColorConversionHelper
 from .feature_overlap_helper import FeatureOverlapHelper
@@ -126,6 +133,12 @@ class NGLViewHelper:
         - Local features: only for own structure
         - Each checkbox controls visibility and transparency independently
         """
+        if not NGLVIEW_AVAILABLE:
+            raise ImportError(
+                "nglview and ipywidgets are required for visualization. "
+                "Install with: pip install mdxplain[jupyter]"
+            )
+
         # Setup view and load structures
         view, component_map, overlaps_global, overlaps_local = NGLViewHelper._setup_view_components(
             pdb_info, top_features_global, feature_colors_global,
