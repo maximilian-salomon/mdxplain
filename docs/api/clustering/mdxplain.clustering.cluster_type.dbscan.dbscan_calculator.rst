@@ -1,5 +1,5 @@
-Cluster Type: DBSCAN Calculator
-===============================
+DBSCAN Calculator
+=================
 
 .. automodule:: mdxplain.clustering.cluster_type.dbscan.dbscan_calculator
    :members:

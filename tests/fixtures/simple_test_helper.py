@@ -21,7 +21,7 @@
 """Simple test helper that bypasses complex trajectory setup."""
 
 import numpy as np
-from mdxplain.pipeline.managers.pipeline_manager import PipelineManager
+from mdxplain.pipeline.manager.pipeline_manager import PipelineManager
 from mdxplain.feature.feature_type.distances import Distances
 from mdxplain.feature.feature_type.contacts import Contacts
 

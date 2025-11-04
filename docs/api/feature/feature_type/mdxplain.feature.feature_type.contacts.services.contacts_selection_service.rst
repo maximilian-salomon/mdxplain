@@ -1,5 +1,5 @@
-Feature Type: Contacts Selection Service
-========================================
+Contacts Selection Service
+==========================
 
 .. automodule:: mdxplain.feature.feature_type.contacts.services.contacts_selection_service
    :members:

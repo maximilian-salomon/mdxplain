@@ -73,6 +73,7 @@ dev = [
     # docs
     "sphinx",
     "sphinx-rtd-theme",
+    "myst-nb",
 ]
 jupyter = [
     # Jupyter ecosystem for end-user analysis

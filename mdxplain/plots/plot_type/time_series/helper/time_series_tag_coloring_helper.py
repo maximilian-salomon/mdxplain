@@ -44,6 +44,7 @@ class TimeSeriesTagColoringHelper:
 
     Provides methods for tag mapping, color assignment, and plotting
     with tag-based coloring. Fixes all bugs from original implementation:
+    
     - Auto-detection of tag coloring mode
     - No circular logic dependencies
     - Real trajectory names instead of "Traj 0"

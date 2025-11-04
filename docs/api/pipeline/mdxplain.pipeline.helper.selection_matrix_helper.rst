@@ -1,5 +1,5 @@
-Pipeline: Selection Matrix Helper
-=================================
+Selection Matrix Helper
+=======================
 
 .. automodule:: mdxplain.pipeline.helper.selection_matrix_helper
    :members:

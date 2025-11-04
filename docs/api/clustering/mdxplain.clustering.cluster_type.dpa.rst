@@ -1,5 +1,5 @@
-Cluster Type: DPA
-=================
+DPA
+===
 
 .. automodule:: mdxplain.clustering.cluster_type.dpa
 

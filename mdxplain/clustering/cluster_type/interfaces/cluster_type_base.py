@@ -140,12 +140,14 @@ class ClusterTypeBase(ABC, metaclass=ClusterTypeMeta):
             Input data matrix to cluster, shape (n_samples, n_features)
         center_method : str, optional
             Method for calculating cluster centers, default="centroid":
+            
             - "centroid": Representative point (medoid - closest to mean)
             - "mean": Average of cluster members
             - "median": Coordinate-wise median (robust to outliers)
             - "density_peak": Point with highest local density
             - "median_centroid": Medoid from median (more robust to outliers)
             - "rmsd_centroid": Centroid using RMSD metric (better for structural comparisons)
+            
             NOTE: If algorithm has built-in centers (e.g. some sklearn models),
             those are ALWAYS used regardless of this parameter.
 

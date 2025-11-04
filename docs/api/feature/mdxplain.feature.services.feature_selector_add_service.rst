@@ -1,5 +1,5 @@
-Feature Services: Feature Selector Add Service
-==============================================
+Feature Selector Add Service
+============================
 
 .. automodule:: mdxplain.feature.services.feature_selector_add_service
    :members:

@@ -1,5 +1,5 @@
-Feature Type: DSSP Calculator
-=============================
+DSSP Calculator
+===============
 
 .. automodule:: mdxplain.feature.feature_type.dssp.dssp_calculator
    :members:

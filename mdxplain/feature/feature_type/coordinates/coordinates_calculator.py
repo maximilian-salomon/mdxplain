@@ -94,7 +94,7 @@ class CoordinatesCalculator(CalculatorBase):
         ----------
         input_data : mdtraj.Trajectory
             MDTraj trajectory object to process
-        '**'kwargs : dict
+        kwargs : dict
             Additional parameters:
             
             - selection : str, default='ca' - Atom selection string

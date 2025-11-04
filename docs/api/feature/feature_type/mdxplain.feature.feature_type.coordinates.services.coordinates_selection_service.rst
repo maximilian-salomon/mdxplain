@@ -1,5 +1,5 @@
-Feature Type: Coordinates Selection Service
-===========================================
+Coordinates Selection Service
+=============================
 
 .. automodule:: mdxplain.feature.feature_type.coordinates.services.coordinates_selection_service
    :members:

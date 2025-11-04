@@ -1,5 +1,5 @@
-Feature Type: Contact Calculator Analysis
-=========================================
+Contact Calculator Analysis
+===========================
 
 .. automodule:: mdxplain.feature.feature_type.contacts.contact_calculator_analysis
    :members:

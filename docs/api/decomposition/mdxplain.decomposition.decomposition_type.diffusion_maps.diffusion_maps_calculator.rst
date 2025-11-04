@@ -1,5 +1,5 @@
-Decomposition Type: Diffusion Maps Calculator
-=============================================
+Diffusion Maps Calculator
+=========================
 
 .. automodule:: mdxplain.decomposition.decomposition_type.diffusion_maps.diffusion_maps_calculator
    :members:

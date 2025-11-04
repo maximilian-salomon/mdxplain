@@ -1,5 +1,5 @@
-Feature Type: Feature Shape Helper
-==================================
+Feature Shape Helper
+====================
 
 .. automodule:: mdxplain.feature.feature_type.helper.feature_shape_helper
    :members:

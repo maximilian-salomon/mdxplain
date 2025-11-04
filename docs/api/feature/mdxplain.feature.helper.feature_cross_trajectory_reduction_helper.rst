@@ -1,5 +1,5 @@
-Feature Helpers: Feature Cross Trajectory Reduction Helper
-==========================================================
+Feature Cross Trajectory Reduction Helper
+=========================================
 
 .. automodule:: mdxplain.feature.helper.feature_cross_trajectory_reduction_helper
    :members:

@@ -1,10 +1,5 @@
-Entities
-========
-
-.. automodule:: mdxplain.clustering.entities
-
-Data
-----
+Clustering Entities
+===================
 
 .. automodule:: mdxplain.clustering.entities.cluster_data
    :members:

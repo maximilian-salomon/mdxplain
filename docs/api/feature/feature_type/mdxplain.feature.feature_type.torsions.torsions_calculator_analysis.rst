@@ -1,5 +1,5 @@
-Feature Type: Torsions Calculator Analysis
-==========================================
+Torsions Calculator Analysis
+============================
 
 .. automodule:: mdxplain.feature.feature_type.torsions.torsions_calculator_analysis
    :members:

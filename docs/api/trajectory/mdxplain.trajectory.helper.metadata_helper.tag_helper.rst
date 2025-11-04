@@ -1,5 +1,5 @@
-Trajectory: Metadata Tag Helper
-===============================
+Tag Helper
+==========
 
 .. automodule:: mdxplain.trajectory.helper.metadata_helper.tag_helper
    :members:

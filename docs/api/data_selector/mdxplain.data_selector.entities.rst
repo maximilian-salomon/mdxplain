@@ -1,11 +1,6 @@
 Data Selection Entities
 =======================
 
-.. automodule:: mdxplain.data_selector.entities
-
-Data
-----
-
 .. automodule:: mdxplain.data_selector.entities.data_selector_data
    :members:
    :special-members: __init__

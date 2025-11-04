@@ -1,5 +1,5 @@
-Analysis Structure Service: RMSD Facade
-=======================================
+RMSD Facade
+===========
 
 .. automodule:: mdxplain.analysis.structure.services.rmsd_facade
    :members:

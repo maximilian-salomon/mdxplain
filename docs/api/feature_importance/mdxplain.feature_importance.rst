@@ -7,8 +7,8 @@ Feature Importance
    :maxdepth: 2
    :titlesonly:
 
-   mdxplain.feature_importance.analyzer_types
+   mdxplain.feature_importance.analyzer_type
    mdxplain.feature_importance.entities
-   mdxplain.feature_importance.helpers
-   mdxplain.feature_importance.managers
+   mdxplain.feature_importance.helper
+   mdxplain.feature_importance.manager
    mdxplain.feature_importance.services

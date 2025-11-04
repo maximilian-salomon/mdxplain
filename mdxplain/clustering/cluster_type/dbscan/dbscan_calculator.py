@@ -87,6 +87,7 @@ class DBSCANCalculator(CalculatorBase):
             Input data matrix to cluster, shape (n_samples, n_features)
         center_method : str, optional
             Method for calculating cluster centers, default="centroid":
+
             - "centroid": Representative point (medoid - closest to mean)
             - "mean": Average of cluster members
             - "median": Coordinate-wise median (robust to outliers)
@@ -95,6 +96,7 @@ class DBSCANCalculator(CalculatorBase):
             - "rmsd_centroid": Centroid using RMSD metric (better for structural comparisons)
         kwargs : dict
             DBSCAN parameters including:
+
             - eps : float, maximum distance between samples
             - min_samples : int, minimum samples in neighborhood
             - method : str, clustering method ('standard', 'precomputed', 'knn_sampling')
@@ -105,6 +107,7 @@ class DBSCANCalculator(CalculatorBase):
         -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
+            
             - cluster_labels: Cluster labels for each sample (-1 for noise)
             - metadata: Dictionary with clustering information
 

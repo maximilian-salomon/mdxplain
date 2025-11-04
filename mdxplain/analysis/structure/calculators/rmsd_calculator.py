@@ -28,7 +28,7 @@ import warnings
 import mdtraj as md
 import numpy as np
 
-from ..helpers.structure_calculation_helper import StructureCalculationHelper
+from ..helper.structure_calculation_helper import StructureCalculationHelper
 
 
 class RMSDCalculator:

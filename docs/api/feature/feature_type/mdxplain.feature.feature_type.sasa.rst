@@ -1,10 +1,11 @@
-Feature Type: SASA
-==================
+SASA
+====
 
 .. automodule:: mdxplain.feature.feature_type.sasa
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
+   :titlesonly:
    
    mdxplain.feature.feature_type.sasa.services
    mdxplain.feature.feature_type.sasa.sasa

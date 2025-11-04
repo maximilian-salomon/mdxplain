@@ -8,5 +8,5 @@ Comparison
    :titlesonly:
 
    mdxplain.comparison.entities
-   mdxplain.comparison.helpers
-   mdxplain.comparison.managers
+   mdxplain.comparison.helper
+   mdxplain.comparison.manager

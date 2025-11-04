@@ -1,11 +1,6 @@
 Feature Entities
 ================
 
-.. automodule:: mdxplain.feature.entities
-
-Data
-----
-
 .. automodule:: mdxplain.feature.entities.feature_data
    :members:
    :special-members: __init__

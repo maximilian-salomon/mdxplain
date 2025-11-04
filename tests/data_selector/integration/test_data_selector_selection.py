@@ -23,7 +23,7 @@
 import numpy as np
 import pytest
 import mdtraj as md
-from mdxplain.pipeline.managers.pipeline_manager import PipelineManager
+from mdxplain.pipeline.manager.pipeline_manager import PipelineManager
 from mdxplain.feature.feature_type.distances.distances import Distances
 
 

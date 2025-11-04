@@ -1,5 +1,5 @@
-Feature Helpers: Feature Reduction Helper
-=========================================
+Feature Reduction Helper
+========================
 
 .. automodule:: mdxplain.feature.helper.feature_reduction_helper
    :members:

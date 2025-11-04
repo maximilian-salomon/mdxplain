@@ -1,5 +1,5 @@
-Feature Type: SASA Selection Service
-====================================
+SASA Selection Service
+======================
 
 .. automodule:: mdxplain.feature.feature_type.sasa.services.sasa_selection_service
    :members:

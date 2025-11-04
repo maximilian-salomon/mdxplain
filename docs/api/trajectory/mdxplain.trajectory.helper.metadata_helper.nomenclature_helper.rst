@@ -1,5 +1,5 @@
-Trajectory: Metadata Nomenclature Helper
-========================================
+Nomenclature Helper
+===================
 
 .. automodule:: mdxplain.trajectory.helper.metadata_helper.nomenclature_helper
    :members:

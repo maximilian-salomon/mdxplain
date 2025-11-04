@@ -25,7 +25,7 @@ from abc import ABC
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ...managers.feature_manager import FeatureManager
+    from ...manager.feature_manager import FeatureManager
     from ....pipeline.entities.pipeline_data import PipelineData
 
 
