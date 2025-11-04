@@ -121,11 +121,13 @@ class FeatureImportanceManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> from mdxplain.feature_importance import analyzer_types
         >>> pipeline.feature_importance.add_analysis("folded_vs_unfolded", analyzer_types.DecisionTree(), "tree_analysis")  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = FeatureImportanceManager()
         >>> manager.add_analysis(pipeline_data, "folded_vs_unfolded", analyzer_types.DecisionTree(), "tree_analysis")  # WITH pipeline_data parameter
@@ -207,10 +209,12 @@ class FeatureImportanceManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.feature_importance.get_analysis_info("tree_analysis")  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = FeatureImportanceManager()
         >>> manager.get_analysis_info(pipeline_data, "tree_analysis")  # pipeline_data required
@@ -302,10 +306,12 @@ class FeatureImportanceManager:
         The PipelineManager automatically injects this parameter.
         
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> all_features = pipeline.feature_importance.get_all_top_features("dt_analysis", n=5)
         
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = FeatureImportanceManager()
         >>> all_features = manager.get_all_top_features(pipeline_data, "dt_analysis", n=5)
@@ -366,10 +372,12 @@ class FeatureImportanceManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.feature_importance.print_top_n_features("my_analysis", n=3)
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = FeatureImportanceManager()
         >>> manager.print_top_n_features(pipeline_data, "my_analysis", n=3)
@@ -418,10 +426,12 @@ class FeatureImportanceManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.feature_importance.list_analyses()  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = FeatureImportanceManager()
         >>> manager.list_analyses(pipeline_data)  # pipeline_data required
@@ -453,10 +463,12 @@ class FeatureImportanceManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.feature_importance.remove_analysis("old_analysis")  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = FeatureImportanceManager()
         >>> manager.remove_analysis(pipeline_data, "old_analysis")  # pipeline_data required
@@ -490,10 +502,12 @@ class FeatureImportanceManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.feature_importance.save('feature_importance.npy')  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = FeatureImportanceManager()
         >>> manager.save(pipeline_data, 'feature_importance.npy')  # pipeline_data required
@@ -526,10 +540,12 @@ class FeatureImportanceManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.feature_importance.load('feature_importance.npy')  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = FeatureImportanceManager()
         >>> manager.load(pipeline_data, 'feature_importance.npy')  # pipeline_data required
@@ -564,10 +580,12 @@ class FeatureImportanceManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.feature_importance.print_info()  # NO pipeline_data parameter
 
         Standalone mode:
+        
         >>> pipeline_data = PipelineData()
         >>> manager = FeatureImportanceManager()
         >>> manager.print_info(pipeline_data)  # pipeline_data required
