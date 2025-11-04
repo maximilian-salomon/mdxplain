@@ -67,8 +67,6 @@ setup-dev-env:
 	mdxplain-venv/bin/pip install .[dev]
 	@echo "Installing DPA with --no-deps..."
 	mdxplain-venv/bin/pip install --no-deps DPA
-	@echo "Installing pre-commit hooks..."
-	mdxplain-venv/bin/pre-commit install
 	@echo "Development setup complete! Activate with: source mdxplain-venv/bin/activate"
 
 # Create fresh virtual environment with development + jupyter + visualization dependencies
@@ -81,8 +79,6 @@ setup-full-env:
 	mdxplain-venv/bin/pip install .[dev,jupyter,visualization]
 	@echo "Installing DPA with --no-deps..."
 	mdxplain-venv/bin/pip install --no-deps DPA
-	@echo "Installing pre-commit hooks..."
-	mdxplain-venv/bin/pre-commit install
 	@echo "Full setup complete! Activate with: source mdxplain-venv/bin/activate"
 
 # Install package in current environment
@@ -94,7 +90,6 @@ install:
 install-dev:
 	pip install .[dev]
 	pip install --no-deps DPA
-	pre-commit install
 
 # Install package with jupyter dependencies in current environment
 install-jupyter:
@@ -145,8 +140,6 @@ setup-conda-dev-env:
 	conda run -n mdxplain pip install .[dev]
 	@echo "Installing DPA with --no-deps..."
 	conda run -n mdxplain pip install --no-deps DPA
-	@echo "Installing pre-commit hooks..."
-	conda run -n mdxplain pre-commit install
 	@echo "Development setup complete! Activate with: conda activate mdxplain"
 
 # Create fresh conda environment with development + jupyter + visualization dependencies
@@ -159,8 +152,6 @@ setup-conda-full-env:
 	conda run -n mdxplain pip install .[dev,jupyter,visualization]
 	@echo "Installing DPA with --no-deps..."
 	conda run -n mdxplain pip install --no-deps DPA
-	@echo "Installing pre-commit hooks..."
-	conda run -n mdxplain pre-commit install
 	@echo "Full setup complete! Activate with: conda activate mdxplain"
 
 # Run tests
