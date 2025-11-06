@@ -19,15 +19,7 @@ Core Strengths
 - **Complete pipeline persistence** for reproducible science
 - **Decision tree explainability** for understanding state-defining features
 
-
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents
+   :hidden:
 
-   how_to_install
-   tutorials/learning
-   theory/theory
-   how_to_contribute
-   how_to_cite
-   license
-   api/api
+   _root_toctree
