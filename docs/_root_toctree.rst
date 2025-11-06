@@ -1,0 +1,11 @@
+.. toctree::
+   :maxdepth: 8
+   :titlesonly:
+   
+   how_to_install
+   tutorials/learning
+   theory/theory
+   how_to_contribute
+   how_to_cite
+   license
+   api/api
