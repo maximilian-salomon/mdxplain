@@ -15,7 +15,7 @@ project = 'mdxplain'
 copyright = '2025, Maximilian Salomon'
 contributers = [
     {'name': 'Maximilian Salomon', 'role': 'Software'},
-    {'name': 'Maeve Butler', 'role': 'Documentation'},
+    {'name': 'Maeve Branwen Butler', 'role': 'Documentation'},
 ]
 author = 'author list from paper'
 
@@ -51,5 +51,5 @@ html_theme_options = {
     'collapse_navigation': False,
     'sticky_navigation': True,
     'navigation_depth': 8,
-    'titles_only': True,
+    'titles_only': False,
 }
