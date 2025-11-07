@@ -127,10 +127,12 @@ class DecompositionManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.decomposition.add("selection", decomposition_type.PCA())  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = DecompositionManager()
         >>> manager.add_decomposition(pipeline_data, "selection", decomposition_type.PCA())  # pipeline_data required
@@ -370,10 +372,12 @@ class DecompositionManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.decomposition.reset_decompositions()  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = DecompositionManager()
         >>> manager.reset_decompositions(pipeline_data)  # pipeline_data required
@@ -417,10 +421,12 @@ class DecompositionManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.decomposition.save('decomposition.npy')  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = DecompositionManager()
         >>> manager.save(pipeline_data, 'decomposition.npy')  # pipeline_data required
@@ -453,10 +459,12 @@ class DecompositionManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.decomposition.load('decomposition.npy')  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = DecompositionManager()
         >>> manager.load(pipeline_data, 'decomposition.npy')  # pipeline_data required
@@ -491,10 +499,12 @@ class DecompositionManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.decomposition.print_info()  # NO pipeline_data parameter
 
         Standalone mode:
+        
         >>> pipeline_data = PipelineData()
         >>> manager = DecompositionManager()
         >>> manager.print_info(pipeline_data)  # pipeline_data required
