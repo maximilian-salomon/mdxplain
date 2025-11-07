@@ -7,7 +7,7 @@ Contributors
 ------------
 
 - **Software**: Maximilian Salomon
-- **Documentation**: Maeve Butler
+- **Documentation**: Maeve Branwen Butler
 
 AI Usage
 --------
