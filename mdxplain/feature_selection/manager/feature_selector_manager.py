@@ -90,10 +90,12 @@ class FeatureSelectorManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.feature_selector.create("my_analysis")  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = FeatureSelectorManager()
         >>> manager.create(pipeline_data, "my_analysis")  # pipeline_data required
@@ -193,12 +195,14 @@ class FeatureSelectorManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.feature_selector.add_selection("analysis", "distances", "res ALA")  # NO pipeline_data
         >>> pipeline.feature_selector.add_selection("analysis", "distances", "all",
         ...     reduction={"metric": "max", "threshold_min": 10.0})
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = FeatureSelectorManager()
         >>> manager.add_selection(pipeline_data, "analysis", "distances", "res ALA")  # pipeline_data required
@@ -293,12 +297,14 @@ class FeatureSelectorManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.feature_selector.select("my_analysis")  # NO pipeline_data parameter
         >>> # Or with specific reference trajectory
         >>> pipeline.feature_selector.select("my_analysis", reference_traj=2)
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = FeatureSelectorManager()
         >>> manager.select(pipeline_data, "my_analysis")  # pipeline_data required
@@ -387,10 +393,12 @@ class FeatureSelectorManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.feature_selector.list_selectors()  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = FeatureSelectorManager()
         >>> manager.list_selectors(pipeline_data)  # pipeline_data required
@@ -429,10 +437,12 @@ class FeatureSelectorManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.feature_selector.get_selector_summary("analysis")  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = FeatureSelectorManager()
         >>> manager.get_selector_summary(pipeline_data, "analysis")  # pipeline_data required
@@ -474,10 +484,12 @@ class FeatureSelectorManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.feature_selector.remove_selector("old_analysis")  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = FeatureSelectorManager()
         >>> manager.remove_selector(pipeline_data, "old_analysis")  # pipeline_data required
@@ -1025,10 +1037,12 @@ class FeatureSelectorManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.feature_selector.save('feature_selector.npy')  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = FeatureSelectorManager()
         >>> manager.save(pipeline_data, 'feature_selector.npy')  # pipeline_data required
@@ -1061,10 +1075,12 @@ class FeatureSelectorManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.feature_selector.load('feature_selector.npy')  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = FeatureSelectorManager()
         >>> manager.load(pipeline_data, 'feature_selector.npy')  # pipeline_data required
@@ -1099,10 +1115,12 @@ class FeatureSelectorManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.feature_selector.print_info()  # NO pipeline_data parameter
 
         Standalone mode:
+        
         >>> pipeline_data = PipelineData()
         >>> manager = FeatureSelectorManager()
         >>> manager.print_info(pipeline_data)  # pipeline_data required
