@@ -25,7 +25,7 @@ KernelPCA decomposition type implementation with nonlinear dimensionality
 reduction using various kernel functions for feature matrices.
 """
 
-from typing import Dict, Tuple, Optional, Any
+from typing import Dict, Tuple, Optional, Any, Union
 
 import numpy as np
 
@@ -66,14 +66,15 @@ class KernelPCA(DecompositionTypeBase):
 
     def __init__(
         self,
-        n_components: Optional[int] = None,
-        gamma: Optional[float] = None,
+        n_components: Union[int, str, None] = "auto",
+        gamma: Union[float, str, None] = "scale",
         use_nystrom: bool = False,
         n_landmarks: int = 10000,
         random_state: Optional[int] = None,
         use_parallel: bool = False,
         n_jobs: int = -1,
         min_chunk_size: int = 1000,
+        offset: Union[int, float] = 0,
     ) -> None:
         """
         Initialize KernelPCA decomposition type with RBF kernel.
@@ -83,10 +84,17 @@ class KernelPCA(DecompositionTypeBase):
 
         Parameters
         ----------
-        n_components : int, optional
-            Number of components to keep. If None, keeps min(n_samples, n_features)
-        gamma : float, optional
-            RBF kernel coefficient. If None, uses 1.0 / n_features
+        n_components : int, str, or None, default="auto"
+            Number of components to keep. Options:
+            - int: Specific number of components
+            - "auto": Automatic selection via elbow detection (5% of features) [DEFAULT]
+            - None: Uses min(n_samples, n_features)
+        gamma : float, str, or None, default="scale"
+            RBF kernel coefficient. Options:
+            - float: Specific gamma value
+            - "scale": 1.0 / (n_features * variance) [DEFAULT]
+            - "auto": 1.0 / n_features
+            - None: Uses 1.0 / n_features (same as "auto")
         use_nystrom : bool, default=False
             Whether to use Nyström approximation for large datasets
         n_landmarks : int, default=10000
@@ -99,6 +107,11 @@ class KernelPCA(DecompositionTypeBase):
             Number of parallel jobs (-1 for all available CPU cores)
         min_chunk_size : int, default=1000
             Minimum chunk size per parallel process to avoid overhead
+        offset : int or float, default=0
+            Adjustment to auto-selected component count (only applies when n_components="auto"):
+
+            - int: Direct addition/subtraction (e.g., -2 selects 2 fewer)
+            - float: Percentage adjustment (e.g., -0.5 selects 50% fewer)
 
         Returns
         ------------------
@@ -143,6 +156,7 @@ class KernelPCA(DecompositionTypeBase):
         self.use_parallel = use_parallel
         self.n_jobs = n_jobs
         self.min_chunk_size = min_chunk_size
+        self.offset = offset
 
     @classmethod
     def get_type_name(cls) -> str:
@@ -278,4 +292,5 @@ class KernelPCA(DecompositionTypeBase):
             use_nystrom=self.use_nystrom,
             n_landmarks=self.n_landmarks,
             random_state=self.random_state,
+            offset=self.offset,
         )

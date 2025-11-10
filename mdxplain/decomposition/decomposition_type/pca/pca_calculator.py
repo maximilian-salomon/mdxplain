@@ -32,6 +32,7 @@ from sklearn.decomposition import PCA, IncrementalPCA
 
 from ..interfaces.calculator_base import CalculatorBase
 from ....utils.data_utils import DataUtils
+from ..helpers.automatic_parameter_helper import AutomaticParameterHelper
 
 
 class PCACalculator(CalculatorBase):
@@ -130,9 +131,30 @@ class PCACalculator(CalculatorBase):
         hyperparameters = self._extract_hyperparameters(data, kwargs)
 
         if self.use_memmap:
-            return self._compute_incremental_pca(data, hyperparameters)
+            transformed_data, metadata = self._compute_incremental_pca(
+                data, hyperparameters
+            )
         else:
-            return self._compute_standard_pca(data, hyperparameters)
+            transformed_data, metadata = self._compute_standard_pca(
+                data, hyperparameters
+            )
+
+        if hyperparameters.get("auto_select", False):
+            variance_ratios = metadata["explained_variance_ratio"]
+            n_temp = hyperparameters["n_components"]
+            n_optimal = AutomaticParameterHelper.find_elbow(
+                variance_ratios, max_components=n_temp, offset=hyperparameters["offset"]
+            )
+
+            transformed_data = transformed_data[:, :n_optimal]
+            metadata["n_components"] = n_optimal
+            metadata["auto_selected"] = True
+            metadata["explained_variance_ratio"] = variance_ratios[:n_optimal]
+            metadata["explained_variance"] = metadata["explained_variance"][
+                :n_optimal
+            ]
+
+        return transformed_data, metadata
 
     def _extract_hyperparameters(self, data: np.ndarray, kwargs: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -152,6 +174,13 @@ class PCACalculator(CalculatorBase):
         """
         n_components = kwargs.get("n_components", data.shape[1])
         random_state = kwargs.get("random_state", None)
+        offset = kwargs.get("offset", 0)
+        auto_select = False
+
+        if n_components == "auto":
+            n_features = data.shape[1]
+            n_components = max(5, min(100, int(n_features * 0.05)))
+            auto_select = True
 
         max_components = data.shape[1]
         if n_components is not None and n_components > data.shape[0]:
@@ -163,6 +192,8 @@ class PCACalculator(CalculatorBase):
         return {
             "n_components": n_components,
             "random_state": random_state,
+            "auto_select": auto_select,
+            "offset": offset,
         }
 
     def _compute_standard_pca(self, data: np.ndarray, hyperparameters: Dict[str, Any]) -> Tuple[np.ndarray, Dict[str, Any]]:
