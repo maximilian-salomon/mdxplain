@@ -113,10 +113,12 @@ class ComparisonManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.comparison.create_comparison("folded_vs_unfolded", "binary", "key_features", ["folded_frames", "unfolded_frames"])  # NO pipeline_data parameter
 
         Standalone mode:
+        
         >>> pipeline_data = PipelineData()
         >>> manager = ComparisonManager()
         >>> manager.create_comparison(pipeline_data, "folded_vs_unfolded", "binary", "key_features", ["folded_frames", "unfolded_frames"])  # WITH pipeline_data parameter
@@ -263,10 +265,12 @@ class ComparisonManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.comparison.save('comparison.npy')  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = ComparisonManager()
         >>> manager.save(pipeline_data, 'comparison.npy')  # pipeline_data required
@@ -299,10 +303,12 @@ class ComparisonManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.comparison.load('comparison.npy')  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = ComparisonManager()
         >>> manager.load(pipeline_data, 'comparison.npy')  # pipeline_data required
@@ -337,10 +343,12 @@ class ComparisonManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.comparison.print_info()  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = ComparisonManager()
         >>> manager.print_info(pipeline_data)  # pipeline_data required

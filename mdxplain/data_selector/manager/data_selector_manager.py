@@ -93,10 +93,12 @@ class DataSelectorManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.data_selector.create("folded_frames")  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = DataSelectorManager()
         >>> manager.create(pipeline_data, "folded_frames")  # WITH pipeline_data parameter
@@ -147,10 +149,12 @@ class DataSelectorManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.data_selector.select_by_tags("biased_system_A", ["system_A", "biased"])  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = DataSelectorManager()
         >>> manager.select_by_tags(pipeline_data, "biased_system_A", ["system_A", "biased"])  # WITH pipeline_data parameter
@@ -246,10 +250,12 @@ class DataSelectorManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.data_selector.select_by_cluster("structured", "conformations", [0, 1])  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = DataSelectorManager()
         >>> manager.select_by_cluster(pipeline_data, "structured", "conformations", [0, 1])  # WITH pipeline_data parameter
@@ -360,10 +366,12 @@ class DataSelectorManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.data_selector.select_by_indices("custom_frames", {0: [10, 20], 1: [5, 15]})  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = DataSelectorManager()
         >>> manager.select_by_indices(pipeline_data, "custom_frames", {0: [10, 20], 1: [5, 15]})  # pipeline_data required
@@ -525,10 +533,12 @@ class DataSelectorManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.data_selector.clear_selector("my_frames")  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = DataSelectorManager()
         >>> manager.clear_selector(pipeline_data, "my_frames")  # WITH pipeline_data parameter
@@ -710,10 +720,12 @@ class DataSelectorManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.data_selector.save('data_selector.npy')  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = DataSelectorManager()
         >>> manager.save(pipeline_data, 'data_selector.npy')  # pipeline_data required
@@ -746,10 +758,12 @@ class DataSelectorManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.data_selector.load('data_selector.npy')  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = DataSelectorManager()
         >>> manager.load(pipeline_data, 'data_selector.npy')  # pipeline_data required
@@ -784,10 +798,12 @@ class DataSelectorManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+        
         >>> pipeline = PipelineManager()
         >>> pipeline.data_selector.print_info()  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = DataSelectorManager()
         >>> manager.print_info(pipeline_data)  # pipeline_data required

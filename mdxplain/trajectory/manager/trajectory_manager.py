@@ -137,10 +137,12 @@ class TrajectoryManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.trajectory.load_trajectories('../data')  # NO pipeline_data parameter
 
         Standalone mode:
+        
         >>> pipeline_data = PipelineData()
         >>> manager = TrajectoryManager()
         >>> manager.load_trajectories(pipeline_data, '../data')  # pipeline_data required
@@ -236,10 +238,12 @@ class TrajectoryManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.trajectory.add_trajectory('../data2')  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = TrajectoryManager()
         >>> manager.add_trajectory(pipeline_data, '../data2')  # pipeline_data required
@@ -318,10 +322,12 @@ class TrajectoryManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.trajectory.remove_trajectory([0, 1])  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = TrajectoryManager()
         >>> manager.remove_trajectory(pipeline_data, [0, 1])  # pipeline_data required
@@ -392,11 +398,13 @@ class TrajectoryManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.trajectory.slice_traj(traj_selection="all", frames=1000)  # NO pipeline_data parameter
         >>> pipeline.trajectory.slice_traj(traj_selection="all", data_selector="folded_frames")  # Use DataSelector
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = TrajectoryManager()
         >>> manager.slice_traj(pipeline_data, frames=1000, traj_selection="all")  # pipeline_data required
@@ -505,10 +513,12 @@ class TrajectoryManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.trajectory.select_atoms("protein", "all")  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = TrajectoryManager()
         >>> manager.select_atoms(pipeline_data, "protein", "all")  # pipeline_data required
@@ -621,10 +631,12 @@ class TrajectoryManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.trajectory.add_labels([0, 1], fragment_definition="receptor")  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = TrajectoryManager()
         >>> manager.add_labels(pipeline_data, [0, 1], fragment_definition="receptor")  # pipeline_data required
@@ -795,10 +807,12 @@ class TrajectoryManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.trajectory.add_tags(0, ["system_A"])  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = TrajectoryManager()
         >>> manager.add_tags(pipeline_data, 0, ["system_A"])  # pipeline_data required
@@ -895,10 +909,12 @@ class TrajectoryManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.trajectory.set_tags(0, ["system_A"])  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = TrajectoryManager()
         >>> manager.set_tags(pipeline_data, 0, ["system_A"])  # pipeline_data required
@@ -1009,10 +1025,12 @@ class TrajectoryManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.trajectory.rename_trajectories({0: "new_name"})  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = TrajectoryManager()
         >>> manager.rename_trajectories(pipeline_data, {0: "new_name"})  # pipeline_data required
@@ -1082,10 +1100,12 @@ class TrajectoryManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.trajectory.reset_trajectory_data()  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = TrajectoryManager()
         >>> manager.reset_trajectory_data(pipeline_data)  # pipeline_data required
@@ -1148,10 +1168,12 @@ class TrajectoryManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.trajectory.save('trajectory_backup.pkl')  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = TrajectoryManager()
         >>> manager.save(pipeline_data, 'trajectory_backup.pkl')  # pipeline_data required
@@ -1184,10 +1206,12 @@ class TrajectoryManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.trajectory.load('trajectory_backup.pkl')  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = TrajectoryManager()
         >>> manager.load(pipeline_data, 'trajectory_backup.pkl')  # pipeline_data required
@@ -1220,10 +1244,12 @@ class TrajectoryManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.trajectory.print_info()  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = TrajectoryManager()
         >>> manager.print_info(pipeline_data)  # pipeline_data required
@@ -1259,10 +1285,12 @@ class TrajectoryManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> selected = pipeline.trajectory.select_trajs("folded_frames")  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = TrajectoryManager()
         >>> selected = manager.select_trajs(pipeline_data, "folded_frames")  # pipeline_data required
@@ -1329,10 +1357,12 @@ class TrajectoryManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.trajectory.superpose(traj_selection="all", reference_traj=0, reference_frame=0)  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = TrajectoryManager()
         >>> manager.superpose(pipeline_data, traj_selection="all", reference_traj=0, reference_frame=0)  # pipeline_data required
@@ -1458,10 +1488,12 @@ class TrajectoryManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.trajectory.center_coordinates(traj_selection="all")  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = TrajectoryManager()
         >>> manager.center_coordinates(pipeline_data, traj_selection="all")  # pipeline_data required
@@ -1581,10 +1613,12 @@ class TrajectoryManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.trajectory.smooth(traj_selection="all", width=5)  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = TrajectoryManager()
         >>> manager.smooth(pipeline_data, traj_selection="all", width=5)  # pipeline_data required
@@ -1728,10 +1762,12 @@ class TrajectoryManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.trajectory.image_molecules(traj_selection="all")  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = TrajectoryManager()
         >>> manager.image_molecules(pipeline_data, traj_selection="all")  # pipeline_data required
@@ -1866,10 +1902,12 @@ class TrajectoryManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.trajectory.remove_solvent(traj_selection="all")  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = TrajectoryManager()
         >>> manager.remove_solvent(pipeline_data, traj_selection="all")  # pipeline_data required
@@ -2028,10 +2066,12 @@ class TrajectoryManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.trajectory.join(target_traj=0, source_traj=1)  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = TrajectoryManager()
         >>> manager.join(pipeline_data, target_traj=0, source_traj=1)  # pipeline_data required
@@ -2175,10 +2215,12 @@ class TrajectoryManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.trajectory.stack(target_traj=0, source_traj=1)  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = TrajectoryManager()
         >>> manager.stack(pipeline_data, target_traj=0, source_traj=1)  # pipeline_data required

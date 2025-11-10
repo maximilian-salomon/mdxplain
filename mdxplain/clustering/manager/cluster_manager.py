@@ -107,10 +107,12 @@ class ClusterManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.clustering.reset_clusters()  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = ClusterManager()
         >>> manager.reset_clusters(pipeline_data)  # pipeline_data required
@@ -386,10 +388,12 @@ class ClusterManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.clustering.add_clustering("selection", cluster_type.DBSCAN())  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = ClusterManager()
         >>> manager.add_clustering(pipeline_data, "selection", cluster_type.DBSCAN())  # pipeline_data required
@@ -718,10 +722,12 @@ class ClusterManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.clustering.save('clustering.npy')  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = ClusterManager()
         >>> manager.save(pipeline_data, 'clustering.npy')  # pipeline_data required
@@ -754,10 +760,12 @@ class ClusterManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.clustering.load('clustering.npy')  # NO pipeline_data parameter
 
         Standalone mode:
+
         >>> pipeline_data = PipelineData()
         >>> manager = ClusterManager()
         >>> manager.load(pipeline_data, 'clustering.npy')  # pipeline_data required
@@ -792,10 +800,12 @@ class ClusterManager:
         The PipelineManager automatically injects this parameter.
 
         Pipeline mode:
+
         >>> pipeline = PipelineManager()
         >>> pipeline.clustering.print_info()  # NO pipeline_data parameter
 
         Standalone mode:
+        
         >>> pipeline_data = PipelineData()
         >>> manager = ClusterManager()
         >>> manager.print_info(pipeline_data)  # pipeline_data required
