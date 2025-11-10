@@ -25,7 +25,7 @@ Implements KernelPCA computation with support for incremental kernel
 computation for large datasets using sklearn's KernelPCA.
 """
 
-from typing import Dict, Tuple, Any
+from typing import Dict, Tuple, Any, Union
 
 import numpy as np
 from joblib import Parallel, delayed
@@ -38,6 +38,7 @@ from tqdm import tqdm
 
 from ..interfaces.calculator_base import CalculatorBase
 from ....utils.data_utils import DataUtils
+from ..helpers.automatic_parameter_helper import AutomaticParameterHelper
 
 
 class KernelPCACalculator(CalculatorBase):
@@ -151,11 +152,107 @@ class KernelPCACalculator(CalculatorBase):
         hyperparameters = self._extract_hyperparameters(data, kwargs)
 
         if hyperparameters["use_nystrom"]:
-            return self._compute_nystrom_kernel_pca(data, hyperparameters)
+            transformed_data, metadata = self._compute_nystrom_kernel_pca(
+                data, hyperparameters
+            )
         elif self.use_memmap:
-            return self._compute_incremental_kernel_pca(data, hyperparameters)
+            transformed_data, metadata = self._compute_incremental_kernel_pca(
+                data, hyperparameters
+            )
         else:
-            return self._compute_standard_kernel_pca(data, hyperparameters)
+            transformed_data, metadata = self._compute_standard_kernel_pca(
+                data, hyperparameters
+            )
+
+        if hyperparameters.get("auto_select", False):
+            transformed_data, metadata = self._apply_auto_selection(
+                transformed_data, metadata, hyperparameters["n_components"], hyperparameters["offset"]
+            )
+
+        return transformed_data, metadata
+
+    def _apply_auto_selection(
+        self, transformed_data, metadata, n_temp, offset
+    ) -> tuple:
+        """
+        Apply automatic component selection to results.
+
+        Parameters
+        ----------
+        transformed_data : numpy.ndarray
+            Transformed data matrix
+        metadata : dict
+            Metadata from computation
+        n_temp : int
+            Temporary number of components used
+        offset : int or float
+            Offset adjustment for elbow detection
+
+        Returns
+        -------
+        tuple
+            (transformed_data, metadata) with optimal components
+        """
+        values = self._extract_values_for_elbow(metadata)
+
+        n_optimal = AutomaticParameterHelper.find_elbow(
+            values, max_components=n_temp, offset=offset
+        )
+
+        transformed_data = transformed_data[:, :n_optimal]
+        metadata["n_components"] = n_optimal
+        metadata["auto_selected"] = True
+
+        metadata = self._update_metadata_arrays(metadata, n_optimal)
+
+        return transformed_data, metadata
+
+    def _extract_values_for_elbow(self, metadata):
+        """
+        Extract values for elbow detection from metadata or data.
+
+        Parameters
+        ----------
+        transformed_data : numpy.ndarray
+            Transformed data matrix
+        metadata : dict
+            Computation metadata
+
+        Returns
+        -------
+        numpy.ndarray
+            Values for elbow detection
+        """
+        if "explained_variance_ratio" in metadata:
+            return metadata["explained_variance_ratio"]
+        elif "eigenvalues" in metadata:
+            return metadata["eigenvalues"]
+        else:
+            raise ValueError("No eigenvalues found in decomposition metadata, this should never happen. Ask developer.")
+
+    def _update_metadata_arrays(self, metadata, n_optimal):
+        """
+        Update metadata arrays to match optimal components.
+
+        Parameters
+        ----------
+        metadata : dict
+            Metadata to update
+        n_optimal : int
+            Optimal number of components
+
+        Returns
+        -------
+        dict
+            Updated metadata
+        """
+        if "explained_variance_ratio" in metadata:
+            metadata["explained_variance_ratio"] = metadata[
+                "explained_variance_ratio"
+            ][:n_optimal]
+        if "eigenvalues" in metadata:
+            metadata["eigenvalues"] = metadata["eigenvalues"][:n_optimal]
+        return metadata
 
     def _extract_hyperparameters(self, data: np.ndarray, kwargs: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -173,28 +270,20 @@ class KernelPCACalculator(CalculatorBase):
         dict
             Validated hyperparameters
         """
-        n_components = kwargs.get("n_components", data.shape[0])
-        if n_components is None:
-            raise ValueError("n_components must be specified")
-
-        gamma = kwargs.get("gamma", 1.0 / data.shape[0])
+        n_components = kwargs.get("n_components", None)
+        gamma = kwargs.get("gamma", None)
         use_nystrom = kwargs.get("use_nystrom", False)
         n_landmarks = kwargs.get("n_landmarks", 10000)
         random_state = kwargs.get("random_state", None)
+        offset = kwargs.get("offset", 0)
 
-        # Validate n_components
-        if n_components is not None and n_components > data.shape[0]:
-            raise ValueError(
-                f"n_components ({n_components}) cannot be larger than the sample-number {data.shape[0]:}."
-            )
-
-        # Validate n_landmarks for Nyström
-        if use_nystrom:
-            n_landmarks = min(n_landmarks, data.shape[0])
-            if n_landmarks < n_components:
-                raise ValueError(
-                    f"n_landmarks ({n_landmarks}) must be >= n_components ({n_components}) for Nyström approximation."
-                )
+        gamma = self._resolve_gamma(data, gamma)
+        n_components, auto_select = self._resolve_n_components(
+            data, n_components, gamma, use_nystrom, n_landmarks, random_state
+        )
+        n_landmarks = self._validate_nystrom_params(
+            data, use_nystrom, n_landmarks, n_components
+        )
 
         return {
             "n_components": n_components,
@@ -203,7 +292,106 @@ class KernelPCACalculator(CalculatorBase):
             "use_nystrom": use_nystrom,
             "n_landmarks": n_landmarks,
             "random_state": random_state,
+            "auto_select": auto_select,
+            "offset": offset,
         }
+
+    def _resolve_gamma(self, data: np.ndarray, gamma: Union[float, str, None]) -> float:
+        """
+        Resolve gamma parameter to float value.
+
+        Parameters
+        ----------
+        data : numpy.ndarray
+            Input data matrix
+        gamma : float, str, or None
+            Gamma parameter specification
+
+        Returns
+        -------
+        float
+            Resolved gamma value
+        """
+        if gamma is None or gamma == "auto":
+            return AutomaticParameterHelper.calculate_gamma_auto(data.shape[1])
+        elif gamma == "scale":
+            return AutomaticParameterHelper.calculate_gamma_scale(
+                data, use_memmap=self.use_memmap, chunk_size=self.chunk_size
+            )
+        return gamma
+
+    def _resolve_n_components(
+        self, data, n_components, gamma, use_nystrom, n_landmarks, random_state
+    ) -> tuple:
+        """
+        Resolve n_components parameter to int value and auto_select flag.
+
+        Parameters
+        ----------
+        data : numpy.ndarray
+            Input data matrix
+        n_components : int, str, or None
+            Number of components specification
+        gamma : float
+            Gamma parameter value
+        use_nystrom : bool
+            Whether Nyström approximation is used
+        n_landmarks : int
+            Number of Nyström landmarks
+        random_state : int
+            Random state for reproducibility
+
+        Returns
+        -------
+        tuple
+            (n_components, auto_select)
+        """
+        auto_select = False
+
+        if n_components == "auto":
+            n_features = data.shape[1]
+            n_components = max(5, min(100, int(n_features * 0.05)))
+            auto_select = True
+        elif n_components is None:
+            n_components = min(data.shape[0], data.shape[1])
+
+        if n_components > data.shape[0]:
+            raise ValueError(
+                f"n_components ({n_components}) cannot be larger than {data.shape[0]}."
+            )
+        return n_components, auto_select
+
+    def _validate_nystrom_params(
+        self, data, use_nystrom, n_landmarks, n_components
+    ) -> int:
+        """
+        Validate and adjust Nyström parameters.
+
+        Parameters
+        ----------
+        data : numpy.ndarray
+            Input data matrix
+        use_nystrom : bool
+            Whether Nyström approximation is used
+        n_landmarks : int
+            Number of Nyström landmarks
+        n_components : int
+            Number of components
+
+        Returns
+        -------
+        int
+            Validated number of landmarks
+        """
+        if not use_nystrom:
+            return n_landmarks
+
+        n_landmarks = min(n_landmarks, data.shape[0])
+        if n_landmarks < n_components:
+            raise ValueError(
+                f"n_landmarks ({n_landmarks}) must be >= n_components ({n_components})."
+            )
+        return n_landmarks
 
     def _compute_standard_kernel_pca(self, data: np.ndarray, hyperparameters: Dict[str, Any]) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
@@ -523,7 +711,7 @@ class KernelPCACalculator(CalculatorBase):
 
             def _matvec(self, v):
                 self.call_count += 1
-                if self.call_count - self.last_report >= 10:  # Report every 10 calls
+                if self.call_count - self.last_report >= 1000:  # Report every 1000 calls
                     print(f"  Matrix-vector products: {self.call_count}")
                     self.last_report = self.call_count
                 return matvec_func(v)

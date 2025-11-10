@@ -21,7 +21,7 @@
 """Factory for adding decomposition algorithms with simplified syntax."""
 
 from __future__ import annotations
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
     from ..manager.decomposition_manager import DecompositionManager
@@ -66,26 +66,35 @@ class DecompositionAddService:
     def pca(
         self,
         selection_name: str,
-        n_components: Optional[int] = None,
+        n_components: Union[int, str, None] = "auto",
         random_state: Optional[int] = None,
+        offset: Union[int, float] = 0,
         decomposition_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
         force: bool = False,
     ) -> None:
         """
         Add PCA (Principal Component Analysis) decomposition.
-        
+
         PCA reduces dimensionality by finding the directions of maximum variance
         in the data and projecting the data onto these principal components.
-        
+
         Parameters
         ----------
         selection_name : str
             Name of feature selection to decompose
-        n_components : int, optional
-            Number of principal components to compute. If None, keeps min(n_samples, n_features)
+        n_components : int, str, or None, default="auto"
+            Number of principal components. Options:
+            - int: Specific number of components
+            - "auto": Automatic selection via elbow detection (5% of features) [DEFAULT]
+            - None: Uses min(n_samples, n_features)
         random_state : int, optional
             Random state for reproducible results
+        offset : int or float, default=0
+            Adjustment to auto-selected component count (only applies when n_components="auto"):
+
+            - int: Direct addition/subtraction (e.g., -2 selects 2 fewer)
+            - float: Percentage adjustment (e.g., -0.5 selects 50% fewer)
         decomposition_name : str, optional
             Name for the decomposition result. If None, uses algorithm-based name
         data_selector_name : str, optional
@@ -127,7 +136,7 @@ class DecompositionAddService:
         the maximum amount of variance in the reduced representation.
         Components are ordered by explained variance ratio.
         """
-        decomposition_type = PCA(n_components=n_components, random_state=random_state)
+        decomposition_type = PCA(n_components=n_components, random_state=random_state, offset=offset)
         return self._manager.add_decomposition(
             self._pipeline_data,
             selection_name,
@@ -140,33 +149,41 @@ class DecompositionAddService:
     def kernel_pca(
         self,
         selection_name: str,
-        n_components: Optional[int] = None,
-        gamma: Optional[float] = None,
+        n_components: Union[int, str, None] = "auto",
+        gamma: Union[float, str, None] = "scale",
         use_nystrom: bool = False,
         n_landmarks: int = 10000,
         random_state: Optional[int] = None,
         use_parallel: bool = False,
         n_jobs: int = -1,
         min_chunk_size: int = 1000,
+        offset: Union[int, float] = 0,
         decomposition_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
         force: bool = False,
     ) -> None:
         """
         Add Kernel PCA decomposition.
-        
+
         Kernel PCA is a nonlinear extension of PCA that uses kernel functions
         to project data into higher-dimensional spaces where linear PCA can
         capture nonlinear relationships in the original space.
-        
+
         Parameters
         ----------
         selection_name : str
             Name of feature selection to decompose
-        n_components : int, optional
-            Number of components to compute. If None, keeps min(n_samples, n_features)
-        gamma : float, optional
-            RBF kernel coefficient. If None, uses 1.0 / n_features
+        n_components : int, str, or None, default="auto"
+            Number of components. Options:
+            - int: Specific number of components
+            - "auto": Automatic selection via elbow detection (5% of features) [DEFAULT]
+            - None: Uses min(n_samples, n_features)
+        gamma : float, str, or None, default="scale"
+            RBF kernel coefficient. Options:
+            - float: Specific gamma value
+            - "scale": 1.0 / (n_features * variance) [DEFAULT]
+            - "auto": 1.0 / n_features
+            - None: Uses 1.0 / n_features (same as "auto")
         use_nystrom : bool, default=False
             Whether to use Nyström approximation for large datasets
         n_landmarks : int, default=10000
@@ -179,6 +196,11 @@ class DecompositionAddService:
             Number of parallel jobs (-1 for all available CPU cores)
         min_chunk_size : int, default=1000
             Minimum chunk size per parallel process to avoid overhead
+        offset : int or float, default=0
+            Adjustment to auto-selected component count (only applies when n_components="auto"):
+
+            - int: Direct addition/subtraction (e.g., -2 selects 2 fewer)
+            - float: Percentage adjustment (e.g., -0.5 selects 50% fewer)
         decomposition_name : str, optional
             Name for the decomposition result
         data_selector_name : str, optional
@@ -229,6 +251,7 @@ class DecompositionAddService:
             use_parallel=use_parallel,
             n_jobs=n_jobs,
             min_chunk_size=min_chunk_size,
+            offset=offset,
         )
         return self._manager.add_decomposition(
             self._pipeline_data,
@@ -242,32 +265,39 @@ class DecompositionAddService:
     def contact_kernel_pca(
         self,
         selection_name: str,
-        n_components: Optional[int] = None,
-        gamma: float = 1.0,
+        n_components: Union[int, str, None] = "auto",
+        gamma: Union[float, str] = "scale",
         use_nystrom: bool = False,
         n_landmarks: int = 2000,
         random_state: Optional[int] = None,
         use_parallel: bool = False,
         n_jobs: int = -1,
         min_chunk_size: int = 1000,
+        offset: Union[int, float] = 0,
         decomposition_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
         force: bool = False,
     ) -> None:
         """
         Add Contact Kernel PCA decomposition.
-        
+
         Specialized Kernel PCA implementation optimized for contact matrix data
         with contact-specific kernel functions and regularization.
-        
+
         Parameters
         ----------
         selection_name : str
             Name of contact feature selection to decompose
-        n_components : int, optional
-            Number of components to compute. If None, keeps min(n_samples, n_features)
-        gamma : float, default=1.0
-            Kernel coefficient for Hamming/RBF kernel on binary contact data
+        n_components : int, str, or None, default="auto"
+            Number of components. Options:
+            - int: Specific number of components
+            - "auto": Automatic selection via elbow detection (5% of features) [DEFAULT]
+            - None: Uses min(n_samples, n_features)
+        gamma : float or str, default="scale"
+            Kernel coefficient for Hamming/RBF kernel. Options:
+            - float: Specific gamma value
+            - "scale": 1.0 / (n_features * variance) [DEFAULT]
+            - "auto": 1.0 / n_features
         use_nystrom : bool, default=False
             Whether to use Nyström approximation for large datasets
         n_landmarks : int, default=2000
@@ -280,6 +310,11 @@ class DecompositionAddService:
             Number of parallel jobs (-1 for all available CPU cores)
         min_chunk_size : int, default=1000
             Minimum chunk size per parallel process to avoid overhead
+        offset : int or float, default=0
+            Adjustment to auto-selected component count (only applies when n_components="auto"):
+
+            - int: Direct addition/subtraction (e.g., -2 selects 2 fewer)
+            - float: Percentage adjustment (e.g., -0.5 selects 50% fewer)
         decomposition_name : str, optional
             Name for the decomposition result
         data_selector_name : str, optional
@@ -329,6 +364,7 @@ class DecompositionAddService:
             use_parallel=use_parallel,
             n_jobs=n_jobs,
             min_chunk_size=min_chunk_size,
+            offset=offset,
         )
         return self._manager.add_decomposition(
             self._pipeline_data,

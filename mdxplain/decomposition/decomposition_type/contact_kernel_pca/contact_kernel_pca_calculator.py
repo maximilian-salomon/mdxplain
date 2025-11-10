@@ -114,10 +114,16 @@ class ContactKernelPCACalculator(KernelPCACalculator):
         kwargs : dict
             ContactKernelPCA parameters:
 
-            - n_components : int, required
-                Number of components to keep
-            - gamma : float, default=1.0
-                RBF kernel coefficient (equivalent to Hamming for binary data)
+            - n_components : int, str, or None, default="auto"
+                Number of components. Options:
+                - int: Specific number of components
+                - "auto": Automatic selection via elbow detection (5% of features)
+                - None: Uses min(n_samples, n_features)
+            - gamma : float, str, or None, default="scale"
+                RBF kernel coefficient. Options:
+                - float: Specific gamma value
+                - "scale": 1.0 / (n_features * variance)
+                - "auto": 1.0 / n_features
             - use_nystrom : bool, optional
                 Whether to use Nyström approximation (default: False)
             - n_landmarks : int, optional
@@ -129,7 +135,7 @@ class ContactKernelPCACalculator(KernelPCACalculator):
         -------
         Tuple[numpy.ndarray, Dict]
             Tuple containing:
-            
+
             - transformed_data: ContactKernelPCA-transformed data (n_samples, n_components)
             - metadata: Dictionary with ContactKernelPCA information including
               kernel parameters, eigenvalues, and hyperparameters
@@ -148,15 +154,8 @@ class ContactKernelPCACalculator(KernelPCACalculator):
             If input data is invalid, not binary, or n_components is too large
         """
         self._validate_binary_data(data)
-
-        hyperparameters = self._extract_hyperparameters(data, kwargs)
-
-        if hyperparameters["use_nystrom"]:
-            return self._compute_nystrom_kernel_pca(data, hyperparameters)
-        elif self.use_memmap:
-            return self._compute_incremental_kernel_pca(data, hyperparameters)
-        else:
-            return self._compute_standard_kernel_pca(data, hyperparameters)
+        # Call parent compute which includes auto-selection logic
+        return super().compute(data, **kwargs)
 
     def _validate_binary_data(self, data: np.ndarray) -> None:
         """

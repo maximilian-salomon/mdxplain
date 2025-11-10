@@ -25,7 +25,7 @@ PCA decomposition type implementation with standard and incremental
 Principal Component Analysis for dimensionality reduction of feature matrices.
 """
 
-from typing import Dict, Tuple, Optional, Any
+from typing import Dict, Tuple, Optional, Any, Union
 
 import numpy as np
 
@@ -61,7 +61,7 @@ class PCA(DecompositionTypeBase):
     >>> transformed, metadata = pca.compute(large_data, n_components=50)
     """
 
-    def __init__(self, n_components: Optional[int] = None, random_state: Optional[int] = None) -> None:
+    def __init__(self, n_components: Union[int, str, None] = "auto", random_state: Optional[int] = None, offset: Union[int, float] = 0) -> None:
         """
         Initialize PCA decomposition type with parameters.
 
@@ -70,11 +70,18 @@ class PCA(DecompositionTypeBase):
 
         Parameters
         ----------
-        n_components : int, float, optional
-            Number of components to keep. If None, keeps min(n_samples, n_features).
-            If float, keeps components corresponding to the fraction of variance to keep.
+        n_components : int, str, or None, default="auto"
+            Number of components to keep. Options:
+            - int: Specific number of components
+            - "auto": Automatic selection via elbow detection (5% of features) [DEFAULT]
+            - None: Uses min(n_samples, n_features)
         random_state : int, optional
             Random state for reproducible results
+        offset : int or float, default=0
+            Adjustment to auto-selected component count (only applies when n_components="auto"):
+
+            - int: Direct addition/subtraction (e.g., -2 selects 2 fewer)
+            - float: Percentage adjustment (e.g., -0.5 selects 50% fewer)
 
         Returned Metadata
         -----------------
@@ -107,6 +114,7 @@ class PCA(DecompositionTypeBase):
         super().__init__()
         self.n_components = n_components
         self.random_state = random_state
+        self.offset = offset
 
     @classmethod
     def get_type_name(cls) -> str:
@@ -228,5 +236,5 @@ class PCA(DecompositionTypeBase):
             )
 
         return self.calculator.compute(
-            data, n_components=self.n_components, random_state=self.random_state
+            data, n_components=self.n_components, random_state=self.random_state, offset=self.offset
         )
