@@ -15,7 +15,7 @@ project = 'mdxplain'
 copyright = '2025, Maximilian Salomon'
 contributers = [
     {'name': 'Maximilian Salomon', 'role': 'Software'},
-    {'name': 'Maeve Butler', 'role': 'Documentation'},
+    {'name': 'Maeve Branwen Butler', 'role': 'Documentation'},
 ]
 author = 'author list from paper'
 
@@ -34,8 +34,6 @@ autodoc_member_order = 'bysource'
 
 exclude_patterns = [
     'build',
-    'Thumbs.db',    # Windows thumbnail cache file
-    '.DS_Store',    # macOS folder metadata file
     'AI_USAGE.md'   # Referenced via :download: directive, not part of documentation tree
     ]
 
@@ -46,11 +44,12 @@ rst_prolog = """
 """
 
 # html build configurations
+master_doc = 'landing'
 html_theme = 'sphinx_rtd_theme'
 html_search = True
 html_theme_options = {
-    "collapse_navigation": False,
-    "sticky_navigation": True,
-    "navigation_depth": 8,
-    "titles_only": False,
+    'collapse_navigation': False,
+    'sticky_navigation': True,
+    'navigation_depth': 8,
+    'titles_only': False,
 }
