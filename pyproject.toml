@@ -66,8 +66,6 @@ dev = [
     # Testing and coverage
     "pytest",
     "coverage",
-    # Pre-commit hooks
-    "pre-commit",
     # Profiling and performance
     "memory-profiler",
     "snakeviz",
