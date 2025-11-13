@@ -3,6 +3,16 @@ Feature Computation
 
 mdxplain provides six feature types for molecular dynamics analysis:
 
+- Distances
+- Contacts
+- Torsions
+- DSSP secondary structure
+- Solvent accessible surface area (SASA)
+- Atomic coordinates
+
+It is recommended to save computed features to disk for large datasets
+to avoid recomputation. (:doc:`Saving and Loading <saving_and_loading>`)
+
 .. code:: python
     
     # Residue-residue distances (closest heavy-atom pairs)

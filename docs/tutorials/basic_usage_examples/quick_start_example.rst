@@ -58,4 +58,4 @@ Here's a complete conformational analysis workflow:
     )
 
     # Save complete analysis
-    pipeline.save("my_analysis.pkl")
+    pipeline.save_to_single_file("my_analysis.pkl")
