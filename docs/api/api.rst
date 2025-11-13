@@ -7,6 +7,7 @@ API Documentation
    :maxdepth: 3
    :titlesonly:
 
+   project_structure
    analysis/mdxplain.analysis
    clustering/mdxplain.clustering
    comparison/mdxplain.comparison
