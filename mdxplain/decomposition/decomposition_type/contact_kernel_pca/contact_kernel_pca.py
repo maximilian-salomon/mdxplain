@@ -25,7 +25,7 @@ ContactKernelPCA decomposition type implementation specialized for binary
 contact matrices using Hamming distance-based kernel.
 """
 
-from typing import Dict, Tuple, Optional
+from typing import Dict, Tuple, Optional, Union
 import numpy as np
 
 from ..interfaces.decomposition_type_base import DecompositionTypeBase
@@ -65,14 +65,15 @@ class ContactKernelPCA(DecompositionTypeBase):
 
     def __init__(
         self,
-        n_components: Optional[int] = None,
-        gamma: float = 1.0,
+        n_components: Union[int, str, None] = "auto",
+        gamma: Union[float, str] = "scale",
         use_nystrom: bool = False,
         n_landmarks: int = 2000,
         random_state: Optional[int] = None,
         use_parallel: bool = False,
         n_jobs: int = -1,
         min_chunk_size: int = 1000,
+        offset: Union[int, float] = 0,
     ) -> None:
         """
         Initialize ContactKernelPCA decomposition type for contact data.
@@ -82,10 +83,16 @@ class ContactKernelPCA(DecompositionTypeBase):
 
         Parameters
         ----------
-        n_components : int, optional
-            Number of components to keep. If None, keeps min(n_samples, n_features)
-        gamma : float, default=1.0
-            Kernel coefficient for Hamming/RBF kernel on binary data
+        n_components : int, str, or None, default="auto"
+            Number of components to keep. Options:
+            - int: Specific number of components
+            - "auto": Automatic selection via elbow detection (5% of features) [DEFAULT]
+            - None: Uses min(n_samples, n_features)
+        gamma : float or str, default="scale"
+            Kernel coefficient for Hamming/RBF kernel. Options:
+            - float: Specific gamma value
+            - "scale": 1.0 / (n_features * variance) [DEFAULT]
+            - "auto": 1.0 / n_features
         use_nystrom : bool, default=False
             Whether to use Nyström approximation for large datasets
         n_landmarks : int, default=2000
@@ -98,6 +105,11 @@ class ContactKernelPCA(DecompositionTypeBase):
             Number of parallel jobs (-1 for all available CPU cores)
         min_chunk_size : int, default=1000
             Minimum chunk size per parallel process to avoid overhead
+        offset : int or float, default=0
+            Adjustment to auto-selected component count (only applies when n_components="auto"):
+
+            - int: Direct addition/subtraction (e.g., -2 selects 2 fewer)
+            - float: Percentage adjustment (e.g., -0.5 selects 50% fewer)
 
         Returned Metadata
         -----------------
@@ -142,6 +154,7 @@ class ContactKernelPCA(DecompositionTypeBase):
         self.use_parallel = use_parallel
         self.n_jobs = n_jobs
         self.min_chunk_size = min_chunk_size
+        self.offset = offset
         self.calculator = None
 
     @classmethod
@@ -257,4 +270,5 @@ class ContactKernelPCA(DecompositionTypeBase):
             use_nystrom=self.use_nystrom,
             n_landmarks=self.n_landmarks,
             random_state=self.random_state,
+            offset=self.offset,
         )
