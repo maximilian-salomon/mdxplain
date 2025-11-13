@@ -3,6 +3,11 @@ Dimensionality Reduction
 
 Four decomposition methods are available:
 
+- PCA
+- Kernel PCA
+- Contact Kernel PCA
+- Diffusion Maps
+
 .. code:: python
 
     # Standard PCA

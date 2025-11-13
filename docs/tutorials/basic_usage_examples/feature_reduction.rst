@@ -19,6 +19,7 @@ What is Feature Reduction?
 - Two approaches: inline reduction (``.with_xxx_reduction()``) or pre-reduction (``feature.reduce_data()``)
 - Pre reduction add this permanent to feature-data. It creates a new permanant data matrix.
 - Post reduction is specified to this specific selection and does not create a specific matrix, but keep the indices.
+- Available metrics depend on feature type. Concrete methods listed here: :doc:`Feature Sattistics <feature_statistics>`
 
 When to Use Feature Reduction
 -----------------------------
