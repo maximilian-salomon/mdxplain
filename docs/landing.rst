@@ -10,11 +10,18 @@ gap between raw simulation data and biological insights. It excels when you need
 thousands of MD frames to actionable, explainable results while maintaining complete workflow
 reproducibility.
 
+.. image:: images/mdxplain_overview.png
+   :width: 1944px
+   :height: 2000px
+   :scale: 30 %
+   :alt: mdxplain overview diagram
+
 Getting Started
 ---------------
 
 1. **Start Jupyter**: ``make jupyter``
-2. **Explore tutorial**: Open :doc:`Complete Workflow Example <tutorials/00_introduction>` for a comprehensive workflow example
+2. **Explore tutorial**: Open :doc:`Complete Workflow Example <tutorials/00_introduction>`
+   for a comprehensive workflow example
 3. **Read documentation**: Visit project documentation for API details
 
 Core Strengths

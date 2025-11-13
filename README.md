@@ -2,6 +2,8 @@
 
 A Python toolkit for scalable molecular dynamics trajectory analysis, combining modular workflows, memory-efficient processing and interpretable machine learning via decision trees to identify key conformational features and streamline complex pipelines.
 
+![mdxplain Overview](docs/images/mdxplain_overview.png)
+
 **Developer:** Maximilian Salomon (Software), Maeve Branwen Butler (ReadTheDocs Documentation)
 
 **Version:** 1.0.0
@@ -75,132 +77,7 @@ make setup-conda-full-env
 conda activate mdxplain
 ```
 
-### Installation Options
-
-| Command | Environment | Description |
-|---------|-------------|-------------|
-| `make setup-env` | venv | Production dependencies only |
-| `make setup-jupyter-env` | venv | Production + Jupyter |
-| `make setup-dev-env` | venv | Development tools (linting, testing) |
-| `make setup-full-env` | venv | Development + Jupyter (recommended) |
-| `make setup-conda-env` | conda | Production dependencies only |
-| `make setup-conda-jupyter-env` | conda | Production + Jupyter |
-| `make setup-conda-dev-env` | conda | Development tools |
-| `make setup-conda-full-env` | conda | Development + Jupyter |
-
-### Development Commands
-
-```bash
-make help          # Show all available commands
-make test          # Run tests
-make lint          # Run code quality checks
-make format        # Format code with black and isort
-make jupyter       # Start JupyterLab
-make html         # Make documentation html build
-make clean         # Remove environments and cache files
-```
-
-## Project Structure
-
-```
-mdxplain/
-├── mdxplain/                      # Main Python package
-│   ├── pipeline/                  # Central pipeline coordination
-│   │   ├── managers/              # PipelineManager (main entry point)
-│   │   ├── entities/              # PipelineData (central data container)
-│   │   └── helper/                # Pipeline utilities
-│   │
-│   ├── trajectory/                # Trajectory loading and management
-│   │   ├── managers/              # TrajectoryManager
-│   │   ├── entities/              # TrajectoryData
-│   │   └── helper/                # Selection, metadata, validation helpers
-│   │
-│   ├── feature/                   # Feature computation
-│   │   ├── managers/              # FeatureManager
-│   │   ├── entities/              # FeatureData
-│   │   ├── services/              # FeatureAddService (add.distances(), etc.)
-│   │   ├── feature_type/          # Feature implementations
-│   │   │   ├── contacts/          # Binary contact features
-│   │   │   ├── distances/         # Residue-residue distances
-│   │   │   ├── torsions/          # Backbone/side-chain angles
-│   │   │   ├── dssp/              # Secondary structure
-│   │   │   ├── sasa/              # Solvent accessible surface area
-│   │   │   ├── coordinates/       # XYZ coordinates
-│   │   │   └── interfaces/        # FeatureTypeBase
-│   │   └── helper/                # Feature computation utilities
-│   │
-│   ├── feature_selection/         # Feature matrix selection
-│   │   ├── managers/              # FeatureSelectorManager
-│   │   ├── entities/              # FeatureSelectorData
-│   │   ├── services/              # Selection services
-│   │   └── helpers/               # Selection utilities
-│   │
-│   ├── decomposition/             # Dimensionality reduction
-│   │   ├── managers/              # DecompositionManager
-│   │   ├── entities/              # DecompositionData
-│   │   ├── services/              # DecompositionAddService
-│   │   ├── decomposition_type/    # Decomposition implementations
-│   │   │   ├── pca/               # Principal Component Analysis
-│   │   │   ├── kernel_pca/        # Kernel PCA
-│   │   │   ├── contact_kernel_pca/# Contact-optimized Kernel PCA
-│   │   │   ├── diffusion_maps/    # Diffusion Maps
-│   │   │   └── interfaces/        # DecompositionTypeBase
-│   │
-│   ├── clustering/                # Clustering algorithms
-│   │   ├── managers/              # ClusterManager
-│   │   ├── entities/              # ClusterData
-│   │   ├── services/              # ClusterAddService
-│   │   ├── cluster_type/          # Clustering implementations
-│   │   │   ├── dpa/               # Density Peak Advanced
-│   │   │   ├── dbscan/            # DBSCAN
-│   │   │   ├── hdbscan/           # Hierarchical DBSCAN
-│   │   │   └── interfaces/        # ClusterTypeBase
-│   │
-│   ├── data_selector/             # Frame selection by cluster/criteria
-│   │   ├── managers/              # DataSelectorManager
-│   │   ├── entities/              # DataSelectorData
-│   │   └── helpers/               # Selection helpers
-│   │
-│   ├── comparison/                # Multi-group comparisons
-│   │   ├── managers/              # ComparisonManager
-│   │   ├── entities/              # ComparisonData
-│   │   └── helpers/               # Comparison utilities
-│   │
-│   ├── feature_importance/        # Feature importance analysis
-│   │   ├── managers/              # FeatureImportanceManager
-│   │   ├── entities/              # FeatureImportanceData
-│   │   ├── services/              # Importance calculation services
-│   │   ├── analyzer_types/        # Analyzer implementations
-│   │   │   └── decision_tree/     # Decision tree analyzer
-│   │   └── helpers/               # Analysis helpers
-│   │
-│   ├── analysis/                  # Structural and statistical analysis
-│   │   ├── managers/              # AnalysisManager
-│   │   ├── services/              # FeatureAnalysisService
-│   │   └── structure/             # Structural analysis
-│   │       ├── calculators/       # RMSD, RMSF calculators
-│   │       └── services/          # StructureAnalysisService
-│   │
-│   ├── plots/                     # Visualization utilities
-│   ├── utils/                     # General utilities and helpers
-│   └── __init__.py                # Package initialization
-│
-├── tutorials/                     # Tutorial notebooks
-│   └── 00_introduction.ipynb      # Complete workflow example
-│
-├── tests/                         # Comprehensive test suite
-├── docs/                          # Documentation
-├── data/                          # Example datasets
-├── dev_scripts/                   # Development scripts
-│
-├── Makefile                       # Build and development automation
-├── pyproject.toml                 # Package configuration
-├── README.md                      # This file
-├── AI_USAGE.md                    # AI assistance declaration
-└── LICENSE                        # LGPL v3.0
-```
-
-### Module Descriptions
+## Module Descriptions
 
 - **pipeline/**: Central coordination layer providing the `PipelineManager` entry point
 - **trajectory/**: Load and manage MD trajectories with tagging and labeling support
