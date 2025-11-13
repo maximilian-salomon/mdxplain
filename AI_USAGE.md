@@ -6,10 +6,10 @@ The software was developed with the support of AI-assisted coding tools, which w
 
 The codebase was developed under the full direction and supervision of the author. AI-assisted coding tools were employed to support the implementation process, following detailed architectural and algorithmic specifications provided by the author.
 
-- **Claude Code (Claude Sonnet 4.0)**: CLI-based AI development tool with full codebase context, used to assist in generating, refactoring, and debugging code segments in accordance with predefined designs and workflows.
+- **Claude Code (Claude Sonnet 4.0 and Claude Sonnet 4.5)**: CLI-based AI development tool with full codebase context, used to assist in generating, refactoring, and debugging code segments in accordance with predefined designs and workflows.
 - **GitHub Copilot (Claude Sonnet 4.0)**: Integrated into Visual Studio Code to provide inline suggestions, supplemental code generation, and context-aware editing assistance.
 
-Claude Sonnet 4.0 served as the primary large language model for coding assistance throughout most of the project.
+Claude Sonnet 4.0 and Claude Sonnet 4.5 served as the primary large language model for coding assistance throughout most of the project.
 
 ## Supplementary Tools and Specific Applications
 
