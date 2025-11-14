@@ -189,6 +189,7 @@ class FeatureImportanceManager:
                 use_memmap=self.use_memmap,
                 cache_path=f"{self.cache_dir}/{analysis_name}",
                 chunk_size=self.chunk_size,
+                max_memory_gb=pipeline_data.max_memory_gb,
             )
 
         # Run analysis using helper

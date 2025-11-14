@@ -116,6 +116,7 @@ class PipelineData:
         cache_dir: str = "./cache",
         chunk_size: int = 2000,
         dtype: type = np.float32,
+        max_memory_gb: float = 6.0,
     ):
         """
         Initialize the central pipeline data container.
@@ -135,6 +136,10 @@ class PipelineData:
             Data type for feature matrices (float32 or float64).
             float32 saves 50% memory and is sufficient for most MD analysis.
             Use float64 only if extreme numerical precision required.
+        max_memory_gb : float, default=6.0
+            Maximum memory in GB for dataset processing.
+            Used for memory-aware sampling in algorithms like DecisionTree.
+            Datasets exceeding this limit will be automatically sampled.
 
         Returns
         -------
@@ -177,7 +182,7 @@ class PipelineData:
         ] = {}
 
         # Dynamic memory management
-        self.max_memory_gb = max(2.0, (10000 * chunk_size * 8) / (1024**3))
+        self.max_memory_gb = max_memory_gb
 
     def clear_all_data(self) -> None:
         """

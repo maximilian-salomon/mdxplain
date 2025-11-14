@@ -77,6 +77,7 @@ class FeatureImportanceAddService:
         min_impurity_decrease: float = 0.0,
         class_weight: Optional[str] = None,
         ccp_alpha: float = 0.0,
+        max_samples: Optional[int] = None,
         force: bool = False,
     ) -> None:
         """
@@ -117,9 +118,13 @@ class FeatureImportanceAddService:
             Weights associated with classes ("balanced" or None)
         ccp_alpha : float, default=0.0
             Complexity parameter for Minimal Cost-Complexity Pruning
+        max_samples : int, optional
+            Maximum number of samples to use for training. If None, automatically
+            calculated based on max_memory_gb from pipeline. Use this to manually
+            override memory-based sampling (e.g., max_samples=50000 for large datasets).
         force : bool, default=False
             Whether to overwrite existing analysis with same name
-            
+
         Returns
         -------
         None
@@ -172,6 +177,7 @@ class FeatureImportanceAddService:
             min_impurity_decrease=min_impurity_decrease,
             class_weight=class_weight,
             ccp_alpha=ccp_alpha,
+            max_samples=max_samples,
         )
         return self._manager.add_analysis(
             self._pipeline_data,
