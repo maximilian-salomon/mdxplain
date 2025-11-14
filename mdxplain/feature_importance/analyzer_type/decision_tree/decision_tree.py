@@ -75,6 +75,7 @@ class DecisionTree(AnalyzerTypeBase):
         min_impurity_decrease: float = 0.0,
         class_weight: Optional[str] = None,
         ccp_alpha: float = 0.0,
+        max_samples: Optional[int] = None,
     ):
         """
         Initialize Decision Tree analyzer type with parameters.
@@ -110,6 +111,10 @@ class DecisionTree(AnalyzerTypeBase):
             Weights associated with classes ("balanced" or None)
         ccp_alpha : float, default=0.0
             Complexity parameter for minimal cost-complexity pruning
+        max_samples : int, optional
+            Maximum number of samples to use for training. If None, automatically
+            calculated based on max_memory_gb. Use this to manually override
+            memory-based sampling (e.g., max_samples=50000).
 
         Returns
         -------
@@ -136,6 +141,7 @@ class DecisionTree(AnalyzerTypeBase):
         self.min_impurity_decrease = min_impurity_decrease
         self.class_weight = class_weight
         self.ccp_alpha = ccp_alpha
+        self.max_samples = max_samples
 
     @classmethod
     def get_type_name(cls) -> str:
@@ -166,7 +172,7 @@ class DecisionTree(AnalyzerTypeBase):
         """
         return "decision_tree"
 
-    def init_calculator(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000) -> None:
+    def init_calculator(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000, max_memory_gb: float = 6.0) -> None:
         """
         Initialize the Decision Tree calculator with specified configuration.
 
@@ -181,6 +187,10 @@ class DecisionTree(AnalyzerTypeBase):
             Path for cache files (reserved for future use)
         chunk_size : int, optional
             Number of samples to process per chunk (reserved for future use)
+        max_memory_gb : float, default=6.0
+            Maximum memory in GB for dataset processing.
+            Datasets exceeding this limit will be stratified sampled
+            to prevent memory errors during DecisionTree training.
 
         Returns
         -------
@@ -196,11 +206,14 @@ class DecisionTree(AnalyzerTypeBase):
         >>> # With memory mapping for large datasets
         >>> dt.init_calculator(use_memmap=True, chunk_size=1000)
 
-        >>> # With custom chunk size
-        >>> dt.init_calculator(chunk_size=500)
+        >>> # With custom memory limit
+        >>> dt.init_calculator(max_memory_gb=8.0)
         """
         self.calculator = DecisionTreeCalculator(
-            use_memmap=use_memmap, cache_path=cache_path, chunk_size=chunk_size
+            use_memmap=use_memmap,
+            cache_path=cache_path,
+            chunk_size=chunk_size,
+            max_memory_gb=max_memory_gb
         )
 
     def compute(self, X: np.ndarray, y: np.ndarray) -> Dict[str, Any]:
@@ -269,6 +282,7 @@ class DecisionTree(AnalyzerTypeBase):
             min_impurity_decrease=self.min_impurity_decrease,
             class_weight=self.class_weight,
             ccp_alpha=self.ccp_alpha,
+            max_samples=self.max_samples,
         )
 
     def get_params(self) -> Dict[str, Any]:

@@ -117,6 +117,8 @@ class PipelineManager:
         dtype: type = np.float32,
         # Cache directory for all managers
         cache_dir: str = "./cache",
+        # Memory management
+        max_memory_gb: float = 6.0,
     ):
         """
         Initialize the pipeline manager with configuration for all managers.
@@ -139,6 +141,10 @@ class PipelineManager:
             Use float64 only if extreme numerical precision required.
         cache_dir : str, default="./cache"
             Cache directory path for all managers
+        max_memory_gb : float, default=6.0
+            Maximum memory in GB for dataset processing.
+            Used for memory-aware sampling in algorithms like DecisionTree.
+            Datasets exceeding this limit will be automatically sampled.
 
         Returns
         -------
@@ -159,6 +165,7 @@ class PipelineManager:
             cache_dir=cache_dir,
             chunk_size=chunk_size,
             dtype=dtype,
+            max_memory_gb=max_memory_gb,
         )
 
         # Create manager instances with their configurations
@@ -670,6 +677,19 @@ class PipelineManager:
             selection=selection
         )
         pipeline._data.load(str(pkl_path))
+
+        # Force update cache_dir to match extracted file location
+        # This prevents path nesting issues on repeated save/load cycles
+        pipeline._data.cache_dir = cache_dir
+
+        # Update all manager cache_dirs for consistency
+        pipeline._trajectory_manager.cache_dir = cache_dir
+        pipeline._feature_manager.cache_dir = cache_dir
+        pipeline._decomposition_manager.cache_dir = cache_dir
+        pipeline._cluster_manager.cache_dir = cache_dir
+        pipeline._feature_importance_manager.cache_dir = cache_dir
+        pipeline._plots_manager.cache_dir = cache_dir
+        pipeline._structure_visualization_manager.cache_dir = cache_dir
 
         return pipeline
 
