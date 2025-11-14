@@ -16,4 +16,4 @@ Memory Mapping Guidelines
 - **Disable** for small/medium datasets that fit in RAM (faster processing)
 - **Chunk size**: Start with 2000 frames; increase if RAM allows, decrease if memory pressure occurs
 
-    - Example: six 3500-frame trajectories with 16 GB RAM → ``chunk_size=300``
+    - Example: six 3500-frame trajectories with 16 GB RAM → ``chunk_size=500``

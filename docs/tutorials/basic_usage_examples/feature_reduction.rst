@@ -13,19 +13,25 @@ So it does not change the feature-data but is specific for this selection.
 What is Feature Reduction?
 --------------------------
 
-- Computed features are analyzed for statistical properties (frequency, variability, transitions)
+- Computed features are analyzed for statistical properties (frequency, variability,
+  transitions)
 - Features failing threshold criteria are removed from the feature set
 - Reduces noise, computational cost, and focuses analysis on relevant features
-- Two approaches: inline reduction (``.with_xxx_reduction()``) or pre-reduction (``feature.reduce_data()``)
-- Pre reduction add this permanent to feature-data. It creates a new permanant data matrix.
-- Post reduction is specified to this specific selection and does not create a specific matrix, but keep the indices.
-- Available metrics depend on feature type. Concrete methods listed here: :doc:`Feature Sattistics <feature_statistics>`
+- Two approaches: inline reduction (``.with_xxx_reduction()``) or pre-reduction
+  (``feature.reduce_data()``)
+- Pre reduction add this permanent to feature-data. It creates a new permanant
+  data matrix.
+- Post reduction is specified to this specific selection and does not create a
+  specific matrix, but keep the indices.
+- Available metrics depend on feature type. Concrete methods listed here:
+  :doc:`Feature Statistics <feature_statistics>`
 
 When to Use Feature Reduction
 -----------------------------
 
 - **Too many features**: Thousands of distances/contacts overwhelm analysis
-- **Focus on variability**: Only analyze features that actually change (cv, std, variance, range)
+- **Focus on variability**: Only analyze features that actually change (cv, std,
+  variance, range)
 - **Focus on stability**: Only analyze persistent interactions (frequency, stability)
 - **Focus on dynamics**: Only analyze features showing transitions
 - **Multi-trajectory**: Ensure features exist across all systems (common_denominator)
