@@ -184,7 +184,7 @@ notebook:
 # Set directions for docs build.
 SPHINXBUILD = sphinx-build
 SOURCEDIR = docs
-BUILDDIR = docs/build
+BUILDDIR = docs/_build
 
 # Sphinx html build.
 html:
