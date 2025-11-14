@@ -4,21 +4,29 @@ A Python toolkit for scalable molecular dynamics trajectory analysis, combining 
 
 Clone or download the repository, then open the [documentation](docs/_build/html/landing.html) in your browser for comprehensive examples and workflow tutorial.
 
-![mdxplain Overview](docs/images/mdxplain_overview.png)
-
-mdxplain creates a complete analytical loop that transforms large-scale molecular dynamics trajectory data into explainable observations through feature calculations, dimensionality reduction, clustering, and comparisons.
-The pipeline begins by importing massive datasets of 1-100+ simulations (each containing 100 to over a million frames) along with metadata tags that classify different simulation conditions, mutations, or experimental variants.
-Central to the framework is a feature extraction engine that computes descriptive features including distances, contacts, torsions, DSSP secondary structure, SASA, and atomic coordinates, transforming high-dimensional data for efficient analysis.
-These features undergo dimensionality reduction using methods like PCA, Kernel PCA, or Diffusion Maps, followed by clustering with DPA, DBSCAN, or HDBSCAN to identify conformational states.
-The system then applies feature selection using metrics such as variance, range, or transitions to prioritize the most relevant features.
-Users can select specific data subsets based on frames, clusters, or tags, which are organized into a final datamatrix with frames as rows and features as columns.
-mdxplain supports systematic comparison of different datasets, such as mutated versus wildtype proteins.
-At its core, the framework uses feature importance analysis to identify system-specific molecular "fingerprints"—decision tree-like visualizations highlight which feature combinations best separate systems, reframing "what happened?" to "why did it happen?".
-The comprehensive output includes analysis metrics, data exports, and visualizations such as energy landscapes, 3D molecular structures, cluster dynamics, and decision trees.
-
 **Developer:** Maximilian Salomon (Software), Maeve Branwen Butler (ReadTheDocs Documentation)
 
 **Version:** 1.0.0
+
+![mdxplain Overview](docs/images/mdxplain_overview.png)
+
+**mdxplain** creates a complete analytical loop that transforms large-scale molecular dynamics trajectory data into explainable observations through feature calculations, dimensionality reduction, clustering, and comparisons.
+
+The **pipeline** begins by importing massive datasets of 1-100+ simulations (each containing 100 to over a million frames) along with metadata tags that classify different simulation conditions, mutations, or experimental variants.
+
+Central to the framework is a feature extraction engine that computes **descriptive features** including distances, contacts, torsions, DSSP secondary structure, SASA, and atomic coordinates, transforming high-dimensional data for efficient analysis.
+
+These features undergo **dimensionality reduction** using methods like PCA, Kernel PCA, or Diffusion Maps, followed by **clustering** with DPA, DBSCAN, or HDBSCAN to identify conformational states.
+
+The system then applies **feature selection** using metrics such as variance, range, or transitions to prioritize the most relevant features.
+
+Users can select specific data subsets based on frames, clusters, or tags, which are organized into a **final datamatrix** with frames as rows and features as columns.
+
+mdxplain supports **systematic comparison** of different datasets, such as mutated versus wildtype proteins.
+
+At its core, the framework uses **feature importance** analysis to identify system-specific molecular "fingerprints". **Decision tree**-like visualizations highlight which feature combinations best separate systems, reframing "what happened?" to "why did it happen?".
+
+The comprehensive output includes analysis metrics, data exports, and visualizations such as energy landscapes, 3D molecular structures, cluster dynamics, and decision trees.
 
 ## Common Use Cases
 
