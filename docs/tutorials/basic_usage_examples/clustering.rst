@@ -3,6 +3,10 @@ Clustering
 
 Three density-based clustering algorithms:
 
+- DPA (Density Peak Advanced)
+- DBSCAN (Density-Based Spatial Clustering of Applications with Noise)
+- HDBSCAN (Hierarchical DBSCAN)
+
 .. code:: python
 
     # Density Peak Advanced (DPA) - automatic cluster number detection
