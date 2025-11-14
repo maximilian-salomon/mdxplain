@@ -678,6 +678,19 @@ class PipelineManager:
         )
         pipeline._data.load(str(pkl_path))
 
+        # Force update cache_dir to match extracted file location
+        # This prevents path nesting issues on repeated save/load cycles
+        pipeline._data.cache_dir = cache_dir
+
+        # Update all manager cache_dirs for consistency
+        pipeline._trajectory_manager.cache_dir = cache_dir
+        pipeline._feature_manager.cache_dir = cache_dir
+        pipeline._decomposition_manager.cache_dir = cache_dir
+        pipeline._cluster_manager.cache_dir = cache_dir
+        pipeline._feature_importance_manager.cache_dir = cache_dir
+        pipeline._plots_manager.cache_dir = cache_dir
+        pipeline._structure_visualization_manager.cache_dir = cache_dir
+
         return pipeline
 
     def print_info(self) -> None:
