@@ -30,6 +30,7 @@ import numpy as np
 
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score, classification_report
+from sklearn.model_selection import train_test_split
 
 from ..interfaces.calculator_base import CalculatorBase
 
@@ -52,7 +53,7 @@ class DecisionTreeCalculator(CalculatorBase):
     >>> trained_model = result['model']
     """
 
-    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000):
+    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000, max_memory_gb: float = 6.0):
         """
         Initialize Decision Tree calculator.
 
@@ -64,13 +65,17 @@ class DecisionTreeCalculator(CalculatorBase):
             Path for cache files (reserved for future use)
         chunk_size : int, default=10000
             Chunk size for processing large datasets (reserved for future use)
+        max_memory_gb : float, default=6.0
+            Maximum memory in GB for dataset processing.
+            Datasets exceeding this limit will be stratified sampled
+            to prevent memory errors during DecisionTree training.
 
         Returns
         -------
         None
             Initializes DecisionTreeCalculator instance
         """
-        super().__init__(use_memmap, cache_path, chunk_size)
+        super().__init__(use_memmap, cache_path, chunk_size, max_memory_gb)
 
     @staticmethod
     def _validate_input_data(X: np.ndarray, y: np.ndarray) -> None:
@@ -113,28 +118,127 @@ class DecisionTreeCalculator(CalculatorBase):
             raise ValueError("Input data contains NaN values")
 
     @staticmethod
+    def _calculate_max_samples(X: np.ndarray, max_memory_gb: float) -> int:
+        """
+        Calculate maximum samples based on memory limit.
+
+        Estimates the number of samples that fit within the memory limit
+        based on feature count and float64 precision (8 bytes per value).
+
+        Parameters
+        ----------
+        X : np.ndarray
+            Feature matrix with shape (n_samples, n_features)
+        max_memory_gb : float
+            Maximum memory in GB
+
+        Returns
+        -------
+        int
+            Maximum number of samples that fit in memory limit
+
+        Examples
+        --------
+        >>> X = np.random.rand(100000, 1000)
+        >>> max_samples = DecisionTreeCalculator._calculate_max_samples(X, 6.0)
+        >>> print(f"Can use {max_samples} samples")
+        """
+        n_samples, n_features = X.shape
+        bytes_per_sample = n_features * X.dtype.itemsize
+        samples_per_gb = (1024**3) / bytes_per_sample
+        max_samples = int(samples_per_gb * max_memory_gb)
+        return min(max_samples, n_samples)
+
+    @staticmethod
+    def _apply_stratified_sampling(
+        X: np.ndarray, y: np.ndarray, max_samples: int, random_state: int = None
+    ) -> tuple:
+        """
+        Apply stratified sampling if data exceeds memory limit.
+
+        Uses sklearn train_test_split with stratify to preserve class
+        distribution while reducing dataset size.
+
+        Parameters
+        ----------
+        X : np.ndarray
+            Feature matrix with shape (n_samples, n_features)
+        y : np.ndarray
+            Target labels with shape (n_samples,)
+        max_samples : int
+            Maximum number of samples allowed
+        random_state : int, optional
+            Random state for reproducible sampling
+
+        Returns
+        -------
+        tuple
+            Tuple of (X_sampled, y_sampled) arrays
+
+        Examples
+        --------
+        >>> X = np.random.rand(100000, 100)
+        >>> y = np.random.choice([0, 1], 100000)
+        >>> X_sample, y_sample = DecisionTreeCalculator._apply_stratified_sampling(
+        ...     X, y, 50000, random_state=42
+        ... )
+        >>> print(f"Reduced from {X.shape[0]} to {X_sample.shape[0]} samples")
+        """
+        if X.shape[0] <= max_samples:
+            return X, y
+
+        # Calculate memory usage
+        bytes_used = X.shape[0] * X.shape[1] * X.dtype.itemsize
+        gb_used = bytes_used / (1024**3)
+
+        print(f"\n  ⚠️  WARNING: Dataset exceeds memory limit!")
+        print(f"  Dataset: {X.shape[0]:,} samples × {X.shape[1]:,} features ({X.dtype.name} = {gb_used:.2f} GB)")
+        print(f"  Memory limit allows: {max_samples:,} samples")
+        print(f"  Applying stratified sampling to fit memory constraint...\n")
+        print(f"  💡 TIP: Reduce memory usage AND improve performance with Feature Reduction:")
+        print(f"      1. Pre-Selection: pipeline.feature.reduce.distances.cv(threshold_min=0.1)")
+        print(f"      2. Post-Selection: pipeline.feature_selector.add.distances.with_cv_reduction(...)")
+        print(f"      Available metrics: cv, std, variance, range, transitions, min, max, mean, mad\n")
+
+        X_sample, _, y_sample, _ = train_test_split(
+            X, y, train_size=max_samples, stratify=y, random_state=random_state
+        )
+
+        return X_sample, y_sample
+
+    @staticmethod
     def _build_training_metadata(
         dt_classifier: DecisionTreeClassifier,
-        X: np.ndarray,
-        y: np.ndarray,
-        dt_params: Dict[str, Any]
+        X_train: np.ndarray,
+        y_train: np.ndarray,
+        dt_params: Dict[str, Any],
+        X_original: np.ndarray,
+        max_samples: int,
+        max_memory_gb: float
     ) -> Dict[str, Any]:
         """
         Build metadata dictionary with training metrics and model info.
 
         Calculates training accuracy, classification report, and collects
-        model statistics for comprehensive analysis metadata.
+        model statistics for comprehensive analysis metadata including
+        sampling information.
 
         Parameters
         ----------
         dt_classifier : DecisionTreeClassifier
             Trained Decision Tree classifier
-        X : np.ndarray
-            Feature matrix used for training
-        y : np.ndarray
-            Target labels used for training
+        X_train : np.ndarray
+            Feature matrix used for training (potentially sampled)
+        y_train : np.ndarray
+            Target labels used for training (potentially sampled)
         dt_params : Dict[str, Any]
             Dictionary of Decision Tree hyperparameters
+        X_original : np.ndarray
+            Original feature matrix before sampling
+        max_samples : int
+            Maximum samples allowed by memory constraint
+        max_memory_gb : float
+            Maximum memory in GB
 
         Returns
         -------
@@ -144,18 +248,18 @@ class DecisionTreeCalculator(CalculatorBase):
         Examples
         --------
         >>> metadata = DecisionTreeCalculator._build_training_metadata(
-        ...     classifier, X, y, params
+        ...     classifier, X_train, y_train, params, X_orig, 50000, 6.0
         ... )
         >>> print(metadata["train_accuracy"])
-        >>> print(metadata["tree_depth"])
+        >>> print(metadata["sampling"]["sampled"])
         """
         # Calculate training metrics
-        y_pred = dt_classifier.predict(X)
-        train_accuracy = accuracy_score(y, y_pred)
-        
+        y_pred = dt_classifier.predict(X_train)
+        train_accuracy = accuracy_score(y_train, y_pred)
+
         # Get classification report as dict
         try:
-            class_report = classification_report(y, y_pred, output_dict=True, zero_division=0)
+            class_report = classification_report(y_train, y_pred, output_dict=True, zero_division=0)
         except Exception:
             # Fallback if classification_report fails
             class_report = {"accuracy": train_accuracy}
@@ -166,11 +270,17 @@ class DecisionTreeCalculator(CalculatorBase):
             'hyperparameters': dt_params,
             'train_accuracy': train_accuracy,
             'classification_report': class_report,
-            'n_samples': X.shape[0],
-            'n_features': X.shape[1],
-            'n_classes': len(np.unique(y)),
+            'n_samples': X_train.shape[0],
+            'n_features': X_train.shape[1],
+            'n_classes': len(np.unique(y_train)),
             'tree_depth': dt_classifier.get_depth(),
             'tree_n_leaves': dt_classifier.get_n_leaves(),
+            'sampling': {
+                'original_samples': X_original.shape[0],
+                'used_samples': X_train.shape[0],
+                'sampled': X_original.shape[0] > max_samples,
+                'max_memory_gb': max_memory_gb
+            }
         }
 
     def compute(self, X: np.ndarray, y: np.ndarray, **kwargs) -> Dict[str, Any]:
@@ -228,12 +338,28 @@ class DecisionTreeCalculator(CalculatorBase):
             'ccp_alpha': kwargs.get('ccp_alpha', 0.0),
         }
 
-        # Create and train Decision Tree classifier
-        dt_classifier = DecisionTreeClassifier(**dt_params)
-        dt_classifier.fit(X, y)
+        # Determine max_samples: user override or auto-calculated
+        user_max_samples = kwargs.get('max_samples', None)
+        if user_max_samples is not None:
+            # User explicitly set max_samples -> use it directly
+            max_samples = user_max_samples
+        else:
+            # Auto-calculate based on memory limit
+            max_samples = self._calculate_max_samples(X, self.max_memory_gb)
 
-        # Build training metadata using helper
-        metadata = self._build_training_metadata(dt_classifier, X, y, dt_params)
+        # Apply stratified sampling if needed
+        X_train, y_train = self._apply_stratified_sampling(
+            X, y, max_samples, dt_params['random_state']
+        )
+
+        # Create and train Decision Tree classifier on potentially sampled data
+        dt_classifier = DecisionTreeClassifier(**dt_params)
+        dt_classifier.fit(X_train, y_train)
+
+        # Build training metadata using helper (includes sampling info)
+        metadata = self._build_training_metadata(
+            dt_classifier, X_train, y_train, dt_params, X, max_samples, self.max_memory_gb
+        )
 
         return {
             'importances': dt_classifier.feature_importances_,

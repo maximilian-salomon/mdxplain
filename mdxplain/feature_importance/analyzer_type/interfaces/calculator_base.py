@@ -41,14 +41,14 @@ class CalculatorBase(ABC):
     Examples
     --------
     >>> class MyCalculator(CalculatorBase):
-    ...     def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000):
-    ...         super().__init__(use_memmap, cache_path, chunk_size)
+    ...     def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000, max_memory_gb: float = 6.0):
+    ...         super().__init__(use_memmap, cache_path, chunk_size, max_memory_gb)
     ...     def compute(self, X, y, **kwargs):
     ...         # Implement ML algorithm logic
     ...         return result_dict
     """
 
-    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000):
+    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000, max_memory_gb: float = 6.0):
         """
         Initialize the calculator with configuration options.
 
@@ -60,6 +60,10 @@ class CalculatorBase(ABC):
             Path for cache files (for future use with large models)
         chunk_size : int, default=10000
             Chunk size for processing large datasets
+        max_memory_gb : float, default=6.0
+            Maximum memory in GB for dataset processing.
+            Datasets exceeding this limit will be automatically sampled
+            to prevent memory errors during model training.
 
         Returns
         -------
@@ -69,6 +73,7 @@ class CalculatorBase(ABC):
         self.use_memmap = use_memmap
         self.cache_path = cache_path
         self.chunk_size = chunk_size
+        self.max_memory_gb = max_memory_gb
 
     @abstractmethod
     def compute(self, X: np.ndarray, y: np.ndarray, **kwargs) -> Dict[str, Any]:
