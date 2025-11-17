@@ -326,7 +326,7 @@ class DecisionTreeCalculator(CalculatorBase):
         dt_params = {
             'criterion': kwargs.get('criterion', 'gini'),
             'splitter': kwargs.get('splitter', 'best'),
-            'max_depth': kwargs.get('max_depth', None),
+            'max_depth': kwargs.get('max_depth', 3),
             'min_samples_split': kwargs.get('min_samples_split', 2),
             'min_samples_leaf': kwargs.get('min_samples_leaf', 1),
             'min_weight_fraction_leaf': kwargs.get('min_weight_fraction_leaf', 0.0),
