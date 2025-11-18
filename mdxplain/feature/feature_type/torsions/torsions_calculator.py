@@ -377,7 +377,8 @@ class TorsionsCalculator(CalculatorBase):
             "algorithm": "mdtraj_dihedral",
             "visualization": {
                 "is_discrete": False,
-                "axis_label": "Angle (°)"
+                "axis_label": "Angle (°)",
+                "allow_hide_prefix": True
             }
         }
 

@@ -75,11 +75,16 @@ class SeparateTreeModeHelper:
         render: bool,
         save_fig: bool,
         cache_dir: str,
-        short_labels: bool,
-        short_naming: bool,
+        short_labels: Optional[bool],
+        short_naming: Optional[bool],
         short_layout: bool,
-        short_edge_labels: bool,
-        wrap_length: int
+        short_edge_labels: Optional[bool],
+        wrap_length: int,
+        hide_node_frames: Optional[bool],
+        show_edge_symbols: Optional[bool],
+        hide_feature_type_prefix: Optional[bool],
+        hide_path: Optional[bool] = None,
+        edge_symbol_fontsize: Optional[int] = None
     ) -> Union[List[str], None]:
         """
         Plot each tree in a separate file.
@@ -121,6 +126,12 @@ class SeparateTreeModeHelper:
             Show only values on edges
         wrap_length : int
             Maximum line length for text wrapping
+        hide_node_frames : bool
+            Hide frame counts in non-root nodes
+        show_edge_symbols : bool
+            Show only symbols on edges
+        hide_feature_type_prefix : bool
+            Hide feature type prefix in labels
 
         Returns
         -------
@@ -139,7 +150,8 @@ class SeparateTreeModeHelper:
             max_depth_display, subplot_width, subplot_height,
             file_format, dpi, render, save_fig, cache_dir,
             short_labels, short_naming, short_layout, short_edge_labels,
-            wrap_length
+            wrap_length, hide_node_frames, show_edge_symbols, hide_feature_type_prefix,
+            hide_path, edge_symbol_fontsize
         )
         SeparateTreeModeHelper._cleanup_separate_trees(old_backend, temp_files)
 
@@ -182,7 +194,9 @@ class SeparateTreeModeHelper:
                                    subplot_width, subplot_height, file_format,
                                    dpi, render, save_fig, cache_dir, short_labels,
                                    short_naming, short_layout, short_edge_labels,
-                                   wrap_length):
+                                   wrap_length, hide_node_frames, show_edge_symbols,
+                                   hide_feature_type_prefix, hide_path=None,
+                                   edge_symbol_fontsize=None):
         """
         Plot all trees separately.
 
@@ -243,7 +257,9 @@ class SeparateTreeModeHelper:
             fig, _ = SeparateTreeModeHelper._create_separate_tree_figure(
                 metadata, feature_metadata, max_depth_display,
                 subplot_width, subplot_height, short_labels,
-                short_naming, short_layout, short_edge_labels, wrap_length, idx
+                short_naming, short_layout, short_edge_labels, wrap_length, idx,
+                hide_node_frames, show_edge_symbols, hide_feature_type_prefix,
+                hide_path, edge_symbol_fontsize
             )
 
             SeparateTreeModeHelper._save_or_display_separate_tree(
@@ -261,7 +277,10 @@ class SeparateTreeModeHelper:
                                        max_depth_display, subplot_width,
                                        subplot_height, short_labels,
                                        short_naming, short_layout,
-                                       short_edge_labels, wrap_length, idx):
+                                       short_edge_labels, wrap_length, idx,
+                                       hide_node_frames, show_edge_symbols,
+                                       hide_feature_type_prefix, hide_path=None,
+                                       edge_symbol_fontsize=None):
         """
         Create figure for single separate tree.
 
@@ -313,7 +332,9 @@ class SeparateTreeModeHelper:
             model, feature_metadata, class_names, max_depth_display,
             short_labels=short_labels, short_naming=short_naming,
             short_layout=short_layout, short_edge_labels=short_edge_labels,
-            wrap_length=wrap_length
+            wrap_length=wrap_length, hide_node_frames=hide_node_frames,
+            show_edge_symbols=show_edge_symbols, hide_feature_type_prefix=hide_feature_type_prefix,
+            hide_path=hide_path, edge_symbol_fontsize=edge_symbol_fontsize
         )
         visualizer.visualize(ax, target_width=target_width_px)
 

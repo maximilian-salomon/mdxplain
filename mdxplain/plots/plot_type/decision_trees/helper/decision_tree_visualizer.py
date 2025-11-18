@@ -31,6 +31,8 @@ from typing import Dict, List, Optional
 
 from .....utils.feature_metadata_utils import FeatureMetadataUtils
 from .decision_tree_visualization_config import DecisionTreeVisualizationConfig
+from .edge_label_formatter import EdgeLabelFormatter
+from .feature_label_builder import FeatureLabelBuilder
 from .node_text_formatter import NodeTextFormatter
 from .tree_position_calculator import TreePositionCalculator
 
@@ -60,11 +62,16 @@ class DecisionTreeVisualizer:
         feature_metadata: List[Dict],
         class_names: List[str],
         max_depth_display: Optional[int] = None,
-        short_labels: bool = False,
-        short_naming: bool = False,
+        short_labels: Optional[bool] = None,
+        short_naming: Optional[bool] = None,
         short_layout: bool = False,
-        short_edge_labels: bool = False,
-        wrap_length: int = 40
+        short_edge_labels: Optional[bool] = None,
+        wrap_length: int = 40,
+        hide_node_frames: Optional[bool] = None,
+        show_edge_symbols: Optional[bool] = None,
+        hide_feature_type_prefix: Optional[bool] = None,
+        hide_path: Optional[bool] = None,
+        edge_symbol_fontsize: Optional[int] = None
     ):
         """
         Initialize decision tree visualizer.
@@ -79,16 +86,33 @@ class DecisionTreeVisualizer:
             List of class names for counting
         max_depth_display : int, optional
             Maximum depth to display (None for full tree)
-        short_labels : bool, default=False
-            Use short discrete labels (NC vs Non-Contact)
-        short_naming : bool, default=False
-            Truncate class names to 16 chars with [...] pattern
+        short_labels : bool, optional, default=None
+            Use short discrete labels (NC vs Non-Contact).
+            If None, determined by short_layout.
+        short_naming : bool, optional, default=None
+            Truncate class names to 16 chars with [...] pattern.
+            If None, determined by short_layout.
         short_layout : bool, default=False
-            Minimal tree layout (no path display) + enables all short options
-        short_edge_labels : bool, default=False
-            Show only values/conditions on edges (e.g., 'Contact' or '≤ 3.50 Å')
+            Minimal tree layout + enables all short options (if not explicitly set)
+        short_edge_labels : bool, optional, default=None
+            Show only values/conditions on edges (e.g., 'Contact' or '≤ 3.50 Å').
+            If None, determined by short_layout.
         wrap_length : int, default=40
             Maximum line length for text wrapping in node labels
+        hide_node_frames : bool, optional, default=None
+            Hide frame counts in non-root nodes, showing only percentages.
+            If None, determined by short_layout.
+        show_edge_symbols : bool, optional, default=None
+            Show only symbols on edges (✓ for left/true, ✗ for right/false).
+            If None, determined by short_layout.
+        hide_feature_type_prefix : bool, optional, default=None
+            Hide feature type prefix in labels.
+            If None, determined by short_layout.
+        hide_path : bool, optional, default=None
+            Hide decision path in non-root nodes.
+            If None, set to True when short_layout=True.
+        edge_symbol_fontsize : int, optional
+            Font size for edge symbols. If None, uses edge_fontsize
 
         Returns
         -------
@@ -101,25 +125,31 @@ class DecisionTreeVisualizer:
         self.class_names = class_names
         self.max_depth_display = max_depth_display
         self.wrap_length = wrap_length
+        self.hide_node_frames = hide_node_frames
+        self.show_edge_symbols = show_edge_symbols
+        self.hide_feature_type_prefix = hide_feature_type_prefix
+        self.edge_symbol_fontsize = edge_symbol_fontsize
 
-        self._apply_short_options(short_labels, short_naming, short_layout, short_edge_labels)
+        self._apply_short_options(short_labels, short_naming, short_layout, short_edge_labels, hide_path)
         self._initialize_tree_metrics()
         self._calculate_font_sizes()
 
-    def _apply_short_options(self, short_labels, short_naming, short_layout, short_edge_labels):
+    def _apply_short_options(self, short_labels, short_naming, short_layout, short_edge_labels, hide_path):
         """
         Apply short label options and configure class names.
 
         Parameters
         ----------
-        short_labels : bool
-            Use short discrete labels
-        short_naming : bool
-            Truncate class names
+        short_labels : bool or None
+            Use short discrete labels (None = use short_layout)
+        short_naming : bool or None
+            Truncate class names (None = use short_layout)
         short_layout : bool
-            Enable minimal layout (enables all short options)
-        short_edge_labels : bool
-            Show only values on edges
+            Enable minimal layout (enables all options if they are None)
+        short_edge_labels : bool or None
+            Show only values on edges (None = use short_layout)
+        hide_path : bool or None
+            Hide decision path (None = use short_layout)
 
         Returns
         -------
@@ -130,6 +160,12 @@ class DecisionTreeVisualizer:
         self.short_labels = self._resolve_short_option(short_labels, short_layout)
         self.short_naming = self._resolve_short_option(short_naming, short_layout)
         self.short_edge_labels = self._resolve_short_option(short_edge_labels, short_layout)
+        self.hide_path = self._resolve_short_option(hide_path, short_layout)
+
+        # Zusätzliche Parameter automatisch aktivieren bei short_layout (nur wenn None)
+        self.show_edge_symbols = self._resolve_short_option(self.show_edge_symbols, short_layout)
+        self.hide_feature_type_prefix = self._resolve_short_option(self.hide_feature_type_prefix, short_layout)
+        self.hide_node_frames = self._resolve_short_option(self.hide_node_frames, short_layout)
 
         if self.short_naming:
             self.class_names = [
@@ -140,19 +176,38 @@ class DecisionTreeVisualizer:
         """
         Resolve short option value based on layout setting.
 
+        Only applies short_layout if option is None (not explicitly set by user).
+        If user explicitly sets option to False, it stays False.
+
         Parameters
         ----------
-        option : bool
-            Individual short option flag
+        option : bool or None
+            Individual short option flag (None = not set by user)
         short_layout : bool
             Master short layout flag
 
         Returns
         -------
         bool
-            True if either option or short_layout is True
+            User's explicit choice if set, otherwise short_layout value
+
+        Examples
+        --------
+        >>> # User didn't set parameter (None), use short_layout
+        >>> self._resolve_short_option(None, True)
+        True
+
+        >>> # User explicitly set to False, respect that
+        >>> self._resolve_short_option(False, True)
+        False
+
+        >>> # User explicitly set to True, respect that
+        >>> self._resolve_short_option(True, False)
+        True
         """
-        return option or short_layout
+        if option is None:
+            return short_layout
+        return option
 
     def _initialize_tree_metrics(self):
         """
@@ -306,6 +361,75 @@ class DecisionTreeVisualizer:
             self.max_score = score
             self.max_score_node = node
 
+    def _create_node_text_and_size(self, node, feature_idx, threshold, path, counts, percentages):
+        """
+        Create node text and calculate size.
+
+        Parameters
+        ----------
+        node : int
+            Node index
+        feature_idx : int
+            Feature index for split
+        threshold : float
+            Decision threshold
+        path : list of str
+            Decision path
+        counts : list of int
+            Class counts
+        percentages : list of float
+            Class percentages
+
+        Returns
+        -------
+        None
+            Updates self.labels and self.node_sizes
+        """
+        feature_type = FeatureMetadataUtils.get_feature_type(
+            self.feature_metadata, feature_idx
+        )
+        feature_name = FeatureMetadataUtils.get_feature_name(
+            self.feature_metadata, feature_idx
+        )
+        discrete_labels = NodeTextFormatter.get_discrete_labels(
+            feature_idx, self.feature_metadata, self.short_labels
+        )
+
+        node_text = NodeTextFormatter.format_node_text(
+            path, counts, percentages, feature_type, feature_name,
+            threshold, discrete_labels, self.class_names, self.total_counts,
+            self.hide_path, self.wrap_length, self.hide_node_frames,
+            self.hide_feature_type_prefix, self.feature_metadata, feature_idx
+        )
+        self.labels[node] = node_text
+
+        width, height = TreePositionCalculator.get_text_size(
+            node_text, self.fontsize, self.node_pad
+        )
+        self.node_sizes[node] = (width, height)
+
+    def _create_path_labels(self, feature_idx, threshold):
+        """
+        Create path labels for decision edges.
+
+        Parameters
+        ----------
+        feature_idx : int
+            Feature index
+        threshold : float
+            Decision threshold
+
+        Returns
+        -------
+        tuple of str
+            (left_label, right_label)
+        """
+        return EdgeLabelFormatter.get_path_labels(
+            feature_idx, threshold, self.feature_metadata,
+            self.short_labels, self.hide_feature_type_prefix,
+            self.show_edge_symbols, NodeTextFormatter.get_discrete_labels
+        )
+
     def _process_decision_node(self, node, depth, path, counts, percentages):
         """
         Process decision node by creating label and recursing to children.
@@ -331,25 +455,8 @@ class DecisionTreeVisualizer:
         feature_idx = self.tree_.feature[node]
         threshold = self.tree_.threshold[node]
 
-        feature_type = FeatureMetadataUtils.get_feature_type(
-            self.feature_metadata, feature_idx
-        )
-        feature_name = FeatureMetadataUtils.get_feature_name(
-            self.feature_metadata, feature_idx
-        )
-        discrete_labels = NodeTextFormatter.get_discrete_labels(feature_idx, self.feature_metadata, self.short_labels)
-
-        node_text = NodeTextFormatter.format_node_text(
-            path, counts, percentages, feature_type, feature_name,
-            threshold, discrete_labels, self.class_names, self.total_counts, self.short_layout, self.wrap_length
-        )
-        self.labels[node] = node_text
-
-        width, height = TreePositionCalculator.get_text_size(node_text, self.fontsize, self.node_pad)
-        self.node_sizes[node] = (width, height)
-
-        # Path labels (in boxes) always use full format
-        left_label, right_label = NodeTextFormatter.get_edge_labels(feature_idx, threshold, self.feature_metadata, self.short_labels, False, self.wrap_length)
+        self._create_node_text_and_size(node, feature_idx, threshold, path, counts, percentages)
+        left_label, right_label = self._create_path_labels(feature_idx, threshold)
         self._recurse_to_children(node, depth, path, left_label, right_label)
 
     def _recurse_to_children(self, node, depth, path, left_label, right_label):
@@ -400,7 +507,7 @@ class DecisionTreeVisualizer:
         None
             Updates self.labels and self.node_sizes
         """
-        node_text = NodeTextFormatter.format_leaf_node_text(path, counts, percentages, self.class_names, self.total_counts, self.short_layout, self.wrap_length)
+        node_text = NodeTextFormatter.format_leaf_node_text(path, counts, percentages, self.class_names, self.total_counts, self.hide_path, self.wrap_length, self.hide_node_frames)
         self.labels[node] = node_text
         width, height = TreePositionCalculator.get_text_size(node_text, self.fontsize, self.node_pad)
         self.node_sizes[node] = (width, height)
@@ -500,31 +607,121 @@ class DecisionTreeVisualizer:
                 self._plot_node(ax, left_child, depth + 1)
                 self._plot_node(ax, right_child, depth + 1)
 
-                left_x = self.positions[left_child]['x']
-                left_y = self.y_positions[left_child]
-                right_x = self.positions[right_child]['x']
-                right_y = self.y_positions[right_child]
+                # Draw edges and labels
+                self._draw_edges_with_labels(ax, node, x, y, left_child, right_child)
 
-                # Draw edges
-                ax.plot([x, left_x], [y, left_y], 'k-')
-                ax.plot([x, right_x], [y, right_y], 'k-')
+    def _draw_edges_with_labels(self, ax, node, x, y, left_child, right_child):
+        """
+        Draw edges and labels to child nodes.
 
-                # Edge labels
-                left_mid_x = (x + left_x) / 2
-                left_mid_y = (y + left_y) / 2
-                right_mid_x = (x + right_x) / 2
-                right_mid_y = (y + right_y) / 2
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            Axes object to plot on
+        node : int
+            Parent node index
+        x : float
+            Parent node x position
+        y : float
+            Parent node y position
+        left_child : int
+            Left child node index
+        right_child : int
+            Right child node index
 
-                feature_idx = self.tree_.feature[node]
-                threshold = self.tree_.threshold[node]
-                left_label, right_label = NodeTextFormatter.get_edge_labels(feature_idx, threshold, self.feature_metadata, self.short_labels, self.short_edge_labels, self.wrap_length)
+        Returns
+        -------
+        None
+            Modifies ax in place
 
-                ax.text(left_mid_x, left_mid_y, left_label, ha='center', va='center',
-                        fontsize=self.edge_fontsize, color='red',
-                        bbox=dict(boxstyle='round,pad=0', facecolor='white', edgecolor='none'))
-                ax.text(right_mid_x, right_mid_y, right_label, ha='center', va='center',
-                        fontsize=self.edge_fontsize, color='blue',
-                        bbox=dict(boxstyle='round,pad=0', facecolor='white', edgecolor='none'))
+        Examples
+        --------
+        >>> visualizer._draw_edges_with_labels(ax, 0, 0.5, 0, 1, 2)
+        """
+        left_x = self.positions[left_child]['x']
+        left_y = self.y_positions[left_child]
+        right_x = self.positions[right_child]['x']
+        right_y = self.y_positions[right_child]
+
+        # Draw edges
+        ax.plot([x, left_x], [y, left_y], 'k-')
+        ax.plot([x, right_x], [y, right_y], 'k-')
+
+        # Calculate midpoints
+        left_mid_x = (x + left_x) / 2
+        left_mid_y = (y + left_y) / 2
+        right_mid_x = (x + right_x) / 2
+        right_mid_y = (y + right_y) / 2
+
+        # Get edge labels
+        feature_idx = self.tree_.feature[node]
+        threshold = self.tree_.threshold[node]
+        left_label, right_label = EdgeLabelFormatter.get_edge_labels(
+            feature_idx, threshold, self.feature_metadata, self.short_labels,
+            self.short_edge_labels, self.wrap_length, self.show_edge_symbols,
+            self.hide_feature_type_prefix
+        )
+
+        # Get edge colors based on reverse semantics
+        left_color, right_color = self._get_edge_colors(feature_idx)
+
+        # Get font size
+        edge_label_fontsize = self._get_edge_label_fontsize()
+
+        # Draw labels
+        ax.text(left_mid_x, left_mid_y, left_label, ha='center', va='center',
+                fontsize=edge_label_fontsize, color=left_color,
+                bbox=dict(boxstyle='round,pad=0', facecolor='white', edgecolor='none'))
+        ax.text(right_mid_x, right_mid_y, right_label, ha='center', va='center',
+                fontsize=edge_label_fontsize, color=right_color,
+                bbox=dict(boxstyle='round,pad=0', facecolor='white', edgecolor='none'))
+
+    def _get_edge_colors(self, feature_idx):
+        """
+        Get edge colors based on reverse semantics setting.
+
+        Parameters
+        ----------
+        feature_idx : int
+            Feature index
+
+        Returns
+        -------
+        tuple
+            (left_color, right_color)
+
+        Examples
+        --------
+        >>> colors = visualizer._get_edge_colors(5)
+        >>> print(colors)  # ('green', 'red') or ('red', 'green')
+        """
+        feature_type = FeatureMetadataUtils.get_feature_type(
+            self.feature_metadata, feature_idx
+        )
+        type_meta = FeatureMetadataUtils.get_top_level_metadata(
+            feature_type, self.feature_metadata
+        )
+
+        reverse_edges = FeatureLabelBuilder.get_reverse_edge_semantics(type_meta)
+        return ('red', 'green') if reverse_edges else ('green', 'red')
+
+    def _get_edge_label_fontsize(self):
+        """
+        Get font size for edge labels.
+
+        Returns
+        -------
+        int
+            Font size for edge labels
+
+        Examples
+        --------
+        >>> fontsize = visualizer._get_edge_label_fontsize()
+        >>> print(fontsize)  # 10 or custom size
+        """
+        if self.show_edge_symbols:
+            return self.edge_symbol_fontsize if self.edge_symbol_fontsize else self.edge_fontsize
+        return self.edge_fontsize
 
     def visualize(self, ax=None, target_width=None):
         """

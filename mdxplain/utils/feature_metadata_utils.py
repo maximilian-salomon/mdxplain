@@ -273,3 +273,66 @@ class FeatureMetadataUtils:
             )
             feature_map[idx] = feature_name
         return feature_map
+
+    @staticmethod
+    def get_top_level_metadata(
+        feature_type: str,
+        feature_metadata: Optional[List[Any]]
+    ) -> Dict[str, Any]:
+        """
+        Get top-level metadata for a feature type.
+
+        Searches feature metadata list for the first entry matching the
+        specified feature type and returns its type-level metadata.
+        This metadata contains type-wide configuration (e.g., unit labels,
+        visualization settings) rather than feature-specific information.
+
+        Parameters
+        ----------
+        feature_type : str
+            Name of the feature type to search for (e.g., "distances", "torsions")
+        feature_metadata : list or None
+            Feature metadata list from pipeline
+
+        Returns
+        -------
+        Dict[str, Any]
+            Type-level metadata dictionary. Returns empty dict if:
+            - feature_metadata is None
+            - No entry with matching type found
+            - Matching entry has no type_metadata
+
+        Examples
+        --------
+        >>> # Get visualization metadata for distances
+        >>> metadata = pipeline_data.get_selected_metadata("my_selector")
+        >>> type_meta = FeatureMetadataUtils.get_top_level_metadata("distances", metadata)
+        >>> print(type_meta.get("unit_label"))  # "Å"
+        >>> print(type_meta.get("allow_hide_prefix"))  # False
+
+        >>> # Get metadata for torsions
+        >>> type_meta = FeatureMetadataUtils.get_top_level_metadata("torsions", metadata)
+        >>> print(type_meta.get("unit_label"))  # "°"
+        >>> print(type_meta.get("allow_hide_prefix"))  # True
+
+        >>> # Returns empty dict when type not found
+        >>> type_meta = FeatureMetadataUtils.get_top_level_metadata("nonexistent", metadata)
+        >>> type_meta
+        {}
+
+        Notes
+        -----
+        - Returns metadata from FIRST matching entry only
+        - Type-level metadata shared across all features of that type
+        - Used for visualization settings, unit labels, display options
+        - Complements feature-specific metadata in individual entries
+        """
+        if feature_metadata is None:
+            return {}
+
+        for meta_entry in feature_metadata:
+            entry_type = meta_entry.get("type")
+            if entry_type == feature_type and "type_metadata" in meta_entry:
+                return meta_entry["type_metadata"]
+
+        return {}

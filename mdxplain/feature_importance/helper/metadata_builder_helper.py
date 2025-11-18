@@ -345,10 +345,10 @@ class MetadataBuilderHelper:
         Returns
         -------
         list
-            List with one class and "all other classes" in label order [0, 1]
+            List with one class and "all other" in label order [0, 1]
         """
         class1 = sub_comp["group1_selectors"][0]
-        class2 = "all other classes"
+        class2 = "all other"
         labels = sub_comp.get("labels", (0, 1))
 
         if labels == (1, 0):
@@ -362,7 +362,7 @@ class MetadataBuilderHelper:
 
         Extracts the data selector names that represent the classes
         in the comparison for use as human-readable class labels.
-        Handles one-vs-rest comparisons by using "all other classes"
+        Handles one-vs-rest comparisons by using "all other"
         label and ensures correct label-to-name mapping.
 
         Parameters
@@ -395,7 +395,7 @@ class MetadataBuilderHelper:
         ... }
         >>> names = MetadataBuilderHelper.extract_class_names(sub_comp)
         >>> print(names)
-        ['all other classes', 'cluster_0']
+        ['all other', 'cluster_0']
 
         >>> # Multiclass comparison
         >>> sub_comp = {
