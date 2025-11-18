@@ -30,9 +30,8 @@ from typing import Optional, Tuple
 
 from .....utils.feature_metadata_utils import FeatureMetadataUtils
 from .....utils.text_utils import TextUtils
-from ....helper.feature_metadata_helper import FeatureMetadataHelper
 from .decision_tree_visualization_config import DecisionTreeVisualizationConfig
-
+from .feature_label_builder import FeatureLabelBuilder
 TREE_CONFIG = DecisionTreeVisualizationConfig()
 
 
@@ -122,7 +121,7 @@ class NodeTextFormatter:
         )
 
         # Get top-level metadata for this TYPE
-        type_meta = FeatureMetadataHelper.get_top_level_metadata(
+        type_meta = FeatureMetadataUtils.get_top_level_metadata(
             feature_type, feature_metadata
         )
 
@@ -151,7 +150,9 @@ class NodeTextFormatter:
     @staticmethod
     def format_node_text(path, counts, percentages, feature_type,
                           feature_name, threshold, discrete_labels,
-                          class_names, total_counts, short_layout, wrap_length):
+                          class_names, total_counts, hide_path, wrap_length,
+                          hide_node_frames=False, hide_feature_type_prefix=False,
+                          feature_metadata=None, feature_idx=None):
         """
         Format text for decision node (root or internal).
 
@@ -179,6 +180,14 @@ class NodeTextFormatter:
             Whether using short layout
         wrap_length : int
             Maximum line length for text wrapping
+        hide_node_frames : bool, default=False
+            Hide frame counts in non-root nodes
+        hide_feature_type_prefix : bool, default=False
+            Hide feature type prefix in labels
+        feature_metadata : list, optional
+            Feature metadata for accessing type-level metadata
+        feature_idx : int, optional
+            Feature index for accessing type-level metadata
 
         Returns
         -------
@@ -187,15 +196,17 @@ class NodeTextFormatter:
         """
         if not path:
             return NodeTextFormatter.format_root_node_text(
-                counts, class_names, total_counts, feature_type, feature_name, threshold, discrete_labels, wrap_length
+                counts, class_names, total_counts, feature_type, feature_name, threshold,
+                discrete_labels, wrap_length, hide_feature_type_prefix, feature_metadata, feature_idx
             )
         return NodeTextFormatter.format_decision_node_text(
             path, counts, percentages, class_names, total_counts, feature_type, feature_name,
-            threshold, discrete_labels, short_layout, wrap_length
+            threshold, discrete_labels, hide_path, wrap_length, hide_node_frames,
+            hide_feature_type_prefix, feature_metadata, feature_idx
         )
 
     @staticmethod
-    def format_root_node_text(counts, class_names, total_counts, feature_type, feature_name, threshold, discrete_labels, wrap_length):
+    def format_root_node_text(counts, class_names, total_counts, feature_type, feature_name, threshold, discrete_labels, wrap_length, hide_feature_type_prefix=False, feature_metadata=None, feature_idx=None):
         """
         Format text for root node.
 
@@ -219,6 +230,12 @@ class NodeTextFormatter:
             Discrete class labels if applicable
         wrap_length : int
             Maximum line length for text wrapping
+        hide_feature_type_prefix : bool, default=False
+            Hide feature type prefix in labels
+        feature_metadata : list, optional
+            Feature metadata for accessing type-level metadata
+        feature_idx : int, optional
+            Feature index for accessing type-level metadata
 
         Returns
         -------
@@ -242,14 +259,11 @@ class NodeTextFormatter:
             wrapped_line = TextUtils.wrap_text(line, wrap_length)
             text += f"{wrapped_line}\n"
 
-        # Feature type and name
-        feature_line = f"{feature_type}: {feature_name}"
-
-        # Add discrete label or threshold
-        if discrete_labels:
-            feature_line += f" = {discrete_labels[1]}"  # Right branch (True/Contact/etc)
-        elif threshold != 0.5:
-            feature_line += f" <= {threshold:.2f}"
+        # Build complete feature label (prefix + suffix)
+        feature_line = FeatureLabelBuilder.build_feature_label(
+            feature_type, feature_name, threshold, discrete_labels,
+            hide_feature_type_prefix, feature_metadata, feature_idx
+        )
 
         wrapped_feature_line = TextUtils.wrap_text(feature_line, wrap_length)
         text += f"\n{wrapped_feature_line}"
@@ -257,7 +271,7 @@ class NodeTextFormatter:
         return text
 
     @staticmethod
-    def format_path_section(path, short_layout, wrap_length):
+    def format_path_section(path, hide_path, wrap_length):
         """
         Format decision path section for node text.
 
@@ -265,15 +279,15 @@ class NodeTextFormatter:
         ----------
         path : list of str
             Decision path from root to this node
-        short_layout : bool
-            Whether using short layout
+        hide_path : bool
+            Whether to hide the path display
         wrap_length : int
             Maximum line length for text wrapping
 
         Returns
         -------
         str
-            Formatted path text or empty string if short_layout enabled
+            Formatted path text or empty string if hide_path is True
 
         Examples
         --------
@@ -282,14 +296,14 @@ class NodeTextFormatter:
         Contact
         State A
         """
-        if not short_layout:
+        if not hide_path:
             wrapped_path = [TextUtils.wrap_text(p, wrap_length) for p in path]
             path_text = '\n'.join(wrapped_path)
             return f"{path_text}\n"
         return ""
 
     @staticmethod
-    def format_class_statistics_section(counts, percentages, class_names, total_counts, wrap_length):
+    def format_class_statistics_section(counts, percentages, class_names, total_counts, wrap_length, hide_node_frames=False):
         """
         Format class statistics section for node text.
 
@@ -305,6 +319,8 @@ class NodeTextFormatter:
             Total counts per class
         wrap_length : int
             Maximum line length for text wrapping
+        hide_node_frames : bool, default=False
+            Hide frame counts, showing only percentages
 
         Returns
         -------
@@ -319,17 +335,28 @@ class NodeTextFormatter:
         >>> print(text)
         Class1: 80 / 100 (80.0%)
         Class2: 20 / 50 (40.0%)
+
+        >>> text = NodeTextFormatter.format_class_statistics_section(
+        ...     [80, 20], [80.0, 40.0], ['Class1', 'Class2'], [100, 50], 40, hide_node_frames=True
+        ... )
+        >>> print(text)
+        Class1: 80.0%
+        Class2: 40.0%
         """
         text = ""
         for i, class_name in enumerate(class_names):
-            line = f"{class_name}: {counts[i]} / {total_counts[i]} ({percentages[i]:.1f}%)"
+            if hide_node_frames:
+                line = f"{class_name}: {percentages[i]:.1f}%"
+            else:
+                line = f"{class_name}: {counts[i]} / {total_counts[i]} ({percentages[i]:.1f}%)"
             wrapped_line = TextUtils.wrap_text(line, wrap_length)
             text += f"{wrapped_line}\n"
         return text
 
     @staticmethod
     def format_split_criterion_section(feature_type, feature_name,
-                                        threshold, discrete_labels, wrap_length):
+                                        threshold, discrete_labels, wrap_length,
+                                        hide_feature_type_prefix=False, feature_metadata=None, feature_idx=None):
         """
         Format splitting criterion section for node text.
 
@@ -345,6 +372,12 @@ class NodeTextFormatter:
             Discrete class labels if applicable
         wrap_length : int
             Maximum line length for text wrapping
+        hide_feature_type_prefix : bool, default=False
+            Hide feature type prefix in labels
+        feature_metadata : list, optional
+            Feature metadata for accessing type-level metadata
+        feature_idx : int, optional
+            Feature index for accessing type-level metadata
 
         Returns
         -------
@@ -359,19 +392,20 @@ class NodeTextFormatter:
         >>> print(text)
         distances: Leu13-ARG31 <= 3.50
         """
-        criterion_line = f"{feature_type}: {feature_name}"
-
-        if discrete_labels:
-            criterion_line += f" = {discrete_labels[1]}"
-        elif threshold != 0.5:
-            criterion_line += f" <= {threshold:.2f}"
+        # Build complete feature label (prefix + suffix)
+        criterion_line = FeatureLabelBuilder.build_feature_label(
+            feature_type, feature_name, threshold, discrete_labels,
+            hide_feature_type_prefix, feature_metadata, feature_idx
+        )
 
         wrapped_criterion = TextUtils.wrap_text(criterion_line, wrap_length)
         return f"\n{wrapped_criterion}"
 
     @staticmethod
     def format_decision_node_text(path, counts, percentages, class_names, total_counts, feature_type,
-                                    feature_name, threshold, discrete_labels, short_layout, wrap_length):
+                                    feature_name, threshold, discrete_labels, hide_path, wrap_length,
+                                    hide_node_frames=False, hide_feature_type_prefix=False,
+                                    feature_metadata=None, feature_idx=None):
         """
         Format text for decision node.
 
@@ -401,6 +435,14 @@ class NodeTextFormatter:
             Whether using short layout
         wrap_length : int
             Maximum line length for text wrapping
+        hide_node_frames : bool, default=False
+            Hide frame counts in non-root nodes
+        hide_feature_type_prefix : bool, default=False
+            Hide feature type prefix in labels
+        feature_metadata : list, optional
+            Feature metadata for accessing type-level metadata
+        feature_idx : int, optional
+            Feature index for accessing type-level metadata
 
         Returns
         -------
@@ -420,15 +462,18 @@ class NodeTextFormatter:
 
         distances: Leu13-ARG31 <= 3.50
         """
-        path_text = NodeTextFormatter.format_path_section(path, short_layout, wrap_length)
-        stats_text = NodeTextFormatter.format_class_statistics_section(counts, percentages, class_names, total_counts, wrap_length)
+        path_text = NodeTextFormatter.format_path_section(path, hide_path, wrap_length)
+        stats_text = NodeTextFormatter.format_class_statistics_section(
+            counts, percentages, class_names, total_counts, wrap_length, hide_node_frames
+        )
         criterion_text = NodeTextFormatter.format_split_criterion_section(
-            feature_type, feature_name, threshold, discrete_labels, wrap_length
+            feature_type, feature_name, threshold, discrete_labels, wrap_length,
+            hide_feature_type_prefix, feature_metadata, feature_idx
         )
         return path_text + stats_text + criterion_text
 
     @staticmethod
-    def format_leaf_node_text(path, counts, percentages, class_names, total_counts, short_layout, wrap_length):
+    def format_leaf_node_text(path, counts, percentages, class_names, total_counts, short_layout, wrap_length, hide_node_frames=False):
         """
         Format text for leaf node.
 
@@ -450,6 +495,8 @@ class NodeTextFormatter:
             Whether using short layout
         wrap_length : int
             Maximum line length for text wrapping
+        hide_node_frames : bool, default=False
+            Hide frame counts, showing only percentages
 
         Returns
         -------
@@ -477,20 +524,72 @@ class NodeTextFormatter:
             text = ""
 
         for i, class_name in enumerate(class_names):
-            line = f"{class_name}: {counts[i]} / {total_counts[i]} ({percentages[i]:.1f}%)"
+            if hide_node_frames:
+                line = f"{class_name}: {percentages[i]:.1f}%"
+            else:
+                line = f"{class_name}: {counts[i]} / {total_counts[i]} ({percentages[i]:.1f}%)"
             wrapped_line = TextUtils.wrap_text(line, wrap_length)
             text += f"{wrapped_line}\n"
         return text
 
     @staticmethod
-    def get_edge_labels(feature_idx: int, threshold: float, feature_metadata,
-                         short_labels: bool, short_edge_labels: bool, wrap_length: int) -> Tuple[str, str]:
+    def should_hide_prefix(feature_type: str, feature_metadata, hide_feature_type_prefix: bool) -> bool:
         """
-        Get feature-specific edge labels with complete information.
+        Check if feature type prefix should be hidden based on metadata and parameter.
 
-        Creates edge labels containing feature type, feature name, and
-        value/threshold information. These labels are used both for edge
-        annotations and in the decision path shown at the top of nodes.
+        Prefix is only hidden if both conditions are met:
+        1. hide_feature_type_prefix parameter is True
+        2. Feature type allows hiding via 'allow_hide_prefix' in metadata
+
+        Parameters
+        ----------
+        feature_type : str
+            Feature type (e.g., 'contacts', 'distances')
+        feature_metadata : list
+            Feature metadata array
+        hide_feature_type_prefix : bool
+            User parameter requesting prefix hiding
+
+        Returns
+        -------
+        bool
+            True if prefix should be hidden, False otherwise
+
+        Examples
+        --------
+        >>> # Contacts with allow_hide_prefix=True
+        >>> should_hide = NodeTextFormatter.should_hide_prefix('contacts', metadata, True)
+        >>> print(should_hide)
+        True
+
+        >>> # Distances without allow_hide_prefix
+        >>> should_hide = NodeTextFormatter.should_hide_prefix('distances', metadata, True)
+        >>> print(should_hide)
+        False
+        """
+        if not hide_feature_type_prefix:
+            return False
+
+        # Get type-level metadata
+        type_meta = FeatureMetadataUtils.get_top_level_metadata(feature_type, feature_metadata)
+
+        # Check if prefix hiding is allowed via metadata
+        if type_meta:
+            vis_metadata = type_meta.get('visualization', {})
+            return vis_metadata.get('allow_hide_prefix', False)
+
+        return False
+
+    @staticmethod
+    def get_split_criterion_rule(feature_idx: int, threshold: float, feature_metadata,
+                                   discrete_labels, hide_feature_type_prefix: bool = False) -> str:
+        """
+        Get the split criterion rule for a decision tree node.
+
+        Extracts only the rule portion without class statistics, used for path labels
+        when show_edge_symbols is enabled. Returns the feature description with
+        threshold information for continuous features or just the feature name for
+        discrete features.
 
         Parameters
         ----------
@@ -500,173 +599,40 @@ class NodeTextFormatter:
             Decision threshold from tree
         feature_metadata : list
             Feature metadata array
-        short_labels : bool
-            Whether to use short labels
-        short_edge_labels : bool
-            Whether to use short edge labels
-        wrap_length : int
-            Maximum line length for text wrapping
+        discrete_labels : tuple or None
+            Discrete class labels if applicable (not used in output)
+        hide_feature_type_prefix : bool, default=False
+            Hide feature type prefix in labels (only if allow_hide_prefix is True)
 
         Returns
         -------
-        Tuple[str, str]
-            Left and right edge labels in format:
-            
-            - Default discrete: "feature_type: feature_name = class_label"
-            - Default continuous: "feature_type: feature_name ≤ threshold unit"
-            - Short discrete: "class_label"
-            - Short continuous: "≤ threshold unit"
+        str
+            Split criterion rule (e.g., "ALA25-LEU29" or "distances: ALA25-LEU29 ≤ 4.5 Å")
 
         Examples
         --------
-        >>> # Discrete feature (contacts), default mode
-        >>> labels = NodeTextFormatter.get_edge_labels(5, 0.5, metadata, False, False, 40)
-        >>> print(labels)
-        ('contact: Leu13-ARG31 = Non-Contact', 'contact: Leu13-ARG31 = Contact')
+        >>> # Discrete feature (contacts)
+        >>> rule = NodeTextFormatter.get_split_criterion_rule(5, 0.5, metadata, ('NC', 'C'), False)
+        >>> print(rule)
+        'contacts: ALA25-LEU29'
 
-        >>> # Discrete feature (contacts), short_edge_labels=True
-        >>> labels = NodeTextFormatter.get_edge_labels(5, 0.5, metadata, False, True, 40)
-        >>> print(labels)
-        ('Non-Contact', 'Contact')
+        >>> # Discrete feature with hide_prefix
+        >>> rule = NodeTextFormatter.get_split_criterion_rule(5, 0.5, metadata, ('NC', 'C'), True)
+        >>> print(rule)
+        'ALA25-LEU29'
 
-        >>> # Continuous feature (distances), default mode
-        >>> labels = NodeTextFormatter.get_edge_labels(10, 3.5, metadata, False, False, 40)
-        >>> print(labels)
-        ('distances: Leu13-ARG31 ≤ 3.50 Å', 'distances: Leu13-ARG31 > 3.50 Å')
-
-        >>> # Continuous feature (distances), short_edge_labels=True
-        >>> labels = NodeTextFormatter.get_edge_labels(10, 3.5, metadata, False, True, 40)
-        >>> print(labels)
-        ('≤ 3.50 Å', '> 3.50 Å')
-
-        Notes
-        -----
-        These labels appear in two places:
-        1. On the edges between nodes (visual connections)
-        2. In the decision path at the top of child nodes
+        >>> # Continuous feature (distances)
+        >>> rule = NodeTextFormatter.get_split_criterion_rule(10, 4.5, metadata, None, False)
+        >>> print(rule)
+        'distances: ALA25-LEU29 ≤ 4.50 Å'
         """
         # Get feature type and name
-        feature_type = FeatureMetadataUtils.get_feature_type(
-            feature_metadata, feature_idx
+        feature_type = FeatureMetadataUtils.get_feature_type(feature_metadata, feature_idx)
+        feature_name = FeatureMetadataUtils.get_feature_name(feature_metadata, feature_idx)
+
+        # Build complete feature label with units
+        return FeatureLabelBuilder.build_feature_label(
+            feature_type, feature_name, threshold, discrete_labels,
+            hide_feature_type_prefix, feature_metadata, feature_idx,
+            include_units=True
         )
-        feature_name = FeatureMetadataUtils.get_feature_name(
-            feature_metadata, feature_idx
-        )
-
-        # Get top-level metadata for units
-        type_meta = FeatureMetadataHelper.get_top_level_metadata(
-            feature_type, feature_metadata
-        )
-
-        discrete_labels = NodeTextFormatter.get_discrete_labels(feature_idx, feature_metadata, short_labels)
-
-        if short_edge_labels:
-            return NodeTextFormatter.format_short_edge_labels(discrete_labels, threshold, type_meta, wrap_length)
-        return NodeTextFormatter.format_default_edge_labels(
-            discrete_labels, feature_type, feature_name, threshold, type_meta, wrap_length
-        )
-
-    @staticmethod
-    def format_short_edge_labels(discrete_labels, threshold, type_meta, wrap_length):
-        """
-        Format short edge labels (value only).
-
-        Parameters
-        ----------
-        discrete_labels : tuple or None
-            Discrete class labels if applicable
-        threshold : float
-            Decision threshold
-        type_meta : dict
-            Feature type metadata
-        wrap_length : int
-            Maximum line length for text wrapping
-
-        Returns
-        -------
-        tuple
-            (left_label, right_label) short format
-        """
-        if discrete_labels:
-            left = TextUtils.wrap_text(discrete_labels[0], wrap_length)
-            right = TextUtils.wrap_text(discrete_labels[1], wrap_length)
-            return left, right
-        return NodeTextFormatter.format_continuous_edge_labels(threshold, type_meta, short=True, wrap_length=wrap_length)
-
-    @staticmethod
-    def format_default_edge_labels(discrete_labels, feature_type,
-                                     feature_name, threshold, type_meta, wrap_length):
-        """
-        Format default edge labels (full information).
-
-        Parameters
-        ----------
-        discrete_labels : tuple or None
-            Discrete class labels if applicable
-        feature_type : str
-            Feature type
-        feature_name : str
-            Feature name
-        threshold : float
-            Decision threshold
-        type_meta : dict
-            Feature type metadata
-        wrap_length : int
-            Maximum line length for text wrapping
-
-        Returns
-        -------
-        tuple
-            (left_label, right_label) default format
-        """
-        if discrete_labels:
-            left_line = f"{feature_type}: {feature_name} = {discrete_labels[0]}"
-            right_line = f"{feature_type}: {feature_name} = {discrete_labels[1]}"
-            wrapped_left = TextUtils.wrap_text(left_line, wrap_length)
-            wrapped_right = TextUtils.wrap_text(right_line, wrap_length)
-            return wrapped_left, wrapped_right
-        return NodeTextFormatter.format_continuous_edge_labels(
-            threshold, type_meta, short=False, feature_type=feature_type,
-            feature_name=feature_name, wrap_length=wrap_length
-        )
-
-    @staticmethod
-    def format_continuous_edge_labels(threshold, type_meta, short=True,
-                                        feature_type=None, feature_name=None, wrap_length=40):
-        """
-        Format continuous edge labels with threshold.
-
-        Parameters
-        ----------
-        threshold : float
-            Decision threshold
-        type_meta : dict
-            Feature type metadata
-        short : bool, default=True
-            Use short format (threshold only) or full format
-        feature_type : str, optional
-            Feature type (required if short=False)
-        feature_name : str, optional
-            Feature name (required if short=False)
-        wrap_length : int, default=40
-            Maximum line length for text wrapping
-
-        Returns
-        -------
-        tuple
-            (left_label, right_label) for continuous features
-        """
-        unit = type_meta.get("units", "")
-        unit_str = f" {unit}" if unit else ""
-
-        if short:
-            left_line = f"≤ {threshold:.2f}{unit_str}"
-            right_line = f"> {threshold:.2f}{unit_str}"
-            left = TextUtils.wrap_text(left_line, wrap_length)
-            right = TextUtils.wrap_text(right_line, wrap_length)
-        else:
-            left_line = f"{feature_type}: {feature_name} ≤ {threshold:.2f}{unit_str}"
-            right_line = f"{feature_type}: {feature_name} > {threshold:.2f}{unit_str}"
-            left = TextUtils.wrap_text(left_line, wrap_length)
-            right = TextUtils.wrap_text(right_line, wrap_length)
-        return left, right

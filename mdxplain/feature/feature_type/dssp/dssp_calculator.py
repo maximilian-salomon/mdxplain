@@ -329,7 +329,8 @@ class DSSPCalculator(CalculatorBase):
                 "is_discrete": True,
                 "is_binary": is_onehot,
                 "axis_label": axis_label,
-                "tick_labels": tick_labels
+                "tick_labels": tick_labels,
+                "allow_hide_prefix": True
             }
         }
 
