@@ -79,10 +79,18 @@ class FeatureImportanceFacade:
         long_labels: bool = False,
         contact_threshold: Optional[float] = 4.5,
         title: Optional[str] = None,
+        legend_title: Optional[str] = None,
+        legend_labels: Optional[Dict[str, str]] = None,
         save_fig: bool = False,
         filename: Optional[str] = None,
         file_format: str = "png",
-        dpi: int = 300
+        dpi: int = 300,
+        title_fontsize: Optional[int] = None,
+        subplot_title_fontsize: Optional[int] = None,
+        ylabel_fontsize: Optional[int] = None,
+        tick_fontsize: Optional[int] = None,
+        legend_fontsize: Optional[int] = None,
+        legend_title_fontsize: Optional[int] = None,
     ) -> Figure:
         """
         Create violin plots from feature importance analysis.
@@ -113,6 +121,10 @@ class FeatureImportanceFacade:
             at this distance value. Common value: 4.5 Å (default cutoff for contacts).
         title : str, optional
             Custom plot title. Auto-generated if None.
+        legend_title : str, optional
+            Custom title for the legend.
+        legend_labels : Dict[str, str], optional
+            Custom labels for the legend.
         save_fig : bool, default=False
             Save figure to file
         filename : str, optional
@@ -121,6 +133,18 @@ class FeatureImportanceFacade:
             File format for saving (png, pdf, svg, etc.)
         dpi : int, default=300
             Resolution for saved figure in dots per inch
+        title_fontsize : int, optional
+            Font size for the main title.
+        subplot_title_fontsize : int, optional
+            Font size for the subplot titles.
+        ylabel_fontsize : int, optional
+            Font size for the y-axis labels.
+        tick_fontsize : int, optional
+            Font size for the tick labels.
+        legend_fontsize : int, optional
+            Font size for the legend entries.
+        legend_title_fontsize : int, optional
+            Font size for the legend title.
 
         Returns
         -------
@@ -177,10 +201,18 @@ class FeatureImportanceFacade:
             long_labels=long_labels,
             contact_threshold=contact_threshold,
             title=title,
+            legend_title=legend_title,
+            legend_labels=legend_labels,
             save_fig=save_fig,
             filename=filename,
             file_format=file_format,
-            dpi=dpi
+            dpi=dpi,
+            title_fontsize=title_fontsize,
+            subplot_title_fontsize=subplot_title_fontsize,
+            ylabel_fontsize=ylabel_fontsize,
+            tick_fontsize=tick_fontsize,
+            legend_fontsize=legend_fontsize,
+            legend_title_fontsize=legend_title_fontsize
         )
 
     def densities(
@@ -202,7 +234,14 @@ class FeatureImportanceFacade:
         save_fig: bool = False,
         filename: Optional[str] = None,
         file_format: str = "png",
-        dpi: int = 300
+        dpi: int = 300,
+        title_fontsize: Optional[int] = None,
+        subplot_title_fontsize: Optional[int] = None,
+        xlabel_fontsize: Optional[int] = None,
+        ylabel_fontsize: Optional[int] = None,
+        tick_fontsize: Optional[int] = None,
+        legend_fontsize: Optional[int] = None,
+        legend_title_fontsize: Optional[int] = None,
     ) -> Figure:
         """
         Create density plots from feature importance analysis.
@@ -260,6 +299,20 @@ class FeatureImportanceFacade:
             File format for saving (png, pdf, svg, etc.)
         dpi : int, default=300
             Resolution for saved figure in dots per inch
+        title_fontsize : int, optional
+            Font size for the main title.
+        subplot_title_fontsize : int, optional
+            Font size for the subplot titles.
+        xlabel_fontsize : int, optional
+            Font size for the x-axis labels.
+        ylabel_fontsize : int, optional
+            Font size for the y-axis labels.
+        tick_fontsize : int, optional
+            Font size for the tick labels.
+        legend_fontsize : int, optional
+            Font size for the legend entries.
+        legend_title_fontsize : int, optional
+            Font size for the legend title.
 
         Returns
         -------
@@ -354,7 +407,14 @@ class FeatureImportanceFacade:
             save_fig=save_fig,
             filename=filename,
             file_format=file_format,
-            dpi=dpi
+            dpi=dpi,
+            title_fontsize=title_fontsize,
+            subplot_title_fontsize=subplot_title_fontsize,
+            xlabel_fontsize=xlabel_fontsize,
+            ylabel_fontsize=ylabel_fontsize,
+            tick_fontsize=tick_fontsize,
+            legend_fontsize=legend_fontsize,
+            legend_title_fontsize=legend_title_fontsize
         )
 
     def time_series(
@@ -384,7 +444,14 @@ class FeatureImportanceFacade:
         smoothing_method: str = "savitzky",
         smoothing_window: int = 51,
         smoothing_polyorder: int = 3,
-        show_unsmoothed_background: bool = True
+        show_unsmoothed_background: bool = True,
+        title_fontsize: Optional[int] = None,
+        subplot_title_fontsize: Optional[int] = None,
+        xlabel_fontsize: Optional[int] = None,
+        ylabel_fontsize: Optional[int] = None,
+        tick_fontsize: Optional[int] = None,
+        legend_fontsize: Optional[int] = None,
+        legend_title_fontsize: Optional[int] = None,
     ) -> Figure:
         """
         Create time series plots from feature importance analysis.
@@ -461,6 +528,20 @@ class FeatureImportanceFacade:
             Polynomial order for Savitzky-Golay filter (ignored for moving_average)
         show_unsmoothed_background : bool, default=True
             Show unsmoothed data as transparent background line when smoothing is enabled
+        title_fontsize : int, optional
+            Font size for main title.
+        subplot_title_fontsize : int, optional
+            Font size for subplot titles.
+        xlabel_fontsize : int, optional
+            Font size for x-axis labels.
+        ylabel_fontsize : int, optional
+            Font size for y-axis labels.
+        tick_fontsize : int, optional
+            Font size for tick labels.
+        legend_fontsize : int, optional
+            Font size for legend entries.
+        legend_title_fontsize : int, optional
+            Font size for legend title.
 
         Returns
         -------
@@ -560,7 +641,14 @@ class FeatureImportanceFacade:
             smoothing_method=smoothing_method,
             smoothing_window=smoothing_window,
             smoothing_polyorder=smoothing_polyorder,
-            show_unsmoothed_background=show_unsmoothed_background
+            show_unsmoothed_background=show_unsmoothed_background,
+            title_fontsize=title_fontsize,
+            subplot_title_fontsize=subplot_title_fontsize,
+            xlabel_fontsize=xlabel_fontsize,
+            ylabel_fontsize=ylabel_fontsize,
+            tick_fontsize=tick_fontsize,
+            legend_fontsize=legend_fontsize,
+            legend_title_fontsize=legend_title_fontsize
         )
 
     def decision_trees(

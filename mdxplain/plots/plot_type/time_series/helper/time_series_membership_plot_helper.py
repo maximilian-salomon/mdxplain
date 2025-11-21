@@ -207,7 +207,7 @@ class TimeSeriesMembershipPlotHelper:
             label_ax = fig.add_subplot(gs[membership_row, 0])
             n = len(membership_indices)
             label_ax.set_yticks([j * y_spacing for j in range(n)])
-            label_ax.set_yticklabels(traj_names)
+            label_ax.set_yticklabels(traj_names, fontsize=config.tick_fontsize or 10)
 
             min_extent = 0 - (config.membership_bar_height / 2)
             max_extent = (n - 1) * y_spacing + (config.membership_bar_height / 2)
@@ -246,7 +246,7 @@ class TimeSeriesMembershipPlotHelper:
             img_ax.spines['top'].set_visible(False)
 
             # Add x-label to all membership plots
-            img_ax.set_xlabel("Time (ns)" if config.use_time else "Frame", fontsize=11)
+            img_ax.set_xlabel("Time (ns)" if config.use_time else "Frame", fontsize=config.xlabel_fontsize or 12)
 
     @staticmethod
     def _plot_single_membership(
@@ -296,10 +296,10 @@ class TimeSeriesMembershipPlotHelper:
             config.membership_bar_height, y_spacing
         )
 
-        ax.set_xlabel("Time (ns)" if config.use_time else "Frame", fontsize=11)
+        ax.set_xlabel("Time (ns)" if config.use_time else "Frame", fontsize=config.xlabel_fontsize or 12)
 
         TimeSeriesMembershipPlotHelper._configure_y_axis(
-            ax, config.pipeline_data, membership_indices, config.membership_bar_height, y_spacing
+            ax, config.pipeline_data, membership_indices, config.membership_bar_height, y_spacing, config.tick_fontsize
         )
 
     @staticmethod
@@ -391,7 +391,7 @@ class TimeSeriesMembershipPlotHelper:
         return img
 
     @staticmethod
-    def _configure_y_axis(ax, pipeline_data, membership_indices, bar_height, y_spacing=0.6):
+    def _configure_y_axis(ax, pipeline_data, membership_indices, bar_height, y_spacing=0.6, tick_fontsize=None):
         """
         Configure Y-axis for membership plot.
 
@@ -407,6 +407,8 @@ class TimeSeriesMembershipPlotHelper:
             Height of each bar
         y_spacing : float, default=0.6
             Vertical spacing between bars
+        tick_fontsize : int, optional
+            Font size for tick labels (default: 10)
 
         Returns
         -------
@@ -415,7 +417,7 @@ class TimeSeriesMembershipPlotHelper:
         Examples
         --------
         >>> TimeSeriesMembershipPlotHelper._configure_y_axis(
-        ...     ax, pipeline_data, [0, 1, 2], 0.5, 0.6
+        ...     ax, pipeline_data, [0, 1, 2], 0.5, 0.6, 10
         ... )
 
         Notes
@@ -430,7 +432,7 @@ class TimeSeriesMembershipPlotHelper:
 
         n = len(membership_indices)
         ax.set_yticks([i * y_spacing for i in range(n)])
-        ax.set_yticklabels(traj_names)
+        ax.set_yticklabels(traj_names, fontsize=tick_fontsize or 10)
 
         min_extent = 0 - (bar_height / 2)
         max_extent = (n - 1) * y_spacing + (bar_height / 2)

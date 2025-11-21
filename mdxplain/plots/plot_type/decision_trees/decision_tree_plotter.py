@@ -37,6 +37,7 @@ from .helper.decision_tree_visualization_config import DecisionTreeVisualization
 from .helper.separate_tree_mode_helper import SeparateTreeModeHelper
 from .helper.plot_configuration_helper import PlotConfigurationHelper
 from ....utils.data_utils import DataUtils
+from ...helper.svg_export_helper import SvgExportHelper
 
 # Global config instance
 TREE_CONFIG = DecisionTreeVisualizationConfig()
@@ -607,6 +608,9 @@ class DecisionTreePlotter:
             Figure if render=True, else None
         """
         if save_fig:
+            # Configure SVG export for editable text
+            SvgExportHelper.apply_svg_config_if_needed(file_format)
+
             if filename is None:
                 filename = f"decision_trees_{feature_importance_name}.{file_format}"
             filepath = DataUtils.get_cache_file_path(filename, self.cache_dir)
