@@ -35,12 +35,13 @@ from .decision_tree_visualizer import DecisionTreeVisualizer
 from .decision_tree_visualization_config import DecisionTreeVisualizationConfig
 from .plot_configuration_helper import PlotConfigurationHelper
 from .....utils.data_utils import DataUtils
+from ....helper.svg_export_helper import SvgExportHelper
 
 TREE_CONFIG = DecisionTreeVisualizationConfig()
 
 # IPython optional dependency for Jupyter display
 try:
-    from IPython.display import Image, display
+    from IPython.display import Image, display, SVG
     IPYTHON_AVAILABLE = True
 except ImportError:
     IPYTHON_AVAILABLE = False
@@ -506,6 +507,9 @@ class SeparateTreeModeHelper:
         ...     fig, "analysis", 0, "comp0", "png", 300, True, "./cache", saved
         ... )
         """
+        # Configure SVG export for editable text
+        SvgExportHelper.apply_svg_config_if_needed(file_format)
+
         tree_filename = (f"decision_trees_{feature_importance_name}_"
                         f"comparison_{idx:02d}_{comparison_name}.{file_format}")
         tree_path = DataUtils.get_cache_file_path(tree_filename, cache_dir)
@@ -546,6 +550,9 @@ class SeparateTreeModeHelper:
         ...     fig, "png", 300, "./cache", temp
         ... )
         """
+        # Configure SVG export for editable text
+        SvgExportHelper.apply_svg_config_if_needed(file_format)
+
         temp_filename = f"tree_temp_{uuid.uuid4().hex}.{file_format}"
         temp_path = DataUtils.get_cache_file_path(temp_filename, cache_dir)
         fig.savefig(temp_path, dpi=dpi, bbox_inches='tight')
@@ -572,7 +579,10 @@ class SeparateTreeModeHelper:
         >>> SeparateTreeModeHelper._display_image_in_jupyter("tree.png")
         """
         if IPYTHON_AVAILABLE:
-            display(Image(filename=filename))
+            if filename.endswith(".svg"):
+                display(SVG(filename=filename))
+            else:
+                display(Image(filename=filename))
 
     @staticmethod
     def _cleanup_separate_trees(old_backend, temp_files):

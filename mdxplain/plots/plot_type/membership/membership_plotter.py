@@ -36,6 +36,7 @@ from .helper import BlockOptimizerHelper
 from ...helper.color_mapping_helper import NOISE_COLOR
 from ...helper.validation_helper import ValidationHelper
 from ...helper.clustering_data_helper import ClusteringDataHelper
+from ...helper.svg_export_helper import SvgExportHelper
 from ....utils.data_utils import DataUtils
 
 
@@ -89,7 +90,12 @@ class MembershipPlotter:
         save_fig: bool = False,
         filename: Optional[str] = None,
         file_format: str = "png",
-        dpi: int = 300
+        dpi: int = 300,
+        title_fontsize: Optional[int] = None,
+        xlabel_fontsize: Optional[int] = None,
+        ylabel_fontsize: Optional[int] = None,
+        tick_fontsize: Optional[int] = None,
+        legend_fontsize: Optional[int] = None,
     ) -> Figure:
         """
         Create cluster membership timeline plot.
@@ -117,9 +123,20 @@ class MembershipPlotter:
         filename : Optional[str], default=None
             Custom filename (auto-generated if None)
         file_format : str, default="png"
-            File format for saving
+            File format for saving (png, pdf, svg, etc.).
+            When using 'svg', text elements remain editable in SVG editors.
         dpi : int, default=300
             Resolution for saved figure
+        title_fontsize : int, optional
+            Font size for overall figure title (default: 14)
+        xlabel_fontsize : int, optional
+            Font size for X-axis label (default: 12)
+        ylabel_fontsize : int, optional
+            Font size for Y-axis trajectory labels (default: 11)
+        tick_fontsize : int, optional
+            Font size for X-axis tick labels (default: 10)
+        legend_fontsize : int, optional
+            Font size for cluster legend entries (default: 10)
 
         Returns
         -------
@@ -180,22 +197,25 @@ class MembershipPlotter:
         )
 
         # Set axis labels and styling
-        self._set_y_labels(ax, traj_indices)
-        self._set_x_labels(ax, show_frame_numbers)
+        self._set_y_labels(ax, traj_indices, ylabel_fontsize or 11)
+        self._set_x_labels(ax, show_frame_numbers, xlabel_fontsize or 12, tick_fontsize or 10)
 
         # Apply tight layout BEFORE adding title and legend
         # Reserve right 12% for legend, bottom 5% for X-axis label
         fig.tight_layout(rect=[0, 0.05, 0.88, 1.0])
 
         # Add title AFTER tight_layout
-        self._set_title(fig, title, clustering_name)
+        self._set_title(fig, title, clustering_name, title_fontsize or 14)
 
         # Add legend AFTER tight_layout
         if show_legend:
-            self._add_legend(fig, cluster_colors)
+            self._add_legend(fig, cluster_colors, legend_fontsize or 10)
 
         # Save if requested
         if save_fig:
+            # Configure SVG export for editable text
+            SvgExportHelper.apply_svg_config_if_needed(file_format)
+
             self._save_figure(
                 fig, filename, clustering_name, traj_selection, file_format, dpi
             )
@@ -316,7 +336,7 @@ class MembershipPlotter:
 
         return labels[start_frame:end_frame]
 
-    def _set_y_labels(self, ax: plt.Axes, traj_indices: List[int]) -> None:
+    def _set_y_labels(self, ax: plt.Axes, traj_indices: List[int], ylabel_fontsize: int) -> None:
         """
         Set y-axis labels to trajectory names.
 
@@ -326,6 +346,8 @@ class MembershipPlotter:
             Axis to configure
         traj_indices : List[int]
             Trajectory indices
+        ylabel_fontsize : int
+            Font size for trajectory labels
 
         Returns
         -------
@@ -336,10 +358,10 @@ class MembershipPlotter:
             for i in traj_indices
         ]
         ax.set_yticks(range(len(names)))
-        ax.set_yticklabels(names)
+        ax.set_yticklabels(names, fontsize=ylabel_fontsize)
         ax.invert_yaxis()  # Top trajectory at top
 
-    def _set_x_labels(self, ax: plt.Axes, show_frame_numbers: bool) -> None:
+    def _set_x_labels(self, ax: plt.Axes, show_frame_numbers: bool, xlabel_fontsize: int, tick_fontsize: int) -> None:
         """
         Configure x-axis.
 
@@ -349,18 +371,25 @@ class MembershipPlotter:
             Axis to configure
         show_frame_numbers : bool
             Whether to show frame numbers
+        xlabel_fontsize : int
+            Font size for X-axis label
+        tick_fontsize : int
+            Font size for tick labels
 
         Returns
         -------
         None
         """
         if show_frame_numbers:
-            ax.set_xlabel("Frame Number")
+            ax.set_xlabel("Frame Number", fontsize=xlabel_fontsize)
         else:
-            ax.set_xlabel("Time")
+            ax.set_xlabel("Time", fontsize=xlabel_fontsize)
+
+        # Set tick label fontsize
+        ax.tick_params(axis='x', labelsize=tick_fontsize)
 
     def _set_title(
-        self, fig: Figure, title: Optional[str], clustering_name: str
+        self, fig: Figure, title: Optional[str], clustering_name: str, title_fontsize: int
     ) -> None:
         """
         Set figure title positioned at top with constant 10mm spacing.
@@ -373,6 +402,8 @@ class MembershipPlotter:
             Custom title or None for auto-generation
         clustering_name : str
             Name of clustering (for auto-generation)
+        title_fontsize : int
+            Font size for title
 
         Returns
         -------
@@ -390,13 +421,13 @@ class MembershipPlotter:
 
         fig.suptitle(
             title_text,
-            fontsize=14,
+            fontsize=title_fontsize,
             fontweight='bold',
             y=y_position  # Constant 10mm spacing regardless of figure height
         )
 
     def _add_legend(
-        self, fig: Figure, cluster_colors: Dict[int, str]
+        self, fig: Figure, cluster_colors: Dict[int, str], legend_fontsize: int
     ) -> None:
         """
         Add cluster color legend positioned outside plot area on right.
@@ -407,6 +438,8 @@ class MembershipPlotter:
             Figure to add legend to
         cluster_colors : Dict[int, str]
             Color mapping for clusters
+        legend_fontsize : int
+            Font size for legend entries
 
         Returns
         -------
@@ -439,7 +472,7 @@ class MembershipPlotter:
             loc='center left',
             bbox_to_anchor=(0.90, 0.5),
             frameon=True,
-            fontsize=10
+            fontsize=legend_fontsize
         )
 
     def _save_figure(

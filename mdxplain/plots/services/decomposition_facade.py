@@ -100,7 +100,13 @@ class DecompositionFacade:
         save_fig: bool = False,
         filename: Optional[str] = None,
         file_format: str = "png",
-        dpi: int = 300
+        dpi: int = 300,
+        title_fontsize: Optional[int] = None,
+        xlabel_fontsize: Optional[int] = None,
+        ylabel_fontsize: Optional[int] = None,
+        tick_fontsize: Optional[int] = None,
+        legend_fontsize: Optional[int] = None,
+        contour_label_fontsize: Optional[int] = None,
     ) -> Figure:
         """
         Create landscape plot for decomposition data.
@@ -162,6 +168,18 @@ class DecompositionFacade:
             File format for saving (png, pdf, svg, etc.)
         dpi : int, default=300
             Resolution for saved figure
+        title_fontsize : int, optional
+            Font size for the figure title.
+        xlabel_fontsize : int, optional
+            Font size for the x-axis labels.
+        ylabel_fontsize : int, optional
+            Font size for the y-axis labels.
+        tick_fontsize : int, optional
+            Font size for the tick labels.
+        legend_fontsize : int, optional
+            Font size for the legend.
+        contour_label_fontsize : int, optional
+            Font size for the contour labels.
 
         Returns
         -------
@@ -242,5 +260,11 @@ class DecompositionFacade:
             save_fig=save_fig,
             filename=filename,
             file_format=file_format,
-            dpi=dpi
+            dpi=dpi,
+            title_fontsize=title_fontsize,
+            xlabel_fontsize=xlabel_fontsize,
+            ylabel_fontsize=ylabel_fontsize,
+            tick_fontsize=tick_fontsize,
+            legend_fontsize=legend_fontsize,
+            contour_label_fontsize=contour_label_fontsize,
         )

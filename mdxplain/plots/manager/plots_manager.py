@@ -255,6 +255,12 @@ class PlotsManager:
         filename: Optional[str] = None,
         file_format: str = "png",
         dpi: int = 300,
+        title_fontsize: Optional[int] = None,
+        xlabel_fontsize: Optional[int] = None,
+        ylabel_fontsize: Optional[int] = None,
+        tick_fontsize: Optional[int] = None,
+        legend_fontsize: Optional[int] = None,
+        contour_label_fontsize: Optional[int] = None,
     ) -> Figure:
         """
         Create landscape plot directly from plots manager.
@@ -312,9 +318,22 @@ class PlotsManager:
         filename : Optional[str], default=None
             Custom filename (overrides auto-generated name)
         file_format : str, default="png"
-            File format for saving (png, pdf, svg, etc.)
+            File format for saving (png, pdf, svg, etc.).
+            When using 'svg', text elements remain editable in SVG editors.
         dpi : int, default=300
             Resolution for saved figure
+        title_fontsize : int, optional
+            Font size for figure title (default: 14)
+        xlabel_fontsize : int, optional
+            Font size for X-axis labels (default: 12)
+        ylabel_fontsize : int, optional
+            Font size for Y-axis labels (default: 12)
+        tick_fontsize : int, optional
+            Font size for tick labels (default: 10)
+        legend_fontsize : int, optional
+            Font size for legend entries (default: 10)
+        contour_label_fontsize : int, optional
+            Font size for contour labels (default: 10)
 
         Returns
         -------
@@ -393,6 +412,12 @@ class PlotsManager:
             filename=filename,
             file_format=file_format,
             dpi=dpi,
+            title_fontsize=title_fontsize,
+            xlabel_fontsize=xlabel_fontsize,
+            ylabel_fontsize=ylabel_fontsize,
+            tick_fontsize=tick_fontsize,
+            legend_fontsize=legend_fontsize,
+            contour_label_fontsize=contour_label_fontsize,
         )
 
     def membership(
@@ -408,6 +433,11 @@ class PlotsManager:
         filename: Optional[str] = None,
         file_format: str = "png",
         dpi: int = 300,
+        title_fontsize: Optional[int] = None,
+        xlabel_fontsize: Optional[int] = None,
+        ylabel_fontsize: Optional[int] = None,
+        tick_fontsize: Optional[int] = None,
+        legend_fontsize: Optional[int] = None,
     ) -> Figure:
         """
         Create cluster membership timeline plot.
@@ -436,9 +466,20 @@ class PlotsManager:
         filename : Optional[str], default=None
             Custom filename (auto-generated if None)
         file_format : str, default="png"
-            File format for saving
+            File format for saving (png, pdf, svg, etc.).
+            When using 'svg', text elements remain editable in SVG editors.
         dpi : int, default=300
             Resolution for saved figure
+        title_fontsize : int, optional
+            Font size for title (default: 14)
+        xlabel_fontsize : int, optional
+            Font size for X-axis label (default: 12)
+        ylabel_fontsize : int, optional
+            Font size for Y-axis trajectory labels (default: 11)
+        tick_fontsize : int, optional
+            Font size for tick labels (default: 10)
+        legend_fontsize : int, optional
+            Font size for legend entries (default: 10)
 
         Returns
         -------
@@ -499,4 +540,9 @@ class PlotsManager:
             filename=filename,
             file_format=file_format,
             dpi=dpi,
+            title_fontsize=title_fontsize,
+            xlabel_fontsize=xlabel_fontsize,
+            ylabel_fontsize=ylabel_fontsize,
+            tick_fontsize=tick_fontsize,
+            legend_fontsize=legend_fontsize,
         )

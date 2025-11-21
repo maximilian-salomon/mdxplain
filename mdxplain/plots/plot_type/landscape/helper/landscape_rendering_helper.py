@@ -67,7 +67,9 @@ class LandscapeRenderingHelper:
         bins: int,
         temperature: float,
         xlim: Tuple[float, float],
-        ylim: Tuple[float, float]
+        ylim: Tuple[float, float],
+        contour_label_fontsize: Optional[int] = None,
+        tick_fontsize: Optional[int] = None
     ) -> None:
         """
         Plot free energy landscape background using KDE.
@@ -88,6 +90,10 @@ class LandscapeRenderingHelper:
             X-axis limits for grid calculation
         ylim : Tuple[float, float]
             Y-axis limits for grid calculation
+        contour_label_fontsize : int, optional
+            Font size for colorbar label (default: 10)
+        tick_fontsize : int, optional
+            Font size for the tick labels.
 
         Returns
         -------
@@ -122,7 +128,16 @@ class LandscapeRenderingHelper:
 
         # Add colorbar
         cbar = plt.colorbar(cf, ax=ax)
-        cbar.set_label('Free Energy Δ (kcal/mol)', rotation=270, labelpad=15)
+        cbar.ax.tick_params(labelsize=tick_fontsize or 10, pad=10 + (tick_fontsize - 10) * 0.5 if tick_fontsize else 5)
+
+        labelpad = 15 + (contour_label_fontsize - 10) * 1.5 if contour_label_fontsize else 15
+        
+        cbar.set_label(
+            'Free Energy Δ (kcal/mol)',
+            rotation=270,
+            labelpad=labelpad,
+            fontsize=contour_label_fontsize or 10
+        )
 
     @staticmethod
     def plot_density_background(
@@ -335,7 +350,8 @@ class LandscapeRenderingHelper:
         labels: np.ndarray,
         cluster_colors: Dict[int, str],
         bins: int,
-        percentile_levels: List[int] = [20, 40, 60, 80]
+        percentile_levels: List[int] = [20, 40, 60, 80],
+        contour_label_fontsize: Optional[int] = None
     ) -> None:
         """
         Plot cluster density contours with percentile labels.
@@ -359,6 +375,8 @@ class LandscapeRenderingHelper:
             Grid resolution for KDE evaluation
         percentile_levels : List[int], default=[20, 40, 60, 80]
             Percentile levels for contour lines
+        contour_label_fontsize : int, optional
+            Font size for contour labels (default: 10)
 
         Returns
         -------
@@ -403,7 +421,7 @@ class LandscapeRenderingHelper:
                 level: f'{100-pct:.0f}%'
                 for level, pct in zip(levels_to_plot, percentile_levels)
             }
-            ax.clabel(CS, CS.levels, inline=True, fmt=fmt, fontsize=10)
+            ax.clabel(CS, CS.levels, inline=True, fmt=fmt, fontsize=contour_label_fontsize or 10)
 
     @staticmethod
     def plot_centers(

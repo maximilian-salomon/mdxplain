@@ -219,7 +219,8 @@ class TitleLegendHelper:
         fig: Figure,
         title: Optional[str],
         title_y: float = 0.98,
-        default_title: str = "Feature Importance Plot"
+        default_title: str = "Feature Importance Plot",
+        fontsize: int = 18
     ) -> None:
         """
         Add figure-level title with consistent positioning.
@@ -234,6 +235,8 @@ class TitleLegendHelper:
             Y-position of title (relative to figure height, 0-1)
         default_title : str, default="Feature Importance Plot"
             Fallback title when title is None
+        fontsize : int, default=18
+            Font size for title text
 
         Returns
         -------
@@ -255,12 +258,12 @@ class TitleLegendHelper:
         -----
         Title is added using fig.suptitle() with:
 
-        - fontsize=18
+        - fontsize (configurable, default=18)
         - fontweight='bold'
         - y=title_y for vertical positioning
         """
         title_text = title if title else default_title
-        fig.suptitle(title_text, fontsize=18, fontweight='bold', y=title_y)
+        fig.suptitle(title_text, fontsize=fontsize, fontweight='bold', y=title_y)
 
     @staticmethod
     def add_legend(
@@ -270,7 +273,9 @@ class TitleLegendHelper:
         legend_labels: Optional[Dict[str, str]],
         contact_threshold: Optional[float] = None,
         legend_x: float = 0.98,
-        legend_y: float = 0.94
+        legend_y: float = 0.94,
+        fontsize: int = 14,
+        title_fontsize: int = 16
     ) -> None:
         """
         Add figure-wide legend for DataSelectors and contact threshold.
@@ -298,6 +303,10 @@ class TitleLegendHelper:
             X-position of legend (in figure coordinates, 0-1)
         legend_y : float, default=0.94
             Y-position of legend (in figure coordinates, 0-1)
+        fontsize : int, default=14
+            Font size for legend entries
+        title_fontsize : int, default=16
+            Font size for legend title
 
         Returns
         -------
@@ -326,11 +335,12 @@ class TitleLegendHelper:
         Notes
         -----
         Legend is created with:
-        
+
         - Sorted DataSelector names (alphabetical)
         - Colored patches (alpha=0.7)
         - Optional contact threshold line (red, dashed)
-        - fontsize=14, title_fontsize=16, title in bold
+        - fontsize (configurable, default=14)
+        - title_fontsize (configurable, default=16), title in bold
         - framealpha=0.9 for visibility
         - loc="upper left" with bbox_to_anchor for precise positioning
         """
@@ -368,8 +378,8 @@ class TitleLegendHelper:
             handles=legend_handles,
             loc="upper left",
             bbox_to_anchor=(legend_x, legend_y),
-            fontsize=14,
+            fontsize=fontsize,
             title=legend_title_text,
-            title_fontproperties={'weight': 'bold', 'size': 16},
+            title_fontproperties={'weight': 'bold', 'size': title_fontsize},
             framealpha=0.9,
         )
