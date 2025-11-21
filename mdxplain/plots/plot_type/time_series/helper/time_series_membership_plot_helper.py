@@ -190,7 +190,7 @@ class TimeSeriesMembershipPlotHelper:
         """
         membership_img = TimeSeriesMembershipPlotHelper._render_membership_to_image(
             fig, gs, prepared_data, membership_indices, cluster_colors,
-            config.membership_bar_height, config.use_time
+            config.membership_bar_height
         )
 
         traj_names = [
@@ -248,6 +248,9 @@ class TimeSeriesMembershipPlotHelper:
             # Add x-label to all membership plots
             img_ax.set_xlabel("Time (ns)" if config.use_time else "Frame", fontsize=config.xlabel_fontsize or 12)
 
+            # Apply tick fontsize to x-axis ticks
+            img_ax.tick_params(axis='x', labelsize=config.tick_fontsize or 10)
+
     @staticmethod
     def _plot_single_membership(
         fig: Figure,
@@ -298,6 +301,9 @@ class TimeSeriesMembershipPlotHelper:
 
         ax.set_xlabel("Time (ns)" if config.use_time else "Frame", fontsize=config.xlabel_fontsize or 12)
 
+        # Apply tick fontsize to x-axis ticks
+        ax.tick_params(axis='x', labelsize=config.tick_fontsize or 10)
+
         TimeSeriesMembershipPlotHelper._configure_y_axis(
             ax, config.pipeline_data, membership_indices, config.membership_bar_height, y_spacing, config.tick_fontsize
         )
@@ -305,7 +311,7 @@ class TimeSeriesMembershipPlotHelper:
     @staticmethod
     def _render_membership_to_image(
         fig, gs, prepared_data, membership_indices, cluster_colors,
-        bar_height, use_time
+        bar_height
     ):
         """
         Render membership to reusable image.
@@ -324,8 +330,6 @@ class TimeSeriesMembershipPlotHelper:
             Cluster color mapping
         bar_height : float
             Height of each bar
-        use_time : bool
-            Use time axis (True) or frames (False)
 
         Returns
         -------
