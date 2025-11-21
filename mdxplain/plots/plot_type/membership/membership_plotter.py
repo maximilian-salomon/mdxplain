@@ -95,7 +95,7 @@ class MembershipPlotter:
         xlabel_fontsize: Optional[int] = None,
         ylabel_fontsize: Optional[int] = None,
         tick_fontsize: Optional[int] = None,
-        legend_fontsize: Optional[int] = None,
+        legend_fontsize: Optional[int] = None
     ) -> Figure:
         """
         Create cluster membership timeline plot.
@@ -189,7 +189,10 @@ class MembershipPlotter:
         )
 
         # Setup figure with fixed width
-        fig, ax = self._setup_figure(len(traj_indices), height_per_trajectory)
+        fig, ax = self._setup_figure(
+            len(traj_indices), height_per_trajectory,
+            xlabel_fontsize or 12, tick_fontsize or 10
+        )
 
         # Plot membership bars
         self._plot_trajectory_bars(
@@ -223,7 +226,11 @@ class MembershipPlotter:
         return fig
 
     def _setup_figure(
-        self, n_trajectories: int, height_per_trajectory: float
+        self,
+        n_trajectories: int,
+        height_per_trajectory: float,
+        xlabel_fontsize: int,
+        tick_fontsize: int
     ) -> Tuple[Figure, plt.Axes]:
         """
         Setup figure with fixed width and dynamic height.
@@ -234,6 +241,10 @@ class MembershipPlotter:
             Number of trajectories to plot
         height_per_trajectory : float
             Height in inches per trajectory
+        xlabel_fontsize : int
+            Font size for X-axis label
+        tick_fontsize : int
+            Font size for tick labels
 
         Returns
         -------
@@ -245,13 +256,23 @@ class MembershipPlotter:
         Notes
         -----
         Uses fixed width of 12 inches for consistent timeline visualization.
-        Height scales dynamically: (n_traj * height_per_trajectory) + 0.8" for title and label space.
+        Height scales dynamically based on trajectory count and font sizes.
         """
         # Fixed width for consistent timeline appearance
         fig_width = 12.0
 
-        # Dynamic height based on trajectory count + fixed space for title and labels
-        fig_height = n_trajectories * height_per_trajectory + 0.8
+        # Base space for title and labels
+        base_space = 0.8
+
+        # Add extra space for larger fonts
+        extra_space = 0.0
+        if xlabel_fontsize > 12:
+            extra_space += (xlabel_fontsize - 12) * 0.02
+        if tick_fontsize > 10:
+            extra_space += (tick_fontsize - 10) * 0.02
+
+        # Dynamic height based on trajectory count + space for title and labels
+        fig_height = n_trajectories * height_per_trajectory + base_space + extra_space
 
         fig, ax = plt.subplots(figsize=(fig_width, fig_height))
         return fig, ax

@@ -325,6 +325,9 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             n_traj = len(membership_indices)
 
             spacing_factor = 1.2
+            # Add extra space for larger tick labels
+            if config.tick_fontsize and config.tick_fontsize > 10:
+                spacing_factor += (config.tick_fontsize - 10) * 0.02
             config.membership_row_height_inches = n_traj * config.membership_bar_height * spacing_factor
             config.n_membership_rows = config.n_rows if config.membership_per_feature else 1
 
@@ -352,7 +355,9 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             config.membership_per_feature, config.tick_fontsize, config.ylabel_fontsize
         )
 
-        wspace, hspace = self._configure_plot_spacing(config.long_labels)
+        wspace, hspace = self._configure_plot_spacing(
+            config.long_labels, config.tick_fontsize, config.membership_per_feature
+        )
 
         n_cols_grid, width_ratios = self._calculate_grid_columns_and_ratios(config)
 
@@ -843,7 +848,11 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         )
 
     @staticmethod
-    def _configure_plot_spacing(long_labels: bool) -> Tuple[float, float]:
+    def _configure_plot_spacing(
+        long_labels: bool,
+        tick_fontsize: Optional[int] = None,
+        membership_per_feature: bool = False
+    ) -> Tuple[float, float]:
         """
         Configure plot spacing for time series plots.
 
@@ -851,6 +860,10 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         ----------
         long_labels : bool
             Whether using long labels for discrete features
+        tick_fontsize : int, optional
+            Font size for tick labels
+        membership_per_feature : bool, default=False
+            Whether membership bars are shown per feature
 
         Returns
         -------
@@ -859,15 +872,21 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
 
         Examples
         --------
-        >>> wspace, hspace = TimeSeriesPlotter._configure_plot_spacing(True)
+        >>> wspace, hspace = TimeSeriesPlotter._configure_plot_spacing(True, 18, True)
         >>> print(wspace)  # 0.25
 
         Notes
         -----
         Time series plots use 0.25 for long_labels, 0.15 otherwise.
+        Adds extra hspace for larger tick fonts on membership plots.
         """
         wspace = 0.25 if long_labels else 0.15
         hspace = 0.4
+
+        # Add extra vertical space for larger ticks on membership plots
+        if membership_per_feature and tick_fontsize and tick_fontsize > 10:
+            hspace += (tick_fontsize - 10) * 0.02
+
         return wspace, hspace
 
     def _calculate_grid_columns_and_ratios(
