@@ -68,11 +68,13 @@ class LandscapeRenderingHelper:
         temperature: float,
         xlim: Tuple[float, float],
         ylim: Tuple[float, float],
+        use_kde: bool = False,
+        mask_empty_bins: bool = True,
         contour_label_fontsize: Optional[int] = None,
         tick_fontsize: Optional[int] = None
     ) -> None:
         """
-        Plot free energy landscape background using KDE.
+        Plot free energy landscape background.
 
         Parameters
         ----------
@@ -90,6 +92,12 @@ class LandscapeRenderingHelper:
             X-axis limits for grid calculation
         ylim : Tuple[float, float]
             Y-axis limits for grid calculation
+        use_kde : bool, default=False
+            Use KDE smoothing for background. Histogram (default) shows
+            actual observations and preserves energy barriers.
+        mask_empty_bins : bool, default=True
+            Mask bins without observations (white/transparent). If False,
+            empty bins are filled with the maximum energy for continuous color.
         contour_label_fontsize : int, optional
             Font size for colorbar label (default: 10)
         tick_fontsize : int, optional
@@ -106,19 +114,36 @@ class LandscapeRenderingHelper:
         ...     ax, data_x, data_y, 50, 310.15, (-5, 5), (-5, 5)
         ... )
         """
-        # KDE-based energy calculation over extended grid
-        X, Y, energy = EnergyCalculatorHelper.calculate_kde_energy_landscape(
-            data_x, data_y, bins, temperature, xlim, ylim
-        )
+        if use_kde:
+            import warnings
+            warnings.warn(
+                "KDE smoothing can filter out small energy barriers and distort "
+                "the free energy landscape. Histograms show actual observations. "
+                "Use KDE only if you know what you do.",
+                UserWarning
+            )
+            X, Y, energy = EnergyCalculatorHelper.calculate_kde_energy_landscape(
+                data_x, data_y, bins, temperature, xlim, ylim
+            )
+        else:
+            X, Y, energy = EnergyCalculatorHelper.calculate_histogram_energy_landscape(
+                data_x, data_y, bins, temperature, xlim, ylim
+            )
 
+        # Color scaling on finite values only
         vmin, vmax = EnergyCalculatorHelper.get_energy_range(energy)
+
+        if mask_empty_bins:
+            energy_plot = np.ma.masked_invalid(energy)
+        else:
+            energy_plot = np.nan_to_num(energy, nan=vmax, posinf=vmax, neginf=vmin)
         cmap = ColorMappingHelper.get_landscape_colormap(energy_values=True)
 
         # Plot with contourf
         cf = ax.contourf(
             X,
             Y,
-            energy,
+            energy_plot,
             levels=bins,
             cmap=cmap,
             vmin=vmin,
@@ -146,10 +171,14 @@ class LandscapeRenderingHelper:
         data_y: np.ndarray,
         bins: int,
         xlim: Tuple[float, float],
-        ylim: Tuple[float, float]
+        ylim: Tuple[float, float],
+        use_kde: bool = False,
+        mask_empty_bins: bool = True,
+        contour_label_fontsize: Optional[int] = None,
+        tick_fontsize: Optional[int] = None
     ) -> None:
         """
-        Plot probability density background using KDE.
+        Plot probability density background.
 
         Parameters
         ----------
@@ -165,6 +194,19 @@ class LandscapeRenderingHelper:
             X-axis limits for grid calculation
         ylim : Tuple[float, float]
             Y-axis limits for grid calculation
+        use_kde : bool, default=False
+            Use KDE smoothing for background. Histogram (default) shows
+            actual observations.
+        mask_empty_bins : bool, default=True
+            Mask bins without observations (white/transparent). If False,
+            empty bins are filled with the maximum density color for continuity.
+        contour_label_fontsize : int, optional
+            Font size for colorbar label (default: 10)
+        tick_fontsize : int, optional
+            Font size for the tick labels.
+        use_kde : bool, default=False
+            Use KDE smoothing for background. Histogram (default) shows
+            actual observations.
 
         Returns
         -------
@@ -177,10 +219,34 @@ class LandscapeRenderingHelper:
         ...     ax, data_x, data_y, 50, (-5, 5), (-5, 5)
         ... )
         """
-        # Get KDE grid over extended limits (no transformation)
-        X, Y, density = EnergyCalculatorHelper.calculate_kde_grid(
-            data_x, data_y, bins, xlim, ylim
-        )
+        if use_kde:
+            # Get KDE grid over extended limits (no transformation)
+            X, Y, density = EnergyCalculatorHelper.calculate_kde_grid(
+                data_x, data_y, bins, xlim, ylim
+            )
+        else:
+            X, Y, density = EnergyCalculatorHelper.calculate_histogram_grid(
+                data_x, data_y, bins, xlim, ylim
+            )
+
+        # Apply masking or filling strategy for empty/invalid bins
+        if mask_empty_bins:
+            density_plot = np.ma.masked_where(
+                (density <= 0) | ~np.isfinite(density),
+                density
+            )
+        else:
+            density_plot = np.nan_to_num(density, nan=0.0, neginf=0.0)
+
+        # Determine bounds for color scaling
+        if np.ma.isMaskedArray(density_plot):
+            finite_vals = density_plot.compressed()
+        else:
+            finite_vals = density_plot[np.isfinite(density_plot)]
+        if finite_vals.size == 0:
+            vmin, vmax = 0.0, 1.0
+        else:
+            vmin, vmax = finite_vals.min(), finite_vals.max()
 
         cmap = ColorMappingHelper.get_landscape_colormap(energy_values=False)
 
@@ -188,15 +254,19 @@ class LandscapeRenderingHelper:
         cf = ax.contourf(
             X,
             Y,
-            density,
+            density_plot,
             levels=bins,
             cmap=cmap,
+            vmin=vmin,
+            vmax=vmax,
             alpha=0.8
         )
 
         # Add colorbar
         cbar = plt.colorbar(cf, ax=ax)
-        cbar.set_label('Probability Density', rotation=270, labelpad=15)
+        cbar.ax.tick_params(labelsize=tick_fontsize or 10, pad=10 + (tick_fontsize - 10) * 0.5 if tick_fontsize else 5)
+        labelpad = 15 + (contour_label_fontsize - 10) * 1.5 if contour_label_fontsize else 15
+        cbar.set_label('Probability Density', rotation=270, labelpad=labelpad, fontsize=contour_label_fontsize or 10)
 
     @staticmethod
     def create_scatter(

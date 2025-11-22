@@ -88,8 +88,10 @@ class LandscapePlotter:
         decomposition_name: str,
         dimensions: List[int],
         clustering_name: Optional[str] = None,
-        show_centers: bool = False,
-        energy_values: bool = False,
+        show_centers: bool = True,
+        energy_values: bool = True,
+        use_kde: bool = False,
+        mask_empty_bins: bool = True,
         bins: int = 50,
         temperature: float = 310.15,
         alpha: float = 0.6,
@@ -129,8 +131,21 @@ class LandscapePlotter:
             Name of clustering for overlay
         show_centers : bool, default=False
             Show cluster centers (requires clustering_name)
-        energy_values : bool, default=False
+        energy_values : bool, default=True
             Show free energy landscape instead of density
+        use_kde : bool, default=False
+            Use KDE smoothing for background density estimation.
+
+            **Default (False)**: Histogram-based - shows actual observations,
+            preserves energy barriers, scientifically accurate.
+
+            **KDE (True)**: Smooth visualization but can filter out small energy
+            barriers and distort the landscape. Use only if you know what you do.
+            NOT for quantitative analysis. A warning will be issued.
+        mask_empty_bins : bool, default=True
+            Mask bins without observations in the background (energy/density)
+            as white/transparent. Set False to fill them with the maximum color
+            for continuity.
         bins : int, default=50
             Number of bins for histogram/energy calculation
         temperature : float, default=300.0
@@ -227,6 +242,10 @@ class LandscapePlotter:
         )
         n_components = decomp_obj.data.shape[1]
 
+        # If no clustering is provided, centers cannot be shown – disable silently
+        if clustering_name is None and show_centers:
+            show_centers = False
+
         ValidationHelper.validate_dimensions_list(
             dimensions, decomposition_name, n_components
         )
@@ -277,6 +296,8 @@ class LandscapePlotter:
                 cluster_ids,
                 cluster_colors,
                 energy_values,
+                use_kde,
+                mask_empty_bins,
                 bins,
                 temperature,
                 alpha,
@@ -401,6 +422,8 @@ class LandscapePlotter:
         cluster_ids: List[int],
         cluster_colors: Optional[Dict[int, str]],
         energy_values: bool,
+        use_kde: bool,
+        mask_empty_bins: bool,
         bins: int,
         temperature: float,
         alpha: float,
@@ -441,6 +464,10 @@ class LandscapePlotter:
             Color mapping for clusters
         energy_values : bool
             Plot energy landscape
+        use_kde : bool
+            Use KDE smoothing for background (histogram is default)
+        mask_empty_bins : bool
+            Mask bins without observations in energy background
         bins : int
             Number of bins for background and cluster contours
         temperature : float
@@ -486,10 +513,20 @@ class LandscapePlotter:
         # Plot background (energy or density) over extended limits
         if energy_values:
             LandscapeRenderingHelper.plot_energy_background(
-                ax, data_x, data_y, bins, temperature, xlim, ylim, contour_label_fontsize, tick_fontsize
+                ax, data_x, data_y, bins, temperature, xlim, ylim,
+                use_kde=use_kde,
+                mask_empty_bins=mask_empty_bins,
+                contour_label_fontsize=contour_label_fontsize,
+                tick_fontsize=tick_fontsize
             )
         else:
-            LandscapeRenderingHelper.plot_density_background(ax, data_x, data_y, bins, xlim, ylim)
+            LandscapeRenderingHelper.plot_density_background(
+                ax, data_x, data_y, bins, xlim, ylim,
+                use_kde=use_kde,
+                mask_empty_bins=mask_empty_bins,
+                contour_label_fontsize=contour_label_fontsize,
+                tick_fontsize=tick_fontsize
+            )
 
         # Overlay cluster visualization
         if labels is not None and cluster_contour:
