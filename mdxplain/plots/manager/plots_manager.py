@@ -234,8 +234,10 @@ class PlotsManager:
         decomposition_name: str,
         dimensions: List[int],
         clustering_name: Optional[str] = None,
-        show_centers: bool = False,
-        energy_values: bool = False,
+        show_centers: bool = True,
+        energy_values: bool = True,
+        use_kde: bool = False,
+        mask_empty_bins: bool = True,
         bins: int = 50,
         temperature: float = 310.15,
         alpha: float = 0.6,
@@ -281,6 +283,19 @@ class PlotsManager:
             Show cluster centers (requires clustering_name)
         energy_values : bool, default=False
             Show free energy landscape instead of density
+        use_kde : bool, default=False
+            Use KDE smoothing for background density estimation.
+
+            **Default (False)**: Histogram-based - shows actual observations,
+            preserves energy barriers, scientifically accurate.
+
+            **KDE (True)**: Smooth visualization but can filter out small energy
+            barriers and distort the landscape. Use only if you know what you do.
+            NOT for quantitative analysis. A warning will be issued.
+        mask_empty_bins : bool, default=True
+            Mask unsampled bins in the background (energy/density) as white/
+            transparent. Set False to fill with the maximum color for
+            continuous fill.
         bins : int, default=50
             Number of bins for histogram/energy calculation
         temperature : float, default=300.0
@@ -393,6 +408,8 @@ class PlotsManager:
             clustering_name=clustering_name,
             show_centers=show_centers,
             energy_values=energy_values,
+            use_kde=use_kde,
+            mask_empty_bins=mask_empty_bins,
             bins=bins,
             temperature=temperature,
             alpha=alpha,
