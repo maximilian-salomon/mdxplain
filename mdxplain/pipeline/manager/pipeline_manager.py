@@ -31,6 +31,7 @@ from __future__ import annotations
 from typing import Any, Dict, Optional, cast
 import os
 import shutil
+import tempfile
 import numpy as np
 from pathlib import Path
 
@@ -718,7 +719,11 @@ class PipelineManager:
         - Automatically repairs memmap paths for portability
         - Cache directory created if it doesn't exist
         """
-        extract_dir = ArchiveUtils.extract_archive(archive_path)
+        # Extract into a temporary directory to avoid clashes with existing cache
+        temp_extract_dir = tempfile.mkdtemp(prefix="mdxplain_archive_")
+        extract_dir = ArchiveUtils.extract_archive(
+            archive_path, extract_to=temp_extract_dir
+        )
 
         pkl_path = extract_dir / "pipeline.pkl"
         if not pkl_path.exists():
@@ -764,6 +769,9 @@ class PipelineManager:
         pipeline._feature_importance_manager.cache_dir = cache_dir
         pipeline._plots_manager.cache_dir = cache_dir
         pipeline._structure_visualization_manager.cache_dir = cache_dir
+
+        # Cleanup extracted temporary directory
+        shutil.rmtree(extract_dir, ignore_errors=True)
 
         return pipeline
 

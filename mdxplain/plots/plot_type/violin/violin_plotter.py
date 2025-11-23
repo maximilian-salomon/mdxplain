@@ -539,8 +539,10 @@ class ViolinPlotter(FeatureImportanceBasePlotter):
             showextrema=False, quantiles=quantiles_list, widths=0.7
         )
 
+        quantile_count = len(quantiles_list[0]) if quantiles_list else 0
+
         self._apply_violin_colors(
-            parts, selector_names, data_selector_colors
+            parts, selector_names, data_selector_colors, quantile_count
         )
         self._draw_threshold_line(ax, resolved_threshold)
 
@@ -576,8 +578,12 @@ class ViolinPlotter(FeatureImportanceBasePlotter):
         return selector_names, data_arrays
 
     @staticmethod
-    def _apply_violin_colors(parts, selector_names: List[str],
-                             data_selector_colors: Dict[str, str]) -> None:
+    def _apply_violin_colors(
+        parts,
+        selector_names: List[str],
+        data_selector_colors: Dict[str, str],
+        quantile_count: int = 0,
+    ) -> None:
         """
         Apply colors to violin bodies.
 
@@ -589,6 +595,8 @@ class ViolinPlotter(FeatureImportanceBasePlotter):
             DataSelector names
         data_selector_colors : Dict[str, str]
             Color mapping
+        quantile_count : int, default=0
+            Number of quantile lines per violin (e.g., 2 for 25/75%)
 
         Returns
         -------
@@ -612,7 +620,13 @@ class ViolinPlotter(FeatureImportanceBasePlotter):
 
         # 25% and 75% quantiles
         if 'cquantiles' in parts and parts['cquantiles']:
-            parts['cquantiles'].set_colors(colors)
+            if quantile_count > 0:
+                quantile_colors = []
+                for color in colors:
+                    quantile_colors.extend([color] * quantile_count)
+                parts['cquantiles'].set_colors(quantile_colors)
+            else:
+                parts['cquantiles'].set_colors(colors)
             parts['cquantiles'].set_linewidth(1.5)
 
     @staticmethod
