@@ -37,6 +37,7 @@ from pathlib import Path
 from ..entities.pipeline_data import PipelineData
 from .auto_inject_proxy import AutoInjectProxy
 from ...utils.archive_utils import ArchiveUtils
+from ...utils.progress_util import ProgressController
 
 from ...trajectory import TrajectoryManager
 from ...feature import FeatureManager
@@ -119,6 +120,8 @@ class PipelineManager:
         cache_dir: str = "./cache",
         # Memory management
         max_memory_gb: float = 6.0,
+        # Output control
+        show_progress: bool = True,
     ):
         """
         Initialize the pipeline manager with configuration for all managers.
@@ -145,6 +148,9 @@ class PipelineManager:
             Maximum memory in GB for dataset processing.
             Used for memory-aware sampling in algorithms like DecisionTree.
             Datasets exceeding this limit will be automatically sampled.
+        show_progress : bool, default=True
+            Enable or disable progress bars globally (tqdm). When False,
+            all progress bars are suppressed.
 
         Returns
         -------
@@ -199,6 +205,9 @@ class PipelineManager:
             use_memmap=use_memmap, chunk_size=chunk_size, cache_dir=cache_dir
         )
 
+        # Configure and propagate progress display setting
+        self._apply_show_progress(show_progress)
+
     @property
     def trajectory(self) -> TrajectoryManager:
         """
@@ -214,6 +223,63 @@ class PipelineManager:
             TrajectoryManager,
             AutoInjectProxy(self._trajectory_manager, self._data),
         )
+
+    def _apply_show_progress(self, show_progress: bool) -> None:
+        """
+        Apply progress display setting to environment and managers.
+
+        Updates the progress controller and propagates the flag to all managers.
+        Can be invoked at runtime to enable or disable progress bars without
+        recreating the pipeline.
+
+        Parameters
+        ----------
+        show_progress : bool
+            Flag to enable (True) or disable (False) progress bars.
+
+        Returns
+        -------
+        None
+            Progress setting is applied to controller and managers.
+        """
+        self.show_progress = show_progress
+        ProgressController.set_enabled(show_progress)
+
+        for manager in (
+            self._trajectory_manager,
+            self._feature_manager,
+            self._cluster_manager,
+            self._decomposition_manager,
+            self._feature_selector_manager,
+            self._data_selector_manager,
+            self._comparison_manager,
+            self._feature_importance_manager,
+            self._analysis_manager,
+            self._plots_manager,
+            self._structure_visualization_manager,
+        ):
+            setattr(manager, "show_progress", show_progress)
+
+    def set_show_progress(self, enabled: bool) -> None:
+        """
+        Public helper to toggle progress bars at runtime.
+
+        Parameters
+        ----------
+        enabled : bool
+            Desired progress bar state. True enables bars, False suppresses them.
+
+        Returns
+        -------
+        None
+            Updates the progress controller for subsequent operations.
+
+        Examples
+        --------
+        >>> pipeline = PipelineManager(show_progress=True)
+        >>> pipeline.set_show_progress(False)
+        """
+        self._apply_show_progress(enabled)
 
     @property
     def feature(self) -> FeatureManager:
@@ -462,6 +528,7 @@ class PipelineManager:
         stride: int = 1,
         concat: bool = False,
         selection: Optional[str] = None,
+        show_progress: bool = True,
     ) -> PipelineManager:
         """
         Load complete pipeline from single pickle file.
@@ -484,6 +551,8 @@ class PipelineManager:
             Default concat mode for future trajectory loading
         selection : str, optional
             Default MDTraj selection string for trajectories
+        show_progress : bool, default=True
+            Enable or disable progress bars globally (tqdm)
 
         Returns
         -------
@@ -514,7 +583,8 @@ class PipelineManager:
             chunk_size=chunk_size,
             stride=stride,
             concat=concat,
-            selection=selection
+            selection=selection,
+            show_progress=show_progress,
         )
         pipeline._data.load(load_path)
         return pipeline
@@ -590,6 +660,7 @@ class PipelineManager:
         stride: int = 1,
         concat: bool = False,
         selection: Optional[str] = None,
+        show_progress: bool = True,
     ) -> PipelineManager:
         """
         Load pipeline from sharable archive.
@@ -612,6 +683,8 @@ class PipelineManager:
             Default concatenation setting for future trajectory loading
         selection : str, optional
             Default MDTraj selection string for trajectories
+        show_progress : bool, default=True
+            Enable or disable progress bars globally (tqdm)
 
         Returns
         -------
@@ -674,7 +747,8 @@ class PipelineManager:
             chunk_size=chunk_size,
             stride=stride,
             concat=concat,
-            selection=selection
+            selection=selection,
+            show_progress=show_progress,
         )
         pipeline._data.load(str(pkl_path))
 

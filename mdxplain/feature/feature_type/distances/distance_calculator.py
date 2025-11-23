@@ -26,10 +26,12 @@ Supports memory mapping for large datasets and provides statistical analysis cap
 """
 
 
-from typing import Dict, Optional, Tuple, Any, List, Union
+from typing import Any, Dict, List, Optional, Tuple
+
 import mdtraj as md
 import numpy as np
-from tqdm import tqdm
+
+from mdxplain.utils.progress_util import ProgressController
 
 from ..helper.calculator_compute_helper import CalculatorComputeHelper
 from ..helper.feature_shape_helper import FeatureShapeHelper
@@ -448,8 +450,11 @@ class DistanceCalculator(CalculatorBase):
         None
         """
         if FeatureShapeHelper.is_memmap(distances) or self.use_memmap:
-            for i in tqdm(range(0, total_frames, self.chunk_size),
-                          desc="Converting units", unit="chunks"):
+            for i in ProgressController.iterate(
+                range(0, total_frames, self.chunk_size),
+                desc="Converting units",
+                unit="chunks",
+            ):
                 end_idx = min(i + self.chunk_size, total_frames)
                 distances[i:end_idx] *= 10
         else:
@@ -539,8 +544,11 @@ class DistanceCalculator(CalculatorBase):
             )
             distances[:] = dist  # Direct assignment
         else:
-            for frame_start in tqdm(range(0, traj.n_frames, self.chunk_size),
-                                    desc=f"Processing traj {traj}", unit="chunks"):
+            for frame_start in ProgressController.iterate(
+                range(0, traj.n_frames, self.chunk_size),
+                desc=f"Processing traj {traj}",
+                unit="chunks",
+            ):
                 frames_to_process = min(self.chunk_size, traj.n_frames - frame_start)
 
                 # Use our precomputed pairs list for ALL residue pairs (except self-pairs)

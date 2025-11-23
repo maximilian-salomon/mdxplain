@@ -26,11 +26,12 @@ HDBSCAN clustering computation using scikit-learn.
 """
 
 import time
-from typing import Dict, Tuple, Any, Optional, List
+from typing import Any, Dict, List, Optional, Tuple
 
-import numpy as np
 import hdbscan
-from tqdm import tqdm
+import numpy as np
+
+from mdxplain.utils.progress_util import ProgressController
 
 from ..interfaces.calculator_base import CalculatorBase
 
@@ -270,8 +271,11 @@ class HDBSCANCalculator(CalculatorBase):
         full_labels = self._prepare_labels_storage(n_samples, "hdbscan", "approximate_predict")
         chunk_size = self.chunk_size
         
-        for start in tqdm(range(0, n_samples, chunk_size), 
-                          desc="HDBSCAN approximate_predict", unit="chunks"):
+        for start in ProgressController.iterate(
+            range(0, n_samples, chunk_size),
+            desc="HDBSCAN approximate_predict",
+            unit="chunks",
+        ):
             end = min(start + chunk_size, n_samples)
             chunk_labels, _ = hdbscan.approximate_predict(clusterer, data[start:end])
             full_labels[start:end] = chunk_labels

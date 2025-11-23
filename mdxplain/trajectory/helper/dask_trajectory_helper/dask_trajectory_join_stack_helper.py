@@ -28,12 +28,12 @@ from __future__ import annotations
 
 import os
 import tempfile
+from typing import TYPE_CHECKING
 
 import numpy as np
 import zarr
+from mdxplain.utils.progress_util import ProgressController
 from zarr.codecs import BloscCodec
-from tqdm import tqdm
-from typing import TYPE_CHECKING
 
 from .zarr_cache_helper import ZarrCacheHelper
 
@@ -300,9 +300,11 @@ class DaskMDTrajectoryJoinStackHelper:
         chunk_size = min(np.floor(traj1.chunk_size / 2), traj1.n_frames)
         n_chunks = (traj1.n_frames + chunk_size - 1) // chunk_size
         
-        print(f"  📝 Stacking {traj1.n_frames} frames in {n_chunks} chunks")
+        print(f"Stacking {traj1.n_frames} frames in {n_chunks} chunks")
         
-        for i in tqdm(range(n_chunks), desc="Stacking trajectory chunks", unit="chunks"):
+        for i in ProgressController.iterate(
+            range(n_chunks), desc="Stacking trajectory chunks", unit="chunks"
+        ):
             start_idx = i * chunk_size
             end_idx = min(start_idx + chunk_size, traj1.n_frames)
             

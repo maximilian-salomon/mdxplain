@@ -26,10 +26,12 @@ array formats. All methods are static and support memory-mapped arrays for
 efficient processing of large datasets.
 """
 
-from typing import Optional, List, Tuple
+from typing import List, Optional, Tuple
+
 import mdtraj as md
 import numpy as np
-from tqdm import tqdm
+
+from mdxplain.utils.progress_util import ProgressController
 
 
 class FeatureShapeHelper:
@@ -225,7 +227,11 @@ class FeatureShapeHelper:
         -------
         None
         """
-        for i in tqdm(range(0, n_frames, chunk_size), desc="Converting to condensed format", unit="chunks"):
+        for i in ProgressController.iterate(
+            range(0, n_frames, chunk_size),
+            desc="Converting to condensed format",
+            unit="chunks",
+        ):
             end_idx = min(i + chunk_size, n_frames)
             chunk = square_array[i:end_idx]
             result[i:end_idx] = chunk[:, i_indices, j_indices]
@@ -377,7 +383,11 @@ class FeatureShapeHelper:
                 (n_frames, n_residues, n_residues), dtype=condensed_array.dtype
             )
 
-        for i in tqdm(range(0, n_frames, chunk_size), desc="Converting to square format", unit="chunks"):
+        for i in ProgressController.iterate(
+            range(0, n_frames, chunk_size),
+            desc="Converting to square format",
+            unit="chunks",
+        ):
             end_idx = min(i + chunk_size, n_frames)
             chunk = condensed_array[i:end_idx]
             square_chunk = md.geometry.squareform(chunk, residue_pairs)

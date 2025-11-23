@@ -32,7 +32,8 @@ from typing import Any, Dict, List, Tuple, Union, Optional
 from pathlib import Path
 
 import mdtraj as md
-from tqdm import tqdm
+
+from mdxplain.utils.progress_util import ProgressController
 
 from ...entities.dask_md_trajectory import DaskMDTrajectory
 
@@ -245,7 +246,9 @@ class TrajectoryLoadHelper:
         """
         print(f"Concatenating {len(result['trajectories'])} processed trajectories...")
         concatenated = result["trajectories"][0]
-        for traj in tqdm(result["trajectories"][1:], desc="Concatenating"):
+        for traj in ProgressController.iterate(
+            result["trajectories"][1:], desc="Concatenating"
+        ):
             concatenated = concatenated.join(traj)
         print(f"Result: 1 concatenated trajectory with {concatenated.n_frames} frames")
         return {
@@ -364,7 +367,7 @@ class TrajectoryLoadHelper:
         ]
 
         # Load from subdirectories
-        for subdir in tqdm(subdirs, desc="Loading systems"):
+        for subdir in ProgressController.iterate(subdirs, desc="Loading systems"):
             subdir_path = os.path.join(directory_path, subdir)
             result = TrajectoryLoadHelper._load_system_trajectories(
                 subdir_path, subdir, concat, stride, selection, use_memmap, chunk_size, cache_dir
@@ -665,7 +668,9 @@ class TrajectoryLoadHelper:
         # Extract topology basename for naming
         top_basename = os.path.splitext(os.path.basename(top_path))[0]
 
-        for traj_file in tqdm(traj_files, desc=f"Loading {subdir_name}", leave=False):
+        for traj_file in ProgressController.iterate(
+            traj_files, desc=f"Loading {subdir_name}", leave=False
+        ):
             traj_path = os.path.join(subdir_path, traj_file)
             traj_basename = os.path.splitext(traj_file)[0]
 
@@ -714,7 +719,9 @@ class TrajectoryLoadHelper:
         system_trajs = []
         names = []
 
-        for file in tqdm(files, desc=f"Loading {subdir_name}", leave=False):
+        for file in ProgressController.iterate(
+            files, desc=f"Loading {subdir_name}", leave=False
+        ):
             file_path = os.path.join(subdir_path, file)
             file_basename = os.path.splitext(file)[0]
 
