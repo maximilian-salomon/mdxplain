@@ -220,10 +220,17 @@ class MembershipBarRenderer:
         -------
         None
         """
+        frame_step = (
+            x_values[1] - x_values[0] if len(x_values) > 1 else 1
+        )
+
         for start, end, cluster_id in blocks:
             color = cluster_colors.get(cluster_id, NOISE_COLOR)
             x_start = x_values[start]
-            x_width = x_values[end] - x_start if end < len(x_values) else x_values[-1] - x_start
+            if end + 1 < len(x_values):
+                x_width = x_values[end + 1] - x_start
+            else:
+                x_width = (x_values[-1] - x_start) + frame_step
 
             ax.barh(
                 y=y_pos,
@@ -234,4 +241,3 @@ class MembershipBarRenderer:
                 edgecolor='none',
                 align='center'
             )
-
