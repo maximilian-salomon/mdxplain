@@ -1,3 +1,5 @@
+:orphan:
+
 Welcome to mdxplain
 ===================
 
@@ -126,8 +128,3 @@ Core Strengths
 - **Multi-trajectory comparison workflows** with tag-based organization
 - **Complete pipeline persistence** for reproducible science
 - **Decision tree explainability** for understanding state-defining features
-
-.. toctree::
-   :hidden:
-
-   _root_toctree
