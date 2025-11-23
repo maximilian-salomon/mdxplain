@@ -24,17 +24,17 @@ Parallel operations for MDTraj methods using Dask arrays.
 Implements memory-efficient, parallelized versions of common MDTraj operations.
 """
 
-from typing import Optional, Tuple, Any
 import multiprocessing
 import os
 import tempfile
 import time
+from typing import Optional, Tuple, Any
 
-import numpy as np
 import dask.array as da
 import mdtraj as md
-from tqdm import tqdm
+import numpy as np
 import zarr
+from mdxplain.utils.progress_util import ProgressController
 from zarr.codecs import BloscCodec
 
 # Default compression for all zarr operations
@@ -156,7 +156,9 @@ class ParallelOperationsHelper:
         n_chunks = (self.n_frames + chunk_size - 1) // chunk_size
         
         # Process chunks and write directly to zarr
-        for i in tqdm(range(n_chunks), desc="  📊 Processing frame chunks"):
+        for i in ProgressController.iterate(
+            range(n_chunks), desc="Processing frame chunks"
+        ):
             start_idx = i * chunk_size
             end_idx = min(start_idx + chunk_size, self.n_frames)
             
@@ -211,7 +213,9 @@ class ParallelOperationsHelper:
         time_data = self.dask_time.compute()
         result_store['time'][:] = time_data.astype(np.float32)
         
-        for i in tqdm(range(n_atom_chunks), desc="  📊 Processing atom chunks"):
+        for i in ProgressController.iterate(
+            range(n_atom_chunks), desc="Processing atom chunks"
+        ):
             chunk_start = i * atom_chunk_size
             chunk_end = min(chunk_start + atom_chunk_size, self.n_atoms)
             current_atom_indices = np.arange(chunk_start, chunk_end)

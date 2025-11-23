@@ -25,10 +25,12 @@ Utility class for computing dihedral torsion angles with support for
 backbone and side chain angles, memory mapping, and chunked processing.
 """
 
-from typing import Dict, Tuple, Any, List
+from typing import Any, Dict, List, Tuple
+
 import mdtraj as md
 import numpy as np
-from tqdm import tqdm
+
+from mdxplain.utils.progress_util import ProgressController
 
 from ..helper.calculator_compute_helper import CalculatorComputeHelper
 from ..helper.calculator_stat_helper import CalculatorStatHelper
@@ -216,8 +218,11 @@ class TorsionsCalculator(CalculatorBase):
         """
         if self.use_memmap:
             # Chunk-wise processing for memory efficiency
-            for i in tqdm(range(0, trajectory.n_frames, self.chunk_size),
-                         desc="Computing torsions", unit="chunks"):
+            for i in ProgressController.iterate(
+                range(0, trajectory.n_frames, self.chunk_size),
+                desc="Computing torsions",
+                unit="chunks",
+            ):
                 end = min(i + self.chunk_size, trajectory.n_frames)
                 chunk = trajectory[i:end]
                 
@@ -541,4 +546,3 @@ class TorsionsCalculator(CalculatorBase):
             "cv", "std", "variance", "mad", "mean", "range", "min", "max", "transitions"
         ]
         raise ValueError(f"Unknown metric: {metric}. Supported: {supported_metrics}")
-

@@ -6,7 +6,7 @@ Clone or download the repository, then open the [documentation](docs/_build/html
 
 **Developer:** Maximilian Salomon (Software), Maeve Branwen Butler (ReadTheDocs Documentation)
 
-**Version:** 1.0.0
+**Version:** 0.1.0
 
 ![mdxplain Overview](docs/images/mdxplain_overview.png)
 

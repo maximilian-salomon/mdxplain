@@ -25,10 +25,12 @@ Utility class for extracting XYZ coordinates from MD trajectories with
 flexible atom selection. Supports memory mapping for large datasets.
 """
 
-from typing import Dict, Tuple, Any
+from typing import Any, Dict, Tuple
+
 import mdtraj as md
 import numpy as np
-from tqdm import tqdm
+
+from mdxplain.utils.progress_util import ProgressController
 
 from ..helper.calculator_compute_helper import CalculatorComputeHelper
 from ..interfaces.calculator_base import CalculatorBase
@@ -225,8 +227,11 @@ class CoordinatesCalculator(CalculatorBase):
         """
         if self.use_memmap or hasattr(coordinates, 'flush'):
             # Chunk-wise processing for memory efficiency
-            for i in tqdm(range(0, trajectory.n_frames, self.chunk_size),
-                         desc="Extracting coordinates", unit="chunks"):
+            for i in ProgressController.iterate(
+                range(0, trajectory.n_frames, self.chunk_size),
+                desc="Extracting coordinates",
+                unit="chunks",
+            ):
                 end = min(i + self.chunk_size, trajectory.n_frames)
                 
                 # Extract coordinates for chunk

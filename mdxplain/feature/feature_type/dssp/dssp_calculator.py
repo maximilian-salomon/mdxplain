@@ -25,10 +25,12 @@ Utility class for computing secondary structure assignments using DSSP algorithm
 with support for multiple encoding formats and memory mapping.
 """
 
-from typing import Dict, Tuple, Any
+from typing import Any, Dict, Tuple
+
 import mdtraj as md
 import numpy as np
-from tqdm import tqdm
+
+from mdxplain.utils.progress_util import ProgressController
 
 from ..helper.calculator_compute_helper import CalculatorComputeHelper
 from ..interfaces.calculator_base import CalculatorBase
@@ -214,8 +216,11 @@ class DSSPCalculator(CalculatorBase):
         """
         if self.use_memmap:
             # Chunk-wise processing for memory efficiency
-            for i in tqdm(range(0, trajectory.n_frames, self.chunk_size),
-                         desc="Computing DSSP", unit="chunks"):
+            for i in ProgressController.iterate(
+                range(0, trajectory.n_frames, self.chunk_size),
+                desc="Computing DSSP",
+                unit="chunks",
+            ):
                 end = min(i + self.chunk_size, trajectory.n_frames)
                 chunk = trajectory[i:end]
 
