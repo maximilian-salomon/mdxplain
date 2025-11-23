@@ -33,9 +33,11 @@ extensions = [
 autodoc_member_order = 'bysource'
 
 exclude_patterns = [
+    '_build',
     'build',
-    'AI_USAGE.md'   # Referenced via :download: directive, not part of documentation tree
-    ]
+    'jupyter_execute',
+    '**/.ipynb_checkpoints',
+]
 
 # Substitution for a literal backslash ("\ |bsol| ") in docstrings to allow "\" in build
 rst_prolog = """
@@ -43,8 +45,12 @@ rst_prolog = """
     :trim:
 """
 
+# Do not execute notebooks during doc builds (avoid sandbox/network/kernel issues)
+nb_execution_mode = "off"
+
 # html build configurations
-master_doc = 'landing'
+# Emit docs/_build/html/index.html for ReadTheDocs root serving
+root_doc = master_doc = 'index'
 html_theme = 'sphinx_rtd_theme'
 html_search = True
 html_theme_options = {
