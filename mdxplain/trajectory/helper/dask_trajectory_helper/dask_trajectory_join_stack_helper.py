@@ -32,7 +32,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import zarr
-from mdxplain.utils.progress_util import ProgressController
+from mdxplain.utils.progress_utils import ProgressUtils
 from zarr.codecs import BloscCodec
 
 from .zarr_cache_helper import ZarrCacheHelper
@@ -302,7 +302,7 @@ class DaskMDTrajectoryJoinStackHelper:
         
         print(f"Stacking {traj1.n_frames} frames in {n_chunks} chunks")
         
-        for i in ProgressController.iterate(
+        for i in ProgressUtils.iterate(
             range(n_chunks), desc="Stacking trajectory chunks", unit="chunks"
         ):
             start_idx = i * chunk_size

@@ -22,7 +22,7 @@
 Helper classes for comparison management.
 
 This module contains helper classes that provide static methods for
-comparison validation and sub-comparison creation. These helpers
+comparison validation and sub-comparison creation. These helper
 separate concerns and make the ComparisonManager more focused.
 """
 

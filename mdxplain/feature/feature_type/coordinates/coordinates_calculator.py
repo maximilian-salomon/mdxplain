@@ -30,7 +30,7 @@ from typing import Any, Dict, Tuple
 import mdtraj as md
 import numpy as np
 
-from mdxplain.utils.progress_util import ProgressController
+from mdxplain.utils.progress_utils import ProgressUtils
 
 from ..helper.calculator_compute_helper import CalculatorComputeHelper
 from ..interfaces.calculator_base import CalculatorBase
@@ -227,7 +227,7 @@ class CoordinatesCalculator(CalculatorBase):
         """
         if self.use_memmap or hasattr(coordinates, 'flush'):
             # Chunk-wise processing for memory efficiency
-            for i in ProgressController.iterate(
+            for i in ProgressUtils.iterate(
                 range(0, trajectory.n_frames, self.chunk_size),
                 desc="Extracting coordinates",
                 unit="chunks",

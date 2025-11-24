@@ -44,7 +44,7 @@ class RMSFPerAtomService:
     Returns
     -------
     RMSFPerAtomService
-        Service exposing helpers to compute per-atom RMSF values for the stored
+        Service exposing helper to compute per-atom RMSF values for the stored
         metric.
 
     Examples

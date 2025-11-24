@@ -32,7 +32,7 @@ from sklearn.decomposition import PCA, IncrementalPCA
 
 from ..interfaces.calculator_base import CalculatorBase
 from ....utils.data_utils import DataUtils
-from ..helpers.automatic_parameter_helper import AutomaticParameterHelper
+from ..helper.automatic_parameter_helper import AutomaticParameterHelper
 
 
 class PCACalculator(CalculatorBase):

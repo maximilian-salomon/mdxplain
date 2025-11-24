@@ -38,7 +38,7 @@ from pathlib import Path
 from ..entities.pipeline_data import PipelineData
 from .auto_inject_proxy import AutoInjectProxy
 from ...utils.archive_utils import ArchiveUtils
-from ...utils.progress_util import ProgressController
+from ...utils.progress_utils import ProgressUtils
 
 from ...trajectory import TrajectoryManager
 from ...feature import FeatureManager
@@ -244,7 +244,7 @@ class PipelineManager:
             Progress setting is applied to controller and managers.
         """
         self.show_progress = show_progress
-        ProgressController.set_enabled(show_progress)
+        ProgressUtils.set_enabled(show_progress)
 
         for manager in (
             self._trajectory_manager,

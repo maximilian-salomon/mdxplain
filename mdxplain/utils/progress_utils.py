@@ -37,7 +37,7 @@ from tqdm import tqdm
 T = TypeVar("T")
 
 
-class ProgressController:
+class ProgressUtils:
     """
     Toggle and wrap progress bar rendering.
 
@@ -65,7 +65,7 @@ class ProgressController:
 
         Examples
         --------
-        >>> ProgressController.set_enabled(False)
+        >>> ProgressUtils.set_enabled(False)
         """
         cls._enabled = enabled
 
@@ -88,7 +88,7 @@ class ProgressController:
 
         Examples
         --------
-        >>> for i in ProgressController.iterate(range(3), desc="Work"):
+        >>> for i in ProgressUtils.iterate(range(3), desc="Work"):
         ...     pass
         """
         return tqdm(iterable, disable=not cls._enabled, **kwargs)

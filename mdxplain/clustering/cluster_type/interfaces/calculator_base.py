@@ -30,7 +30,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
-from mdxplain.utils.progress_util import ProgressController
+from mdxplain.utils.progress_utils import ProgressUtils
 from sklearn.metrics import silhouette_score
 from sklearn.neighbors import KNeighborsClassifier
 
@@ -561,7 +561,7 @@ class CalculatorBase(ABC):
                 knn_classifier.fit(non_noise_sample_data, non_noise_sample_labels)
                 
                 # Process remaining points in chunks (direct memmap/array writing)
-                for start in ProgressController.iterate(
+                for start in ProgressUtils.iterate(
                     range(0, len(remaining_indices), self.chunk_size),
                     desc="k-NN prediction",
                     unit="chunks",

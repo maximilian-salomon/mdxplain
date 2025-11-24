@@ -371,7 +371,7 @@ class TimeSeriesDataPreparer:
 
         Notes
         -----
-        Central method for X-axis values used by all time series plotting helpers
+        Central method for X-axis values used by all time series plotting helper
         to ensure consistent axis ranges across feature and membership plots.
         """
         trajectory = pipeline_data.trajectory_data.trajectories[traj_idx]

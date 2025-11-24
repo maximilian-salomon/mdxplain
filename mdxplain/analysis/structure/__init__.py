@@ -21,7 +21,7 @@
 """Structure analysis utilities.
 
 The :mod:`mdxplain.analysis.structure` package bundles services, calculators,
-and helpers for structure-driven analyses such as RMSD and RMSF. All
+and helper for structure-driven analyses such as RMSD and RMSF. All
 components integrate with the PipelineData system and work with MDTraj and
 Dask-backed trajectories.
 """

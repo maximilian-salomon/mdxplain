@@ -31,7 +31,7 @@ from typing import List, Optional, Tuple
 import mdtraj as md
 import numpy as np
 
-from mdxplain.utils.progress_util import ProgressController
+from mdxplain.utils.progress_utils import ProgressUtils
 
 
 class FeatureShapeHelper:
@@ -227,7 +227,7 @@ class FeatureShapeHelper:
         -------
         None
         """
-        for i in ProgressController.iterate(
+        for i in ProgressUtils.iterate(
             range(0, n_frames, chunk_size),
             desc="Converting to condensed format",
             unit="chunks",
@@ -383,7 +383,7 @@ class FeatureShapeHelper:
                 (n_frames, n_residues, n_residues), dtype=condensed_array.dtype
             )
 
-        for i in ProgressController.iterate(
+        for i in ProgressUtils.iterate(
             range(0, n_frames, chunk_size),
             desc="Converting to square format",
             unit="chunks",

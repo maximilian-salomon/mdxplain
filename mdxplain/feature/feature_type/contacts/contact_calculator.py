@@ -29,7 +29,7 @@ from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
 
-from mdxplain.utils.progress_util import ProgressController
+from mdxplain.utils.progress_utils import ProgressUtils
 
 from ..helper.calculator_compute_helper import CalculatorComputeHelper
 from ..interfaces.calculator_base import CalculatorBase
@@ -131,7 +131,7 @@ class ContactCalculator(CalculatorBase):
         if self.chunk_size is None:
             self.chunk_size = distances.shape[0]
 
-        for i in ProgressController.iterate(
+        for i in ProgressUtils.iterate(
             range(0, distances.shape[0], self.chunk_size),
             desc="Computing contacts",
             unit="chunks",

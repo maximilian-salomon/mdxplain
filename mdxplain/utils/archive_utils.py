@@ -32,7 +32,7 @@ import tempfile
 from pathlib import Path
 from typing import List, Tuple
 
-from .progress_util import ProgressController
+from .progress_utils import ProgressUtils
 
 
 class ArchiveUtils:
@@ -486,7 +486,7 @@ class ArchiveUtils:
             ) as tar:
                 tar.add(temp_pkl, arcname="pipeline.pkl")
 
-                for file_path, archive_name in ProgressController.iterate(
+                for file_path, archive_name in ProgressUtils.iterate(
                     files_to_archive,
                     desc="Adding files to archive",
                     unit="file"
