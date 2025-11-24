@@ -37,6 +37,7 @@ from .helper.decision_tree_visualization_config import DecisionTreeVisualization
 from .helper.separate_tree_mode_helper import SeparateTreeModeHelper
 from .helper.plot_configuration_helper import PlotConfigurationHelper
 from ....utils.data_utils import DataUtils
+from ...helper.svg_export_helper import SvgExportHelper
 
 # Global config instance
 TREE_CONFIG = DecisionTreeVisualizationConfig()
@@ -94,11 +95,16 @@ class DecisionTreePlotter:
         separate_trees: Union[bool, str] = "auto",
         width_scale_factor: float = 1.0,
         height_scale_factor: float = 1.0,
-        short_labels: bool = False,
-        short_naming: bool = False,
+        short_labels: Optional[bool] = None,
+        short_naming: Optional[bool] = None,
         short_layout: bool = False,
-        short_edge_labels: bool = False,
-        wrap_length: int = 40
+        short_edge_labels: Optional[bool] = None,
+        wrap_length: int = 40,
+        hide_node_frames: Optional[bool] = None,
+        show_edge_symbols: Optional[bool] = None,
+        hide_feature_type_prefix: Optional[bool] = None,
+        hide_path: Optional[bool] = None,
+        edge_symbol_fontsize: Optional[int] = None
     ) -> Union[Figure, List[str], None]:
         """
         Plot decision trees for feature importance analysis.
@@ -142,16 +148,31 @@ class DecisionTreePlotter:
             Multiplicative factor for figure width (use >1.0 for wider boxes)
         height_scale_factor : float, default=1.0
             Multiplicative factor for figure height (use >1.0 for taller boxes)
-        short_labels : bool, default=False
-            Use short discrete labels (NC vs Non-Contact)
-        short_naming : bool, default=False
-            Truncate class names to 16 chars with [...] pattern
+        short_labels : bool, optional, default=None
+            Use short discrete labels (NC vs Non-Contact).
+            If None, determined by short_layout.
+        short_naming : bool, optional, default=None
+            Truncate class names to 16 chars with [...] pattern.
+            If None, determined by short_layout.
         short_layout : bool, default=False
-            Minimal tree layout (no path display) + enables all short options
-        short_edge_labels : bool, default=False
-            Show only values/conditions on edges (e.g., 'Contact' or '≤ 3.50 Å')
+            Minimal tree layout + enables all short options (if not explicitly set)
+        short_edge_labels : bool, optional, default=None
+            Show only values/conditions on edges (e.g., 'Contact' or '≤ 3.50 Å').
+            If None, determined by short_layout.
         wrap_length : int, default=40
             Maximum line length for text wrapping in node labels
+        hide_node_frames : bool, optional, default=None
+            Hide frame counts in non-root nodes, showing only percentages.
+            If None, determined by short_layout.
+        show_edge_symbols : bool, optional, default=None
+            Show only symbols on edges (✓ for left/true, ✗ for right/false).
+            If None, determined by short_layout.
+        hide_feature_type_prefix : bool, optional, default=None
+            Hide feature type prefix in labels.
+            If None, determined by short_layout.
+        hide_path : bool, optional, default=None
+            Hide decision path in non-root nodes.
+            If None, set to True when short_layout=True.
 
         Returns
         -------
@@ -196,7 +217,9 @@ class DecisionTreePlotter:
                 max_depth_display, subplot_width, subplot_height,
                 n_comparisons, effective_depth, file_format, dpi,
                 render, save_fig, short_labels, short_naming,
-                short_layout, short_edge_labels, wrap_length
+                short_layout, short_edge_labels, wrap_length,
+                hide_node_frames, show_edge_symbols, hide_feature_type_prefix,
+                hide_path, edge_symbol_fontsize
             )
 
         return self._plot_grid_mode(
@@ -204,7 +227,9 @@ class DecisionTreePlotter:
             max_depth_display, subplot_width, subplot_height,
             n_rows, n_cols, hspace_dynamic, effective_depth,
             title, filename, file_format, dpi, render, save_fig,
-            short_labels, short_naming, short_layout, short_edge_labels, wrap_length
+            short_labels, short_naming, short_layout, short_edge_labels, wrap_length,
+            hide_node_frames, show_edge_symbols, hide_feature_type_prefix,
+            hide_path, edge_symbol_fontsize
         )
 
     def _plot_separate_trees_mode(self, fi_data, feature_metadata,
@@ -212,7 +237,9 @@ class DecisionTreePlotter:
                                    subplot_width, subplot_height, n_comparisons,
                                    effective_depth, file_format, dpi, render,
                                    save_fig, short_labels, short_naming,
-                                   short_layout, short_edge_labels, wrap_length):
+                                   short_layout, short_edge_labels, wrap_length,
+                                   hide_node_frames, show_edge_symbols, hide_feature_type_prefix,
+                                   hide_path, edge_symbol_fontsize):
         """
         Plot trees in separate figures mode.
 
@@ -232,14 +259,17 @@ class DecisionTreePlotter:
             max_depth_display, subplot_width, subplot_height,
             file_format, dpi, render, save_fig, self.cache_dir,
             short_labels, short_naming, short_layout, short_edge_labels,
-            wrap_length
+            wrap_length, hide_node_frames, show_edge_symbols, hide_feature_type_prefix,
+            hide_path, edge_symbol_fontsize
         )
 
     def _plot_grid_mode(self, fi_data, feature_metadata, feature_importance_name,
                         max_depth_display, subplot_width, subplot_height,
                         n_rows, n_cols, hspace_dynamic, effective_depth,
                         title, filename, file_format, dpi, render, save_fig,
-                        short_labels, short_naming, short_layout, short_edge_labels, wrap_length):
+                        short_labels, short_naming, short_layout, short_edge_labels, wrap_length,
+                        hide_node_frames, show_edge_symbols, hide_feature_type_prefix,
+                        hide_path, edge_symbol_fontsize):
         """
         Plot trees in grid mode.
 
@@ -258,7 +288,9 @@ class DecisionTreePlotter:
         self._plot_trees_in_grid(fi_data, feature_metadata, max_depth_display,
                                   subplot_width, effective_depth, n_rows, n_cols,
                                   fig, gs, short_labels, short_naming,
-                                  short_layout, short_edge_labels, wrap_length)
+                                  short_layout, short_edge_labels, wrap_length,
+                                  hide_node_frames, show_edge_symbols, hide_feature_type_prefix,
+                                  hide_path, edge_symbol_fontsize)
         self._add_main_title(fig, title, feature_importance_name, effective_depth)
         return self._save_and_return_figure(fig, save_fig, filename,
                                              feature_importance_name, file_format,
@@ -319,7 +351,9 @@ class DecisionTreePlotter:
     def _plot_trees_in_grid(self, fi_data, feature_metadata, max_depth_display,
                             subplot_width, effective_depth, n_rows, n_cols,
                             fig, gs, short_labels, short_naming,
-                            short_layout, short_edge_labels, wrap_length):
+                            short_layout, short_edge_labels, wrap_length,
+                            hide_node_frames, show_edge_symbols, hide_feature_type_prefix,
+                            hide_path, edge_symbol_fontsize):
         """
         Plot each tree in grid.
 
@@ -338,7 +372,9 @@ class DecisionTreePlotter:
             self._plot_single_tree_in_grid(
                 ax, metadata, feature_metadata, max_depth_display,
                 subplot_width, effective_depth, idx, short_labels,
-                short_naming, short_layout, short_edge_labels, wrap_length
+                short_naming, short_layout, short_edge_labels, wrap_length,
+                hide_node_frames, show_edge_symbols, hide_feature_type_prefix,
+                hide_path, edge_symbol_fontsize
             )
 
         self._hide_unused_subplots(fig, gs, n_comparisons, n_rows, n_cols)
@@ -370,7 +406,9 @@ class DecisionTreePlotter:
     def _plot_single_tree_in_grid(self, ax, metadata, feature_metadata,
                                    max_depth_display, subplot_width,
                                    effective_depth, idx, short_labels,
-                                   short_naming, short_layout, short_edge_labels, wrap_length):
+                                   short_naming, short_layout, short_edge_labels, wrap_length,
+                                   hide_node_frames, show_edge_symbols, hide_feature_type_prefix,
+                                   hide_path, edge_symbol_fontsize):
         """
         Plot single tree in grid cell.
 
@@ -398,7 +436,9 @@ class DecisionTreePlotter:
             model, feature_metadata, class_names, max_depth_display,
             short_labels=short_labels, short_naming=short_naming,
             short_layout=short_layout, short_edge_labels=short_edge_labels,
-            wrap_length=wrap_length
+            wrap_length=wrap_length, hide_node_frames=hide_node_frames,
+            show_edge_symbols=show_edge_symbols, hide_feature_type_prefix=hide_feature_type_prefix,
+            edge_symbol_fontsize=edge_symbol_fontsize
         )
         visualizer.visualize(ax, target_width=target_width_px)
 
@@ -568,6 +608,9 @@ class DecisionTreePlotter:
             Figure if render=True, else None
         """
         if save_fig:
+            # Configure SVG export for editable text
+            SvgExportHelper.apply_svg_config_if_needed(file_format)
+
             if filename is None:
                 filename = f"decision_trees_{feature_importance_name}.{file_format}"
             filepath = DataUtils.get_cache_file_path(filename, self.cache_dir)

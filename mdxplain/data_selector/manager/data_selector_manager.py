@@ -32,8 +32,10 @@ from __future__ import annotations
 from typing import List, Union, Dict, Any, TYPE_CHECKING
 
 from ..entities.data_selector_data import DataSelectorData
+from ..entities.data_selector_group import DataSelectorGroup
 from ..helper.frame_selection_helper import FrameSelectionHelper
 from ..helper.criteria_builder_helper import CriteriaBuilderHelper
+from ..helper.group_creation_helper import GroupCreationHelper
 from ...utils.data_utils import DataUtils
 
 if TYPE_CHECKING:
@@ -833,3 +835,204 @@ class DataSelectorManager:
         for name, data in pipeline_data.data_selector_data.items():
             print(f"\n--- {name} ---")
             data.print_info()
+
+    # =============================================================================
+    # GROUP MANAGEMENT METHODS
+    # =============================================================================
+
+    def create_from_clusters(
+        self,
+        pipeline_data: PipelineData,
+        group_name: str,
+        clustering_name: str,
+        cluster_ids: Union[List[int], None] = None,
+        noise_id: Union[int, None] = -1,
+        force: bool = False,
+    ) -> None:
+        """
+        Create data selectors automatically for clusters.
+
+        Creates one data selector per cluster and organizes them
+        into a named group for easy reference. Noise clusters are
+        filtered out by default.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data object containing clustering results
+        group_name : str
+            Name for the selector group
+        clustering_name : str
+            Name of clustering result to use
+        cluster_ids : List[int], optional
+            Specific cluster IDs to include.
+            If None, includes all non-noise clusters.
+        noise_id : int or None, default=-1
+            Cluster ID that represents noise/outliers to filter out.
+            - If int: Filters out this specific cluster ID (e.g., -1 for sklearn)
+            - If None: No filtering, creates selectors for ALL cluster IDs
+        force : bool, default=False
+            Whether to overwrite existing selectors with same names.
+            If False, raises ValueError when selector already exists.
+
+        Returns
+        -------
+        None
+            Creates selectors and stores group in pipeline_data
+
+        Raises
+        ------
+        ValueError
+            If clustering_name does not exist in pipeline_data
+        ValueError
+            If selector already exists and force is False
+
+        Examples
+        --------
+        >>> # Create selectors for all non-noise clusters
+        >>> manager.create_from_clusters(
+        ...     pipeline_data, "clusters", "dbscan_clustering"
+        ... )
+
+        >>> # Create selectors for specific clusters only
+        >>> manager.create_from_clusters(
+        ...     pipeline_data, "folded", "clustering",
+        ...     cluster_ids=[0, 1, 2]
+        ... )
+
+        >>> # Include ALL clusters (even noise)
+        >>> manager.create_from_clusters(
+        ...     pipeline_data, "all_states", "clustering",
+        ...     noise_id=None
+        ... )
+        """
+        group = GroupCreationHelper.create_cluster_selectors(
+            pipeline_data,
+            self,
+            group_name,
+            clustering_name,
+            cluster_ids,
+            noise_id,
+            force,
+        )
+        pipeline_data.data_selector_groups[group_name] = group
+
+    def create_from_tags(
+        self,
+        pipeline_data: PipelineData,
+        group_name: str,
+        tags: Union[List[str], None] = None,
+        force: bool = False,
+    ) -> None:
+        """
+        Create data selectors automatically for tags.
+
+        Creates one data selector per tag and organizes them
+        into a named group for easy reference.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data object
+        group_name : str
+            Name for the group
+        tags : List[str], optional
+            Specific tags to include
+        force : bool, default=False
+            Overwrite existing selectors
+
+        Returns
+        -------
+        None
+            Creates selectors and group
+
+        Examples
+        --------
+        >>> manager.create_from_tags(
+        ...     pipeline_data, "systems", tags=["system_A", "system_B"]
+        ... )
+        """
+        group = GroupCreationHelper.create_tag_selectors(
+            pipeline_data, self, group_name, tags, force
+        )
+        pipeline_data.data_selector_groups[group_name] = group
+
+    def get_group(self, pipeline_data: PipelineData, group_name: str) -> List[str]:
+        """
+        Get selector names in a group.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data object
+        group_name : str
+            Group name
+
+        Returns
+        -------
+        List[str]
+            Selector names
+
+        Examples
+        --------
+        >>> selectors = manager.get_group(pipeline_data, "clusters")
+        """
+        if group_name not in pipeline_data.data_selector_groups:
+            raise ValueError(f"Group '{group_name}' not found.")
+        return pipeline_data.data_selector_groups[group_name].selector_names
+
+    def list_groups(self, pipeline_data: PipelineData) -> List[str]:
+        """
+        List all group names.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data object
+
+        Returns
+        -------
+        List[str]
+            Group names
+
+        Examples
+        --------
+        >>> groups = manager.list_groups(pipeline_data)
+        """
+        return list(pipeline_data.data_selector_groups.keys())
+
+    def delete_group(
+        self,
+        pipeline_data: PipelineData,
+        group_name: str,
+        delete_selectors: bool = False,
+    ) -> None:
+        """
+        Delete a group.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data object
+        group_name : str
+            Group name
+        delete_selectors : bool, default=False
+            Also delete selectors
+
+        Returns
+        -------
+        None
+            Deletes group
+
+        Examples
+        --------
+        >>> manager.delete_group(pipeline_data, "old_group")
+        """
+        if group_name not in pipeline_data.data_selector_groups:
+            raise ValueError(f"Group '{group_name}' not found.")
+        if delete_selectors:
+            group = pipeline_data.data_selector_groups[group_name]
+            for name in group.selector_names:
+                if name in pipeline_data.data_selector_data:
+                    del pipeline_data.data_selector_data[name]
+        del pipeline_data.data_selector_groups[group_name]

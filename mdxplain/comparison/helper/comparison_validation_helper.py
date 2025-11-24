@@ -163,4 +163,29 @@ class ComparisonValidationHelper:
                 f"Data selectors not found: {missing_selectors}. "
                 f"Available selectors: {list(available_selectors)}"
             )
+
+    @staticmethod
+    def validate_has_selectors(selectors: List[str]) -> None:
+        """
+        Validate that at least one selector is provided.
+
+        Parameters
+        ----------
+        selectors : List[str]
+            List of selector names
+
+        Returns
+        -------
+        None
+            Method returns nothing, raises ValueError if empty
+
+        Raises
+        ------
+        ValueError
+            If selector list is empty
+        """
+        if not selectors:
+            raise ValueError(
+                "Must provide either data_selectors or data_selector_groups"
+            )
         

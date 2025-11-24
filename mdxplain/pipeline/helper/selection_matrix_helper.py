@@ -439,16 +439,75 @@ class SelectionMatrixHelper:
         
         # Fill matrix column by column
         for i, (col_idx, use_reduced) in enumerate(zip(indices, use_reduced_flags)):
-            # Get source data
+            # Get source data and metadata
             if use_reduced and feature_data.reduced_data is not None:
                 source_data = feature_data.reduced_data
+                metadata = feature_data.reduced_feature_metadata
             else:
                 source_data = feature_data.data
-            
+                metadata = feature_data.feature_metadata
+
             if source_data is not None:
-                # Copy data for selected frames
-                matrix[start_row:start_row+len(frame_indices), start_col+i] = (
-                    source_data[frame_indices, col_idx]
+                # Get data for selected frames and column
+                data_slice = source_data[frame_indices, col_idx]
+
+                # Convert char-encoded data to integer if needed
+                data_slice = SelectionMatrixHelper._convert_char_to_int(
+                    data_slice, metadata
                 )
-        
+
+                # Copy data to matrix
+                matrix[start_row:start_row+len(frame_indices), start_col+i] = data_slice
+
         return start_col + len(indices)
+
+    @staticmethod
+    def _convert_char_to_int(data_slice: np.ndarray, metadata: Dict[str, Any]) -> np.ndarray:
+        """
+        Convert char-encoded categorical data to integer if needed.
+
+        Parameters
+        ----------
+        data_slice : numpy.ndarray
+            Data slice to potentially convert
+        metadata : dict
+            Feature metadata containing matrix_mapping
+
+        Returns
+        -------
+        numpy.ndarray
+            Converted data (integer) or original data if no conversion needed
+
+        Raises
+        ------
+        ValueError
+            If data contains characters not present in matrix_mapping
+
+        Notes
+        -----
+        Uses matrix_mapping from metadata for char => int conversion.
+        Only converts if data is Unicode string dtype.
+        """
+        if data_slice.dtype.kind != 'U':  # Not Unicode string
+            return data_slice
+
+        matrix_mapping = metadata.get("matrix_mapping", {})
+        if not matrix_mapping:
+            return data_slice
+
+        # Validate all chars are in mapping before conversion
+        unique_chars = np.unique(data_slice)
+        unknown_chars = [char for char in unique_chars if char not in matrix_mapping]
+
+        if unknown_chars:
+            raise ValueError(
+                f"Unknown characters in data: {unknown_chars}. "
+                f"Valid characters are: {list(matrix_mapping.keys())}"
+            )
+
+        # Vectorized conversion using numpy vectorize
+        convert_func = np.vectorize(
+            lambda x: matrix_mapping[x],
+            otypes=[np.int8]
+        )
+        return convert_func(data_slice)

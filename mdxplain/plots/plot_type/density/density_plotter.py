@@ -32,6 +32,7 @@ import numpy as np
 
 from ...helper.validation_helper import ValidationHelper
 from ...helper.title_legend_helper import TitleLegendHelper
+from ...helper.svg_export_helper import SvgExportHelper
 from .helper.density_data_preparer import DensityDataPreparer
 from .helper.density_calculation_helper import DensityCalculationHelper
 from ..feature_importance_base.feature_importance_base_plotter import FeatureImportanceBasePlotter
@@ -90,6 +91,13 @@ class DensityPlotter(FeatureImportanceBasePlotter):
         filename: Optional[str] = None,
         file_format: str = "png",
         dpi: int = 300,
+        title_fontsize: Optional[int] = None,
+        subplot_title_fontsize: Optional[int] = None,
+        xlabel_fontsize: Optional[int] = None,
+        ylabel_fontsize: Optional[int] = None,
+        tick_fontsize: Optional[int] = None,
+        legend_fontsize: Optional[int] = None,
+        legend_title_fontsize: Optional[int] = None,
     ) -> Figure:
         """
         Create density plots from feature importance or manual selection.
@@ -153,9 +161,24 @@ class DensityPlotter(FeatureImportanceBasePlotter):
         filename : str, optional
             Custom filename (auto-generated if None)
         file_format : str, default="png"
-            File format for saving
+            File format for saving (png, pdf, svg, etc.).
+            When using 'svg', text elements remain editable in SVG editors.
         dpi : int, default=300
             Resolution for saved figure
+        title_fontsize : int, optional
+            Font size for main figure title (default: 18)
+        subplot_title_fontsize : int, optional
+            Font size for feature subplot titles (default: 14)
+        xlabel_fontsize : int, optional
+            Font size for X-axis labels (default: 13)
+        ylabel_fontsize : int, optional
+            Font size for Y-axis labels (default: 13)
+        tick_fontsize : int, optional
+            Font size for axis tick labels (default: 12)
+        legend_fontsize : int, optional
+            Font size for legend entries (default: 14)
+        legend_title_fontsize : int, optional
+            Font size for legend title (default: 16)
 
         Returns
         -------
@@ -237,17 +260,22 @@ class DensityPlotter(FeatureImportanceBasePlotter):
         rightmost_ax_first_row, active_threshold = self._plot_all_features(
             fig, gs, all_features, layout, density_data, metadata_map,
             data_selector_colors, long_labels, kde_bandwidth, base_sigma, max_sigma,
-            alpha, line_width, contact_threshold, contact_cutoff
+            alpha, line_width, contact_threshold, contact_cutoff,
+            subplot_title_fontsize, xlabel_fontsize, ylabel_fontsize, tick_fontsize
         )
 
         # 8. Add title and legend
         self._add_title_and_legend_positioned(
             fig, wrapped_title, top, rightmost_ax_first_row,
-            data_selector_colors, legend_title, legend_labels, active_threshold
+            data_selector_colors, legend_title, legend_labels, active_threshold,
+            title_fontsize, legend_fontsize, legend_title_fontsize
         )
 
         # 9. Save if requested
         if save_fig:
+            # Configure SVG export for editable text
+            SvgExportHelper.apply_svg_config_if_needed(file_format)
+
             self._save_figure(
                 fig, filename, mode_type, mode_name,
                 n_top, file_format, dpi, prefix="density"
@@ -329,7 +357,11 @@ class DensityPlotter(FeatureImportanceBasePlotter):
         alpha: float,
         line_width: float,
         contact_threshold: Optional[float],
-        contact_cutoff: Optional[float]
+        contact_cutoff: Optional[float],
+        subplot_title_fontsize: Optional[int],
+        xlabel_fontsize: Optional[int],
+        ylabel_fontsize: Optional[int],
+        tick_fontsize: Optional[int]
     ) -> Tuple:
         """
         Plot all features in grid layout.
@@ -366,6 +398,14 @@ class DensityPlotter(FeatureImportanceBasePlotter):
             Distance threshold for contact threshold line
         contact_cutoff : float, optional
             Contact cutoff from conversion
+        subplot_title_fontsize : int, optional
+            Font size for subplot titles
+        xlabel_fontsize : int, optional
+            Font size for X-axis labels
+        ylabel_fontsize : int, optional
+            Font size for Y-axis labels
+        tick_fontsize : int, optional
+            Font size for axis ticks
 
         Returns
         -------
@@ -406,7 +446,10 @@ class DensityPlotter(FeatureImportanceBasePlotter):
                 alpha, line_width, resolved_threshold
             )
 
-            self._style_subplot(ax, feat_name, feat_metadata, long_labels)
+            self._style_subplot(
+                ax, feat_name, feat_metadata, long_labels,
+                subplot_title_fontsize, xlabel_fontsize, ylabel_fontsize, tick_fontsize
+            )
 
         return rightmost_ax_first_row, active_threshold
 
@@ -497,7 +540,11 @@ class DensityPlotter(FeatureImportanceBasePlotter):
         ax,
         feat_name: str,
         feat_metadata: Dict[str, any],
-        long_labels: bool
+        long_labels: bool,
+        subplot_title_fontsize: Optional[int],
+        xlabel_fontsize: Optional[int],
+        ylabel_fontsize: Optional[int],
+        tick_fontsize: Optional[int]
     ):
         """
         Apply styling to subplot.
@@ -512,6 +559,14 @@ class DensityPlotter(FeatureImportanceBasePlotter):
             Feature metadata with type_metadata structure
         long_labels : bool
             Use long descriptive labels for discrete features
+        subplot_title_fontsize : int, optional
+            Font size for subplot title
+        xlabel_fontsize : int, optional
+            Font size for X-axis label
+        ylabel_fontsize : int, optional
+            Font size for Y-axis label
+        tick_fontsize : int, optional
+            Font size for tick labels
 
         Returns
         -------
@@ -520,7 +575,7 @@ class DensityPlotter(FeatureImportanceBasePlotter):
         """
         # Title with line wrapping for long names
         wrapped_title = TitleLegendHelper.wrap_title(feat_name, max_chars_per_line=40)
-        ax.set_title(wrapped_title, fontsize=14, pad=10, fontweight='bold')
+        ax.set_title(wrapped_title, fontsize=subplot_title_fontsize or 14, pad=10, fontweight='bold')
 
         # Get visualization metadata from feature
         type_metadata = feat_metadata.get("type_metadata", {})
@@ -528,7 +583,7 @@ class DensityPlotter(FeatureImportanceBasePlotter):
 
         # Set X-axis label
         xlabel = viz.get("axis_label", "Feature Value")
-        ax.set_xlabel(xlabel, fontsize=13)
+        ax.set_xlabel(xlabel, fontsize=xlabel_fontsize or 13)
 
         # Configure discrete features with tick labels
         if viz.get("is_discrete", False):
@@ -546,16 +601,16 @@ class DensityPlotter(FeatureImportanceBasePlotter):
                 ax.set_xticks(positions)
                 # Rotate labels vertically for long_labels to prevent overlap
                 if long_labels:
-                    ax.set_xticklabels(tick_labels, rotation=90, ha='center', fontsize=10)
+                    ax.set_xticklabels(tick_labels, rotation=90, ha='center', fontsize=tick_fontsize or 10)
                 else:
-                    ax.set_xticklabels(tick_labels)
+                    ax.set_xticklabels(tick_labels, fontsize=tick_fontsize or 12)
                 ax.set_xlim(xlim)
 
         # Y-axis label
-        ax.set_ylabel("Probability Density", fontsize=13)
+        ax.set_ylabel("Probability Density", fontsize=ylabel_fontsize or 13)
 
         # Grid
         ax.grid(True, alpha=0.3, axis='both')
 
         # Tick sizes
-        ax.tick_params(axis='both', labelsize=12)
+        ax.tick_params(axis='both', labelsize=tick_fontsize or 12)

@@ -409,7 +409,7 @@ class PlotConfigurationHelper:
         """
         max_dimension = max(subplot_width, subplot_height)
         if max_dimension > TREE_CONFIG.max_dimension_for_dpi_reduction:
-            print(f"Large tree dimensions ({max_dimension:.1f}\"): DPI {dpi} → {TREE_CONFIG.reduced_dpi}")
+            print(f"Large tree dimensions ({max_dimension:.1f}): DPI {dpi} => {TREE_CONFIG.reduced_dpi}")
             return TREE_CONFIG.reduced_dpi
         return dpi
 

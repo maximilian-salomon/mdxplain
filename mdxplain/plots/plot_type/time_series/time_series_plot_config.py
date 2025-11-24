@@ -201,6 +201,15 @@ class TimeSeriesPlotConfig:
     smoothing_polyorder: int = 3
     show_unsmoothed_background: bool = True
 
+    # Font size parameters
+    title_fontsize: int = None
+    subplot_title_fontsize: int = None
+    xlabel_fontsize: int = None
+    ylabel_fontsize: int = None
+    tick_fontsize: int = None
+    legend_fontsize: int = None
+    legend_title_fontsize: int = None
+
     # Prepared data (set during plotting)
     feature_data: Dict = field(default_factory=dict)
     feature_indices: Dict[int, str] = field(default_factory=dict)

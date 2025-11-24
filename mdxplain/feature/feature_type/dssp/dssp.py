@@ -64,7 +64,7 @@ class DSSP(FeatureTypeBase):
 
     """Available reduce metrics for DSSP features."""
 
-    def __init__(self, simplified: bool = False, encoding: str = 'char') -> None:
+    def __init__(self, simplified: bool = False, encoding: str = 'integer') -> None:
         """
         Initialize DSSP feature type with classification and encoding parameters.
 
@@ -75,11 +75,11 @@ class DSSP(FeatureTypeBase):
 
             - True: Simplified 3-class (H=helix, E=sheet, C=coil/other)
             - False: Full 8-class DSSP (H, B, E, G, I, T, S, C)
-        encoding : str, default='char'
+        encoding : str, default='integer'
             Output encoding format:
-            
+
             - 'onehot': One-hot encoded binary vectors
-            - 'integer': Integer class indices (0, 1, 2, ...)
+            - 'integer': Integer class indices (0, 1, 2, ...) [default]
             - 'char': Character codes ('H', 'E', 'C', etc.)
 
         Returns

@@ -25,9 +25,11 @@ Utility class for computing contact maps from distance arrays using distance cut
 Supports memory mapping for large datasets and provides statistical analysis capabilities.
 """
 
-from typing import Dict, Optional, Tuple, Any
+from typing import Any, Dict, Optional, Tuple
+
 import numpy as np
-from tqdm import tqdm
+
+from mdxplain.utils.progress_util import ProgressController
 
 from ..helper.calculator_compute_helper import CalculatorComputeHelper
 from ..interfaces.calculator_base import CalculatorBase
@@ -129,7 +131,11 @@ class ContactCalculator(CalculatorBase):
         if self.chunk_size is None:
             self.chunk_size = distances.shape[0]
 
-        for i in tqdm(range(0, distances.shape[0], self.chunk_size), desc="Computing contacts", unit="chunks"):
+        for i in ProgressController.iterate(
+            range(0, distances.shape[0], self.chunk_size),
+            desc="Computing contacts",
+            unit="chunks",
+        ):
             end_idx = min(i + self.chunk_size, distances.shape[0])
             contacts[i:end_idx] = distances[i:end_idx] <= cutoff
 

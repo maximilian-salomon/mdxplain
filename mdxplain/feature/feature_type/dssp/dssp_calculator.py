@@ -25,10 +25,12 @@ Utility class for computing secondary structure assignments using DSSP algorithm
 with support for multiple encoding formats and memory mapping.
 """
 
-from typing import Dict, Tuple, Any
+from typing import Any, Dict, Tuple
+
 import mdtraj as md
 import numpy as np
-from tqdm import tqdm
+
+from mdxplain.utils.progress_util import ProgressController
 
 from ..helper.calculator_compute_helper import CalculatorComputeHelper
 from ..interfaces.calculator_base import CalculatorBase
@@ -214,22 +216,31 @@ class DSSPCalculator(CalculatorBase):
         """
         if self.use_memmap:
             # Chunk-wise processing for memory efficiency
-            for i in tqdm(range(0, trajectory.n_frames, self.chunk_size),
-                         desc="Computing DSSP", unit="chunks"):
+            for i in ProgressController.iterate(
+                range(0, trajectory.n_frames, self.chunk_size),
+                desc="Computing DSSP",
+                unit="chunks",
+            ):
                 end = min(i + self.chunk_size, trajectory.n_frames)
                 chunk = trajectory[i:end]
-                
+
                 # Compute DSSP for chunk
                 chunk_dssp = md.compute_dssp(chunk, simplified=simplified)
-                
+
+                # MDTraj returns ' ' for loops/irregular elements
+                chunk_dssp = np.where(chunk_dssp == ' ', 'C', chunk_dssp)
+
                 # Encode chunk according to format
                 encoded_chunk = self._encode_dssp_assignments(chunk_dssp, encoding, classes, simplified)
-                
+
                 dssp_array[i:end] = encoded_chunk
         else:
             # In-memory processing for smaller datasets
             dssp_assignments = md.compute_dssp(trajectory, simplified=simplified)
-            
+
+            # MDTraj returns ' ' for loops/irregular elements
+            dssp_assignments = np.where(dssp_assignments == ' ', 'C', dssp_assignments)
+
             # Encode according to format
             dssp_array[:] = self._encode_dssp_assignments(dssp_assignments, encoding, classes, simplified)
 
@@ -265,10 +276,11 @@ class DSSPCalculator(CalculatorBase):
         
         The *_chunked methods are only for encoding large arrays in one call,
         but here we either have small arrays or are already processing chunks.
-        Only converts space to C for char encoding when simplified=False.
+
+        Space conversion happens centrally in _compute_dssp_assignments() before
+        this method is called, so dssp_data is already cleaned.
         """
         if encoding == 'char':
-            dssp_data = np.where(dssp_data == '', 'C', dssp_data)
             return dssp_data.astype('U1')
         elif encoding == 'integer':
             return DSSPEncodingHelper.encode_integer(dssp_data, classes)
@@ -314,6 +326,9 @@ class DSSPCalculator(CalculatorBase):
         # Prepare tick labels for discrete features
         tick_labels = self._create_tick_labels(encoding, classes)
 
+        # Create matrix_mapping for char => int conversion
+        matrix_mapping = {char: idx for idx, char in enumerate(classes)}
+
         return {
             "is_pair": False,
             "features": features,
@@ -325,11 +340,13 @@ class DSSPCalculator(CalculatorBase):
             "n_classes": len(classes),
             "n_features": len(features),
             "algorithm": "dssp",
+            "matrix_mapping": matrix_mapping,
             "visualization": {
                 "is_discrete": True,
                 "is_binary": is_onehot,
                 "axis_label": axis_label,
-                "tick_labels": tick_labels
+                "tick_labels": tick_labels,
+                "allow_hide_prefix": True
             }
         }
 

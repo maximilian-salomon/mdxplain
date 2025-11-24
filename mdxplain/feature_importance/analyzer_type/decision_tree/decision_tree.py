@@ -65,7 +65,7 @@ class DecisionTree(AnalyzerTypeBase):
         self,
         criterion: str = "gini",
         splitter: str = "best",
-        max_depth: Optional[int] = None,
+        max_depth: Optional[int] = 3,
         min_samples_split: int = 2,
         min_samples_leaf: int = 1,
         min_weight_fraction_leaf: float = 0.0,
@@ -91,7 +91,7 @@ class DecisionTree(AnalyzerTypeBase):
             Function to measure quality of splits ("gini" or "entropy")
         splitter : str, default="best"
             Strategy to split at each node ("best" or "random")
-        max_depth : int, optional
+        max_depth : int, optional, default=3
             Maximum depth of tree. None means unlimited depth.
         min_samples_split : int, default=2
             Minimum samples required to split an internal node

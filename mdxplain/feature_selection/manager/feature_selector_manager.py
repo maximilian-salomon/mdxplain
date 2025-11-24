@@ -1144,7 +1144,7 @@ class FeatureSelectorManager:
 
         print("=== FeatureSelectorData Information ===")
         data_names = list(pipeline_data.selected_feature_data.keys())
-        print(f"FeatureSelectorData Names: {len(data_names)} ({", ".join(data_names)})")
+        print(f"FeatureSelectorData Names: {len(data_names)} ({', '.join(data_names)})")
         
         for name, data in pipeline_data.selected_feature_data.items():
             print(f"\n--- {name} ---")

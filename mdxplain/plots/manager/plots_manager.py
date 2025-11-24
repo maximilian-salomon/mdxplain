@@ -234,8 +234,10 @@ class PlotsManager:
         decomposition_name: str,
         dimensions: List[int],
         clustering_name: Optional[str] = None,
-        show_centers: bool = False,
-        energy_values: bool = False,
+        show_centers: bool = True,
+        energy_values: bool = True,
+        use_kde: bool = False,
+        mask_empty_bins: bool = True,
         bins: int = 50,
         temperature: float = 310.15,
         alpha: float = 0.6,
@@ -255,6 +257,12 @@ class PlotsManager:
         filename: Optional[str] = None,
         file_format: str = "png",
         dpi: int = 300,
+        title_fontsize: Optional[int] = None,
+        xlabel_fontsize: Optional[int] = None,
+        ylabel_fontsize: Optional[int] = None,
+        tick_fontsize: Optional[int] = None,
+        legend_fontsize: Optional[int] = None,
+        contour_label_fontsize: Optional[int] = None,
     ) -> Figure:
         """
         Create landscape plot directly from plots manager.
@@ -275,6 +283,19 @@ class PlotsManager:
             Show cluster centers (requires clustering_name)
         energy_values : bool, default=False
             Show free energy landscape instead of density
+        use_kde : bool, default=False
+            Use KDE smoothing for background density estimation.
+
+            **Default (False)**: Histogram-based - shows actual observations,
+            preserves energy barriers, scientifically accurate.
+
+            **KDE (True)**: Smooth visualization but can filter out small energy
+            barriers and distort the landscape. Use only if you know what you do.
+            NOT for quantitative analysis. A warning will be issued.
+        mask_empty_bins : bool, default=True
+            Mask unsampled bins in the background (energy/density) as white/
+            transparent. Set False to fill with the maximum color for
+            continuous fill.
         bins : int, default=50
             Number of bins for histogram/energy calculation
         temperature : float, default=300.0
@@ -312,9 +333,22 @@ class PlotsManager:
         filename : Optional[str], default=None
             Custom filename (overrides auto-generated name)
         file_format : str, default="png"
-            File format for saving (png, pdf, svg, etc.)
+            File format for saving (png, pdf, svg, etc.).
+            When using 'svg', text elements remain editable in SVG editors.
         dpi : int, default=300
             Resolution for saved figure
+        title_fontsize : int, optional
+            Font size for figure title (default: 14)
+        xlabel_fontsize : int, optional
+            Font size for X-axis labels (default: 12)
+        ylabel_fontsize : int, optional
+            Font size for Y-axis labels (default: 12)
+        tick_fontsize : int, optional
+            Font size for tick labels (default: 10)
+        legend_fontsize : int, optional
+            Font size for legend entries (default: 10)
+        contour_label_fontsize : int, optional
+            Font size for contour labels (default: 10)
 
         Returns
         -------
@@ -374,6 +408,8 @@ class PlotsManager:
             clustering_name=clustering_name,
             show_centers=show_centers,
             energy_values=energy_values,
+            use_kde=use_kde,
+            mask_empty_bins=mask_empty_bins,
             bins=bins,
             temperature=temperature,
             alpha=alpha,
@@ -393,6 +429,12 @@ class PlotsManager:
             filename=filename,
             file_format=file_format,
             dpi=dpi,
+            title_fontsize=title_fontsize,
+            xlabel_fontsize=xlabel_fontsize,
+            ylabel_fontsize=ylabel_fontsize,
+            tick_fontsize=tick_fontsize,
+            legend_fontsize=legend_fontsize,
+            contour_label_fontsize=contour_label_fontsize,
         )
 
     def membership(
@@ -408,6 +450,11 @@ class PlotsManager:
         filename: Optional[str] = None,
         file_format: str = "png",
         dpi: int = 300,
+        title_fontsize: Optional[int] = None,
+        xlabel_fontsize: Optional[int] = None,
+        ylabel_fontsize: Optional[int] = None,
+        tick_fontsize: Optional[int] = None,
+        legend_fontsize: Optional[int] = None,
     ) -> Figure:
         """
         Create cluster membership timeline plot.
@@ -436,9 +483,20 @@ class PlotsManager:
         filename : Optional[str], default=None
             Custom filename (auto-generated if None)
         file_format : str, default="png"
-            File format for saving
+            File format for saving (png, pdf, svg, etc.).
+            When using 'svg', text elements remain editable in SVG editors.
         dpi : int, default=300
             Resolution for saved figure
+        title_fontsize : int, optional
+            Font size for title (default: 14)
+        xlabel_fontsize : int, optional
+            Font size for X-axis label (default: 12)
+        ylabel_fontsize : int, optional
+            Font size for Y-axis trajectory labels (default: 11)
+        tick_fontsize : int, optional
+            Font size for tick labels (default: 10)
+        legend_fontsize : int, optional
+            Font size for legend entries (default: 10)
 
         Returns
         -------
@@ -499,4 +557,9 @@ class PlotsManager:
             filename=filename,
             file_format=file_format,
             dpi=dpi,
+            title_fontsize=title_fontsize,
+            xlabel_fontsize=xlabel_fontsize,
+            ylabel_fontsize=ylabel_fontsize,
+            tick_fontsize=tick_fontsize,
+            legend_fontsize=legend_fontsize,
         )

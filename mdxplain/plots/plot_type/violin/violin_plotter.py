@@ -78,6 +78,12 @@ class ViolinPlotter(FeatureImportanceBasePlotter):
         filename: Optional[str] = None,
         file_format: str = "png",
         dpi: int = 300,
+        title_fontsize: Optional[int] = None,
+        subplot_title_fontsize: Optional[int] = None,
+        ylabel_fontsize: Optional[int] = None,
+        tick_fontsize: Optional[int] = None,
+        legend_fontsize: Optional[int] = None,
+        legend_title_fontsize: Optional[int] = None,
     ) -> Figure:
         """
         Create violin plots from feature importance or manual selection.
@@ -128,9 +134,22 @@ class ViolinPlotter(FeatureImportanceBasePlotter):
         filename : str, optional
             Custom filename (auto-generated if None)
         file_format : str, default="png"
-            File format for saving
+            File format for saving (png, pdf, svg, etc.).
+            When using 'svg', text elements remain editable in SVG editors.
         dpi : int, default=300
             Resolution for saved figure
+        title_fontsize : int, optional
+            Font size for main figure title (default: 18)
+        subplot_title_fontsize : int, optional
+            Font size for feature subplot titles (default: 14)
+        ylabel_fontsize : int, optional
+            Font size for Y-axis labels (default: 13)
+        tick_fontsize : int, optional
+            Font size for axis tick labels (default: 12)
+        legend_fontsize : int, optional
+            Font size for legend entries (default: 14)
+        legend_title_fontsize : int, optional
+            Font size for legend title (default: 16)
 
         Returns
         -------
@@ -209,13 +228,15 @@ class ViolinPlotter(FeatureImportanceBasePlotter):
         first_ax, rightmost_ax_first_row, active_threshold = self._plot_all_features(
             fig, gs, all_features, layout,
             violin_data, metadata_map, data_selector_colors,
-            long_labels, contact_threshold, contact_cutoff
+            long_labels, contact_threshold, contact_cutoff,
+            subplot_title_fontsize, ylabel_fontsize, tick_fontsize
         )
 
         # 8. Add title and legend
         self._add_title_and_legend_positioned(
             fig, wrapped_title, top, rightmost_ax_first_row,
-            data_selector_colors, legend_title, legend_labels, active_threshold
+            data_selector_colors, legend_title, legend_labels, active_threshold,
+            title_fontsize, legend_fontsize, legend_title_fontsize
         )
 
         # 9. Save if requested
@@ -226,7 +247,6 @@ class ViolinPlotter(FeatureImportanceBasePlotter):
             )
 
         return fig
-
     def _prepare_violin_data(
         self,
         mode_type: str,
@@ -296,7 +316,10 @@ class ViolinPlotter(FeatureImportanceBasePlotter):
         data_selector_colors: Dict[str, str],
         long_labels: bool,
         contact_threshold: Optional[float],
-        contact_cutoff: Optional[float]
+        contact_cutoff: Optional[float],
+        subplot_title_fontsize: Optional[int],
+        ylabel_fontsize: Optional[int],
+        tick_fontsize: Optional[int]
     ) -> Tuple:
         """
         Plot all features in grid layout.
@@ -323,6 +346,12 @@ class ViolinPlotter(FeatureImportanceBasePlotter):
             Distance threshold line
         contact_cutoff : float, optional
             Contact cutoff from conversion
+        subplot_title_fontsize : int, optional
+            Font size for subplot titles
+        ylabel_fontsize : int, optional
+            Font size for Y-axis labels
+        tick_fontsize : int, optional
+            Font size for axis ticks
 
         Returns
         -------
@@ -347,7 +376,8 @@ class ViolinPlotter(FeatureImportanceBasePlotter):
             active_threshold = self._plot_single_feature(
                 ax, feat_type, feat_name, violin_data, metadata_map,
                 data_selector_colors, long_labels,
-                contact_threshold, active_threshold, contact_cutoff
+                contact_threshold, active_threshold, contact_cutoff,
+                subplot_title_fontsize, ylabel_fontsize, tick_fontsize
             )
 
         return first_ax, rightmost_ax_first_row, active_threshold
@@ -405,7 +435,10 @@ class ViolinPlotter(FeatureImportanceBasePlotter):
         long_labels: bool,
         contact_threshold: Optional[float],
         active_threshold: Optional[float],
-        contact_cutoff: Optional[float]
+        contact_cutoff: Optional[float],
+        subplot_title_fontsize: Optional[int],
+        ylabel_fontsize: Optional[int],
+        tick_fontsize: Optional[int]
     ) -> Optional[float]:
         """
         Plot single feature with violins.
@@ -432,6 +465,12 @@ class ViolinPlotter(FeatureImportanceBasePlotter):
             Currently active threshold
         contact_cutoff : float, optional
             Contact cutoff from conversion
+        subplot_title_fontsize : int, optional
+            Font size for subplot title
+        ylabel_fontsize : int, optional
+            Font size for Y-axis label
+        tick_fontsize : int, optional
+            Font size for tick labels
 
         Returns
         -------
@@ -454,7 +493,8 @@ class ViolinPlotter(FeatureImportanceBasePlotter):
         )
 
         self._style_subplot(
-            ax, feat_name, feat_metadata, long_labels
+            ax, feat_name, feat_metadata, long_labels,
+            subplot_title_fontsize, ylabel_fontsize, tick_fontsize
         )
 
         return active_threshold
@@ -499,8 +539,10 @@ class ViolinPlotter(FeatureImportanceBasePlotter):
             showextrema=False, quantiles=quantiles_list, widths=0.7
         )
 
+        quantile_count = len(quantiles_list[0]) if quantiles_list else 0
+
         self._apply_violin_colors(
-            parts, selector_names, data_selector_colors
+            parts, selector_names, data_selector_colors, quantile_count
         )
         self._draw_threshold_line(ax, resolved_threshold)
 
@@ -536,8 +578,12 @@ class ViolinPlotter(FeatureImportanceBasePlotter):
         return selector_names, data_arrays
 
     @staticmethod
-    def _apply_violin_colors(parts, selector_names: List[str],
-                             data_selector_colors: Dict[str, str]) -> None:
+    def _apply_violin_colors(
+        parts,
+        selector_names: List[str],
+        data_selector_colors: Dict[str, str],
+        quantile_count: int = 0,
+    ) -> None:
         """
         Apply colors to violin bodies.
 
@@ -549,6 +595,8 @@ class ViolinPlotter(FeatureImportanceBasePlotter):
             DataSelector names
         data_selector_colors : Dict[str, str]
             Color mapping
+        quantile_count : int, default=0
+            Number of quantile lines per violin (e.g., 2 for 25/75%)
 
         Returns
         -------
@@ -572,7 +620,13 @@ class ViolinPlotter(FeatureImportanceBasePlotter):
 
         # 25% and 75% quantiles
         if 'cquantiles' in parts and parts['cquantiles']:
-            parts['cquantiles'].set_colors(colors)
+            if quantile_count > 0:
+                quantile_colors = []
+                for color in colors:
+                    quantile_colors.extend([color] * quantile_count)
+                parts['cquantiles'].set_colors(quantile_colors)
+            else:
+                parts['cquantiles'].set_colors(colors)
             parts['cquantiles'].set_linewidth(1.5)
 
     @staticmethod
@@ -604,7 +658,10 @@ class ViolinPlotter(FeatureImportanceBasePlotter):
         ax,
         feat_name: str,
         feat_metadata: Dict[str, any],
-        long_labels: bool
+        long_labels: bool,
+        subplot_title_fontsize: Optional[int],
+        ylabel_fontsize: Optional[int],
+        tick_fontsize: Optional[int]
     ) -> None:
         """
         Apply styling to subplot.
@@ -619,6 +676,12 @@ class ViolinPlotter(FeatureImportanceBasePlotter):
             Feature metadata
         long_labels : bool
             Use long labels for discrete features
+        subplot_title_fontsize : int, optional
+            Font size for subplot title
+        ylabel_fontsize : int, optional
+            Font size for Y-axis label
+        tick_fontsize : int, optional
+            Font size for tick labels
 
         Returns
         -------
@@ -628,7 +691,7 @@ class ViolinPlotter(FeatureImportanceBasePlotter):
         wrapped_title = TitleLegendHelper.wrap_title(
             feat_name, max_chars_per_line=40
         )
-        ax.set_title(wrapped_title, fontsize=14, pad=10, fontweight='bold')
+        ax.set_title(wrapped_title, fontsize=subplot_title_fontsize or 14, pad=10, fontweight='bold')
 
         # Get visualization metadata from feature
         type_metadata = feat_metadata.get("type_metadata", {})
@@ -636,20 +699,20 @@ class ViolinPlotter(FeatureImportanceBasePlotter):
 
         # Set Y-axis label
         ylabel = viz.get("axis_label", "Feature Value")
-        ax.set_ylabel(ylabel, fontsize=13)
+        ax.set_ylabel(ylabel, fontsize=ylabel_fontsize or 13)
 
         # Configure discrete features with tick labels
         if viz.get("is_discrete", False):
-            self._configure_discrete_y_axis(ax, viz, long_labels)
+            self._configure_discrete_y_axis(ax, viz, long_labels, tick_fontsize)
 
         ax.set_xlabel("")
         ax.set_xticks([])
         ax.grid(True, alpha=0.3, axis='y')
-        ax.tick_params(axis='both', labelsize=12)
+        ax.tick_params(axis='both', labelsize=tick_fontsize or 12)
 
     @staticmethod
     def _configure_discrete_y_axis(
-        ax, viz: Dict, long_labels: bool
+        ax, viz: Dict, long_labels: bool, tick_fontsize: Optional[int] = None
     ) -> None:
         """
         Configure Y-axis for discrete features using visualization metadata.
@@ -662,6 +725,8 @@ class ViolinPlotter(FeatureImportanceBasePlotter):
             Visualization metadata from feature
         long_labels : bool
             Use long labels
+        tick_fontsize : int, optional
+            Font size for tick labels (default: 12)
 
         Returns
         -------
@@ -682,5 +747,5 @@ class ViolinPlotter(FeatureImportanceBasePlotter):
         ylim = (-0.3, n_ticks - 1 + 0.3)
 
         ax.set_yticks(positions)
-        ax.set_yticklabels(tick_labels)
+        ax.set_yticklabels(tick_labels, fontsize=tick_fontsize or 12)
         ax.set_ylim(ylim)

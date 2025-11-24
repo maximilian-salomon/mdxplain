@@ -25,14 +25,14 @@ Defines the interface that all clustering calculators must implement
 for consistency across different clustering methods.
 """
 
-from abc import ABC, abstractmethod
-from typing import Dict, Tuple, Any, Optional
 import warnings
+from abc import ABC, abstractmethod
+from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
+from mdxplain.utils.progress_util import ProgressController
 from sklearn.metrics import silhouette_score
 from sklearn.neighbors import KNeighborsClassifier
-from tqdm import tqdm
 
 from ....utils.data_utils import DataUtils
 from ...helper.center_calculation_helper import CenterCalculationHelper
@@ -561,8 +561,11 @@ class CalculatorBase(ABC):
                 knn_classifier.fit(non_noise_sample_data, non_noise_sample_labels)
                 
                 # Process remaining points in chunks (direct memmap/array writing)
-                for start in tqdm(range(0, len(remaining_indices), self.chunk_size), 
-                                  desc="k-NN prediction", unit="chunks"):
+                for start in ProgressController.iterate(
+                    range(0, len(remaining_indices), self.chunk_size),
+                    desc="k-NN prediction",
+                    unit="chunks",
+                ):
                     end = min(start + self.chunk_size, len(remaining_indices))
                     chunk_indices = remaining_indices[start:end]
                     

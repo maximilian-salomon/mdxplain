@@ -29,7 +29,7 @@ appropriate sub-comparisons.
 
 from __future__ import annotations
 
-from typing import List, Dict, Any, TYPE_CHECKING
+from typing import List, Dict, Any, Union, TYPE_CHECKING
 
 from ..entities.comparison_data import ComparisonData
 from ..helper.comparison_validation_helper import ComparisonValidationHelper
@@ -102,7 +102,8 @@ class ComparisonManager:
         name: str,
         mode: str,
         feature_selector: str,
-        data_selectors: List[str],
+        data_selectors: Union[List[str], None] = None,
+        data_selector_groups: Union[str, List[str], None] = None,
     ) -> None:
         """
         Create a new comparison with specified mode and selectors.
@@ -118,7 +119,7 @@ class ComparisonManager:
         >>> pipeline.comparison.create_comparison("folded_vs_unfolded", "binary", "key_features", ["folded_frames", "unfolded_frames"])  # NO pipeline_data parameter
 
         Standalone mode:
-        
+
         >>> pipeline_data = PipelineData()
         >>> manager = ComparisonManager()
         >>> manager.create_comparison(pipeline_data, "folded_vs_unfolded", "binary", "key_features", ["folded_frames", "unfolded_frames"])  # WITH pipeline_data parameter
@@ -133,8 +134,10 @@ class ComparisonManager:
             Comparison mode: "binary", "pairwise", "one_vs_rest", "multiclass"
         feature_selector : str
             Name of the feature selector to use (defines columns)
-        data_selectors : List[str]
-            Names of data selectors to compare
+        data_selectors : List[str], optional
+            Names of individual data selectors to compare
+        data_selector_groups : str or List[str], optional
+            Name(s) of data selector groups to use
 
         Returns
         -------
@@ -151,35 +154,50 @@ class ComparisonManager:
         >>> # Binary comparison
         >>> manager.create_comparison(
         ...     pipeline_data, "folded_vs_unfolded", "binary", "key_features",
-        ...     ["folded_frames", "unfolded_frames"]
+        ...     data_selectors=["folded_frames", "unfolded_frames"]
         ... )
 
-        >>> # One-vs-rest comparison (creates multiple sub-comparisons)
+        >>> # Using groups
         >>> manager.create_comparison(
-        ...     pipeline_data, "conformations", "one_vs_rest", "all_features",
-        ...     ["folded", "intermediate", "unfolded", "extended"]
+        ...     pipeline_data, "cluster_comp", "one_vs_rest", "features",
+        ...     data_selector_groups="clusters"
         ... )
         """
+        # Resolve groups to individual selectors
+        all_selectors = self._resolve_selector_groups(
+            pipeline_data, data_selectors, data_selector_groups
+        )
+
         # Validate inputs using helper
         ComparisonValidationHelper.validate_comparison_name(pipeline_data, name)
         ComparisonValidationHelper.validate_mode(mode)
-        ComparisonValidationHelper.validate_feature_selector(pipeline_data, feature_selector)
-        ComparisonValidationHelper.validate_data_selectors(pipeline_data, data_selectors)
+        ComparisonValidationHelper.validate_feature_selector(
+            pipeline_data, feature_selector
+        )
+        ComparisonValidationHelper.validate_data_selectors(
+            pipeline_data, all_selectors
+        )
 
         # Create comparison data (pure metadata container)
-        comp_data = ComparisonData(
-            name, mode, feature_selector, data_selectors
-        )
+        comp_data = ComparisonData(name, mode, feature_selector, all_selectors)
 
         # Generate sub-comparisons based on mode using helper
         if mode == "binary":
-            SubComparisonCreationHelper.create_binary_sub_comparisons(comp_data, data_selectors)
+            SubComparisonCreationHelper.create_binary_sub_comparisons(
+                comp_data, all_selectors
+            )
         elif mode == "pairwise":
-            SubComparisonCreationHelper.create_pairwise_sub_comparisons(comp_data, data_selectors)
+            SubComparisonCreationHelper.create_pairwise_sub_comparisons(
+                comp_data, all_selectors
+            )
         elif mode == "one_vs_rest":
-            SubComparisonCreationHelper.create_one_vs_rest_sub_comparisons(comp_data, data_selectors)
+            SubComparisonCreationHelper.create_one_vs_rest_sub_comparisons(
+                comp_data, all_selectors
+            )
         elif mode == "multiclass":
-            SubComparisonCreationHelper.create_multiclass_sub_comparisons(comp_data, data_selectors)
+            SubComparisonCreationHelper.create_multiclass_sub_comparisons(
+                comp_data, all_selectors
+            )
 
         # Store in pipeline data
         pipeline_data.comparison_data[name] = comp_data
@@ -378,3 +396,61 @@ class ComparisonManager:
         for name, data in pipeline_data.comparison_data.items():
             print(f"\n--- {name} ---")
             data.print_info()
+
+    # =============================================================================
+    # PRIVATE HELPER METHODS
+    # =============================================================================
+
+    def _resolve_selector_groups(
+        self,
+        pipeline_data: PipelineData,
+        data_selectors: Union[List[str], None],
+        data_selector_groups: Union[str, List[str], None],
+    ) -> List[str]:
+        """
+        Resolve groups to individual selector names.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data object
+        data_selectors : List[str] or None
+            Individual selectors
+        data_selector_groups : str, List[str], or None
+            Group name(s)
+
+        Returns
+        -------
+        List[str]
+            Combined selector names
+
+        Raises
+        ------
+        ValueError
+            If both are None or group not found
+        """
+        all_selectors = []
+        if data_selectors is not None:
+            all_selectors.extend(data_selectors)
+        if data_selector_groups is not None:
+            groups = (
+                [data_selector_groups]
+                if isinstance(data_selector_groups, str)
+                else data_selector_groups
+            )
+            for group in groups:
+                self._add_group_selectors(pipeline_data, all_selectors, group)
+        ComparisonValidationHelper.validate_has_selectors(all_selectors)
+        return all_selectors
+
+    def _add_group_selectors(
+        self, pipeline_data: PipelineData, selectors: List[str], group: str
+    ) -> None:
+        """Add selectors from group."""
+        if group not in pipeline_data.data_selector_groups:
+            available = list(pipeline_data.data_selector_groups.keys())
+            raise ValueError(
+                f"Group '{group}' not found. Available: {available}"
+            )
+        group_obj = pipeline_data.data_selector_groups[group]
+        selectors.extend(group_obj.selector_names)

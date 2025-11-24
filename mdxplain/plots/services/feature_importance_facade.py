@@ -79,10 +79,18 @@ class FeatureImportanceFacade:
         long_labels: bool = False,
         contact_threshold: Optional[float] = 4.5,
         title: Optional[str] = None,
+        legend_title: Optional[str] = None,
+        legend_labels: Optional[Dict[str, str]] = None,
         save_fig: bool = False,
         filename: Optional[str] = None,
         file_format: str = "png",
-        dpi: int = 300
+        dpi: int = 300,
+        title_fontsize: Optional[int] = None,
+        subplot_title_fontsize: Optional[int] = None,
+        ylabel_fontsize: Optional[int] = None,
+        tick_fontsize: Optional[int] = None,
+        legend_fontsize: Optional[int] = None,
+        legend_title_fontsize: Optional[int] = None,
     ) -> Figure:
         """
         Create violin plots from feature importance analysis.
@@ -113,6 +121,10 @@ class FeatureImportanceFacade:
             at this distance value. Common value: 4.5 Å (default cutoff for contacts).
         title : str, optional
             Custom plot title. Auto-generated if None.
+        legend_title : str, optional
+            Custom title for the legend.
+        legend_labels : Dict[str, str], optional
+            Custom labels for the legend.
         save_fig : bool, default=False
             Save figure to file
         filename : str, optional
@@ -121,6 +133,18 @@ class FeatureImportanceFacade:
             File format for saving (png, pdf, svg, etc.)
         dpi : int, default=300
             Resolution for saved figure in dots per inch
+        title_fontsize : int, optional
+            Font size for the main title.
+        subplot_title_fontsize : int, optional
+            Font size for the subplot titles.
+        ylabel_fontsize : int, optional
+            Font size for the y-axis labels.
+        tick_fontsize : int, optional
+            Font size for the tick labels.
+        legend_fontsize : int, optional
+            Font size for the legend entries.
+        legend_title_fontsize : int, optional
+            Font size for the legend title.
 
         Returns
         -------
@@ -177,10 +201,18 @@ class FeatureImportanceFacade:
             long_labels=long_labels,
             contact_threshold=contact_threshold,
             title=title,
+            legend_title=legend_title,
+            legend_labels=legend_labels,
             save_fig=save_fig,
             filename=filename,
             file_format=file_format,
-            dpi=dpi
+            dpi=dpi,
+            title_fontsize=title_fontsize,
+            subplot_title_fontsize=subplot_title_fontsize,
+            ylabel_fontsize=ylabel_fontsize,
+            tick_fontsize=tick_fontsize,
+            legend_fontsize=legend_fontsize,
+            legend_title_fontsize=legend_title_fontsize
         )
 
     def densities(
@@ -202,7 +234,14 @@ class FeatureImportanceFacade:
         save_fig: bool = False,
         filename: Optional[str] = None,
         file_format: str = "png",
-        dpi: int = 300
+        dpi: int = 300,
+        title_fontsize: Optional[int] = None,
+        subplot_title_fontsize: Optional[int] = None,
+        xlabel_fontsize: Optional[int] = None,
+        ylabel_fontsize: Optional[int] = None,
+        tick_fontsize: Optional[int] = None,
+        legend_fontsize: Optional[int] = None,
+        legend_title_fontsize: Optional[int] = None,
     ) -> Figure:
         """
         Create density plots from feature importance analysis.
@@ -260,6 +299,20 @@ class FeatureImportanceFacade:
             File format for saving (png, pdf, svg, etc.)
         dpi : int, default=300
             Resolution for saved figure in dots per inch
+        title_fontsize : int, optional
+            Font size for the main title.
+        subplot_title_fontsize : int, optional
+            Font size for the subplot titles.
+        xlabel_fontsize : int, optional
+            Font size for the x-axis labels.
+        ylabel_fontsize : int, optional
+            Font size for the y-axis labels.
+        tick_fontsize : int, optional
+            Font size for the tick labels.
+        legend_fontsize : int, optional
+            Font size for the legend entries.
+        legend_title_fontsize : int, optional
+            Font size for the legend title.
 
         Returns
         -------
@@ -354,7 +407,14 @@ class FeatureImportanceFacade:
             save_fig=save_fig,
             filename=filename,
             file_format=file_format,
-            dpi=dpi
+            dpi=dpi,
+            title_fontsize=title_fontsize,
+            subplot_title_fontsize=subplot_title_fontsize,
+            xlabel_fontsize=xlabel_fontsize,
+            ylabel_fontsize=ylabel_fontsize,
+            tick_fontsize=tick_fontsize,
+            legend_fontsize=legend_fontsize,
+            legend_title_fontsize=legend_title_fontsize
         )
 
     def time_series(
@@ -384,7 +444,14 @@ class FeatureImportanceFacade:
         smoothing_method: str = "savitzky",
         smoothing_window: int = 51,
         smoothing_polyorder: int = 3,
-        show_unsmoothed_background: bool = True
+        show_unsmoothed_background: bool = True,
+        title_fontsize: Optional[int] = None,
+        subplot_title_fontsize: Optional[int] = None,
+        xlabel_fontsize: Optional[int] = None,
+        ylabel_fontsize: Optional[int] = None,
+        tick_fontsize: Optional[int] = None,
+        legend_fontsize: Optional[int] = None,
+        legend_title_fontsize: Optional[int] = None,
     ) -> Figure:
         """
         Create time series plots from feature importance analysis.
@@ -461,6 +528,20 @@ class FeatureImportanceFacade:
             Polynomial order for Savitzky-Golay filter (ignored for moving_average)
         show_unsmoothed_background : bool, default=True
             Show unsmoothed data as transparent background line when smoothing is enabled
+        title_fontsize : int, optional
+            Font size for main title.
+        subplot_title_fontsize : int, optional
+            Font size for subplot titles.
+        xlabel_fontsize : int, optional
+            Font size for x-axis labels.
+        ylabel_fontsize : int, optional
+            Font size for y-axis labels.
+        tick_fontsize : int, optional
+            Font size for tick labels.
+        legend_fontsize : int, optional
+            Font size for legend entries.
+        legend_title_fontsize : int, optional
+            Font size for legend title.
 
         Returns
         -------
@@ -560,7 +641,14 @@ class FeatureImportanceFacade:
             smoothing_method=smoothing_method,
             smoothing_window=smoothing_window,
             smoothing_polyorder=smoothing_polyorder,
-            show_unsmoothed_background=show_unsmoothed_background
+            show_unsmoothed_background=show_unsmoothed_background,
+            title_fontsize=title_fontsize,
+            subplot_title_fontsize=subplot_title_fontsize,
+            xlabel_fontsize=xlabel_fontsize,
+            ylabel_fontsize=ylabel_fontsize,
+            tick_fontsize=tick_fontsize,
+            legend_fontsize=legend_fontsize,
+            legend_title_fontsize=legend_title_fontsize
         )
 
     def decision_trees(
@@ -579,11 +667,16 @@ class FeatureImportanceFacade:
         separate_trees: Union[bool, str] = "auto",
         width_scale_factor: float = 1.0,
         height_scale_factor: float = 1.0,
-        short_labels: bool = False,
-        short_naming: bool = False,
+        short_labels: Optional[bool] = None,
+        short_naming: Optional[bool] = None,
         short_layout: bool = False,
-        short_edge_labels: bool = False,
-        wrap_length: int = 40
+        short_edge_labels: Optional[bool] = None,
+        wrap_length: int = 40,
+        hide_node_frames: Optional[bool] = None,
+        show_edge_symbols: Optional[bool] = None,
+        hide_feature_type_prefix: Optional[bool] = None,
+        hide_path: Optional[bool] = None,
+        edge_symbol_fontsize: Optional[int] = None
     ) -> Union[Figure, List[str], None]:
         """
         Create decision tree visualizations from feature importance analysis.
@@ -635,19 +728,40 @@ class FeatureImportanceFacade:
             Multiplicative factor for figure width (use >1.0 for wider boxes)
         height_scale_factor : float, default=1.0
             Multiplicative factor for figure height (use >1.0 for taller boxes)
-        short_labels : bool, default=False
-            Use short discrete labels (NC vs Non-Contact) for feature values
-        short_naming : bool, default=False
-            Truncate class/selector names to 16 chars with [...] pattern
+        short_labels : bool, optional, default=None
+            Use short discrete labels (NC vs Non-Contact) for feature values.
+            If None, determined by short_layout.
+        short_naming : bool, optional, default=None
+            Truncate class/selector names to 16 chars with [...] pattern.
+            If None, determined by short_layout.
         short_layout : bool, default=False
-            Minimal tree layout (no path display) + enables all short options
-        short_edge_labels : bool, default=False
+            Minimal tree layout + enables all short options (if not explicitly set)
+        short_edge_labels : bool, optional, default=None
             Show only values/conditions on edges (e.g., 'Contact' or '≤ 3.50 Å')
-            instead of full format 'contact: Leu13-ARG31 = Contact'
+            instead of full format 'contact: Leu13-ARG31 = Contact'.
+            If None, determined by short_layout.
         wrap_length : int, default=40
             Maximum line length for text wrapping in node labels, class lines,
             feature lines, and edge labels. Text longer than this will wrap
             at spaces (colons, equals signs, etc.).
+        hide_node_frames : bool, optional, default=None
+            Hide frame counts in non-root nodes, showing only percentages
+            (e.g., 'State_A: 53.3%' instead of 'State_A: 80 / 150 (53.3%)').
+            If None, determined by short_layout.
+        show_edge_symbols : bool, optional, default=None
+            Show only symbols on edges (✓ for left/true, ✗ for right/false)
+            instead of text labels.
+            If None, determined by short_layout.
+        hide_feature_type_prefix : bool, optional, default=None
+            Hide feature type prefix in labels (e.g., 'ALA_5-GLU_10' instead
+            of 'contacts: ALA_5-GLU_10').
+            If None, determined by short_layout.
+        hide_path : bool, optional, default=None
+            Hide decision path in non-root nodes (shown at top of each node).
+            If None, set to True when short_layout=True.
+        edge_symbol_fontsize : int, optional
+            Font size for edge symbols when show_edge_symbols=True.
+            If None, uses the default edge label font size.
 
         Returns
         -------
@@ -722,5 +836,10 @@ class FeatureImportanceFacade:
             short_naming=short_naming,
             short_layout=short_layout,
             short_edge_labels=short_edge_labels,
-            wrap_length=wrap_length
+            wrap_length=wrap_length,
+            hide_node_frames=hide_node_frames,
+            show_edge_symbols=show_edge_symbols,
+            hide_feature_type_prefix=hide_feature_type_prefix,
+            hide_path=hide_path,
+            edge_symbol_fontsize=edge_symbol_fontsize
         )
