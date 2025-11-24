@@ -96,7 +96,7 @@ class RMSFMedianVariantFacade:
         -------
         RMSFPerAtomService
             Median-specific per-atom RMSF service exposing ``to_*_reference``
-            helpers.
+            helper.
 
         Examples
         --------

@@ -33,7 +33,7 @@ from pathlib import Path
 
 import mdtraj as md
 
-from mdxplain.utils.progress_util import ProgressController
+from mdxplain.utils.progress_utils import ProgressUtils
 
 from ...entities.dask_md_trajectory import DaskMDTrajectory
 
@@ -246,7 +246,7 @@ class TrajectoryLoadHelper:
         """
         print(f"Concatenating {len(result['trajectories'])} processed trajectories...")
         concatenated = result["trajectories"][0]
-        for traj in ProgressController.iterate(
+        for traj in ProgressUtils.iterate(
             result["trajectories"][1:], desc="Concatenating"
         ):
             concatenated = concatenated.join(traj)
@@ -367,7 +367,7 @@ class TrajectoryLoadHelper:
         ]
 
         # Load from subdirectories
-        for subdir in ProgressController.iterate(subdirs, desc="Loading systems"):
+        for subdir in ProgressUtils.iterate(subdirs, desc="Loading systems"):
             subdir_path = os.path.join(directory_path, subdir)
             result = TrajectoryLoadHelper._load_system_trajectories(
                 subdir_path, subdir, concat, stride, selection, use_memmap, chunk_size, cache_dir
@@ -668,7 +668,7 @@ class TrajectoryLoadHelper:
         # Extract topology basename for naming
         top_basename = os.path.splitext(os.path.basename(top_path))[0]
 
-        for traj_file in ProgressController.iterate(
+        for traj_file in ProgressUtils.iterate(
             traj_files, desc=f"Loading {subdir_name}", leave=False
         ):
             traj_path = os.path.join(subdir_path, traj_file)
@@ -719,7 +719,7 @@ class TrajectoryLoadHelper:
         system_trajs = []
         names = []
 
-        for file in ProgressController.iterate(
+        for file in ProgressUtils.iterate(
             files, desc=f"Loading {subdir_name}", leave=False
         ):
             file_path = os.path.join(subdir_path, file)

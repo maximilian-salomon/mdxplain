@@ -210,7 +210,7 @@ class LandscapePlotter:
         Raises
         ------
         ValueError
-            If inputs are invalid (via validation helpers)
+            If inputs are invalid (via validation helper)
 
         Examples
         --------

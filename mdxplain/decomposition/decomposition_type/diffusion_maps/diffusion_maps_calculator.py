@@ -30,7 +30,7 @@ import os
 from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
-from mdxplain.utils.progress_util import ProgressController
+from mdxplain.utils.progress_utils import ProgressUtils
 from scipy.linalg import eig
 from scipy.sparse.linalg import LinearOperator, eigs
 from sklearn.cluster import MiniBatchKMeans
@@ -532,7 +532,7 @@ class DiffusionMapsCalculator(CalculatorBase):
         )
         
         # Compute RMSD matrix (same logic for both memmap and regular array)
-        for i in ProgressController.iterate(
+        for i in ProgressUtils.iterate(
             range(n_frames), desc="Computing RMSD matrix", unit="frames"
         ):
             for j in range(n_frames):
@@ -573,7 +573,7 @@ class DiffusionMapsCalculator(CalculatorBase):
         )
         row_sums = np.zeros(n_frames)
 
-        for i in ProgressController.iterate(
+        for i in ProgressUtils.iterate(
             range(0, n_frames, self.chunk_size),
             desc="Computing kernel matrix",
             unit="chunks",
@@ -728,7 +728,7 @@ class DiffusionMapsCalculator(CalculatorBase):
         
         if self.use_memmap or n_samples > self.chunk_size:
             chunk_medians = []
-            for i in ProgressController.iterate(
+            for i in ProgressUtils.iterate(
                 range(0, n_samples, self.chunk_size),
                 desc="Computing epsilon",
                 unit="chunks",
@@ -846,7 +846,7 @@ class DiffusionMapsCalculator(CalculatorBase):
         )
         
         # Train MiniBatchKMeans chunk-wise
-        for chunk_start in ProgressController.iterate(
+        for chunk_start in ProgressUtils.iterate(
             range(0, n_frames, self.chunk_size),
             desc="Training MiniBatch KMeans",
             unit="chunks",
@@ -862,7 +862,7 @@ class DiffusionMapsCalculator(CalculatorBase):
             closest_frame = -1
             
             # Search chunk-wise for closest frame
-            for chunk_start in ProgressController.iterate(
+            for chunk_start in ProgressUtils.iterate(
                 range(0, n_frames, self.chunk_size),
                 desc="Finding landmarks",
                 unit="chunks",
@@ -916,7 +916,7 @@ class DiffusionMapsCalculator(CalculatorBase):
         n_landmarks = len(landmark_idx)
         K_landmarks = np.zeros((n_landmarks, n_landmarks))
         
-        for i in ProgressController.iterate(
+        for i in ProgressUtils.iterate(
             range(n_landmarks),
             desc="Computing landmark kernel matrix",
             unit="landmarks",
@@ -965,7 +965,7 @@ class DiffusionMapsCalculator(CalculatorBase):
             landmark_coord = data[landmark_idx[j]]
             
             # Compute chunk-wise RMSD to this landmark (vectorized)
-            for chunk_start in ProgressController.iterate(
+            for chunk_start in ProgressUtils.iterate(
                 range(0, n_frames, self.chunk_size),
                 desc=f"Landmark kernel {j+1}/{len(landmark_idx)}",
                 unit="chunks",
@@ -1083,7 +1083,7 @@ class DiffusionMapsCalculator(CalculatorBase):
         valid_eigvals = np.where(mask, eigvals_small, 1e-10)
         
         # Extend eigenvectors chunk-wise for memory efficiency
-        for chunk_start in ProgressController.iterate(
+        for chunk_start in ProgressUtils.iterate(
             range(0, n_frames, self.chunk_size),
             desc="Nystroem extension",
             unit="chunks",
