@@ -31,7 +31,8 @@ import tarfile
 import tempfile
 from pathlib import Path
 from typing import List, Tuple
-from tqdm import tqdm
+
+from .progress_util import ProgressController
 
 
 class ArchiveUtils:
@@ -485,7 +486,7 @@ class ArchiveUtils:
             ) as tar:
                 tar.add(temp_pkl, arcname="pipeline.pkl")
 
-                for file_path, archive_name in tqdm(
+                for file_path, archive_name in ProgressController.iterate(
                     files_to_archive,
                     desc="Adding files to archive",
                     unit="file"

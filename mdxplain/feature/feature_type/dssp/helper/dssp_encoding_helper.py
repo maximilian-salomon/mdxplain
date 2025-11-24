@@ -73,8 +73,9 @@ class DSSPEncodingHelper:
             
         Notes
         -----
-        For non-simplified data, converts space characters '' to 'C'.
         Uses memory mapping for efficient processing of large datasets.
+        Space conversion happens centrally in dssp_calculator before this method
+        is called, so dssp_data is already cleaned.
         """
         cache_file = DataUtils.get_cache_file_path(
             f'dssp_char_{id(dssp_data)}.dat', cache_path
@@ -82,11 +83,11 @@ class DSSPEncodingHelper:
         encoded = np.memmap(
             cache_file, dtype='U1', mode='w+', shape=dssp_data.shape
         )
-        
+
         for i in range(0, dssp_data.shape[0], chunk_size):
             end = min(i + chunk_size, dssp_data.shape[0])
             chunk = dssp_data[i:end]
-            encoded[i:end] = np.where(chunk == '', 'C', chunk).astype('U1')
+            encoded[i:end] = chunk.astype('U1')
         
         return encoded
 

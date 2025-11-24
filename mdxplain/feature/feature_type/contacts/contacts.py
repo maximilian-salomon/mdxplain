@@ -179,7 +179,10 @@ class Contacts(FeatureTypeBase):
             'tick_labels': {
                 'short': ['NC', 'C'],
                 'long': ['Non\nContact', 'Contact']
-            }
+            },
+            'short_rule_suffix': '',
+            'reverse_edge_semantics': True,
+            'allow_hide_prefix': True
         }
 
         return (

@@ -357,7 +357,144 @@ class TestFeatureAPIIntegration:
         
         assert dssp.shape == (10, 3)
         assert dssp.dtype == np.int8
-    
+
+    @patch('mdtraj.compute_dssp')
+    def test_add_dssp_char_with_space_character(self, mock_compute_dssp):
+        """
+        Test DSSP char encoding converts space ' ' from mdtraj to 'C'.
+
+        MDTraj returns ' ' (space) for loops and irregular elements in DSSP.
+        This test validates that spaces are correctly converted to 'C' in
+        char encoding mode.
+        """
+        pipeline = self._setup_triangle_pipeline(n_frames=10)
+
+        # Mock with spaces at various positions
+        mock_dssp_data = np.array([
+            ['H', 'E', ' '],  # Space at position 2
+            [' ', 'E', 'C'],  # Space at position 0
+            ['H', ' ', 'C'],  # Space at position 1
+            ['H', 'E', 'C'],  # No space
+            [' ', ' ', ' '],  # Only spaces
+            ['H', 'E', ' '],  # Space at position 2
+            [' ', 'E', 'C'],  # Space at position 0
+            ['H', ' ', 'C'],  # Space at position 1
+            ['H', 'E', 'C'],  # No space
+            [' ', ' ', ' '],  # Only spaces
+        ], dtype='U1')
+        mock_compute_dssp.return_value = mock_dssp_data
+
+        pipeline.feature.add.dssp(simplified=True, encoding='char', force=True)
+        dssp = pipeline._data.feature_data['dssp'][0].data
+
+        # All spaces should be converted to 'C'
+        expected = np.array([
+            ['H', 'E', 'C'],
+            ['C', 'E', 'C'],
+            ['H', 'C', 'C'],
+            ['H', 'E', 'C'],
+            ['C', 'C', 'C'],
+            ['H', 'E', 'C'],
+            ['C', 'E', 'C'],
+            ['H', 'C', 'C'],
+            ['H', 'E', 'C'],
+            ['C', 'C', 'C'],
+        ], dtype='U1')
+        np.testing.assert_array_equal(dssp, expected)
+        assert dssp.dtype.kind == 'U'
+
+    @patch('mdtraj.compute_dssp')
+    def test_add_dssp_integer_with_space_character(self, mock_compute_dssp):
+        """
+        Test DSSP integer encoding converts space ' ' from mdtraj to 2 (C).
+
+        MDTraj returns ' ' (space) for loops and irregular elements in DSSP.
+        This test validates that spaces are correctly converted to integer 2 (C)
+        in integer encoding mode.
+        """
+        pipeline = self._setup_triangle_pipeline(n_frames=10)
+
+        # Mock with spaces at various positions
+        mock_dssp_data = np.array([
+            ['H', 'E', ' '],  # Space at position 2
+            [' ', 'E', 'C'],  # Space at position 0
+            ['H', ' ', 'C'],  # Space at position 1
+            ['H', 'E', 'C'],  # No space
+            [' ', ' ', ' '],  # Only spaces
+            ['H', 'E', ' '],  # Space at position 2
+            [' ', 'E', 'C'],  # Space at position 0
+            ['H', ' ', 'C'],  # Space at position 1
+            ['H', 'E', 'C'],  # No space
+            [' ', ' ', ' '],  # Only spaces
+        ], dtype='U1')
+        mock_compute_dssp.return_value = mock_dssp_data
+
+        pipeline.feature.add.dssp(simplified=True, encoding='integer', force=True)
+        dssp = pipeline._data.feature_data['dssp'][0].data
+
+        # H=0, E=1, C=2, Space→C=2
+        expected = np.array([
+            [0, 1, 2],
+            [2, 1, 2],
+            [0, 2, 2],
+            [0, 1, 2],
+            [2, 2, 2],
+            [0, 1, 2],
+            [2, 1, 2],
+            [0, 2, 2],
+            [0, 1, 2],
+            [2, 2, 2],
+        ], dtype=np.int8)
+        np.testing.assert_array_equal(dssp, expected)
+        assert dssp.dtype == np.int8
+
+    @patch('mdtraj.compute_dssp')
+    def test_add_dssp_onehot_with_space_character(self, mock_compute_dssp):
+        """
+        Test DSSP onehot encoding converts space ' ' from mdtraj to C one-hot.
+
+        MDTraj returns ' ' (space) for loops and irregular elements in DSSP.
+        This test validates that spaces are correctly converted to C one-hot
+        representation [0,0,1] in onehot encoding mode.
+        """
+        pipeline = self._setup_triangle_pipeline(n_frames=10)
+
+        # Mock with spaces at various positions
+        mock_dssp_data = np.array([
+            ['H', 'E', ' '],  # Space at position 2
+            [' ', 'E', 'C'],  # Space at position 0
+            ['H', ' ', 'C'],  # Space at position 1
+            ['H', 'E', 'C'],  # No space
+            [' ', ' ', ' '],  # Only spaces
+            ['H', 'E', ' '],  # Space at position 2
+            [' ', 'E', 'C'],  # Space at position 0
+            ['H', ' ', 'C'],  # Space at position 1
+            ['H', 'E', 'C'],  # No space
+            [' ', ' ', ' '],  # Only spaces
+        ], dtype='U1')
+        mock_compute_dssp.return_value = mock_dssp_data
+
+        pipeline.feature.add.dssp(simplified=True, encoding='onehot', force=True)
+        dssp = pipeline._data.feature_data['dssp'][0].data
+
+        # One-hot: 3 Residues × 4 Classes [H,E,C,NA] = 12 Features
+        # Per residue: [H_bit, E_bit, C_bit, NA_bit]
+        # Space → C → [0, 0, 1, 0]
+        expected = np.array([
+            [1,0,0,0, 0,1,0,0, 0,0,1,0],  # H, E, Space→C
+            [0,0,1,0, 0,1,0,0, 0,0,1,0],  # Space→C, E, C
+            [1,0,0,0, 0,0,1,0, 0,0,1,0],  # H, Space→C, C
+            [1,0,0,0, 0,1,0,0, 0,0,1,0],  # H, E, C
+            [0,0,1,0, 0,0,1,0, 0,0,1,0],  # Space→C, Space→C, Space→C
+            [1,0,0,0, 0,1,0,0, 0,0,1,0],  # H, E, Space→C
+            [0,0,1,0, 0,1,0,0, 0,0,1,0],  # Space→C, E, C
+            [1,0,0,0, 0,0,1,0, 0,0,1,0],  # H, Space→C, C
+            [1,0,0,0, 0,1,0,0, 0,0,1,0],  # H, E, C
+            [0,0,1,0, 0,0,1,0, 0,0,1,0],  # Space→C, Space→C, Space→C
+        ], dtype=np.float32)
+        np.testing.assert_array_equal(dssp, expected)
+        assert dssp.dtype == np.float32
+
     # === TORSIONS TESTS (2 Tests) ===
     
     @patch('mdtraj.compute_psi')

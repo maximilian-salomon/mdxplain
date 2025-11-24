@@ -25,16 +25,16 @@ Implements KernelPCA computation with support for incremental kernel
 computation for large datasets using sklearn's KernelPCA.
 """
 
-from typing import Dict, Tuple, Any, Union
+from typing import Any, Dict, Tuple, Union
 
 import numpy as np
 from joblib import Parallel, delayed
+from mdxplain.utils.progress_util import ProgressController
+from scipy.linalg import eigh
+from scipy.sparse.linalg import LinearOperator, eigs
 from sklearn.decomposition import IncrementalPCA, KernelPCA
 from sklearn.kernel_approximation import Nystroem
 from sklearn.metrics.pairwise import rbf_kernel
-from scipy.sparse.linalg import LinearOperator, eigs
-from scipy.linalg import eigh
-from tqdm import tqdm
 
 from ..interfaces.calculator_base import CalculatorBase
 from ....utils.data_utils import DataUtils
@@ -454,11 +454,20 @@ class KernelPCACalculator(CalculatorBase):
         used_chunk_size = int(np.floor(self.chunk_size / 2))
 
         # Compute kernel matrix chunk-wise
-        for row_start in tqdm(range(0, n_samples, used_chunk_size), desc="Computing kernel matrix rows", unit="chunks"):
+        for row_start in ProgressController.iterate(
+            range(0, n_samples, used_chunk_size),
+            desc="Computing kernel matrix rows",
+            unit="chunks",
+        ):
             row_end = min(row_start + used_chunk_size, n_samples)
             chunk_i = data[row_start:row_end]
 
-            for col_start in tqdm(range(0, n_samples, used_chunk_size), desc=f"Computing kernel row {row_start//used_chunk_size + 1} of {n_samples//used_chunk_size}", unit="col_chunks", leave=False):
+            for col_start in ProgressController.iterate(
+                range(0, n_samples, used_chunk_size),
+                desc=f"Computing kernel row {row_start//used_chunk_size + 1} of {n_samples//used_chunk_size}",
+                unit="col_chunks",
+                leave=False,
+            ):
                 col_end = min(col_start + used_chunk_size, n_samples)
                 chunk_j = data[col_start:col_end]
 
@@ -487,12 +496,20 @@ class KernelPCACalculator(CalculatorBase):
         col_sums = np.zeros(n_samples, dtype=np.float64)
         
         # First pass: compute row sums
-        for i in tqdm(range(0, n_samples, self.chunk_size), desc="Computing row sums", unit="chunks"):
+        for i in ProgressController.iterate(
+            range(0, n_samples, self.chunk_size),
+            desc="Computing row sums",
+            unit="chunks",
+        ):
             end = min(i + self.chunk_size, n_samples)
             row_sums[i:end] = kernel_matrix[i:end].sum(axis=1)
-        
+
         # Second pass: compute column sums
-        for j in tqdm(range(0, n_samples, self.chunk_size), desc="Computing col sums", unit="chunks"):
+        for j in ProgressController.iterate(
+            range(0, n_samples, self.chunk_size),
+            desc="Computing col sums",
+            unit="chunks",
+        ):
             end = min(j + self.chunk_size, n_samples)
             col_sums[j:end] = kernel_matrix[:, j:end].sum(axis=0)
         
@@ -524,7 +541,11 @@ class KernelPCACalculator(CalculatorBase):
         """
         n_samples = kernel_matrix.shape[0]
         
-        for i in tqdm(range(0, n_samples, self.chunk_size), desc="Centering kernel matrix", unit="chunks"):
+        for i in ProgressController.iterate(
+            range(0, n_samples, self.chunk_size),
+            desc="Centering kernel matrix",
+            unit="chunks",
+        ):
             i_end = min(i + self.chunk_size, n_samples)
             
             # Apply centering formula: K_centered = K - row_means - col_means + grand_mean
@@ -783,7 +804,11 @@ class KernelPCACalculator(CalculatorBase):
         )
         
         # Step 3: Chunk-wise transform and partial_fit
-        for start in tqdm(range(0, n_samples, self.chunk_size), desc="Nystroem partial fitting", unit="chunks"):
+        for start in ProgressController.iterate(
+            range(0, n_samples, self.chunk_size),
+            desc="Nystroem partial fitting",
+            unit="chunks",
+        ):
             end = min(start + self.chunk_size, n_samples)
             data_chunk = data[start:end]
 
@@ -800,7 +825,11 @@ class KernelPCACalculator(CalculatorBase):
             filename=f"{self._cache_prefix}_nystrom.dat"
         )
 
-        for start in tqdm(range(0, n_samples, self.chunk_size), desc="Nystroem final transform", unit="chunks"):
+        for start in ProgressController.iterate(
+            range(0, n_samples, self.chunk_size),
+            desc="Nystroem final transform",
+            unit="chunks",
+        ):
             end = min(start + self.chunk_size, n_samples)
             data_chunk = data[start:end]
 

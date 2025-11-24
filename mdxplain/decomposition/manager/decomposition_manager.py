@@ -529,7 +529,7 @@ class DecompositionManager:
 
         print("=== DecompositionData Information ===")
         data_names = list(pipeline_data.decomposition_data.keys())
-        print(f"DecompositionData Names: {len(data_names)} ({", ".join(data_names)})")
+        print(f"DecompositionData Names: {len(data_names)} ({', '.join(data_names)})")
         
         for name, data in pipeline_data.decomposition_data.items():
             print(f"\n--- {name} ---")

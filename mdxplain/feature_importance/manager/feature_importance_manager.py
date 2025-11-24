@@ -613,7 +613,7 @@ class FeatureImportanceManager:
 
         print("=== FeatureImportanceData Information ===")
         data_names = list(pipeline_data.feature_importance_data.keys())
-        print(f"FeatureImportanceData Names: {len(data_names)} ({", ".join(data_names)})")
+        print(f"FeatureImportanceData Names: {len(data_names)} ({', '.join(data_names)})")
         
         for name, data in pipeline_data.feature_importance_data.items():
             print(f"\n--- {name} ---")

@@ -239,6 +239,7 @@ class TestSuperpose:
         # Superpose
         traj_manager.superpose(
             pipeline_data,
+            traj_selection=0,
             reference_traj=0,
             reference_frame=0,
             atom_selection="all"
@@ -325,6 +326,7 @@ class TestSuperpose:
         # Superpose to frame 0
         traj_manager.superpose(
             pipeline_data,
+            traj_selection=0,
             reference_traj=0,
             reference_frame=0,
             atom_selection="all"
@@ -367,6 +369,7 @@ class TestSuperpose:
             # Perform superposition
             traj_manager.superpose(
                 pipeline_data,
+                traj_selection=0,
                 reference_traj=0,
                 reference_frame=0,
                 atom_selection=selection
@@ -394,7 +397,7 @@ class TestSuperpose:
 
         # Test with empty trajectory data
         with pytest.raises(ValueError, match="No trajectories loaded"):
-            traj_manager.superpose(pipeline_data)
+            traj_manager.superpose(pipeline_data, traj_selection=0)
 
         # Setup with one trajectory
         traj = create_test_trajectory(n_frames=5, n_atoms=80)
@@ -404,19 +407,19 @@ class TestSuperpose:
 
         # Test invalid reference trajectory
         with pytest.raises(ValueError, match="Reference trajectory index 5 is invalid"):
-            traj_manager.superpose(pipeline_data, reference_traj=5)
+            traj_manager.superpose(pipeline_data, traj_selection=0, reference_traj=5)
 
         # Test invalid reference frame
         with pytest.raises(ValueError, match="Reference frame index 100 is invalid"):
-            traj_manager.superpose(pipeline_data, reference_frame=100)
+            traj_manager.superpose(pipeline_data, traj_selection=0, reference_frame=100)
 
         # Test invalid atom selection
         with pytest.raises(ValueError, match="Invalid atom selection"):
-            traj_manager.superpose(pipeline_data, atom_selection="invalid_selection_string")
+            traj_manager.superpose(pipeline_data, traj_selection=0, atom_selection="invalid_selection_string")
 
         # Test empty atom selection
         with pytest.raises(ValueError, match="produced no atoms"):
-            traj_manager.superpose(pipeline_data, atom_selection="name XYZ")  # Non-existent atom
+            traj_manager.superpose(pipeline_data, traj_selection=0, atom_selection="name XYZ")  # Non-existent atom
 
     def test_superpose_selection_subset(self):
         """Only selected trajectories should be aligned while others stay untouched."""
@@ -530,6 +533,7 @@ class TestSuperpose:
         # Superpose
         traj_manager.superpose(
             pipeline_data,
+            traj_selection=0,
             reference_traj=0,
             reference_frame=0,
             atom_selection="all"
@@ -570,7 +574,7 @@ class TestSuperpose:
         pipeline_md.trajectory_data.trajectory_names = ["md_test"]
 
         traj_manager1 = TrajectoryManager()
-        traj_manager1.superpose(pipeline_md, reference_traj=0, reference_frame=0)
+        traj_manager1.superpose(pipeline_md, traj_selection=0, reference_traj=0, reference_frame=0)
 
         # Test 2: DaskMDTrajectory through TrajectoryManager
         pipeline_dask = PipelineData()
@@ -579,7 +583,7 @@ class TestSuperpose:
         pipeline_dask.trajectory_data.trajectory_names = ["dask_test"]
 
         traj_manager2 = TrajectoryManager(use_memmap=True)
-        traj_manager2.superpose(pipeline_dask, reference_traj=0, reference_frame=0)
+        traj_manager2.superpose(pipeline_dask, traj_selection=0, reference_traj=0, reference_frame=0)
 
         # Both should have changed
         assert not np.allclose(md_orig, md_traj.xyz), "MDTraj should have changed"
@@ -613,6 +617,7 @@ class TestSuperpose:
         # Superpose to frame 0
         traj_manager.superpose(
             pipeline_data,
+            traj_selection=0,
             reference_traj=0,
             reference_frame=0,
             atom_selection="all"
@@ -656,6 +661,7 @@ class TestSuperpose:
             # Perform superposition
             traj_manager.superpose(
                 pipeline_data,
+                traj_selection=0,
                 reference_traj=0,
                 reference_frame=0,
                 atom_selection=selection
@@ -683,7 +689,7 @@ class TestSuperpose:
 
         # Test with empty trajectory data
         with pytest.raises(ValueError, match="No trajectories loaded"):
-            traj_manager.superpose(pipeline_data)
+            traj_manager.superpose(pipeline_data, traj_selection=0)
 
         # Setup with one DaskMDTrajectory
         factory, _ = dask_traj_factory
@@ -695,19 +701,19 @@ class TestSuperpose:
 
         # Test invalid reference trajectory
         with pytest.raises(ValueError, match="Reference trajectory index 5 is invalid"):
-            traj_manager.superpose(pipeline_data, reference_traj=5)
+            traj_manager.superpose(pipeline_data, traj_selection=0, reference_traj=5)
 
         # Test invalid reference frame
         with pytest.raises(ValueError, match="Reference frame index 100 is invalid"):
-            traj_manager.superpose(pipeline_data, reference_frame=100)
+            traj_manager.superpose(pipeline_data, traj_selection=0, reference_frame=100)
 
         # Test invalid atom selection
         with pytest.raises(ValueError, match="Invalid atom selection"):
-            traj_manager.superpose(pipeline_data, atom_selection="invalid_selection_string")
+            traj_manager.superpose(pipeline_data, traj_selection=0, atom_selection="invalid_selection_string")
 
         # Test empty atom selection
         with pytest.raises(ValueError, match="produced no atoms"):
-            traj_manager.superpose(pipeline_data, atom_selection="name XYZ")  # Non-existent atom
+            traj_manager.superpose(pipeline_data, traj_selection=0, atom_selection="name XYZ")  # Non-existent atom
 
     def test_multiple_trajectory_equivalence(self, dask_traj_factory):
         """Test that TrajectoryManager works correctly with multiple trajectories for both types."""
@@ -805,6 +811,7 @@ class TestSuperpose:
         # Superpose
         traj_manager.superpose(
             pipeline_data,
+            traj_selection=0,
             reference_traj=0,
             reference_frame=0,
             atom_selection="all"
@@ -847,6 +854,7 @@ class TestSuperpose:
             # Superpose
             traj_manager.superpose(
                 pipeline_data,
+                traj_selection=0,
                 reference_traj=0,
                 reference_frame=0,
                 atom_selection="all"
@@ -891,6 +899,7 @@ class TestSuperpose:
         # Superpose
         traj_manager.superpose(
             pipeline_data,
+            traj_selection=0,
             reference_traj=0,
             reference_frame=0,
             atom_selection="all"

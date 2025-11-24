@@ -26,14 +26,14 @@ computation and iterative memory-mapped computation for large datasets.
 Uses MDTraj trajectories and RMSD-based distance computation.
 """
 
-from typing import Dict, Tuple, Any, Optional
 import os
+from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
+from mdxplain.utils.progress_util import ProgressController
 from scipy.linalg import eig
-from scipy.sparse.linalg import eigs, LinearOperator
+from scipy.sparse.linalg import LinearOperator, eigs
 from sklearn.cluster import MiniBatchKMeans
-from tqdm import tqdm
 
 from ..interfaces.calculator_base import CalculatorBase
 
@@ -532,7 +532,9 @@ class DiffusionMapsCalculator(CalculatorBase):
         )
         
         # Compute RMSD matrix (same logic for both memmap and regular array)
-        for i in tqdm(range(n_frames), desc="Computing RMSD matrix", unit="frames"):
+        for i in ProgressController.iterate(
+            range(n_frames), desc="Computing RMSD matrix", unit="frames"
+        ):
             for j in range(n_frames):
                 rmsd_matrix[i, j] = self._compute_rmsd_flattened(data[i], data[j], n_atoms)
         
@@ -571,7 +573,11 @@ class DiffusionMapsCalculator(CalculatorBase):
         )
         row_sums = np.zeros(n_frames)
 
-        for i in tqdm(range(0, n_frames, self.chunk_size), desc="Computing kernel matrix", unit="chunks"):
+        for i in ProgressController.iterate(
+            range(0, n_frames, self.chunk_size),
+            desc="Computing kernel matrix",
+            unit="chunks",
+        ):
             end_i = min(i + self.chunk_size, n_frames)
             chunk_kernel = np.exp(-(rmsd_matrix[i:end_i] ** 2) / epsilon)
             kernel_matrix[i:end_i] = chunk_kernel
@@ -722,7 +728,11 @@ class DiffusionMapsCalculator(CalculatorBase):
         
         if self.use_memmap or n_samples > self.chunk_size:
             chunk_medians = []
-            for i in tqdm(range(0, n_samples, self.chunk_size), desc="Computing epsilon", unit="chunks"):
+            for i in ProgressController.iterate(
+                range(0, n_samples, self.chunk_size),
+                desc="Computing epsilon",
+                unit="chunks",
+            ):
                 end = min(i + self.chunk_size, n_samples)
                 chunk_vals = np.array(k_distances[i:end])
                 chunk_medians.append(np.median(chunk_vals))
@@ -836,7 +846,11 @@ class DiffusionMapsCalculator(CalculatorBase):
         )
         
         # Train MiniBatchKMeans chunk-wise
-        for chunk_start in tqdm(range(0, n_frames, self.chunk_size), desc="Training MiniBatch KMeans", unit="chunks"):
+        for chunk_start in ProgressController.iterate(
+            range(0, n_frames, self.chunk_size),
+            desc="Training MiniBatch KMeans",
+            unit="chunks",
+        ):
             chunk_end = min(chunk_start + self.chunk_size, n_frames)
             chunk_coords = data[chunk_start:chunk_end]
             kmeans.partial_fit(chunk_coords)
@@ -848,7 +862,12 @@ class DiffusionMapsCalculator(CalculatorBase):
             closest_frame = -1
             
             # Search chunk-wise for closest frame
-            for chunk_start in tqdm(range(0, n_frames, self.chunk_size), desc=f"Finding landmarks", unit="chunks", leave=False):
+            for chunk_start in ProgressController.iterate(
+                range(0, n_frames, self.chunk_size),
+                desc="Finding landmarks",
+                unit="chunks",
+                leave=False,
+            ):
                 chunk_end = min(chunk_start + self.chunk_size, n_frames)
                 chunk_coords = data[chunk_start:chunk_end]
                 
@@ -897,7 +916,11 @@ class DiffusionMapsCalculator(CalculatorBase):
         n_landmarks = len(landmark_idx)
         K_landmarks = np.zeros((n_landmarks, n_landmarks))
         
-        for i in tqdm(range(n_landmarks), desc="Computing landmark kernel matrix", unit="landmarks"):
+        for i in ProgressController.iterate(
+            range(n_landmarks),
+            desc="Computing landmark kernel matrix",
+            unit="landmarks",
+        ):
             for j in range(n_landmarks):
                 rmsd = self._compute_rmsd_flattened(data[landmark_idx[i]], data[landmark_idx[j]], n_atoms)
                 K_landmarks[i, j] = np.exp(-(rmsd ** 2) / epsilon)
@@ -942,7 +965,12 @@ class DiffusionMapsCalculator(CalculatorBase):
             landmark_coord = data[landmark_idx[j]]
             
             # Compute chunk-wise RMSD to this landmark (vectorized)
-            for chunk_start in tqdm(range(0, n_frames, self.chunk_size), desc=f"Landmark kernel {j+1}/{len(landmark_idx)}", unit="chunks", leave=False):
+            for chunk_start in ProgressController.iterate(
+                range(0, n_frames, self.chunk_size),
+                desc=f"Landmark kernel {j+1}/{len(landmark_idx)}",
+                unit="chunks",
+                leave=False,
+            ):
                 chunk_end = min(chunk_start + self.chunk_size, n_frames)
                 chunk_data = data[chunk_start:chunk_end]
                 
@@ -1055,7 +1083,11 @@ class DiffusionMapsCalculator(CalculatorBase):
         valid_eigvals = np.where(mask, eigvals_small, 1e-10)
         
         # Extend eigenvectors chunk-wise for memory efficiency
-        for chunk_start in tqdm(range(0, n_frames, self.chunk_size), desc="Nystroem extension", unit="chunks"):
+        for chunk_start in ProgressController.iterate(
+            range(0, n_frames, self.chunk_size),
+            desc="Nystroem extension",
+            unit="chunks",
+        ):
             chunk_end = min(chunk_start + self.chunk_size, n_frames)
             K_chunk = K_all_to_landmarks[chunk_start:chunk_end, :]
             

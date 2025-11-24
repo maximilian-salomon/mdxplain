@@ -32,6 +32,7 @@ from matplotlib.gridspec import GridSpec
 from ...helper.grid_layout_helper import GridLayoutHelper
 from ...helper.title_legend_helper import TitleLegendHelper
 from ...helper.validation_helper import ValidationHelper
+from ...helper.svg_export_helper import SvgExportHelper
 from ....utils.data_utils import DataUtils
 
 
@@ -433,7 +434,10 @@ class FeatureImportanceBasePlotter:
         data_selector_colors: Dict[str, str],
         legend_title: Optional[str],
         legend_labels: Optional[Dict[str, str]],
-        active_threshold: Optional[float]
+        active_threshold: Optional[float],
+        title_fontsize: Optional[int] = None,
+        legend_fontsize: Optional[int] = None,
+        legend_title_fontsize: Optional[int] = None
     ) -> None:
         """
         Add title and legend with calculated positions.
@@ -456,6 +460,12 @@ class FeatureImportanceBasePlotter:
             Custom legend labels
         active_threshold : float, optional
             Threshold value for legend
+        title_fontsize : int, optional
+            Font size for title (default: 18)
+        legend_fontsize : int, optional
+            Font size for legend entries (default: 14)
+        legend_title_fontsize : int, optional
+            Font size for legend title (default: 16)
 
         Returns
         -------
@@ -464,7 +474,10 @@ class FeatureImportanceBasePlotter:
         """
         title_offset_from_top = 0.15
         title_y = 1.0 - (title_offset_from_top / fig.get_figheight())
-        TitleLegendHelper.add_title(fig, wrapped_title, title_y=title_y)
+        TitleLegendHelper.add_title(
+            fig, wrapped_title, title_y=title_y,
+            fontsize=title_fontsize or 18
+        )
 
         pos = rightmost_ax_first_row.get_position()
         gap_inches = 0.1
@@ -475,7 +488,9 @@ class FeatureImportanceBasePlotter:
             fig, data_selector_colors,
             legend_title, legend_labels,
             contact_threshold=active_threshold,
-            legend_x=legend_x, legend_y=legend_y
+            legend_x=legend_x, legend_y=legend_y,
+            fontsize=legend_fontsize or 14,
+            title_fontsize=legend_title_fontsize or 16
         )
 
     def _save_figure(
@@ -535,6 +550,9 @@ class FeatureImportanceBasePlotter:
         ... )
         Figure saved to: my_plot.pdf
         """
+        # Configure SVG export for editable text
+        SvgExportHelper.apply_svg_config_if_needed(file_format)
+
         if filename is None:
             if mode_type == "feature_importance":
                 filename = f"{prefix}_{mode_name}_top{n_top}.{file_format}"

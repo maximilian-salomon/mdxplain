@@ -27,10 +27,11 @@ array support and statistical filtering capabilities.
 """
 
 import warnings
-from typing import Dict, Tuple, Any, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
-from tqdm import tqdm
+
+from mdxplain.utils.progress_util import ProgressController
 
 from .feature_shape_helper import FeatureShapeHelper
 
@@ -326,8 +327,11 @@ class CalculatorComputeHelper:
         None
             Fills dynamic_data array in-place
         """
-        for i in tqdm(range(0, data.shape[0], chunk_size), 
-                      desc="Computing dynamic values", unit="chunks"):
+        for i in ProgressController.iterate(
+            range(0, data.shape[0], chunk_size),
+            desc="Computing dynamic values",
+            unit="chunks",
+        ):
             end_idx = min(i + chunk_size, data.shape[0])
             chunk = data[i:end_idx]
             CalculatorComputeHelper._process_chunk(
@@ -359,14 +363,20 @@ class CalculatorComputeHelper:
         """
         if is_square_format:
             indices = np.where(mask)
-            for i in tqdm(range(0, data.shape[0], chunk_size),
-                          desc="Extracting pair data", unit="chunks"):
+            for i in ProgressController.iterate(
+                range(0, data.shape[0], chunk_size),
+                desc="Extracting pair data",
+                unit="chunks",
+            ):
                 end_idx = min(i + chunk_size, data.shape[0])
                 dynamic_data[i:end_idx] = data[i:end_idx, indices[0], indices[1]]
         else:
             data_flat = data.reshape(data.shape[0], -1)
-            for i in tqdm(range(0, data.shape[0], chunk_size),
-                          desc="Extracting mask data", unit="chunks"):
+            for i in ProgressController.iterate(
+                range(0, data.shape[0], chunk_size),
+                desc="Extracting mask data",
+                unit="chunks",
+            ):
                 end_idx = min(i + chunk_size, data.shape[0])
                 dynamic_data[i:end_idx] = data_flat[i:end_idx, mask.flatten()]
 

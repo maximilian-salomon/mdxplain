@@ -25,9 +25,11 @@ Implements specialized KernelPCA computation for binary contact matrices using
 Hamming distance-based kernel that is equivalent to RBF kernel for binary data.
 """
 
-from typing import Dict, Tuple, Any
+from typing import Any, Dict, Tuple
+
 import numpy as np
-from tqdm import tqdm
+
+from mdxplain.utils.progress_util import ProgressController
 
 from ..kernel_pca.kernel_pca_calculator import KernelPCACalculator
 
@@ -185,7 +187,11 @@ class ContactKernelPCACalculator(KernelPCACalculator):
                 )
         else:
             # Chunk-wise validation with early exit
-            for i in tqdm(range(0, data.size, self.chunk_size), desc="Validating binary data", unit="chunks"):
+            for i in ProgressController.iterate(
+                range(0, data.size, self.chunk_size),
+                desc="Validating binary data",
+                unit="chunks",
+            ):
                 chunk = data.flat[i : i + self.chunk_size]
                 if not np.all((chunk == 0) | (chunk == 1)):
                     raise ValueError(

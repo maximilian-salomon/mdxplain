@@ -25,10 +25,12 @@ Utility class for computing Solvent Accessible Surface Area using the
 Shrake-Rupley algorithm with support for memory mapping and chunked processing.
 """
 
-from typing import Dict, Tuple, Any
+from typing import Any, Dict, Tuple
+
 import mdtraj as md
 import numpy as np
-from tqdm import tqdm
+
+from mdxplain.utils.progress_util import ProgressController
 
 from ..helper.calculator_compute_helper import CalculatorComputeHelper
 from ..interfaces.calculator_base import CalculatorBase
@@ -185,8 +187,11 @@ class SASACalculator(CalculatorBase):
         """
         if self.use_memmap:
             # Chunk-wise processing for memory efficiency
-            for i in tqdm(range(0, trajectory.n_frames, self.chunk_size),
-                         desc="Computing SASA", unit="chunks"):
+            for i in ProgressController.iterate(
+                range(0, trajectory.n_frames, self.chunk_size),
+                desc="Computing SASA",
+                unit="chunks",
+            ):
                 end = min(i + self.chunk_size, trajectory.n_frames)
                 chunk = trajectory[i:end]
                 
@@ -502,4 +507,3 @@ class SASACalculator(CalculatorBase):
             "mad", "mean", "burial_fraction", "exposure_fraction"
         ]
         raise ValueError(f"Unknown metric: {metric}. Supported: {supported_metrics}")
-

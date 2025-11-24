@@ -37,6 +37,7 @@ from ...feature_selection.entities.feature_selector_data import (
 from ...clustering.entities.cluster_data import ClusterData
 from ...decomposition.entities.decomposition_data import DecompositionData
 from ...data_selector.entities.data_selector_data import DataSelectorData
+from ...data_selector.entities.data_selector_group import DataSelectorGroup
 from ...comparison.entities.comparison_data import ComparisonData
 from ...feature_importance.entities.feature_importance_data import (
     FeatureImportanceData,
@@ -88,6 +89,8 @@ class PipelineData:
         Dictionary of clustering results by cluster name
     data_selector_data : Dict[str, DataSelectorData]
         Dictionary of data selector results by selector name
+    data_selector_groups : Dict[str, DataSelectorGroup]
+        Dictionary of data selector groups by group name
     comparison_data : Dict[str, ComparisonData]
         Dictionary of comparison results by comparison name
     feature_importance_data : Dict[str, FeatureImportanceData]
@@ -171,6 +174,7 @@ class PipelineData:
 
         # New analysis modules
         self.data_selector_data: Dict[str, DataSelectorData] = {}
+        self.data_selector_groups: Dict[str, DataSelectorGroup] = {}
         self.comparison_data: Dict[str, ComparisonData] = {}
         self.feature_importance_data: Dict[str, FeatureImportanceData] = {}
         self.structure_visualization_data: Dict[str, StructureVisualizationData] = {}
@@ -209,6 +213,7 @@ class PipelineData:
         self.decomposition_data.clear()
         self.cluster_data.clear()
         self.data_selector_data.clear()
+        self.data_selector_groups.clear()
         self.comparison_data.clear()
         self.feature_importance_data.clear()
         self.structure_visualization_data.clear()

@@ -25,16 +25,16 @@ Handles conversion from trajectory files to optimized Zarr format using md.iterl
 """
 
 import os
-import time
 import pickle
-from typing import Optional, Dict, Any, Tuple
-from pathlib import Path
 import tempfile
+import time
+from pathlib import Path
+from typing import Any, Dict, Optional, Tuple
 
+import mdtraj as md
 import numpy as np
 import zarr
-import mdtraj as md
-from tqdm import tqdm
+from mdxplain.utils.progress_util import ProgressController
 from zarr.codecs import BloscCodec
 
 # Default compression for all zarr operations  
@@ -246,7 +246,9 @@ class ZarrCacheHelper:
         print("  🔍 Analyzing trajectory dimensions...")
         n_frames = 0
         frame_iter = md.iterload(trajectory_file, top=topology, chunk=self.chunk_size)
-        for chunk in tqdm(frame_iter, desc="  📊 Counting frames"):
+        for chunk in ProgressController.iterate(
+            frame_iter, desc="Counting frames"
+        ):
             n_frames += chunk.n_frames
         
         traj_info = {
@@ -356,7 +358,9 @@ class ZarrCacheHelper:
         frame_iter = md.iterload(trajectory_file, top=topology, chunk=self.chunk_size)
         total_chunks = (traj_info['n_frames'] + self.chunk_size - 1) // self.chunk_size
         
-        for chunk in tqdm(frame_iter, desc="  📝 Processing chunks", total=total_chunks):
+        for chunk in ProgressController.iterate(
+            frame_iter, desc="Processing chunks", total=total_chunks
+        ):
             end_idx = frame_idx + chunk.n_frames
             
             self._store_chunk_data(store, chunk, frame_idx, end_idx)

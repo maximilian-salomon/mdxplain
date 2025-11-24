@@ -26,13 +26,13 @@ DBSCAN clustering computation using scikit-learn.
 """
 
 import time
-from typing import Dict, Tuple, Any
-from scipy.sparse import vstack
+from typing import Any, Dict, Tuple
 
 import numpy as np
+from mdxplain.utils.progress_util import ProgressController
+from scipy.sparse import vstack
 from sklearn.cluster import DBSCAN as SklearnDBSCAN
 from sklearn.neighbors import NearestNeighbors
-from tqdm import tqdm
 
 from ..interfaces.calculator_base import CalculatorBase
 
@@ -253,8 +253,11 @@ class DBSCANCalculator(CalculatorBase):
         chunk_size = self.chunk_size
         sparse_matrices = []
         
-        for chunk_start in tqdm(range(0, n_samples, chunk_size), 
-                                desc="Building sparse matrix", unit="chunks"):
+        for chunk_start in ProgressController.iterate(
+            range(0, n_samples, chunk_size),
+            desc="Building sparse matrix",
+            unit="chunks",
+        ):
             chunk_end = min(chunk_start + chunk_size, n_samples)
             chunk_data = data[chunk_start:chunk_end]
             

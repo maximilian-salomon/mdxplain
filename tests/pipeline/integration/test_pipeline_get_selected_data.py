@@ -24,8 +24,10 @@ import numpy as np
 import pytest
 import warnings
 import mdtraj as md
+from unittest.mock import patch
 from mdxplain.pipeline.manager.pipeline_manager import PipelineManager
 from mdxplain.feature.feature_type.distances.distances import Distances
+from mdxplain.feature.feature_type.dssp.dssp import DSSP
 
 
 class TestGetSelectedDataVerification:
@@ -856,4 +858,535 @@ class TestGetSelectedDataEdgeCases:
         assert not np.any(np.isnan(ala_data))
         assert not np.any(np.isnan(gly_data))
         assert not np.any(np.isnan(all_data))
-    
+
+
+class TestGetSelectedDataDSSP:
+    """Test get_selected_data() with all DSSP encoding modes."""
+
+    def _create_base_pipeline(self):
+        """
+        Create base pipeline with minimal trajectory for DSSP testing.
+
+        Returns
+        -------
+        PipelineManager
+            Initialized pipeline with minimal trajectory
+        """
+        pipeline = PipelineManager()
+
+        # Minimal topology (5 residues)
+        topology = md.Topology()
+        chain = topology.add_chain()
+        for name in ["ALA", "GLY", "VAL", "ALA", "GLY"]:
+            residues = topology.add_residue(name, chain)
+            topology.add_atom("CA", md.element.carbon, residues)
+
+        # Minimal coordinates (10 frames)
+        xyz = np.zeros((10, 5, 3))
+        test_traj = md.Trajectory(xyz, topology)
+
+        pipeline.data.trajectory_data.trajectories = [test_traj]
+        pipeline.data.trajectory_data.trajectory_names = ["test"]
+
+        # Residue metadata
+        res_metadata = []
+        for i in range(5):
+            res_metadata.append({
+                "resid": i + 1,
+                "seqid": i + 1,
+                "resname": "ALA",
+                "aaa_code": "ALA",
+                "a_code": "A",
+                "consensus": None,
+                "full_name": f"ALA{i+1}",
+                "index": i
+            })
+        pipeline.data.trajectory_data.res_label_data = {0: res_metadata}
+
+        return pipeline
+
+    def _create_mock_feature_data(self):
+        """
+        Create a minimal mock FeatureData object without full initialization.
+
+        Returns
+        -------
+        object
+            Mock feature data object with required attributes
+        """
+        class MockFeatureData:
+            def __init__(self):
+                self.data = None
+                self.feature_metadata = None
+                self.reduced_data = None
+                self.reduced_feature_metadata = None
+                self.reduction_info = None
+                self.use_memmap = False
+                self.chunk_size = 2000
+
+        return MockFeatureData()
+
+    def _inject_mock_dssp_char(self, pipeline):
+        """
+        Inject MOCK char-encoded DSSP data with known values.
+
+        Parameters
+        ----------
+        pipeline : PipelineManager
+            Pipeline to inject data into
+
+        Returns
+        -------
+        numpy.ndarray
+            Expected integer values after conversion
+        """
+        # MOCK char data (10 frames, 5 residues)
+        # Predictable pattern for exact testing
+        mock_data = np.array([
+            ['H', 'E', 'C', 'H', 'E'],
+            ['H', 'E', 'C', 'C', 'E'],
+            ['E', 'E', 'C', 'H', 'H'],
+            ['H', 'C', 'C', 'H', 'E'],
+            ['H', 'E', 'H', 'H', 'E'],
+            ['C', 'E', 'C', 'C', 'C'],
+            ['H', 'H', 'C', 'H', 'E'],
+            ['H', 'E', 'E', 'H', 'E'],
+            ['E', 'E', 'C', 'E', 'E'],
+            ['H', 'C', 'C', 'H', 'C'],
+        ], dtype='U1')
+
+        # Expected after conversion (H=0, E=1, C=2)
+        expected_int = np.array([
+            [0, 1, 2, 0, 1],
+            [0, 1, 2, 2, 1],
+            [1, 1, 2, 0, 0],
+            [0, 2, 2, 0, 1],
+            [0, 1, 0, 0, 1],
+            [2, 1, 2, 2, 2],
+            [0, 0, 2, 0, 1],
+            [0, 1, 1, 0, 1],
+            [1, 1, 2, 1, 1],
+            [0, 2, 2, 0, 2],
+        ], dtype=np.int8)
+
+        feature_data = self._create_mock_feature_data()
+        feature_data.data = mock_data
+
+        # Create features in DSSP format: list of lists with residue info
+        features = []
+        for i in range(5):
+            feature_info = {
+                "residue": {
+                    "index": i,
+                    "resid": i + 1,
+                    "seqid": i + 1,
+                    "resname": "ALA",
+                    "full_name": f"ALA{i+1}"
+                },
+                "special_label": None,
+                "full_name": f"ALA{i+1}_DSSP"
+            }
+            features.append([feature_info])
+
+        feature_data.feature_metadata = {
+            "features": features,
+            "computation_params": {
+                "simplified": True,
+                "encoding": "char",
+                "classes": ['H', 'E', 'C']
+            },
+            "matrix_mapping": {'H': 0, 'E': 1, 'C': 2},
+            "visualization": {
+                "is_discrete": True,
+                "tick_labels": {
+                    "short": ['H', 'E', 'C'],
+                    "long": ['Helix', 'Sheet', 'Coil']
+                }
+            }
+        }
+
+        pipeline.data.feature_data["dssp"] = {0: feature_data}
+        return expected_int
+
+    def _inject_mock_dssp_integer(self, pipeline):
+        """
+        Inject MOCK integer-encoded DSSP data.
+
+        Parameters
+        ----------
+        pipeline : PipelineManager
+            Pipeline to inject data into
+
+        Returns
+        -------
+        numpy.ndarray
+            Integer-encoded DSSP data
+        """
+        # MOCK integer data (same pattern as char, but integers)
+        mock_data = np.array([
+            [0, 1, 2, 0, 1],
+            [0, 1, 2, 2, 1],
+            [1, 1, 2, 0, 0],
+            [0, 2, 2, 0, 1],
+            [0, 1, 0, 0, 1],
+            [2, 1, 2, 2, 2],
+            [0, 0, 2, 0, 1],
+            [0, 1, 1, 0, 1],
+            [1, 1, 2, 1, 1],
+            [0, 2, 2, 0, 2],
+        ], dtype=np.int8)
+
+        feature_data = self._create_mock_feature_data()
+        feature_data.data = mock_data
+
+        # Create features in DSSP format: list of lists with residue info
+        features = []
+        for i in range(5):
+            feature_info = {
+                "residue": {
+                    "index": i,
+                    "resid": i + 1,
+                    "seqid": i + 1,
+                    "resname": "ALA",
+                    "full_name": f"ALA{i+1}"
+                },
+                "special_label": None,
+                "full_name": f"ALA{i+1}_DSSP"
+            }
+            features.append([feature_info])
+
+        feature_data.feature_metadata = {
+            "features": features,
+            "computation_params": {
+                "simplified": True,
+                "encoding": "integer",
+                "classes": ['H', 'E', 'C']
+            },
+            "matrix_mapping": {'H': 0, 'E': 1, 'C': 2},
+            "visualization": {
+                "is_discrete": True,
+                "tick_labels": {
+                    "short": ['H', 'E', 'C'],
+                    "long": ['Helix', 'Sheet', 'Coil']
+                }
+            }
+        }
+
+        pipeline.data.feature_data["dssp"] = {0: feature_data}
+        return mock_data
+
+    def _inject_mock_dssp_onehot(self, pipeline):
+        """
+        Inject MOCK onehot-encoded DSSP data.
+
+        Parameters
+        ----------
+        pipeline : PipelineManager
+            Pipeline to inject data into
+
+        Returns
+        -------
+        numpy.ndarray
+            Onehot-encoded DSSP data (shape: n_frames, n_residues * n_classes)
+        """
+        # One-hot encoding: 3 classes * 5 residues = 15 features
+        # Frame 0: H(0), E(1), C(2), H(0), E(1) → onehot
+        mock_data = np.array([
+            # Res0:H  Res1:E  Res2:C  Res3:H  Res4:E
+            [1,0,0, 0,1,0, 0,0,1, 1,0,0, 0,1,0],  # Frame 0
+            [1,0,0, 0,1,0, 0,0,1, 0,0,1, 0,1,0],  # Frame 1
+            [0,1,0, 0,1,0, 0,0,1, 1,0,0, 1,0,0],  # Frame 2
+            [1,0,0, 0,0,1, 0,0,1, 1,0,0, 0,1,0],  # Frame 3
+            [1,0,0, 0,1,0, 1,0,0, 1,0,0, 0,1,0],  # Frame 4
+            [0,0,1, 0,1,0, 0,0,1, 0,0,1, 0,0,1],  # Frame 5
+            [1,0,0, 1,0,0, 0,0,1, 1,0,0, 0,1,0],  # Frame 6
+            [1,0,0, 0,1,0, 0,1,0, 1,0,0, 0,1,0],  # Frame 7
+            [0,1,0, 0,1,0, 0,0,1, 0,1,0, 0,1,0],  # Frame 8
+            [1,0,0, 0,0,1, 0,0,1, 1,0,0, 0,0,1],  # Frame 9
+        ], dtype=np.float32)
+
+        feature_data = self._create_mock_feature_data()
+        feature_data.data = mock_data
+
+        # Create metadata for onehot: one feature per residue per class
+        # Format: list of lists, each with residue info + dssp_class
+        features = []
+        for res_idx in range(5):
+            for class_idx, class_name in enumerate(['H', 'E', 'C']):
+                feature_info = {
+                    "residue": {
+                        "index": res_idx,
+                        "resid": res_idx + 1,
+                        "seqid": res_idx + 1,
+                        "resname": "ALA",
+                        "full_name": f"ALA{res_idx+1}"
+                    },
+                    "dssp_class": class_name,
+                    "special_label": None,
+                    "full_name": f"ALA{res_idx+1}_DSSP_{class_name}"
+                }
+                features.append([feature_info])
+
+        feature_data.feature_metadata = {
+            "features": features,
+            "computation_params": {
+                "simplified": True,
+                "encoding": "onehot",
+                "classes": ['H', 'E', 'C']
+            },
+            "visualization": {
+                "is_discrete": True,
+                "is_binary": True,
+                "tick_labels": {
+                    "short": ['H', 'E', 'C'],
+                    "long": ['Helix', 'Sheet', 'Coil']
+                }
+            }
+        }
+
+        pipeline.data.feature_data["dssp"] = {0: feature_data}
+        return mock_data
+
+    def test_dssp_default_encoding_is_integer(self):
+        """
+        Test that DSSP default encoding is integer.
+
+        Validates that DSSP() without arguments uses integer encoding
+        which is matrix-compatible.
+        """
+        from mdxplain.feature.feature_type.dssp.dssp import DSSP
+
+        dssp = DSSP()
+        assert dssp.encoding == 'integer', (
+            f"DSSP default should be 'integer', got '{dssp.encoding}'"
+        )
+
+    def test_dssp_char_encoding_all_features(self):
+        """
+        Test DSSP char to int conversion with all features.
+
+        Validates that char-encoded DSSP data is automatically converted
+        to integer when building selection matrix.
+        """
+        pipeline = self._create_base_pipeline()
+        expected = self._inject_mock_dssp_char(pipeline)
+
+        pipeline.feature_selector.create("test")
+        pipeline.feature_selector.add_selection("test", "dssp", "all", use_reduced=False)
+        pipeline.feature_selector.select("test", reference_traj=0)
+
+        selected_data = pipeline.data.get_selected_data("test")
+        np.testing.assert_array_equal(selected_data, expected)
+
+    def test_dssp_char_encoding_with_frame_selection(self):
+        """
+        Test DSSP char conversion with data selector.
+
+        Validates that char-encoded DSSP works correctly when combined
+        with frame selection via data selector.
+        """
+        pipeline = self._create_base_pipeline()
+        expected = self._inject_mock_dssp_char(pipeline)
+
+        pipeline.data_selector.create("subset")
+        pipeline.data_selector.select_by_indices("subset", {0: [2, 5, 7]})
+
+        pipeline.feature_selector.create("test")
+        pipeline.feature_selector.add_selection("test", "dssp", "all", use_reduced=False)
+        pipeline.feature_selector.select("test", reference_traj=0)
+
+        selected_data = pipeline.data.get_selected_data("test", data_selector="subset")
+        np.testing.assert_array_equal(selected_data, expected[[2, 5, 7], :])
+
+    def test_dssp_char_encoding_with_residue_selection(self):
+        """
+        Test DSSP char conversion with feature selection.
+
+        Validates that char-encoded DSSP works when selecting specific
+        residues via feature selector.
+        """
+        pipeline = self._create_base_pipeline()
+        expected = self._inject_mock_dssp_char(pipeline)
+
+        pipeline.feature_selector.create("test")
+        pipeline.feature_selector.add_selection("test", "dssp", "seqid 2,4", use_reduced=False)
+        pipeline.feature_selector.select("test", reference_traj=0)
+
+        selected_data = pipeline.data.get_selected_data("test")
+        np.testing.assert_array_equal(selected_data, expected[:, [1, 3]])
+
+    def test_dssp_integer_encoding_all_features(self):
+        """
+        Test DSSP integer encoding works correctly.
+
+        Validates that integer-encoded DSSP (current default) works
+        without any conversion needed.
+        """
+        pipeline = self._create_base_pipeline()
+        expected = self._inject_mock_dssp_integer(pipeline)
+
+        pipeline.feature_selector.create("test")
+        pipeline.feature_selector.add_selection("test", "dssp", "all", use_reduced=False)
+        pipeline.feature_selector.select("test", reference_traj=0)
+
+        selected_data = pipeline.data.get_selected_data("test")
+        np.testing.assert_array_equal(selected_data, expected)
+
+    def test_dssp_integer_encoding_with_selection(self):
+        """
+        Test DSSP integer encoding with data and feature selectors.
+
+        Validates that integer-encoded DSSP works correctly with
+        combined frame and residue selection.
+        """
+        pipeline = self._create_base_pipeline()
+        expected = self._inject_mock_dssp_integer(pipeline)
+
+        pipeline.data_selector.create("subset")
+        pipeline.data_selector.select_by_indices("subset", {0: [0, 5, 9]})
+
+        pipeline.feature_selector.create("test")
+        pipeline.feature_selector.add_selection("test", "dssp", "seqid 1,3,5", use_reduced=False)
+        pipeline.feature_selector.select("test", reference_traj=0)
+
+        selected_data = pipeline.data.get_selected_data("test", data_selector="subset")
+        np.testing.assert_array_equal(selected_data, expected[np.ix_([0, 5, 9], [0, 2, 4])])
+
+    def test_dssp_onehot_encoding(self):
+        """
+        Test DSSP onehot encoding works correctly.
+
+        Validates that onehot-encoded DSSP (alternative encoding) works
+        correctly with selection matrix.
+        """
+        pipeline = self._create_base_pipeline()
+        expected = self._inject_mock_dssp_onehot(pipeline)
+
+        pipeline.feature_selector.create("test")
+        pipeline.feature_selector.add_selection("test", "dssp", "all", use_reduced=False)
+        pipeline.feature_selector.select("test", reference_traj=0)
+
+        selected_data = pipeline.data.get_selected_data("test")
+        np.testing.assert_array_equal(selected_data, expected)
+
+    def test_dssp_char_with_distances_real_pipeline_integration(self):
+        """
+        Real integration test: DSSP(char) + Distances through full pipeline API.
+
+        Tests complete workflow with actual feature computation (patched DSSP),
+        feature selector, and selection matrix building with char->int conversion.
+        Validates exact values, not shapes.
+        """
+        # Setup pipeline with triangle trajectory for known distances
+        pipeline = PipelineManager()
+
+        # Create mock trajectory with 3 residues, 10 frames
+        topology = md.Topology()
+        chain = topology.add_chain()
+        for name in ["ALA", "GLY", "VAL"]:
+            residue = topology.add_residue(name, chain)
+            topology.add_atom("CA", md.element.carbon, residue)
+
+        # Triangle coordinates for predictable distances: 3.0, 4.0, 5.0 Å
+        xyz = np.zeros((10, 3, 3))
+        for frame in range(10):
+            xyz[frame, 0, :] = [0.0, 0.0, 0.0]
+            xyz[frame, 1, :] = [0.3, 0.0, 0.0]  # 3.0 Å in nm
+            xyz[frame, 2, :] = [0.0, 0.4, 0.0]  # 4.0 Å in nm
+
+        test_traj = md.Trajectory(xyz, topology)
+        pipeline.data.trajectory_data.trajectories = [test_traj]
+        pipeline.data.trajectory_data.trajectory_names = ["triangle"]
+
+        # Residue metadata
+        res_metadata = []
+        for i, name in enumerate(["ALA", "GLY", "VAL"]):
+            res_metadata.append({
+                "resid": i + 1,
+                "seqid": i + 1,
+                "resname": name,
+                "aaa_code": name,
+                "a_code": name[0],
+                "consensus": None,
+                "full_name": f"{name}{i+1}",
+                "index": i
+            })
+        pipeline.data.trajectory_data.res_label_data = {0: res_metadata}
+
+        # Mock DSSP computation with controlled char output
+        mock_dssp_data = np.array([
+            ['H', 'E', 'C'],
+            ['H', 'E', 'C'],
+            ['E', 'H', 'C'],
+            ['H', 'C', 'E'],
+            ['C', 'E', 'H'],
+            ['H', 'E', 'C'],
+            ['E', 'E', 'C'],
+            ['H', 'C', 'H'],
+            ['C', 'H', 'E'],
+            ['H', 'E', 'E'],
+        ], dtype='U1')
+
+        # Expected integer conversion (H=0, E=1, C=2)
+        expected_dssp_int = np.array([
+            [0, 1, 2],
+            [0, 1, 2],
+            [1, 0, 2],
+            [0, 2, 1],
+            [2, 1, 0],
+            [0, 1, 2],
+            [1, 1, 2],
+            [0, 2, 0],
+            [2, 0, 1],
+            [0, 1, 1],
+        ], dtype=np.int8)
+
+        # Expected distances (3.0, 4.0, 5.0 Å for all frames)
+        expected_distances = np.array([
+            [3.0, 4.0, 5.0],
+            [3.0, 4.0, 5.0],
+            [3.0, 4.0, 5.0],
+            [3.0, 4.0, 5.0],
+            [3.0, 4.0, 5.0],
+            [3.0, 4.0, 5.0],
+            [3.0, 4.0, 5.0],
+            [3.0, 4.0, 5.0],
+            [3.0, 4.0, 5.0],
+            [3.0, 4.0, 5.0],
+        ], dtype=np.float32)
+
+        # Patch md.compute_dssp to return controlled data
+        with patch('mdtraj.compute_dssp', return_value=mock_dssp_data):
+            # Add DSSP feature with CHAR encoding
+            dssp = DSSP(simplified=True, encoding='char')
+            pipeline.feature.add_feature(dssp)
+
+        # Add Distances feature (real computation)
+        # Use excluded_neighbors=0 to get ALL pairwise distances
+        distances = Distances(excluded_neighbors=0)
+        pipeline.feature.add_feature(distances)
+
+        # Create feature selector with both features
+        pipeline.feature_selector.create("mixed")
+        pipeline.feature_selector.add_selection("mixed", "dssp", "all", use_reduced=False)
+        pipeline.feature_selector.add_selection("mixed", "distances", "all", use_reduced=False)
+        pipeline.feature_selector.select("mixed", reference_traj=0)
+
+        # Get selection matrix
+        selected_data = pipeline.data.get_selected_data("mixed")
+
+        # Validate exact values (NO shape tests!)
+        # DSSP columns (0-2) should be converted from char to int
+        np.testing.assert_array_equal(
+            selected_data[:, 0:3],
+            expected_dssp_int,
+            err_msg="DSSP char->int conversion failed"
+        )
+
+        # Distances columns (3-5) should match expected distances
+        np.testing.assert_allclose(
+            selected_data[:, 3:6],
+            expected_distances,
+            rtol=1e-5,
+            err_msg="Distances do not match expected values"
+        )

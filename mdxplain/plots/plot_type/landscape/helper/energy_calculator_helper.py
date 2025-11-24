@@ -39,9 +39,9 @@ class EnergyCalculatorHelper:
     """
     Helper class for energy landscape calculations.
 
-    Provides static methods for calculating KDE-based free energy landscapes
-    using Boltzmann inversion, determining energy ranges, and masking
-    high-energy regions.
+    Provides static methods for calculating histogram- and KDE-based free
+    energy landscapes using Boltzmann inversion, determining energy ranges,
+    and masking high-energy regions.
 
     Examples
     --------
@@ -175,6 +175,113 @@ class EnergyCalculatorHelper:
         return X, Y, energy
 
     @staticmethod
+    def calculate_histogram_grid(
+        data_x: np.ndarray,
+        data_y: np.ndarray,
+        bins: int,
+        xlim: Tuple[float, float],
+        ylim: Tuple[float, float]
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Calculate 2D histogram on regular grid.
+
+        Parameters
+        ----------
+        data_x : numpy.ndarray
+            X-axis data
+        data_y : numpy.ndarray
+            Y-axis data
+        bins : int
+            Number of bins per dimension
+        xlim : Tuple[float, float]
+            X-axis limits for grid calculation
+        ylim : Tuple[float, float]
+            Y-axis limits for grid calculation
+
+        Returns
+        -------
+        X : numpy.ndarray
+            X-axis grid centers
+        Y : numpy.ndarray
+            Y-axis grid centers
+        histogram : numpy.ndarray
+            Normalized histogram values (probability density)
+        """
+        x_edges = np.linspace(xlim[0], xlim[1], bins + 1)
+        y_edges = np.linspace(ylim[0], ylim[1], bins + 1)
+
+        histogram, _, _ = np.histogram2d(data_x, data_y, bins=[x_edges, y_edges])
+
+        hist_sum = histogram.sum()
+        # Normalize to probability density if possible
+        if hist_sum > 0:
+            histogram = histogram / hist_sum
+        else:
+            histogram = np.zeros_like(histogram)
+
+        # Grid centers for plotting
+        x_centers = (x_edges[:-1] + x_edges[1:]) / 2
+        y_centers = (y_edges[:-1] + y_edges[1:]) / 2
+        X, Y = np.meshgrid(x_centers, y_centers)
+
+        return X, Y, histogram.T
+
+    @staticmethod
+    def calculate_histogram_energy_landscape(
+        data_x: np.ndarray,
+        data_y: np.ndarray,
+        bins: int,
+        temperature: float,
+        xlim: Tuple[float, float],
+        ylim: Tuple[float, float]
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Calculate histogram-based free energy landscape.
+
+        Parameters
+        ----------
+        data_x : numpy.ndarray
+            Data for x-axis (first dimension)
+        data_y : numpy.ndarray
+            Data for y-axis (second dimension)
+        bins : int
+            Number of bins per dimension
+        temperature : float
+            Temperature in Kelvin for Boltzmann factor
+        xlim : Tuple[float, float]
+            X-axis limits for grid calculation
+        ylim : Tuple[float, float]
+            Y-axis limits for grid calculation
+
+        Returns
+        -------
+        X : numpy.ndarray
+            X-axis grid centers
+        Y : numpy.ndarray
+            Y-axis grid centers
+        energy : numpy.ndarray
+            Free energy values in kcal/mol
+        """
+        X, Y, histogram = EnergyCalculatorHelper.calculate_histogram_grid(
+            data_x, data_y, bins, xlim, ylim
+        )
+
+        histogram_max = histogram.max()
+        # Handle empty or degenerate histograms gracefully
+        if histogram_max <= 0:
+            energy = np.full_like(histogram, np.nan)
+            return X, Y, energy
+
+        # Boltzmann inversion; ignore empty bins to avoid infinities
+        kT = KB_KCAL * temperature
+        energy = np.full_like(histogram, np.nan, dtype=float)
+        nonzero_mask = histogram > 0
+        with np.errstate(divide='ignore', invalid='ignore'):
+            energy[nonzero_mask] = -kT * np.log(histogram[nonzero_mask] / histogram_max)
+
+        return X, Y, energy
+
+    @staticmethod
     def get_energy_range(
         energy: np.ndarray,
         percentile: float = 99.0
@@ -213,8 +320,17 @@ class EnergyCalculatorHelper:
         # Minimum is always 0 (reference state at maximum probability)
         vmin = 0.0
 
-        # Maximum uses percentile to exclude extreme outliers
-        vmax = np.nanpercentile(energy, percentile)
+        # Support masked arrays by using compressed data; otherwise use raw
+        if np.ma.isMaskedArray(energy):
+            energy_values = energy.compressed()
+        else:
+            energy_values = energy
+
+        # Maximum uses percentile to exclude extreme outliers (finite values only)
+        finite_energy = energy_values[np.isfinite(energy_values)]
+        if finite_energy.size == 0:
+            return vmin, 1.0
+        vmax = np.percentile(finite_energy, percentile)
 
         return vmin, vmax
 

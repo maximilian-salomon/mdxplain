@@ -165,7 +165,7 @@ class TimeSeriesFeaturePlotHelper:
         ...     ax, 0, "distances", "CA-CB", config
         ... )
         """
-        ax.set_title(feat_name, fontsize=12, pad=8)
+        ax.set_title(feat_name, fontsize=config.subplot_title_fontsize or 14, pad=8)
 
         TimeSeriesFeaturePlotHelper._plot_feature_lines(ax, feat_idx, config)
 
@@ -247,8 +247,9 @@ class TimeSeriesFeaturePlotHelper:
         y_label = TimeSeriesFeaturePlotHelper._get_feature_y_label(
             feat_type, feature_metadata
         )
-        ax.set_ylabel(y_label, fontsize=11)
-        ax.set_xlabel("Time (ns)" if config.use_time else "Frame", fontsize=11)
+        ax.set_ylabel(y_label, fontsize=config.ylabel_fontsize or 12)
+        ax.set_xlabel("Time (ns)" if config.use_time else "Frame", fontsize=config.xlabel_fontsize or 12)
+        ax.tick_params(axis='both', labelsize=config.tick_fontsize or 10)
         ax.grid(True, alpha=0.3)
 
         # Set xlim explicitly for exact alignment with membership plots
@@ -260,7 +261,7 @@ class TimeSeriesFeaturePlotHelper:
         viz = type_metadata.get("visualization", {})
         if viz.get("is_discrete", False):
             TimeSeriesFeaturePlotHelper._configure_discrete_y_axis(
-                ax, viz, config.long_labels
+                ax, viz, config.long_labels, config.tick_fontsize
             )
 
         if feat_type == "distances" and config.contact_threshold is not None:
@@ -333,7 +334,7 @@ class TimeSeriesFeaturePlotHelper:
         return None
 
     @staticmethod
-    def _configure_discrete_y_axis(ax, viz: Dict, long_labels: bool):
+    def _configure_discrete_y_axis(ax, viz: Dict, long_labels: bool, tick_fontsize: int = None):
         """
         Configure Y-axis for discrete features.
 
@@ -345,6 +346,8 @@ class TimeSeriesFeaturePlotHelper:
             Visualization metadata from feature
         long_labels : bool
             Use long labels (True) or short labels (False)
+        tick_fontsize : int, optional
+            Font size for tick labels (default: 10)
 
         Returns
         -------
@@ -354,7 +357,7 @@ class TimeSeriesFeaturePlotHelper:
         Examples
         --------
         >>> TimeSeriesFeaturePlotHelper._configure_discrete_y_axis(
-        ...     ax, {"tick_labels": {"short": ["H", "E"], "long": ["Helix", "Sheet"]}}, True
+        ...     ax, {"tick_labels": {"short": ["H", "E"], "long": ["Helix", "Sheet"]}}, True, 10
         ... )
 
         Notes
@@ -374,5 +377,5 @@ class TimeSeriesFeaturePlotHelper:
         ylim = (-0.3, n_ticks - 1 + 0.3)
 
         ax.set_yticks(positions)
-        ax.set_yticklabels(tick_labels)
+        ax.set_yticklabels(tick_labels, fontsize=tick_fontsize or 10)
         ax.set_ylim(ylim)

@@ -41,6 +41,7 @@ from ...helper.clustering_data_helper import ClusteringDataHelper
 from ...helper.grid_layout_helper import GridLayoutHelper
 from ...helper.contact_to_distances_converter import ContactToDistancesConverter
 from ...helper.title_legend_helper import TitleLegendHelper
+from ...helper.svg_export_helper import SvgExportHelper
 
 
 class TimeSeriesPlotter(FeatureImportanceBasePlotter):
@@ -87,7 +88,14 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         smoothing_method: str = "savitzky",
         smoothing_window: int = 51,
         smoothing_polyorder: int = 3,
-        show_unsmoothed_background: bool = True
+        show_unsmoothed_background: bool = True,
+        title_fontsize: Optional[int] = None,
+        subplot_title_fontsize: Optional[int] = None,
+        xlabel_fontsize: Optional[int] = None,
+        ylabel_fontsize: Optional[int] = None,
+        tick_fontsize: Optional[int] = None,
+        legend_fontsize: Optional[int] = None,
+        legend_title_fontsize: Optional[int] = None
     ) -> Figure:
         """
         Create time series plots from feature importance or manual selection.
@@ -153,6 +161,20 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             Polynomial order for Savitzky-Golay filter (ignored for moving_average)
         show_unsmoothed_background : bool, default=True
             Show unsmoothed data as transparent background line when smoothing is enabled
+        title_fontsize : int, optional
+            Font size for main figure title (default: 18)
+        subplot_title_fontsize : int, optional
+            Font size for subplot titles (default: 14)
+        xlabel_fontsize : int, optional
+            Font size for X-axis labels (default: 12)
+        ylabel_fontsize : int, optional
+            Font size for Y-axis labels (default: 12)
+        tick_fontsize : int, optional
+            Font size for tick labels (default: 10)
+        legend_fontsize : int, optional
+            Font size for legend entries (default: 10)
+        legend_title_fontsize : int, optional
+            Font size for legend title (default: 12)
 
         Returns
         -------
@@ -217,7 +239,14 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             smoothing_method=smoothing_method,
             smoothing_window=smoothing_window,
             smoothing_polyorder=smoothing_polyorder,
-            show_unsmoothed_background=show_unsmoothed_background
+            show_unsmoothed_background=show_unsmoothed_background,
+            title_fontsize=title_fontsize,
+            subplot_title_fontsize=subplot_title_fontsize,
+            xlabel_fontsize=xlabel_fontsize,
+            ylabel_fontsize=ylabel_fontsize,
+            tick_fontsize=tick_fontsize,
+            legend_fontsize=legend_fontsize,
+            legend_title_fontsize=legend_title_fontsize
         )
 
         # Prepare plot data and update config
@@ -296,6 +325,9 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             n_traj = len(membership_indices)
 
             spacing_factor = 1.2
+            # Add extra space for larger tick labels
+            if config.tick_fontsize and config.tick_fontsize > 10:
+                spacing_factor += (config.tick_fontsize - 10) * 0.02
             config.membership_row_height_inches = n_traj * config.membership_bar_height * spacing_factor
             config.n_membership_rows = config.n_rows if config.membership_per_feature else 1
 
@@ -320,10 +352,12 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         config.fig = self._create_figure_dynamic(
             config.n_rows, config.n_cols, config.n_frames, config.n_membership_rows,
             config.membership_row_height_inches, config.subplot_height,
-            config.membership_per_feature
+            config.membership_per_feature, config.tick_fontsize, config.ylabel_fontsize
         )
 
-        wspace, hspace = self._configure_plot_spacing(config.long_labels)
+        wspace, hspace = self._configure_plot_spacing(
+            config.long_labels, config.tick_fontsize, config.membership_per_feature
+        )
 
         n_cols_grid, width_ratios = self._calculate_grid_columns_and_ratios(config)
 
@@ -423,7 +457,9 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         n_membership_rows: int,
         membership_row_height_inches: float,
         subplot_height: float,
-        membership_per_feature: bool = False
+        membership_per_feature: bool = False,
+        tick_fontsize: Optional[int] = None,
+        ylabel_fontsize: Optional[int] = None
     ):
         """
         Create figure with dynamic size based on data.
@@ -447,6 +483,10 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             Height of each feature row in inches
         membership_per_feature : bool, default=False
             If True, uses higher overhead factor for more bottom space
+        tick_fontsize : int, optional
+            Font size for the tick labels.
+        ylabel_fontsize : int, optional
+            Font size for the y-axis labels.
 
         Returns
         -------
@@ -472,7 +512,12 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         content_height = feature_height + membership_height
         # More space for per-feature mode to avoid bottom cramping
         overhead_factor = 2.3 if membership_per_feature else 2.0
-
+        
+        if tick_fontsize:
+            overhead_factor += (tick_fontsize - 10) * 0.05
+        if ylabel_fontsize:
+            overhead_factor += (ylabel_fontsize - 12) * 0.05
+            
         fig_height = max(8, content_height * overhead_factor)
 
         return plt.figure(figsize=(fig_width, fig_height))
@@ -504,10 +549,14 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         self._add_legend_or_title(
             config.fig, config.show_legend, legend_colors,
             config.wrapped_title, config.top, config.rightmost_ax_first_row,
-            config.contact_threshold, config.clustering_name, config.membership_per_feature
+            config.contact_threshold, config.clustering_name, config.membership_per_feature,
+            config.title_fontsize, config.legend_fontsize, config.legend_title_fontsize
         )
 
         if config.save_fig:
+            # Configure SVG export for editable text
+            SvgExportHelper.apply_svg_config_if_needed(config.file_format)
+
             self._save_figure(
                 config.fig, config.filename, "feature_importance", config.feature_importance_name,
                 config.n_top, config.file_format, config.dpi, "time_series"
@@ -516,7 +565,8 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
     def _add_legend_or_title(
         self, fig, show_legend, legend_colors,
         wrapped_title, top, rightmost_ax_first_row,
-        contact_threshold, clustering_name, membership_per_feature
+        contact_threshold, clustering_name, membership_per_feature,
+        title_fontsize, legend_fontsize, legend_title_fontsize
     ):
         """
         Add legend or title only.
@@ -541,6 +591,12 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             Clustering name
         membership_per_feature : bool
             Membership per feature flag
+        title_fontsize : int or None
+            Font size for title
+        legend_fontsize : int or None
+            Font size for legend entries
+        legend_title_fontsize : int or None
+            Font size for legend title
 
         Returns
         -------
@@ -555,17 +611,18 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             if clustering_name:
                 self._add_combined_legend(
                     fig, wrapped_title, top, rightmost_ax_first_row,
-                    legend_colors, clustering_name
+                    legend_colors, clustering_name, title_fontsize, legend_fontsize
                 )
             else:
                 self._add_title_and_legend_positioned(
                     fig, wrapped_title, top, rightmost_ax_first_row,
-                    legend_colors, None, None, contact_threshold
+                    legend_colors, None, None, contact_threshold,
+                    title_fontsize, legend_fontsize, legend_title_fontsize
                 )
         else:
             title_offset_from_top = 0.15
             title_y = 1.0 - (title_offset_from_top / fig.get_figheight())
-            TitleLegendHelper.add_title(fig, wrapped_title, title_y=title_y)
+            TitleLegendHelper.add_title(fig, wrapped_title, title_y=title_y, fontsize=title_fontsize or 18)
 
     def _get_trajectory_indices(
         self, traj_selection, feature_selector_name
@@ -600,7 +657,7 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
 
     def _add_combined_legend(
         self, fig, wrapped_title, _top, rightmost_ax_first_row,
-        traj_colors, clustering_name
+        traj_colors, clustering_name, title_fontsize, legend_fontsize
     ):
         """
         Add title and combined Trajectories + Clusters legend.
@@ -619,6 +676,10 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             Trajectory colors
         clustering_name : str
             Clustering name
+        title_fontsize : int or None
+            Font size for title
+        legend_fontsize : int or None
+            Font size for legend entries
 
         Returns
         -------
@@ -631,7 +692,7 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         # Add title
         title_offset_from_top = 0.15
         title_y = 1.0 - (title_offset_from_top / fig.get_figheight())
-        TitleLegendHelper.add_title(fig, wrapped_title, title_y=title_y)
+        TitleLegendHelper.add_title(fig, wrapped_title, title_y=title_y, fontsize=title_fontsize or 18)
 
         # Create combined legend handles (inlined from _create_combined_legend_handles)
         handles = []
@@ -675,7 +736,7 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             bbox_to_anchor=(legend_x, legend_y),
             bbox_transform=fig.transFigure,
             frameon=True,
-            fontsize=10
+            fontsize=legend_fontsize or 10
         )
 
     def _add_title_and_legend_positioned(
@@ -687,7 +748,10 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         data_selector_colors: Dict[str, str],
         legend_title: Optional[str],
         legend_labels: Optional[Dict[str, str]],
-        active_threshold: Optional[float]
+        active_threshold: Optional[float],
+        title_fontsize: Optional[int] = None,
+        legend_fontsize: Optional[int] = None,
+        legend_title_fontsize: Optional[int] = None
     ) -> None:
         """
         Add title and legend with calculated positions.
@@ -712,6 +776,12 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             Custom legend labels
         active_threshold : float, optional
             Threshold value for legend
+        title_fontsize : int, optional
+            Font size for title (default: 18)
+        legend_fontsize : int, optional
+            Font size for legend entries (default: 14)
+        legend_title_fontsize : int, optional
+            Font size for legend title (default: 16)
 
         Returns
         -------
@@ -725,7 +795,7 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         """
         title_offset_from_top = 0.15
         title_y = 1.0 - (title_offset_from_top / fig.get_figheight())
-        TitleLegendHelper.add_title(fig, wrapped_title, title_y=title_y)
+        TitleLegendHelper.add_title(fig, wrapped_title, title_y=title_y, fontsize=title_fontsize or 18)
 
         pos = rightmost_ax_first_row.get_position()
         gap_inches = 0.1
@@ -740,7 +810,9 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             fig, data_selector_colors,
             legend_title, legend_labels,
             contact_threshold=active_threshold,
-            legend_x=legend_x, legend_y=legend_y
+            legend_x=legend_x, legend_y=legend_y,
+            fontsize=legend_fontsize or 14,
+            title_fontsize=legend_title_fontsize or 16
         )
 
     def _get_max_frames_from_plotted_trajectories(
@@ -776,7 +848,11 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         )
 
     @staticmethod
-    def _configure_plot_spacing(long_labels: bool) -> Tuple[float, float]:
+    def _configure_plot_spacing(
+        long_labels: bool,
+        tick_fontsize: Optional[int] = None,
+        membership_per_feature: bool = False
+    ) -> Tuple[float, float]:
         """
         Configure plot spacing for time series plots.
 
@@ -784,6 +860,10 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         ----------
         long_labels : bool
             Whether using long labels for discrete features
+        tick_fontsize : int, optional
+            Font size for tick labels
+        membership_per_feature : bool, default=False
+            Whether membership bars are shown per feature
 
         Returns
         -------
@@ -792,15 +872,21 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
 
         Examples
         --------
-        >>> wspace, hspace = TimeSeriesPlotter._configure_plot_spacing(True)
+        >>> wspace, hspace = TimeSeriesPlotter._configure_plot_spacing(True, 18, True)
         >>> print(wspace)  # 0.25
 
         Notes
         -----
         Time series plots use 0.25 for long_labels, 0.15 otherwise.
+        Adds extra hspace for larger tick fonts on membership plots.
         """
         wspace = 0.25 if long_labels else 0.15
         hspace = 0.4
+
+        # Add extra vertical space for larger ticks on membership plots
+        if membership_per_feature and tick_fontsize and tick_fontsize > 10:
+            hspace += (tick_fontsize - 10) * 0.02
+
         return wspace, hspace
 
     def _calculate_grid_columns_and_ratios(

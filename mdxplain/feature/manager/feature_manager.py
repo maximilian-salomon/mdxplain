@@ -24,10 +24,12 @@ It is used to add, reset, and reduce features to the pipeline data.
 """
 from __future__ import annotations
 
-from typing import Any, Callable, List, Optional, Union, TYPE_CHECKING
-import numpy as np
+from typing import TYPE_CHECKING, Any, Callable, List, Optional, Union
 import os
-from tqdm import tqdm
+
+import numpy as np
+
+from mdxplain.utils.progress_util import ProgressController
 
 if TYPE_CHECKING:
     from ...pipeline.entities.pipeline_data import PipelineData
@@ -528,30 +530,30 @@ class FeatureManager:
         if feature_key not in pipeline_data.feature_data:
             pipeline_data.feature_data[feature_key] = {}
 
-        # Create FeatureData per trajectory with progress bar        
-        with tqdm(total=len(traj_indices), desc=f"Computing {feature_type.get_type_name()}", unit="trajectories") as pbar:
-            for traj_idx in traj_indices:
-                trajectory_name = pipeline_data.trajectory_data.trajectory_names[traj_idx]
-                
-                # Create FeatureData for this trajectory
-                feature_data = FeatureData(
-                    feature_type=feature_type,
-                    use_memmap=self.use_memmap,
-                    cache_path=self.cache_dir,
-                    chunk_size=self.chunk_size,
-                    trajectory_name=trajectory_name,
-                )
+        # Create FeatureData per trajectory with progress bar
+        for traj_idx in ProgressController.iterate(
+            traj_indices,
+            desc=f"Computing {feature_type.get_type_name()}",
+            unit="trajectories",
+        ):
+            trajectory_name = pipeline_data.trajectory_data.trajectory_names[traj_idx]
 
-                # Compute feature for single trajectory
-                self._compute_and_store_single_trajectory(
-                    pipeline_data, feature_data, feature_type, traj_idx, force_original
-                )
+            # Create FeatureData for this trajectory
+            feature_data = FeatureData(
+                feature_type=feature_type,
+                use_memmap=self.use_memmap,
+                cache_path=self.cache_dir,
+                chunk_size=self.chunk_size,
+                trajectory_name=trajectory_name,
+            )
 
-                # Store the feature data
-                pipeline_data.feature_data[feature_key][traj_idx] = feature_data
-                
-                # Update progress
-                pbar.update(1)
+            # Compute feature for single trajectory
+            self._compute_and_store_single_trajectory(
+                pipeline_data, feature_data, feature_type, traj_idx, force_original
+            )
+
+            # Store the feature data
+            pipeline_data.feature_data[feature_key][traj_idx] = feature_data
 
     def _compute_and_store_single_trajectory(
         self, 

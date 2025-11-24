@@ -35,12 +35,13 @@ from .decision_tree_visualizer import DecisionTreeVisualizer
 from .decision_tree_visualization_config import DecisionTreeVisualizationConfig
 from .plot_configuration_helper import PlotConfigurationHelper
 from .....utils.data_utils import DataUtils
+from ....helper.svg_export_helper import SvgExportHelper
 
 TREE_CONFIG = DecisionTreeVisualizationConfig()
 
 # IPython optional dependency for Jupyter display
 try:
-    from IPython.display import Image, display
+    from IPython.display import Image, display, SVG
     IPYTHON_AVAILABLE = True
 except ImportError:
     IPYTHON_AVAILABLE = False
@@ -75,11 +76,16 @@ class SeparateTreeModeHelper:
         render: bool,
         save_fig: bool,
         cache_dir: str,
-        short_labels: bool,
-        short_naming: bool,
+        short_labels: Optional[bool],
+        short_naming: Optional[bool],
         short_layout: bool,
-        short_edge_labels: bool,
-        wrap_length: int
+        short_edge_labels: Optional[bool],
+        wrap_length: int,
+        hide_node_frames: Optional[bool],
+        show_edge_symbols: Optional[bool],
+        hide_feature_type_prefix: Optional[bool],
+        hide_path: Optional[bool] = None,
+        edge_symbol_fontsize: Optional[int] = None
     ) -> Union[List[str], None]:
         """
         Plot each tree in a separate file.
@@ -121,6 +127,12 @@ class SeparateTreeModeHelper:
             Show only values on edges
         wrap_length : int
             Maximum line length for text wrapping
+        hide_node_frames : bool
+            Hide frame counts in non-root nodes
+        show_edge_symbols : bool
+            Show only symbols on edges
+        hide_feature_type_prefix : bool
+            Hide feature type prefix in labels
 
         Returns
         -------
@@ -139,7 +151,8 @@ class SeparateTreeModeHelper:
             max_depth_display, subplot_width, subplot_height,
             file_format, dpi, render, save_fig, cache_dir,
             short_labels, short_naming, short_layout, short_edge_labels,
-            wrap_length
+            wrap_length, hide_node_frames, show_edge_symbols, hide_feature_type_prefix,
+            hide_path, edge_symbol_fontsize
         )
         SeparateTreeModeHelper._cleanup_separate_trees(old_backend, temp_files)
 
@@ -182,7 +195,9 @@ class SeparateTreeModeHelper:
                                    subplot_width, subplot_height, file_format,
                                    dpi, render, save_fig, cache_dir, short_labels,
                                    short_naming, short_layout, short_edge_labels,
-                                   wrap_length):
+                                   wrap_length, hide_node_frames, show_edge_symbols,
+                                   hide_feature_type_prefix, hide_path=None,
+                                   edge_symbol_fontsize=None):
         """
         Plot all trees separately.
 
@@ -243,7 +258,9 @@ class SeparateTreeModeHelper:
             fig, _ = SeparateTreeModeHelper._create_separate_tree_figure(
                 metadata, feature_metadata, max_depth_display,
                 subplot_width, subplot_height, short_labels,
-                short_naming, short_layout, short_edge_labels, wrap_length, idx
+                short_naming, short_layout, short_edge_labels, wrap_length, idx,
+                hide_node_frames, show_edge_symbols, hide_feature_type_prefix,
+                hide_path, edge_symbol_fontsize
             )
 
             SeparateTreeModeHelper._save_or_display_separate_tree(
@@ -261,7 +278,10 @@ class SeparateTreeModeHelper:
                                        max_depth_display, subplot_width,
                                        subplot_height, short_labels,
                                        short_naming, short_layout,
-                                       short_edge_labels, wrap_length, idx):
+                                       short_edge_labels, wrap_length, idx,
+                                       hide_node_frames, show_edge_symbols,
+                                       hide_feature_type_prefix, hide_path=None,
+                                       edge_symbol_fontsize=None):
         """
         Create figure for single separate tree.
 
@@ -313,7 +333,9 @@ class SeparateTreeModeHelper:
             model, feature_metadata, class_names, max_depth_display,
             short_labels=short_labels, short_naming=short_naming,
             short_layout=short_layout, short_edge_labels=short_edge_labels,
-            wrap_length=wrap_length
+            wrap_length=wrap_length, hide_node_frames=hide_node_frames,
+            show_edge_symbols=show_edge_symbols, hide_feature_type_prefix=hide_feature_type_prefix,
+            hide_path=hide_path, edge_symbol_fontsize=edge_symbol_fontsize
         )
         visualizer.visualize(ax, target_width=target_width_px)
 
@@ -485,6 +507,9 @@ class SeparateTreeModeHelper:
         ...     fig, "analysis", 0, "comp0", "png", 300, True, "./cache", saved
         ... )
         """
+        # Configure SVG export for editable text
+        SvgExportHelper.apply_svg_config_if_needed(file_format)
+
         tree_filename = (f"decision_trees_{feature_importance_name}_"
                         f"comparison_{idx:02d}_{comparison_name}.{file_format}")
         tree_path = DataUtils.get_cache_file_path(tree_filename, cache_dir)
@@ -525,6 +550,9 @@ class SeparateTreeModeHelper:
         ...     fig, "png", 300, "./cache", temp
         ... )
         """
+        # Configure SVG export for editable text
+        SvgExportHelper.apply_svg_config_if_needed(file_format)
+
         temp_filename = f"tree_temp_{uuid.uuid4().hex}.{file_format}"
         temp_path = DataUtils.get_cache_file_path(temp_filename, cache_dir)
         fig.savefig(temp_path, dpi=dpi, bbox_inches='tight')
@@ -551,7 +579,10 @@ class SeparateTreeModeHelper:
         >>> SeparateTreeModeHelper._display_image_in_jupyter("tree.png")
         """
         if IPYTHON_AVAILABLE:
-            display(Image(filename=filename))
+            if filename.endswith(".svg"):
+                display(SVG(filename=filename))
+            else:
+                display(Image(filename=filename))
 
     @staticmethod
     def _cleanup_separate_trees(old_backend, temp_files):

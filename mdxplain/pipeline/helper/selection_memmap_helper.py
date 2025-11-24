@@ -26,8 +26,10 @@ large datasets in the feature selection system.
 """
 
 from typing import List
+
 import numpy as np
-from tqdm import tqdm
+from mdxplain.utils.progress_util import ProgressController
+
 from ...utils.data_utils import DataUtils
 
 
@@ -92,7 +94,11 @@ class SelectionMemmapHelper:
             shape=(n_rows, n_cols),
         )
 
-        for row_start in tqdm(range(0, n_rows, chunk_size), desc="Selecting columns", unit="chunks"):
+        for row_start in ProgressController.iterate(
+            range(0, n_rows, chunk_size),
+            desc="Selecting columns",
+            unit="chunks",
+        ):
             row_end = min(row_start + chunk_size, n_rows)
             result[row_start:row_end, :] = data[row_start:row_end, indices]
 
@@ -146,7 +152,12 @@ class SelectionMemmapHelper:
             col_end = col_start + matrix.shape[1]
 
             # Process in chunks to avoid loading entire matrix into memory
-            for row_start in tqdm(range(0, total_samples, chunk_size), desc=f"Concatenating matrix {i+1}/{len(matrices)}", unit="chunks", leave=False):
+            for row_start in ProgressController.iterate(
+                range(0, total_samples, chunk_size),
+                desc=f"Concatenating matrix {i+1}/{len(matrices)}",
+                unit="chunks",
+                leave=False,
+            ):
                 row_end = min(row_start + chunk_size, total_samples)
                 result[row_start:row_end, col_start:col_end] = matrix[
                     row_start:row_end, :
@@ -204,7 +215,11 @@ class SelectionMemmapHelper:
         )
 
         # Process in chunks to avoid loading entire data into memory
-        for chunk_start in tqdm(range(0, n_selected_frames, chunk_size), desc="Creating frame selection", unit="chunks"):
+        for chunk_start in ProgressController.iterate(
+            range(0, n_selected_frames, chunk_size),
+            desc="Creating frame selection",
+            unit="chunks",
+        ):
             chunk_end = min(chunk_start + chunk_size, n_selected_frames)
             
             # Get indices for this chunk
