@@ -92,7 +92,7 @@ class LandscapePlotter:
         energy_values: bool = True,
         use_kde: bool = False,
         mask_empty_bins: bool = True,
-        bins: int = 50,
+        bins: Union[int, str] = "auto",
         temperature: float = 310.15,
         alpha: float = 0.6,
         cluster_contour: bool = True,
@@ -146,8 +146,10 @@ class LandscapePlotter:
             Mask bins without observations in the background (energy/density)
             as white/transparent. Set False to fill them with the maximum color
             for continuity.
-        bins : int, default=50
-            Number of bins for histogram/energy calculation
+        bins : int or str, default="auto"
+            Number of bins for histogram/energy calculation.
+            Use "auto" to automatically determine optimal bin count using numpy's
+            histogram_bin_edges algorithm.
         temperature : float, default=300.0
             Temperature in Kelvin for energy calculation
         alpha : float, default=0.6
@@ -173,9 +175,9 @@ class LandscapePlotter:
         yaxis_label : Optional[str], default=None
             Custom Y-axis label (default: "Component {dim_y}")
         xlim : Optional[Tuple[float, float]], default=None
-            X-axis limits. If None, auto-calculated with 20% padding beyond data range
+            X-axis limits. If None, auto-calculated with 5% padding beyond data range
         ylim : Optional[Tuple[float, float]], default=None
-            Y-axis limits. If None, auto-calculated with 20% padding beyond data range
+            Y-axis limits. If None, auto-calculated with 5% padding beyond data range
         subplot_size : float, default=4.0
             Size of each subplot in inches
         save_fig : bool, default=False
@@ -468,8 +470,9 @@ class LandscapePlotter:
             Use KDE smoothing for background (histogram is default)
         mask_empty_bins : bool
             Mask bins without observations in energy background
-        bins : int
-            Number of bins for background and cluster contours
+        bins : int or str
+            Number of bins for background and cluster contours.
+            Use "auto" to automatically determine optimal bin count.
         temperature : float
             Temperature for energy calculation
         alpha : float
@@ -502,13 +505,19 @@ class LandscapePlotter:
         data_x = decomp_data[:, dim_x]
         data_y = decomp_data[:, dim_y]
 
-        # Auto-calculate limits with 20% padding if not provided
+        # Auto-calculate limits with 5% padding if not provided
         if xlim is None:
             x_range = data_x.max() - data_x.min()
-            xlim = (data_x.min() - 0.2 * x_range, data_x.max() + 0.2 * x_range)
+            xlim = (data_x.min() - 0.05 * x_range, data_x.max() + 0.05 * x_range)
         if ylim is None:
             y_range = data_y.max() - data_y.min()
-            ylim = (data_y.min() - 0.2 * y_range, data_y.max() + 0.2 * y_range)
+            ylim = (data_y.min() - 0.05 * y_range, data_y.max() + 0.05 * y_range)
+
+        # Auto-calculate bins if requested
+        if bins == "auto":
+            x_edges = np.histogram_bin_edges(data_x, bins="auto")
+            y_edges = np.histogram_bin_edges(data_y, bins="auto")
+            bins = max(len(x_edges), len(y_edges)) - 1
 
         # Plot background (energy or density) over extended limits
         if energy_values:
