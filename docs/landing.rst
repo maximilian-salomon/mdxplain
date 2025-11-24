@@ -3,24 +3,20 @@
 Welcome to mdxplain
 ===================
 
-A Python toolkit for scalable molecular dynamics trajectory analysis, combining modular workflows,
-memory-efficient processing and interpretable machine learning via decision trees to identify key
-conformational features and streamline complex pipelines.
-
-mdxplain is designed for **interpretable molecular dynamics trajectory analysis**, bridging the
-gap between raw simulation data and biological insights. It excels when you need to move from
-thousands of MD frames to actionable, explainable results while maintaining complete workflow
-reproducibility.
+A Python toolkit designed for **interpretable molecular dynamics trajectory analysis**, efficiently
+processing large datasets while delivering understandable results through machine learning models.
+It combines modular workflows with memory-efficient processing and decision trees to identify key
+conformational features and streamline complex analytical pipelines.
 
 Getting Started
 ---------------
 
-1. **Install mdxplain**: Follow the instructions at :doc:`How to Install mdxplain <how_to_install>`
+1. **Install mdxplain**: Follow the instructions at :doc:`How to Install mdxplain <main_sites/how_to_install>`
 2. **Start Jupyter**: ``make jupyter``
 3. **Explore tutorial**: Open :doc:`Complete Workflow Example <tutorials/00_introduction>`
    for a comprehensive workflow example
-4. **Read documentation**: Visit :doc:`Learn mdxplain <tutorials/learning>` and :doc:`API <api/api>`
-   for details
+4. **Read documentation**: Visit :doc:`Learn mdxplain <tutorials/learning>` for tutorials and :doc:`API <api/api>`
+   for further details
 
 .. image:: images/mdxplain_overview.png
    :width: 1944px
@@ -119,6 +115,45 @@ mdxplain provide comprehensive output options:
     - Cluster Dynamics
 
 - Decision Trees
+
+Common Use Cases
+----------------
+
+**Conformational Analysis**
+
+- Identify distinct conformational states in protein dynamics
+- Characterize states by specific molecular interactions (contacts, distances)
+- Understand conformational transitions and mechanisms
+- Map allosteric pathways and communication networks
+
+**Comparative Studies**
+
+- Wild-type vs. mutant: Find molecular features affected by mutations
+- Ligand-bound vs. apo: Identify binding-induced conformational changes
+- Condition comparisons: pH, temperature, force effects on structure
+- Multi-system analysis: Compare different proteins, homologs, or variants
+
+**Feature Engineering**
+
+- Prepare structured feature matrices for machine learning
+- Generate input data for Markov state models (MSM)
+- Export custom feature sets for downstream analysis
+- Create interpretable descriptors for QSAR/QSPR studies
+
+**Trajectory Exploration**
+
+- RMSD/RMSF analysis for structural characterization
+- Contact frequency patterns to identify key interactions
+- Statistical feature analysis across conditions
+- Quality assessment and validation of simulations
+
+**When to Use mdxplain:**
+
+- Large-scale trajectory analysis requiring memory efficiency
+- Need for interpretable, explainable results (not black-box ML)
+- Multi-system comparisons with systematic organization
+- Reproducible workflows with complete pipeline saving
+- Automated conformational state discovery and characterization
 
 Core Strengths
 --------------
