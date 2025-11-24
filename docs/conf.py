@@ -33,7 +33,6 @@ extensions = [
 autodoc_member_order = 'bysource'
 
 exclude_patterns = [
-    '_build',
     'build',
     'jupyter_execute',
     '**/.ipynb_checkpoints',
@@ -49,7 +48,7 @@ rst_prolog = """
 nb_execution_mode = "off"
 
 # html build configurations
-# Emit docs/_build/html/index.html for ReadTheDocs root serving
+# Emit docs/build/html/index.html for ReadTheDocs root serving
 root_doc = master_doc = 'index'
 html_theme = 'sphinx_rtd_theme'
 html_search = True
