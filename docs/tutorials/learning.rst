@@ -18,6 +18,8 @@ Key Design Principles
 Basic Usage Examples
 --------------------
 
+.. todo: streamline existing base examples for clarity and efficiency
+
 .. toctree::
    :maxdepth: 1
 
@@ -45,3 +47,6 @@ Here's a complete conformational analysis workflow:
    :maxdepth: 1
 
    00_introduction
+
+.. todo: Provide Multiple Notebooks – offer various notebooks illustrating different workflows.
+   Missing: A page showing where all data is stored (labels, tags, computed arrays, etc.).

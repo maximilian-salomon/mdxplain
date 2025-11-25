@@ -1,6 +1,9 @@
 Feature Computation
 ===================
 
+.. todo: Provide guidance on how to access arrays for external analysis.
+    Optionally link to possible downstream applications.
+
 mdxplain provides six feature types for molecular dynamics analysis:
 
 - Distances

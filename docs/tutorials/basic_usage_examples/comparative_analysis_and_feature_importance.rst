@@ -1,6 +1,8 @@
 Comparative Analysis and Feature Importance
 ===========================================
 
+.. todo: currently too brief; expand content.
+
 .. code:: python
     
     # Create data selectors for clusters
