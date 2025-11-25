@@ -1,6 +1,9 @@
 Dimensionality Reduction
 ========================
 
+.. todo: requires more explanation:
+    Include prerequisites (e.g., output from feature selector for selection_name).
+
 Four decomposition methods are available:
 
 - PCA
