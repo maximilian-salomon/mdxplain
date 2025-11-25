@@ -26,11 +26,11 @@ FeatureImportanceManager methods to improve code organization and reusability.
 
 Notes
 -----
-All helpers are internal to the feature_importance module and should be
+All helper are internal to the feature_importance module and should be
 imported directly where needed. No exports to avoid circular import issues
-when helpers/__init__.py is executed during direct helper imports.
+when helper/__init__.py is executed during direct helper imports.
 """
 
-# No imports or exports - all helpers are internal
+# No imports or exports - all helper are internal
 # Import directly: from .helper.analysis_runner_helper import AnalysisRunnerHelper
 __all__ = []

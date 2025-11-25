@@ -96,7 +96,7 @@ class RMSFMeanVariantFacade:
         -------
         RMSFPerAtomService
             Mean-specific per-atom RMSF service exposing ``to_*_reference``
-            helpers.
+            helper.
 
         Examples
         --------

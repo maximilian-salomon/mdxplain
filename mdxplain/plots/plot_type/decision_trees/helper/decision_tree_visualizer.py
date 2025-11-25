@@ -593,10 +593,13 @@ class DecisionTreeVisualizer:
         self.y_positions[node] = y
 
         node_text = self.labels[node]
-        facecolor = 'red' if node == self.max_score_node else 'lightgrey'
+        is_highlighted = node == self.max_score_node
+        edgecolor = 'green' if is_highlighted else 'black'
+        linewidth = 3 if is_highlighted else 1
 
         ax.text(x, y, node_text, ha='center', va='center', fontsize=self.fontsize,
-                bbox=dict(boxstyle=f'round,pad={self.node_pad}', edgecolor='black', facecolor=facecolor))
+                bbox=dict(boxstyle=f'round,pad={self.node_pad}', edgecolor=edgecolor,
+                          facecolor='lightgrey', linewidth=linewidth))
 
         if self.tree_.feature[node] != _tree.TREE_UNDEFINED:
             left_child = self.tree_.children_left[node]

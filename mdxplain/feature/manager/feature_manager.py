@@ -29,7 +29,7 @@ import os
 
 import numpy as np
 
-from mdxplain.utils.progress_util import ProgressController
+from mdxplain.utils.progress_utils import ProgressUtils
 
 if TYPE_CHECKING:
     from ...pipeline.entities.pipeline_data import PipelineData
@@ -531,7 +531,7 @@ class FeatureManager:
             pipeline_data.feature_data[feature_key] = {}
 
         # Create FeatureData per trajectory with progress bar
-        for traj_idx in ProgressController.iterate(
+        for traj_idx in ProgressUtils.iterate(
             traj_indices,
             desc=f"Computing {feature_type.get_type_name()}",
             unit="trajectories",

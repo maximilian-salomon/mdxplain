@@ -31,7 +31,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import hdbscan
 import numpy as np
 
-from mdxplain.utils.progress_util import ProgressController
+from mdxplain.utils.progress_utils import ProgressUtils
 
 from ..interfaces.calculator_base import CalculatorBase
 
@@ -271,7 +271,7 @@ class HDBSCANCalculator(CalculatorBase):
         full_labels = self._prepare_labels_storage(n_samples, "hdbscan", "approximate_predict")
         chunk_size = self.chunk_size
         
-        for start in ProgressController.iterate(
+        for start in ProgressUtils.iterate(
             range(0, n_samples, chunk_size),
             desc="HDBSCAN approximate_predict",
             unit="chunks",

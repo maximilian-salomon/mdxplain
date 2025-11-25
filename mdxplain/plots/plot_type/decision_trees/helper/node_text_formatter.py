@@ -333,22 +333,22 @@ class NodeTextFormatter:
         ...     [80, 20], [80.0, 40.0], ['Class1', 'Class2'], [100, 50], 40
         ... )
         >>> print(text)
-        Class1: 80 / 100 (80.0%)
-        Class2: 20 / 50 (40.0%)
+        Class1: 80 / 100 (80%)
+        Class2: 20 / 50 (40%)
 
         >>> text = NodeTextFormatter.format_class_statistics_section(
         ...     [80, 20], [80.0, 40.0], ['Class1', 'Class2'], [100, 50], 40, hide_node_frames=True
         ... )
         >>> print(text)
-        Class1: 80.0%
-        Class2: 40.0%
+        Class1: 80%
+        Class2: 40%
         """
         text = ""
         for i, class_name in enumerate(class_names):
             if hide_node_frames:
-                line = f"{class_name}: {percentages[i]:.1f}%"
+                line = f"{class_name}: {percentages[i]:.0f}%"
             else:
-                line = f"{class_name}: {counts[i]} / {total_counts[i]} ({percentages[i]:.1f}%)"
+                line = f"{class_name}: {counts[i]} / {total_counts[i]} ({percentages[i]:.0f}%)"
             wrapped_line = TextUtils.wrap_text(line, wrap_length)
             text += f"{wrapped_line}\n"
         return text
@@ -457,8 +457,8 @@ class NodeTextFormatter:
         ... )
         >>> print(text)
         Contact
-        Class1: 80 / 100 (80.0%)
-        Class2: 20 / 50 (40.0%)
+        Class1: 80 / 100 (80%)
+        Class2: 20 / 50 (40%)
 
         distances: Leu13-ARG31 <= 3.50
         """
@@ -512,8 +512,8 @@ class NodeTextFormatter:
         >>> print(text)
         Contact
         distances: Leu13-ARG31 <= 3.5
-        Class1: 60 / 100 (60.0%)
-        Class2: 5 / 50 (10.0%)
+        Class1: 60 / 100 (60%)
+        Class2: 5 / 50 (10%)
         """
         # Skip path if short_layout is enabled
         if not short_layout:
@@ -525,9 +525,9 @@ class NodeTextFormatter:
 
         for i, class_name in enumerate(class_names):
             if hide_node_frames:
-                line = f"{class_name}: {percentages[i]:.1f}%"
+                line = f"{class_name}: {percentages[i]:.0f}%"
             else:
-                line = f"{class_name}: {counts[i]} / {total_counts[i]} ({percentages[i]:.1f}%)"
+                line = f"{class_name}: {counts[i]} / {total_counts[i]} ({percentages[i]:.0f}%)"
             wrapped_line = TextUtils.wrap_text(line, wrap_length)
             text += f"{wrapped_line}\n"
         return text

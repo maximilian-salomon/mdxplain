@@ -20,7 +20,7 @@
 
 """Shared helper functions for structure calculations.
 
-These helpers provide chunk iteration and stacking utilities that allow
+These helper provide chunk iteration and stacking utilities that allow
 structure analyses to process large trajectories without loading all frames
 into memory simultaneously.
 """

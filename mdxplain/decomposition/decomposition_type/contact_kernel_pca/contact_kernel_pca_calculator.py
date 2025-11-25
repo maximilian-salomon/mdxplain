@@ -29,7 +29,7 @@ from typing import Any, Dict, Tuple
 
 import numpy as np
 
-from mdxplain.utils.progress_util import ProgressController
+from mdxplain.utils.progress_utils import ProgressUtils
 
 from ..kernel_pca.kernel_pca_calculator import KernelPCACalculator
 
@@ -187,7 +187,7 @@ class ContactKernelPCACalculator(KernelPCACalculator):
                 )
         else:
             # Chunk-wise validation with early exit
-            for i in ProgressController.iterate(
+            for i in ProgressUtils.iterate(
                 range(0, data.size, self.chunk_size),
                 desc="Validating binary data",
                 unit="chunks",

@@ -34,7 +34,7 @@ from typing import Any, Dict, Optional, Tuple
 import mdtraj as md
 import numpy as np
 import zarr
-from mdxplain.utils.progress_util import ProgressController
+from mdxplain.utils.progress_utils import ProgressUtils
 from zarr.codecs import BloscCodec
 
 # Default compression for all zarr operations  
@@ -246,7 +246,7 @@ class ZarrCacheHelper:
         print("  🔍 Analyzing trajectory dimensions...")
         n_frames = 0
         frame_iter = md.iterload(trajectory_file, top=topology, chunk=self.chunk_size)
-        for chunk in ProgressController.iterate(
+        for chunk in ProgressUtils.iterate(
             frame_iter, desc="Counting frames"
         ):
             n_frames += chunk.n_frames
@@ -358,7 +358,7 @@ class ZarrCacheHelper:
         frame_iter = md.iterload(trajectory_file, top=topology, chunk=self.chunk_size)
         total_chunks = (traj_info['n_frames'] + self.chunk_size - 1) // self.chunk_size
         
-        for chunk in ProgressController.iterate(
+        for chunk in ProgressUtils.iterate(
             frame_iter, desc="Processing chunks", total=total_chunks
         ):
             end_idx = frame_idx + chunk.n_frames

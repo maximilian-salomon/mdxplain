@@ -93,7 +93,7 @@ class RMSDFacade:
         Returns
         -------
         RMSDMeanService
-            Mean RMSD service exposing helpers such as :meth:`to_reference`,
+            Mean RMSD service exposing helper such as :meth:`to_reference`,
             :meth:`frame_to_frame`, :meth:`window_frame_to_start`, and
             :meth:`window_frame_to_frame`.
 
@@ -150,7 +150,7 @@ class RMSDFacade:
         Returns
         -------
         RMSDMadService
-            MAD RMSD service exposing helpers such as :meth:`to_reference` and
+            MAD RMSD service exposing helper such as :meth:`to_reference` and
             the window-based calculations.
 
         Examples

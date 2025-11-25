@@ -29,7 +29,7 @@ from typing import Any, Dict, Tuple, Union
 
 import numpy as np
 from joblib import Parallel, delayed
-from mdxplain.utils.progress_util import ProgressController
+from mdxplain.utils.progress_utils import ProgressUtils
 from scipy.linalg import eigh
 from scipy.sparse.linalg import LinearOperator, eigs
 from sklearn.decomposition import IncrementalPCA, KernelPCA
@@ -38,7 +38,7 @@ from sklearn.metrics.pairwise import rbf_kernel
 
 from ..interfaces.calculator_base import CalculatorBase
 from ....utils.data_utils import DataUtils
-from ..helpers.automatic_parameter_helper import AutomaticParameterHelper
+from ..helper.automatic_parameter_helper import AutomaticParameterHelper
 
 
 class KernelPCACalculator(CalculatorBase):
@@ -454,7 +454,7 @@ class KernelPCACalculator(CalculatorBase):
         used_chunk_size = int(np.floor(self.chunk_size / 2))
 
         # Compute kernel matrix chunk-wise
-        for row_start in ProgressController.iterate(
+        for row_start in ProgressUtils.iterate(
             range(0, n_samples, used_chunk_size),
             desc="Computing kernel matrix rows",
             unit="chunks",
@@ -462,7 +462,7 @@ class KernelPCACalculator(CalculatorBase):
             row_end = min(row_start + used_chunk_size, n_samples)
             chunk_i = data[row_start:row_end]
 
-            for col_start in ProgressController.iterate(
+            for col_start in ProgressUtils.iterate(
                 range(0, n_samples, used_chunk_size),
                 desc=f"Computing kernel row {row_start//used_chunk_size + 1} of {n_samples//used_chunk_size}",
                 unit="col_chunks",
@@ -496,7 +496,7 @@ class KernelPCACalculator(CalculatorBase):
         col_sums = np.zeros(n_samples, dtype=np.float64)
         
         # First pass: compute row sums
-        for i in ProgressController.iterate(
+        for i in ProgressUtils.iterate(
             range(0, n_samples, self.chunk_size),
             desc="Computing row sums",
             unit="chunks",
@@ -505,7 +505,7 @@ class KernelPCACalculator(CalculatorBase):
             row_sums[i:end] = kernel_matrix[i:end].sum(axis=1)
 
         # Second pass: compute column sums
-        for j in ProgressController.iterate(
+        for j in ProgressUtils.iterate(
             range(0, n_samples, self.chunk_size),
             desc="Computing col sums",
             unit="chunks",
@@ -541,7 +541,7 @@ class KernelPCACalculator(CalculatorBase):
         """
         n_samples = kernel_matrix.shape[0]
         
-        for i in ProgressController.iterate(
+        for i in ProgressUtils.iterate(
             range(0, n_samples, self.chunk_size),
             desc="Centering kernel matrix",
             unit="chunks",
@@ -804,7 +804,7 @@ class KernelPCACalculator(CalculatorBase):
         )
         
         # Step 3: Chunk-wise transform and partial_fit
-        for start in ProgressController.iterate(
+        for start in ProgressUtils.iterate(
             range(0, n_samples, self.chunk_size),
             desc="Nystroem partial fitting",
             unit="chunks",
@@ -825,7 +825,7 @@ class KernelPCACalculator(CalculatorBase):
             filename=f"{self._cache_prefix}_nystrom.dat"
         )
 
-        for start in ProgressController.iterate(
+        for start in ProgressUtils.iterate(
             range(0, n_samples, self.chunk_size),
             desc="Nystroem final transform",
             unit="chunks",

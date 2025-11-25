@@ -18,10 +18,10 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""Support helpers for structure analysis.
+"""Support helper for structure analysis.
 
 The helper subpackage contains streaming utilities, reference-structure
-builders, and memory estimation helpers used by the structure analysis
+builders, and memory estimation helper used by the structure analysis
 services and calculators.
 """
 

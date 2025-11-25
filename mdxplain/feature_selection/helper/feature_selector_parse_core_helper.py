@@ -22,7 +22,7 @@
 Core parser helper for feature selection.
 
 This module provides the main coordination functionality for feature selection parsing,
-including smart pattern detection and delegation to specialized category helpers.
+including smart pattern detection and delegation to specialized category helper.
 """
 
 import re
@@ -37,7 +37,7 @@ from .feature_selector_consensus_parse_helper import FeatureSelectorConsensusPar
 
 class FeatureSelectorParseCoreHelper:
     """
-    Core parser that coordinates pattern detection and delegates to specialized helpers.
+    Core parser that coordinates pattern detection and delegates to specialized helper.
 
     This class implements the main logic for parsing feature selection strings,
     including smart pattern detection to infer categories when not explicitly provided.
@@ -47,7 +47,7 @@ class FeatureSelectorParseCoreHelper:
     def parse_selection(selection_string: str, features_list: List[list], require_all_partners: bool = False) -> List[int]:
         """
         Parse selection string and return matching feature indices.
-        Coordinates pattern detection and delegates to specialized category helpers.
+        Coordinates pattern detection and delegates to specialized category helper.
 
         Parameters
         ----------
