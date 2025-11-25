@@ -12,3 +12,4 @@ Decomposition Types
    mdxplain.decomposition.decomposition_type.kernel_pca
    mdxplain.decomposition.decomposition_type.pca
    mdxplain.decomposition.decomposition_type.interfaces
+   mdxplain.decomposition.decomposition_type.helper
