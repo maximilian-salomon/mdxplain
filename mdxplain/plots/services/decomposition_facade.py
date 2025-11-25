@@ -84,7 +84,7 @@ class DecompositionFacade:
         energy_values: bool = True,
         use_kde: bool = False,
         mask_empty_bins: bool = True,
-        bins: int = 50,
+        bins: Union[int, str] = "auto",
         temperature: float = 310.15,
         alpha: float = 0.6,
         cluster_contour: bool = True,
@@ -143,7 +143,7 @@ class DecompositionFacade:
             Mask unsampled bins in the background (energy/density) as white/
             transparent. Set False to fill with the maximum color for
             continuous fill.
-        bins : int, default=50
+        bins : int or str, default="auto"
             Number of bins for histogram/energy calculation
         temperature : float, default=300.0
             Temperature in Kelvin for energy calculation

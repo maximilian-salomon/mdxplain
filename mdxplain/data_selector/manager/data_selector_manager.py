@@ -305,7 +305,7 @@ class DataSelectorManager:
         ...     pipeline_data, "my_frames", "conformations", ["folded", "intermediate"], mode="intersect"
         ... )
         """
-        # Validation using helpers
+        # Validation using helper
         FrameSelectionHelper.validate_selector_exists(pipeline_data, name)
         FrameSelectionHelper.validate_clustering_exists(pipeline_data, clustering_name)
 

@@ -30,7 +30,7 @@ from typing import Any, Callable, Optional
 
 import numpy as np
 
-from mdxplain.utils.progress_util import ProgressController
+from mdxplain.utils.progress_utils import ProgressUtils
 
 from .feature_shape_helper import FeatureShapeHelper
 
@@ -155,7 +155,7 @@ class CalculatorStatHelper:
 
         # Process in chunks
         result_chunks = []
-        for i in ProgressController.iterate(
+        for i in ProgressUtils.iterate(
             range(0, n_features, chunk_size),
             desc="Computing statistics per feature",
             unit="chunks",
@@ -247,7 +247,7 @@ class CalculatorStatHelper:
             Statistical values per frame
         """
         result_chunks = []
-        for i in ProgressController.iterate(
+        for i in ProgressUtils.iterate(
             range(0, array.shape[0], chunk_size),
             desc="Computing statistics per frame",
             unit="chunks",
@@ -386,7 +386,7 @@ class CalculatorStatHelper:
             Statistical values per column
         """
         result_chunks = []
-        for i in ProgressController.iterate(
+        for i in ProgressUtils.iterate(
             range(0, array.shape[0], chunk_size),
             desc="Computing spatial statistics",
             unit="chunks",
@@ -571,7 +571,7 @@ class CalculatorStatHelper:
             Modifies result array in-place
         """
         flat_result = result.flatten()
-        for i in ProgressController.iterate(
+        for i in ProgressUtils.iterate(
             range(0, array.shape[1], chunk_size),
             desc="Computing transitions",
             unit="chunks",

@@ -29,7 +29,7 @@ import time
 from typing import Any, Dict, Tuple
 
 import numpy as np
-from mdxplain.utils.progress_util import ProgressController
+from mdxplain.utils.progress_utils import ProgressUtils
 from scipy.sparse import vstack
 from sklearn.cluster import DBSCAN as SklearnDBSCAN
 from sklearn.neighbors import NearestNeighbors
@@ -253,7 +253,7 @@ class DBSCANCalculator(CalculatorBase):
         chunk_size = self.chunk_size
         sparse_matrices = []
         
-        for chunk_start in ProgressController.iterate(
+        for chunk_start in ProgressUtils.iterate(
             range(0, n_samples, chunk_size),
             desc="Building sparse matrix",
             unit="chunks",

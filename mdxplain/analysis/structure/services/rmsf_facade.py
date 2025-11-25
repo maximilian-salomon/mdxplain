@@ -97,7 +97,7 @@ class RMSFFacade:
         Returns
         -------
         RMSFMeanVariantFacade
-            Mean RMSF variant facade exposing per-atom and per-residue helpers.
+            Mean RMSF variant facade exposing per-atom and per-residue helper.
 
         Examples
         --------
@@ -125,7 +125,7 @@ class RMSFFacade:
         -------
         RMSFMedianVariantFacade
             Median RMSF variant facade exposing per-atom and per-residue
-            helpers.
+            helper.
 
         Examples
         --------
@@ -152,7 +152,7 @@ class RMSFFacade:
         Returns
         -------
         RMSFMadVariantFacade
-            MAD RMSF variant facade exposing per-atom and per-residue helpers.
+            MAD RMSF variant facade exposing per-atom and per-residue helper.
 
         Examples
         --------
@@ -173,7 +173,7 @@ class RMSFFacade:
         Returns
         -------
         RMSFPerAtomService
-            Per-atom RMSF service providing ``to_*_reference`` helpers.
+            Per-atom RMSF service providing ``to_*_reference`` helper.
 
         Examples
         --------

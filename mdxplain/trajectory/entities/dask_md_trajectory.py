@@ -36,7 +36,7 @@ import zarr
 import dask.array as da
 import mdtraj as md
 
-from ...utils.progress_util import ProgressController
+from ...utils.progress_utils import ProgressUtils
 
 from zarr.codecs import BloscCodec
 
@@ -1059,7 +1059,7 @@ class DaskMDTrajectory:
         print(f"Copying {self.n_frames} frames in {n_chunks} chunks (offset: {frame_offset})")
         
         # Copy coordinate and time data chunk-wise
-        for i in ProgressController.iterate(
+        for i in ProgressUtils.iterate(
             range(n_chunks), desc="Copying trajectory chunks", unit="chunks"
         ):
             start_idx = i * chunk_size
@@ -1151,7 +1151,7 @@ class DaskMDTrajectory:
         new_instance._unitcell_lengths_cache = None
         new_instance._unitcell_angles_cache = None
         
-        # Share helpers (use existing configuration)
+        # Share helper (use existing configuration)
         new_instance._parallel_ops = self._parallel_ops
         new_instance._join_stack_helper = self._join_stack_helper
         

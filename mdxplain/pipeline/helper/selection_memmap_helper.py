@@ -28,7 +28,7 @@ large datasets in the feature selection system.
 from typing import List
 
 import numpy as np
-from mdxplain.utils.progress_util import ProgressController
+from mdxplain.utils.progress_utils import ProgressUtils
 
 from ...utils.data_utils import DataUtils
 
@@ -94,7 +94,7 @@ class SelectionMemmapHelper:
             shape=(n_rows, n_cols),
         )
 
-        for row_start in ProgressController.iterate(
+        for row_start in ProgressUtils.iterate(
             range(0, n_rows, chunk_size),
             desc="Selecting columns",
             unit="chunks",
@@ -152,7 +152,7 @@ class SelectionMemmapHelper:
             col_end = col_start + matrix.shape[1]
 
             # Process in chunks to avoid loading entire matrix into memory
-            for row_start in ProgressController.iterate(
+            for row_start in ProgressUtils.iterate(
                 range(0, total_samples, chunk_size),
                 desc=f"Concatenating matrix {i+1}/{len(matrices)}",
                 unit="chunks",
@@ -215,7 +215,7 @@ class SelectionMemmapHelper:
         )
 
         # Process in chunks to avoid loading entire data into memory
-        for chunk_start in ProgressController.iterate(
+        for chunk_start in ProgressUtils.iterate(
             range(0, n_selected_frames, chunk_size),
             desc="Creating frame selection",
             unit="chunks",

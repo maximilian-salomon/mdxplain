@@ -34,7 +34,7 @@ import dask.array as da
 import mdtraj as md
 import numpy as np
 import zarr
-from mdxplain.utils.progress_util import ProgressController
+from mdxplain.utils.progress_utils import ProgressUtils
 from zarr.codecs import BloscCodec
 
 # Default compression for all zarr operations
@@ -156,7 +156,7 @@ class ParallelOperationsHelper:
         n_chunks = (self.n_frames + chunk_size - 1) // chunk_size
         
         # Process chunks and write directly to zarr
-        for i in ProgressController.iterate(
+        for i in ProgressUtils.iterate(
             range(n_chunks), desc="Processing frame chunks"
         ):
             start_idx = i * chunk_size
@@ -213,7 +213,7 @@ class ParallelOperationsHelper:
         time_data = self.dask_time.compute()
         result_store['time'][:] = time_data.astype(np.float32)
         
-        for i in ProgressController.iterate(
+        for i in ProgressUtils.iterate(
             range(n_atom_chunks), desc="Processing atom chunks"
         ):
             chunk_start = i * atom_chunk_size

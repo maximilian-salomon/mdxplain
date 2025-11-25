@@ -31,7 +31,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import mdtraj as md
 import numpy as np
 
-from mdxplain.utils.progress_util import ProgressController
+from mdxplain.utils.progress_utils import ProgressUtils
 
 from ..helper.calculator_compute_helper import CalculatorComputeHelper
 from ..helper.feature_shape_helper import FeatureShapeHelper
@@ -450,7 +450,7 @@ class DistanceCalculator(CalculatorBase):
         None
         """
         if FeatureShapeHelper.is_memmap(distances) or self.use_memmap:
-            for i in ProgressController.iterate(
+            for i in ProgressUtils.iterate(
                 range(0, total_frames, self.chunk_size),
                 desc="Converting units",
                 unit="chunks",
@@ -544,7 +544,7 @@ class DistanceCalculator(CalculatorBase):
             )
             distances[:] = dist  # Direct assignment
         else:
-            for frame_start in ProgressController.iterate(
+            for frame_start in ProgressUtils.iterate(
                 range(0, traj.n_frames, self.chunk_size),
                 desc=f"Processing traj {traj}",
                 unit="chunks",
