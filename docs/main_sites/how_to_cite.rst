@@ -8,17 +8,7 @@ please cite it.
 BibTeX Reference
 ----------------
 
-.. parsed-literal::
+:download:`Download BibTeX file <../../mdxplain.bib>`
 
-    @article{mdxplain2025,
-        title = {mdxplain},
-        author = {Salomon, Maximilian},
-        journal = {},
-        volume = {},
-        number = {},
-        pages = {},
-        year = {2025},
-        doi = {},
-        url = {https://github.com/BioFreak95/mdxplain},
-        version = {|release|}
-    }
+.. literalinclude:: ../../mdxplain.bib
+   :language: bibtex

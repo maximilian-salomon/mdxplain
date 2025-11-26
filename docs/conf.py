@@ -17,7 +17,17 @@ contributers = [
     {'name': 'Maximilian Salomon', 'role': 'Software'},
     {'name': 'Maeve Branwen Butler', 'role': 'Documentation'},
 ]
-author = 'author list from paper'
+authors = [
+    'Salomon, Maximilian',
+    'Pankonin, Maik',
+    'Butler, Maeve Branwen',
+    'Batebi, Hossein',
+    'Stadler, Peter F.',
+    'Pérez-Hernández, Guillermo',
+    'Hildebrand, Peter W.',
+]
+# author expects a string with all authors
+author = ' and '.join(authors)
 
 # Set path for root folder and source code folder
 sys.path.insert(0, os.path.abspath('..'))
