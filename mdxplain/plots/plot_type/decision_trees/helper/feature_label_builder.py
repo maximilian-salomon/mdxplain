@@ -175,6 +175,7 @@ class FeatureLabelBuilder:
         Notes
         -----
         - Prefix only hidden if BOTH conditions met:
+        
           1. User requests hiding (hide_feature_type_prefix=True)
           2. Metadata allows hiding (allow_hide_prefix=True)
         """
