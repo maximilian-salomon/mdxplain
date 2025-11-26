@@ -3,18 +3,10 @@ Learn mdxplain
 
 mdxplain provides a **PipelineManager** as the central entry point for all molecular
 dynamics trajectory analysis. The architecture follows a **builder pattern**, where
-complex analyses are constructed step-by-step through a
-fluent, manager-based interface.
-
-Core Concept
-------------
-
-mdxplain provides a **PipelineManager** as the central entry point for all molecular
-dynamics trajectory analysis. The architecture follows a **builder pattern**, where
 complex analyses are constructed step-by-step through a fluent, manager-based interface.
 
 Key Design Principles
-^^^^^^^^^^^^^^^^^^^^^
+---------------------
 
 - **PipelineManager**: Single entry point that coordinates all analysis operations
 - **Manager-based Architecture**: Specialized managers for trajectories, features,
@@ -25,6 +17,8 @@ Key Design Principles
 
 Basic Usage Examples
 --------------------
+
+.. todo: streamline existing base examples for clarity and efficiency
 
 .. toctree::
    :maxdepth: 1
@@ -41,6 +35,7 @@ Basic Usage Examples
    basic_usage_examples/feature_statistics
    basic_usage_examples/data_selection
    basic_usage_examples/comparative_analysis_and_feature_importance
+   basic_usage_examples/plotting
    basic_usage_examples/saving_and_loading
 
 Complete Workflow Example
@@ -52,3 +47,6 @@ Here's a complete conformational analysis workflow:
    :maxdepth: 1
 
    00_introduction
+
+.. todo: Provide Multiple Notebooks – offer various notebooks illustrating different workflows.
+   Missing: A page showing where all data is stored (labels, tags, computed arrays, etc.).

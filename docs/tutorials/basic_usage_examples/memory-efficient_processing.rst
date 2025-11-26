@@ -1,6 +1,8 @@
 Memory-Efficient Processing
 ===========================
 
+.. todo: Is it possible to adjust chunksize after pipeline creation?
+
 For large trajectories, mdxplain supports memory-mapped processing:
 
 .. code:: python

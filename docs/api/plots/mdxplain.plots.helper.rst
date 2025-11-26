@@ -14,5 +14,6 @@ Plot Helper
    mdxplain.plots.helper.discrete_feature_helper
    mdxplain.plots.helper.feature_metadata_helper
    mdxplain.plots.helper.grid_layout_helper
+   mdxplain.plots.helper.svg_export_helper
    mdxplain.plots.helper.title_legend_helper
    mdxplain.plots.helper.validation_helper

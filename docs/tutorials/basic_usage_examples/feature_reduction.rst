@@ -1,6 +1,8 @@
 Feature Reduction
 =================
 
+.. todo: Feature Reduction & Feature Statistics – overlapping functionalities; needs consolidation.
+
 Statistical Feature Filtering
 -----------------------------
 
