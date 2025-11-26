@@ -15,7 +15,7 @@ mdxplain uses a Makefile for streamlined installation and development workflows:
 .. code-block::
 
     # Clone repository
-    git clone https://github.com/BioFreak95/mdxplain.git
+    git clone https://github.com/maximilian-salomon/mdxplain.git
     cd mdxplain
 
     # Full setup with development tools and Jupyter (recommended)

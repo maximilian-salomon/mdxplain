@@ -1,6 +1,15 @@
 Trajectory Management
 =====================
 
+.. todo: Depth/nesting of folder structure for loading – how deep can it go?
+    Trajectories not loaded alphabetically → plotting (e.g., membership) can be disordered → reduces comparability in plots
+    Is there an option to sort trajectories?
+    Depth/nesting of folder structure for loading – how deep can it go?
+    --> Missing example for folder structure: e.g., max one PDB per folder, multiple XTCs possible.
+    Cache folder for trajectories – relative to script execution path or pipeline cache directory?
+    select_atoms: which strings are valid? Include brief note that these are mdtraj selection strings; optionally link or provide example.
+    Consensus nomenclature for labels: What is the exact reference for nomenclature consensus?
+
 mdxplain supports all MDTraj-compatible trajectory formats (xtc, dcd, trr, pdb,
 h5, netcdf, etc.) and provides powerful tools for organizing and manipulating
 multiple trajectories. Tags enable systematic organization for comparative

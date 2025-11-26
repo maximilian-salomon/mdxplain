@@ -1,6 +1,8 @@
 Data Selection (Frame/Row Selection)
 ====================================
 
+.. todo: needs streamlining
+
 While FeatureSelector defines which features (matrix columns) to analyze,
 DataSelector chooses which trajectory frames (matrix rows) to include.
 This enables subset-based analyses focusing on specific conformational
