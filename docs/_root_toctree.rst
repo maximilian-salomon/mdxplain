@@ -2,6 +2,7 @@
    :maxdepth: 8
    :titlesonly:
 
+   main_sites/overview
    main_sites/how_to_install
    tutorials/learning
    main_sites/how_to_contribute
