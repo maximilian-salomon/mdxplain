@@ -1,0 +1,36 @@
+/* Custom CSS for mdxplain documentation */
+
+/* Fix for long class/function names that overflow */
+.rst-content dl dt {
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+    display: block;
+}
+
+/* Alternative: Allow horizontal scrolling for signature lines */
+.rst-content dl dt .sig {
+    overflow-x: auto;
+    display: inline-block;
+    max-width: 100%;
+}
+
+/* Better wrapping for long module paths */
+.rst-content code.literal {
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+/* Ensure class/function signatures don't overflow their containers */
+.rst-content .class > dt,
+.rst-content .function > dt,
+.rst-content .method > dt {
+    overflow-wrap: break-word;
+    hyphens: auto;
+}
+
+/* Better handling of long parameter lists */
+.sig-param {
+    display: inline-block;
+}
