@@ -38,15 +38,16 @@ Basic Usage Examples
    basic_usage_examples/plotting
    basic_usage_examples/saving_and_loading
 
-Complete Workflow Example
--------------------------
+Tutorials
+---------
 
 Here's a complete conformational analysis workflow:
+
+.. placeholder for notebooks
 
 .. toctree::
    :maxdepth: 1
 
-   00_introduction
+   placeholder
 
-.. todo: Provide Multiple Notebooks – offer various notebooks illustrating different workflows.
-   Missing: A page showing where all data is stored (labels, tags, computed arrays, etc.).
+.. toctree notebooks end
