@@ -189,7 +189,7 @@ To see all available commands:
     make help
 
 Install on Windows
-^^^^^^^^^^^^^^^^^^
+------------------
 
 Windows requires **Make** to be installed for using the Makefile commands. If you don't
 have Make, you can install it via `Chocolatey <https://chocolatey.org/>`_ or use the
@@ -198,7 +198,7 @@ manual pip/conda commands below.
 All make command except PyMOL installation are supported on Windows.
 
 PyMOL Installation on Windows
-"""""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``make install-pymol`` command is not supported on Windows due to PyMOL's
 GUI-specific dependencies and the need for pre-built wheel files. Instead, install
@@ -223,7 +223,7 @@ Download and install the appropriate PyMOL wheel for your Python version from th
    `PyMOL Windows Wheels repository <https://github.com/cgohlke/pymol-open-source-wheels>`_.
 
 Manual Installation (without Make)
-""""""""""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 1. Create a virtual environment:
 
