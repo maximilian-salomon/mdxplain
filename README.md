@@ -2,7 +2,7 @@
 
 A Python toolkit designed for **interpretable molecular dynamics trajectory analysis**, efficiently processing large datasets while delivering understandable results through machine learning models. It combines modular workflows with memory-efficient processing and decision trees to identify key conformational features and streamline complex analytical pipelines.
 
-**Official Documentation**: `mdxplain documentation <https://mdxplain.readthedocs.io/en/latest/>`
+**Official Documentation**: [mdxplain documentation](https://mdxplain.readthedocs.io/en/latest/)
 
 **Developer:** Maximilian Salomon (Software), Maeve Branwen Butler (ReadTheDocs Documentation)
 
