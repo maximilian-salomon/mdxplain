@@ -2,6 +2,8 @@
 
 A Python toolkit designed for **interpretable molecular dynamics trajectory analysis**, efficiently processing large datasets while delivering understandable results through machine learning models. It combines modular workflows with memory-efficient processing and decision trees to identify key conformational features and streamline complex analytical pipelines.
 
+**Official Documentation**: `mdxplain documentation <https://mdxplain.readthedocs.io/en/latest/>`
+
 **Developer:** Maximilian Salomon (Software), Maeve Branwen Butler (ReadTheDocs Documentation)
 
 **Version:** 0.1.0
@@ -39,10 +41,14 @@ source mdxplain-venv/bin/activate
 
 ### Install in Existing Environment
 
-Install mdxplain core package in your currently active environment (without Jupyter and nglview):
+Install mdxplain core package in your currently active environment:
 
 ```bash
+# Without Jupyter notebooks and nglview
 make install
+
+# With Jupyter notebooks and nglview
+make install-jupyter
 ```
 
 ### Optional: PyMOL Installation
@@ -53,7 +59,7 @@ PyMOL is not included in the standard installation to avoid compatibility issues
 make install-pymol
 ```
 
-**Note:** For system-specific installation instructions, please refer to the [official PyMOL documentation](https://pymolwiki.org/index.php/Linux_Install). Alternatively, you can install PyMOL independently and load mdxplain's generated PyMOL scripts manually.
+**Note:** For system-specific installation instructions, please refer to the [official PyMOL documentation](https://www.pymol.org/). Alternatively, you can install PyMOL independently and load mdxplain's generated PyMOL scripts manually.
 
 ## Workflow Example
 

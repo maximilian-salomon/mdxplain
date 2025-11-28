@@ -51,12 +51,15 @@ Create a new virtual environment with production dependencies, Jupyter, and nglv
 Install in Existing Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Install mdxplain core package in your currently active environment (without Jupyter
-and nglview):
+Install mdxplain core package in your currently active environment:
 
 .. code-block:: bash
 
+   # Without Jupyter notebooks and nglview
    make install
+
+   # With Jupyter notebooks and nglview
+   make install-jupyter
 
 Optional: PyMOL Installation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -70,7 +73,7 @@ install it separately:
    make install-pymol
 
 **Note:** For system-specific installation instructions, please refer to the
-`official PyMOL documentation <https://pymolwiki.org/index.php/Linux_Install>`_. Alternatively,
+`official PyMOL documentation <https://www.pymol.org/>`_. Alternatively,
 you can install PyMOL independently and load mdxplain's generated PyMOL scripts manually.
 
 
@@ -79,9 +82,6 @@ Workflow Example
 
 This example demonstrates a complete analysis pipeline from trajectory loading to
 interpretable results.
-
-For further workflow examples visit the `mdxplain documentation
-<https://mdxplain.readthedocs.io/en/latest/>`_.
 
 Setup and Data Loading
 ^^^^^^^^^^^^^^^^^^^^^^
