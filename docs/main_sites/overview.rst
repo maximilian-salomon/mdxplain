@@ -2,19 +2,20 @@ mdxplain Overview
 =================
 
 .. image:: ../images/mdxplain_overview.png
-   :width: 4961px
-   :height: 3391px
-   :scale: 10 %
-   :alt: mdxplain overview
+   :width: 1944px
+   :height: 2000px
+   :scale: 35 %
+   :alt: mdxplain overview diagram
+   :align: center
 
 mdxplain creates a complete analytical loop from raw simulation data to explainable observations.
 The framework transforms large-scale trajectory data into interpretable insights through feature
-calcuations, dimensionality reduction, clustering and comparisons.
+calculations, dimensionality reduction, clustering and comparisons.
 
 Data Input
 ^^^^^^^^^^
 
-The pipeline begins with massive datasets compromisong of **1-100+ MD simulations**, each containing
+The pipeline begins with massive datasets compromising of **1-100+ MD simulations**, each containing
 **100 to over a million frames**. The tagging system allows classification of different simulation
 conditions, mutations, or experimental variants. Both the raw data and associated metadata (tags and
 labels) are imported.
