@@ -107,10 +107,8 @@ Project Structure
     ├── dev_scripts/                   # Development scripts
     │
     ├── Makefile                       # Build and development automation
-    ├── make.bat                       # Command file for Sphinx documentation
     ├── readthedocs.yaml               # ReadTheDocs configuration
     ├── pyproject.toml                 # Package configuration
     ├── README.md                      # Project overview and setup
     ├── AI_USAGE.md                    # AI assistance declaration
-    ├── LICENSE                        # LGPL v3.0
-    └── mdxplain.bib                   # Citation information
+    └── LICENSE                        # LGPL v3.0
