@@ -1,6 +1,9 @@
 Feature Selection
 =================
 
+.. todo: generally fine; needs streamlining and clarification.
+    Clarify on difference to Data Selector. When should each be used?
+
 Feature selection defines which molecular features (matrix columns) enter your analysis.
 mdxplain provides a custom parsing syntax that supports residue names, IDs, consensus
 nomenclature, and logical operations for flexible feature filtering.

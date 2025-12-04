@@ -1,6 +1,8 @@
 Feature Statistics
 ==================
 
+.. todo: Feature Reduction & Feature Statistics – overlapping functionalities; needs consolidation.
+
 Feature statistics provide quantitative insights into molecular interaction
 patterns, dynamic behavior, and conformational preferences. Use statistics
 to understand contact formation frequencies, distance distributions, or

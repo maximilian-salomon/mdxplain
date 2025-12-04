@@ -8,3 +8,4 @@ Data Selector Helper
    
    mdxplain.data_selector.helper.criteria_builder_helper
    mdxplain.data_selector.helper.frame_selection_helper
+   mdxplain.data_selector.helper.group_creation_helper

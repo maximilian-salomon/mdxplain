@@ -48,6 +48,7 @@ class DiffusionMapsCalculator(CalculatorBase):
     Coifman & Lafon (2006).
 
     The algorithm consists of three main steps:
+    
     1. Construct Gaussian kernel from RMSD distances: K_ij = exp(-d_ij^2 / epsilon)
     2. Normalize to transition matrix: M = D^(-1) * K (Random Walk normalization)
     3. Compute eigenvectors of M, skip first (stationary distribution)

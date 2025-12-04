@@ -78,7 +78,7 @@ class ProgressUtils:
         ----------
         iterable : Iterable
             Sequence or generator to wrap with a progress bar.
-        **kwargs
+        kwargs
             Additional tqdm keyword arguments (e.g., desc, total, unit).
 
         Returns

@@ -17,7 +17,17 @@ contributers = [
     {'name': 'Maximilian Salomon', 'role': 'Software'},
     {'name': 'Maeve Branwen Butler', 'role': 'Documentation'},
 ]
-author = 'author list from paper'
+authors = [
+    'Salomon, Maximilian',
+    'Pankonin, Maik',
+    'Butler, Maeve Branwen',
+    'Batebi, Hossein',
+    'Stadler, Peter F.',
+    'Pérez-Hernández, Guillermo',
+    'Hildebrand, Peter W.',
+]
+# author expects a string with all authors
+author = ' and '.join(authors)
 
 # Set path for root folder and source code folder
 sys.path.insert(0, os.path.abspath('..'))
@@ -33,7 +43,6 @@ extensions = [
 autodoc_member_order = 'bysource'
 
 exclude_patterns = [
-    '_build',
     'build',
     'jupyter_execute',
     '**/.ipynb_checkpoints',
@@ -49,7 +58,7 @@ rst_prolog = """
 nb_execution_mode = "off"
 
 # html build configurations
-# Emit docs/_build/html/index.html for ReadTheDocs root serving
+# Emit docs/build/html/index.html for ReadTheDocs root serving
 root_doc = master_doc = 'index'
 html_theme = 'sphinx_rtd_theme'
 html_search = True
@@ -59,3 +68,9 @@ html_theme_options = {
     'navigation_depth': 8,
     'titles_only': False,
 }
+
+# Custom CSS to fix long class names
+html_static_path = ['_static']
+html_css_files = [
+    'custom.css',
+]
