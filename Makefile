@@ -1,27 +1,25 @@
-.PHONY: help setup-env setup-jupyter-env setup-dev-env setup-full-env setup-conda-env setup-conda-jupyter-env setup-conda-dev-env setup-conda-full-env install install-dev install-jupyter install-visualization install-full test lint format jupyter notebook html clean
+.PHONY: help setup-conda setup-dev-conda setup-pymol-conda setup-venv setup-dev-venv setup-pymol-venv install install-dev install-jupyter install-pymol install-full test lint format jupyter notebook html clean
 
 # Default target
 help:
 	@echo "Available targets:"
 	@echo ""
-	@echo "Environment Setup (Python venv):"
-	@echo "  setup-env           Create venv with production dependencies"
-	@echo "  setup-jupyter-env   Create venv with production + jupyter dependencies"
-	@echo "  setup-dev-env       Create venv with development dependencies"
-	@echo "  setup-full-env      Create venv with development + jupyter + visualization"
-	@echo ""
 	@echo "Environment Setup (Conda):"
-	@echo "  setup-conda-env         Create conda env with production dependencies"
-	@echo "  setup-conda-jupyter-env Create conda env with production + jupyter dependencies"
-	@echo "  setup-conda-dev-env     Create conda env with development dependencies"
-	@echo "  setup-conda-full-env    Create conda env with dev + jupyter + visualization"
+	@echo "  setup-conda         Create conda env with production dependencies (without PyMOL)"
+	@echo "  setup-dev-conda     Create conda env with development dependencies (without PyMOL)"
+	@echo "  setup-pymol-conda   Create conda env with jupyter and PyMOL"
+	@echo ""
+	@echo "Environment Setup (Python venv):"
+	@echo "  setup-venv          Create venv with production dependencies (without PyMOL)"
+	@echo "  setup-dev-venv      Create venv with development dependencies (without PyMOL)"
+	@echo "  setup-pymol-venv    Create venv with jupyter and PyMOL"
 	@echo ""
 	@echo "Installation (in existing environment):"
-	@echo "  install             Install package in current environment"
-	@echo "  install-dev         Install package with dev dependencies"
-	@echo "  install-jupyter     Install package with jupyter dependencies"
-	@echo "  install-visualization Install package with visualization dependencies (PyMOL)"
-	@echo "  install-full        Install package with dev + jupyter + visualization"
+	@echo "  install             Install package (without PyMOL)"
+	@echo "  install-dev         Install package with development dependencies (without PyMOL)"
+	@echo "  install-jupyter     Install Jupyter dependencies"
+	@echo "  install-pymol       Install PyMOL for 3D structure visualization"
+	@echo "  install-full        Install package with full dependencies including Jupyter and PyMOL"
 	@echo ""
 	@echo "Jupyter:"
 	@echo "  jupyter             Start JupyterLab"
@@ -33,126 +31,111 @@ help:
 	@echo "  format              Format code with black and isort"
 	@echo "  clean               Remove environments and cache files"
 
+# Create fresh conda environment with production dependencies
+setup-conda:
+	@echo "Creating new conda environment 'mdxplain'..."
+	conda create -n mdxplain python=3.12 -y
+	@echo "Installing pip in conda environment..."
+	conda run -n mdxplain conda install pip -y
+	@echo "Installing production dependencies with jupyter..."
+	conda run -n mdxplain pip install .[jupyter]
+	@echo "Installing DPA with --no-deps..."
+	conda run -n mdxplain pip install --no-deps DPA
+	@echo "Setup complete! Activate with: conda activate mdxplain"
+
+# Create fresh conda environment with development dependencies
+setup-dev-conda:
+	@echo "Creating new conda environment 'mdxplain' for development..."
+	conda create -n mdxplain python=3.12 -y
+	@echo "Installing pip in conda environment..."
+	conda run -n mdxplain conda install pip -y
+	@echo "Installing development dependencies..."
+	conda run -n mdxplain pip install .[dev,jupyter]
+	@echo "Installing DPA with --no-deps..."
+	conda run -n mdxplain pip install --no-deps DPA
+	@echo "Development setup complete! Activate with: conda activate mdxplain"
+
+# Create fresh conda environment with jupyter and pymol
+setup-pymol-conda:
+	@echo "Creating new conda environment 'mdxplain' with jupyter and pymol..."
+	conda create -n mdxplain python=3.12 -y
+	@echo "Installing pip in conda environment..."
+	conda run -n mdxplain conda install pip -y
+	@echo "Installing jupyter and pymol..."
+	conda run -n mdxplain pip install .[jupyter,pymol]
+	@echo "Installing DPA with --no-deps..."
+	conda run -n mdxplain pip install --no-deps DPA
+	@echo "Development setup complete! Activate with: conda activate mdxplain"
+
 # Create fresh virtual environment with production dependencies only
-setup-env:
+setup-venv:
 	@echo "Creating new virtual environment 'mdxplain-venv'..."
 	python -m venv mdxplain-venv
 	@echo "Upgrading pip..."
 	mdxplain-venv/bin/pip install --upgrade pip
 	@echo "Installing production dependencies..."
-	mdxplain-venv/bin/pip install .
+	mdxplain-venv/bin/pip install .[jupyter]
 	@echo "Installing DPA with --no-deps..."
 	mdxplain-venv/bin/pip install --no-deps DPA
 	@echo "Setup complete! Activate with: source mdxplain-venv/bin/activate"
 
-# Create fresh virtual environment with production + jupyter dependencies
-setup-jupyter-env:
-	@echo "Creating new virtual environment 'mdxplain-venv' with Jupyter..."
-	python -m venv mdxplain-venv
-	@echo "Upgrading pip..."
-	mdxplain-venv/bin/pip install --upgrade pip
-	@echo "Installing production + jupyter dependencies..."
-	mdxplain-venv/bin/pip install .[jupyter]
-	@echo "Installing DPA with --no-deps..."
-	mdxplain-venv/bin/pip install --no-deps DPA
-	@echo "Jupyter setup complete! Activate with: source mdxplain-venv/bin/activate"
-
 # Create fresh virtual environment with development dependencies
-setup-dev-env:
+setup-dev-venv:
 	@echo "Creating new development virtual environment 'mdxplain-venv'..."
 	python -m venv mdxplain-venv
 	@echo "Upgrading pip..."
 	mdxplain-venv/bin/pip install --upgrade pip
 	@echo "Installing development dependencies..."
-	mdxplain-venv/bin/pip install .[dev]
+	mdxplain-venv/bin/pip install .[dev,jupyter]
 	@echo "Installing DPA with --no-deps..."
 	mdxplain-venv/bin/pip install --no-deps DPA
 	@echo "Development setup complete! Activate with: source mdxplain-venv/bin/activate"
 
-# Create fresh virtual environment with development + jupyter + visualization dependencies
-setup-full-env:
-	@echo "Creating new full virtual environment 'mdxplain-venv'..."
+# Create fresh virtual environment with jupyter and pymol
+setup-pymol-venv:
+	@echo "Creating new virtual environment 'mdxplain-venv' with jupyter and pymol..."
 	python -m venv mdxplain-venv
 	@echo "Upgrading pip..."
 	mdxplain-venv/bin/pip install --upgrade pip
-	@echo "Installing development + jupyter + visualization dependencies..."
-	mdxplain-venv/bin/pip install .[dev,jupyter,visualization]
+	@echo "Installing jupyter and pymol..."
+	mdxplain-venv/bin/pip install .[jupyter,pymol]
 	@echo "Installing DPA with --no-deps..."
 	mdxplain-venv/bin/pip install --no-deps DPA
-	@echo "Full setup complete! Activate with: source mdxplain-venv/bin/activate"
+	@echo "Development setup complete! Activate with: source mdxplain-venv/bin/activate"
 
 # Install package in current environment
 install:
+	@echo "Installing mdxplain..."
 	pip install .
 	pip install --no-deps DPA
+	@echo "Installation complete!"
 
 # Install package with development dependencies in current environment
 install-dev:
-	pip install .[dev]
+	@echo "Installing mdxplain with development dependencies..."
+	pip install .[dev,jupyter]
 	pip install --no-deps DPA
+	@echo "Development installation complete!"
 
-# Install package with jupyter dependencies in current environment
+# Install Jupyter dependencies
 install-jupyter:
+	@echo "Installing Jupyter dependencies..."
 	pip install .[jupyter]
 	pip install --no-deps DPA
+	@echo "Jupyter installation complete!"
 
-# Install package with visualization dependencies in current environment
-install-visualization:
-	pip install .[visualization]
+# Install PyMOL separately
+install-pymol:
+	@echo "Installing PyMOL..."
+	pip install .[pymol]
 	pip install --no-deps DPA
+	@echo "PyMOL installation complete!"
 
-# Install package with development, jupyter and visualization dependencies in current environment
 install-full:
-	pip install .[dev,jupyter,visualization]
+	@echo "Installing mdxplain with full dependencies including Jupyter and PyMOL..."
+	pip install .[dev,jupyter,pymol]
 	pip install --no-deps DPA
-
-# Create fresh conda environment with production dependencies only
-setup-conda-env:
-	@echo "Creating new conda environment 'mdxplain'..."
-	conda create -n mdxplain python=3.12 -y
-	@echo "Installing pip in conda environment..."
-	conda run -n mdxplain conda install pip -y
-	@echo "Installing production dependencies..."
-	conda run -n mdxplain pip install .
-	@echo "Installing DPA with --no-deps..."
-	conda run -n mdxplain pip install --no-deps DPA
-	@echo "Setup complete! Activate with: conda activate mdxplain"
-
-# Create fresh conda environment with production + jupyter dependencies
-setup-conda-jupyter-env:
-	@echo "Creating new conda environment 'mdxplain' with Jupyter..."
-	conda create -n mdxplain python=3.12 -y
-	@echo "Installing pip in conda environment..."
-	conda run -n mdxplain conda install pip -y
-	@echo "Installing production + jupyter dependencies..."
-	conda run -n mdxplain pip install .[jupyter]
-	@echo "Installing DPA with --no-deps..."
-	conda run -n mdxplain pip install --no-deps DPA
-	@echo "Jupyter setup complete! Activate with: conda activate mdxplain"
-
-# Create fresh conda environment with development dependencies
-setup-conda-dev-env:
-	@echo "Creating new conda environment 'mdxplain'..."
-	conda create -n mdxplain python=3.12 -y
-	@echo "Installing pip in conda environment..."
-	conda run -n mdxplain conda install pip -y
-	@echo "Installing development dependencies..."
-	conda run -n mdxplain pip install .[dev]
-	@echo "Installing DPA with --no-deps..."
-	conda run -n mdxplain pip install --no-deps DPA
-	@echo "Development setup complete! Activate with: conda activate mdxplain"
-
-# Create fresh conda environment with development + jupyter + visualization dependencies
-setup-conda-full-env:
-	@echo "Creating new conda environment 'mdxplain' with full setup..."
-	conda create -n mdxplain python=3.12 -y
-	@echo "Installing pip in conda environment..."
-	conda run -n mdxplain conda install pip -y
-	@echo "Installing development + jupyter + visualization dependencies..."
-	conda run -n mdxplain pip install .[dev,jupyter,visualization]
-	@echo "Installing DPA with --no-deps..."
-	conda run -n mdxplain pip install --no-deps DPA
-	@echo "Full setup complete! Activate with: conda activate mdxplain"
+	@echo "Full installation complete!"
 
 # Run tests
 test:
@@ -180,22 +163,24 @@ jupyter:
 notebook:
 	jupyter notebook
 
-
-# Set directions for docs build.
+# Set directions for docs build
 SPHINXBUILD = sphinx-build
 SOURCEDIR = docs
-BUILDDIR = docs/_build
+BUILDDIR = docs/build
 
-# Sphinx html build.
+# Prepare notebooks and build Sphinx html
 html:
+	@echo "Preparing notebooks for documentation..."
+	python docs/dev/prepare_notebooks.py
+	@echo "Building HTML documentation..."
 	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(0)
 
 # Clean up
 clean:
-	@echo "Removing virtual environment..."
-	rm -rf mdxplain-venv
 	@echo "Removing conda environment (if exists)..."
 	-conda env remove -n mdxplain -y
+	@echo "Removing virtual environment..."
+	rm -rf mdxplain-venv
 	@echo "Removing Python cache files..."
 	find . -type f -name "*.pyc" -delete
 	find . -type d -name "__pycache__" -delete

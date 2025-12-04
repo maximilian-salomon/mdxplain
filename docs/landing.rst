@@ -3,128 +3,208 @@
 Welcome to mdxplain
 ===================
 
-A Python toolkit for scalable molecular dynamics trajectory analysis, combining modular workflows,
-memory-efficient processing and interpretable machine learning via decision trees to identify key
-conformational features and streamline complex pipelines.
+A Python toolkit designed for **interpretable molecular dynamics trajectory analysis**, efficiently
+processing large datasets while delivering understandable results through machine learning models.
+It combines modular workflows with memory-efficient processing and decision trees to identify key
+conformational features and streamline complex analytical pipelines.
 
-mdxplain is designed for **interpretable molecular dynamics trajectory analysis**, bridging the
-gap between raw simulation data and biological insights. It excels when you need to move from
-thousands of MD frames to actionable, explainable results while maintaining complete workflow
-reproducibility.
+.. image:: images/mdxplain_graphical_abstract.png
+   :width: 4961px
+   :height: 3391px
+   :scale: 14 %
+   :alt: mdxplain graphical abstract
+   :align: center
 
-Getting Started
----------------
+Quick Start Installation
+------------------------
 
-1. **Install mdxplain**: Follow the instructions at :doc:`How to Install mdxplain <how_to_install>`
-2. **Start Jupyter**: ``make jupyter``
-3. **Explore tutorial**: Open :doc:`Complete Workflow Example <tutorials/00_introduction>`
-   for a comprehensive workflow example
-4. **Read documentation**: Visit :doc:`Learn mdxplain <tutorials/learning>` and :doc:`API <api/api>`
-   for details
+mdxplain uses a Makefile for streamlined installation and development workflows.
+For detailed instructions, please refer to the `How to Install mdxplain
+<./main_sites/how_to_install.rst>`_ guide.
 
-.. image:: images/mdxplain_overview.png
-   :width: 1944px
-   :height: 2000px
-   :scale: 30 %
-   :alt: mdxplain overview diagram
+.. code-block:: bash
 
-mdxplain creates a complete analytical loop from raw simulation data to explainable observations.
-The framework transforms large-scale trajectory data into interpretable insights through feature
-calcuations, dimensionality reduction, clustering and comparisons.
+   git clone https://github.com/maximilian-salomon/mdxplain.git
+   cd mdxplain
 
-Data Input
-^^^^^^^^^^
+Conda Environment (Recommended)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The pipeline begins with massive datasets compromisong of **1-100+ MD simulations**, each containing
-**100 to over a million frames**. The tagging system allows classification of different simulation
-conditions, mutations, or experimental variants. Both the raw data and associated metadata (tags and
-labels) are imported.
+Create a new conda environment with production dependencies, Jupyter, and nglview:
 
-mdxplain Tools
-^^^^^^^^^^^^^^
+.. code-block:: bash
 
-1. Feature Calculation
-""""""""""""""""""""""
+   make setup
+   conda activate mdxplain
 
-Central to mdxplain is the feature extraction engine that computes a multitue of descriptive features
-from the simulation trajectories.
 
-- Distances
-- Contacts
-- Torsions
-- DSSP secondary structure
-- Solvent accessible surface area (SASA)
-- Atomic coordinates
+Python Virtual Environment (Alternative)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Through these features, high-dimenional data is transformed for efficient computational analysis.
+Create a new virtual environment with production dependencies, Jupyter, and nglview:
 
-2.1 Dimensionality Reduction and Clustering
-"""""""""""""""""""""""""""""""""""""""""""
+.. code-block:: bash
 
-The extracted features undergo dimensionality reduction to identify the most informative patterns while
-reducing computational complexity. mdxplain offers different statistical metrics for reduction.
+   make setup-venv
+   source mdxplain-venv/bin/activate
 
-Decomposition methods:
+Install in Existing Environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- PCA (Principal Component Analysis)
-- Kernel PCA
-- Contact Kernel PCA
-- Diffusion Maps
+Install mdxplain core package in your currently active environment:
 
-Clustering methods:
+.. code-block:: bash
 
-- DPA (Density Peak Advanced)
-- DBSCAN (Density-Based Spatial Clustering)
-- HDBSCAN (Hierarchical DBSCAN)
+   # Without Jupyter notebooks and nglview
+   make install
 
-2.2 Feature Selection
-"""""""""""""""""""""
+   # With Jupyter notebooks and nglview
+   make install-jupyter
 
-The system identifies the most relevant features that capture essential molecular behavior. Different
-metrics (e. g. variance, range, transition, etc.) can be applied to help priortize features across
-different simulations.
+Optional: PyMOL Installation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-3. Data Selection and Matrix Construction
-"""""""""""""""""""""""""""""""""""""""""
+PyMOL is not included in the standard installation to avoid compatibility issues due
+to its complex system-level dependencies. If you need PyMOL for 3D structure visualization,
+install it separately:
 
-User can select specific subsets of data based on frames, clusters or tags to further narrow down.
+.. code-block:: bash
 
-The target data from data selection or feature selection is organized into a final datamatrix. The rows
-represent frames and the columns represent features.
+   make install-pymol
 
-4. Comparison
-"""""""""""""
+**Note:** For system-specific installation instructions, please refer to the
+`official PyMOL documentation <https://www.pymol.org/>`_. Alternatively,
+you can install PyMOL independently and load mdxplain's generated PyMOL scripts manually.
 
-mdxplain supports the systematic comparison of different datasets, such as mutated vs wildtype proteins.
 
-5. Explainability Through Feature Importance
-""""""""""""""""""""""""""""""""""""""""""""
+Workflow Example
+----------------
 
-At the core of mdxplain is its use of feature importance analysis to identify which molecular
-feature-combination serves as system-specific "fingeprint". Decision-tree-like visualization highlight
-the features that best separate sytems, reframing the question from "what happened?" to "**why** did it
-happen?".
+This example demonstrates a complete analysis pipeline from trajectory loading to
+interpretable results.
 
-Data Output
-^^^^^^^^^^^
+Setup and Data Loading
+^^^^^^^^^^^^^^^^^^^^^^
 
-mdxplain provide comprehensive output options:
+.. code-block:: python
 
-- Analysis Metrics
-- Data Exports
-- Visualizations
+   from mdxplain import PipelineManager
 
-    - Energy Landscapes
-    - 3D molecular Visualization
-    - Cluster Dynamics
+   # Initialize pipeline and load trajectory data
+   pipeline = PipelineManager(show_progress=False)
+   pipeline.trajectory.load_trajectories(data_input="data/2RJY")
+   pipeline.trajectory.add_labels(traj_selection="all")
 
-- Decision Trees
+Feature Extraction and Selection
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Core Strengths
---------------
+Extract molecular features and create a custom feature subset.
 
-- **Automated conformational analysis** with interpretable feature importance
-- **Memory-efficient processing** for trajectories exceeding available RAM
-- **Multi-trajectory comparison workflows** with tag-based organization
-- **Complete pipeline persistence** for reproducible science
-- **Decision tree explainability** for understanding state-defining features
+.. code-block:: python
+
+   # Add distance and contact features
+   pipeline.feature.add.distances()
+   pipeline.feature.add.contacts(cutoff=4.5)
+
+   # Create and configure feature selector
+   pipeline.feature_selector.create("contacts_only")
+   pipeline.feature_selector.add.contacts("contacts_only", "all")
+   pipeline.feature_selector.select("contacts_only")
+
+Dimensionality Reduction and Clustering
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Reduce feature space and identify conformational states.
+
+.. code-block:: python
+
+   # Apply Contact Kernel PCA
+   pipeline.decomposition.add.contact_kernel_pca(
+      n_components=4,
+      selection_name="contacts_only", 
+      decomposition_name="ContactKernelPCA",
+   )
+
+   # Cluster using Density Peak Algorithm
+   pipeline.clustering.add.dpa(
+      "ContactKernelPCA", 
+      Z=2.5,
+      cluster_name="DPA_ContactKPC"
+   )
+
+Feature Importance Analysis
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Identify which molecular features distinguish conformational states.
+
+.. code-block:: python
+
+   # Setup comparison groups from clusters
+   pipeline.data_selector.create_from_clusters(
+      group_name="cluster",
+      clustering_name="DPA_ContactKPC"
+   )
+
+   # Create one-vs-rest comparison
+   pipeline.comparison.create_comparison(
+      name="cluster_comparison", 
+      mode="one_vs_rest", 
+      feature_selector="contacts_only", 
+      data_selector_groups="cluster"
+   )
+
+   # Add decision tree for interpretability
+   pipeline.feature_importance.add.decision_tree(
+      comparison_name="cluster_comparison",
+      analysis_name="feature_importance"
+   )
+
+Visualization
+^^^^^^^^^^^^^
+
+.. code-block:: python
+
+   # Cluster membership visualization
+   fig = pipeline.plots.clustering.membership(clustering_name="DPA_ContactKPC")
+
+   # Free energy landscape
+   fig = pipeline.plots.landscape(
+      decomposition_name="ContactKernelPCA",
+      dimensions=[0, 1]
+   )
+
+   # Decision tree visualization
+   fig = pipeline.plots.feature_importance.decision_trees(
+      feature_importance_name="feature_importance",
+      short_layout=True
+   )
+
+   # Feature distribution comparison
+   fig = pipeline.plots.feature_importance.violins(
+      feature_importance_name="feature_importance"
+   )
+
+   # Time-resolved feature importance
+   fig = pipeline.plots.feature_importance.time_series(
+      feature_importance_name="feature_importance",
+      membership_per_feature=True,
+      clustering_name="DPA_ContactKPC"
+   )
+
+3D Visualization with PyMOL or NGLView
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: python
+
+   pipeline.structure_visualization.feature_importance.create_pdb_with_beta_factors(
+      structure_viz_name="structure_viz",
+      feature_importance_name="feature_importance",
+   )
+   # Create PyMOL script and call pymol structure_viz.pml
+   pipeline.structure_visualization.feature_importance.create_pymol_script(
+      structure_viz_name="structure_viz"
+   )
+   # Or use nglview in Jupyter notebooks
+   ui, view = pipeline.structure_visualization.feature_importance.visualize_nglview_jupyter(
+      structure_viz_name="structure_viz",
+   )

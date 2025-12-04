@@ -107,7 +107,8 @@ Project Structure
     ├── dev_scripts/                   # Development scripts
     │
     ├── Makefile                       # Build and development automation
+    ├── readthedocs.yaml               # ReadTheDocs configuration
     ├── pyproject.toml                 # Package configuration
-    ├── README.md                      # This file
+    ├── README.md                      # Project overview and setup
     ├── AI_USAGE.md                    # AI assistance declaration
     └── LICENSE                        # LGPL v3.0

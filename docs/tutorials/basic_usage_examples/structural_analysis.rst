@@ -1,6 +1,9 @@
 Structural Analysis
 ===================
 
+.. todo: should be shortened;
+    add instructions on how to access data as a dictionary.
+
 Structural metrics provide quantitative measures of protein dynamics and conformational
 changes. mdxplain offers multiple RMSD/RMSF variants optimized for different analysis
 scenarios.
