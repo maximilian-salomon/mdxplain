@@ -1,6 +1,8 @@
 Selection MemMap Helper
 =======================
 
+GitHub Link to `Code <https://github.com/maximilian-salomon/mdxplain/blob/main/mdxplain/pipeline/helper/selection_memmap_helper.py>`_.
+
 .. automodule:: mdxplain.pipeline.helper.selection_memmap_helper
    :members:
    :special-members: __init__

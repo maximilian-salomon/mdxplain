@@ -1,6 +1,8 @@
 Violin Helper
 =============
 
+GitHub Link to `Code <https://github.com/maximilian-salomon/mdxplain/blob/main/mdxplain/plots/plot_type/violin/helper.py>`_.
+
 .. automodule:: mdxplain.plots.plot_type.violin.helper
 
 Violin Data Preparer
