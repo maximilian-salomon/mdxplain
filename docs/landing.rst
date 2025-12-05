@@ -8,6 +8,8 @@ processing large datasets while delivering understandable results through machin
 It combines modular workflows with memory-efficient processing and decision trees to identify key
 conformational features and streamline complex analytical pipelines.
 
+You can check and download the code on https://github.com/maximilian-salomon/mdxplain.
+
 .. image:: images/mdxplain_graphical_abstract.png
    :width: 4961px
    :height: 3391px

@@ -50,7 +50,47 @@ def prepare_notebooks():
         
         # Copy the notebook
         shutil.copy2(notebook, target_file)
-    
+
+    # Copy images directory if it exists
+    source_images_dir = source_dir / "images"
+    target_images_dir = target_dir / "images"
+
+    if source_images_dir.exists() and source_images_dir.is_dir():
+        # Ensure target images directory exists
+        target_images_dir.mkdir(parents=True, exist_ok=True)
+
+        # Find all image files
+        image_extensions = ['*.png', '*.jpg', '*.jpeg', '*.svg', '*.gif']
+        image_files = []
+        for ext in image_extensions:
+            image_files.extend(source_images_dir.glob(ext))
+
+        if image_files:
+            print(f"\nCopying {len(image_files)} image(s)...")
+            for image_file in image_files:
+                target_file = target_images_dir / image_file.name
+
+                if target_file.exists():
+                    print(f"  Replacing existing: {image_file.name}")
+                    target_file.unlink()
+                else:
+                    print(f"  Copying: {image_file.name}")
+
+                shutil.copy2(image_file, target_file)
+
+            # Cleanup: Remove images from target that no longer exist in source
+            source_image_names = {img.name for img in image_files}
+            existing_target_images = []
+            for ext in image_extensions:
+                existing_target_images.extend(target_images_dir.glob(ext))
+
+            for target_file in existing_target_images:
+                if target_file.name not in source_image_names:
+                    print(f"  Removing deleted image: {target_file.name}")
+                    target_file.unlink()
+        else:
+            print("\nNo images found in tutorials/images/")
+
     # Generate toctree entries (without .ipynb extension)
     toctree_entries = "\n".join(f"   notebooks/{nb.stem}" for nb in notebooks)
     

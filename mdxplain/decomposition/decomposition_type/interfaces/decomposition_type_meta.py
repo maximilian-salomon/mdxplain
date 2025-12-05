@@ -52,7 +52,11 @@ class DecompositionTypeMeta(ABCMeta):
         str
             String representation of the decomposition type class
         """
-        return cls.get_type_name()
+        type_name = cls.get_type_name()
+        if type_name is None:
+            # Fallback for abstract classes where get_type_name() returns None
+            return cls.__name__
+        return type_name
 
     def __str__(cls):
         """
@@ -68,7 +72,11 @@ class DecompositionTypeMeta(ABCMeta):
         str
             String representation of the decomposition type class
         """
-        return cls.get_type_name()
+        type_name = cls.get_type_name()
+        if type_name is None:
+            # Fallback for abstract classes where get_type_name() returns None
+            return cls.__name__
+        return type_name
 
     def __hash__(cls):
         """
