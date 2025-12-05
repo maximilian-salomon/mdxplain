@@ -1,6 +1,8 @@
 DSSP Encoding Helper
 ====================
 
+GitHub Link to `Code <https://github.com/maximilian-salomon/mdxplain/blob/main/mdxplain/feature/feature_type/dssp/helper/dssp_encoding_helper.py>`_.
+
 .. automodule:: mdxplain.feature.feature_type.dssp.helper.dssp_encoding_helper
    :members:
    :special-members: __init__
