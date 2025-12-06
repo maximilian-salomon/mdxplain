@@ -34,3 +34,29 @@
 .sig-param {
     display: inline-block;
 }
+
+/* Hide <no-title> link and separator in breadcrumbs */
+.wy-breadcrumbs li a[href$="_root_toctree.html"] {
+    display: none !important;
+}
+
+/* Hide the separator (») before the hidden breadcrumb */
+.wy-breadcrumbs li a[href$="_root_toctree.html"] + .icon-home {
+    display: none !important;
+}
+
+/* If _root_toctree is in a list item, hide the whole item including separator */
+.wy-breadcrumbs li:has(> a[href$="_root_toctree.html"]) {
+    display: none !important;
+}
+
+/* Hide navigation arrows at the bottom of pages */
+.rst-footer-buttons {
+    display: none !important;
+}
+
+/* Alternative if the above doesn't work */
+footer[role="contentinfo"] .rst-footer-buttons,
+.footer-relations {
+    display: none !important;
+}
