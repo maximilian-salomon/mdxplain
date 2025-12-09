@@ -116,6 +116,9 @@ class CalculatorComputeHelper:
             data, mask, use_memmap, output_path, chunk_size
         )
 
+        # Calculate kept indices for reduction mapping
+        kept_indices = np.where(mask.flatten())[0]
+
         return {
             "indices": np.where(mask),
             "values": metric_values[mask],
@@ -126,6 +129,7 @@ class CalculatorComputeHelper:
             "total_pairs": mask.size,
             "threshold_min": threshold_min,
             "threshold_max": threshold_max,
+            "kept_indices": kept_indices,
         }
 
     @staticmethod

@@ -30,12 +30,15 @@ continuous value visualization.
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Tuple, Optional
+import numpy as np
 
 if TYPE_CHECKING:
     from ...pipeline.entities.pipeline_data import PipelineData
+    from ...feature_selection.entities.feature_selector_data import FeatureSelectorData
 
 from ...feature_selection.manager.feature_selector_manager import FeatureSelectorManager
 from ...utils.output_utils import OutputUtils
+from ...feature_selection.helper.reduction_index_mapper import ReductionIndexMapper
 
 
 class ContactToDistancesConverter:
@@ -67,7 +70,7 @@ class ContactToDistancesConverter:
     def convert_contacts_to_distances(
         pipeline_data: PipelineData,
         feature_selector_name: str
-    ) -> Tuple[str, bool]:
+    ) -> Tuple[str, bool, Optional[float]]:
         """
         Ensure feature selector uses continuous distance features.
 
@@ -167,6 +170,11 @@ class ContactToDistancesConverter:
             reference_traj = selector_data.reference_trajectory
             manager.select(pipeline_data, new_selector_name, reference_traj=reference_traj)
 
+            # Apply index mapping if needed (contacts reduced but distances not)
+            ContactToDistancesConverter._apply_index_mapping_if_needed(
+                pipeline_data, new_selector_name, feature_selector_name
+            )
+
         # Extract contact cutoff for threshold visualization
         contact_cutoff = ContactToDistancesConverter._extract_contact_cutoff(
             pipeline_data
@@ -177,10 +185,10 @@ class ContactToDistancesConverter:
 
     @staticmethod
     def _copy_selections_to_new_selector(
-        pipeline_data,
-        selector_data,
+        pipeline_data: PipelineData,
+        selector_data: FeatureSelectorData,
         new_selector_name: str,
-        manager
+        manager: FeatureSelectorManager
     ) -> None:
         """
         Copy selections from original selector to new selector.
@@ -189,7 +197,7 @@ class ContactToDistancesConverter:
         ----------
         pipeline_data : PipelineData
             Pipeline data container
-        selector_data : SelectedFeatureData
+        selector_data : FeatureSelectorData
             Original selector data
         new_selector_name : str
             Name of new selector
@@ -207,16 +215,158 @@ class ContactToDistancesConverter:
 
             # Copy all selections for this feature
             for selection_dict in selections_list:
+                # ALWAYS use_reduced=False when converting between feature types
+                # Reason: Target may have different reduction than source
+                # Solution: Use original data with index mapping from source.kept_indices
                 manager.add_selection(
                     pipeline_data,
                     new_selector_name,
                     target_feature_key,
                     selection_dict["selection"],
-                    use_reduced=selection_dict["use_reduced"],
+                    use_reduced=False,
                     common_denominator=selection_dict.get("common_denominator", True),
                     traj_selection=selection_dict.get("traj_selection", "all"),
                     require_all_partners=selection_dict.get("require_all_partners", False)
                 )
+
+    @staticmethod
+    def _apply_index_mapping_if_needed(
+        pipeline_data: PipelineData,
+        new_selector_name: str,
+        source_selector_name: str
+    ) -> None:
+        """
+        Apply index mapping when source is reduced but target is not.
+
+        When contacts are reduced but distances are not, this maps
+        the reduced contact indices back to original indices for distances,
+        ensuring consistent atom pair selection across feature types.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data container
+        new_selector_name : str
+            Name of new distances selector
+        source_selector_name : str
+            Name of original contacts selector
+
+        Returns
+        -------
+        None
+            Modifies selection_results in place if mapping needed
+
+        Examples
+        --------
+        >>> # After creating distances selector from reduced contacts
+        >>> ContactToDistancesConverter._apply_index_mapping_if_needed(
+        ...     pipeline_data, "contacts_distances", "contacts"
+        ... )
+        >>> # Distances indices now mapped to original space
+
+        Notes
+        -----
+        Mapping logic:
+
+        - Check if source (contacts) was reduced
+        - If target (distances) not using reduced data
+        - Map: reduced indices => original indices via kept_indices
+        - Update selection_results with mapped indices
+
+        This ensures the same atom pairs are selected for both features,
+        even when only one has been reduced.
+        """
+        source_data = pipeline_data.selected_feature_data[source_selector_name]
+        target_data = pipeline_data.selected_feature_data[new_selector_name]
+
+        # Check if mapping needed for contacts=>distances conversion
+        if "contacts" not in source_data.selections:
+            return
+
+        if "distances" not in target_data.selections:
+            return
+
+        # Get selection results
+        contacts_results = source_data.selection_results.get("contacts", {})
+        contacts_traj_results = contacts_results.get("trajectory_indices", {})
+
+        distances_results = target_data.selection_results.get("distances", {})
+        traj_indices_dict = distances_results.get("trajectory_indices", {})
+
+        # For each trajectory, apply mapping if source was reduced
+        for traj_idx, traj_data in traj_indices_dict.items():
+            # Check if source (contacts) was reduced
+            kept_indices = ReductionIndexMapper.get_kept_indices(
+                pipeline_data, "contacts", traj_idx
+            )
+
+            # Use the contact selection (reduced space) as source for mapping
+            source_traj_data = contacts_traj_results.get(traj_idx, {})
+            reduced_indices = np.array(source_traj_data.get("indices", []), dtype=int)
+
+            # Skip if nothing was selected for this trajectory
+            if reduced_indices.size == 0:
+                continue
+
+            # If contacts were feature-reduced, map to original indices
+            if kept_indices is not None:
+                if reduced_indices.max(initial=-1) >= len(kept_indices):
+                    raise ValueError(
+                        "Contact index mapping failed: reduced indices exceed kept_indices length. "
+                        "Ensure contacts were reduced before converting to distances."
+                    )
+
+                original_indices = ReductionIndexMapper.map_reduced_to_original(
+                    reduced_indices, kept_indices
+                )
+            else:
+                # No feature-level reduction: contacts indices already refer to original space
+                original_indices = reduced_indices
+
+            # Update selection results with mapped indices
+            traj_data["indices"] = original_indices.tolist()
+            # Distances are always taken from original data after mapping
+            traj_data["use_reduced"] = [False] * len(traj_data["indices"])
+
+        # Recompute total column count after mapping
+        ContactToDistancesConverter._update_selector_column_count(target_data)
+
+    @staticmethod
+    def _update_selector_column_count(selector_data: FeatureSelectorData) -> None:
+        """
+        Recalculate total column count for a selector after index updates.
+
+        Parameters
+        ----------
+        selector_data : FeatureSelectorData
+            Selector whose column count should be updated.
+
+        Returns
+        -------
+        None
+            Updates n_columns in place to reflect current selection results.
+        """
+        total_columns = 0
+
+        for feature_type, selection_info in selector_data.selection_results.items():
+            trajectory_indices = selection_info.get("trajectory_indices", {})
+            if not trajectory_indices:
+                continue
+
+            counts = [len(data.get("indices", [])) for data in trajectory_indices.values()]
+            if not counts:
+                continue
+
+            first = counts[0]
+            if any(count != first for count in counts):
+                raise ValueError(
+                    f"Feature '{feature_type}' has inconsistent column counts across trajectories "
+                    f"after index mapping."
+                )
+
+            total_columns += first
+
+        selector_data.set_n_columns(total_columns)
 
     @staticmethod
     def _extract_contact_cutoff(pipeline_data: PipelineData) -> Optional[float]:

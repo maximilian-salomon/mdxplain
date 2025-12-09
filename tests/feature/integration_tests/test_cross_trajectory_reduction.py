@@ -96,7 +96,8 @@ class MockFeatureData:
                 "dynamic_data": dynamic_data,
                 "feature_names": np.array(feature_names),
                 "n_dynamic": len(indices),
-                "total_pairs": len(metric_values)
+                "total_pairs": len(metric_values),
+                "kept_indices": indices
             }
 
         mock_calculator.compute_dynamic_values = mock_compute_dynamic_values
