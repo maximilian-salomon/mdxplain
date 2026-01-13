@@ -28,6 +28,7 @@ import os
 import pickle
 import tempfile
 import time
+import shutil
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
@@ -524,11 +525,15 @@ class ZarrCacheHelper:
         if cache_path is None:
             cache_path = self.get_cache_path(trajectory_file)
         
-        if self.cache_exists(cache_path):
-            print(f"📁 Using existing cache: {cache_path}")
-            metadata = self.load_cache_metadata(cache_path)
-        else:
-            metadata = self.create_cache(trajectory_file, topology_file, cache_path)
+        # Always delete existing cache to fulfill user requirement for fresh initialization
+        if os.path.exists(cache_path):
+            print(f"Deleting existing Zarr cache at: {cache_path}")
+            if os.path.isdir(cache_path):
+                shutil.rmtree(cache_path)
+            else:
+                os.remove(cache_path)
+        
+        metadata = self.create_cache(trajectory_file, topology_file, cache_path)
         
         return cache_path, metadata
     

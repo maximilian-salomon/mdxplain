@@ -26,6 +26,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union, TYPE_CHECKING
 import numpy as np
 import os
 import mdtraj as md
+import inspect
 
 if TYPE_CHECKING:
     from ...pipeline.entities.pipeline_data import PipelineData
@@ -388,6 +389,7 @@ class TrajectoryManager:
         cut: Optional[int] = None,
         data_selector: Optional[str] = None,
         force: bool = False,
+        inplace: bool = True,
     ) -> None:
         """
         Slice trajectories using frame ranges, stride, OR DataSelector.
@@ -441,11 +443,14 @@ class TrajectoryManager:
         force : bool, default=False
             Whether to force slicing even when features have been calculated. When True,
             existing features become invalid and should be recalculated.
+        inplace : bool, default=True
+            Whether to perform the operation in-place. For DaskMDTrajectory,
+            slicing returns a lazy view which is updated in the pipeline.
 
         Returns
         -------
         None
-            Modifies trajectories in-place
+            Modifies trajectories and updates pipeline_data.
 
         Examples
         --------
@@ -453,25 +458,6 @@ class TrajectoryManager:
         >>> traj_manager = TrajectoryManager()
         >>> traj_manager.load_trajectories(pipeline_data, '../data')
         >>> traj_manager.slice_traj(pipeline_data, traj_selection="all", frames=1000)
-
-        >>> # Slice specific frames with stride for specific trajectories by index
-        >>> traj_manager.slice_traj(pipeline_data, traj_selection=[0, 2, 4], frames=500, stride=5)
-
-        >>> # Use slice object for precise frame ranges
-        >>> traj_manager.slice_traj(pipeline_data, traj_selection="all", frames=slice(100, 500), stride=2)
-
-        >>> # Select specific frame indices by name selection
-        >>> traj_manager.slice_traj(
-        ...     pipeline_data,
-        ...     traj_selection=['system1_prot_traj1', 'system2_prot_traj2'],
-        ...     frames=[0, 10, 20, 50, 100]
-        ... )
-
-        >>> # Cut trajectory after 1000 frames with stride
-        >>> traj_manager.slice_traj(pipeline_data, traj_selection="all", cut=1000, stride=2)
-
-        >>> # Use DataSelector to slice trajectories to folded frames only
-        >>> traj_manager.slice_traj(pipeline_data, traj_selection="all", data_selector="folded_frames")
 
         Raises
         ------
@@ -493,7 +479,7 @@ class TrajectoryManager:
         
         # Apply slicing using unified helper method
         TrajectoryProcessHelper.apply_slicing(
-            pipeline_data, indices_to_process, frames, data_selector, stride, cut
+            pipeline_data, indices_to_process, frames, data_selector, stride, cut, inplace=inplace
         )
         
     
@@ -503,6 +489,7 @@ class TrajectoryManager:
         selection: str,
         traj_selection: Union[int, str, List[Union[int, str]], "all"],
         force: bool = False,
+        inplace: bool = True,
     ) -> None:
         """
         Apply atom selection to trajectories using MDTraj selection syntax.
@@ -539,11 +526,15 @@ class TrajectoryManager:
         force : bool, default=False
             Whether to force atom selection even when features have been calculated. When True,
             existing features become invalid and should be recalculated.
+        inplace : bool, default=True
+            Whether to perform the operation in-place. If True, overwrites the 
+            original Zarr cache (for DaskMDTrajectory). If False, creates a 
+            new permanent Zarr file.
 
         Returns
         -------
         None
-            Applies atom selection to trajectories in-place
+            Applies atom selection to trajectories and updates pipeline_data
 
         Examples
         --------
@@ -593,8 +584,10 @@ class TrajectoryManager:
                 for atom_idx in atom_indices
             ])
 
-            # Apply atom slice to trajectory
-            selected_traj = traj.atom_slice(atom_indices)
+            # Apply atom selection to trajectory
+            selected_traj = self._call_traj_method(
+                traj, "atom_slice", atom_indices=atom_indices, inplace=inplace
+            )
 
             # Update trajectory
             pipeline_data.trajectory_data.trajectories[idx] = selected_traj
@@ -1126,6 +1119,45 @@ class TrajectoryManager:
         """
         pipeline_data.trajectory_data.reset()
 
+    def _call_traj_method(
+        self, trajectory: Union[DaskMDTrajectory, md.Trajectory], method_name: str, **kwargs
+    ) -> Union[DaskMDTrajectory, md.Trajectory]:
+        """
+        Execute a trajectory method safely, handling 'inplace' parameter differences.
+
+        Parameters
+        ----------
+        trajectory : DaskMDTrajectory or md.Trajectory
+            Trajectory object to operate on
+        method_name : str
+            Name of method to call
+        **kwargs :
+            Arguments for the method, including 'inplace'
+
+        Returns
+        -------
+        Union[DaskMDTrajectory, md.Trajectory]
+            The resulting trajectory object
+        """
+        inplace = kwargs.pop("inplace", True)
+
+        # Force a copy for md.Trajectory if not inplace and method is usually inplace
+        # or if we want to ensure isolation
+        if not inplace and not isinstance(trajectory, DaskMDTrajectory):
+            trajectory = trajectory.slice(range(trajectory.n_frames))
+
+        method = getattr(trajectory, method_name)
+        sig = inspect.signature(method)
+
+        # Pass 'inplace' only if supported by the method
+        if "inplace" in sig.parameters:
+            result = method(inplace=inplace, **kwargs)
+        else:
+            result = method(**kwargs)
+
+        # Return result if provided, else return the modified trajectory
+        return result if result is not None else trajectory
+
     def _prepare_parameters(
         self,
         selection: Optional[str] = None,
@@ -1342,14 +1374,14 @@ class TrajectoryManager:
         reference_traj: int = 0,
         reference_frame: int = 0,
         atom_selection: str = "backbone",
+        inplace: bool = True,
     ) -> None:
         """
-        Superpose selected trajectories to a reference frame (always in-place).
+        Superpose selected trajectories to a reference frame.
 
         This method aligns all frames of selected trajectories to a specific reference
-        frame using MDTraj's superpose functionality. The operation is performed
-        in-place, modifying the original trajectories. For memory-mapped trajectories,
-        the alignment is performed chunk-wise to manage memory usage efficiently.
+        frame using MDTraj's superpose functionality. By default, the operation is
+        performed in-place, overwriting the original Zarr cache for DaskMDTrajectory.
 
         Warning
         -------
@@ -1386,11 +1418,15 @@ class TrajectoryManager:
             MDTraj selection string for atoms to use in alignment calculation.
             Common selections: "backbone", "name CA", "protein", "resid 10 to 50"
             See: https://mdtraj.org/1.9.4/atom_selection.html
+        inplace : bool, default=True
+            Whether to perform the operation in-place. If True, overwrites the 
+            original Zarr cache (for DaskMDTrajectory). If False, creates a 
+            new permanent Zarr file.
 
         Returns
         -------
         None
-            Modifies trajectories in-place. No return value.
+            Modifies trajectories and updates pipeline_data.
 
         Examples
         --------
@@ -1405,23 +1441,9 @@ class TrajectoryManager:
         ...     atom_selection="name CA"
         ... )
 
-        Selective alignment:
-        >>> pipeline.trajectory.superpose(
-        ...     traj_selection=[0, 1, 3],
-        ...     atom_selection="backbone and resid 50:150"
-        ... )
-
-        Tag-based selection:
-        >>> pipeline.trajectory.superpose(
-        ...     traj_selection="tag:wild_type",
-        ...     reference_traj=0,
-        ...     reference_frame=0
-        ... )
-
         Notes
         -----
         - Dask trajectories (use_memmap=True) handle memory management automatically
-        - The reference trajectory itself is also aligned to the reference frame
         - All trajectories must have compatible topology for alignment
         - Large trajectories may take significant time to align
 
@@ -1460,8 +1482,13 @@ class TrajectoryManager:
                 raise ValueError(f"Atom count mismatch: trajectory {idx} has {len(traj_atom_indices)} atoms "
                                 f"but reference has {len(ref_atom_indices)} atoms for selection '{atom_selection}'")
 
-            # Standard in-memory trajectory: direct alignment
-            trajectory.superpose(reference=ref_frame, atom_indices=traj_atom_indices)
+            # Perform alignment
+            result = self._call_traj_method(
+                trajectory, "superpose", reference=ref_frame, atom_indices=traj_atom_indices, inplace=inplace
+            )
+            
+            # Update trajectory in pipeline data
+            pipeline_data.trajectory_data.trajectories[idx] = result
 
             print(f"    ✓ Trajectory {idx} aligned successfully")
 
@@ -1473,14 +1500,15 @@ class TrajectoryManager:
         traj_selection: Union[int, str, List[Union[int, str]], str],
         mass_weighted: bool = False,
         force: bool = False,
+        inplace: bool = True,
     ) -> None:
         """
-        Center trajectory coordinates at the origin (always in-place).
+        Center trajectory coordinates at the origin.
 
         This method centers all frames of selected trajectories at the origin using
-        either geometric centering (default) or mass-weighted centering. The operation
-        is performed in-place, modifying the original trajectories. For memory-mapped
-        trajectories, the centering is performed chunk-wise to manage memory efficiently.
+        either geometric centering (default) or mass-weighted centering. By default,
+        the operation is performed in-place, overwriting the original Zarr cache
+        for DaskMDTrajectory.
 
         Warning
         -------
@@ -1516,11 +1544,15 @@ class TrajectoryManager:
         force : bool, default=False
             Whether to force centering even when features have been calculated.
             When True, existing features become invalid and should be recalculated.
+        inplace : bool, default=True
+            Whether to perform the operation in-place. If True, overwrites the 
+            original Zarr cache (for DaskMDTrajectory). If False, creates a 
+            new permanent Zarr file.
 
         Returns
         -------
         None
-            Modifies trajectories in-place. No return value.
+            Modifies trajectories and updates pipeline_data.
 
         Examples
         --------
@@ -1530,18 +1562,6 @@ class TrajectoryManager:
         Mass-weighted centering:
         >>> pipeline.trajectory.center_coordinates(
         ...     traj_selection="all",
-        ...     mass_weighted=True
-        ... )
-
-        Center specific trajectories:
-        >>> pipeline.trajectory.center_coordinates(
-        ...     traj_selection=[0, 1, 2],
-        ...     mass_weighted=False
-        ... )
-
-        Tag-based selection:
-        >>> pipeline.trajectory.center_coordinates(
-        ...     traj_selection="tag:production",
         ...     mass_weighted=True
         ... )
 
@@ -1580,8 +1600,13 @@ class TrajectoryManager:
 
             print(f"  Centering trajectory {idx} ({trajectory.n_frames} frames)...")
 
-            # Apply centering (in-place for both DaskMDTrajectory and md.Trajectory)
-            trajectory.center_coordinates(mass_weighted=mass_weighted)
+            # Apply centering
+            result = self._call_traj_method(
+                trajectory, "center_coordinates", mass_weighted=mass_weighted, inplace=inplace
+            )
+            
+            # Update trajectory in pipeline data
+            pipeline_data.trajectory_data.trajectories[idx] = result
 
             print(f"    ✓ Trajectory {idx} centered successfully")
 
@@ -1597,14 +1622,14 @@ class TrajectoryManager:
         order: Optional[int] = None,
         atom_selection: Optional[str] = None,
         force: bool = False,
+        inplace: bool = True,
     ) -> None:
         """
-        Apply Savitzky-Golay smoothing filter to trajectory coordinates (always in-place).
+        Apply Savitzky-Golay smoothing filter to trajectory coordinates.
 
-        This method smooths trajectory coordinates using a Savitzky-Golay filter,
-        which fits successive sub-sets of adjacent data points with a low-degree
-        polynomial by linear least squares. The operation is performed in-place,
-        modifying the original trajectories. Smoothing can be applied to all atoms
+        This method smooths trajectory coordinates using a Savitzky-Golay filter.
+        By default, the operation is performed in-place, overwriting the original 
+        Zarr cache for DaskMDTrajectory. Smoothing can be applied to all atoms
         or a subset selected via atom_selection.
 
         Warning
@@ -1647,11 +1672,15 @@ class TrajectoryManager:
         force : bool, default=False
             Whether to force smoothing even when features have been calculated.
             When True, existing features become invalid and should be recalculated.
+        inplace : bool, default=True
+            Whether to perform the operation in-place. If True, overwrites the 
+            original Zarr cache (for DaskMDTrajectory). If False, creates a 
+            new permanent Zarr file.
 
         Returns
         -------
         None
-            Modifies trajectories in-place. No return value.
+            Modifies trajectories and updates pipeline_data.
 
         Examples
         --------
@@ -1663,20 +1692,6 @@ class TrajectoryManager:
         ...     traj_selection="all",
         ...     width=7,
         ...     order=3
-        ... )
-
-        Smooth only backbone atoms:
-        >>> pipeline.trajectory.smooth(
-        ...     traj_selection=[0, 1, 2],
-        ...     width=5,
-        ...     atom_selection="backbone"
-        ... )
-
-        Smooth CA atoms for specific trajectories:
-        >>> pipeline.trajectory.smooth(
-        ...     traj_selection="tag:production",
-        ...     width=3,
-        ...     atom_selection="name CA"
         ... )
 
         Notes
@@ -1728,10 +1743,13 @@ class TrajectoryManager:
                         f"Atom selection '{atom_selection}' produced no atoms for trajectory {idx}"
                     )
 
-            # Apply smoothing (in-place for both types)
-            trajectory.smooth(
-                width=width, order=order, atom_indices=atom_indices, inplace=True
+            # Apply smoothing
+            result = self._call_traj_method(
+                trajectory, "smooth", width=width, order=order, atom_indices=atom_indices, inplace=inplace
             )
+            
+            # Update trajectory in pipeline data
+            pipeline_data.trajectory_data.trajectories[idx] = result
 
             print(f"    ✓ Trajectory {idx} smoothed successfully")
 
@@ -1747,14 +1765,15 @@ class TrajectoryManager:
         other_molecules: Optional[np.ndarray] = None,
         make_whole: bool = True,
         force: bool = False,
+        inplace: bool = True,
     ) -> None:
         """
-        Apply periodic boundary condition imaging to molecules (always in-place).
+        Apply periodic boundary condition imaging to molecules.
 
         This method recenters molecules and wraps them into the primary unit cell
-        using MDTraj's image_molecules method. This is essential for visualizing
-        trajectories with periodic boundary conditions correctly. The operation
-        modifies coordinates but does not change the number of atoms or topology.
+        using MDTraj's image_molecules method. By default, the operation
+        is performed in-place, overwriting the original Zarr cache for 
+        DaskMDTrajectory.
 
         Warning
         -------
@@ -1796,22 +1815,20 @@ class TrajectoryManager:
         force : bool, default=False
             Whether to force imaging even when features have been calculated.
             When True, existing features become invalid and should be recalculated.
+        inplace : bool, default=True
+            Whether to perform the operation in-place. If True, overwrites the 
+            original Zarr cache (for DaskMDTrajectory). If False, creates a 
+            new permanent Zarr file.
 
         Returns
         -------
         None
-            Modifies trajectories in-place. No return value.
+            Modifies trajectories and updates pipeline_data.
 
         Examples
         --------
         Basic imaging (default parameters):
         >>> pipeline.trajectory.image_molecules(traj_selection="all")
-
-        Image without making molecules whole:
-        >>> pipeline.trajectory.image_molecules(
-        ...     traj_selection="all",
-        ...     make_whole=False
-        ... )
 
         Image with specific anchor molecules:
         >>> # Anchor protein (molecules 0-2), image solvent around it
@@ -1819,12 +1836,6 @@ class TrajectoryManager:
         >>> pipeline.trajectory.image_molecules(
         ...     traj_selection=[0, 1],
         ...     anchor_molecules=protein_molecules,
-        ...     make_whole=True
-        ... )
-
-        Tag-based selection:
-        >>> pipeline.trajectory.image_molecules(
-        ...     traj_selection="tag:production",
         ...     make_whole=True
         ... )
 
@@ -1866,13 +1877,18 @@ class TrajectoryManager:
 
             print(f"  Imaging trajectory {idx} ({trajectory.n_frames} frames)...")
 
-            # Apply imaging (in-place for both DaskMDTrajectory and md.Trajectory)
-            trajectory.image_molecules(
+            # Apply imaging
+            result = self._call_traj_method(
+                trajectory,
+                "image_molecules",
                 anchor_molecules=anchor_molecules,
                 other_molecules=other_molecules,
                 make_whole=make_whole,
-                inplace=True,
+                inplace=inplace,
             )
+            
+            # Update trajectory in pipeline data
+            pipeline_data.trajectory_data.trajectories[idx] = result
 
             print(f"    ✓ Trajectory {idx} imaged successfully")
 
@@ -1886,15 +1902,17 @@ class TrajectoryManager:
         traj_selection: Union[int, str, List[Union[int, str]], str],
         exclude: Optional[list] = None,
         force: bool = False,
+        inplace: bool = True,
     ) -> None:
         """
-        Remove solvent atoms from trajectories (always in-place).
+        Remove solvent atoms from trajectories.
 
         This method removes solvent atoms using MDTraj's remove_solvent method,
         which identifies and removes common solvent molecules (water, ions, etc.).
-        The operation modifies both coordinates AND topology, changing the number
-        of atoms in the trajectory. Labels are automatically adjusted to match the
-        new residue structure.
+        By default, the operation is performed in-place, overwriting the original 
+        Zarr cache for DaskMDTrajectory. The operation modifies both coordinates 
+        AND topology, changing the number of atoms in the trajectory. 
+        Labels are automatically adjusted to match the new residue structure.
 
         Warning
         -------
@@ -1930,11 +1948,15 @@ class TrajectoryManager:
         force : bool, default=False
             Whether to force removal even when features have been calculated.
             When True, existing features become invalid and should be recalculated.
+        inplace : bool, default=True
+            Whether to perform the operation in-place. If True, overwrites the 
+            original Zarr cache (for DaskMDTrajectory). If False, creates a 
+            new permanent Zarr file.
 
         Returns
         -------
         None
-            Modifies trajectories in-place. No return value.
+            Modifies trajectories and updates pipeline_data.
 
         Examples
         --------
@@ -1945,17 +1967,6 @@ class TrajectoryManager:
         >>> pipeline.trajectory.remove_solvent(
         ...     traj_selection="all",
         ...     exclude=['HOH', 'WAT']
-        ... )
-
-        Remove solvent from specific trajectories:
-        >>> pipeline.trajectory.remove_solvent(
-        ...     traj_selection=[0, 1, 2],
-        ...     exclude=None
-        ... )
-
-        Tag-based selection:
-        >>> pipeline.trajectory.remove_solvent(
-        ...     traj_selection="tag:production"
         ... )
 
         Notes
@@ -2014,22 +2025,27 @@ class TrajectoryManager:
             original_n_atoms = trajectory.n_atoms
             original_n_residues = trajectory.n_residues
 
-            # Apply solvent removal (Trajectory method decides what is solvent!)
-            trajectory.remove_solvent(exclude=exclude, inplace=True)
+            # Apply solvent removal
+            result = self._call_traj_method(
+                trajectory, "remove_solvent", exclude=exclude, inplace=inplace
+            )
+            
+            # Update trajectory in pipeline data
+            pipeline_data.trajectory_data.trajectories[idx] = result
 
             # AFTER removal: Map remaining residues back to their ORIGINAL indices
             # Helper handles the matching of residues by name + atom composition
             kept_residue_indices[idx] = LabelOperationHelper.map_residues_to_original_indices(
-                original_residue_info[idx], trajectory.topology
+                original_residue_info[idx], result.topology
             )
 
-            atoms_removed = original_n_atoms - trajectory.n_atoms
-            residues_removed = original_n_residues - trajectory.n_residues
+            atoms_removed = original_n_atoms - result.n_atoms
+            residues_removed = original_n_residues - result.n_residues
 
             print(
                 f"    ✓ Trajectory {idx} processed: "
-                f"{original_n_atoms} → {trajectory.n_atoms} atoms, "
-                f"{original_n_residues} → {trajectory.n_residues} residues "
+                f"{original_n_atoms} → {result.n_atoms} atoms, "
+                f"{original_n_residues} → {result.n_residues} residues "
                 f"({atoms_removed} atoms, {residues_removed} residues removed)"
             )
 

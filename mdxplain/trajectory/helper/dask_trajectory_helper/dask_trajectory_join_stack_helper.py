@@ -68,13 +68,15 @@ class DaskMDTrajectoryJoinStackHelper:
         """
         self.cache_dir = cache_dir
     
-    def join_trajectories(self, traj1: DaskMDTrajectory, traj2: DaskMDTrajectory, 
+    def join_trajectories(self, result_path: str, traj1: DaskMDTrajectory, traj2: DaskMDTrajectory, 
                          check_topology: bool = True) -> DaskMDTrajectory:
         """
         Combine trajectories along frame axis using memory-efficient approach.
         
         Parameters
         ----------
+        result_path : str
+            Path to store result Zarr
         traj1 : DaskMDTrajectory
             First trajectory (self)
         traj2 : DaskMDTrajectory
@@ -99,20 +101,16 @@ class DaskMDTrajectoryJoinStackHelper:
         >>> helper = DaskMDTrajectoryJoinStackHelper(cache_dir='./cache')
         >>> traj1 = DaskMDTrajectory('part1.xtc', 'topology.pdb')
         >>> traj2 = DaskMDTrajectory('part2.xtc', 'topology.pdb') 
-        >>> combined = helper.join_trajectories(traj1, traj2)
+        >>> combined = helper.join_trajectories('joined.zarr', traj1, traj2)
         >>> print(f"Combined trajectory: {combined.n_frames} frames")
         """
         if check_topology and traj1.n_atoms != traj2.n_atoms:
             raise ValueError("Trajectories have different number of atoms")
         
-        print(f"🔗 Joining trajectories: {traj1.n_frames} + {traj2.n_frames} = {traj1.n_frames + traj2.n_frames} frames")
+        print(f"Joining trajectories: {traj1.n_frames} + {traj2.n_frames} = {traj1.n_frames + traj2.n_frames} frames")
         
-        # Create secure temporary file for zarr store in cache directory
-        temp_fd, temp_path = tempfile.mkstemp(suffix='.zarr', prefix='dask_join_', dir=self.cache_dir)
-        os.close(temp_fd)  # Close file descriptor, we only need the path
-        os.unlink(temp_path)  # Remove the file, zarr will create directory
-        
-        temp_store = zarr.open(temp_path, mode='w')
+        # Create result zarr store
+        temp_store = zarr.open(result_path, mode='w')
         
         # Calculate final dimensions
         final_frames = traj1.n_frames + traj2.n_frames
@@ -143,12 +141,14 @@ class DaskMDTrajectoryJoinStackHelper:
         
         return result
     
-    def stack_trajectories(self, traj1: DaskMDTrajectory, traj2: DaskMDTrajectory) -> DaskMDTrajectory:
+    def stack_trajectories(self, result_path: str, traj1: DaskMDTrajectory, traj2: DaskMDTrajectory) -> DaskMDTrajectory:
         """
         Combine trajectories along atom axis using memory-efficient approach.
         
         Parameters
         ----------
+        result_path : str
+            Path to store result Zarr
         traj1 : DaskMDTrajectory
             First trajectory (self)
         traj2 : DaskMDTrajectory
@@ -171,20 +171,16 @@ class DaskMDTrajectoryJoinStackHelper:
         >>> helper = DaskMDTrajectoryJoinStackHelper(cache_dir='./cache')
         >>> protein = DaskMDTrajectory('protein.xtc', 'protein.pdb')
         >>> ligand = DaskMDTrajectory('ligand.xtc', 'ligand.pdb')
-        >>> complex_traj = helper.stack_trajectories(protein, ligand)
+        >>> complex_traj = helper.stack_trajectories('complex.zarr', protein, ligand)
         >>> print(f"Complex: {complex_traj.n_atoms} atoms")
         """
         if traj1.n_frames != traj2.n_frames:
             raise ValueError("Trajectories have different number of frames")
         
-        print(f"📚 Stacking trajectories: {traj1.n_atoms} + {traj2.n_atoms} = {traj1.n_atoms + traj2.n_atoms} atoms")
+        print(f"Stacking trajectories: {traj1.n_atoms} + {traj2.n_atoms} = {traj1.n_atoms + traj2.n_atoms} atoms")
         
-        # Create secure temporary file for zarr store in cache directory
-        temp_fd, temp_path = tempfile.mkstemp(suffix='.zarr', prefix='dask_stack_', dir=self.cache_dir)
-        os.close(temp_fd)  # Close file descriptor, we only need the path
-        os.unlink(temp_path)  # Remove the file, zarr will create directory
-        
-        temp_store = zarr.open(temp_path, mode='w')
+        # Create result zarr store
+        temp_store = zarr.open(result_path, mode='w')
         
         # Calculate final dimensions
         final_atoms = traj1.n_atoms + traj2.n_atoms
@@ -196,7 +192,7 @@ class DaskMDTrajectoryJoinStackHelper:
         self._stack_trajectories_chunked(temp_store, traj1, traj2)
         
         # Combine topologies (stack = combine atoms, join = combine frames)
-        combined_topology = traj1._topology.stack(traj2._topology)
+        combined_topology = traj1._topology.join(traj2._topology)
         
         # Copy metadata
         new_metadata = traj1.metadata.copy()

@@ -41,7 +41,8 @@ class TrajectoryProcessHelper:
         frames: Optional[Union[int, slice, List[int]]], 
         data_selector: Optional[str],
         stride: Optional[int],
-        cut: Optional[int]
+        cut: Optional[int],
+        inplace: bool = True
     ) -> None:
         """
         Apply slicing to trajectories using frames OR DataSelector.
@@ -60,21 +61,20 @@ class TrajectoryProcessHelper:
             Stride value for frame subsampling
         cut : int or None
             Frame number after which to cut trajectories
+        inplace : bool, default=True
+            Whether to perform operation in-place. Note: slicing always returns
+            a new trajectory object (view) which replaces the original in the pipeline.
         
         Returns
         -------
         None
-            Modifies trajectories in-place
+            Modifies trajectories and updates pipeline_data.
             
         Examples
         --------
         >>> # Using frames parameter
         >>> TrajectoryProcessHelper.apply_slicing(
         ...     pipeline_data, [0, 1, 2], frames=1000, data_selector=None, stride=2, cut=500
-        ... )
-        >>> # Using DataSelector
-        >>> TrajectoryProcessHelper.apply_slicing(
-        ...     pipeline_data, [0, 1], frames=None, data_selector="folded_frames", stride=2, cut=None
         ... )
         """
         # Get frames from DataSelector or use frames parameter
