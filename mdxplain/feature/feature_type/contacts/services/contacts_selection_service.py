@@ -94,6 +94,8 @@ class ContactsSelectionService(SelectionServiceBase):
         selector_name: str,
         selection: str = "all",
         use_reduced: bool = False,
+        #TODO: True is a bad idea I think
+        #TODO: Also this docstring can not be found at least in jupyter lab via official installation
         common_denominator: bool = True,
         traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all",
         require_all_partners: bool = False,
