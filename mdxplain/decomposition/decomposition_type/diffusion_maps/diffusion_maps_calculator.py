@@ -33,7 +33,6 @@ import numpy as np
 from mdxplain.utils.progress_utils import ProgressUtils
 from scipy.linalg import eig
 from scipy.sparse.linalg import LinearOperator, eigs
-from sklearn.cluster import MiniBatchKMeans
 
 from ..interfaces.calculator_base import CalculatorBase
 
@@ -445,6 +444,7 @@ class DiffusionMapsCalculator(CalculatorBase):
         # STEP 1: Select Landmarks
         # Fowlkes et al. (2004): "randomly chosen samples"
         # improvement: Use KMeans for better coverage instead of random
+        # TODO: Add here also random option, cause it is less accurate but much faster logically.
         landmark_idx = self._select_landmarks_kmeans(data, n_landmarks, random_state)
 
         # STEP 2: Compute Landmark Kernel Matrix A
@@ -818,80 +818,6 @@ class DiffusionMapsCalculator(CalculatorBase):
         rmsd_values = np.sqrt(np.mean(diff ** 2, axis=(1, 2)))
         
         return rmsd_values
-
-    def _select_landmarks_kmeans(self, data: np.ndarray, n_landmarks: int, random_state: Optional[int]) -> np.ndarray:
-        """
-        Select landmark frames using MiniBatchKMeans clustering (chunk-konform).
-
-        Parameters
-        ----------
-        data : numpy.ndarray
-            Input coordinate matrix (n_frames, n_features)
-        n_landmarks : int
-            Number of landmarks to select
-        random_state : int, optional
-            Random state for reproducible results
-
-        Returns
-        -------
-        numpy.ndarray
-            Array of landmark frame indices
-        """
-        n_frames = data.shape[0]
-        
-        # Initialize MiniBatchKMeans
-        kmeans = MiniBatchKMeans(
-            n_clusters=n_landmarks,
-            batch_size=min(self.chunk_size, n_frames),
-            random_state=random_state,
-        )
-        
-        # Train MiniBatchKMeans chunk-wise
-        for chunk_start in ProgressUtils.iterate(
-            range(0, n_frames, self.chunk_size),
-            desc="Training MiniBatch KMeans",
-            unit="chunks",
-        ):
-            chunk_end = min(chunk_start + self.chunk_size, n_frames)
-            chunk_coords = data[chunk_start:chunk_end]
-            kmeans.partial_fit(chunk_coords)
-        
-        # Find frames closest to cluster centers - also chunk-wise!
-        landmarks = []
-        for center in kmeans.cluster_centers_:
-            min_dist = float('inf')
-            closest_frame = -1
-            
-            # Search chunk-wise for closest frame
-            for chunk_start in ProgressUtils.iterate(
-                range(0, n_frames, self.chunk_size),
-                desc="Finding landmarks",
-                unit="chunks",
-                leave=False,
-            ):
-                chunk_end = min(chunk_start + self.chunk_size, n_frames)
-                chunk_coords = data[chunk_start:chunk_end]
-                
-                # Euclidean distances to this center
-                distances = np.sum((chunk_coords - center)**2, axis=1)
-                chunk_min_idx = np.argmin(distances)
-                chunk_min_dist = distances[chunk_min_idx]
-                
-                if chunk_min_dist < min_dist:
-                    min_dist = chunk_min_dist
-                    closest_frame = chunk_start + chunk_min_idx
-            
-            if closest_frame not in landmarks and closest_frame != -1:
-                landmarks.append(closest_frame)
-        
-        # Fill remaining if needed
-        rng = np.random.RandomState(random_state)
-        while len(landmarks) < n_landmarks:
-            frame = rng.randint(n_frames)
-            if frame not in landmarks:
-                landmarks.append(frame)
-        
-        return np.array(landmarks[:n_landmarks])
 
     def _compute_landmarks_kernel(self, data: np.ndarray, landmark_idx: np.ndarray, 
                                  epsilon: float, n_atoms: int) -> np.ndarray:

@@ -278,7 +278,7 @@ def test_compute_calls_nystrom(mock_nystrom, calculator):
     mock_nystrom.assert_called_once()
 
 # 5. Test Nyström Method Steps
-@patch('sklearn.cluster.MiniBatchKMeans')
+@patch('mdxplain.decomposition.decomposition_type.interfaces.calculator_base.MiniBatchKMeans')
 def test_select_landmarks_kmeans(mock_kmeans_class, calculator):
     """
     Test landmark selection using MiniBatchKMeans.

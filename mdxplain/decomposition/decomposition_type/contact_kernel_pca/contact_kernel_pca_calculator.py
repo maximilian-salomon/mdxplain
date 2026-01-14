@@ -130,6 +130,10 @@ class ContactKernelPCACalculator(KernelPCACalculator):
                 Whether to use Nyström approximation (default: False)
             - n_landmarks : int, optional
                 Number of landmarks for Nyström approximation (default: 10000)
+            - landmark_selection : str, optional
+                Method for landmark selection in Nyström approximation (default: "kmeans")
+                - "kmeans": Use KMeans centroids as landmarks (better coverage)
+                - "random": Use random sampling from data
             - random_state : int, optional
                 Random state for reproducible results
 

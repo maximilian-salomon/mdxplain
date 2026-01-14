@@ -122,6 +122,10 @@ class KernelPCACalculator(CalculatorBase):
                 Whether to use Nyström approximation (default: False)
             - n_landmarks : int, optional
                 Number of landmarks for Nyström approximation (default: 10000)
+            - landmark_selection : str, optional
+                Method for landmark selection in Nyström approximation (default: "kmeans")
+                - "kmeans": Use KMeans centroids as landmarks (better coverage)
+                - "random": Use random sampling from data
             - random_state : int, optional
                 Random state for reproducible results
 
@@ -273,6 +277,7 @@ class KernelPCACalculator(CalculatorBase):
         gamma = kwargs.get("gamma", None)
         use_nystrom = kwargs.get("use_nystrom", False)
         n_landmarks = kwargs.get("n_landmarks", 10000)
+        landmark_selection = kwargs.get("landmark_selection", "kmeans")
         random_state = kwargs.get("random_state", None)
         offset = kwargs.get("offset", 0)
 
@@ -284,12 +289,16 @@ class KernelPCACalculator(CalculatorBase):
             data, use_nystrom, n_landmarks, n_components
         )
 
+        if use_nystrom and landmark_selection not in ["kmeans", "random"]:
+            raise ValueError(f"Invalid landmark_selection: '{landmark_selection}'. Must be 'kmeans' or 'random'.")
+
         return {
             "n_components": n_components,
             "kernel": "rbf",
             "gamma": gamma,
             "use_nystrom": use_nystrom,
             "n_landmarks": n_landmarks,
+            "landmark_selection": landmark_selection,
             "random_state": random_state,
             "auto_select": auto_select,
             "offset": offset,
@@ -785,35 +794,76 @@ class KernelPCACalculator(CalculatorBase):
         n_samples = data.shape[0]
         n_landmarks = hyperparameters["n_landmarks"]
         n_components = hyperparameters["n_components"]
+        landmark_selection = hyperparameters.get("landmark_selection", "kmeans")
 
-        # TODO: Maybe we should add here a KMeans based landmark selection.
-        nystroem = Nystroem(
-            kernel="rbf",
-            gamma=hyperparameters["gamma"],
-            n_components=n_landmarks,
-            random_state=hyperparameters["random_state"]
-        )
-        nystroem.fit(data)  # Only fit, don't transform yet
+        # Validate chunk size for IncrementalPCA
+        # IPCA requires batch_size >= n_components
+        processing_chunk_size = self.chunk_size
+        if processing_chunk_size < n_components:
+            print(f"Warning: chunk_size ({self.chunk_size}) is smaller than n_components ({n_components}). "
+                  f"Increasing chunk size to {n_components} for IncrementalPCA to function correctly. "
+                  f"This might increase memory usage.")
+            processing_chunk_size = n_components
+            # Ensure it's not larger than dataset
+            if processing_chunk_size > n_samples:
+                 raise ValueError(f"n_components ({n_components}) cannot be larger than n_samples ({n_samples})")
+
+        if landmark_selection == "kmeans":
+            # Use optimized chunk-wise MiniBatchKMeans from base class
+            # Returns indices of real data points closest to centroids
+            landmark_idx = self._select_landmarks_kmeans(
+                data, 
+                n_landmarks, 
+                hyperparameters["random_state"]
+            )
+            
+            # Sort indices for efficient memory access (especially for memmaps)
+            landmark_idx = np.sort(landmark_idx)
+            landmarks = data[landmark_idx].astype(np.float32, copy=False)
+            
+            nystroem = Nystroem(
+                kernel="rbf",
+                gamma=hyperparameters["gamma"],
+                n_components=n_landmarks,
+                random_state=hyperparameters["random_state"]
+            )
+            nystroem.fit(landmarks)
+
+        elif landmark_selection == "random":
+            rng = np.random.RandomState(hyperparameters["random_state"])
+            landmark_idx = rng.choice(n_samples, n_landmarks, replace=False)
+            landmark_idx = np.sort(landmark_idx)
+            landmarks = data[landmark_idx].astype(np.float32, copy=False)
+
+            nystroem = Nystroem(
+                kernel="rbf",
+                gamma=hyperparameters["gamma"],
+                n_components=n_landmarks,
+                random_state=hyperparameters["random_state"]
+            )
+            nystroem.fit(landmarks)
+        else:
+            raise ValueError("The parameter landmark_selection only knows 'random' or 'kmeans'.")
         
         # Step 2: IncrementalPCA for features (this is correct - PCA on features!)
         ipca = IncrementalPCA(
             n_components=n_components,
-            batch_size=self.chunk_size,
+            batch_size=processing_chunk_size,
             whiten=True,
             copy=False
         )
         
         # Step 3: Chunk-wise transform and partial_fit
         for start in ProgressUtils.iterate(
-            range(0, n_samples, self.chunk_size),
+            range(0, n_samples, processing_chunk_size),
             desc="Nystroem partial fitting",
             unit="chunks",
         ):
-            end = min(start + self.chunk_size, n_samples)
-            data_chunk = data[start:end]
+            end = min(start + processing_chunk_size, n_samples)
+            data_chunk = data[start:end].astype(np.float32, copy=False)
 
             # Transform chunk to Kernel-Features (n_landmarks dimensional)
-            kernel_features_chunk = nystroem.transform(data_chunk)
+            kernel_features_chunk = nystroem.transform(data_chunk).astype(np.float32, copy=False)
 
             # Partial fit PCA on features (not on kernel matrix!)
             ipca.partial_fit(kernel_features_chunk)
@@ -826,14 +876,14 @@ class KernelPCACalculator(CalculatorBase):
         )
 
         for start in ProgressUtils.iterate(
-            range(0, n_samples, self.chunk_size),
+            range(0, n_samples, processing_chunk_size),
             desc="Nystroem final transform",
             unit="chunks",
         ):
-            end = min(start + self.chunk_size, n_samples)
-            data_chunk = data[start:end]
+            end = min(start + processing_chunk_size, n_samples)
+            data_chunk = data[start:end].astype(np.float32, copy=False)
 
-            kernel_features_chunk = nystroem.transform(data_chunk)
+            kernel_features_chunk = nystroem.transform(data_chunk).astype(np.float32, copy=False)
             result[start:end] = ipca.transform(kernel_features_chunk)
 
         metadata = self._prepare_metadata(hyperparameters, data.shape)

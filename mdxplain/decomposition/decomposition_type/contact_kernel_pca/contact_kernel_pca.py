@@ -69,6 +69,7 @@ class ContactKernelPCA(DecompositionTypeBase):
         gamma: Union[float, str] = "scale",
         use_nystrom: bool = False,
         n_landmarks: int = 2000,
+        landmark_selection: str = "kmeans",
         random_state: Optional[int] = None,
         use_parallel: bool = False,
         n_jobs: int = -1,
@@ -97,6 +98,10 @@ class ContactKernelPCA(DecompositionTypeBase):
             Whether to use Nyström approximation for large datasets
         n_landmarks : int, default=2000
             Number of landmarks for Nyström approximation
+        landmark_selection : str, default="kmeans"
+            Method for landmark selection in Nyström approximation:
+            - "kmeans": Use KMeans centroids as landmarks (better coverage)
+            - "random": Use random sampling from data
         random_state : int, optional
             Random state for reproducible results
         use_parallel : bool, default=False
@@ -150,6 +155,7 @@ class ContactKernelPCA(DecompositionTypeBase):
         self.gamma = gamma
         self.use_nystrom = use_nystrom
         self.n_landmarks = n_landmarks
+        self.landmark_selection = landmark_selection
         self.random_state = random_state
         self.use_parallel = use_parallel
         self.n_jobs = n_jobs
@@ -269,6 +275,7 @@ class ContactKernelPCA(DecompositionTypeBase):
             gamma=self.gamma,
             use_nystrom=self.use_nystrom,
             n_landmarks=self.n_landmarks,
+            landmark_selection=self.landmark_selection,
             random_state=self.random_state,
             offset=self.offset,
         )

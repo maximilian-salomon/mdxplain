@@ -28,8 +28,10 @@ for consistency across different dimensionality reduction methods.
 from abc import ABC, abstractmethod
 from typing import Dict, Tuple, Any, Optional
 import numpy as np
+from sklearn.cluster import MiniBatchKMeans
 
 from ....utils.data_utils import DataUtils
+from ....utils.progress_utils import ProgressUtils
 
 
 class CalculatorBase(ABC):
@@ -221,3 +223,75 @@ class CalculatorBase(ABC):
             return np.memmap(memmap_path, dtype=dtype, mode='w+', shape=shape)
         else:
             return np.zeros(shape, dtype=dtype)
+
+    def _select_landmarks_kmeans(self, data: np.ndarray, n_landmarks: int, random_state: Optional[int]) -> np.ndarray:
+        """
+        Select landmark frames using MiniBatchKMeans clustering (chunk-konform).
+
+        Parameters
+        ----------
+        data : numpy.ndarray
+            Input coordinate matrix (n_frames, n_features)
+        n_landmarks : int
+            Number of landmarks to select
+        random_state : int, optional
+            Random state for reproducible results
+
+        Returns
+        -------
+        numpy.ndarray
+            Array of landmark frame indices
+        """
+        n_frames = data.shape[0]
+        
+        # Initialize MiniBatchKMeans
+        kmeans = MiniBatchKMeans(
+            n_clusters=n_landmarks,
+            batch_size=min(self.chunk_size, n_frames),
+            random_state=random_state,
+            n_init="auto",
+        )
+        
+        # Train MiniBatchKMeans chunk-wise
+        for start in ProgressUtils.iterate(
+            range(0, n_frames, self.chunk_size),
+            desc="Training MiniBatch KMeans",
+            unit="chunks",
+        ):
+            end = min(start + self.chunk_size, n_frames)
+            chunk = data[start:end].astype(np.float32, copy=False)
+            kmeans.partial_fit(chunk)
+        
+        # Find frames closest to cluster centers - single pass
+        centers = kmeans.cluster_centers_.astype(np.float32, copy=False)
+        best_dist = np.full(n_landmarks, np.inf, dtype=np.float64)
+        best_idx = np.full(n_landmarks, -1, dtype=np.int64)
+        
+        for start in ProgressUtils.iterate(range(0, n_frames, self.chunk_size), desc="Finding landmarks", unit="chunks"):
+            end = min(start + self.chunk_size, n_frames)
+            chunk = data[start:end].astype(np.float32, copy=False)
+            labels = kmeans.predict(chunk)
+            diff = chunk - centers[labels]
+            d2 = np.sum(diff * diff, axis=1)
+
+            for i, k in enumerate(labels):
+                if d2[i] < best_dist[k]:
+                    best_dist[k] = d2[i]
+                    best_idx[k]  = start + i
+
+        landmarks, seen = [], set()
+        for idx in best_idx:
+            val = int(idx)
+            if val != -1 and val not in seen:
+                landmarks.append(val)
+                seen.add(val)
+        
+        # Fill remaining if needed
+        rng = np.random.RandomState(random_state)
+        while len(landmarks) < n_landmarks:
+            frame = int(rng.randint(n_frames))
+            if frame not in seen:
+                landmarks.append(frame)
+                seen.add(frame)
+        
+        return np.array(landmarks[:n_landmarks])
