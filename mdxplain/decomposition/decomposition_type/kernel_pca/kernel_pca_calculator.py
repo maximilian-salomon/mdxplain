@@ -30,7 +30,6 @@ from typing import Any, Dict, Tuple, Union
 import numpy as np
 from joblib import Parallel, delayed
 from mdxplain.utils.progress_utils import ProgressUtils
-from scipy.linalg import eigh
 from scipy.sparse.linalg import LinearOperator, eigs
 from sklearn.decomposition import IncrementalPCA, KernelPCA
 from sklearn.kernel_approximation import Nystroem
@@ -347,7 +346,7 @@ class KernelPCACalculator(CalculatorBase):
             (n_components, auto_select)
         """
         auto_select = False
-
+        # TODO: Are 5% here a sensefull amount?
         if n_components == "auto":
             n_features = data.shape[1]
             n_components = max(5, min(100, int(n_features * 0.05)))
@@ -787,6 +786,7 @@ class KernelPCACalculator(CalculatorBase):
         n_landmarks = hyperparameters["n_landmarks"]
         n_components = hyperparameters["n_components"]
 
+        # TODO: Maybe we should add here a KMeans based landmark selection.
         nystroem = Nystroem(
             kernel="rbf",
             gamma=hyperparameters["gamma"],
