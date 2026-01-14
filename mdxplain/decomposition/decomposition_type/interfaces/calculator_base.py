@@ -253,14 +253,17 @@ class CalculatorBase(ABC):
         )
         
         # Train MiniBatchKMeans chunk-wise
-        for start in ProgressUtils.iterate(
-            range(0, n_frames, self.chunk_size),
-            desc="Training MiniBatch KMeans",
-            unit="chunks",
-        ):
-            end = min(start + self.chunk_size, n_frames)
-            chunk = data[start:end].astype(np.float32, copy=False)
-            kmeans.partial_fit(chunk)
+        # Ensure the first batch is large enough to initialize all centers (n_landmarks)
+        first_end = min(max(self.chunk_size, n_landmarks), n_frames)
+        if first_end > self.chunk_size:
+            print(f"Warning: Increasing first batch size to {first_end} for KMeans initialization. This is absolute necessary. "
+                  "If this causes memory issues, consider reducing n_landmarks.")
+        kmeans.partial_fit(data[:first_end].astype(np.float32, copy=False))
+
+        if n_frames > first_end:
+            for start in ProgressUtils.iterate(range(first_end, n_frames, self.chunk_size), desc="Training MiniBatch KMeans", unit="chunks"):
+                end = min(start + self.chunk_size, n_frames)
+                kmeans.partial_fit(data[start:end].astype(np.float32, copy=False))
         
         # Find frames closest to cluster centers - single pass
         centers = kmeans.cluster_centers_.astype(np.float32, copy=False)
