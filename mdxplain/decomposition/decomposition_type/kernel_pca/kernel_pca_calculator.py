@@ -320,6 +320,8 @@ class KernelPCACalculator(CalculatorBase):
         float
             Resolved gamma value
         """
+        # TODO: You can to this. It is probably a good guess for continous data. 
+        # But is it for sparse contact matrices and what is with mixed data. 
         if gamma is None or gamma == "auto":
             return AutomaticParameterHelper.calculate_gamma_auto(data.shape[1])
         elif gamma == "scale":
@@ -355,7 +357,14 @@ class KernelPCACalculator(CalculatorBase):
             (n_components, auto_select)
         """
         auto_select = False
-        # TODO: Are 5% here a sensefull amount?
+        # Question: Are 5% here a sensefull amount?
+        # Answere: Yes. Usually the kneed in MD data are in the first few components. 
+        # The min of 100 but potentially more, will probably usually find the kneed.
+        # Nevertheless, sometimes for sure this may fail. 
+        # But automatic value guesses are still guesses so there are always situations where they fail.
+        # So this is more like a trade-off, and if this does not lead to sufficient results, 
+        # one need to adjust the parameter.
+        
         if n_components == "auto":
             n_features = data.shape[1]
             n_components = max(5, min(100, int(n_features * 0.05)))

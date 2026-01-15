@@ -114,6 +114,62 @@ class LandscapeRenderingHelper:
         ...     ax, data_x, data_y, 50, 310.15, (-5, 5), (-5, 5)
         ... )
         """
+        X, Y, energy = LandscapeRenderingHelper._calculate_energy_grid(
+            data_x, data_y, bins, temperature, xlim, ylim, use_kde
+        )
+
+        vmin, vmax = EnergyCalculatorHelper.get_energy_range(energy)
+        energy_plot = LandscapeRenderingHelper._prepare_energy_plot_data(
+            energy, mask_empty_bins, vmin, vmax
+        )
+        cmap = ColorMappingHelper.get_landscape_colormap(energy_values=True)
+
+        cf = ax.contourf(X, Y, energy_plot, levels=bins, cmap=cmap,
+                         vmin=vmin, vmax=vmax, alpha=0.8)
+
+        LandscapeRenderingHelper._add_energy_colorbar(
+            ax, cf, contour_label_fontsize, tick_fontsize
+        )
+
+    @staticmethod
+    def _calculate_energy_grid(
+        data_x: np.ndarray,
+        data_y: np.ndarray,
+        bins: int,
+        temperature: float,
+        xlim: Tuple[float, float],
+        ylim: Tuple[float, float],
+        use_kde: bool
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Calculate energy grid using KDE or histogram.
+
+        Parameters
+        ----------
+        data_x : numpy.ndarray
+            X-axis data
+        data_y : numpy.ndarray
+            Y-axis data
+        bins : int
+            Number of bins
+        temperature : float
+            Temperature in Kelvin
+        xlim : Tuple[float, float]
+            X-axis limits
+        ylim : Tuple[float, float]
+            Y-axis limits
+        use_kde : bool
+            Use KDE smoothing
+
+        Returns
+        -------
+        X : numpy.ndarray
+            X grid
+        Y : numpy.ndarray
+            Y grid
+        energy : numpy.ndarray
+            Energy values
+        """
         if use_kde:
             import warnings
             warnings.warn(
@@ -122,46 +178,83 @@ class LandscapeRenderingHelper:
                 "Use KDE only if you know what you do.",
                 UserWarning
             )
-            X, Y, energy = EnergyCalculatorHelper.calculate_kde_energy_landscape(
+            return EnergyCalculatorHelper.calculate_kde_energy_landscape(
                 data_x, data_y, bins, temperature, xlim, ylim
             )
-        else:
-            X, Y, energy = EnergyCalculatorHelper.calculate_histogram_energy_landscape(
-                data_x, data_y, bins, temperature, xlim, ylim
-            )
-
-        # Color scaling on finite values only
-        vmin, vmax = EnergyCalculatorHelper.get_energy_range(energy)
-
-        if mask_empty_bins:
-            energy_plot = np.ma.masked_invalid(energy)
-        else:
-            energy_plot = np.nan_to_num(energy, nan=vmax, posinf=vmax, neginf=vmin)
-        cmap = ColorMappingHelper.get_landscape_colormap(energy_values=True)
-
-        # Plot with contourf
-        cf = ax.contourf(
-            X,
-            Y,
-            energy_plot,
-            levels=bins,
-            cmap=cmap,
-            vmin=vmin,
-            vmax=vmax,
-            alpha=0.8
+        return EnergyCalculatorHelper.calculate_histogram_energy_landscape(
+            data_x, data_y, bins, temperature, xlim, ylim
         )
 
-        # Add colorbar
-        cbar = plt.colorbar(cf, ax=ax)
-        cbar.ax.tick_params(labelsize=tick_fontsize or 10, pad=10 + (tick_fontsize - 10) * 0.5 if tick_fontsize else 5)
+    @staticmethod
+    def _prepare_energy_plot_data(
+        energy: np.ndarray,
+        mask_empty_bins: bool,
+        vmin: float,
+        vmax: float
+    ) -> np.ndarray:
+        """
+        Prepare energy data for plotting with masking or filling.
 
+        Parameters
+        ----------
+        energy : numpy.ndarray
+            Raw energy values
+        mask_empty_bins : bool
+            Whether to mask invalid values
+        vmin : float
+            Minimum energy value
+        vmax : float
+            Maximum energy value
+
+        Returns
+        -------
+        numpy.ndarray
+            Prepared energy data
+        """
+        if mask_empty_bins:
+            return np.ma.masked_invalid(energy)
+        return np.nan_to_num(energy, nan=vmax, posinf=vmax, neginf=vmin)
+
+    @staticmethod
+    def _add_energy_colorbar(
+        ax,
+        cf,
+        contour_label_fontsize: Optional[int],
+        tick_fontsize: Optional[int]
+    ) -> None:
+        """
+        Add colorbar to energy plot with font size adjustments.
+
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            Axis to add colorbar to
+        cf
+            Contour plot object
+        contour_label_fontsize : Optional[int]
+            Font size for colorbar label
+        tick_fontsize : Optional[int]
+            Font size for tick labels
+
+        Returns
+        -------
+        None
+        """
+        cbar = plt.colorbar(cf, ax=ax)
+        tick_size = tick_fontsize or 10
+        cbar.ax.tick_params(
+            labelsize=tick_size,
+            pad=10 + (tick_fontsize - 10) * 0.5 if tick_fontsize else 5
+        )
+
+        label_size = contour_label_fontsize or 10
         labelpad = 15 + (contour_label_fontsize - 10) * 1.5 if contour_label_fontsize else 15
-        
+
         cbar.set_label(
             'Free Energy Δ (kcal/mol)',
             rotation=270,
             labelpad=labelpad,
-            fontsize=contour_label_fontsize or 10
+            fontsize=label_size
         )
 
     @staticmethod
@@ -219,54 +312,167 @@ class LandscapeRenderingHelper:
         ...     ax, data_x, data_y, 50, (-5, 5), (-5, 5)
         ... )
         """
-        if use_kde:
-            # Get KDE grid over extended limits (no transformation)
-            X, Y, density = EnergyCalculatorHelper.calculate_kde_grid(
-                data_x, data_y, bins, xlim, ylim
-            )
-        else:
-            X, Y, density = EnergyCalculatorHelper.calculate_histogram_grid(
-                data_x, data_y, bins, xlim, ylim
-            )
+        X, Y, density = LandscapeRenderingHelper._calculate_density_grid(
+            data_x, data_y, bins, xlim, ylim, use_kde
+        )
 
-        # Apply masking or filling strategy for empty/invalid bins
+        density_plot = LandscapeRenderingHelper._prepare_density_plot_data(
+            density, mask_empty_bins
+        )
+
+        vmin, vmax = LandscapeRenderingHelper._calculate_density_color_bounds(
+            density_plot
+        )
+
+        cmap = ColorMappingHelper.get_landscape_colormap(energy_values=False)
+
+        cf = ax.contourf(X, Y, density_plot, levels=bins, cmap=cmap,
+                         vmin=vmin, vmax=vmax, alpha=0.8)
+
+        LandscapeRenderingHelper._add_density_colorbar(
+            ax, cf, contour_label_fontsize, tick_fontsize
+        )
+
+    @staticmethod
+    def _calculate_density_grid(
+        data_x: np.ndarray,
+        data_y: np.ndarray,
+        bins: int,
+        xlim: Tuple[float, float],
+        ylim: Tuple[float, float],
+        use_kde: bool
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Calculate density grid using KDE or histogram.
+
+        Parameters
+        ----------
+        data_x : numpy.ndarray
+            X-axis data
+        data_y : numpy.ndarray
+            Y-axis data
+        bins : int
+            Number of bins
+        xlim : Tuple[float, float]
+            X-axis limits
+        ylim : Tuple[float, float]
+            Y-axis limits
+        use_kde : bool
+            Use KDE smoothing
+
+        Returns
+        -------
+        X : numpy.ndarray
+            X grid
+        Y : numpy.ndarray
+            Y grid
+        density : numpy.ndarray
+            Density values
+        """
+        if use_kde:
+            return EnergyCalculatorHelper.calculate_kde_grid(
+                data_x, data_y, bins, xlim, ylim
+            )
+        return EnergyCalculatorHelper.calculate_histogram_grid(
+            data_x, data_y, bins, xlim, ylim
+        )
+
+    @staticmethod
+    def _prepare_density_plot_data(
+        density: np.ndarray,
+        mask_empty_bins: bool
+    ) -> np.ndarray:
+        """
+        Prepare density data for plotting with masking or filling.
+
+        Parameters
+        ----------
+        density : numpy.ndarray
+            Raw density values
+        mask_empty_bins : bool
+            Whether to mask empty/invalid values
+
+        Returns
+        -------
+        numpy.ndarray
+            Prepared density data
+        """
         if mask_empty_bins:
-            density_plot = np.ma.masked_where(
+            return np.ma.masked_where(
                 (density <= 0) | ~np.isfinite(density),
                 density
             )
-        else:
-            density_plot = np.nan_to_num(density, nan=0.0, neginf=0.0)
+        return np.nan_to_num(density, nan=0.0, neginf=0.0)
 
-        # Determine bounds for color scaling
+    @staticmethod
+    def _calculate_density_color_bounds(
+        density_plot: np.ndarray
+    ) -> Tuple[float, float]:
+        """
+        Calculate color scale bounds for density plot.
+
+        Parameters
+        ----------
+        density_plot : numpy.ndarray
+            Density data (may be masked)
+
+        Returns
+        -------
+        vmin : float
+            Minimum value for color scale
+        vmax : float
+            Maximum value for color scale
+        """
         if np.ma.isMaskedArray(density_plot):
             finite_vals = density_plot.compressed()
         else:
             finite_vals = density_plot[np.isfinite(density_plot)]
+
         if finite_vals.size == 0:
-            vmin, vmax = 0.0, 1.0
-        else:
-            vmin, vmax = finite_vals.min(), finite_vals.max()
+            return 0.0, 1.0
+        return finite_vals.min(), finite_vals.max()
 
-        cmap = ColorMappingHelper.get_landscape_colormap(energy_values=False)
+    @staticmethod
+    def _add_density_colorbar(
+        ax,
+        cf,
+        contour_label_fontsize: Optional[int],
+        tick_fontsize: Optional[int]
+    ) -> None:
+        """
+        Add colorbar to density plot with font size adjustments.
 
-        # Plot with contourf (matches energy plot styling)
-        cf = ax.contourf(
-            X,
-            Y,
-            density_plot,
-            levels=bins,
-            cmap=cmap,
-            vmin=vmin,
-            vmax=vmax,
-            alpha=0.8
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            Axis to add colorbar to
+        cf
+            Contour plot object
+        contour_label_fontsize : Optional[int]
+            Font size for colorbar label
+        tick_fontsize : Optional[int]
+            Font size for tick labels
+
+        Returns
+        -------
+        None
+        """
+        cbar = plt.colorbar(cf, ax=ax)
+        tick_size = tick_fontsize or 10
+        cbar.ax.tick_params(
+            labelsize=tick_size,
+            pad=10 + (tick_fontsize - 10) * 0.5 if tick_fontsize else 5
         )
 
-        # Add colorbar
-        cbar = plt.colorbar(cf, ax=ax)
-        cbar.ax.tick_params(labelsize=tick_fontsize or 10, pad=10 + (tick_fontsize - 10) * 0.5 if tick_fontsize else 5)
+        label_size = contour_label_fontsize or 10
         labelpad = 15 + (contour_label_fontsize - 10) * 1.5 if contour_label_fontsize else 15
-        cbar.set_label('Probability Density', rotation=270, labelpad=labelpad, fontsize=contour_label_fontsize or 10)
+
+        cbar.set_label(
+            'Probability Density',
+            rotation=270,
+            labelpad=labelpad,
+            fontsize=label_size
+        )
 
     @staticmethod
     def create_scatter(
@@ -276,10 +482,14 @@ class LandscapeRenderingHelper:
         labels: Optional[np.ndarray],
         cluster_colors: Optional[Dict[int, str]],
         alpha: float,
-        data_scatter: bool
+        data_scatter: bool,
+        frame_tag_map: Optional[Dict[int, str]] = None,
+        tag_colors: Optional[Dict[str, str]] = None,
+        unselected_indices: Optional[List[int]] = None,
+        scatter_size: int = 1
     ) -> None:
         """
-        Create scatter plot - clustered or gray.
+        Create scatter plot - clustered, tag-based, or gray.
 
         Parameters
         ----------
@@ -297,6 +507,14 @@ class LandscapeRenderingHelper:
             Point transparency
         data_scatter : bool
             Whether to show gray scatter when labels is None
+        frame_tag_map : Optional[Dict[int, str]], default=None
+            Mapping from frame index to tag (for tag-based coloring)
+        tag_colors : Optional[Dict[str, str]], default=None
+            Mapping from tag to color (for tag-based coloring)
+        unselected_indices : Optional[List[int]], default=None
+            Indices of unselected points to plot in gray
+        scatter_size : int, default=1
+            Size of scatter points in matplotlib units
 
         Returns
         -------
@@ -310,36 +528,211 @@ class LandscapeRenderingHelper:
         ...     ax, data_x, data_y, labels, colors, alpha=0.6, data_scatter=True
         ... )
 
-        >>> # Gray scatter
+        >>> # Tag-based scatter
         >>> LandscapeRenderingHelper.create_scatter(
-        ...     ax, data_x, data_y, None, None, alpha=0.3, data_scatter=True
+        ...     ax, data_x, data_y, None, None, 0.6, True,
+        ...     frame_tag_map={0: "biased", 1: "unbiased"},
+        ...     tag_colors={"biased": "#1f77b4"}
         ... )
         """
-        if labels is not None:
-            # Clustered scatter
-            df = pd.DataFrame({'x': data_x, 'y': data_y, 'cluster': labels})
-            sns.scatterplot(
-                data=df,
-                x='x',
-                y='y',
-                hue='cluster',
-                palette=cluster_colors,
-                ax=ax,
-                s=1,
-                alpha=alpha,
-                legend=False
+        LandscapeRenderingHelper._plot_unselected_if_needed(
+            ax, data_x, data_y, unselected_indices, alpha, scatter_size
+        )
+
+        if frame_tag_map is not None:
+            LandscapeRenderingHelper._plot_tag_colored_scatter(
+                ax, data_x, data_y, frame_tag_map, tag_colors, alpha, scatter_size
+            )
+        elif labels is not None:
+            LandscapeRenderingHelper._plot_cluster_colored_scatter(
+                ax, data_x, data_y, labels, cluster_colors, alpha, scatter_size
             )
         elif data_scatter:
-            # Gray scatter
-            sns.scatterplot(
-                x=data_x,
-                y=data_y,
-                ax=ax,
-                color='gray',
-                s=1,
-                alpha=alpha,
-                legend=False
+            LandscapeRenderingHelper._plot_gray_scatter(
+                ax, data_x, data_y, alpha, scatter_size
             )
+
+    @staticmethod
+    def _plot_unselected_if_needed(
+        ax,
+        data_x: np.ndarray,
+        data_y: np.ndarray,
+        unselected_indices: Optional[List[int]],
+        alpha: float,
+        scatter_size: int = 1
+    ) -> None:
+        """
+        Plot unselected points in gray if requested.
+
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            Axis to plot on
+        data_x : numpy.ndarray
+            X-axis data
+        data_y : numpy.ndarray
+            Y-axis data
+        unselected_indices : Optional[List[int]]
+            Indices of unselected points
+        alpha : float
+            Base alpha for colored points
+        scatter_size : int, default=1
+            Size of scatter points
+
+        Returns
+        -------
+        None
+        """
+        if unselected_indices is not None and len(unselected_indices) > 0:
+            ax.scatter(
+                data_x[unselected_indices],
+                data_y[unselected_indices],
+                color='gray',
+                s=scatter_size,
+                alpha=alpha * 0.4,
+                zorder=1
+            )
+
+    @staticmethod
+    def _plot_tag_colored_scatter(
+        ax,
+        data_x: np.ndarray,
+        data_y: np.ndarray,
+        frame_tag_map: Dict[int, str],
+        tag_colors: Dict[str, str],
+        alpha: float,
+        scatter_size: int = 1
+    ) -> None:
+        """
+        Plot scatter with tag-based coloring.
+
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            Axis to plot on
+        data_x : numpy.ndarray
+            X-axis data
+        data_y : numpy.ndarray
+            Y-axis data
+        frame_tag_map : Dict[int, str]
+            Frame index to tag mapping
+        tag_colors : Dict[str, str]
+            Tag to color mapping
+        alpha : float
+            Point transparency
+        scatter_size : int, default=1
+            Size of scatter points
+
+        Returns
+        -------
+        None
+        """
+        indices = list(frame_tag_map.keys())
+        tags = [frame_tag_map[i] for i in indices]
+        df = pd.DataFrame({
+            'x': data_x[indices],
+            'y': data_y[indices],
+            'tag': tags
+        })
+        sns.scatterplot(
+            data=df,
+            x='x',
+            y='y',
+            hue='tag',
+            palette=tag_colors,
+            ax=ax,
+            s=scatter_size,
+            alpha=alpha,
+            legend=False,
+            zorder=2
+        )
+
+    @staticmethod
+    def _plot_cluster_colored_scatter(
+        ax,
+        data_x: np.ndarray,
+        data_y: np.ndarray,
+        labels: np.ndarray,
+        cluster_colors: Dict[int, str],
+        alpha: float,
+        scatter_size: int = 1
+    ) -> None:
+        """
+        Plot scatter with cluster-based coloring.
+
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            Axis to plot on
+        data_x : numpy.ndarray
+            X-axis data
+        data_y : numpy.ndarray
+            Y-axis data
+        labels : numpy.ndarray
+            Cluster labels
+        cluster_colors : Dict[int, str]
+            Cluster to color mapping
+        alpha : float
+            Point transparency
+        scatter_size : int, default=1
+            Size of scatter points
+
+        Returns
+        -------
+        None
+        """
+        df = pd.DataFrame({'x': data_x, 'y': data_y, 'cluster': labels})
+        sns.scatterplot(
+            data=df,
+            x='x',
+            y='y',
+            hue='cluster',
+            palette=cluster_colors,
+            ax=ax,
+            s=scatter_size,
+            alpha=alpha,
+            legend=False,
+            zorder=2
+        )
+
+    @staticmethod
+    def _plot_gray_scatter(
+        ax,
+        data_x: np.ndarray,
+        data_y: np.ndarray,
+        alpha: float,
+        scatter_size: int = 1
+    ) -> None:
+        """
+        Plot gray scatter points.
+
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            Axis to plot on
+        data_x : numpy.ndarray
+            X-axis data
+        data_y : numpy.ndarray
+            Y-axis data
+        alpha : float
+            Point transparency
+        scatter_size : int, default=1
+            Size of scatter points
+
+        Returns
+        -------
+        None
+        """
+        sns.scatterplot(
+            x=data_x,
+            y=data_y,
+            ax=ax,
+            color='gray',
+            s=scatter_size,
+            alpha=alpha,
+            legend=False,
+            zorder=2
+        )
 
     @staticmethod
     def plot_cluster_voronoi(

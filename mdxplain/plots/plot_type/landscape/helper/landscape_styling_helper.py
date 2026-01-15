@@ -205,6 +205,64 @@ class LandscapeStylingHelper:
         )
 
     @staticmethod
+    def add_tag_legend(
+        fig: Figure,
+        tag_colors: Dict[str, str],
+        fig_width: float,
+        right_inch: float,
+        legend_fontsize: Optional[int] = None
+    ) -> None:
+        """
+        Add central legend for tag-based coloring.
+
+        Parameters
+        ----------
+        fig : matplotlib.figure.Figure
+            Figure to add legend to
+        tag_colors : Dict[str, str]
+            Color mapping for tags
+        fig_width : float
+            Figure width in inches
+        right_inch : float
+            Right margin in inches
+        legend_fontsize : int, optional
+            Font size for the legend entries
+
+        Returns
+        -------
+        None
+            Modifies figure in-place
+
+        Examples
+        --------
+        >>> LandscapeStylingHelper.add_tag_legend(
+        ...     fig, {"biased": "#1f77b4", "unbiased": "#ff7f0e"}, 12.0, 0.8
+        ... )
+        """
+        handles = []
+        labels = []
+        for tag, color in sorted(tag_colors.items()):
+            handles.append(plt.Line2D([0], [0], color=color, lw=4))
+            labels.append(tag)
+
+        base_gap_inch = 0.1
+        font_size = legend_fontsize or 10
+        extra_gap = (font_size - 10) * 0.05
+        legend_gap_inch = base_gap_inch + extra_gap
+
+        plot_right = 1 - (right_inch / fig_width)
+        legend_left_inch = plot_right * fig_width + legend_gap_inch
+        legend_x = legend_left_inch / fig_width
+
+        fig.legend(
+            handles, labels,
+            loc='center left',
+            bbox_to_anchor=(legend_x, 0.5),
+            frameon=True,
+            fontsize=legend_fontsize or 10
+        )
+
+    @staticmethod
     def set_axis_labels(
         ax,
         dim_x: int,

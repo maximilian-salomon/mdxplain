@@ -33,10 +33,12 @@ from matplotlib.figure import Figure
 from .helper import LayoutCalculatorHelper
 from .helper.landscape_rendering_helper import LandscapeRenderingHelper
 from .helper.landscape_styling_helper import LandscapeStylingHelper
+from .helper.landscape_tag_coloring_helper import LandscapeTagColoringHelper
 from ...helper.validation_helper import ValidationHelper
 from ...helper.clustering_data_helper import ClusteringDataHelper
 from ...helper.svg_export_helper import SvgExportHelper
 from ....utils.data_utils import DataUtils
+from ....decomposition.entities.decomposition_data import DecompositionData
 
 
 class LandscapePlotter:
@@ -99,8 +101,11 @@ class LandscapePlotter:
         cluster_contour_voronoi: bool = False,
         data_scatter: bool = True,
         show_clusters: Union[str, List[int]] = "all",
+        tag_coloring: Optional[List[str]] = None,
+        scatter_show_all: bool = False,
         center_marker: str = 'X',
         center_size: int = 200,
+        scatter_size: int = 1,
         title: Optional[str] = None,
         xaxis_label: Optional[str] = None,
         yaxis_label: Optional[str] = None,
@@ -164,10 +169,25 @@ class LandscapePlotter:
         show_clusters : Union[str, List[int]], default="all"
             Which clusters to display: "all" or list of cluster IDs.
             Colors remain consistent regardless of selection
+        tag_coloring : Optional[List[str]], default=None
+            Color scatter points by trajectory tags instead of clusters.
+            Provide list of tags, e.g., ["biased", "unbiased"].
+            If a frame matches multiple tags, the last tag in the list is used.
+            When set, overrides cluster-based coloring from clustering_name
+        scatter_show_all : bool, default=False
+            Show unselected points in gray (applies to both cluster and tag mode):
+            - **Cluster mode:** When show_clusters=[0,1], other clusters/noise shown in gray
+            - **Tag mode:** When tag_coloring=["biased"], frames without this tag shown in gray
+            - False (default): Only show selected points, hide others (current behavior)
         center_marker : str, default='X'
             Marker style for cluster centers
         center_size : int, default=200
             Marker size for cluster centers
+        scatter_size : int, default=1
+            Size of scatter points in matplotlib units. Applies to all scatter
+            points (cluster-colored, tag-colored, gray, and unselected).
+            Typical values: 1 (tiny), 5-10 (small), 20-50 (medium), 100+ (large).
+            Note: Cluster centers use `center_size` parameter separately.
         title : Optional[str], default=None
             Custom title (overrides auto-generated)
         xaxis_label : Optional[str], default=None
@@ -238,43 +258,30 @@ class LandscapePlotter:
         ...     ylim=(-3, 3)
         ... )
         """
-        # Validate all inputs using atomic validation methods
-        decomp_obj = ValidationHelper.validate_decomposition_exists(
-            self.pipeline_data, decomposition_name
-        )
-        n_components = decomp_obj.data.shape[1]
-
-        # If no clustering is provided, centers cannot be shown – disable silently
+        # Disable show_centers silently if no clustering provided
         if clustering_name is None and show_centers:
             show_centers = False
 
-        ValidationHelper.validate_dimensions_list(
-            dimensions, decomposition_name, n_components
-        )
-        ValidationHelper.validate_dimensions_for_layout(dimensions)
-        ValidationHelper.validate_show_centers_requirement(
-            show_centers, clustering_name
+        # Validate all inputs
+        decomp_obj = self._validate_plot_inputs(
+            decomposition_name, dimensions, clustering_name, show_centers
         )
 
-        if clustering_name:
-            n_frames_decomp = decomp_obj.data.shape[0]
-            ValidationHelper.validate_clustering_compatibility(
-                self.pipeline_data, clustering_name,
-                decomposition_name, n_frames_decomp
-            )
-
-        # Load decomposition data
+        # Load decomposition and clustering data
         decomp_data = decomp_obj.data
+        labels, centers, cluster_colors, cluster_ids = self._load_plot_data(
+            clustering_name, show_centers, show_clusters
+        )
 
-        # Load clustering data if specified
-        if clustering_name:
-            labels, centers, cluster_colors = self._load_clustering_data(
-                clustering_name, show_centers
+        # Prepare tag-based coloring or scatter_show_all for cluster mode
+        frame_tag_map, tag_colors, unselected_indices = self._prepare_tag_coloring(
+            tag_coloring, scatter_show_all, decomp_obj
+        )
+
+        if unselected_indices is None:
+            unselected_indices = self._prepare_cluster_scatter_show_all(
+                clustering_name, scatter_show_all, labels
             )
-            # Filter clusters while keeping colors consistent
-            labels, centers, cluster_ids = self._filter_clusters(labels, centers, show_clusters)
-        else:
-            labels, centers, cluster_colors, cluster_ids = None, None, None, []
 
         # Setup figure layout
         dim_pairs = LayoutCalculatorHelper.create_dimension_pairs(dimensions)
@@ -308,6 +315,7 @@ class LandscapePlotter:
                 data_scatter,
                 center_marker,
                 center_size,
+                scatter_size,
                 xaxis_label,
                 yaxis_label,
                 xlim,
@@ -315,30 +323,313 @@ class LandscapePlotter:
                 contour_label_fontsize,
                 xlabel_fontsize,
                 ylabel_fontsize,
-                tick_fontsize
+                tick_fontsize,
+                frame_tag_map,
+                tag_colors,
+                unselected_indices
             )
 
-        # Finalize figure
+        # Finalize figure, add legend, and save if requested
+        self._finalize_and_save_figure(
+            fig, axes, n_plots, n_rows, n_cols, fig_width, fig_height,
+            clustering_name, frame_tag_map, cluster_colors, tag_colors,
+            show_clusters, legend_fontsize, title, decomposition_name,
+            energy_values, title_fontsize, tick_fontsize, save_fig,
+            filename, dimensions, show_centers, file_format, dpi
+        )
+
+        return fig
+
+    def _validate_plot_inputs(
+        self,
+        decomposition_name: str,
+        dimensions: List[int],
+        clustering_name: Optional[str],
+        show_centers: bool
+    ) -> DecompositionData:
+        """
+        Validate all plot inputs.
+
+        Parameters
+        ----------
+        decomposition_name : str
+            Name of decomposition to plot
+        dimensions : List[int]
+            Dimension indices to plot
+        clustering_name : Optional[str]
+            Name of clustering for overlay
+        show_centers : bool
+            Whether to show cluster centers
+
+        Returns
+        -------
+        DecompositionData
+            Validated decomposition object
+
+        Raises
+        ------
+        ValueError
+            If any validation fails
+        """
+        decomp_obj = ValidationHelper.validate_decomposition_exists(
+            self.pipeline_data, decomposition_name
+        )
+        n_components = decomp_obj.data.shape[1]
+
+        ValidationHelper.validate_dimensions_list(
+            dimensions, decomposition_name, n_components
+        )
+        ValidationHelper.validate_dimensions_for_layout(dimensions)
+        ValidationHelper.validate_show_centers_requirement(
+            show_centers, clustering_name
+        )
+
+        if clustering_name:
+            n_frames_decomp = decomp_obj.data.shape[0]
+            ValidationHelper.validate_clustering_compatibility(
+                self.pipeline_data, clustering_name,
+                decomposition_name, n_frames_decomp
+            )
+
+        return decomp_obj
+
+    def _load_plot_data(
+        self,
+        clustering_name: Optional[str],
+        show_centers: bool,
+        show_clusters: Union[str, List[int]]
+    ) -> Tuple[Optional[np.ndarray], Optional[np.ndarray], Optional[Dict[int, str]], List[int]]:
+        """
+        Load clustering data if specified.
+
+        Parameters
+        ----------
+        clustering_name : Optional[str]
+            Name of clustering
+        show_centers : bool
+            Whether to load cluster centers
+        show_clusters : Union[str, List[int]]
+            Which clusters to display
+
+        Returns
+        -------
+        labels : Optional[np.ndarray]
+            Cluster labels
+        centers : Optional[np.ndarray]
+            Cluster centers
+        cluster_colors : Optional[Dict[int, str]]
+            Color mapping for clusters
+        cluster_ids : List[int]
+            Cluster IDs corresponding to centers
+        """
+        if clustering_name:
+            labels, centers, cluster_colors = self._load_clustering_data(
+                clustering_name, show_centers
+            )
+            labels, centers, cluster_ids = self._filter_clusters(
+                labels, centers, show_clusters
+            )
+        else:
+            labels, centers, cluster_colors, cluster_ids = None, None, None, []
+
+        return labels, centers, cluster_colors, cluster_ids
+
+    def _prepare_tag_coloring(
+        self,
+        tag_coloring: Optional[List[str]],
+        scatter_show_all: bool,
+        decomp_obj: DecompositionData
+    ) -> Tuple[Optional[Dict[int, str]], Optional[Dict[str, str]], Optional[List[int]]]:
+        """
+        Prepare tag-based coloring data.
+
+        Parameters
+        ----------
+        tag_coloring : Optional[List[str]]
+            List of tags for coloring, or None if not using tags
+        scatter_show_all : bool
+            Whether to collect unselected frame indices
+        decomp_obj : DecompositionData
+            Decomposition object for frame mapping
+
+        Returns
+        -------
+        frame_tag_map : Optional[Dict[int, str]]
+            Mapping from frame index to tag name
+        tag_colors : Optional[Dict[str, str]]
+            Mapping from tag name to hex color
+        unselected_indices : Optional[List[int]]
+            Indices of frames without matching tags
+        """
+        if tag_coloring is None:
+            return None, None, None
+
+        frame_tag_map, tag_colors, unselected_indices = (
+            LandscapeTagColoringHelper.build_frame_tag_map(
+                decomp_obj,
+                self.pipeline_data.trajectory_data,
+                tag_coloring,
+                scatter_show_all
+            )
+        )
+        return frame_tag_map, tag_colors, unselected_indices
+
+    def _prepare_cluster_scatter_show_all(
+        self,
+        clustering_name: Optional[str],
+        scatter_show_all: bool,
+        labels: Optional[np.ndarray]
+    ) -> Optional[List[int]]:
+        """
+        Prepare unselected indices for cluster mode with scatter_show_all.
+
+        Parameters
+        ----------
+        clustering_name : Optional[str]
+            Name of clustering, or None if not using clustering
+        scatter_show_all : bool
+            Whether to show unselected points in gray
+        labels : Optional[np.ndarray]
+            Cluster labels array
+
+        Returns
+        -------
+        Optional[List[int]]
+            List of indices with label == -1 (noise), or None if not applicable
+        """
+        if clustering_name and scatter_show_all and labels is not None:
+            unselected_mask = labels == -1
+            return np.where(unselected_mask)[0].tolist()
+        return None
+
+    def _determine_legend_type(
+        self,
+        clustering_name: Optional[str],
+        frame_tag_map: Optional[Dict[int, str]]
+    ) -> str:
+        """
+        Determine which legend type to add.
+
+        Parameters
+        ----------
+        clustering_name : Optional[str]
+            Name of clustering, or None if not using clustering
+        frame_tag_map : Optional[Dict[int, str]]
+            Frame-to-tag mapping, or None if not using tags
+
+        Returns
+        -------
+        str
+            Legend type: "cluster", "tag", or "none"
+        """
+        if frame_tag_map is not None:
+            return "tag"
+        if clustering_name is not None:
+            return "cluster"
+        return "none"
+
+    def _finalize_and_save_figure(
+        self,
+        fig: Figure,
+        axes: np.ndarray,
+        n_plots: int,
+        n_rows: int,
+        n_cols: int,
+        fig_width: float,
+        fig_height: float,
+        clustering_name: Optional[str],
+        frame_tag_map: Optional[Dict[int, str]],
+        cluster_colors: Optional[Dict[int, str]],
+        tag_colors: Optional[Dict[str, str]],
+        show_clusters: Union[str, List[int]],
+        legend_fontsize: Optional[int],
+        title: Optional[str],
+        decomposition_name: str,
+        energy_values: bool,
+        title_fontsize: Optional[int],
+        tick_fontsize: Optional[int],
+        save_fig: bool,
+        filename: Optional[str],
+        dimensions: List[int],
+        show_centers: bool,
+        file_format: str,
+        dpi: int
+    ) -> None:
+        """
+        Finalize figure layout, add legend, and save if requested.
+
+        Parameters
+        ----------
+        fig : Figure
+            Figure to finalize
+        axes : np.ndarray
+            Array of subplot axes
+        n_plots : int
+            Number of plots
+        n_rows : int
+            Number of rows
+        n_cols : int
+            Number of columns
+        fig_width : float
+            Figure width in inches
+        fig_height : float
+            Figure height in inches
+        clustering_name : Optional[str]
+            Name of clustering
+        frame_tag_map : Optional[Dict[int, str]]
+            Frame-to-tag mapping
+        cluster_colors : Optional[Dict[int, str]]
+            Cluster colors
+        tag_colors : Optional[Dict[str, str]]
+            Tag colors
+        show_clusters : Union[str, List[int]]
+            Which clusters to show
+        legend_fontsize : Optional[int]
+            Legend font size
+        title : Optional[str]
+            Custom title
+        decomposition_name : str
+            Decomposition name
+        energy_values : bool
+            Whether energy values are used
+        title_fontsize : Optional[int]
+            Title font size
+        tick_fontsize : Optional[int]
+            Tick font size
+        save_fig : bool
+            Whether to save figure
+        filename : Optional[str]
+            Custom filename
+        dimensions : List[int]
+            Dimensions plotted
+        show_centers : bool
+            Whether centers are shown
+        file_format : str
+            File format
+        dpi : int
+            DPI for saving
+
+        Returns
+        -------
+        None
+        """
         LandscapeStylingHelper.finalize_figure(
             fig, axes, n_plots, n_rows, n_cols,
             title, decomposition_name, clustering_name, energy_values,
             title_fontsize, tick_fontsize
         )
 
-        # Calculate dynamic whitespace (fixed absolute inches → scales with figure size)
-        left_inch = 0.3    # Fixed 0.3 inch on left
-
-        # Dynamic right margin based on legend font size
+        # Calculate dynamic whitespace
+        left_inch = 0.3
         base_right_inch = 0.8
         if clustering_name and legend_fontsize:
-            # Add extra space for larger legend font sizes
-            extra_right = (legend_fontsize - 10) * 0.5  # 0.5 inch per font size point above 10
+            extra_right = (legend_fontsize - 10) * 0.5
             right_inch = base_right_inch + extra_right
         else:
             right_inch = base_right_inch
 
-        top_inch = 0.5     # Fixed 0.5 inch on top (for title)
-        bottom_inch = 0.3  # Fixed 0.3 inch on bottom
+        top_inch = 0.5
+        bottom_inch = 0.3
 
         left = left_inch / fig_width
         right = 1 - (right_inch / fig_width)
@@ -347,30 +638,25 @@ class LandscapePlotter:
 
         fig.subplots_adjust(left=left, right=right, top=top, bottom=bottom)
 
-        # Add central legend if clustering is present (after subplots_adjust)
-        if clustering_name:
+        # Add appropriate legend
+        legend_type = self._determine_legend_type(clustering_name, frame_tag_map)
+
+        if legend_type == "cluster":
             LandscapeStylingHelper.add_central_legend(
                 fig, cluster_colors, show_clusters, fig_width, right_inch, legend_fontsize
+            )
+        elif legend_type == "tag":
+            LandscapeStylingHelper.add_tag_legend(
+                fig, tag_colors, fig_width, right_inch, legend_fontsize
             )
 
         # Save if requested
         if save_fig:
-            # Configure SVG export for editable text
             SvgExportHelper.apply_svg_config_if_needed(file_format)
-
             self._save_figure(
-                fig,
-                filename,
-                decomposition_name,
-                dimensions,
-                clustering_name,
-                show_centers,
-                energy_values,
-                file_format,
-                dpi
+                fig, filename, decomposition_name, dimensions,
+                clustering_name, show_centers, energy_values, file_format, dpi
             )
-
-        return fig
 
     def _generate_landscape_filename(
         self,
@@ -434,6 +720,7 @@ class LandscapePlotter:
         data_scatter: bool,
         center_marker: str,
         center_size: int,
+        scatter_size: int,
         xaxis_label: Optional[str],
         yaxis_label: Optional[str],
         xlim: Optional[Tuple[float, float]],
@@ -441,7 +728,10 @@ class LandscapePlotter:
         contour_label_fontsize: Optional[int],
         xlabel_fontsize: Optional[int],
         ylabel_fontsize: Optional[int],
-        tick_fontsize: Optional[int]
+        tick_fontsize: Optional[int],
+        frame_tag_map: Optional[Dict[int, str]] = None,
+        tag_colors: Optional[Dict[str, str]] = None,
+        unselected_indices: Optional[List[int]] = None
     ) -> None:
         """
         Plot single 2D landscape on given axis.
@@ -487,6 +777,8 @@ class LandscapePlotter:
             Marker for centers
         center_size : int
             Size of center markers
+        scatter_size : int
+            Size of scatter points
         xaxis_label : Optional[str]
             Custom X-axis label
         yaxis_label : Optional[str]
@@ -501,43 +793,224 @@ class LandscapePlotter:
         None
             Modifies ax in place
         """
-        # Extract data for this projection
         data_x = decomp_data[:, dim_x]
         data_y = decomp_data[:, dim_y]
 
-        # Auto-calculate limits with 5% padding if not provided
+        xlim, ylim = self._calculate_plot_limits(data_x, data_y, xlim, ylim)
+        bins = self._calculate_bins(data_x, data_y, bins)
+
+        self._plot_background(
+            ax, data_x, data_y, bins, temperature, xlim, ylim,
+            energy_values, use_kde, mask_empty_bins,
+            contour_label_fontsize, tick_fontsize
+        )
+
+        self._plot_cluster_overlay(
+            ax, data_x, data_y, labels, cluster_colors, alpha,
+            cluster_contour, cluster_contour_voronoi, bins, data_scatter,
+            contour_label_fontsize, frame_tag_map, tag_colors, unselected_indices,
+            scatter_size
+        )
+
+        if centers is not None:
+            LandscapeRenderingHelper.plot_centers(
+                ax, centers, cluster_ids, dim_x, dim_y, cluster_colors,
+                center_marker, center_size
+            )
+
+        LandscapeStylingHelper.set_axis_labels(
+            ax, dim_x, dim_y, xaxis_label, yaxis_label,
+            xlabel_fontsize, ylabel_fontsize
+        )
+        LandscapeStylingHelper.set_axis_limits(ax, xlim, ylim)
+
+    def _calculate_plot_limits(
+        self,
+        data_x: np.ndarray,
+        data_y: np.ndarray,
+        xlim: Optional[Tuple[float, float]],
+        ylim: Optional[Tuple[float, float]]
+    ) -> Tuple[Tuple[float, float], Tuple[float, float]]:
+        """
+        Calculate plot limits with 5% padding if not provided.
+
+        Parameters
+        ----------
+        data_x : numpy.ndarray
+            X-axis data
+        data_y : numpy.ndarray
+            Y-axis data
+        xlim : Optional[Tuple[float, float]]
+            Custom X-axis limits
+        ylim : Optional[Tuple[float, float]]
+            Custom Y-axis limits
+
+        Returns
+        -------
+        xlim : Tuple[float, float]
+            X-axis limits
+        ylim : Tuple[float, float]
+            Y-axis limits
+        """
         if xlim is None:
             x_range = data_x.max() - data_x.min()
             xlim = (data_x.min() - 0.05 * x_range, data_x.max() + 0.05 * x_range)
         if ylim is None:
             y_range = data_y.max() - data_y.min()
             ylim = (data_y.min() - 0.05 * y_range, data_y.max() + 0.05 * y_range)
+        return xlim, ylim
 
-        # Auto-calculate bins if requested
+    def _calculate_bins(
+        self,
+        data_x: np.ndarray,
+        data_y: np.ndarray,
+        bins: Union[int, str]
+    ) -> int:
+        """
+        Calculate optimal bins if "auto" is specified.
+
+        Parameters
+        ----------
+        data_x : numpy.ndarray
+            X-axis data
+        data_y : numpy.ndarray
+            Y-axis data
+        bins : int or str
+            Number of bins or "auto"
+
+        Returns
+        -------
+        int
+            Number of bins
+        """
         if bins == "auto":
             x_edges = np.histogram_bin_edges(data_x, bins="auto")
             y_edges = np.histogram_bin_edges(data_y, bins="auto")
-            bins = max(len(x_edges), len(y_edges)) - 1
+            return max(len(x_edges), len(y_edges)) - 1
+        return bins
 
-        # Plot background (energy or density) over extended limits
+    def _plot_background(
+        self,
+        ax,
+        data_x: np.ndarray,
+        data_y: np.ndarray,
+        bins: int,
+        temperature: float,
+        xlim: Tuple[float, float],
+        ylim: Tuple[float, float],
+        energy_values: bool,
+        use_kde: bool,
+        mask_empty_bins: bool,
+        contour_label_fontsize: Optional[int],
+        tick_fontsize: Optional[int]
+    ) -> None:
+        """
+        Plot energy or density background.
+
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            Axis to plot on
+        data_x : numpy.ndarray
+            X-axis data
+        data_y : numpy.ndarray
+            Y-axis data
+        bins : int
+            Number of bins
+        temperature : float
+            Temperature for energy calculation
+        xlim : Tuple[float, float]
+            X-axis limits
+        ylim : Tuple[float, float]
+            Y-axis limits
+        energy_values : bool
+            Plot energy landscape
+        use_kde : bool
+            Use KDE smoothing
+        mask_empty_bins : bool
+            Mask empty bins
+        contour_label_fontsize : Optional[int]
+            Colorbar label font size
+        tick_fontsize : Optional[int]
+            Tick label font size
+
+        Returns
+        -------
+        None
+        """
         if energy_values:
             LandscapeRenderingHelper.plot_energy_background(
                 ax, data_x, data_y, bins, temperature, xlim, ylim,
-                use_kde=use_kde,
-                mask_empty_bins=mask_empty_bins,
+                use_kde=use_kde, mask_empty_bins=mask_empty_bins,
                 contour_label_fontsize=contour_label_fontsize,
                 tick_fontsize=tick_fontsize
             )
         else:
             LandscapeRenderingHelper.plot_density_background(
                 ax, data_x, data_y, bins, xlim, ylim,
-                use_kde=use_kde,
-                mask_empty_bins=mask_empty_bins,
+                use_kde=use_kde, mask_empty_bins=mask_empty_bins,
                 contour_label_fontsize=contour_label_fontsize,
                 tick_fontsize=tick_fontsize
             )
 
-        # Overlay cluster visualization
+    def _plot_cluster_overlay(
+        self,
+        ax,
+        data_x: np.ndarray,
+        data_y: np.ndarray,
+        labels: Optional[np.ndarray],
+        cluster_colors: Optional[Dict[int, str]],
+        alpha: float,
+        cluster_contour: bool,
+        cluster_contour_voronoi: bool,
+        bins: int,
+        data_scatter: bool,
+        contour_label_fontsize: Optional[int],
+        frame_tag_map: Optional[Dict[int, str]],
+        tag_colors: Optional[Dict[str, str]],
+        unselected_indices: Optional[List[int]],
+        scatter_size: int
+    ) -> None:
+        """
+        Plot cluster overlay as contours or scatter.
+
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            Axis to plot on
+        data_x : numpy.ndarray
+            X-axis data
+        data_y : numpy.ndarray
+            Y-axis data
+        labels : Optional[numpy.ndarray]
+            Cluster labels
+        cluster_colors : Optional[Dict[int, str]]
+            Cluster colors
+        alpha : float
+            Transparency
+        cluster_contour : bool
+            Show as contours
+        cluster_contour_voronoi : bool
+            Use Voronoi contours
+        bins : int
+            Number of bins for contours
+        data_scatter : bool
+            Show gray scatter
+        contour_label_fontsize : Optional[int]
+            Contour label font size
+        frame_tag_map : Optional[Dict[int, str]]
+            Frame-to-tag mapping
+        tag_colors : Optional[Dict[str, str]]
+            Tag colors
+        unselected_indices : Optional[List[int]]
+            Unselected frame indices
+        scatter_size : int
+            Size of scatter points
+
+        Returns
+        -------
+        None
+        """
         if labels is not None and cluster_contour:
             if cluster_contour_voronoi:
                 LandscapeRenderingHelper.plot_cluster_voronoi(
@@ -545,24 +1018,15 @@ class LandscapePlotter:
                 )
             else:
                 LandscapeRenderingHelper.plot_cluster_density_contours(
-                    ax, data_x, data_y, labels, cluster_colors, bins, contour_label_fontsize=contour_label_fontsize
+                    ax, data_x, data_y, labels, cluster_colors, bins,
+                    contour_label_fontsize=contour_label_fontsize
                 )
         else:
             LandscapeRenderingHelper.create_scatter(
-                ax, data_x, data_y, labels, cluster_colors, alpha, data_scatter
+                ax, data_x, data_y, labels, cluster_colors, alpha, data_scatter,
+                frame_tag_map=frame_tag_map, tag_colors=tag_colors,
+                unselected_indices=unselected_indices, scatter_size=scatter_size
             )
-
-        # Plot cluster centers if present
-        if centers is not None:
-            LandscapeRenderingHelper.plot_centers(
-                ax, centers, cluster_ids, dim_x, dim_y, cluster_colors,
-                center_marker, center_size
-            )
-
-        # Set axis styling
-        LandscapeStylingHelper.set_axis_labels(ax, dim_x, dim_y, xaxis_label, yaxis_label, xlabel_fontsize,
-                                               ylabel_fontsize)
-        LandscapeStylingHelper.set_axis_limits(ax, xlim, ylim)
 
     def _load_clustering_data(
         self,
