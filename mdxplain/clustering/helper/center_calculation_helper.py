@@ -56,7 +56,8 @@ class CenterCalculationHelper:
         center_method: str = "centroid",
         chunk_size: int = 1000,
         use_memmap: bool = False,
-        max_memory_gb: float = 2.0
+        max_memory_gb: float = 2.0,
+        n_jobs: int = -1
     ) -> Optional[np.ndarray]:
         """
         Calculate cluster centers from data and labels.
@@ -82,6 +83,8 @@ class CenterCalculationHelper:
             Whether to use chunk-wise processing (memory-safe for large data)
         max_memory_gb : float, default=2.0
             Memory threshold for density_peak sampling (other methods ignore this)
+        n_jobs : int, default=-1
+            Number of parallel jobs for density_peak method (other methods ignore this)
 
         Returns
         -------
@@ -122,6 +125,11 @@ class CenterCalculationHelper:
             raise ValueError(
                 f"Invalid center_method: '{center_method}'. "
                 f"Valid options: {list(dispatch.keys())}"
+            )
+
+        if center_method == "density_peak":
+            return CenterCalculationHelper._calculate_density_peaks(
+                data, labels, chunk_size, use_memmap, max_memory_gb, n_jobs
             )
 
         return dispatch[center_method](data, labels, chunk_size, use_memmap, max_memory_gb)
@@ -499,7 +507,8 @@ class CenterCalculationHelper:
         labels: np.ndarray,
         chunk_size: int,
         use_memmap: bool,
-        max_memory_gb: float = 2.0
+        max_memory_gb: float = 2.0,
+        n_jobs: int = -1
     ) -> Optional[np.ndarray]:
         """
         Calculate density peaks with memory-aware sampling.
@@ -519,6 +528,8 @@ class CenterCalculationHelper:
             Not used by this method (kept for API consistency)
         max_memory_gb : float, default=2.0
             Memory threshold for full cluster loading
+        n_jobs : int, default=-1
+            Number of parallel jobs for NearestNeighbors
 
         Returns
         -------
@@ -540,7 +551,9 @@ class CenterCalculationHelper:
             cluster_points = CenterCalculationHelper._load_cluster_for_density(
                 data, labels, label, max_memory_gb
             )
-            center = CenterCalculationHelper._find_density_peak_from_cluster(cluster_points)
+            center = CenterCalculationHelper._find_density_peak_from_cluster(
+                cluster_points, n_jobs
+            )
             centers.append(center)
 
         return np.array(centers) if centers else None
@@ -583,7 +596,7 @@ class CenterCalculationHelper:
         return data[sample_indices]
 
     @staticmethod
-    def _find_density_peak_from_cluster(cluster_points):
+    def _find_density_peak_from_cluster(cluster_points, n_jobs: int = -1):
         """
         Find density peak in cluster using k-NN.
 
@@ -591,6 +604,8 @@ class CenterCalculationHelper:
         ----------
         cluster_points : np.ndarray
             Cluster data points
+        n_jobs : int, default=-1
+            Number of parallel jobs for NearestNeighbors
 
         Returns
         -------
@@ -603,12 +618,12 @@ class CenterCalculationHelper:
             return cluster_points[np.argmin(distances)]
 
         n_neighbors = min(8, len(cluster_points))
-        nbrs = NearestNeighbors(n_neighbors=n_neighbors)
+        nbrs = NearestNeighbors(n_neighbors=n_neighbors, n_jobs=n_jobs)
         nbrs.fit(cluster_points)
         distances, _ = nbrs.kneighbors(cluster_points)
         epsilon = np.median(distances[:, -1])
 
-        nbrs_count = NearestNeighbors(radius=epsilon)
+        nbrs_count = NearestNeighbors(radius=epsilon, n_jobs=n_jobs)
         nbrs_count.fit(cluster_points)
         neighbor_counts = [
             len(nbrs_count.radius_neighbors([point], return_distance=False)[0])

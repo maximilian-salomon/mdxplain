@@ -162,6 +162,7 @@ class DBSCANCalculator(CalculatorBase):
             "sample_size": sample_size,
             "force": kwargs.get("force", False),
             "knn_neighbors": kwargs.get("knn_neighbors", 5),
+            "n_jobs": kwargs.get("n_jobs", -1),
         }
 
     def _perform_clustering(self, data: np.ndarray, parameters: Dict[str, Any]) -> Tuple[np.ndarray, Any, float]:
@@ -246,7 +247,7 @@ class DBSCANCalculator(CalculatorBase):
         
         # Build index ONCE before loop
         print("Building neighbors index on full dataset (this may take a while)...")
-        nbrs = NearestNeighbors(radius=eps, n_jobs=-1)
+        nbrs = NearestNeighbors(radius=eps, n_jobs=parameters["n_jobs"])
         nbrs.fit(data)
         
         # Compute radius neighbors graph chunk-wise
@@ -273,7 +274,7 @@ class DBSCANCalculator(CalculatorBase):
             eps=eps,
             min_samples=parameters["min_samples"],
             metric='precomputed',
-            n_jobs=-1
+            n_jobs=parameters["n_jobs"]
         )
         cluster_labels = dbscan.fit_predict(full_sparse_matrix)
         

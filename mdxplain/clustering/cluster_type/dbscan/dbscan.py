@@ -57,13 +57,14 @@ class DBSCAN(ClusterTypeBase):
     """
 
     def __init__(
-        self, 
-        eps: float = 0.5, 
+        self,
+        eps: float = 0.5,
         min_samples: int = 5,
         method: str = "standard",
         sample_fraction: float = 0.1,
         force: bool = False,
-        knn_neighbors: int = 5
+        knn_neighbors: int = 5,
+        n_jobs: int = -1
     ) -> None:
         """
         Initialize DBSCAN cluster type.
@@ -87,6 +88,9 @@ class DBSCAN(ClusterTypeBase):
             Override memory and dimensionality checks (converts errors to warnings)
         knn_neighbors : int, default=5
             Number of neighbors for k-NN sampling method.
+        n_jobs : int, default=-1
+            Number of parallel jobs for distance computations.
+            -1 means using all processors.
 
         Returned Metadata
         -----------------
@@ -116,6 +120,7 @@ class DBSCAN(ClusterTypeBase):
         self.sample_fraction = sample_fraction
         self.force = force
         self.knn_neighbors = knn_neighbors
+        self.n_jobs = n_jobs
         self._validate_parameters()
 
     @classmethod
@@ -197,7 +202,8 @@ class DBSCAN(ClusterTypeBase):
             method=self.method,
             sample_fraction=self.sample_fraction,
             force=self.force,
-            knn_neighbors=self.knn_neighbors
+            knn_neighbors=self.knn_neighbors,
+            n_jobs=self.n_jobs
         )
     
     def _validate_parameters(self):

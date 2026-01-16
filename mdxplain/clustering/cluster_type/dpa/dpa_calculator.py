@@ -201,6 +201,7 @@ class DPACalculator(CalculatorBase):
             "sample_size": sample_size,
             "knn_neighbors": kwargs.get("knn_neighbors", 5),
             "force": kwargs.get("force", False),
+            "n_jobs": kwargs.get("n_jobs", -1),
         }
 
     def _perform_clustering(self, data: np.ndarray, parameters: Dict[str, Any]) -> Tuple[np.ndarray, Any, float]:
@@ -322,7 +323,7 @@ class DPACalculator(CalculatorBase):
             blockAn=parameters["blockAn"],
             block_ratio=parameters["block_ratio"],
             frac=parameters["frac"],
-            n_jobs=-1,  # Always use all available cores
+            n_jobs=parameters["n_jobs"],
         )
 
         dpa.fit(data)

@@ -91,6 +91,7 @@ class DPAAddService:
         method: str = "standard",
         sample_fraction: float = 0.1,
         knn_neighbors: int = 5,
+        n_jobs: int = -1,
         use_decomposed: bool = True,
         cluster_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
@@ -136,6 +137,9 @@ class DPAAddService:
             Fraction of data to sample for sampling-based methods
         knn_neighbors : int, default=5
             Number of neighbors for k-NN classifier in sampling methods
+        n_jobs : int, default=-1
+            Number of parallel jobs for distance computations.
+            -1 means using all processors.
         use_decomposed : bool, default=True
             Whether to use decomposed data if available
         cluster_name : str, optional
@@ -190,7 +194,7 @@ class DPAAddService:
         return self._execute(
             selection_name, Z, metric, affinity, density_algo, k_max, D_thr,
             dim_algo, blockAn, block_ratio, frac, halos, method,
-            sample_fraction, knn_neighbors, use_decomposed, cluster_name,
+            sample_fraction, knn_neighbors, n_jobs, use_decomposed, cluster_name,
             data_selector_name, force, override_cache, center_method="centroid"
         )
 
@@ -211,6 +215,7 @@ class DPAAddService:
         method: str = "standard",
         sample_fraction: float = 0.1,
         knn_neighbors: int = 5,
+        n_jobs: int = -1,
         use_decomposed: bool = True,
         cluster_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
@@ -252,6 +257,8 @@ class DPAAddService:
             Sampling fraction
         knn_neighbors : int, default=5
             K-NN neighbors
+        n_jobs : int, default=-1
+            Number of parallel jobs (-1 for all processors)
         use_decomposed : bool, default=True
             Use decomposed data if available
         cluster_name : str, optional
@@ -270,7 +277,7 @@ class DPAAddService:
         return self._execute(
             selection_name, Z, metric, affinity, density_algo, k_max, D_thr,
             dim_algo, blockAn, block_ratio, frac, halos, method,
-            sample_fraction, knn_neighbors, use_decomposed, cluster_name,
+            sample_fraction, knn_neighbors, n_jobs, use_decomposed, cluster_name,
             data_selector_name, force, override_cache, center_method="centroid"
         )
 
@@ -291,6 +298,7 @@ class DPAAddService:
         method: str = "standard",
         sample_fraction: float = 0.1,
         knn_neighbors: int = 5,
+        n_jobs: int = -1,
         use_decomposed: bool = True,
         cluster_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
@@ -332,6 +340,8 @@ class DPAAddService:
             Sampling fraction
         knn_neighbors : int, default=5
             K-NN neighbors
+        n_jobs : int, default=-1
+            Number of parallel jobs (-1 for all processors)
         use_decomposed : bool, default=True
             Use decomposed data if available
         cluster_name : str, optional
@@ -350,7 +360,7 @@ class DPAAddService:
         return self._execute(
             selection_name, Z, metric, affinity, density_algo, k_max, D_thr,
             dim_algo, blockAn, block_ratio, frac, halos, method,
-            sample_fraction, knn_neighbors, use_decomposed, cluster_name,
+            sample_fraction, knn_neighbors, n_jobs, use_decomposed, cluster_name,
             data_selector_name, force, override_cache, center_method="mean"
         )
 
@@ -371,6 +381,7 @@ class DPAAddService:
         method: str = "standard",
         sample_fraction: float = 0.1,
         knn_neighbors: int = 5,
+        n_jobs: int = -1,
         use_decomposed: bool = True,
         cluster_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
@@ -412,6 +423,8 @@ class DPAAddService:
             Sampling fraction
         knn_neighbors : int, default=5
             K-NN neighbors
+        n_jobs : int, default=-1
+            Number of parallel jobs (-1 for all processors)
         use_decomposed : bool, default=True
             Use decomposed data if available
         cluster_name : str, optional
@@ -430,7 +443,7 @@ class DPAAddService:
         return self._execute(
             selection_name, Z, metric, affinity, density_algo, k_max, D_thr,
             dim_algo, blockAn, block_ratio, frac, halos, method,
-            sample_fraction, knn_neighbors, use_decomposed, cluster_name,
+            sample_fraction, knn_neighbors, n_jobs, use_decomposed, cluster_name,
             data_selector_name, force, override_cache, center_method="median"
         )
 
@@ -451,6 +464,7 @@ class DPAAddService:
         method: str = "standard",
         sample_fraction: float = 0.1,
         knn_neighbors: int = 5,
+        n_jobs: int = -1,
         use_decomposed: bool = True,
         cluster_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
@@ -492,6 +506,8 @@ class DPAAddService:
             Sampling fraction
         knn_neighbors : int, default=5
             K-NN neighbors
+        n_jobs : int, default=-1
+            Number of parallel jobs (-1 for all processors)
         use_decomposed : bool, default=True
             Use decomposed data if available
         cluster_name : str, optional
@@ -510,7 +526,7 @@ class DPAAddService:
         return self._execute(
             selection_name, Z, metric, affinity, density_algo, k_max, D_thr,
             dim_algo, blockAn, block_ratio, frac, halos, method,
-            sample_fraction, knn_neighbors, use_decomposed, cluster_name,
+            sample_fraction, knn_neighbors, n_jobs, use_decomposed, cluster_name,
             data_selector_name, force, override_cache, center_method="density_peak"
         )
 
@@ -531,6 +547,7 @@ class DPAAddService:
         method: str = "standard",
         sample_fraction: float = 0.1,
         knn_neighbors: int = 5,
+        n_jobs: int = -1,
         use_decomposed: bool = True,
         cluster_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
@@ -572,6 +589,8 @@ class DPAAddService:
             Sampling fraction
         knn_neighbors : int, default=5
             K-NN neighbors
+        n_jobs : int, default=-1
+            Number of parallel jobs (-1 for all processors)
         use_decomposed : bool, default=True
             Use decomposed data if available
         cluster_name : str, optional
@@ -590,7 +609,7 @@ class DPAAddService:
         return self._execute(
             selection_name, Z, metric, affinity, density_algo, k_max, D_thr,
             dim_algo, blockAn, block_ratio, frac, halos, method,
-            sample_fraction, knn_neighbors, use_decomposed, cluster_name,
+            sample_fraction, knn_neighbors, n_jobs, use_decomposed, cluster_name,
             data_selector_name, force, override_cache, center_method="median_centroid"
         )
 
@@ -611,6 +630,7 @@ class DPAAddService:
         method: str = "standard",
         sample_fraction: float = 0.1,
         knn_neighbors: int = 5,
+        n_jobs: int = -1,
         use_decomposed: bool = True,
         cluster_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
@@ -652,6 +672,8 @@ class DPAAddService:
             Sampling fraction
         knn_neighbors : int, default=5
             K-NN neighbors
+        n_jobs : int, default=-1
+            Number of parallel jobs (-1 for all processors)
         use_decomposed : bool, default=True
             Use decomposed data if available
         cluster_name : str, optional
@@ -670,7 +692,7 @@ class DPAAddService:
         return self._execute(
             selection_name, Z, metric, affinity, density_algo, k_max, D_thr,
             dim_algo, blockAn, block_ratio, frac, halos, method,
-            sample_fraction, knn_neighbors, use_decomposed, cluster_name,
+            sample_fraction, knn_neighbors, n_jobs, use_decomposed, cluster_name,
             data_selector_name, force, override_cache, center_method="rmsd_centroid"
         )
 
@@ -691,6 +713,7 @@ class DPAAddService:
         method: str,
         sample_fraction: float,
         knn_neighbors: int,
+        n_jobs: int,
         use_decomposed: bool,
         cluster_name: Optional[str],
         data_selector_name: Optional[str],
@@ -733,6 +756,8 @@ class DPAAddService:
             Sampling fraction
         knn_neighbors : int
             K-NN neighbors
+        n_jobs : int
+            Number of parallel jobs
         use_decomposed : bool
             Use decomposed data
         cluster_name : str, optional
@@ -766,6 +791,7 @@ class DPAAddService:
             sample_fraction=sample_fraction,
             knn_neighbors=knn_neighbors,
             force=force,
+            n_jobs=n_jobs,
         )
         return self._manager.add_clustering(
             self._pipeline_data,

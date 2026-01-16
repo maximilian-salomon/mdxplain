@@ -82,6 +82,7 @@ class DBSCANAddService:
         method: str = "standard",
         sample_fraction: float = 0.1,
         knn_neighbors: int = 5,
+        n_jobs: int = -1,
         use_decomposed: bool = True,
         cluster_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
@@ -111,6 +112,9 @@ class DBSCANAddService:
             Fraction of data to sample for 'knn_sampling' method
         knn_neighbors : int, default=5
             Number of neighbors for k-NN sampling method
+        n_jobs : int, default=-1
+            Number of parallel jobs for distance computations.
+            -1 means using all processors.
         use_decomposed : bool, default=True
             Whether to use decomposed data if available, otherwise use raw features
         cluster_name : str, optional
@@ -160,7 +164,7 @@ class DBSCANAddService:
         """
         return self._execute(
             selection_name, eps, min_samples, method, sample_fraction,
-            knn_neighbors, use_decomposed, cluster_name, data_selector_name,
+            knn_neighbors, n_jobs, use_decomposed, cluster_name, data_selector_name,
             force, override_cache, center_method="centroid"
         )
 
@@ -172,6 +176,7 @@ class DBSCANAddService:
         method: str = "standard",
         sample_fraction: float = 0.1,
         knn_neighbors: int = 5,
+        n_jobs: int = -1,
         use_decomposed: bool = True,
         cluster_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
@@ -195,6 +200,8 @@ class DBSCANAddService:
             Fraction for knn_sampling method
         knn_neighbors : int, default=5
             Neighbors for k-NN sampling
+        n_jobs : int, default=-1
+            Number of parallel jobs (-1 for all processors)
         use_decomposed : bool, default=True
             Use decomposed data if available
         cluster_name : str, optional
@@ -212,7 +219,7 @@ class DBSCANAddService:
         """
         return self._execute(
             selection_name, eps, min_samples, method, sample_fraction,
-            knn_neighbors, use_decomposed, cluster_name, data_selector_name,
+            knn_neighbors, n_jobs, use_decomposed, cluster_name, data_selector_name,
             force, override_cache, center_method="centroid"
         )
 
@@ -224,6 +231,7 @@ class DBSCANAddService:
         method: str = "standard",
         sample_fraction: float = 0.1,
         knn_neighbors: int = 5,
+        n_jobs: int = -1,
         use_decomposed: bool = True,
         cluster_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
@@ -247,6 +255,8 @@ class DBSCANAddService:
             Fraction for knn_sampling method
         knn_neighbors : int, default=5
             Neighbors for k-NN sampling
+        n_jobs : int, default=-1
+            Number of parallel jobs (-1 for all processors)
         use_decomposed : bool, default=True
             Use decomposed data if available
         cluster_name : str, optional
@@ -264,7 +274,7 @@ class DBSCANAddService:
         """
         return self._execute(
             selection_name, eps, min_samples, method, sample_fraction,
-            knn_neighbors, use_decomposed, cluster_name, data_selector_name,
+            knn_neighbors, n_jobs, use_decomposed, cluster_name, data_selector_name,
             force, override_cache, center_method="mean"
         )
 
@@ -276,6 +286,7 @@ class DBSCANAddService:
         method: str = "standard",
         sample_fraction: float = 0.1,
         knn_neighbors: int = 5,
+        n_jobs: int = -1,
         use_decomposed: bool = True,
         cluster_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
@@ -299,6 +310,8 @@ class DBSCANAddService:
             Fraction for knn_sampling method
         knn_neighbors : int, default=5
             Neighbors for k-NN sampling
+        n_jobs : int, default=-1
+            Number of parallel jobs (-1 for all processors)
         use_decomposed : bool, default=True
             Use decomposed data if available
         cluster_name : str, optional
@@ -316,7 +329,7 @@ class DBSCANAddService:
         """
         return self._execute(
             selection_name, eps, min_samples, method, sample_fraction,
-            knn_neighbors, use_decomposed, cluster_name, data_selector_name,
+            knn_neighbors, n_jobs, use_decomposed, cluster_name, data_selector_name,
             force, override_cache, center_method="median"
         )
 
@@ -328,6 +341,7 @@ class DBSCANAddService:
         method: str = "standard",
         sample_fraction: float = 0.1,
         knn_neighbors: int = 5,
+        n_jobs: int = -1,
         use_decomposed: bool = True,
         cluster_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
@@ -351,6 +365,8 @@ class DBSCANAddService:
             Fraction for knn_sampling method
         knn_neighbors : int, default=5
             Neighbors for k-NN sampling
+        n_jobs : int, default=-1
+            Number of parallel jobs (-1 for all processors)
         use_decomposed : bool, default=True
             Use decomposed data if available
         cluster_name : str, optional
@@ -368,7 +384,7 @@ class DBSCANAddService:
         """
         return self._execute(
             selection_name, eps, min_samples, method, sample_fraction,
-            knn_neighbors, use_decomposed, cluster_name, data_selector_name,
+            knn_neighbors, n_jobs, use_decomposed, cluster_name, data_selector_name,
             force, override_cache, center_method="density_peak"
         )
 
@@ -380,6 +396,7 @@ class DBSCANAddService:
         method: str = "standard",
         sample_fraction: float = 0.1,
         knn_neighbors: int = 5,
+        n_jobs: int = -1,
         use_decomposed: bool = True,
         cluster_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
@@ -403,6 +420,8 @@ class DBSCANAddService:
             Fraction for knn_sampling method
         knn_neighbors : int, default=5
             Neighbors for k-NN sampling
+        n_jobs : int, default=-1
+            Number of parallel jobs (-1 for all processors)
         use_decomposed : bool, default=True
             Use decomposed data if available
         cluster_name : str, optional
@@ -420,7 +439,7 @@ class DBSCANAddService:
         """
         return self._execute(
             selection_name, eps, min_samples, method, sample_fraction,
-            knn_neighbors, use_decomposed, cluster_name, data_selector_name,
+            knn_neighbors, n_jobs, use_decomposed, cluster_name, data_selector_name,
             force, override_cache, center_method="median_centroid"
         )
 
@@ -432,6 +451,7 @@ class DBSCANAddService:
         method: str = "standard",
         sample_fraction: float = 0.1,
         knn_neighbors: int = 5,
+        n_jobs: int = -1,
         use_decomposed: bool = True,
         cluster_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
@@ -455,6 +475,8 @@ class DBSCANAddService:
             Fraction for knn_sampling method
         knn_neighbors : int, default=5
             Neighbors for k-NN sampling
+        n_jobs : int, default=-1
+            Number of parallel jobs (-1 for all processors)
         use_decomposed : bool, default=True
             Use decomposed data if available
         cluster_name : str, optional
@@ -472,7 +494,7 @@ class DBSCANAddService:
         """
         return self._execute(
             selection_name, eps, min_samples, method, sample_fraction,
-            knn_neighbors, use_decomposed, cluster_name, data_selector_name,
+            knn_neighbors, n_jobs, use_decomposed, cluster_name, data_selector_name,
             force, override_cache, center_method="rmsd_centroid"
         )
 
@@ -484,6 +506,7 @@ class DBSCANAddService:
         method: str,
         sample_fraction: float,
         knn_neighbors: int,
+        n_jobs: int,
         use_decomposed: bool,
         cluster_name: Optional[str],
         data_selector_name: Optional[str],
@@ -508,6 +531,8 @@ class DBSCANAddService:
             Sampling fraction
         knn_neighbors : int
             K-NN neighbors
+        n_jobs : int
+            Number of parallel jobs
         use_decomposed : bool
             Use decomposed data
         cluster_name : str, optional
@@ -531,6 +556,7 @@ class DBSCANAddService:
             method=method,
             sample_fraction=sample_fraction,
             knn_neighbors=knn_neighbors,
+            n_jobs=n_jobs,
             force=force
         )
         return self._manager.add_clustering(

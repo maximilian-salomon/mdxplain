@@ -432,7 +432,7 @@ class KernelPCACalculator(CalculatorBase):
             gamma=hyperparameters["gamma"],
             random_state=hyperparameters["random_state"],
             copy_X=False,
-            n_jobs=-1,
+            n_jobs=self.n_jobs,
         )
 
         transformed_data = kpca.fit_transform(data)
@@ -834,7 +834,8 @@ class KernelPCACalculator(CalculatorBase):
                 kernel="rbf",
                 gamma=hyperparameters["gamma"],
                 n_components=n_landmarks,
-                random_state=hyperparameters["random_state"]
+                random_state=hyperparameters["random_state"],
+                n_jobs=self.n_jobs
             )
             nystroem.fit(landmarks)
 
@@ -848,7 +849,8 @@ class KernelPCACalculator(CalculatorBase):
                 kernel="rbf",
                 gamma=hyperparameters["gamma"],
                 n_components=n_landmarks,
-                random_state=hyperparameters["random_state"]
+                random_state=hyperparameters["random_state"],
+                n_jobs=self.n_jobs
             )
             nystroem.fit(landmarks)
         else:

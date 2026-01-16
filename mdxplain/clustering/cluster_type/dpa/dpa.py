@@ -82,6 +82,7 @@ class DPA(ClusterTypeBase):
         sample_fraction: float = 0.1,
         knn_neighbors: int = 5,
         force: bool = False,
+        n_jobs: int = -1,
     ) -> None:
         """
         Initialize DPA cluster type.
@@ -180,6 +181,9 @@ class DPA(ClusterTypeBase):
             
         force : bool, default=False
             Override memory and dimensionality checks (converts errors to warnings)
+        n_jobs : int, default=-1
+            Number of parallel jobs for distance computations.
+            -1 means using all processors.
 
         Returned Metadata
         -----------------
@@ -212,11 +216,6 @@ class DPA(ClusterTypeBase):
         cache_path : str
             Path used for caching results
 
-        Note:
-        -----
-        The n_jobs parameter is automatically set to -1 (use all processors) for
-        optimal performance in molecular dynamics analysis.
-
         References
         ----------
         Parameter descriptions adapted from the DPA package documentation.
@@ -238,6 +237,7 @@ class DPA(ClusterTypeBase):
         self.sample_fraction = sample_fraction
         self.knn_neighbors = knn_neighbors
         self.force = force
+        self.n_jobs = n_jobs
         self._validate_parameters()
 
     @classmethod
@@ -331,6 +331,7 @@ class DPA(ClusterTypeBase):
             sample_fraction=self.sample_fraction,
             knn_neighbors=self.knn_neighbors,
             force=self.force,
+            n_jobs=self.n_jobs,
         )
 
     def _validate_parameters(self):

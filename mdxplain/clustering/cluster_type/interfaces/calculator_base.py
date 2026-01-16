@@ -301,6 +301,7 @@ class CalculatorBase(ABC):
         labels: np.ndarray,
         cluster_model: Any,
         center_method: str = "centroid",
+        n_jobs: int = -1,
     ) -> Tuple[Optional[np.ndarray], str]:
         """
         Calculate cluster centers using built-in or helper method.
@@ -326,11 +327,13 @@ class CalculatorBase(ABC):
             - "density_peak": Point with highest local density
             - "median_centroid": Medoid from median (robust)
             - "rmsd_centroid": Centroid using RMSD metric (structural)
+        n_jobs : int, default=-1
+            Number of parallel jobs for density_peak method
 
         Returns
         -------
         Tuple[Optional[numpy.ndarray], str]
-        
+
             - centers: Array of cluster centers or None
             - method_used: "direct" if built-in, else center_method
 
@@ -349,7 +352,8 @@ class CalculatorBase(ABC):
             data, labels, center_method,
             chunk_size=self.chunk_size,
             use_memmap=self.use_memmap,
-            max_memory_gb=self.max_memory_gb
+            max_memory_gb=self.max_memory_gb,
+            n_jobs=n_jobs
         )
         return centers, center_method
 
@@ -557,7 +561,9 @@ class CalculatorBase(ABC):
             if len(remaining_indices) > 0:
                 # Fit k-NN classifier
                 n_neighbors = min(parameters["knn_neighbors"], len(non_noise_sample_data))
-                knn_classifier = KNeighborsClassifier(n_neighbors=n_neighbors)
+                knn_classifier = KNeighborsClassifier(
+                    n_neighbors=n_neighbors, n_jobs=parameters["n_jobs"]
+                )
                 knn_classifier.fit(non_noise_sample_data, non_noise_sample_labels)
                 
                 # Process remaining points in chunks (direct memmap/array writing)
