@@ -25,6 +25,7 @@ Implements KernelPCA computation with support for incremental kernel
 computation for large datasets using sklearn's KernelPCA.
 """
 
+from contextlib import nullcontext
 from typing import Any, Dict, Tuple, Union
 
 import numpy as np
@@ -38,6 +39,11 @@ from sklearn.metrics.pairwise import rbf_kernel
 from ..interfaces.calculator_base import CalculatorBase
 from ....utils.data_utils import DataUtils
 from ..helper.automatic_parameter_helper import AutomaticParameterHelper
+
+try:
+    from threadpoolctl import threadpool_limits
+except ImportError:  # pragma: no cover - optional dependency via sklearn
+    threadpool_limits = None
 
 
 class KernelPCACalculator(CalculatorBase):
@@ -61,7 +67,17 @@ class KernelPCACalculator(CalculatorBase):
     >>> transformed, metadata = calc.compute(large_data, n_components=50)
     """
 
-    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000, use_parallel: bool = False, n_jobs: int = -1, min_chunk_size: int = 1000) -> None:
+    def __init__(
+        self,
+        use_memmap: bool = False,
+        cache_path: str = "./cache",
+        chunk_size: int = 2000,
+        use_parallel: bool = False,
+        n_jobs: int = -1,
+        min_chunk_size: int = 1000,
+        max_blas_threads: Union[int, None] = 1,
+        auto_limit_blas: bool = True,
+    ) -> None:
         """
         Initialize KernelPCA calculator.
 
@@ -79,7 +95,12 @@ class KernelPCACalculator(CalculatorBase):
             Number of parallel jobs (-1 for all available CPU cores)
         min_chunk_size : int, default=1000
             Minimum chunk size per parallel process to avoid overhead
-
+        max_blas_threads : int or None, default=1
+            Preferred BLAS/OpenMP thread limit; set auto_limit_blas=False to disable
+            thread limiting, or None to fall back to a safe default
+        auto_limit_blas : bool, default=True
+            Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
+            otherwise use max_blas_threads (fallback 2 when None)
         Returns
         -------
         None
@@ -98,6 +119,50 @@ class KernelPCACalculator(CalculatorBase):
         self.use_parallel = use_parallel
         self.n_jobs = n_jobs
         self.min_chunk_size = min_chunk_size
+        self.max_blas_threads = max_blas_threads
+        self.auto_limit_blas = auto_limit_blas
+
+    def _limit_threadpools(self):
+        """
+        Create a context manager that limits BLAS/OpenMP threadpools.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        contextlib.AbstractContextManager
+            Context manager that enforces thread limits when enabled
+        """
+        if threadpool_limits is None:
+            return nullcontext()
+        if self.auto_limit_blas:
+            if self._uses_parallel_jobs():
+                limits = 1
+            else:
+                limits = self.max_blas_threads if self.max_blas_threads and self.max_blas_threads > 0 else 2
+            return threadpool_limits(limits=limits)
+        if self.max_blas_threads is None or self.max_blas_threads < 1:
+            return nullcontext()
+        return threadpool_limits(limits=self.max_blas_threads)
+
+    def _uses_parallel_jobs(self) -> bool:
+        """
+        Determine whether parallel jobs are requested.
+
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        bool
+            True if n_jobs requests more than one worker
+        """
+        if self.n_jobs is None:
+            return False
+        return self.n_jobs != 1
 
     def compute(self, data: np.ndarray, **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
@@ -154,18 +219,19 @@ class KernelPCACalculator(CalculatorBase):
         self._validate_input_data(data)
         hyperparameters = self._extract_hyperparameters(data, kwargs)
 
-        if hyperparameters["use_nystrom"]:
-            transformed_data, metadata = self._compute_nystrom_kernel_pca(
-                data, hyperparameters
-            )
-        elif self.use_memmap:
-            transformed_data, metadata = self._compute_incremental_kernel_pca(
-                data, hyperparameters
-            )
-        else:
-            transformed_data, metadata = self._compute_standard_kernel_pca(
-                data, hyperparameters
-            )
+        with self._limit_threadpools():
+            if hyperparameters["use_nystrom"]:
+                transformed_data, metadata = self._compute_nystrom_kernel_pca(
+                    data, hyperparameters
+                )
+            elif self.use_memmap:
+                transformed_data, metadata = self._compute_incremental_kernel_pca(
+                    data, hyperparameters
+                )
+            else:
+                transformed_data, metadata = self._compute_standard_kernel_pca(
+                    data, hyperparameters
+                )
 
         if hyperparameters.get("auto_select", False):
             transformed_data, metadata = self._apply_auto_selection(

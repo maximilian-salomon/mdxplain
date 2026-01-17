@@ -158,6 +158,8 @@ class DecompositionAddService:
         use_parallel: bool = False,
         n_jobs: int = -1,
         min_chunk_size: int = 1000,
+        max_blas_threads: Union[int, None] = 1,
+        auto_limit_blas: bool = True,
         offset: Union[int, float] = 0,
         decomposition_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
@@ -201,6 +203,12 @@ class DecompositionAddService:
             Number of parallel jobs (-1 for all available CPU cores)
         min_chunk_size : int, default=1000
             Minimum chunk size per parallel process to avoid overhead
+        max_blas_threads : int or None, default=1
+            Preferred BLAS/OpenMP thread limit; set auto_limit_blas=False to disable
+            thread limiting, or None to fall back to a safe default
+        auto_limit_blas : bool, default=True
+            Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
+            otherwise use max_blas_threads (fallback 2 when None)
         offset : int or float, default=0
             Adjustment to auto-selected component count (only applies when n_components="auto"):
 
@@ -257,6 +265,8 @@ class DecompositionAddService:
             use_parallel=use_parallel,
             n_jobs=n_jobs,
             min_chunk_size=min_chunk_size,
+            max_blas_threads=max_blas_threads,
+            auto_limit_blas=auto_limit_blas,
             offset=offset,
         )
         return self._manager.add_decomposition(
@@ -280,6 +290,8 @@ class DecompositionAddService:
         use_parallel: bool = False,
         n_jobs: int = -1,
         min_chunk_size: int = 1000,
+        max_blas_threads: Union[int, None] = 1,
+        auto_limit_blas: bool = True,
         offset: Union[int, float] = 0,
         decomposition_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
@@ -321,6 +333,12 @@ class DecompositionAddService:
             Number of parallel jobs (-1 for all available CPU cores)
         min_chunk_size : int, default=1000
             Minimum chunk size per parallel process to avoid overhead
+        max_blas_threads : int or None, default=1
+            Preferred BLAS/OpenMP thread limit; set auto_limit_blas=False to disable
+            thread limiting, or None to fall back to a safe default
+        auto_limit_blas : bool, default=True
+            Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
+            otherwise use max_blas_threads (fallback 2 when None)
         offset : int or float, default=0
             Adjustment to auto-selected component count (only applies when n_components="auto"):
 
@@ -376,6 +394,8 @@ class DecompositionAddService:
             use_parallel=use_parallel,
             n_jobs=n_jobs,
             min_chunk_size=min_chunk_size,
+            max_blas_threads=max_blas_threads,
+            auto_limit_blas=auto_limit_blas,
             offset=offset,
         )
         return self._manager.add_decomposition(

@@ -26,6 +26,7 @@ for consistency across different clustering methods.
 """
 
 import warnings
+from contextlib import nullcontext
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional, Tuple
 
@@ -36,6 +37,11 @@ from sklearn.neighbors import KNeighborsClassifier
 
 from ....utils.data_utils import DataUtils
 from ...helper.center_calculation_helper import CenterCalculationHelper
+
+try:
+    from threadpoolctl import threadpool_limits
+except ImportError:  # pragma: no cover - optional dependency via sklearn
+    threadpool_limits = None
 
 
 class CalculatorBase(ABC):
@@ -60,7 +66,9 @@ class CalculatorBase(ABC):
         cache_path: str = "./cache", 
         max_memory_gb: float = 2.0,
         chunk_size: int = 1000,
-        use_memmap: bool = False
+        use_memmap: bool = False,
+        max_blas_threads: Optional[int] = 1,
+        auto_limit_blas: bool = True,
     ) -> None:
         """
         Initialize the clustering calculator.
@@ -75,7 +83,12 @@ class CalculatorBase(ABC):
             Chunk size for processing large datasets. Default is 1000.
         use_memmap : bool, optional
             Whether to use memory mapping for large datasets. Default is False.
-
+        max_blas_threads : int or None, default=1
+            Preferred BLAS/OpenMP thread limit; set auto_limit_blas=False to disable
+            thread limiting, or None to fall back to a safe default
+        auto_limit_blas : bool, default=True
+            Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
+            otherwise use max_blas_threads (fallback 2 when None)
         Returns
         -------
         None
@@ -95,6 +108,53 @@ class CalculatorBase(ABC):
         self.max_memory_bytes = max_memory_gb * (1024**3)
         self.chunk_size = chunk_size
         self.use_memmap = use_memmap
+        self.max_blas_threads = max_blas_threads
+        self.auto_limit_blas = auto_limit_blas
+
+    def _limit_threadpools(self, n_jobs: Optional[int]):
+        """
+        Create a context manager that limits BLAS/OpenMP threadpools.
+
+        Parameters
+        ----------
+        n_jobs : int or None
+            Number of requested parallel jobs
+
+        Returns
+        -------
+        contextlib.AbstractContextManager
+            Context manager that enforces thread limits when enabled
+        """
+        if threadpool_limits is None:
+            return nullcontext()
+        if self.auto_limit_blas:
+            if self._uses_parallel_jobs(n_jobs):
+                limits = 1
+            else:
+                limits = self.max_blas_threads if self.max_blas_threads and self.max_blas_threads > 0 else 2
+            return threadpool_limits(limits=limits)
+        if self.max_blas_threads is None or self.max_blas_threads < 1:
+            return nullcontext()
+        return threadpool_limits(limits=self.max_blas_threads)
+
+    @staticmethod
+    def _uses_parallel_jobs(n_jobs: Optional[int]) -> bool:
+        """
+        Determine whether parallel jobs are requested.
+
+        Parameters
+        ----------
+        n_jobs : int or None
+            Number of requested parallel jobs
+
+        Returns
+        -------
+        bool
+            True if n_jobs requests more than one worker
+        """
+        if n_jobs is None:
+            return False
+        return n_jobs != 1
 
     @abstractmethod
     def compute(self, data: np.ndarray, center_method: str = "centroid", **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:

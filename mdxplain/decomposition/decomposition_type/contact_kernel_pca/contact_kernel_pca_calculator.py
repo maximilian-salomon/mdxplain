@@ -25,7 +25,7 @@ Implements specialized KernelPCA computation for binary contact matrices using
 Hamming distance-based kernel that is equivalent to RBF kernel for binary data.
 """
 
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Tuple, Union
 
 import numpy as np
 
@@ -65,7 +65,17 @@ class ContactKernelPCACalculator(KernelPCACalculator):
     >>> transformed, metadata = calc.compute(very_large_binary, n_components=50, use_nystrom=True, n_landmarks=5000)
     """
 
-    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000, use_parallel: bool = False, n_jobs: int = -1, min_chunk_size: int = 1000) -> None:
+    def __init__(
+        self,
+        use_memmap: bool = False,
+        cache_path: str = "./cache",
+        chunk_size: int = 2000,
+        use_parallel: bool = False,
+        n_jobs: int = -1,
+        min_chunk_size: int = 1000,
+        max_blas_threads: Union[int, None] = 1,
+        auto_limit_blas: bool = True,
+    ) -> None:
         """
         Initialize ContactKernelPCA calculator.
 
@@ -83,7 +93,12 @@ class ContactKernelPCACalculator(KernelPCACalculator):
             Number of parallel jobs (-1 for all available CPU cores)
         min_chunk_size : int, default=1000
             Minimum chunk size per parallel process to avoid overhead
-
+        max_blas_threads : int or None, default=1
+            Preferred BLAS/OpenMP thread limit; set auto_limit_blas=False to disable
+            thread limiting, or None to fall back to a safe default
+        auto_limit_blas : bool, default=True
+            Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
+            otherwise use max_blas_threads (fallback 2 when None)
         Returns
         -------
         None
@@ -97,7 +112,16 @@ class ContactKernelPCACalculator(KernelPCACalculator):
         >>> # Incremental ContactKernelPCA for large datasets
         >>> calc = ContactKernelPCACalculator(use_memmap=True, chunk_size=1000)
         """
-        super().__init__(use_memmap, cache_path, chunk_size, use_parallel, n_jobs, min_chunk_size)
+        super().__init__(
+            use_memmap,
+            cache_path,
+            chunk_size,
+            use_parallel,
+            n_jobs,
+            min_chunk_size,
+            max_blas_threads,
+            auto_limit_blas,
+        )
         self._cache_prefix = "contact_kernel_pca"
 
     def compute(self, data: np.ndarray, **kwargs) -> Tuple[np.ndarray, Dict]:

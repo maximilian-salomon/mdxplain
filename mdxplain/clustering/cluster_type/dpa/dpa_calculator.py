@@ -57,7 +57,9 @@ class DPACalculator(CalculatorBase):
         cache_path: str = "./cache", 
         max_memory_gb: float = 2.0,
         chunk_size: int = 1000,
-        use_memmap: bool = False
+        use_memmap: bool = False,
+        max_blas_threads: Optional[int] = 1,
+        auto_limit_blas: bool = True,
     ) -> None:
         """
         Initialize DPA calculator.
@@ -73,12 +75,24 @@ class DPACalculator(CalculatorBase):
             Used for chunked k-NN prediction. Default is 1000.
         use_memmap : bool, optional
             Whether to use memory mapping for large datasets. Default is False.
-
+        max_blas_threads : int or None, default=1
+            Preferred BLAS/OpenMP thread limit; set auto_limit_blas=False to disable
+            thread limiting, or None to fall back to a safe default
+        auto_limit_blas : bool, default=True
+            Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
+            otherwise use max_blas_threads (fallback 2 when None)
         Returns
         -------
         None
         """
-        super().__init__(cache_path, max_memory_gb, chunk_size, use_memmap)
+        super().__init__(
+            cache_path,
+            max_memory_gb,
+            chunk_size,
+            use_memmap,
+            max_blas_threads,
+            auto_limit_blas,
+        )
 
     def compute(self, data: np.ndarray, center_method: str = "centroid", **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
@@ -114,6 +128,7 @@ class DPACalculator(CalculatorBase):
             - method : str, clustering method ('standard', 'knn_sampling')
             - sample_fraction : float, fraction of data to sample
             - force : bool, override memory and dimensionality checks
+            - n_jobs : int, number of parallel jobs (-1 uses all processors)
 
         Returns
         -------
@@ -135,9 +150,10 @@ class DPACalculator(CalculatorBase):
 
         self._validate_memory_and_dimensionality(data, parameters)
 
-        cluster_labels, dpa_model, computation_time = self._perform_clustering(
-            data, parameters
-        )
+        with self._limit_threadpools(parameters.get("n_jobs")):
+            cluster_labels, dpa_model, computation_time = self._perform_clustering(
+                data, parameters
+            )
         metadata = self._build_metadata(
             data, cluster_labels, dpa_model, parameters, computation_time, center_method
         )
@@ -410,7 +426,7 @@ class DPACalculator(CalculatorBase):
 
         # Calculate cluster centers using base class method (coordinates, not indices)
         centers, method_used = self._calculate_centers(
-            data, cluster_labels, dpa_model, center_method
+            data, cluster_labels, dpa_model, center_method, n_jobs=parameters["n_jobs"]
         )
         metadata["centers"] = centers
         metadata["center_method"] = method_used
