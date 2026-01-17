@@ -26,6 +26,7 @@ flexible atom selection. Supports memory mapping for large datasets.
 """
 
 from typing import Any, Dict, Tuple
+import warnings
 
 import mdtraj as md
 import numpy as np
@@ -166,7 +167,20 @@ class CoordinatesCalculator(CalculatorBase):
             indices = np.arange(trajectory.n_atoms)
         else:
             try:
-                indices = trajectory.topology.select(selection)
+                # mdtraj selection emits pyparsing deprecations; silence locally.
+                with warnings.catch_warnings():
+                    warnings.filterwarnings(
+                        "ignore",
+                        category=DeprecationWarning,
+                        module=r"mdtraj\.core\.selection",
+                    )
+                    warnings.filterwarnings(
+                        "ignore",
+                        category=DeprecationWarning,
+                        module=r"pyparsing\.util",
+                        message=r".*parseAll.*",
+                    )
+                    indices = trajectory.topology.select(selection)
             except Exception as e:
                 raise ValueError(
                     f"Invalid selection string '{selection}': {e}. "
