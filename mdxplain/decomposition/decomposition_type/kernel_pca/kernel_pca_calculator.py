@@ -29,12 +29,12 @@ from contextlib import nullcontext
 from typing import Any, Dict, Tuple, Union
 
 import numpy as np
-from joblib import Parallel, delayed
 from mdxplain.utils.progress_utils import ProgressUtils
 from scipy.sparse.linalg import LinearOperator, eigs
 from sklearn.decomposition import IncrementalPCA, KernelPCA
 from sklearn.kernel_approximation import Nystroem
 from sklearn.metrics.pairwise import rbf_kernel
+from sklearn.utils.parallel import Parallel, delayed
 
 from ..interfaces.calculator_base import CalculatorBase
 from ....utils.data_utils import DataUtils
