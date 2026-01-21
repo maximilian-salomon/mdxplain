@@ -30,6 +30,8 @@ from typing import Any, Dict, Tuple, Union
 import numpy as np
 
 from mdxplain.utils.progress_utils import ProgressUtils
+from mdxplain.utils.resource_utils import ResourceUtils
+from mdxplain.utils.data_utils import DataUtils
 
 from ..kernel_pca.kernel_pca_calculator import KernelPCACalculator
 
@@ -215,6 +217,8 @@ class ContactKernelPCACalculator(KernelPCACalculator):
                 )
         else:
             # Chunk-wise validation with early exit
+            if DataUtils.is_memmap_view(data):
+                ResourceUtils.tune_memmap(data, "sequential")
             for i in ProgressUtils.iterate(
                 range(0, data.size, self.chunk_size),
                 desc="Validating binary data",
@@ -226,6 +230,8 @@ class ContactKernelPCACalculator(KernelPCACalculator):
                         "ContactKernelPCA requires binary data. "
                         "Probably your selection not only contains contacts."
                     )
+            if DataUtils.is_memmap_view(data):
+                ResourceUtils.tune_memmap(data, "random")
 
     def _extract_hyperparameters(self, data: np.ndarray, kwargs: Dict[str, Any]) -> Dict[str, Any]:
         """

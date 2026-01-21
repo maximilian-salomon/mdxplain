@@ -31,9 +31,10 @@ import mdtraj as md
 import numpy as np
 
 from mdxplain.utils.progress_utils import ProgressUtils
+from mdxplain.utils.resource_utils import ResourceUtils
+from mdxplain.utils.data_utils import DataUtils
 
 from ..helper.calculator_compute_helper import CalculatorComputeHelper
-from ..helper.calculator_stat_helper import CalculatorStatHelper
 from ..interfaces.calculator_base import CalculatorBase
 from .torsions_calculator_analysis import TorsionsCalculatorAnalysis
 
@@ -218,6 +219,8 @@ class TorsionsCalculator(CalculatorBase):
         """
         if self.use_memmap:
             # Chunk-wise processing for memory efficiency
+            if DataUtils.is_memmap_view(torsions_array):
+                ResourceUtils.tune_memmap(torsions_array, "sequential")
             for i in ProgressUtils.iterate(
                 range(0, trajectory.n_frames, self.chunk_size),
                 desc="Computing torsions",
@@ -232,6 +235,8 @@ class TorsionsCalculator(CalculatorBase):
                 )
                 
                 torsions_array[i:end] = chunk_angles
+                if hasattr(torsions_array, "flush"):
+                    torsions_array.flush()
         else:
             # In-memory processing for smaller datasets
             all_angles, _ = self._compute_all_angles(
@@ -239,6 +244,8 @@ class TorsionsCalculator(CalculatorBase):
             )
             torsions_array[:] = all_angles
 
+        if isinstance(torsions_array, np.memmap):
+            ResourceUtils.tune_memmap(torsions_array, "random")
         return torsions_array
 
     def _compute_all_angles(self, trajectory: md.Trajectory, calculate_phi: bool, 

@@ -29,6 +29,8 @@ Preserves memmap properties correctly.
 from typing import Any, Union
 import os
 
+import numpy as np
+
 from .helper.load_and_save_helper import LoadAndSaveHelper
 
 
@@ -149,6 +151,30 @@ class DataUtils:
             default_path = "./cache"
             os.makedirs(default_path, exist_ok=True)
             return os.path.join(default_path, cache_name)
+
+    @staticmethod
+    def is_memmap_view(array: Any) -> bool:
+        """
+        Check whether an array is backed by a numpy memmap (including views).
+
+        Parameters
+        ----------
+        array : Any
+            Array or view to check.
+
+        Returns
+        -------
+        bool
+            True if the array is a memmap or view on a memmap.
+        """
+        base = array
+        seen = set()
+        while base is not None and id(base) not in seen:
+            if isinstance(base, np.memmap):
+                return True
+            seen.add(id(base))
+            base = getattr(base, "base", None)
+        return False
 
     @staticmethod
     def get_type_key(type_obj: Union[str, type, object]) -> str:

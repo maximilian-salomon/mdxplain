@@ -32,6 +32,7 @@ from sklearn.cluster import MiniBatchKMeans
 
 from ....utils.data_utils import DataUtils
 from ....utils.progress_utils import ProgressUtils
+from ....utils.resource_utils import ResourceUtils
 
 
 class CalculatorBase(ABC):
@@ -220,7 +221,9 @@ class CalculatorBase(ABC):
                 full_filename = filename
             
             memmap_path = DataUtils.get_cache_file_path(full_filename, self.cache_path)
-            return np.memmap(memmap_path, dtype=dtype, mode='w+', shape=shape)
+            memmap_array = np.memmap(memmap_path, dtype=dtype, mode='w+', shape=shape)
+            ResourceUtils.tune_memmap(memmap_array, "random")
+            return memmap_array
         else:
             return np.zeros(shape, dtype=dtype)
 
@@ -243,6 +246,7 @@ class CalculatorBase(ABC):
             Array of landmark frame indices
         """
         n_frames = data.shape[0]
+        is_memmap_data = DataUtils.is_memmap_view(data)
         
         # Initialize MiniBatchKMeans
         kmeans = MiniBatchKMeans(
@@ -258,18 +262,24 @@ class CalculatorBase(ABC):
         if first_end > self.chunk_size:
             print(f"Warning: Increasing first batch size to {first_end} for KMeans initialization. This is absolute necessary. "
                   "If this causes memory issues, consider reducing n_landmarks.")
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data, "sequential")
         kmeans.partial_fit(data[:first_end].astype(np.float32, copy=False))
 
         if n_frames > first_end:
             for start in ProgressUtils.iterate(range(first_end, n_frames, self.chunk_size), desc="Training MiniBatch KMeans", unit="chunks"):
                 end = min(start + self.chunk_size, n_frames)
                 kmeans.partial_fit(data[start:end].astype(np.float32, copy=False))
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data, "random")
         
         # Find frames closest to cluster centers - single pass
         centers = kmeans.cluster_centers_.astype(np.float32, copy=False)
         best_dist = np.full(n_landmarks, np.inf, dtype=np.float64)
         best_idx = np.full(n_landmarks, -1, dtype=np.int64)
         
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data, "sequential")
         for start in ProgressUtils.iterate(range(0, n_frames, self.chunk_size), desc="Finding landmarks", unit="chunks"):
             end = min(start + self.chunk_size, n_frames)
             chunk = data[start:end].astype(np.float32, copy=False)
@@ -281,6 +291,8 @@ class CalculatorBase(ABC):
                 if d2[i] < best_dist[k]:
                     best_dist[k] = d2[i]
                     best_idx[k]  = start + i
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data, "random")
 
         landmarks, seen = [], set()
         for idx in best_idx:

@@ -38,12 +38,10 @@ from sklearn.utils.parallel import Parallel, delayed
 
 from ..interfaces.calculator_base import CalculatorBase
 from ....utils.data_utils import DataUtils
+from ....utils.resource_utils import ResourceUtils
 from ..helper.automatic_parameter_helper import AutomaticParameterHelper
 
-try:
-    from threadpoolctl import threadpool_limits
-except ImportError:  # pragma: no cover - optional dependency via sklearn
-    threadpool_limits = None
+from threadpoolctl import threadpool_limits
 
 
 class KernelPCACalculator(CalculatorBase):
@@ -492,6 +490,9 @@ class KernelPCACalculator(CalculatorBase):
         tuple
             Tuple of (transformed_data, metadata)
         """
+        if DataUtils.is_memmap_view(data):
+            ResourceUtils.tune_memmap(data, "sequential")
+
         kpca = KernelPCA(
             n_components=hyperparameters["n_components"],
             kernel=hyperparameters["kernel"],
@@ -502,6 +503,8 @@ class KernelPCACalculator(CalculatorBase):
         )
 
         transformed_data = kpca.fit_transform(data)
+        if DataUtils.is_memmap_view(data):
+            ResourceUtils.tune_memmap(data, "random")
 
         metadata = self._prepare_metadata(hyperparameters, data.shape)
         metadata.update(
@@ -530,8 +533,13 @@ class KernelPCACalculator(CalculatorBase):
         """
         n_samples = data.shape[0]
 
+        if DataUtils.is_memmap_view(data):
+            ResourceUtils.tune_memmap(data, "sequential")
+
         # Create kernel matrix as memmap if use_memmap=True
         kernel_matrix = self._create_kernel_memmap(n_samples)
+        if self.use_memmap:
+            ResourceUtils.tune_memmap(kernel_matrix, "sequential")
 
         # Use half of the chunk size, cause we need to use two chunks of size chunk_size
         used_chunk_size = int(np.floor(self.chunk_size / 2))
@@ -557,6 +565,13 @@ class KernelPCACalculator(CalculatorBase):
                 # Compute RBF kernel block
                 block = rbf_kernel(chunk_i, chunk_j, gamma=gamma)
                 kernel_matrix[row_start:row_end, col_start:col_end] = block
+            if self.use_memmap:
+                kernel_matrix.flush()
+
+        if self.use_memmap:
+            ResourceUtils.tune_memmap(kernel_matrix, "random")
+        if DataUtils.is_memmap_view(data):
+            ResourceUtils.tune_memmap(data, "random")
 
         return kernel_matrix
 
@@ -577,6 +592,9 @@ class KernelPCACalculator(CalculatorBase):
         n_samples = kernel_matrix.shape[0]
         row_sums = np.zeros(n_samples, dtype=np.float64)
         col_sums = np.zeros(n_samples, dtype=np.float64)
+        is_memmap = DataUtils.is_memmap_view(kernel_matrix)
+        if is_memmap:
+            ResourceUtils.tune_memmap(kernel_matrix, "sequential")
         
         # First pass: compute row sums
         for i in ProgressUtils.iterate(
@@ -595,6 +613,8 @@ class KernelPCACalculator(CalculatorBase):
         ):
             end = min(j + self.chunk_size, n_samples)
             col_sums[j:end] = kernel_matrix[:, j:end].sum(axis=0)
+        if is_memmap:
+            ResourceUtils.tune_memmap(kernel_matrix, "random")
         
         row_means = row_sums / n_samples
         col_means = col_sums / n_samples
@@ -623,6 +643,9 @@ class KernelPCACalculator(CalculatorBase):
             Modifies kernel_matrix in-place
         """
         n_samples = kernel_matrix.shape[0]
+        is_memmap = DataUtils.is_memmap_view(kernel_matrix)
+        if is_memmap:
+            ResourceUtils.tune_memmap(kernel_matrix, "sequential")
         
         for i in ProgressUtils.iterate(
             range(0, n_samples, self.chunk_size),
@@ -636,6 +659,10 @@ class KernelPCACalculator(CalculatorBase):
                                     row_means[i:i_end, np.newaxis] - 
                                     col_means[np.newaxis, :] + 
                                     grand_mean)
+            if hasattr(kernel_matrix, "flush"):
+                kernel_matrix.flush()
+        if is_memmap:
+            ResourceUtils.tune_memmap(kernel_matrix, "random")
 
     def _compute_incremental_kernel_pca(self, data: np.ndarray, hyperparameters: Dict[str, Any]) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
@@ -709,7 +736,9 @@ class KernelPCACalculator(CalculatorBase):
                 mode="w+",
                 shape=transformed_data.shape,
             )
+            ResourceUtils.tune_memmap(transformed_memmap, "random")
             transformed_memmap[:] = transformed_data
+            transformed_memmap.flush()
             transformed_data = transformed_memmap
 
         metadata = self._prepare_metadata(hyperparameters, data.shape)
@@ -744,6 +773,9 @@ class KernelPCACalculator(CalculatorBase):
         """
         n_samples = kernel_matrix.shape[0]
         result = np.zeros(n_samples, dtype=v.dtype)
+        is_memmap = DataUtils.is_memmap_view(kernel_matrix)
+        if is_memmap:
+            ResourceUtils.tune_memmap(kernel_matrix, "sequential")
         
         for i in range(0, n_samples, chunk_size):
             end = min(i + chunk_size, n_samples)
@@ -753,7 +785,8 @@ class KernelPCACalculator(CalculatorBase):
             
             # Perform multiplication and add to the result vector
             result[i:end] = matrix_chunk @ v
-            
+        if is_memmap:
+            ResourceUtils.tune_memmap(kernel_matrix, "random")
         return result
 
     def _parallel_chunked_matvec(self, v: np.ndarray, kernel_matrix: np.memmap, parallel_chunk_size: int) -> np.ndarray:
@@ -775,18 +808,24 @@ class KernelPCACalculator(CalculatorBase):
             Resulting vector from the multiplication
         """
         n_samples = kernel_matrix.shape[0]
+        is_memmap = DataUtils.is_memmap_view(kernel_matrix)
         
         def process_chunk(start_index):
             end_index = min(start_index + parallel_chunk_size, n_samples)
-            matrix_chunk = kernel_matrix[start_index:end_index, :]
-            return matrix_chunk @ v
+            if is_memmap:
+                ResourceUtils.tune_memmap(kernel_matrix, "sequential")
+            with self._limit_threadpools():
+                matrix_chunk = kernel_matrix[start_index:end_index, :]
+                result = matrix_chunk @ v
+            if is_memmap:
+                ResourceUtils.tune_memmap(kernel_matrix, "random")
+            return result
 
         chunk_starts = range(0, n_samples, parallel_chunk_size)
         
         chunk_results = Parallel(n_jobs=self.n_jobs)(
             delayed(process_chunk)(i) for i in chunk_starts
         )
-        
         return np.concatenate(chunk_results)
 
     def _create_progress_linear_operator(self, shape, matvec_func, dtype):
@@ -844,6 +883,7 @@ class KernelPCACalculator(CalculatorBase):
         kernel_matrix = np.memmap(
             memmap_path, dtype=float, mode="w+", shape=(n_samples, n_samples)
         )
+        ResourceUtils.tune_memmap(kernel_matrix, "random")
 
         return kernel_matrix
 
@@ -867,6 +907,7 @@ class KernelPCACalculator(CalculatorBase):
             Tuple of (transformed_data, metadata)
         """
         n_samples = data.shape[0]
+        is_memmap_data = DataUtils.is_memmap_view(data)
         n_landmarks = hyperparameters["n_landmarks"]
         n_components = hyperparameters["n_components"]
         landmark_selection = hyperparameters.get("landmark_selection", "kmeans")
@@ -931,6 +972,8 @@ class KernelPCACalculator(CalculatorBase):
         )
         
         # Step 3: Chunk-wise transform and partial_fit
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data, "sequential")
         for start in ProgressUtils.iterate(
             range(0, n_samples, processing_chunk_size),
             desc="Nystroem partial fitting",
@@ -944,6 +987,8 @@ class KernelPCACalculator(CalculatorBase):
 
             # Partial fit PCA on features (not on kernel matrix!)
             ipca.partial_fit(kernel_features_chunk)
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data, "random")
         
         # Step 4: Final transform chunk-wise
         result = self._create_array_or_memmap(
@@ -952,6 +997,11 @@ class KernelPCACalculator(CalculatorBase):
             filename=f"{self._cache_prefix}_nystrom.dat"
         )
 
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data, "sequential")
+        is_memmap_result = DataUtils.is_memmap_view(result)
+        if is_memmap_result:
+            ResourceUtils.tune_memmap(result, "sequential")
         for start in ProgressUtils.iterate(
             range(0, n_samples, processing_chunk_size),
             desc="Nystroem final transform",
@@ -962,6 +1012,10 @@ class KernelPCACalculator(CalculatorBase):
 
             kernel_features_chunk = nystroem.transform(data_chunk).astype(np.float32, copy=False)
             result[start:end] = ipca.transform(kernel_features_chunk)
+            if hasattr(result, "flush"):
+                result.flush()
+        if is_memmap_result:
+            ResourceUtils.tune_memmap(result, "random")
 
         metadata = self._prepare_metadata(hyperparameters, data.shape)
         metadata.update(
@@ -973,4 +1027,6 @@ class KernelPCACalculator(CalculatorBase):
             }
         )
 
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data, "random")
         return result, metadata

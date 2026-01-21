@@ -32,6 +32,8 @@ import hdbscan
 import numpy as np
 
 from mdxplain.utils.progress_utils import ProgressUtils
+from mdxplain.utils.resource_utils import ResourceUtils
+from mdxplain.utils.data_utils import DataUtils
 
 from ..interfaces.calculator_base import CalculatorBase
 
@@ -289,7 +291,12 @@ class HDBSCANCalculator(CalculatorBase):
         # Use approximate_predict for all data in chunks (direct memmap/array writing)
         full_labels = self._prepare_labels_storage(n_samples, "hdbscan", "approximate_predict")
         chunk_size = self.chunk_size
-        
+        is_memmap_labels = isinstance(full_labels, np.memmap)
+        is_memmap_data = DataUtils.is_memmap_view(data)
+        if is_memmap_labels:
+            ResourceUtils.tune_memmap(full_labels, "sequential")
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data, "sequential")
         for start in ProgressUtils.iterate(
             range(0, n_samples, chunk_size),
             desc="HDBSCAN approximate_predict",
@@ -298,6 +305,12 @@ class HDBSCANCalculator(CalculatorBase):
             end = min(start + chunk_size, n_samples)
             chunk_labels, _ = hdbscan.approximate_predict(clusterer, data[start:end])
             full_labels[start:end] = chunk_labels
+            if hasattr(full_labels, "flush"):
+                full_labels.flush()
+        if is_memmap_labels:
+            ResourceUtils.tune_memmap(full_labels, "random")
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data, "random")
         
         return full_labels, clusterer
 

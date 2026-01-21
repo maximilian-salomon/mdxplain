@@ -28,6 +28,8 @@ import pickle
 
 import numpy as np
 
+from ..resource_utils import ResourceUtils
+
 
 class LoadAndSaveHelper:
     """
@@ -736,12 +738,14 @@ class LoadAndSaveHelper:
             Restored memmap if file exists, None otherwise.
         """
         if os.path.exists(path):
-            return np.memmap(
+            memmap_array = np.memmap(
                 path,
                 dtype=memmap_info["dtype"],
                 mode="r",
                 shape=tuple(memmap_info["shape"]),
             )
+            ResourceUtils.tune_memmap(memmap_array, "random")
+            return memmap_array
         return None
 
     @staticmethod

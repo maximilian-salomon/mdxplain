@@ -27,6 +27,7 @@ stability analysis, and transition frequency calculations.
 
 import numpy as np
 from ....utils.data_utils import DataUtils
+from ....utils.resource_utils import ResourceUtils
 
 
 class DSSPCalculatorAnalysis:
@@ -144,11 +145,18 @@ class DSSPCalculatorAnalysis:
                                shape=(n_frames, n_residues))
             
             # Chunk-wise processing
+            ResourceUtils.tune_memmap(indices, "sequential")
+            if DataUtils.is_memmap_view(dssp_data):
+                ResourceUtils.tune_memmap(dssp_data, "sequential")
             for i in range(0, n_frames, self.chunk_size):
                 end = min(i + self.chunk_size, n_frames)
                 chunk_reshaped = dssp_data[i:end].reshape(-1, n_residues, n_classes)
                 indices[i:end] = np.argmax(chunk_reshaped, axis=2)
+                indices.flush()
             
+            ResourceUtils.tune_memmap(indices, "random")
+            if DataUtils.is_memmap_view(dssp_data):
+                ResourceUtils.tune_memmap(dssp_data, "random")
             return indices
         else:
             # Non-memmap: direct processing
@@ -195,9 +203,13 @@ class DSSPCalculatorAnalysis:
         
         if self.use_memmap:
             transitions = np.zeros(n_residues, dtype=np.float32)
+            if DataUtils.is_memmap_view(data):
+                ResourceUtils.tune_memmap(data, "sequential")
             for i in range(0, n_frames - lag_time, self.chunk_size):
                 end = min(i + self.chunk_size, n_frames - lag_time)
                 transitions += (data[i:end] != data[i+lag_time:end+lag_time]).sum(axis=0).astype(np.float32)
+            if DataUtils.is_memmap_view(data):
+                ResourceUtils.tune_memmap(data, "random")
             return transitions
         else:
             return (data[:-lag_time] != data[lag_time:]).sum(axis=0).astype(np.float32)
@@ -242,6 +254,8 @@ class DSSPCalculatorAnalysis:
         # For each sliding window, count if ANY transition occurs
         if self.use_memmap:
             # Chunk-wise processing for memmap
+            if DataUtils.is_memmap_view(data):
+                ResourceUtils.tune_memmap(data, "sequential")
             for start in range(0, n_frames - window_size + 1, self.chunk_size):
                 end = min(start + self.chunk_size, n_frames - window_size + 1)
                 
@@ -251,6 +265,8 @@ class DSSPCalculatorAnalysis:
                     diffs = (window_data[1:] != window_data[:-1])
                     window_transitions = diffs.any(axis=0)
                     transitions += window_transitions.astype(np.float32)
+            if DataUtils.is_memmap_view(data):
+                ResourceUtils.tune_memmap(data, "random")
         else:
             # In-memory processing
             for i in range(n_frames - window_size + 1):
@@ -311,11 +327,15 @@ class DSSPCalculatorAnalysis:
             frequencies = np.zeros((n_residues, n_classes), dtype=np.float32)
             
             if self.use_memmap:
+                if DataUtils.is_memmap_view(dssp_data):
+                    ResourceUtils.tune_memmap(dssp_data, "sequential")
                 for i in range(0, n_frames, self.chunk_size):
                     end = min(i + self.chunk_size, n_frames)
                     chunk = dssp_data[i:end]
                     for class_idx, class_value in enumerate(class_values):
                         frequencies[:, class_idx] += (chunk == class_value).sum(axis=0).astype(np.float32)
+                if DataUtils.is_memmap_view(dssp_data):
+                    ResourceUtils.tune_memmap(dssp_data, "random")
             else:
                 for class_idx, class_value in enumerate(class_values):
                     frequencies[:, class_idx] = (dssp_data == class_value).sum(axis=0).astype(np.float32)
@@ -349,6 +369,8 @@ class DSSPCalculatorAnalysis:
         if self.use_memmap:
             # Chunk-wise processing with overlap handling
             prev_frame = None
+            if DataUtils.is_memmap_view(dssp_data):
+                ResourceUtils.tune_memmap(dssp_data, "sequential")
             
             for i in range(0, n_frames, self.chunk_size):
                 end = min(i + self.chunk_size, n_frames)
@@ -365,6 +387,8 @@ class DSSPCalculatorAnalysis:
                     transition_counts += boundary_transitions.astype(np.float32)
                 
                 prev_frame = chunk[-1]
+            if DataUtils.is_memmap_view(dssp_data):
+                ResourceUtils.tune_memmap(dssp_data, "random")
         else:
             # In-memory computation
             transitions = (dssp_data[1:] != dssp_data[:-1]).sum(axis=0).astype(np.float32)

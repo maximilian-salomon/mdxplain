@@ -30,6 +30,8 @@ from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
 from mdxplain.utils.progress_utils import ProgressUtils
+from mdxplain.utils.resource_utils import ResourceUtils
+from mdxplain.utils.data_utils import DataUtils
 from scipy.sparse import vstack
 from sklearn.cluster import DBSCAN as SklearnDBSCAN
 from sklearn.neighbors import NearestNeighbors
@@ -271,7 +273,10 @@ class DBSCANCalculator(CalculatorBase):
         # Compute radius neighbors graph chunk-wise
         chunk_size = self.chunk_size
         sparse_matrices = []
-        
+
+        is_memmap_data = DataUtils.is_memmap_view(data)
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data, "sequential")
         for chunk_start in ProgressUtils.iterate(
             range(0, n_samples, chunk_size),
             desc="Building sparse matrix",
@@ -283,6 +288,8 @@ class DBSCANCalculator(CalculatorBase):
             # Only query (no rebuilding index!)
             sparse_matrix = nbrs.radius_neighbors_graph(chunk_data, mode='distance')
             sparse_matrices.append(sparse_matrix)
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data, "random")
         
         # Combine sparse matrices
         full_sparse_matrix = vstack(sparse_matrices)

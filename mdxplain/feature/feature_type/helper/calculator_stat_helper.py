@@ -31,6 +31,8 @@ from typing import Any, Callable, Optional
 import numpy as np
 
 from mdxplain.utils.progress_utils import ProgressUtils
+from mdxplain.utils.resource_utils import ResourceUtils
+from mdxplain.utils.data_utils import DataUtils
 
 from .feature_shape_helper import FeatureShapeHelper
 
@@ -155,6 +157,9 @@ class CalculatorStatHelper:
 
         # Process in chunks
         result_chunks = []
+        is_memmap_input = DataUtils.is_memmap_view(flat_array)
+        if is_memmap_input:
+            ResourceUtils.tune_memmap(flat_array, "sequential")
         for i in ProgressUtils.iterate(
             range(0, n_features, chunk_size),
             desc="Computing statistics per feature",
@@ -163,6 +168,8 @@ class CalculatorStatHelper:
             end_idx = min(i + chunk_size, n_features)
             chunk_result = func(flat_array[:, i:end_idx], axis=0, **func_kwargs)
             result_chunks.append(chunk_result)
+        if is_memmap_input:
+            ResourceUtils.tune_memmap(flat_array, "random")
 
         # Concatenate results and reshape back to original spatial dimensions
         result = np.concatenate(result_chunks)
@@ -247,6 +254,9 @@ class CalculatorStatHelper:
             Statistical values per frame
         """
         result_chunks = []
+        is_memmap_input = DataUtils.is_memmap_view(array)
+        if is_memmap_input:
+            ResourceUtils.tune_memmap(array, "sequential")
         for i in ProgressUtils.iterate(
             range(0, array.shape[0], chunk_size),
             desc="Computing statistics per frame",
@@ -257,6 +267,8 @@ class CalculatorStatHelper:
                 array, func, i, end_idx
             )
             result_chunks.append(chunk_result)
+        if is_memmap_input:
+            ResourceUtils.tune_memmap(array, "random")
         return np.concatenate(result_chunks)
 
     @staticmethod
@@ -386,6 +398,9 @@ class CalculatorStatHelper:
             Statistical values per column
         """
         result_chunks = []
+        is_memmap_input = DataUtils.is_memmap_view(array)
+        if is_memmap_input:
+            ResourceUtils.tune_memmap(array, "sequential")
         for i in ProgressUtils.iterate(
             range(0, array.shape[0], chunk_size),
             desc="Computing spatial statistics",
@@ -394,6 +409,8 @@ class CalculatorStatHelper:
             end_idx = min(i + chunk_size, array.shape[0])
             chunk_result = func(array[i:end_idx], axis=(0, 2), **func_kwargs)
             result_chunks.append(chunk_result)
+        if is_memmap_input:
+            ResourceUtils.tune_memmap(array, "random")
 
         return CalculatorStatHelper._combine_chunk_results(result_chunks)
 
@@ -571,6 +588,13 @@ class CalculatorStatHelper:
             Modifies result array in-place
         """
         flat_result = result.flatten()
+        is_memmap_input = DataUtils.is_memmap_view(array)
+        is_memmap_result = DataUtils.is_memmap_view(result)
+        if is_memmap_input:
+            ResourceUtils.tune_memmap(array, "sequential")
+        if is_memmap_result:
+            ResourceUtils.tune_memmap(result, "sequential")
+            
         for i in ProgressUtils.iterate(
             range(0, array.shape[1], chunk_size),
             desc="Computing transitions",
@@ -581,7 +605,14 @@ class CalculatorStatHelper:
             CalculatorStatHelper._process_chunk_transitions(
                 chunk, threshold, window_size, mode, flat_result, i
             )
+
         result[:] = flat_result.reshape(result.shape)
+        if is_memmap_input:
+            ResourceUtils.tune_memmap(array, "random")
+        if is_memmap_result:
+            if hasattr(result, "flush"):
+                result.flush()
+            ResourceUtils.tune_memmap(result, "random")
 
     @staticmethod
     def _process_chunk_transitions(

@@ -31,6 +31,8 @@ import mdtraj as md
 import numpy as np
 
 from mdxplain.utils.progress_utils import ProgressUtils
+from mdxplain.utils.resource_utils import ResourceUtils
+from mdxplain.utils.data_utils import DataUtils
 
 from ..helper.calculator_compute_helper import CalculatorComputeHelper
 from ..interfaces.calculator_base import CalculatorBase
@@ -187,6 +189,8 @@ class SASACalculator(CalculatorBase):
         """
         if self.use_memmap:
             # Chunk-wise processing for memory efficiency
+            if DataUtils.is_memmap_view(sasa_array):
+                ResourceUtils.tune_memmap(sasa_array, "sequential")
             for i in ProgressUtils.iterate(
                 range(0, trajectory.n_frames, self.chunk_size),
                 desc="Computing SASA",
@@ -203,6 +207,8 @@ class SASACalculator(CalculatorBase):
                 )
                 
                 sasa_array[i:end] = chunk_sasa
+                if hasattr(sasa_array, "flush"):
+                    sasa_array.flush()
         else:
             # In-memory processing for smaller datasets
             sasa_values = md.shrake_rupley(
@@ -212,6 +218,8 @@ class SASACalculator(CalculatorBase):
             )
             sasa_array[:] = sasa_values
 
+        if isinstance(sasa_array, np.memmap):
+            ResourceUtils.tune_memmap(sasa_array, "random")
         return sasa_array
 
     def _generate_feature_metadata(self, trajectory: md.Trajectory, mode: str, probe_radius: float, res_metadata: Dict[str, Any]) -> Dict[str, Any]:

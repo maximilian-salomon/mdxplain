@@ -29,6 +29,7 @@ to automatically inject PipelineData into manager methods that need it.
 from __future__ import annotations
 
 from typing import Any, Dict, Optional, cast
+from types import SimpleNamespace
 import os
 import shutil
 import tempfile
@@ -37,8 +38,10 @@ from pathlib import Path
 
 from ..entities.pipeline_data import PipelineData
 from .auto_inject_proxy import AutoInjectProxy
+from .performance_config import PerformanceConfig
 from ...utils.archive_utils import ArchiveUtils
 from ...utils.progress_utils import ProgressUtils
+from ...utils.resource_utils import ResourceUtils
 
 from ...trajectory import TrajectoryManager
 from ...feature import FeatureManager
@@ -123,6 +126,8 @@ class PipelineManager:
         max_memory_gb: float = 6.0,
         # Output control
         show_progress: bool = True,
+        # Stability configuration toggle
+        use_stability_config: Optional[bool] = None,
     ):
         """
         Initialize the pipeline manager with configuration for all managers.
@@ -130,43 +135,286 @@ class PipelineManager:
         Parameters
         ----------
         stride : int, default=1
-            Default stride for trajectory loading
+            Default stride for trajectory loading. Larger values reduce memory
+            footprint and downstream compute at the cost of temporal resolution.
+            For large datasets, consider stride > 1 to keep feature matrices
+            smaller and more cache-friendly.
+
         concat : bool, default=False
-            Default concatenation setting for trajectories
+            Default concatenation setting for trajectories. When True, multiple
+            trajectories are concatenated into one, which simplifies indexing
+            but may increase memory pressure for very long series.
+
         selection : str, optional
-            Default MDTraj selection string for trajectories
-        use_memmap : bool, default=False
-            Whether to use memory mapping for feature and decomposition data
+            Default MDTraj selection string for trajectories. Use this to
+            restrict atom selection at load time to reduce downstream features.
+
+        use_memmap : bool, default=True
+            Whether to use memory mapping for feature and decomposition data.
+            Enable this for large datasets that do not fit comfortably in RAM.
+            When stability settings are enabled, the pipeline lowers I/O
+            priority during large sequential scans to keep the system
+            responsive.
+
         chunk_size : int, default=2000
-            Processing chunk size for feature and decomposition computation
+            Processing chunk size for feature and decomposition computation.
+            Larger chunks reduce overhead but increase peak memory and I/O
+            burst size. For very large memmaps, a moderate chunk size tends
+            to provide the best I/O behavior.
+
         dtype : type, default=np.float32
-            Data type for feature matrices (float32 or float64).
-            float32 saves 50% memory and is sufficient for most MD analysis.
-            Use float64 only if extreme numerical precision required.
+            Data type for feature matrices (float32 or float64). float32 saves
+            50% memory and is sufficient for most MD analysis. Use float64
+            only if you need extreme numerical precision or stable eigenvalues.
+
         cache_dir : str, default="./cache"
-            Cache directory path for all managers
+            Cache directory path for all managers. For memmap-heavy workloads,
+            use a fast local SSD to avoid I/O contention.
+
         max_memory_gb : float, default=6.0
-            Maximum memory in GB for dataset processing.
-            Used for memory-aware sampling in algorithms like DecisionTree.
-            Datasets exceeding this limit will be automatically sampled.
+            Maximum memory in GB for dataset processing. Used for memory-aware
+            sampling in algorithms like DecisionTree. Increase this on large
+            workstations to reduce sampling, or keep it low to stay responsive.
         show_progress : bool, default=True
-            Enable or disable progress bars globally (tqdm). When False,
-            all progress bars are suppressed.
+            Enable or disable progress bars globally (tqdm). When False, all
+            progress bars are suppressed. This also disables resource limit
+            reporting unless you call report_resource_limits explicitly.
+
+        use_stability_config : bool or None, default=None
+            Choose how resource limits are applied at initialization. The
+            default (None) enables stability settings only when use_memmap is
+            True; otherwise it preserves OS defaults. When True, the pipeline
+            applies a stability policy immediately: it lowers CPU priority
+            (nice=15), keeps two CPU cores free via affinity, reduces I/O
+            priority to "low", and caps BLAS/OpenMP thread pools to the active
+            CPU set. When False, no resource limits are applied at startup and
+            the process keeps OS defaults. All settings are stored in
+            pipeline.config.performance; any change there is applied
+            immediately.
 
         Returns
         -------
         None
             Initializes PipelineManager with automatic data injection
         """
-        # Validate parameters
+        self._validate_init_params(stride=stride, chunk_size=chunk_size)
+        os.makedirs(cache_dir, exist_ok=True)
+
+        self._init_performance_config(
+            use_memmap=use_memmap,
+            use_stability_config=use_stability_config,
+        )
+        self._init_data(
+            use_memmap=use_memmap,
+            cache_dir=cache_dir,
+            chunk_size=chunk_size,
+            dtype=dtype,
+            max_memory_gb=max_memory_gb,
+        )
+        self._init_managers(
+            stride=stride,
+            concat=concat,
+            selection=selection,
+            cache_dir=cache_dir,
+            use_memmap=use_memmap,
+            chunk_size=chunk_size,
+        )
+        self._apply_show_progress(show_progress)
+        self.report_resource_limits()
+
+    def _validate_init_params(self, stride: int, chunk_size: int) -> None:
+        """
+        Validate initialization parameters for basic correctness.
+
+        This helper keeps the constructor focused on wiring while still
+        enforcing minimum input constraints. It currently validates stride
+        and chunk size since these affect memory access patterns and can
+        trigger confusing downstream errors if invalid.
+
+        Parameters
+        ----------
+        stride : int
+            Trajectory stride; must be a positive integer.
+        chunk_size : int
+            Processing chunk size; must be a positive integer.
+
+        Returns
+        -------
+        None
+            Raises ValueError for invalid inputs.
+        """
         if stride <= 0 and not isinstance(stride, int):
             raise ValueError("Stride must be a positive integer.")
         if chunk_size <= 0 and not isinstance(chunk_size, int):
             raise ValueError("Chunk size must be a positive integer.")
 
-        os.makedirs(cache_dir, exist_ok=True)
+    def _init_performance_config(
+        self,
+        use_memmap: bool,
+        use_stability_config: Optional[bool],
+    ) -> None:
+        """
+        Build performance configuration and apply stability policy if requested.
 
-        # Central data container
+        The configuration is stored on pipeline.config.performance. Changes
+        to any of its fields automatically trigger re-application of resource
+        limits through _apply_performance_config.
+
+        Parameters
+        ----------
+        use_memmap : bool
+            Whether this pipeline is configured to use memmaps. When
+            use_stability_config is None, this determines whether stability
+            settings are applied.
+        use_stability_config : bool or None
+            When True, overwrite the baseline (OS-default) configuration with
+            stability-oriented values and apply them immediately. When False,
+            leave the baseline defaults and do not apply any limits. When
+            None, apply stability values only if use_memmap is True.
+
+        Returns
+        -------
+        None
+            Initializes self.config.performance and self.resource_limits.
+        """
+        self.resource_limits = {"errors": []}
+        defaults = self._default_performance_config()
+        perf = PerformanceConfig(defaults=defaults, on_change=self._apply_performance_config)
+        self.config = SimpleNamespace(performance=perf)
+
+        resolved_stability = use_stability_config
+        if resolved_stability is None:
+            resolved_stability = use_memmap
+
+        if resolved_stability:
+            stability = self._stability_performance_overrides()
+            self.config.performance.update(**stability)
+
+    def _default_performance_config(self) -> Dict[str, Any]:
+        """
+        Return baseline performance settings that preserve OS defaults.
+
+        These defaults are intentionally neutral: they do not change CPU
+        priority, I/O priority, affinity, or BLAS/OpenMP threading. They are
+        still stored on pipeline.config.performance so users can override them.
+
+        Returns
+        -------
+        dict
+            Dictionary of baseline performance settings.
+        """
+        return {
+            "auto_resource_limits": False,
+            "reserve_cores": 0,
+            "resource_nice": None,
+            "resource_io_priority": None,
+            "resource_cpu_affinity": None,
+            "auto_blas_thread_limit": False,
+        }
+
+    def _stability_performance_overrides(self) -> Dict[str, Any]:
+        """
+        Return stability-oriented performance settings.
+
+        These values favor responsiveness and avoid hard system stalls during
+        large sequential I/O workloads. They are applied only when
+        use_stability_config is enabled.
+
+        Returns
+        -------
+        dict
+            Dictionary of stability-focused overrides.
+        """
+        return {
+            "auto_resource_limits": True,
+            "reserve_cores": 2,
+            "resource_nice": 15,
+            "resource_io_priority": "low",
+            "resource_cpu_affinity": None,
+            "auto_blas_thread_limit": True,
+        }
+
+    def _apply_performance_config(self) -> None:
+        """
+        Apply process-level limits using the current performance configuration.
+
+        This method is invoked automatically whenever pipeline.config.performance
+        changes. It applies process nice value, I/O priority, CPU affinity, and
+        BLAS/OpenMP thread caps. All settings are best-effort and may be ignored
+        by the OS or restricted by the current scheduler allocation.
+
+        Returns
+        -------
+        None
+            Updates self.resource_limits with applied values and warnings.
+        """
+        perf = self.config.performance
+        cpu_affinity = perf.resource_cpu_affinity
+
+        if perf.auto_resource_limits and cpu_affinity is None:
+            cpu_affinity = ResourceUtils.recommend_cpu_affinity(
+                reserve_cores=perf.reserve_cores
+            )
+
+        should_apply = (
+            perf.auto_resource_limits
+            or cpu_affinity is not None
+            or perf.resource_nice is not None
+            or perf.resource_io_priority is not None
+        )
+
+        self.resource_limits = {"errors": []}
+        if should_apply:
+            self.resource_limits = ResourceUtils.apply_process_limits(
+                nice=perf.resource_nice,
+                io_priority=perf.resource_io_priority,
+                cpu_affinity=cpu_affinity,
+            )
+
+        if perf.auto_blas_thread_limit:
+            max_threads = None
+            if cpu_affinity:
+                max_threads = len(cpu_affinity)
+            else:
+                allowed = ResourceUtils.recommend_cpu_affinity(reserve_cores=0)
+                if allowed:
+                    max_threads = len(allowed)
+            if max_threads is not None:
+                self.resource_limits["blas"] = ResourceUtils.apply_blas_thread_limits(
+                    max_threads
+                )
+        else:
+            self.resource_limits["blas"] = ResourceUtils.apply_blas_thread_limits(None)
+
+    def _init_data(
+        self,
+        use_memmap: bool,
+        cache_dir: str,
+        chunk_size: int,
+        dtype: type,
+        max_memory_gb: float,
+    ) -> None:
+        """
+        Initialize the central PipelineData container.
+
+        Parameters
+        ----------
+        use_memmap : bool
+            Whether to store feature and decomposition data as memmaps.
+        cache_dir : str
+            Cache directory for memmaps and intermediate artifacts.
+        chunk_size : int
+            Chunk size used by downstream managers and helpers.
+        dtype : type
+            Data type for feature matrices.
+        max_memory_gb : float
+            Maximum memory budget for memory-aware sampling.
+
+        Returns
+        -------
+        None
+            Sets self._data.
+        """
         self._data = PipelineData(
             use_memmap=use_memmap,
             cache_dir=cache_dir,
@@ -175,7 +423,38 @@ class PipelineManager:
             max_memory_gb=max_memory_gb,
         )
 
-        # Create manager instances with their configurations
+    def _init_managers(
+        self,
+        stride: int,
+        concat: bool,
+        selection: Optional[str],
+        cache_dir: str,
+        use_memmap: bool,
+        chunk_size: int,
+    ) -> None:
+        """
+        Initialize manager instances with the shared pipeline configuration.
+
+        Parameters
+        ----------
+        stride : int
+            Trajectory stride used by the TrajectoryManager.
+        concat : bool
+            Concatenation flag for trajectory loading.
+        selection : str, optional
+            MDTraj selection string for trajectory loading.
+        cache_dir : str
+            Cache directory for managers that persist data.
+        use_memmap : bool
+            Whether managers should create memmaps for large matrices.
+        chunk_size : int
+            Shared chunk size for chunked processing.
+
+        Returns
+        -------
+        None
+            Creates manager instances on the PipelineManager.
+        """
         self._trajectory_manager = TrajectoryManager(
             stride=stride,
             concat=concat,
@@ -206,8 +485,46 @@ class PipelineManager:
             use_memmap=use_memmap, chunk_size=chunk_size, cache_dir=cache_dir
         )
 
-        # Configure and propagate progress display setting
-        self._apply_show_progress(show_progress)
+    def report_resource_limits(self) -> None:
+        """
+        Report applied resource limits to stdout when progress output is enabled.
+
+        This method is public to let users re-print the current limits after
+        changing settings at runtime. It is intentionally lightweight and
+        avoids strong formatting guarantees; the output is meant for human
+        inspection rather than machine parsing.
+
+        Returns
+        -------
+        None
+            Prints a one-line summary plus any warnings when applicable.
+        """
+        if not getattr(self, "show_progress", True):
+            return
+        if not getattr(self, "resource_limits", None):
+            return
+
+        parts = []
+        affinity = self.resource_limits.get("cpu_affinity")
+        if affinity:
+            parts.append(f"cpu_affinity={len(affinity)} cores")
+        if self.resource_limits.get("nice") is not None:
+            parts.append(f"nice={self.resource_limits['nice']}")
+        if self.resource_limits.get("io_priority") is not None:
+            parts.append(f"io_priority={self.resource_limits['io_priority']}")
+        blas = self.resource_limits.get("blas")
+        if isinstance(blas, dict) and blas.get("max_threads") is not None:
+            parts.append(f"blas_threads={blas['max_threads']}")
+
+        if parts:
+            print("Resource limits applied: " + ", ".join(parts))
+
+        errors = []
+        errors.extend(self.resource_limits.get("errors") or [])
+        if isinstance(blas, dict):
+            errors.extend(blas.get("errors") or [])
+        if errors:
+            print("Resource limit warnings: " + "; ".join(errors))
 
     @property
     def trajectory(self) -> TrajectoryManager:

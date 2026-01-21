@@ -31,6 +31,8 @@ from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
 from mdxplain.utils.progress_utils import ProgressUtils
+from mdxplain.utils.resource_utils import ResourceUtils
+from mdxplain.utils.data_utils import DataUtils
 from scipy.linalg import eig
 from scipy.sparse.linalg import LinearOperator, eigs
 
@@ -531,6 +533,11 @@ class DiffusionMapsCalculator(CalculatorBase):
             dtype=np.float32,
             filename=filename
         )
+        if self.use_memmap:
+            ResourceUtils.tune_memmap(rmsd_matrix, "sequential")
+        is_memmap_data = DataUtils.is_memmap_view(data)
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data, "sequential")
         
         # Compute RMSD matrix (same logic for both memmap and regular array)
         for i in ProgressUtils.iterate(
@@ -538,6 +545,13 @@ class DiffusionMapsCalculator(CalculatorBase):
         ):
             for j in range(n_frames):
                 rmsd_matrix[i, j] = self._compute_rmsd_flattened(data[i], data[j], n_atoms)
+            if self.use_memmap:
+                rmsd_matrix.flush()
+
+        if self.use_memmap:
+            ResourceUtils.tune_memmap(rmsd_matrix, "random")
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data, "random")
         
         return rmsd_matrix
 
@@ -572,6 +586,9 @@ class DiffusionMapsCalculator(CalculatorBase):
             dtype=np.float32,
             filename=filename
         )
+        if self.use_memmap:
+            ResourceUtils.tune_memmap(kernel_matrix, "sequential")
+            ResourceUtils.tune_memmap(rmsd_matrix, "sequential")
         row_sums = np.zeros(n_frames)
 
         for i in ProgressUtils.iterate(
@@ -583,9 +600,15 @@ class DiffusionMapsCalculator(CalculatorBase):
             chunk_kernel = np.exp(-(rmsd_matrix[i:end_i] ** 2) / epsilon)
             kernel_matrix[i:end_i] = chunk_kernel
             row_sums[i:end_i] = chunk_kernel.sum(axis=1)
+            if self.use_memmap:
+                kernel_matrix.flush()
 
         row_sums[row_sums < 1e-12] = 1e-12  # Numerical stability
         inv_row_sums = 1.0 / row_sums
+
+        if self.use_memmap:
+            ResourceUtils.tune_memmap(kernel_matrix, "random")
+            ResourceUtils.tune_memmap(rmsd_matrix, "random")
 
         return kernel_matrix, inv_row_sums
 
@@ -612,10 +635,15 @@ class DiffusionMapsCalculator(CalculatorBase):
         
         def matvec_mult(v):
             result = np.zeros_like(v)
+            is_memmap_kernel = DataUtils.is_memmap_view(kernel_matrix)
+            if is_memmap_kernel:
+                ResourceUtils.tune_memmap(kernel_matrix, "sequential")
             for i in range(0, n_frames, self.chunk_size):
                 end_i = min(i + self.chunk_size, n_frames)
                 kernel_chunk = kernel_matrix[i:end_i, :]
                 result[i:end_i] = (kernel_chunk * inv_row_sums[i:end_i, np.newaxis]) @ v
+            if is_memmap_kernel:
+                ResourceUtils.tune_memmap(kernel_matrix, "random")
             return result
 
         return LinearOperator((n_frames, n_frames), matvec=matvec_mult)
@@ -721,14 +749,28 @@ class DiffusionMapsCalculator(CalculatorBase):
             dtype=np.float32,
             filename="epsilon_estimator.dat"
         )
+        if self.use_memmap:
+            ResourceUtils.tune_memmap(k_distances, "random")
+        if DataUtils.is_memmap_view(data):
+            ResourceUtils.tune_memmap(data, "sequential")
+        if self.use_memmap:
+            ResourceUtils.tune_memmap(k_distances, "sequential")
         for i, sample_idx in enumerate(sample_indices):
             distances = np.zeros(n_frames)
             for j in range(n_frames):
                 distances[j] = self._compute_rmsd_flattened(data[sample_idx], data[j], n_atoms)
             k_distances[i] = np.partition(distances, k)[k]
+            if self.use_memmap:
+                k_distances.flush()
+        if DataUtils.is_memmap_view(data):
+            ResourceUtils.tune_memmap(data, "random")
+        if self.use_memmap:
+            ResourceUtils.tune_memmap(k_distances, "random")
         
         if self.use_memmap or n_samples > self.chunk_size:
             chunk_medians = []
+            if self.use_memmap:
+                ResourceUtils.tune_memmap(k_distances, "sequential")
             for i in ProgressUtils.iterate(
                 range(0, n_samples, self.chunk_size),
                 desc="Computing epsilon",
@@ -737,6 +779,8 @@ class DiffusionMapsCalculator(CalculatorBase):
                 end = min(i + self.chunk_size, n_samples)
                 chunk_vals = np.array(k_distances[i:end])
                 chunk_medians.append(np.median(chunk_vals))
+            if self.use_memmap:
+                ResourceUtils.tune_memmap(k_distances, "random")
             epsilon = np.median(chunk_medians) ** 2
         
             # Cleanup memmap file if used
@@ -842,6 +886,9 @@ class DiffusionMapsCalculator(CalculatorBase):
         """
         n_landmarks = len(landmark_idx)
         K_landmarks = np.zeros((n_landmarks, n_landmarks))
+        is_memmap_data = DataUtils.is_memmap_view(data)
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data, "sequential")
         
         for i in ProgressUtils.iterate(
             range(n_landmarks),
@@ -851,6 +898,8 @@ class DiffusionMapsCalculator(CalculatorBase):
             for j in range(n_landmarks):
                 rmsd = self._compute_rmsd_flattened(data[landmark_idx[i]], data[landmark_idx[j]], n_atoms)
                 K_landmarks[i, j] = np.exp(-(rmsd ** 2) / epsilon)
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data, "random")
         
         return K_landmarks
 
@@ -886,6 +935,11 @@ class DiffusionMapsCalculator(CalculatorBase):
             dtype=np.float32,
             filename="nystrom_K_all.dat"
         )
+        if self.use_memmap:
+            ResourceUtils.tune_memmap(K_all_to_landmarks, "sequential")
+        is_memmap_data = DataUtils.is_memmap_view(data)
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data, "sequential")
 
         # Vectorized computation: outer loop over landmarks, inner chunk-wise
         for j in range(n_landmarks):
@@ -904,7 +958,14 @@ class DiffusionMapsCalculator(CalculatorBase):
                 # Vectorized RMSD computation for entire chunk
                 rmsd_values = self._compute_rmsd_chunk_to_single(chunk_data, landmark_coord, n_atoms)
                 K_all_to_landmarks[chunk_start:chunk_end, j] = np.exp(-(rmsd_values ** 2) / epsilon)
+                if self.use_memmap:
+                    K_all_to_landmarks.flush()
         
+        if self.use_memmap:
+            ResourceUtils.tune_memmap(K_all_to_landmarks, "random")
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data, "random")
+
         return K_all_to_landmarks
 
     def _nystrom_normalize_to_markov(self, K_landmarks: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
@@ -1002,7 +1063,10 @@ class DiffusionMapsCalculator(CalculatorBase):
             dtype=np.float32,
             filename="nystrom_eigenvectors_full.dat"
         )
-        
+        if self.use_memmap:
+            ResourceUtils.tune_memmap(eigenvectors_full, "sequential")
+            ResourceUtils.tune_memmap(K_all_to_landmarks, "sequential")
+
         # Identify valid eigenvalues (avoid division by near-zero values)
         # For diffusion maps, we need at least n_components+1 eigenvalues (including stationary)
         # Use 1e-10 threshold like standard method to maintain consistency
@@ -1029,6 +1093,12 @@ class DiffusionMapsCalculator(CalculatorBase):
             eigenvectors_full[chunk_start:chunk_end, mask] = (
                 (P_chunk @ eigvecs_small[:, mask]) / valid_eigvals[mask]
             )
+            if self.use_memmap:
+                eigenvectors_full.flush()
+
+        if self.use_memmap:
+            ResourceUtils.tune_memmap(eigenvectors_full, "random")
+            ResourceUtils.tune_memmap(K_all_to_landmarks, "random")
         
         return eigenvectors_full
 

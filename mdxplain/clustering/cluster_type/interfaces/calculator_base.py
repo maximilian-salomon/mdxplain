@@ -36,12 +36,10 @@ from sklearn.metrics import silhouette_score
 from sklearn.neighbors import KNeighborsClassifier
 
 from ....utils.data_utils import DataUtils
+from ....utils.resource_utils import ResourceUtils
 from ...helper.center_calculation_helper import CenterCalculationHelper
 
-try:
-    from threadpoolctl import threadpool_limits
-except ImportError:  # pragma: no cover - optional dependency via sklearn
-    threadpool_limits = None
+from threadpoolctl import threadpool_limits
 
 
 class CalculatorBase(ABC):
@@ -534,7 +532,9 @@ class CalculatorBase(ABC):
         if self.use_memmap:
             filename = f"{algorithm}_{method}_labels.dat"
             path = DataUtils.get_cache_file_path(filename, self.cache_path)
-            return np.memmap(path, dtype=np.int32, mode='w+', shape=(n_samples,))
+            labels = np.memmap(path, dtype=np.int32, mode='w+', shape=(n_samples,))
+            ResourceUtils.tune_memmap(labels, "random")
+            return labels
         else:
             return np.empty(n_samples, dtype=np.int32)
 
@@ -560,7 +560,9 @@ class CalculatorBase(ABC):
             filename = f"{algorithm}_{method}_labels.dat"
             path = DataUtils.get_cache_file_path(filename, self.cache_path)
             memmap_labels = np.memmap(path, dtype=np.int32, mode='w+', shape=labels.shape)
+            ResourceUtils.tune_memmap(memmap_labels, "random")
             memmap_labels[:] = labels
+            memmap_labels.flush()
             return memmap_labels
         return labels
 
@@ -606,6 +608,8 @@ class CalculatorBase(ABC):
         full_labels = self._prepare_labels_storage(n_samples, algorithm, "knn_sampling")
         full_labels[:] = noise_label
         full_labels[sample_indices] = sample_labels
+        if hasattr(full_labels, "flush"):
+            full_labels.flush()
         
         # Use k-NN for non-sampled points (only for non-noise clusters)
         non_noise_mask = sample_labels != noise_label
@@ -627,6 +631,12 @@ class CalculatorBase(ABC):
                 knn_classifier.fit(non_noise_sample_data, non_noise_sample_labels)
                 
                 # Process remaining points in chunks (direct memmap/array writing)
+                is_memmap_labels = isinstance(full_labels, np.memmap)
+                is_memmap_data = DataUtils.is_memmap_view(data)
+                if is_memmap_labels:
+                    ResourceUtils.tune_memmap(full_labels, "sequential")
+                if is_memmap_data:
+                    ResourceUtils.tune_memmap(data, "sequential")
                 for start in ProgressUtils.iterate(
                     range(0, len(remaining_indices), self.chunk_size),
                     desc="k-NN prediction",
@@ -638,5 +648,12 @@ class CalculatorBase(ABC):
                     # k-NN prediction for chunk and write directly
                     chunk_labels = knn_classifier.predict(data[chunk_indices])
                     full_labels[chunk_indices] = chunk_labels
-        
+                    if hasattr(full_labels, "flush"):
+                        full_labels.flush()
+                if is_memmap_labels:
+                    ResourceUtils.tune_memmap(full_labels, "random")
+                if is_memmap_data:
+                    ResourceUtils.tune_memmap(data, "random")
+            
+
         return full_labels

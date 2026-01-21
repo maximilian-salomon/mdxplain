@@ -32,6 +32,8 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 
 from mdxplain.utils.progress_utils import ProgressUtils
+from mdxplain.utils.resource_utils import ResourceUtils
+from mdxplain.utils.data_utils import DataUtils
 
 from .feature_shape_helper import FeatureShapeHelper
 
@@ -261,6 +263,7 @@ class CalculatorComputeHelper:
                 mode="w+",
                 shape=(data.shape[0], n_selected),
             )
+            ResourceUtils.tune_memmap(dynamic_data, "random")
             CalculatorComputeHelper._fill_memmap_data(
                 data, dynamic_data, mask, chunk_size
             )
@@ -331,6 +334,10 @@ class CalculatorComputeHelper:
         None
             Fills dynamic_data array in-place
         """
+        if DataUtils.is_memmap_view(data):
+            ResourceUtils.tune_memmap(data, "sequential")
+        if DataUtils.is_memmap_view(dynamic_data):
+            ResourceUtils.tune_memmap(dynamic_data, "sequential")
         for i in ProgressUtils.iterate(
             range(0, data.shape[0], chunk_size),
             desc="Computing dynamic values",
@@ -341,6 +348,12 @@ class CalculatorComputeHelper:
             CalculatorComputeHelper._process_chunk(
                 chunk, dynamic_data, mask, i, end_idx, is_square_format
             )
+            if hasattr(dynamic_data, "flush"):
+                dynamic_data.flush()
+        if DataUtils.is_memmap_view(data):
+            ResourceUtils.tune_memmap(data, "random")
+        if DataUtils.is_memmap_view(dynamic_data):
+            ResourceUtils.tune_memmap(dynamic_data, "random")
 
     @staticmethod
     def _fill_regular_chunked(data: np.ndarray, dynamic_data: np.ndarray, mask: np.ndarray, chunk_size: int, is_square_format: bool) -> None:
@@ -365,6 +378,12 @@ class CalculatorComputeHelper:
         None
             Fills dynamic_data array in-place
         """
+        is_memmap_data = DataUtils.is_memmap_view(data)
+        is_memmap_output = DataUtils.is_memmap_view(dynamic_data)
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data, "sequential")
+        if is_memmap_output:
+            ResourceUtils.tune_memmap(dynamic_data, "sequential")
         if is_square_format:
             indices = np.where(mask)
             for i in ProgressUtils.iterate(
@@ -374,6 +393,8 @@ class CalculatorComputeHelper:
             ):
                 end_idx = min(i + chunk_size, data.shape[0])
                 dynamic_data[i:end_idx] = data[i:end_idx, indices[0], indices[1]]
+                if hasattr(dynamic_data, "flush"):
+                    dynamic_data.flush()
         else:
             data_flat = data.reshape(data.shape[0], -1)
             for i in ProgressUtils.iterate(
@@ -383,6 +404,12 @@ class CalculatorComputeHelper:
             ):
                 end_idx = min(i + chunk_size, data.shape[0])
                 dynamic_data[i:end_idx] = data_flat[i:end_idx, mask.flatten()]
+                if hasattr(dynamic_data, "flush"):
+                    dynamic_data.flush()
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data, "random")
+        if is_memmap_output:
+            ResourceUtils.tune_memmap(dynamic_data, "random")
 
     @staticmethod
     def _process_chunk(chunk: np.ndarray, dynamic_data: np.ndarray, mask: np.ndarray, start_idx: int, end_idx: int, is_square_format: bool) -> None:
@@ -560,6 +587,8 @@ class CalculatorComputeHelper:
             Created output array
         """
         if use_memmap:
-            return np.memmap(path, dtype=dtype, mode="w+", shape=output_shape)
+            output = np.memmap(path, dtype=dtype, mode="w+", shape=output_shape)
+            ResourceUtils.tune_memmap(output, "random")
+            return output
         else:
             return np.zeros(output_shape, dtype=dtype)

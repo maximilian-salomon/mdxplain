@@ -33,6 +33,9 @@ import warnings
 import os
 import tempfile
 
+from mdxplain.utils.resource_utils import ResourceUtils
+from mdxplain.utils.data_utils import DataUtils
+
 if TYPE_CHECKING:
     from ...pipeline.entities.pipeline_data import PipelineData
     from ...feature.feature_type.interfaces.calculator_base import CalculatorBase
@@ -366,12 +369,19 @@ class PostSelectionReductionHelper:
         )
 
         # Copy chunk-wise
+        is_memmap_data = DataUtils.is_memmap_view(data_matrix)
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data_matrix, "sequential")
+        ResourceUtils.tune_memmap(selected_data, "sequential")
         for start in range(0, n_frames, chunk_size):
             end = min(start + chunk_size, n_frames)
             chunk = data_matrix[start:end, :][:, column_indices]
             selected_data[start:end, :] = chunk
+            selected_data.flush()
 
-        selected_data.flush()
+        ResourceUtils.tune_memmap(selected_data, "random")
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data_matrix, "random")
         return selected_data, temp_path
 
     @staticmethod

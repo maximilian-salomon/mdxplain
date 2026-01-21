@@ -32,6 +32,7 @@ import mdtraj as md
 import numpy as np
 
 from mdxplain.utils.progress_utils import ProgressUtils
+from mdxplain.utils.resource_utils import ResourceUtils
 
 
 class FeatureShapeHelper:
@@ -162,6 +163,8 @@ class FeatureShapeHelper:
             )
         else:
             result[:] = square_array[:, i_indices, j_indices]
+            if FeatureShapeHelper.is_memmap(result):
+                result.flush()
 
         return result
 
@@ -187,12 +190,14 @@ class FeatureShapeHelper:
             Output array for condensed format
         """
         if output_path is not None:
-            return np.memmap(
+            output = np.memmap(
                 output_path,
                 dtype=dtype,
                 mode="w+",
                 shape=(n_frames, n_contacts),
             )
+            ResourceUtils.tune_memmap(output, "random")
+            return output
         else:
             return np.zeros((n_frames, n_contacts), dtype=dtype)
 
@@ -227,6 +232,12 @@ class FeatureShapeHelper:
         -------
         None
         """
+        is_memmap_result = FeatureShapeHelper.is_memmap(result)
+        is_memmap_input = FeatureShapeHelper.is_memmap(square_array)
+        if is_memmap_input:
+            ResourceUtils.tune_memmap(square_array, "sequential")
+        if is_memmap_result:
+            ResourceUtils.tune_memmap(result, "sequential")
         for i in ProgressUtils.iterate(
             range(0, n_frames, chunk_size),
             desc="Converting to condensed format",
@@ -235,6 +246,12 @@ class FeatureShapeHelper:
             end_idx = min(i + chunk_size, n_frames)
             chunk = square_array[i:end_idx]
             result[i:end_idx] = chunk[:, i_indices, j_indices]
+            if is_memmap_result:
+                result.flush()
+        if is_memmap_input:
+            ResourceUtils.tune_memmap(square_array, "random")
+        if is_memmap_result:
+            ResourceUtils.tune_memmap(result, "random")
 
     @staticmethod
     def condensed_to_squareform(
@@ -378,11 +395,18 @@ class FeatureShapeHelper:
                 mode="w+",
                 shape=(n_frames, n_residues, n_residues),
             )
+            ResourceUtils.tune_memmap(square_array, "random")
         else:
             square_array = np.zeros(
                 (n_frames, n_residues, n_residues), dtype=condensed_array.dtype
             )
 
+        is_memmap_output = FeatureShapeHelper.is_memmap(square_array)
+        is_memmap_input = FeatureShapeHelper.is_memmap(condensed_array)
+        if is_memmap_input:
+            ResourceUtils.tune_memmap(condensed_array, "sequential")
+        if is_memmap_output:
+            ResourceUtils.tune_memmap(square_array, "sequential")
         for i in ProgressUtils.iterate(
             range(0, n_frames, chunk_size),
             desc="Converting to square format",
@@ -392,5 +416,11 @@ class FeatureShapeHelper:
             chunk = condensed_array[i:end_idx]
             square_chunk = md.geometry.squareform(chunk, residue_pairs)
             square_array[i:end_idx] = square_chunk
+            if is_memmap_output:
+                square_array.flush()
 
+        if is_memmap_input:
+            ResourceUtils.tune_memmap(condensed_array, "random")
+        if is_memmap_output:
+            ResourceUtils.tune_memmap(square_array, "random")
         return square_array

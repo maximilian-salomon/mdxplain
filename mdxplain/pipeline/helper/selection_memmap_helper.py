@@ -31,6 +31,7 @@ import numpy as np
 from mdxplain.utils.progress_utils import ProgressUtils
 
 from ...utils.data_utils import DataUtils
+from ...utils.resource_utils import ResourceUtils
 
 
 class SelectionMemmapHelper:
@@ -93,7 +94,10 @@ class SelectionMemmapHelper:
             mode="w+",
             shape=(n_rows, n_cols),
         )
-
+        is_memmap_data = DataUtils.is_memmap_view(data)
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data, "sequential")
+        ResourceUtils.tune_memmap(result, "sequential")
         for row_start in ProgressUtils.iterate(
             range(0, n_rows, chunk_size),
             desc="Selecting columns",
@@ -101,7 +105,11 @@ class SelectionMemmapHelper:
         ):
             row_end = min(row_start + chunk_size, n_rows)
             result[row_start:row_end, :] = data[row_start:row_end, indices]
+            result.flush()
 
+        ResourceUtils.tune_memmap(result, "random")
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data, "random")
         return [result]
 
     @staticmethod
@@ -152,6 +160,10 @@ class SelectionMemmapHelper:
             col_end = col_start + matrix.shape[1]
 
             # Process in chunks to avoid loading entire matrix into memory
+            is_memmap_matrix = DataUtils.is_memmap_view(matrix)
+            if is_memmap_matrix:
+                ResourceUtils.tune_memmap(matrix, "sequential")
+            ResourceUtils.tune_memmap(result, "sequential")
             for row_start in ProgressUtils.iterate(
                 range(0, total_samples, chunk_size),
                 desc=f"Concatenating matrix {i+1}/{len(matrices)}",
@@ -162,9 +174,14 @@ class SelectionMemmapHelper:
                 result[row_start:row_end, col_start:col_end] = matrix[
                     row_start:row_end, :
                 ]
+                result.flush()
+            ResourceUtils.tune_memmap(result, "random")
+            if is_memmap_matrix:
+                ResourceUtils.tune_memmap(matrix, "random")
 
             col_start = col_end
 
+        ResourceUtils.tune_memmap(result, "random")
         return result
 
     @staticmethod
@@ -215,6 +232,10 @@ class SelectionMemmapHelper:
         )
 
         # Process in chunks to avoid loading entire data into memory
+        is_memmap_data = DataUtils.is_memmap_view(data)
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data, "sequential")
+        ResourceUtils.tune_memmap(result, "sequential")
         for chunk_start in ProgressUtils.iterate(
             range(0, n_selected_frames, chunk_size),
             desc="Creating frame selection",
@@ -227,5 +248,9 @@ class SelectionMemmapHelper:
             
             # Copy data for this chunk
             result[chunk_start:chunk_end, :] = data[chunk_indices, :]
+            result.flush()
 
+        ResourceUtils.tune_memmap(result, "random")
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data, "random")
         return result

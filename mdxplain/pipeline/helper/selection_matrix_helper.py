@@ -31,6 +31,7 @@ import numpy as np
 from typing import Dict, Tuple, Optional, List, Any, TYPE_CHECKING
 
 from ...utils.data_utils import DataUtils
+from ...utils.resource_utils import ResourceUtils
 
 if TYPE_CHECKING:
     from ..entities.pipeline_data import PipelineData
@@ -185,6 +186,7 @@ class SelectionMatrixHelper:
         matrix = np.memmap(
             memmap_path, dtype=pipeline_data.dtype, mode='r+', shape=(n_rows, n_cols)
         )
+        ResourceUtils.tune_memmap(matrix, "random")
 
         return matrix, frame_mapping
 
@@ -272,6 +274,7 @@ class SelectionMatrixHelper:
             matrix = np.memmap(
                 memmap_path, dtype=dtype, mode='w+', shape=shape
             )
+            ResourceUtils.tune_memmap(matrix, "random")
 
             return matrix, memmap_path
 
@@ -303,6 +306,9 @@ class SelectionMatrixHelper:
         """
         frame_mapping = {}
         current_row = 0
+        is_memmap = isinstance(matrix, np.memmap)
+        if is_memmap:
+            ResourceUtils.tune_memmap(matrix, "sequential")
         
         selector_data = pipeline_data.selected_feature_data[name]
         all_results = selector_data.get_all_results()
@@ -325,7 +331,11 @@ class SelectionMatrixHelper:
                 matrix, pipeline_data, all_results, traj_idx, 
                 current_row, frame_selection, frame_mapping
             )
+            if is_memmap:
+                matrix.flush()
         
+        if is_memmap:
+            ResourceUtils.tune_memmap(matrix, "random")
         return frame_mapping
     
     @staticmethod

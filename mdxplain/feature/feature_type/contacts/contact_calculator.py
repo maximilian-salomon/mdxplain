@@ -30,6 +30,8 @@ from typing import Any, Dict, Optional, Tuple
 import numpy as np
 
 from mdxplain.utils.progress_utils import ProgressUtils
+from mdxplain.utils.resource_utils import ResourceUtils
+from mdxplain.utils.data_utils import DataUtils
 
 from ..helper.calculator_compute_helper import CalculatorComputeHelper
 from ..interfaces.calculator_base import CalculatorBase
@@ -131,6 +133,12 @@ class ContactCalculator(CalculatorBase):
         if self.chunk_size is None:
             self.chunk_size = distances.shape[0]
 
+        is_memmap_contacts = DataUtils.is_memmap_view(contacts)
+        is_memmap_distances = DataUtils.is_memmap_view(distances)
+        if is_memmap_contacts:
+            ResourceUtils.tune_memmap(contacts, "sequential")
+        if is_memmap_distances:
+            ResourceUtils.tune_memmap(distances, "sequential")
         for i in ProgressUtils.iterate(
             range(0, distances.shape[0], self.chunk_size),
             desc="Computing contacts",
@@ -138,6 +146,13 @@ class ContactCalculator(CalculatorBase):
         ):
             end_idx = min(i + self.chunk_size, distances.shape[0])
             contacts[i:end_idx] = distances[i:end_idx] <= cutoff
+            if hasattr(contacts, "flush"):
+                contacts.flush()
+
+        if is_memmap_contacts:
+            ResourceUtils.tune_memmap(contacts, "random")
+        if is_memmap_distances:
+            ResourceUtils.tune_memmap(distances, "random")
 
         return contacts
 
