@@ -82,6 +82,9 @@ class DBSCANAddService:
         method: str = "standard",
         sample_fraction: float = 0.1,
         knn_neighbors: int = 5,
+        n_jobs: int = -1,
+        max_blas_threads: Optional[int] = 1,
+        auto_limit_blas: bool = True,
         use_decomposed: bool = True,
         cluster_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
@@ -111,6 +114,15 @@ class DBSCANAddService:
             Fraction of data to sample for 'knn_sampling' method
         knn_neighbors : int, default=5
             Number of neighbors for k-NN sampling method
+        n_jobs : int, default=-1
+            Number of parallel jobs for distance computations.
+            -1 means using all processors.
+        max_blas_threads : int or None, default=1
+            Preferred BLAS/OpenMP thread limit; set auto_limit_blas=False to disable
+            thread limiting, or None to fall back to a safe default
+        auto_limit_blas : bool, default=True
+            Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
+            otherwise use max_blas_threads (fallback 2 when None)
         use_decomposed : bool, default=True
             Whether to use decomposed data if available, otherwise use raw features
         cluster_name : str, optional
@@ -160,8 +172,8 @@ class DBSCANAddService:
         """
         return self._execute(
             selection_name, eps, min_samples, method, sample_fraction,
-            knn_neighbors, use_decomposed, cluster_name, data_selector_name,
-            force, override_cache, center_method="centroid"
+            knn_neighbors, n_jobs, max_blas_threads, auto_limit_blas, use_decomposed,
+            cluster_name, data_selector_name, force, override_cache, center_method="centroid"
         )
 
     def with_centroid_centers(
@@ -172,6 +184,9 @@ class DBSCANAddService:
         method: str = "standard",
         sample_fraction: float = 0.1,
         knn_neighbors: int = 5,
+        n_jobs: int = -1,
+        max_blas_threads: Optional[int] = 1,
+        auto_limit_blas: bool = True,
         use_decomposed: bool = True,
         cluster_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
@@ -195,6 +210,14 @@ class DBSCANAddService:
             Fraction for knn_sampling method
         knn_neighbors : int, default=5
             Neighbors for k-NN sampling
+        n_jobs : int, default=-1
+            Number of parallel jobs (-1 for all processors)
+        max_blas_threads : int or None, default=1
+            Preferred BLAS/OpenMP thread limit; set auto_limit_blas=False to disable
+            thread limiting, or None to fall back to a safe default
+        auto_limit_blas : bool, default=True
+            Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
+            otherwise use max_blas_threads (fallback 2 when None)
         use_decomposed : bool, default=True
             Use decomposed data if available
         cluster_name : str, optional
@@ -212,8 +235,8 @@ class DBSCANAddService:
         """
         return self._execute(
             selection_name, eps, min_samples, method, sample_fraction,
-            knn_neighbors, use_decomposed, cluster_name, data_selector_name,
-            force, override_cache, center_method="centroid"
+            knn_neighbors, n_jobs, max_blas_threads, auto_limit_blas, use_decomposed,
+            cluster_name, data_selector_name, force, override_cache, center_method="centroid"
         )
 
     def with_mean_centers(
@@ -224,6 +247,9 @@ class DBSCANAddService:
         method: str = "standard",
         sample_fraction: float = 0.1,
         knn_neighbors: int = 5,
+        n_jobs: int = -1,
+        max_blas_threads: Optional[int] = 1,
+        auto_limit_blas: bool = True,
         use_decomposed: bool = True,
         cluster_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
@@ -247,6 +273,14 @@ class DBSCANAddService:
             Fraction for knn_sampling method
         knn_neighbors : int, default=5
             Neighbors for k-NN sampling
+        n_jobs : int, default=-1
+            Number of parallel jobs (-1 for all processors)
+        max_blas_threads : int or None, default=1
+            Preferred BLAS/OpenMP thread limit; set auto_limit_blas=False to disable
+            thread limiting, or None to fall back to a safe default
+        auto_limit_blas : bool, default=True
+            Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
+            otherwise use max_blas_threads (fallback 2 when None)
         use_decomposed : bool, default=True
             Use decomposed data if available
         cluster_name : str, optional
@@ -264,8 +298,8 @@ class DBSCANAddService:
         """
         return self._execute(
             selection_name, eps, min_samples, method, sample_fraction,
-            knn_neighbors, use_decomposed, cluster_name, data_selector_name,
-            force, override_cache, center_method="mean"
+            knn_neighbors, n_jobs, max_blas_threads, auto_limit_blas, use_decomposed,
+            cluster_name, data_selector_name, force, override_cache, center_method="mean"
         )
 
     def with_median_centers(
@@ -276,6 +310,9 @@ class DBSCANAddService:
         method: str = "standard",
         sample_fraction: float = 0.1,
         knn_neighbors: int = 5,
+        n_jobs: int = -1,
+        max_blas_threads: Optional[int] = 1,
+        auto_limit_blas: bool = True,
         use_decomposed: bool = True,
         cluster_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
@@ -299,6 +336,14 @@ class DBSCANAddService:
             Fraction for knn_sampling method
         knn_neighbors : int, default=5
             Neighbors for k-NN sampling
+        n_jobs : int, default=-1
+            Number of parallel jobs (-1 for all processors)
+        max_blas_threads : int or None, default=1
+            Preferred BLAS/OpenMP thread limit; set auto_limit_blas=False to disable
+            thread limiting, or None to fall back to a safe default
+        auto_limit_blas : bool, default=True
+            Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
+            otherwise use max_blas_threads (fallback 2 when None)
         use_decomposed : bool, default=True
             Use decomposed data if available
         cluster_name : str, optional
@@ -316,8 +361,8 @@ class DBSCANAddService:
         """
         return self._execute(
             selection_name, eps, min_samples, method, sample_fraction,
-            knn_neighbors, use_decomposed, cluster_name, data_selector_name,
-            force, override_cache, center_method="median"
+            knn_neighbors, n_jobs, max_blas_threads, auto_limit_blas, use_decomposed,
+            cluster_name, data_selector_name, force, override_cache, center_method="median"
         )
 
     def with_density_peak_centers(
@@ -328,6 +373,9 @@ class DBSCANAddService:
         method: str = "standard",
         sample_fraction: float = 0.1,
         knn_neighbors: int = 5,
+        n_jobs: int = -1,
+        max_blas_threads: Optional[int] = 1,
+        auto_limit_blas: bool = True,
         use_decomposed: bool = True,
         cluster_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
@@ -351,6 +399,14 @@ class DBSCANAddService:
             Fraction for knn_sampling method
         knn_neighbors : int, default=5
             Neighbors for k-NN sampling
+        n_jobs : int, default=-1
+            Number of parallel jobs (-1 for all processors)
+        max_blas_threads : int or None, default=1
+            Preferred BLAS/OpenMP thread limit; set auto_limit_blas=False to disable
+            thread limiting, or None to fall back to a safe default
+        auto_limit_blas : bool, default=True
+            Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
+            otherwise use max_blas_threads (fallback 2 when None)
         use_decomposed : bool, default=True
             Use decomposed data if available
         cluster_name : str, optional
@@ -368,8 +424,8 @@ class DBSCANAddService:
         """
         return self._execute(
             selection_name, eps, min_samples, method, sample_fraction,
-            knn_neighbors, use_decomposed, cluster_name, data_selector_name,
-            force, override_cache, center_method="density_peak"
+            knn_neighbors, n_jobs, max_blas_threads, auto_limit_blas, use_decomposed,
+            cluster_name, data_selector_name, force, override_cache, center_method="density_peak"
         )
 
     def with_median_centroid_centers(
@@ -380,6 +436,9 @@ class DBSCANAddService:
         method: str = "standard",
         sample_fraction: float = 0.1,
         knn_neighbors: int = 5,
+        n_jobs: int = -1,
+        max_blas_threads: Optional[int] = 1,
+        auto_limit_blas: bool = True,
         use_decomposed: bool = True,
         cluster_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
@@ -403,6 +462,14 @@ class DBSCANAddService:
             Fraction for knn_sampling method
         knn_neighbors : int, default=5
             Neighbors for k-NN sampling
+        n_jobs : int, default=-1
+            Number of parallel jobs (-1 for all processors)
+        max_blas_threads : int or None, default=1
+            Preferred BLAS/OpenMP thread limit; set auto_limit_blas=False to disable
+            thread limiting, or None to fall back to a safe default
+        auto_limit_blas : bool, default=True
+            Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
+            otherwise use max_blas_threads (fallback 2 when None)
         use_decomposed : bool, default=True
             Use decomposed data if available
         cluster_name : str, optional
@@ -420,8 +487,8 @@ class DBSCANAddService:
         """
         return self._execute(
             selection_name, eps, min_samples, method, sample_fraction,
-            knn_neighbors, use_decomposed, cluster_name, data_selector_name,
-            force, override_cache, center_method="median_centroid"
+            knn_neighbors, n_jobs, max_blas_threads, auto_limit_blas, use_decomposed,
+            cluster_name, data_selector_name, force, override_cache, center_method="median_centroid"
         )
 
     def with_rmsd_centroid_centers(
@@ -432,6 +499,9 @@ class DBSCANAddService:
         method: str = "standard",
         sample_fraction: float = 0.1,
         knn_neighbors: int = 5,
+        n_jobs: int = -1,
+        max_blas_threads: Optional[int] = 1,
+        auto_limit_blas: bool = True,
         use_decomposed: bool = True,
         cluster_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
@@ -455,6 +525,14 @@ class DBSCANAddService:
             Fraction for knn_sampling method
         knn_neighbors : int, default=5
             Neighbors for k-NN sampling
+        n_jobs : int, default=-1
+            Number of parallel jobs (-1 for all processors)
+        max_blas_threads : int or None, default=1
+            Preferred BLAS/OpenMP thread limit; set auto_limit_blas=False to disable
+            thread limiting, or None to fall back to a safe default
+        auto_limit_blas : bool, default=True
+            Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
+            otherwise use max_blas_threads (fallback 2 when None)
         use_decomposed : bool, default=True
             Use decomposed data if available
         cluster_name : str, optional
@@ -472,8 +550,8 @@ class DBSCANAddService:
         """
         return self._execute(
             selection_name, eps, min_samples, method, sample_fraction,
-            knn_neighbors, use_decomposed, cluster_name, data_selector_name,
-            force, override_cache, center_method="rmsd_centroid"
+            knn_neighbors, n_jobs, max_blas_threads, auto_limit_blas, use_decomposed,
+            cluster_name, data_selector_name, force, override_cache, center_method="rmsd_centroid"
         )
 
     def _execute(
@@ -484,6 +562,9 @@ class DBSCANAddService:
         method: str,
         sample_fraction: float,
         knn_neighbors: int,
+        n_jobs: int,
+        max_blas_threads: Optional[int],
+        auto_limit_blas: bool,
         use_decomposed: bool,
         cluster_name: Optional[str],
         data_selector_name: Optional[str],
@@ -508,6 +589,12 @@ class DBSCANAddService:
             Sampling fraction
         knn_neighbors : int
             K-NN neighbors
+        n_jobs : int
+            Number of parallel jobs
+        max_blas_threads : int or None
+            BLAS/OpenMP thread limit
+        auto_limit_blas : bool
+            Enable auto-limiting for BLAS/OpenMP threads
         use_decomposed : bool
             Use decomposed data
         cluster_name : str, optional
@@ -531,6 +618,9 @@ class DBSCANAddService:
             method=method,
             sample_fraction=sample_fraction,
             knn_neighbors=knn_neighbors,
+            n_jobs=n_jobs,
+            max_blas_threads=max_blas_threads,
+            auto_limit_blas=auto_limit_blas,
             force=force
         )
         return self._manager.add_clustering(

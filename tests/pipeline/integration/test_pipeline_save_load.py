@@ -20,6 +20,7 @@
 
 """Integration tests for pipeline save and load functionality."""
 
+import pickle
 import pytest
 import numpy as np
 from pathlib import Path
@@ -43,7 +44,74 @@ class TestPipelineSaveLoad:
         temp_dir = Path(tempfile.mkdtemp())
         yield temp_dir
         shutil.rmtree(temp_dir)
-    
+
+    def _build_res_labels(self, n_atoms: int) -> list:
+        """
+        Build residue labels for mock trajectories.
+
+        Parameters
+        ----------
+        n_atoms : int
+            Number of atoms in the mock trajectory.
+
+        Returns
+        -------
+        list
+            List of residue label dictionaries.
+        """
+        return [
+            {"seqid": idx, "full_name": f"RES_{idx}"} for idx in range(n_atoms)
+        ]
+
+    def _assign_mock_trajectory(
+        self, pipeline: PipelineManager, mock_traj, name: str
+    ) -> None:
+        """
+        Assign mock trajectory data to the pipeline.
+
+        Parameters
+        ----------
+        pipeline : PipelineManager
+            Pipeline to update.
+        mock_traj : object
+            Mock trajectory with xyz data and topology info.
+        name : str
+            Trajectory name to set.
+
+        Returns
+        -------
+        None
+        """
+        traj_data = pipeline._data.trajectory_data
+        traj_data.trajectories = [mock_traj]
+        traj_data.trajectory_names = [name]
+        traj_data.n_frames = mock_traj.n_frames
+        traj_data.n_atoms = mock_traj.n_atoms
+        traj_data.res_label_data = {0: self._build_res_labels(mock_traj.n_atoms)}
+
+    def _build_memmap_pipeline(self, temp_dir: Path) -> PipelineManager:
+        """
+        Build a pipeline with memmap-backed feature data.
+
+        Parameters
+        ----------
+        temp_dir : Path
+            Temporary directory for cache files.
+
+        Returns
+        -------
+        PipelineManager
+            Pipeline configured for memmap-backed feature computation.
+        """
+        cache_dir = temp_dir / "cache"
+        pipeline = PipelineManager(use_memmap=True, cache_dir=str(cache_dir))
+        mock_traj = MockTrajectoryFactory.create_simple(
+            n_frames=120, n_atoms=25, seed=42
+        )
+        self._assign_mock_trajectory(pipeline, mock_traj, "mock_trajectory")
+        pipeline.feature.add_feature(Distances(), force=True)
+        return pipeline
+
     def test_save_load_empty_pipeline(self, temp_dir):
         """
         Test that empty pipeline save/load preserves structure.
@@ -343,6 +411,33 @@ class TestPipelineSaveLoad:
         
         # Verify feature selectors exist
         assert "all_features" in loaded._data.selected_feature_data
+
+    def test_save_load_pipeline_with_memmap(self, temp_dir):
+        """
+        Verify memmap-backed feature data survives save/load.
+        """
+        pipeline = self._build_memmap_pipeline(temp_dir)
+        feature_data = pipeline._data.feature_data["distances"][0]
+        data_path = Path(feature_data.cache_path)
+        assert data_path.exists()
+        assert isinstance(feature_data.data, np.memmap)
+        save_path = temp_dir / "memmap_pipeline.pkl"
+        pipeline.save_to_single_file(str(save_path))
+        with open(save_path, "rb") as handle:
+            saved = pickle.load(handle)
+        saved_feature = saved["feature_data"]["distances"][0]
+        assert isinstance(saved_feature.data, dict)
+        assert saved_feature.data.get("_is_memmap") is True
+        assert Path(saved_feature.data["original_path"]).resolve() == data_path.resolve()
+        loaded = PipelineManager.load_from_single_file(
+            str(save_path), cache_dir=str(temp_dir / "cache")
+        )
+        loaded_feature = loaded._data.feature_data["distances"][0]
+        assert isinstance(loaded_feature.data, np.memmap)
+        assert Path(loaded_feature.data.filename).resolve() == data_path.resolve()
+        np.testing.assert_array_equal(
+            loaded_feature.data, np.array(feature_data.data)
+        )
         
     def test_save_load_preserves_bound_methods(self, temp_dir):
         """

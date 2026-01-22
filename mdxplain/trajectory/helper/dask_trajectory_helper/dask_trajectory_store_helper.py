@@ -61,7 +61,7 @@ class DaskMDTrajectoryStoreHelper:
         """
         self.cache_dir = cache_dir
     
-    def create_slice_store(self, dask_traj: DaskMDTrajectory, key: Union[slice, np.ndarray]) -> zarr.Group:
+    def create_slice_store(self, dask_traj: DaskMDTrajectory, key: Union[slice, np.ndarray], result_path: str) -> zarr.Group:
         """
         Create new zarr store with sliced trajectory data.
         
@@ -71,6 +71,8 @@ class DaskMDTrajectoryStoreHelper:
             Source trajectory to slice
         key : Union[slice, np.ndarray]
             Slice or array indices to extract
+        result_path : str
+            Path to store result Zarr
             
         Returns
         -------
@@ -80,15 +82,11 @@ class DaskMDTrajectoryStoreHelper:
         Examples
         --------
         >>> store_mgr = DaskMDTrajectoryStoreHelper()
-        >>> zarr_store = store_mgr.create_slice_store(dask_traj, slice(0, 100))
+        >>> zarr_store = store_mgr.create_slice_store(dask_traj, slice(0, 100), 'slice.zarr')
         >>> # Creates store with first 100 frames
         """
-        # Create temporary zarr store with secure temporary directory
-        # Use a temporary file that persists until the returned store is used        
-        temp_fd, temp_path = tempfile.mkstemp(suffix='.zarr', dir=self.cache_dir)
-        os.close(temp_fd)  # Close file descriptor, but keep file
-        os.remove(temp_path)  # Remove file so zarr can create directory
-        temp_store = zarr.open(temp_path, mode='w')
+        # Create result zarr store
+        temp_store = zarr.open(result_path, mode='w')
         
         # Get sliced data
         sliced_coords = dask_traj._dask_coords[key]

@@ -31,6 +31,8 @@ import mdtraj as md
 import numpy as np
 
 from mdxplain.utils.progress_utils import ProgressUtils
+from mdxplain.utils.resource_utils import ResourceUtils
+from mdxplain.utils.data_utils import DataUtils
 
 from ..helper.calculator_compute_helper import CalculatorComputeHelper
 from ..interfaces.calculator_base import CalculatorBase
@@ -216,6 +218,8 @@ class DSSPCalculator(CalculatorBase):
         """
         if self.use_memmap:
             # Chunk-wise processing for memory efficiency
+            if DataUtils.is_memmap_view(dssp_array):
+                ResourceUtils.tune_memmap(dssp_array, "sequential")
             for i in ProgressUtils.iterate(
                 range(0, trajectory.n_frames, self.chunk_size),
                 desc="Computing DSSP",
@@ -234,6 +238,8 @@ class DSSPCalculator(CalculatorBase):
                 encoded_chunk = self._encode_dssp_assignments(chunk_dssp, encoding, classes, simplified)
 
                 dssp_array[i:end] = encoded_chunk
+                if hasattr(dssp_array, "flush"):
+                    dssp_array.flush()
         else:
             # In-memory processing for smaller datasets
             dssp_assignments = md.compute_dssp(trajectory, simplified=simplified)
@@ -244,6 +250,8 @@ class DSSPCalculator(CalculatorBase):
             # Encode according to format
             dssp_array[:] = self._encode_dssp_assignments(dssp_assignments, encoding, classes, simplified)
 
+        if isinstance(dssp_array, np.memmap):
+            ResourceUtils.tune_memmap(dssp_array, "random")
         return dssp_array
 
     def _encode_dssp_assignments(self, dssp_data: np.ndarray, encoding: str, classes: list, simplified: bool) -> np.ndarray:

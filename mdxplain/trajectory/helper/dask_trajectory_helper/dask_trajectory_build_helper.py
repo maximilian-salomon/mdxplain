@@ -34,6 +34,7 @@ import multiprocessing
 import zarr
 import dask.array as da
 import mdtraj as md
+import shutil
 
 from .zarr_cache_helper import ZarrCacheHelper
 from .parallel_operations_helper import ParallelOperationsHelper
@@ -192,14 +193,6 @@ class DaskMDTrajectoryBuildHelper:
         instance.zarr_cache_path, instance.metadata = instance.cache_manager.create_cache_from_mdtraj(
             mdtraj, zarr_cache_path
         )
-        
-        # Track if this is a temporary cache for cleanup
-        if zarr_cache_path is None:
-            instance._is_temp_store = True
-            instance._temp_zarr_path = instance.zarr_cache_path
-        else:
-            instance._is_temp_store = False
-            instance._temp_zarr_path = None
         
         # Open Zarr store
         instance._zarr_store = zarr.open(instance.zarr_cache_path, mode='r')

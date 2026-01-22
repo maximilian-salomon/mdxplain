@@ -26,10 +26,12 @@ with memmap support. Works with any Python object, not just TrajectoryData.
 Preserves memmap properties correctly.
 """
 
-from typing import Any, Dict, Optional, Union
+from typing import Any, Union
 import os
+
 import numpy as np
-import pickle
+
+from .helper.load_and_save_helper import LoadAndSaveHelper
 
 
 class DataUtils:
@@ -75,10 +77,7 @@ class DataUtils:
         >>> # Save any custom object with memmaps
         >>> DataUtils.save_object(my_analysis, 'outputs/analysis.pkl')
         """
-        save_obj: Dict[str, Any] = DataUtils._prepare_save_object(obj)
-        
-        with open(save_path, 'wb') as f:
-            pickle.dump(save_obj, f, protocol=4)
+        LoadAndSaveHelper.save_object(obj, save_path)
 
     @staticmethod
     def load_object(obj: Any, load_path: str) -> None:
@@ -107,266 +106,7 @@ class DataUtils:
         >>> my_obj = MyAnalysisClass()
         >>> DataUtils.load_object(my_obj, 'outputs/analysis.pkl')
         """       
-        with open(load_path, 'rb') as f:
-            loaded_obj: Dict[str, Any] = pickle.load(f)
-        DataUtils._restore_object_attributes(obj, loaded_obj)
-
-    @staticmethod
-    def _prepare_save_object(obj: Any) -> Dict[str, Any]:
-        """
-        Prepare object for saving by converting memmaps and special objects to metadata.
-
-        Parameters
-        ----------
-        obj : object
-            Object to prepare
-
-        Returns
-        -------
-        dict
-            Dictionary with attributes, special objects converted to metadata
-        """
-        save_obj: Dict[str, Any] = {}
-
-        for attr_name in dir(obj):
-            if attr_name.startswith("_"):
-                continue
-
-            attr_value = getattr(obj, attr_name)
-            save_obj[attr_name] = DataUtils._convert_attribute(attr_value, attr_name)
-
-        return save_obj
-
-    @staticmethod
-    def _convert_attribute(attr_value: Any, attr_name: str) -> Any:
-        """
-        Convert single attribute for saving.
-
-        Parameters
-        ----------
-        attr_value : Any
-            Attribute value to convert
-        attr_name : str
-            Attribute name for error messages
-
-        Returns
-        -------
-        Any
-            Converted attribute (metadata dict for special types, original value otherwise)
-        """
-        if isinstance(attr_value, np.memmap):
-            return DataUtils._save_memmap_info(attr_value, attr_name)
-        
-        return attr_value
-
-    @staticmethod
-    def _save_memmap_info(memmap_array: np.memmap, attr_name: str) -> Dict[str, Any]:
-        """
-        Save memmap metadata for later restoration.
-
-        Parameters
-        ----------
-        memmap_array : np.memmap
-            Memory-mapped array to save metadata for
-        attr_name : str
-            Attribute name for error messages
-
-        Returns
-        -------
-        dict
-            Metadata dictionary with shape, dtype, and file path
-        """
-        if not (hasattr(memmap_array, "filename") and memmap_array.filename):
-            raise ValueError(
-                f"Memmap {attr_name} has no filename - this should not happen!"
-            )
-
-        return {
-            "_is_memmap": True,
-            "dtype": memmap_array.dtype,
-            "shape": memmap_array.shape,
-            "mode": getattr(memmap_array, "mode", "r"),
-            "original_path": memmap_array.filename,
-        }
-
-    @staticmethod
-    def _restore_object_attributes(obj: Any, loaded_obj: Dict[str, Any]) -> None:
-        """
-        Restore object attributes from loaded data.
-
-        Parameters
-        ----------
-        obj : object
-            Target object to restore attributes into
-        loaded_obj : dict
-            Loaded data dictionary with attributes
-
-        Returns
-        -------
-        None
-            Modifies obj in-place
-        """
-        for attr_name, attr_value in loaded_obj.items():
-            restored_value = DataUtils._restore_single_attribute(obj, attr_value, attr_name)
-            setattr(obj, attr_name, restored_value)
-
-    @staticmethod
-    def _restore_single_attribute(obj: Any, attr_value: Any, attr_name: str) -> Any:
-        """
-        Restore single attribute from loaded data.
-
-        Parameters
-        ----------
-        obj : object
-            Target object for restoration context
-        attr_value : Any
-            Loaded attribute value
-        attr_name : str
-            Attribute name
-
-        Returns
-        -------
-        Any
-            Restored attribute value
-        """
-        if isinstance(attr_value, dict) and attr_value.get("_is_memmap", False):
-            return DataUtils._restore_memmap(obj, attr_value, attr_name)
-        
-        return attr_value
-
-    @staticmethod
-    def _restore_memmap(obj: Any, memmap_info: Dict[str, Any], attr_name: str) -> Optional[np.memmap]:
-        """
-        Restore memmap from metadata.
-
-        Parameters
-        ----------
-        obj : object
-            Target object for memmap restoration
-        memmap_info : dict
-            Metadata dictionary with memmap information
-        attr_name : str
-            Attribute name for the memmap
-
-        Returns
-        -------
-        np.memmap or None
-            Restored memmap or None if file not found
-        """
-        original_path: str = memmap_info["original_path"]
-
-        # Try to restore from original path first
-        restored = DataUtils._try_restore_from_path(original_path, memmap_info)
-        if restored is not None:
-            return restored
-
-        # Try alternative path if object supports it
-        return DataUtils._try_restore_from_alternative_path(
-            obj, attr_name, memmap_info, original_path
-        )
-
-    @staticmethod
-    def _try_restore_from_path(path: str, memmap_info: Dict[str, Any]) -> Optional[np.memmap]:
-        """
-        Try to restore memmap from given path.
-
-        Parameters
-        ----------
-        path : str
-            File path to try for memmap restoration
-        memmap_info : dict
-            Metadata dictionary with memmap information
-
-        Returns
-        -------
-        np.memmap or None
-            Restored memmap if file exists, None otherwise
-        """
-        if os.path.exists(path):
-            return np.memmap(
-                path,
-                dtype=memmap_info["dtype"],
-                mode="r",
-                shape=tuple(memmap_info["shape"]),
-            )
-        return None
-
-    @staticmethod
-    def _try_restore_from_alternative_path(
-        obj: Any, 
-        attr_name: str, 
-        memmap_info: Dict[str, Any], 
-        original_path: str
-    ) -> Optional[np.memmap]:
-        """
-        Try to restore memmap from alternative path.
-
-        Parameters
-        ----------
-        obj : object
-            Target object for memmap restoration
-        attr_name : str
-            Attribute name for the memmap
-        memmap_info : dict
-            Metadata dictionary with memmap information
-        original_path : str
-            Original file path that failed
-
-        Returns
-        -------
-        np.memmap or None
-            Restored memmap from alternative path or None if not possible
-        """
-        if not DataUtils._check_supports_alternative_path(obj, attr_name):
-            return None
-
-        target_path: str = getattr(obj, f"{attr_name}_path")
-        if DataUtils._check_is_invalid_alternative_path(target_path, original_path):
-            return None
-
-        return DataUtils._try_restore_from_path(target_path, memmap_info)
-
-    @staticmethod
-    def _check_supports_alternative_path(obj: Any, attr_name: str) -> bool:
-        """
-        Check if object supports alternative path restoration.
-
-        Parameters
-        ----------
-        obj : object
-            Object to check for alternative path support
-        attr_name : str
-            Attribute name to check for path support
-
-        Returns
-        -------
-        bool
-            True if object supports alternative path restoration
-        """
-        return (
-            hasattr(obj, "use_memmap")
-            and obj.use_memmap
-            and hasattr(obj, f"{attr_name}_path")
-        )
-
-    @staticmethod
-    def _check_is_invalid_alternative_path(target_path: str, original_path: str) -> bool:
-        """
-        Check if alternative path is invalid.
-
-        Parameters
-        ----------
-        target_path : str
-            Alternative path to check
-        original_path : str
-            Original path for comparison
-
-        Returns
-        -------
-        bool
-            True if alternative path is invalid
-        """
-        return target_path == original_path or not os.path.exists(target_path)
+        LoadAndSaveHelper.load_object(obj, load_path)
 
     @staticmethod
     def get_cache_file_path(cache_name: str, cache_path: str = "./cache") -> str:
@@ -411,6 +151,30 @@ class DataUtils:
             default_path = "./cache"
             os.makedirs(default_path, exist_ok=True)
             return os.path.join(default_path, cache_name)
+
+    @staticmethod
+    def is_memmap_view(array: Any) -> bool:
+        """
+        Check whether an array is backed by a numpy memmap (including views).
+
+        Parameters
+        ----------
+        array : Any
+            Array or view to check.
+
+        Returns
+        -------
+        bool
+            True if the array is a memmap or view on a memmap.
+        """
+        base = array
+        seen = set()
+        while base is not None and id(base) not in seen:
+            if isinstance(base, np.memmap):
+                return True
+            seen.add(id(base))
+            base = getattr(base, "base", None)
+        return False
 
     @staticmethod
     def get_type_key(type_obj: Union[str, type, object]) -> str:

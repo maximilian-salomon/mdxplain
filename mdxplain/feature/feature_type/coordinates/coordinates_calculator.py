@@ -26,11 +26,14 @@ flexible atom selection. Supports memory mapping for large datasets.
 """
 
 from typing import Any, Dict, Tuple
+import warnings
 
 import mdtraj as md
 import numpy as np
 
 from mdxplain.utils.progress_utils import ProgressUtils
+from mdxplain.utils.resource_utils import ResourceUtils
+from mdxplain.utils.data_utils import DataUtils
 
 from ..helper.calculator_compute_helper import CalculatorComputeHelper
 from ..interfaces.calculator_base import CalculatorBase
@@ -166,7 +169,20 @@ class CoordinatesCalculator(CalculatorBase):
             indices = np.arange(trajectory.n_atoms)
         else:
             try:
-                indices = trajectory.topology.select(selection)
+                # mdtraj selection emits pyparsing deprecations; silence locally.
+                with warnings.catch_warnings():
+                    warnings.filterwarnings(
+                        "ignore",
+                        category=DeprecationWarning,
+                        module=r"mdtraj\.core\.selection",
+                    )
+                    warnings.filterwarnings(
+                        "ignore",
+                        category=DeprecationWarning,
+                        module=r"pyparsing\.util",
+                        message=r".*parseAll.*",
+                    )
+                    indices = trajectory.topology.select(selection)
             except Exception as e:
                 raise ValueError(
                     f"Invalid selection string '{selection}': {e}. "
@@ -225,7 +241,10 @@ class CoordinatesCalculator(CalculatorBase):
         numpy.ndarray
             Filled coordinates array
         """
+        is_memmap = DataUtils.is_memmap_view(coordinates)
         if self.use_memmap or hasattr(coordinates, 'flush'):
+            if is_memmap:
+                ResourceUtils.tune_memmap(coordinates, "sequential")
             # Chunk-wise processing for memory efficiency
             for i in ProgressUtils.iterate(
                 range(0, trajectory.n_frames, self.chunk_size),
@@ -235,7 +254,8 @@ class CoordinatesCalculator(CalculatorBase):
                 end = min(i + self.chunk_size, trajectory.n_frames)
                 
                 # Extract coordinates for chunk
-                chunk_coords = trajectory[i:end].xyz[:, indices, :]
+                # Convert directly into angstroem
+                chunk_coords = trajectory[i:end].xyz[:, indices, :] * 10
                 
                 # Reshape to flat format (n_frames, n_atoms * 3)
                 coordinates[i:end] = chunk_coords.reshape(end - i, -1)
@@ -245,12 +265,12 @@ class CoordinatesCalculator(CalculatorBase):
                     coordinates.flush()
         else:
             # In-memory processing for smaller datasets
-            coords = trajectory.xyz[:, indices, :]
+            # Convert directly into angstroem
+            coords = trajectory.xyz[:, indices, :] * 10
             coordinates[:] = coords.reshape(trajectory.n_frames, -1)
 
-        # Convert from nanometers to Angstrom (MDTraj uses nm)
-        coordinates *= 10.0
-
+        if is_memmap:
+            ResourceUtils.tune_memmap(coordinates, "random")
         return coordinates
 
     def _generate_feature_metadata(self, indices: np.ndarray, topology: md.Topology, selection: str) -> Dict[str, Any]:

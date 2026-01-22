@@ -32,6 +32,7 @@ from sklearn.decomposition import PCA, IncrementalPCA
 
 from ..interfaces.calculator_base import CalculatorBase
 from ....utils.data_utils import DataUtils
+from ....utils.resource_utils import ResourceUtils
 from ..helper.automatic_parameter_helper import AutomaticParameterHelper
 
 
@@ -268,7 +269,9 @@ class PCACalculator(CalculatorBase):
                 mode="w+",
                 shape=transformed_data.shape,
             )
+            ResourceUtils.tune_memmap(transformed_memmap, "random")
             transformed_memmap[:] = transformed_data
+            transformed_memmap.flush()
             transformed_data = transformed_memmap
 
         metadata = self._prepare_metadata(hyperparameters, data.shape)

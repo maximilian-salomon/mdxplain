@@ -91,8 +91,11 @@ class DecompositionFacade:
         cluster_contour_voronoi: bool = False,
         data_scatter: bool = True,
         show_clusters: Union[str, List[int]] = "all",
+        tag_coloring: Optional[List[str]] = None,
+        scatter_show_all: bool = False,
         center_marker: str = 'X',
         center_size: int = 200,
+        scatter_size: int = 1,
         title: Optional[str] = None,
         xaxis_label: Optional[str] = None,
         yaxis_label: Optional[str] = None,
@@ -159,10 +162,25 @@ class DecompositionFacade:
         show_clusters : Union[str, List[int]], default="all"
             Which clusters to display: "all" or list of cluster IDs.
             Colors remain consistent regardless of selection
+        tag_coloring : Optional[List[str]], default=None
+            Color scatter points by trajectory tags instead of clusters.
+            Provide list of tags, e.g., ["biased", "unbiased"].
+            If a frame matches multiple tags, the last tag in the list is used.
+            When set, overrides cluster-based coloring from clustering_name
+        scatter_show_all : bool, default=False
+            Show unselected points in gray (applies to both cluster and tag mode):
+            - **Cluster mode:** When show_clusters=[0,1], other clusters/noise shown in gray
+            - **Tag mode:** When tag_coloring=["biased"], frames without this tag shown in gray
+            - False (default): Only show selected points, hide others (current behavior)
         center_marker : str, default='X'
             Marker style for cluster centers
         center_size : int, default=200
             Marker size for cluster centers
+        scatter_size : int, default=1
+            Size of scatter points in matplotlib units. Applies to all scatter
+            points (cluster-colored, tag-colored, gray, and unselected).
+            Typical values: 1 (tiny), 5-10 (small), 20-50 (medium), 100+ (large).
+            Note: Cluster centers use ``center_size`` parameter separately.
         title : Optional[str], default=None
             Custom overall title (overrides default)
         xaxis_label : Optional[str], default=None
@@ -266,8 +284,11 @@ class DecompositionFacade:
             cluster_contour_voronoi=cluster_contour_voronoi,
             data_scatter=data_scatter,
             show_clusters=show_clusters,
+            tag_coloring=tag_coloring,
+            scatter_show_all=scatter_show_all,
             center_marker=center_marker,
             center_size=center_size,
+            scatter_size=scatter_size,
             title=title,
             xaxis_label=xaxis_label,
             yaxis_label=yaxis_label,

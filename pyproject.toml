@@ -40,6 +40,8 @@ dependencies = [
     "hdbscan>=0.8.33",
     "kneed>=0.8.0",
     "numba>=0.60.0",
+    "psutil>=5.9.0",
+    "threadpoolctl>=3.5.0",
 ]
 
 [project.optional-dependencies]

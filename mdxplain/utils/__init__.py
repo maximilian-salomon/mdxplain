@@ -26,9 +26,11 @@
 from .data_utils import DataUtils
 from .color_utils import ColorUtils
 from .top_features_utils import TopFeaturesUtils
+from .resource_utils import ResourceUtils
 
 __all__ = [
     "DataUtils",
     "ColorUtils",
     "TopFeaturesUtils",
+    "ResourceUtils",
 ]

@@ -473,6 +473,25 @@ class TestDataUtilsSaveObject:
         with pytest.raises(ValueError, match="Memmap bad_memmap has no filename"):
             DataUtils.save_object(obj, save_path)
 
+    def test_save_nested_memmap_uses_metadata(self, temp_dir):
+        """
+        Test that nested memmaps are saved as metadata, not raw arrays.
+        """
+        memmap_path = os.path.join(temp_dir, "nested_save.dat")
+        memmap = np.memmap(memmap_path, dtype=np.float64, mode="w+", shape=(200, 200))
+        memmap[:] = np.arange(40000, dtype=np.float64).reshape(200, 200)
+        memmap.flush()
+        obj = SimpleTestObject(nested={"items": [memmap]})
+        save_path = os.path.join(temp_dir, "nested_save.pkl")
+        DataUtils.save_object(obj, save_path)
+        with open(save_path, "rb") as f:
+            saved = pickle.load(f)
+        saved_item = saved["nested"]["items"][0]
+        assert isinstance(saved_item, dict)
+        assert saved_item["_is_memmap"] is True
+        assert saved_item["original_path"] == memmap_path
+        assert os.path.getsize(save_path) < os.path.getsize(memmap_path) * 0.2
+
 class TestDataUtilsLoadObject:
     """Test DataUtils.load_object() method."""
     
@@ -543,6 +562,24 @@ class TestDataUtilsLoadObject:
         
         # Check regular attributes
         assert loaded_obj.regular_attr == "normal_value"
+
+    def test_load_nested_memmap_restores_memmap(self, temp_dir):
+        """
+        Test that nested memmaps load back as memmaps with valid filenames.
+        """
+        memmap_path = os.path.join(temp_dir, "nested_load.dat")
+        memmap = np.memmap(memmap_path, dtype=np.float32, mode="w+", shape=(25, 10))
+        memmap[:] = np.arange(250, dtype=np.float32).reshape(25, 10)
+        memmap.flush()
+        original = SimpleTestObject(nested={"items": [memmap]})
+        save_path = os.path.join(temp_dir, "nested_load.pkl")
+        DataUtils.save_object(original, save_path)
+        loaded = SimpleTestObject()
+        DataUtils.load_object(loaded, save_path)
+        loaded_item = loaded.nested["items"][0]
+        assert isinstance(loaded_item, np.memmap)
+        assert os.path.abspath(loaded_item.filename) == os.path.abspath(memmap_path)
+        assert np.array_equal(loaded_item, np.array(memmap))
     
     def test_load_memmap_with_missing_file_returns_none(self, temp_dir):
         """

@@ -176,6 +176,7 @@ class FeatureCrossTrajectoryReductionHelper:
                 "feature_names": feature_names,
                 "n_dynamic": len(common_indices),
                 "total_pairs": len(feature_data.feature_metadata["features"]),
+                "kept_indices": common_indices_array,
             }
 
             # Use FeatureReductionHelper for consistent processing

@@ -95,12 +95,14 @@ class ParallelOperationsHelper:
         
         self.n_frames, self.n_atoms = self.dask_coords.shape[:2]
         
-    def center_coordinates(self, mass_weighted: bool = False) -> zarr.Group:
+    def center_coordinates(self, result_path: str, mass_weighted: bool = False) -> zarr.Group:
         """
         Center coordinates at origin using real MDTraj method chunkwise.
         
         Parameters
         ----------
+        result_path : str
+            Path to store result Zarr
         mass_weighted : bool, default=False
             Use mass-weighted centering
             
@@ -112,15 +114,10 @@ class ParallelOperationsHelper:
         Examples
         --------
         >>> parallel_ops = ParallelOperationsHelper('trajectory.zarr', topology, chunk_size=500)
-        >>> centered_store = parallel_ops.center_coordinates(mass_weighted=True)
+        >>> centered_store = parallel_ops.center_coordinates('centered.zarr', mass_weighted=True)
         >>> print(f"Centered trajectory stored at {centered_store.path}")
         """
         print(f"Centering coordinates (mass_weighted={mass_weighted})...")
-        
-        # Create temporary file for result
-        temp_fd, temp_path = tempfile.mkstemp(suffix='.zarr', dir=self.cache_dir)
-        os.close(temp_fd)
-        os.remove(temp_path)
         
         # Define operation function for centering
         def center_operation(chunk_traj: md.Trajectory, mass_weighted: bool) -> None:
@@ -129,7 +126,7 @@ class ParallelOperationsHelper:
         # Use generic helper method
         return self._process_trajectory_chunked(
             operation_func=center_operation,
-            result_path=temp_path,
+            result_path=result_path,
             result_shape=(self.n_frames, self.n_atoms, 3),
             mass_weighted=mass_weighted
         )
@@ -323,13 +320,15 @@ class ParallelOperationsHelper:
         
         return result_store
     
-    def superpose(self, reference_traj: md.Trajectory,
+    def superpose(self, result_path: str, reference_traj: md.Trajectory,
                  atom_indices: Optional[np.ndarray] = None) -> zarr.Group:
         """
         Superpose trajectory to reference trajectory using real MDTraj method chunkwise.
         
         Parameters
         ----------
+        result_path : str
+            Path to store result Zarr
         reference_traj : md.Trajectory
             Reference trajectory (single frame) to align to
         atom_indices : np.ndarray, optional
@@ -352,17 +351,12 @@ class ParallelOperationsHelper:
         >>> parallel_ops = ParallelOperationsHelper('trajectory.zarr', topology)
         >>> # Create reference trajectory (single frame)
         >>> ref_traj = md.load_frame('reference.pdb', 0)
-        >>> aligned_store = parallel_ops.superpose(ref_traj)
+        >>> aligned_store = parallel_ops.superpose('aligned.zarr', ref_traj)
         >>> # Superpose using only backbone atoms
         >>> backbone_indices = topology.select('backbone')
-        >>> aligned_store = parallel_ops.superpose(ref_traj, backbone_indices)
+        >>> aligned_store = parallel_ops.superpose('aligned.zarr', ref_traj, backbone_indices)
         """
         print(f"Superposing to reference trajectory...")
-        
-        # Create temporary file for result
-        temp_fd, temp_path = tempfile.mkstemp(suffix='.zarr', dir=self.cache_dir)
-        os.close(temp_fd)
-        os.remove(temp_path)
         
         # Define operation function for superpose
         def superpose_operation(chunk_traj: md.Trajectory, reference_traj: md.Trajectory, atom_indices: Optional[np.ndarray]) -> None:
@@ -371,13 +365,13 @@ class ParallelOperationsHelper:
         # Use generic helper method
         return self._process_trajectory_chunked(
             operation_func=superpose_operation,
-            result_path=temp_path,
+            result_path=result_path,
             result_shape=(self.n_frames, self.n_atoms, 3),
             reference_traj=reference_traj,
             atom_indices=atom_indices
         )
     
-    def smooth(self, width: int, order: Optional[int] = None, 
+    def smooth(self, result_path: str, width: int, order: Optional[int] = None, 
               atom_indices: Optional[np.ndarray] = None) -> zarr.Group:
         """
         Apply smoothing filter using real MDTraj method with atom-wise chunking.
@@ -387,6 +381,8 @@ class ParallelOperationsHelper:
         
         Parameters
         ----------
+        result_path : str
+            Path to store result Zarr
         width : int
             Smoothing window width
         order : int, optional
@@ -410,10 +406,10 @@ class ParallelOperationsHelper:
         --------
         >>> parallel_ops = ParallelOperationsHelper('trajectory.zarr', topology)
         >>> # Apply smoothing with width 5 to all atoms
-        >>> smoothed_store = parallel_ops.smooth(width=5)
+        >>> smoothed_store = parallel_ops.smooth('smooth.zarr', width=5)
         >>> # Apply smoothing only to protein atoms
         >>> protein_indices = topology.select('protein')
-        >>> smoothed_store = parallel_ops.smooth(5, atom_indices=protein_indices)
+        >>> smoothed_store = parallel_ops.smooth('smooth.zarr', 5, atom_indices=protein_indices)
         """
         print(f"Smoothing with width={width} (atom-wise chunking)...")
         
@@ -422,11 +418,6 @@ class ParallelOperationsHelper:
             order = 3
         if atom_indices is None:
             atom_indices = np.arange(self.n_atoms)
-        
-        # Create temporary file for result
-        temp_fd, temp_path = tempfile.mkstemp(suffix='.zarr', dir=self.cache_dir)
-        os.close(temp_fd)
-        os.remove(temp_path)
         
         # Define operation function for smoothing
         def smooth_operation(chunk_traj: md.Trajectory, target_atom_indices: np.ndarray, current_atom_indices: np.ndarray, width: int, order: int) -> None:
@@ -445,7 +436,7 @@ class ParallelOperationsHelper:
         # Use generic helper with atom chunking mode
         return self._process_trajectory_chunked(
             operation_func=smooth_operation,
-            result_path=temp_path,
+            result_path=result_path,
             result_shape=(self.n_frames, self.n_atoms, 3),
             chunking_mode='atom',
             atom_indices=atom_indices,
@@ -453,12 +444,14 @@ class ParallelOperationsHelper:
             order=order
         )
     
-    def atom_slice(self, atom_indices: np.ndarray) -> zarr.Group:
+    def atom_slice(self, result_path: str, atom_indices: np.ndarray) -> zarr.Group:
         """
         Create atom slice using real MDTraj method chunkwise.
         
         Parameters
         ----------
+        result_path : str
+            Path to store result Zarr
         atom_indices : np.ndarray
             Indices of atoms to keep
             
@@ -479,17 +472,12 @@ class ParallelOperationsHelper:
         >>> parallel_ops = ParallelOperationsHelper('trajectory.zarr', topology)
         >>> # Select only first 100 atoms
         >>> atom_indices = np.arange(100)
-        >>> sliced_store = parallel_ops.atom_slice(atom_indices)
+        >>> sliced_store = parallel_ops.atom_slice('slice.zarr', atom_indices)
         >>> # Select only CA atoms
         >>> ca_indices = topology.select('name CA')
-        >>> ca_store = parallel_ops.atom_slice(ca_indices)
+        >>> ca_store = parallel_ops.atom_slice('slice.zarr', ca_indices)
         """
         print(f"Creating atom slice ({len(atom_indices)} atoms)...")
-        
-        # Create temporary file for result
-        temp_fd, temp_path = tempfile.mkstemp(suffix='.zarr', dir=self.cache_dir)
-        os.close(temp_fd)
-        os.remove(temp_path)
         
         # Create new topology using MDTraj
         new_topology = self.topology.subset(atom_indices)
@@ -505,14 +493,14 @@ class ParallelOperationsHelper:
         # Use generic helper method with reshape mode and new topology
         return self._process_trajectory_chunked(
             operation_func=atom_slice_operation,
-            result_path=temp_path,
+            result_path=result_path,
             result_shape=(self.n_frames, len(atom_indices), 3),  # Note: n_atoms changes!
             chunking_mode='reshape',
             result_topology=new_topology,  # This will be used for metadata
             atom_indices=atom_indices
         )
 
-    def image_molecules(self, anchor_molecules: Optional[np.ndarray] = None,
+    def image_molecules(self, result_path: str, anchor_molecules: Optional[np.ndarray] = None,
                        other_molecules: Optional[np.ndarray] = None,
                        sorted_bonds: Optional[np.ndarray] = None,
                        make_whole: bool = True) -> zarr.Group:
@@ -524,6 +512,8 @@ class ParallelOperationsHelper:
 
         Parameters
         ----------
+        result_path : str
+            Path to store result Zarr
         anchor_molecules : np.ndarray, optional
             Indices of molecules to anchor at the origin
         other_molecules : np.ndarray, optional
@@ -549,17 +539,12 @@ class ParallelOperationsHelper:
         --------
         >>> helper = ParallelOperationsHelper('trajectory.zarr', topology)
         >>> # Apply default imaging (all molecules)
-        >>> imaged_store = helper.image_molecules()
+        >>> imaged_store = helper.image_molecules('imaged.zarr')
         >>> # Image with specific anchor molecules
         >>> protein_molecules = np.array([0, 1, 2])
-        >>> imaged_store = helper.image_molecules(anchor_molecules=protein_molecules)
+        >>> imaged_store = helper.image_molecules('imaged.zarr', anchor_molecules=protein_molecules)
         """
         print(f"Applying periodic boundary condition imaging...")
-
-        # Create temporary file for result
-        temp_fd, temp_path = tempfile.mkstemp(suffix='.zarr', dir=self.cache_dir)
-        os.close(temp_fd)
-        os.remove(temp_path)
 
         # Define operation function for image_molecules
         def image_operation(chunk_traj: md.Trajectory,
@@ -578,7 +563,7 @@ class ParallelOperationsHelper:
         # Use generic helper method
         return self._process_trajectory_chunked(
             operation_func=image_operation,
-            result_path=temp_path,
+            result_path=result_path,
             result_shape=(self.n_frames, self.n_atoms, 3),
             anchor_molecules=anchor_molecules,
             other_molecules=other_molecules,
@@ -586,7 +571,7 @@ class ParallelOperationsHelper:
             make_whole=make_whole
         )
 
-    def remove_solvent(self, exclude: Optional[list] = None) -> zarr.Group:
+    def remove_solvent(self, result_path: str, exclude: Optional[list] = None) -> zarr.Group:
         """
         Remove solvent atoms from trajectory.
 
@@ -596,6 +581,8 @@ class ParallelOperationsHelper:
 
         Parameters
         ----------
+        result_path : str
+            Path to store result Zarr
         exclude : list, optional
             List of solvent residue names to KEEP (not remove). If None,
             removes all recognized solvent molecules.
@@ -616,16 +603,11 @@ class ParallelOperationsHelper:
         --------
         >>> helper = ParallelOperationsHelper('trajectory.zarr', topology)
         >>> # Remove all solvent
-        >>> no_solvent_store = helper.remove_solvent()
+        >>> no_solvent_store = helper.remove_solvent('no_solvent.zarr')
         >>> # Keep water but remove other solvent
-        >>> keep_water_store = helper.remove_solvent(exclude=['HOH', 'WAT'])
+        >>> keep_water_store = helper.remove_solvent('keep_water.zarr', exclude=['HOH', 'WAT'])
         """
         print(f"Removing solvent atoms...")
-
-        # Create temporary file for result
-        temp_fd, temp_path = tempfile.mkstemp(suffix='.zarr', dir=self.cache_dir)
-        os.close(temp_fd)
-        os.remove(temp_path)
 
         # Create temporary trajectory to determine non-solvent atoms
         # We need this to know the result topology
@@ -652,7 +634,7 @@ class ParallelOperationsHelper:
         # Use generic helper method with reshape mode and new topology
         return self._process_trajectory_chunked(
             operation_func=remove_solvent_operation,
-            result_path=temp_path,
+            result_path=result_path,
             result_shape=(self.n_frames, n_atoms_new, 3),
             chunking_mode='reshape',
             result_topology=new_topology,
@@ -829,13 +811,15 @@ class ParallelOperationsHelper:
         # Use reasonable bounds: at least 1 atom, at most all atoms
         return max(1, min(self.n_atoms, atom_chunk_size))
     
-    def _create_new_zarr_store(self, new_coords: np.ndarray, 
+    def _create_new_zarr_store(self, result_path: str, new_coords: np.ndarray, 
                               new_topology: Optional[md.Topology] = None) -> zarr.Group:
         """
         Create new Zarr store with processed coordinates.
         
         Parameters
         ----------
+        result_path : str
+            Path to store result Zarr
         new_coords : np.ndarray
             Processed coordinate data to store
         new_topology : md.Topology, optional
@@ -844,20 +828,16 @@ class ParallelOperationsHelper:
         Returns
         -------
         zarr.Group
-            New temporary zarr store with processed data
+            New zarr store with processed data
             
         Examples
         --------
         >>> coords = np.random.rand(100, 50, 3)
-        >>> store = parallel_ops._create_new_zarr_store(coords)
+        >>> store = parallel_ops._create_new_zarr_store('new.zarr', coords)
         >>> print(f"Created store with {coords.shape[0]} frames")
         """
         
-        # Use temporary zarr store with secure creation
-        temp_fd, temp_path = tempfile.mkstemp(suffix='.zarr', dir=self.cache_dir)
-        os.close(temp_fd)  # Close file descriptor, but keep file
-        os.remove(temp_path)  # Remove file so zarr can create directory
-        new_store = zarr.open(temp_path, mode='w')
+        new_store = zarr.open(result_path, mode='w')
         
         n_frames_new, n_atoms_new = new_coords.shape[:2]
         

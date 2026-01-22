@@ -66,6 +66,9 @@ class HDBSCAN(ClusterTypeBase):
         sample_fraction: float = 0.1,
         knn_neighbors: int = 5,
         force: bool = False,
+        n_jobs: int = -1,
+        max_blas_threads: Optional[int] = 1,
+        auto_limit_blas: bool = True,
     ) -> None:
         """
         Initialize HDBSCAN cluster type.
@@ -94,7 +97,15 @@ class HDBSCAN(ClusterTypeBase):
             Number of neighbors for k-NN classifier in knn_sampling method
         force : bool, default=False
             Override memory and dimensionality checks (converts errors to warnings)
-
+        n_jobs : int, default=-1
+            Number of parallel jobs for core distance computation.
+            -1 means using all processors.
+        max_blas_threads : int or None, default=1
+            Preferred BLAS/OpenMP thread limit; set auto_limit_blas=False to disable
+            thread limiting, or None to fall back to a safe default
+        auto_limit_blas : bool, default=True
+            Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
+            otherwise use max_blas_threads (fallback 2 when None)
         Returned Metadata
         -----------------
         algorithm : str
@@ -127,6 +138,9 @@ class HDBSCAN(ClusterTypeBase):
         self.sample_fraction = sample_fraction
         self.knn_neighbors = knn_neighbors
         self.force = force
+        self.n_jobs = n_jobs
+        self.max_blas_threads = max_blas_threads
+        self.auto_limit_blas = auto_limit_blas
         self._validate_parameters()
 
     @classmethod
@@ -146,7 +160,7 @@ class HDBSCAN(ClusterTypeBase):
         cache_path: str = "./cache", 
         max_memory_gb: float = 2.0,
         chunk_size: int = 1000,
-        use_memmap: bool = False
+        use_memmap: bool = False,
     ) -> None:
         """
         Initialize the HDBSCAN calculator.
@@ -166,7 +180,9 @@ class HDBSCAN(ClusterTypeBase):
             cache_path=cache_path, 
             max_memory_gb=max_memory_gb,
             chunk_size=chunk_size,
-            use_memmap=use_memmap
+            use_memmap=use_memmap,
+            max_blas_threads=self.max_blas_threads,
+            auto_limit_blas=self.auto_limit_blas,
         )
 
     def compute(self, data: np.ndarray, center_method: str = "centroid") -> Tuple[np.ndarray, Dict[str, Any]]:
@@ -209,6 +225,7 @@ class HDBSCAN(ClusterTypeBase):
             sample_fraction=self.sample_fraction,
             knn_neighbors=self.knn_neighbors,
             force=self.force,
+            n_jobs=self.n_jobs,
         )
 
     def _validate_parameters(self):

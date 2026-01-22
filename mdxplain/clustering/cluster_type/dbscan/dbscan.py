@@ -25,7 +25,7 @@ This module provides the DBSCAN cluster type that implements density-based
 clustering for molecular dynamics trajectory analysis.
 """
 
-from typing import Dict, Tuple, Any
+from typing import Dict, Tuple, Any, Optional
 import numpy as np
 
 from ..interfaces.cluster_type_base import ClusterTypeBase
@@ -57,13 +57,16 @@ class DBSCAN(ClusterTypeBase):
     """
 
     def __init__(
-        self, 
-        eps: float = 0.5, 
+        self,
+        eps: float = 0.5,
         min_samples: int = 5,
         method: str = "standard",
         sample_fraction: float = 0.1,
         force: bool = False,
-        knn_neighbors: int = 5
+        knn_neighbors: int = 5,
+        n_jobs: int = -1,
+        max_blas_threads: Optional[int] = 1,
+        auto_limit_blas: bool = True,
     ) -> None:
         """
         Initialize DBSCAN cluster type.
@@ -87,7 +90,15 @@ class DBSCAN(ClusterTypeBase):
             Override memory and dimensionality checks (converts errors to warnings)
         knn_neighbors : int, default=5
             Number of neighbors for k-NN sampling method.
-
+        n_jobs : int, default=-1
+            Number of parallel jobs for distance computations.
+            -1 means using all processors.
+        max_blas_threads : int or None, default=1
+            Preferred BLAS/OpenMP thread limit; set auto_limit_blas=False to disable
+            thread limiting, or None to fall back to a safe default
+        auto_limit_blas : bool, default=True
+            Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
+            otherwise use max_blas_threads (fallback 2 when None)
         Returned Metadata
         -----------------
         algorithm : str
@@ -116,6 +127,9 @@ class DBSCAN(ClusterTypeBase):
         self.sample_fraction = sample_fraction
         self.force = force
         self.knn_neighbors = knn_neighbors
+        self.n_jobs = n_jobs
+        self.max_blas_threads = max_blas_threads
+        self.auto_limit_blas = auto_limit_blas
         self._validate_parameters()
 
     @classmethod
@@ -135,7 +149,7 @@ class DBSCAN(ClusterTypeBase):
         cache_path: str = "./cache", 
         max_memory_gb: float = 2.0,
         chunk_size: int = 1000,
-        use_memmap: bool = False
+        use_memmap: bool = False,
     ) -> None:
         """
         Initialize the DBSCAN calculator.
@@ -159,7 +173,9 @@ class DBSCAN(ClusterTypeBase):
             cache_path=cache_path, 
             max_memory_gb=max_memory_gb,
             chunk_size=chunk_size,
-            use_memmap=use_memmap
+            use_memmap=use_memmap,
+            max_blas_threads=self.max_blas_threads,
+            auto_limit_blas=self.auto_limit_blas,
         )
 
     def compute(self, data: np.ndarray, center_method: str = "centroid") -> Tuple[np.ndarray, Dict[str, Any]]:
@@ -197,7 +213,8 @@ class DBSCAN(ClusterTypeBase):
             method=self.method,
             sample_fraction=self.sample_fraction,
             force=self.force,
-            knn_neighbors=self.knn_neighbors
+            knn_neighbors=self.knn_neighbors,
+            n_jobs=self.n_jobs
         )
     
     def _validate_parameters(self):

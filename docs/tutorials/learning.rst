@@ -24,6 +24,7 @@ Basic Usage Examples
    :maxdepth: 1
 
    basic_usage_examples/quick_start_example
+   basic_usage_examples/performance_settings
    basic_usage_examples/memory-efficient_processing
    basic_usage_examples/trajectory_management
    basic_usage_examples/feature_computation
@@ -38,6 +39,19 @@ Basic Usage Examples
    basic_usage_examples/plotting
    basic_usage_examples/saving_and_loading
 
+
+Performance and System Stability
+--------------------------------
+
+Large KernelPCA and Diffusion Maps runs can overwhelm CPU, memory, and I/O. This
+short explainer summarizes why hard freezes happen and which mdxplain safeguards
+prevent them. See :doc:`performance_and_system_stability` for the full discussion.
+
+.. toctree::
+   :maxdepth: 1
+
+   performance_and_system_stability
+
 Tutorials
 ---------
 
@@ -48,6 +62,7 @@ Here's a complete conformational analysis workflow:
 .. toctree::
    :maxdepth: 1
 
-   placeholder
+   notebooks/01_Quickstart_VillinHeadpiece_Full_Analysis
+   notebooks/02_VillinHeadpiece_Full_Analysis
 
 .. toctree notebooks end

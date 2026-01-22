@@ -32,6 +32,8 @@ import hdbscan
 import numpy as np
 
 from mdxplain.utils.progress_utils import ProgressUtils
+from mdxplain.utils.resource_utils import ResourceUtils
+from mdxplain.utils.data_utils import DataUtils
 
 from ..interfaces.calculator_base import CalculatorBase
 
@@ -57,7 +59,9 @@ class HDBSCANCalculator(CalculatorBase):
         cache_path: str = "./cache", 
         max_memory_gb: float = 2.0,
         chunk_size: int = 1000,
-        use_memmap: bool = False
+        use_memmap: bool = False,
+        max_blas_threads: Optional[int] = 1,
+        auto_limit_blas: bool = True,
     ) -> None:
         """
         Initialize HDBSCAN calculator.
@@ -73,12 +77,24 @@ class HDBSCANCalculator(CalculatorBase):
             Used for chunked k-NN prediction and approximate_predict. Default is 1000.
         use_memmap : bool, optional
             Whether to use memory mapping for large datasets. Default is False.
-
+        max_blas_threads : int or None, default=1
+            Preferred BLAS/OpenMP thread limit; set auto_limit_blas=False to disable
+            thread limiting, or None to fall back to a safe default
+        auto_limit_blas : bool, default=True
+            Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
+            otherwise use max_blas_threads (fallback 2 when None)
         Returns
         -------
         None
         """
-        super().__init__(cache_path, max_memory_gb, chunk_size, use_memmap)
+        super().__init__(
+            cache_path,
+            max_memory_gb,
+            chunk_size,
+            use_memmap,
+            max_blas_threads,
+            auto_limit_blas,
+        )
 
     def compute(self, data: np.ndarray, center_method: str = "centroid", **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
@@ -106,6 +122,7 @@ class HDBSCANCalculator(CalculatorBase):
             - cluster_selection_method : str, cluster selection method
             - method : str, clustering method ('standard', 'sampling_approximate', 'sampling_knn')
             - sample_fraction : float, fraction of data to sample
+            - n_jobs : int, number of parallel jobs (-1 uses all processors)
             - force : bool, override memory and dimensionality checks
 
         Returns
@@ -126,9 +143,10 @@ class HDBSCANCalculator(CalculatorBase):
 
         self._validate_memory_and_dimensionality(data, parameters)
 
-        cluster_labels, hdbscan_model, computation_time = self._perform_clustering(
-            data, parameters
-        )
+        with self._limit_threadpools(parameters.get("n_jobs")):
+            cluster_labels, hdbscan_model, computation_time = self._perform_clustering(
+                data, parameters
+            )
         metadata = self._build_metadata(
             data, cluster_labels, hdbscan_model, parameters, computation_time, center_method
         )
@@ -168,6 +186,7 @@ class HDBSCANCalculator(CalculatorBase):
             "sample_size": sample_size,
             "knn_neighbors": kwargs.get("knn_neighbors", 5),
             "force": kwargs.get("force", False),
+            "n_jobs": kwargs.get("n_jobs", -1),
         }
 
     def _perform_clustering(self, data: np.ndarray, parameters: Dict[str, Any]) -> Tuple[np.ndarray, Any, float]:
@@ -223,6 +242,7 @@ class HDBSCANCalculator(CalculatorBase):
             min_samples=parameters["min_samples"],
             cluster_selection_epsilon=parameters["cluster_selection_epsilon"],
             cluster_selection_method=parameters["cluster_selection_method"],
+            core_dist_n_jobs=parameters["n_jobs"],
         )
         cluster_labels = clusterer.fit_predict(data)
         
@@ -263,6 +283,7 @@ class HDBSCANCalculator(CalculatorBase):
             min_samples=parameters["min_samples"],
             cluster_selection_epsilon=parameters["cluster_selection_epsilon"],
             cluster_selection_method=parameters["cluster_selection_method"],
+            core_dist_n_jobs=parameters["n_jobs"],
             prediction_data=True  # Enable approximate_predict functionality
         )
         clusterer.fit(sample_data)
@@ -270,7 +291,12 @@ class HDBSCANCalculator(CalculatorBase):
         # Use approximate_predict for all data in chunks (direct memmap/array writing)
         full_labels = self._prepare_labels_storage(n_samples, "hdbscan", "approximate_predict")
         chunk_size = self.chunk_size
-        
+        is_memmap_labels = isinstance(full_labels, np.memmap)
+        is_memmap_data = DataUtils.is_memmap_view(data)
+        if is_memmap_labels:
+            ResourceUtils.tune_memmap(full_labels, "sequential")
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data, "sequential")
         for start in ProgressUtils.iterate(
             range(0, n_samples, chunk_size),
             desc="HDBSCAN approximate_predict",
@@ -279,6 +305,12 @@ class HDBSCANCalculator(CalculatorBase):
             end = min(start + chunk_size, n_samples)
             chunk_labels, _ = hdbscan.approximate_predict(clusterer, data[start:end])
             full_labels[start:end] = chunk_labels
+            if hasattr(full_labels, "flush"):
+                full_labels.flush()
+        if is_memmap_labels:
+            ResourceUtils.tune_memmap(full_labels, "random")
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data, "random")
         
         return full_labels, clusterer
 
@@ -311,6 +343,7 @@ class HDBSCANCalculator(CalculatorBase):
             min_samples=parameters["min_samples"],
             cluster_selection_epsilon=parameters["cluster_selection_epsilon"],
             cluster_selection_method=parameters["cluster_selection_method"],
+            core_dist_n_jobs=parameters["n_jobs"],
         )
         sample_labels = clusterer.fit_predict(sample_data)
         
@@ -366,7 +399,7 @@ class HDBSCANCalculator(CalculatorBase):
 
         # Calculate cluster centers using base class method
         centers, method_used = self._calculate_centers(
-            data, cluster_labels, hdbscan_model, center_method
+            data, cluster_labels, hdbscan_model, center_method, n_jobs=parameters["n_jobs"]
         )
         metadata["centers"] = centers
         metadata["center_method"] = method_used

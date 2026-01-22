@@ -29,6 +29,7 @@ chunk-wise processing for large datasets.
 
 import numpy as np
 from .....utils import DataUtils
+from .....utils.resource_utils import ResourceUtils
 
 
 class DSSPEncodingHelper:
@@ -84,11 +85,14 @@ class DSSPEncodingHelper:
             cache_file, dtype='U1', mode='w+', shape=dssp_data.shape
         )
 
+        ResourceUtils.tune_memmap(encoded, "sequential")
         for i in range(0, dssp_data.shape[0], chunk_size):
             end = min(i + chunk_size, dssp_data.shape[0])
             chunk = dssp_data[i:end]
             encoded[i:end] = chunk.astype('U1')
-        
+            encoded.flush()
+
+        ResourceUtils.tune_memmap(encoded, "random")
         return encoded
 
     @staticmethod
@@ -154,6 +158,7 @@ class DSSPEncodingHelper:
             cache_file, dtype=np.int8, mode='w+', shape=dssp_data.shape
         )
         
+        ResourceUtils.tune_memmap(encoded, "sequential")
         for i in range(0, dssp_data.shape[0], chunk_size):
             end = min(i + chunk_size, dssp_data.shape[0])
             chunk = dssp_data[i:end]
@@ -163,7 +168,9 @@ class DSSPEncodingHelper:
                 chunk_encoded[chunk == class_char] = idx
             
             encoded[i:end] = chunk_encoded
+            encoded.flush()
         
+        ResourceUtils.tune_memmap(encoded, "random")
         return encoded
 
     @staticmethod
@@ -208,12 +215,15 @@ class DSSPEncodingHelper:
         )
         
         # Process in chunks
+        ResourceUtils.tune_memmap(encoded, "sequential")
         for i in range(0, n_frames, chunk_size):
             end = min(i + chunk_size, n_frames)
             for class_idx, class_char in enumerate(classes):
                 mask = (dssp_data[i:end] == class_char)
                 encoded[i:end][:, class_idx::n_classes] = mask
+            encoded.flush()
 
+        ResourceUtils.tune_memmap(encoded, "random")
         return encoded
 
     @staticmethod

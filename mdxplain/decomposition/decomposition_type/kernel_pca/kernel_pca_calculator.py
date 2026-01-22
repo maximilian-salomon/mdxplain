@@ -25,20 +25,23 @@ Implements KernelPCA computation with support for incremental kernel
 computation for large datasets using sklearn's KernelPCA.
 """
 
+from contextlib import nullcontext
 from typing import Any, Dict, Tuple, Union
 
 import numpy as np
-from joblib import Parallel, delayed
 from mdxplain.utils.progress_utils import ProgressUtils
-from scipy.linalg import eigh
 from scipy.sparse.linalg import LinearOperator, eigs
 from sklearn.decomposition import IncrementalPCA, KernelPCA
 from sklearn.kernel_approximation import Nystroem
 from sklearn.metrics.pairwise import rbf_kernel
+from sklearn.utils.parallel import Parallel, delayed
 
 from ..interfaces.calculator_base import CalculatorBase
 from ....utils.data_utils import DataUtils
+from ....utils.resource_utils import ResourceUtils
 from ..helper.automatic_parameter_helper import AutomaticParameterHelper
+
+from threadpoolctl import threadpool_limits
 
 
 class KernelPCACalculator(CalculatorBase):
@@ -62,7 +65,17 @@ class KernelPCACalculator(CalculatorBase):
     >>> transformed, metadata = calc.compute(large_data, n_components=50)
     """
 
-    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000, use_parallel: bool = False, n_jobs: int = -1, min_chunk_size: int = 1000) -> None:
+    def __init__(
+        self,
+        use_memmap: bool = False,
+        cache_path: str = "./cache",
+        chunk_size: int = 2000,
+        use_parallel: bool = False,
+        n_jobs: int = -1,
+        min_chunk_size: int = 1000,
+        max_blas_threads: Union[int, None] = 1,
+        auto_limit_blas: bool = True,
+    ) -> None:
         """
         Initialize KernelPCA calculator.
 
@@ -80,7 +93,12 @@ class KernelPCACalculator(CalculatorBase):
             Number of parallel jobs (-1 for all available CPU cores)
         min_chunk_size : int, default=1000
             Minimum chunk size per parallel process to avoid overhead
-
+        max_blas_threads : int or None, default=1
+            Preferred BLAS/OpenMP thread limit; set auto_limit_blas=False to disable
+            thread limiting, or None to fall back to a safe default
+        auto_limit_blas : bool, default=True
+            Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
+            otherwise use max_blas_threads (fallback 2 when None)
         Returns
         -------
         None
@@ -99,6 +117,50 @@ class KernelPCACalculator(CalculatorBase):
         self.use_parallel = use_parallel
         self.n_jobs = n_jobs
         self.min_chunk_size = min_chunk_size
+        self.max_blas_threads = max_blas_threads
+        self.auto_limit_blas = auto_limit_blas
+
+    def _limit_threadpools(self):
+        """
+        Create a context manager that limits BLAS/OpenMP threadpools.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        contextlib.AbstractContextManager
+            Context manager that enforces thread limits when enabled
+        """
+        if threadpool_limits is None:
+            return nullcontext()
+        if self.auto_limit_blas:
+            if self._uses_parallel_jobs():
+                limits = 1
+            else:
+                limits = self.max_blas_threads if self.max_blas_threads and self.max_blas_threads > 0 else 2
+            return threadpool_limits(limits=limits)
+        if self.max_blas_threads is None or self.max_blas_threads < 1:
+            return nullcontext()
+        return threadpool_limits(limits=self.max_blas_threads)
+
+    def _uses_parallel_jobs(self) -> bool:
+        """
+        Determine whether parallel jobs are requested.
+
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        bool
+            True if n_jobs requests more than one worker
+        """
+        if self.n_jobs is None:
+            return False
+        return self.n_jobs != 1
 
     def compute(self, data: np.ndarray, **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
@@ -123,6 +185,10 @@ class KernelPCACalculator(CalculatorBase):
                 Whether to use Nyström approximation (default: False)
             - n_landmarks : int, optional
                 Number of landmarks for Nyström approximation (default: 10000)
+            - landmark_selection : str, optional
+                Method for landmark selection in Nyström approximation (default: "kmeans")
+                - "kmeans": Use KMeans centroids as landmarks (better coverage)
+                - "random": Use random sampling from data
             - random_state : int, optional
                 Random state for reproducible results
 
@@ -151,18 +217,19 @@ class KernelPCACalculator(CalculatorBase):
         self._validate_input_data(data)
         hyperparameters = self._extract_hyperparameters(data, kwargs)
 
-        if hyperparameters["use_nystrom"]:
-            transformed_data, metadata = self._compute_nystrom_kernel_pca(
-                data, hyperparameters
-            )
-        elif self.use_memmap:
-            transformed_data, metadata = self._compute_incremental_kernel_pca(
-                data, hyperparameters
-            )
-        else:
-            transformed_data, metadata = self._compute_standard_kernel_pca(
-                data, hyperparameters
-            )
+        with self._limit_threadpools():
+            if hyperparameters["use_nystrom"]:
+                transformed_data, metadata = self._compute_nystrom_kernel_pca(
+                    data, hyperparameters
+                )
+            elif self.use_memmap:
+                transformed_data, metadata = self._compute_incremental_kernel_pca(
+                    data, hyperparameters
+                )
+            else:
+                transformed_data, metadata = self._compute_standard_kernel_pca(
+                    data, hyperparameters
+                )
 
         if hyperparameters.get("auto_select", False):
             transformed_data, metadata = self._apply_auto_selection(
@@ -274,6 +341,7 @@ class KernelPCACalculator(CalculatorBase):
         gamma = kwargs.get("gamma", None)
         use_nystrom = kwargs.get("use_nystrom", False)
         n_landmarks = kwargs.get("n_landmarks", 10000)
+        landmark_selection = kwargs.get("landmark_selection", "kmeans")
         random_state = kwargs.get("random_state", None)
         offset = kwargs.get("offset", 0)
 
@@ -285,12 +353,16 @@ class KernelPCACalculator(CalculatorBase):
             data, use_nystrom, n_landmarks, n_components
         )
 
+        if use_nystrom and landmark_selection not in ["kmeans", "random"]:
+            raise ValueError(f"Invalid landmark_selection: '{landmark_selection}'. Must be 'kmeans' or 'random'.")
+
         return {
             "n_components": n_components,
             "kernel": "rbf",
             "gamma": gamma,
             "use_nystrom": use_nystrom,
             "n_landmarks": n_landmarks,
+            "landmark_selection": landmark_selection,
             "random_state": random_state,
             "auto_select": auto_select,
             "offset": offset,
@@ -312,6 +384,8 @@ class KernelPCACalculator(CalculatorBase):
         float
             Resolved gamma value
         """
+        # TODO: You can to this. It is probably a good guess for continous data. 
+        # But is it for sparse contact matrices and what is with mixed data. 
         if gamma is None or gamma == "auto":
             return AutomaticParameterHelper.calculate_gamma_auto(data.shape[1])
         elif gamma == "scale":
@@ -347,7 +421,14 @@ class KernelPCACalculator(CalculatorBase):
             (n_components, auto_select)
         """
         auto_select = False
-
+        # Question: Are 5% here a sensefull amount?
+        # Answere: Yes. Usually the kneed in MD data are in the first few components. 
+        # The min of 100 but potentially more, will probably usually find the kneed.
+        # Nevertheless, sometimes for sure this may fail. 
+        # But automatic value guesses are still guesses so there are always situations where they fail.
+        # So this is more like a trade-off, and if this does not lead to sufficient results, 
+        # one need to adjust the parameter.
+        
         if n_components == "auto":
             n_features = data.shape[1]
             n_components = max(5, min(100, int(n_features * 0.05)))
@@ -409,16 +490,21 @@ class KernelPCACalculator(CalculatorBase):
         tuple
             Tuple of (transformed_data, metadata)
         """
+        if DataUtils.is_memmap_view(data):
+            ResourceUtils.tune_memmap(data, "sequential")
+
         kpca = KernelPCA(
             n_components=hyperparameters["n_components"],
             kernel=hyperparameters["kernel"],
             gamma=hyperparameters["gamma"],
             random_state=hyperparameters["random_state"],
             copy_X=False,
-            n_jobs=-1,
+            n_jobs=self.n_jobs,
         )
 
         transformed_data = kpca.fit_transform(data)
+        if DataUtils.is_memmap_view(data):
+            ResourceUtils.tune_memmap(data, "random")
 
         metadata = self._prepare_metadata(hyperparameters, data.shape)
         metadata.update(
@@ -447,8 +533,13 @@ class KernelPCACalculator(CalculatorBase):
         """
         n_samples = data.shape[0]
 
+        if DataUtils.is_memmap_view(data):
+            ResourceUtils.tune_memmap(data, "sequential")
+
         # Create kernel matrix as memmap if use_memmap=True
         kernel_matrix = self._create_kernel_memmap(n_samples)
+        if self.use_memmap:
+            ResourceUtils.tune_memmap(kernel_matrix, "sequential")
 
         # Use half of the chunk size, cause we need to use two chunks of size chunk_size
         used_chunk_size = int(np.floor(self.chunk_size / 2))
@@ -474,6 +565,13 @@ class KernelPCACalculator(CalculatorBase):
                 # Compute RBF kernel block
                 block = rbf_kernel(chunk_i, chunk_j, gamma=gamma)
                 kernel_matrix[row_start:row_end, col_start:col_end] = block
+            if self.use_memmap:
+                kernel_matrix.flush()
+
+        if self.use_memmap:
+            ResourceUtils.tune_memmap(kernel_matrix, "random")
+        if DataUtils.is_memmap_view(data):
+            ResourceUtils.tune_memmap(data, "random")
 
         return kernel_matrix
 
@@ -494,6 +592,9 @@ class KernelPCACalculator(CalculatorBase):
         n_samples = kernel_matrix.shape[0]
         row_sums = np.zeros(n_samples, dtype=np.float64)
         col_sums = np.zeros(n_samples, dtype=np.float64)
+        is_memmap = DataUtils.is_memmap_view(kernel_matrix)
+        if is_memmap:
+            ResourceUtils.tune_memmap(kernel_matrix, "sequential")
         
         # First pass: compute row sums
         for i in ProgressUtils.iterate(
@@ -512,6 +613,8 @@ class KernelPCACalculator(CalculatorBase):
         ):
             end = min(j + self.chunk_size, n_samples)
             col_sums[j:end] = kernel_matrix[:, j:end].sum(axis=0)
+        if is_memmap:
+            ResourceUtils.tune_memmap(kernel_matrix, "random")
         
         row_means = row_sums / n_samples
         col_means = col_sums / n_samples
@@ -540,6 +643,9 @@ class KernelPCACalculator(CalculatorBase):
             Modifies kernel_matrix in-place
         """
         n_samples = kernel_matrix.shape[0]
+        is_memmap = DataUtils.is_memmap_view(kernel_matrix)
+        if is_memmap:
+            ResourceUtils.tune_memmap(kernel_matrix, "sequential")
         
         for i in ProgressUtils.iterate(
             range(0, n_samples, self.chunk_size),
@@ -553,6 +659,10 @@ class KernelPCACalculator(CalculatorBase):
                                     row_means[i:i_end, np.newaxis] - 
                                     col_means[np.newaxis, :] + 
                                     grand_mean)
+            if hasattr(kernel_matrix, "flush"):
+                kernel_matrix.flush()
+        if is_memmap:
+            ResourceUtils.tune_memmap(kernel_matrix, "random")
 
     def _compute_incremental_kernel_pca(self, data: np.ndarray, hyperparameters: Dict[str, Any]) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
@@ -626,7 +736,9 @@ class KernelPCACalculator(CalculatorBase):
                 mode="w+",
                 shape=transformed_data.shape,
             )
+            ResourceUtils.tune_memmap(transformed_memmap, "random")
             transformed_memmap[:] = transformed_data
+            transformed_memmap.flush()
             transformed_data = transformed_memmap
 
         metadata = self._prepare_metadata(hyperparameters, data.shape)
@@ -661,6 +773,9 @@ class KernelPCACalculator(CalculatorBase):
         """
         n_samples = kernel_matrix.shape[0]
         result = np.zeros(n_samples, dtype=v.dtype)
+        is_memmap = DataUtils.is_memmap_view(kernel_matrix)
+        if is_memmap:
+            ResourceUtils.tune_memmap(kernel_matrix, "sequential")
         
         for i in range(0, n_samples, chunk_size):
             end = min(i + chunk_size, n_samples)
@@ -670,7 +785,8 @@ class KernelPCACalculator(CalculatorBase):
             
             # Perform multiplication and add to the result vector
             result[i:end] = matrix_chunk @ v
-            
+        if is_memmap:
+            ResourceUtils.tune_memmap(kernel_matrix, "random")
         return result
 
     def _parallel_chunked_matvec(self, v: np.ndarray, kernel_matrix: np.memmap, parallel_chunk_size: int) -> np.ndarray:
@@ -692,18 +808,24 @@ class KernelPCACalculator(CalculatorBase):
             Resulting vector from the multiplication
         """
         n_samples = kernel_matrix.shape[0]
+        is_memmap = DataUtils.is_memmap_view(kernel_matrix)
         
         def process_chunk(start_index):
             end_index = min(start_index + parallel_chunk_size, n_samples)
-            matrix_chunk = kernel_matrix[start_index:end_index, :]
-            return matrix_chunk @ v
+            if is_memmap:
+                ResourceUtils.tune_memmap(kernel_matrix, "sequential")
+            with self._limit_threadpools():
+                matrix_chunk = kernel_matrix[start_index:end_index, :]
+                result = matrix_chunk @ v
+            if is_memmap:
+                ResourceUtils.tune_memmap(kernel_matrix, "random")
+            return result
 
         chunk_starts = range(0, n_samples, parallel_chunk_size)
         
         chunk_results = Parallel(n_jobs=self.n_jobs)(
             delayed(process_chunk)(i) for i in chunk_starts
         )
-        
         return np.concatenate(chunk_results)
 
     def _create_progress_linear_operator(self, shape, matvec_func, dtype):
@@ -761,6 +883,7 @@ class KernelPCACalculator(CalculatorBase):
         kernel_matrix = np.memmap(
             memmap_path, dtype=float, mode="w+", shape=(n_samples, n_samples)
         )
+        ResourceUtils.tune_memmap(kernel_matrix, "random")
 
         return kernel_matrix
 
@@ -784,39 +907,88 @@ class KernelPCACalculator(CalculatorBase):
             Tuple of (transformed_data, metadata)
         """
         n_samples = data.shape[0]
+        is_memmap_data = DataUtils.is_memmap_view(data)
         n_landmarks = hyperparameters["n_landmarks"]
         n_components = hyperparameters["n_components"]
+        landmark_selection = hyperparameters.get("landmark_selection", "kmeans")
 
-        nystroem = Nystroem(
-            kernel="rbf",
-            gamma=hyperparameters["gamma"],
-            n_components=n_landmarks,
-            random_state=hyperparameters["random_state"]
-        )
-        nystroem.fit(data)  # Only fit, don't transform yet
+        # Validate chunk size for IncrementalPCA
+        # IPCA requires batch_size >= n_components
+        processing_chunk_size = self.chunk_size
+        if processing_chunk_size < n_components:
+            print(f"Warning: chunk_size ({self.chunk_size}) is smaller than n_components ({n_components}). "
+                  f"Increasing chunk size to {n_components} for IncrementalPCA to function correctly. "
+                  f"This might increase memory usage.")
+            processing_chunk_size = n_components
+            # Ensure it's not larger than dataset
+            if processing_chunk_size > n_samples:
+                 raise ValueError(f"n_components ({n_components}) cannot be larger than n_samples ({n_samples})")
+
+        if landmark_selection == "kmeans":
+            # Use optimized chunk-wise MiniBatchKMeans from base class
+            # Returns indices of real data points closest to centroids
+            landmark_idx = self._select_landmarks_kmeans(
+                data, 
+                n_landmarks, 
+                hyperparameters["random_state"]
+            )
+            
+            # Sort indices for efficient memory access (especially for memmaps)
+            landmark_idx = np.sort(landmark_idx)
+            landmarks = data[landmark_idx].astype(np.float32, copy=False)
+            
+            nystroem = Nystroem(
+                kernel="rbf",
+                gamma=hyperparameters["gamma"],
+                n_components=n_landmarks,
+                random_state=hyperparameters["random_state"],
+                n_jobs=self.n_jobs
+            )
+            nystroem.fit(landmarks)
+
+        elif landmark_selection == "random":
+            rng = np.random.RandomState(hyperparameters["random_state"])
+            landmark_idx = rng.choice(n_samples, n_landmarks, replace=False)
+            landmark_idx = np.sort(landmark_idx)
+            landmarks = data[landmark_idx].astype(np.float32, copy=False)
+
+            nystroem = Nystroem(
+                kernel="rbf",
+                gamma=hyperparameters["gamma"],
+                n_components=n_landmarks,
+                random_state=hyperparameters["random_state"],
+                n_jobs=self.n_jobs
+            )
+            nystroem.fit(landmarks)
+        else:
+            raise ValueError("The parameter landmark_selection only knows 'random' or 'kmeans'.")
         
         # Step 2: IncrementalPCA for features (this is correct - PCA on features!)
         ipca = IncrementalPCA(
             n_components=n_components,
-            batch_size=self.chunk_size,
+            batch_size=processing_chunk_size,
             whiten=True,
             copy=False
         )
         
         # Step 3: Chunk-wise transform and partial_fit
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data, "sequential")
         for start in ProgressUtils.iterate(
-            range(0, n_samples, self.chunk_size),
+            range(0, n_samples, processing_chunk_size),
             desc="Nystroem partial fitting",
             unit="chunks",
         ):
-            end = min(start + self.chunk_size, n_samples)
-            data_chunk = data[start:end]
+            end = min(start + processing_chunk_size, n_samples)
+            data_chunk = data[start:end].astype(np.float32, copy=False)
 
             # Transform chunk to Kernel-Features (n_landmarks dimensional)
-            kernel_features_chunk = nystroem.transform(data_chunk)
+            kernel_features_chunk = nystroem.transform(data_chunk).astype(np.float32, copy=False)
 
             # Partial fit PCA on features (not on kernel matrix!)
             ipca.partial_fit(kernel_features_chunk)
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data, "random")
         
         # Step 4: Final transform chunk-wise
         result = self._create_array_or_memmap(
@@ -825,16 +997,25 @@ class KernelPCACalculator(CalculatorBase):
             filename=f"{self._cache_prefix}_nystrom.dat"
         )
 
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data, "sequential")
+        is_memmap_result = DataUtils.is_memmap_view(result)
+        if is_memmap_result:
+            ResourceUtils.tune_memmap(result, "sequential")
         for start in ProgressUtils.iterate(
-            range(0, n_samples, self.chunk_size),
+            range(0, n_samples, processing_chunk_size),
             desc="Nystroem final transform",
             unit="chunks",
         ):
-            end = min(start + self.chunk_size, n_samples)
-            data_chunk = data[start:end]
+            end = min(start + processing_chunk_size, n_samples)
+            data_chunk = data[start:end].astype(np.float32, copy=False)
 
-            kernel_features_chunk = nystroem.transform(data_chunk)
+            kernel_features_chunk = nystroem.transform(data_chunk).astype(np.float32, copy=False)
             result[start:end] = ipca.transform(kernel_features_chunk)
+            if hasattr(result, "flush"):
+                result.flush()
+        if is_memmap_result:
+            ResourceUtils.tune_memmap(result, "random")
 
         metadata = self._prepare_metadata(hyperparameters, data.shape)
         metadata.update(
@@ -846,4 +1027,6 @@ class KernelPCACalculator(CalculatorBase):
             }
         )
 
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data, "random")
         return result, metadata

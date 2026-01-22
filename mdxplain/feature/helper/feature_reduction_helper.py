@@ -89,7 +89,8 @@ class FeatureReductionHelper:
             "threshold_min": threshold_min,
             "threshold_max": threshold_max,
             "n_dynamic": results["n_dynamic"],
-            "total_pairs": results["total_pairs"]
+            "total_pairs": results["total_pairs"],
+            "kept_indices": results["kept_indices"]
         }
 
         # Check and warn about low retention

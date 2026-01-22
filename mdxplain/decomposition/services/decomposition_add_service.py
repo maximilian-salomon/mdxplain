@@ -153,10 +153,13 @@ class DecompositionAddService:
         gamma: Union[float, str, None] = "scale",
         use_nystrom: bool = False,
         n_landmarks: int = 10000,
+        landmark_selection: str = "kmeans",
         random_state: Optional[int] = None,
         use_parallel: bool = False,
         n_jobs: int = -1,
         min_chunk_size: int = 1000,
+        max_blas_threads: Union[int, None] = 1,
+        auto_limit_blas: bool = True,
         offset: Union[int, float] = 0,
         decomposition_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
@@ -188,6 +191,10 @@ class DecompositionAddService:
             Whether to use Nyström approximation for large datasets
         n_landmarks : int, default=10000
             Number of landmarks for Nyström approximation
+        landmark_selection : str, default="kmeans"
+            Method for landmark selection in Nyström approximation:
+            - "kmeans": Use KMeans centroids as landmarks (better coverage)
+            - "random": Use random sampling from data
         random_state : int, optional
             Random state for reproducible results
         use_parallel : bool, default=False
@@ -196,6 +203,12 @@ class DecompositionAddService:
             Number of parallel jobs (-1 for all available CPU cores)
         min_chunk_size : int, default=1000
             Minimum chunk size per parallel process to avoid overhead
+        max_blas_threads : int or None, default=1
+            Preferred BLAS/OpenMP thread limit; set auto_limit_blas=False to disable
+            thread limiting, or None to fall back to a safe default
+        auto_limit_blas : bool, default=True
+            Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
+            otherwise use max_blas_threads (fallback 2 when None)
         offset : int or float, default=0
             Adjustment to auto-selected component count (only applies when n_components="auto"):
 
@@ -247,10 +260,13 @@ class DecompositionAddService:
             gamma=gamma,
             use_nystrom=use_nystrom,
             n_landmarks=n_landmarks,
+            landmark_selection=landmark_selection,
             random_state=random_state,
             use_parallel=use_parallel,
             n_jobs=n_jobs,
             min_chunk_size=min_chunk_size,
+            max_blas_threads=max_blas_threads,
+            auto_limit_blas=auto_limit_blas,
             offset=offset,
         )
         return self._manager.add_decomposition(
@@ -269,10 +285,13 @@ class DecompositionAddService:
         gamma: Union[float, str] = "scale",
         use_nystrom: bool = False,
         n_landmarks: int = 2000,
+        landmark_selection: str = "kmeans",
         random_state: Optional[int] = None,
         use_parallel: bool = False,
         n_jobs: int = -1,
         min_chunk_size: int = 1000,
+        max_blas_threads: Union[int, None] = 1,
+        auto_limit_blas: bool = True,
         offset: Union[int, float] = 0,
         decomposition_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
@@ -302,6 +321,10 @@ class DecompositionAddService:
             Whether to use Nyström approximation for large datasets
         n_landmarks : int, default=2000
             Number of landmarks for Nyström approximation
+        landmark_selection : str, default="kmeans"
+            Method for landmark selection in Nyström approximation:
+            - "kmeans": Use KMeans centroids as landmarks (better coverage)
+            - "random": Use random sampling from data
         random_state : int, optional
             Random state for reproducible results
         use_parallel : bool, default=False
@@ -310,6 +333,12 @@ class DecompositionAddService:
             Number of parallel jobs (-1 for all available CPU cores)
         min_chunk_size : int, default=1000
             Minimum chunk size per parallel process to avoid overhead
+        max_blas_threads : int or None, default=1
+            Preferred BLAS/OpenMP thread limit; set auto_limit_blas=False to disable
+            thread limiting, or None to fall back to a safe default
+        auto_limit_blas : bool, default=True
+            Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
+            otherwise use max_blas_threads (fallback 2 when None)
         offset : int or float, default=0
             Adjustment to auto-selected component count (only applies when n_components="auto"):
 
@@ -360,10 +389,13 @@ class DecompositionAddService:
             gamma=gamma,
             use_nystrom=use_nystrom,
             n_landmarks=n_landmarks,
+            landmark_selection=landmark_selection,
             random_state=random_state,
             use_parallel=use_parallel,
             n_jobs=n_jobs,
             min_chunk_size=min_chunk_size,
+            max_blas_threads=max_blas_threads,
+            auto_limit_blas=auto_limit_blas,
             offset=offset,
         )
         return self._manager.add_decomposition(

@@ -91,6 +91,9 @@ class DPAAddService:
         method: str = "standard",
         sample_fraction: float = 0.1,
         knn_neighbors: int = 5,
+        n_jobs: int = -1,
+        max_blas_threads: Optional[int] = 1,
+        auto_limit_blas: bool = True,
         use_decomposed: bool = True,
         cluster_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
@@ -136,6 +139,15 @@ class DPAAddService:
             Fraction of data to sample for sampling-based methods
         knn_neighbors : int, default=5
             Number of neighbors for k-NN classifier in sampling methods
+        n_jobs : int, default=-1
+            Number of parallel jobs for distance computations.
+            -1 means using all processors.
+        max_blas_threads : int or None, default=1
+            Preferred BLAS/OpenMP thread limit; set auto_limit_blas=False to disable
+            thread limiting, or None to fall back to a safe default
+        auto_limit_blas : bool, default=True
+            Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
+            otherwise use max_blas_threads (fallback 2 when None)
         use_decomposed : bool, default=True
             Whether to use decomposed data if available
         cluster_name : str, optional
@@ -190,8 +202,9 @@ class DPAAddService:
         return self._execute(
             selection_name, Z, metric, affinity, density_algo, k_max, D_thr,
             dim_algo, blockAn, block_ratio, frac, halos, method,
-            sample_fraction, knn_neighbors, use_decomposed, cluster_name,
-            data_selector_name, force, override_cache, center_method="centroid"
+            sample_fraction, knn_neighbors, n_jobs, max_blas_threads, auto_limit_blas,
+            use_decomposed, cluster_name, data_selector_name, force, override_cache,
+            center_method="centroid"
         )
 
     def with_centroid_centers(
@@ -211,6 +224,9 @@ class DPAAddService:
         method: str = "standard",
         sample_fraction: float = 0.1,
         knn_neighbors: int = 5,
+        n_jobs: int = -1,
+        max_blas_threads: Optional[int] = 1,
+        auto_limit_blas: bool = True,
         use_decomposed: bool = True,
         cluster_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
@@ -252,6 +268,14 @@ class DPAAddService:
             Sampling fraction
         knn_neighbors : int, default=5
             K-NN neighbors
+        n_jobs : int, default=-1
+            Number of parallel jobs (-1 for all processors)
+        max_blas_threads : int or None, default=1
+            Preferred BLAS/OpenMP thread limit; set auto_limit_blas=False to disable
+            thread limiting, or None to fall back to a safe default
+        auto_limit_blas : bool, default=True
+            Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
+            otherwise use max_blas_threads (fallback 2 when None)
         use_decomposed : bool, default=True
             Use decomposed data if available
         cluster_name : str, optional
@@ -270,8 +294,9 @@ class DPAAddService:
         return self._execute(
             selection_name, Z, metric, affinity, density_algo, k_max, D_thr,
             dim_algo, blockAn, block_ratio, frac, halos, method,
-            sample_fraction, knn_neighbors, use_decomposed, cluster_name,
-            data_selector_name, force, override_cache, center_method="centroid"
+            sample_fraction, knn_neighbors, n_jobs, max_blas_threads, auto_limit_blas,
+            use_decomposed, cluster_name, data_selector_name, force, override_cache,
+            center_method="centroid"
         )
 
     def with_mean_centers(
@@ -291,6 +316,9 @@ class DPAAddService:
         method: str = "standard",
         sample_fraction: float = 0.1,
         knn_neighbors: int = 5,
+        n_jobs: int = -1,
+        max_blas_threads: Optional[int] = 1,
+        auto_limit_blas: bool = True,
         use_decomposed: bool = True,
         cluster_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
@@ -332,6 +360,14 @@ class DPAAddService:
             Sampling fraction
         knn_neighbors : int, default=5
             K-NN neighbors
+        n_jobs : int, default=-1
+            Number of parallel jobs (-1 for all processors)
+        max_blas_threads : int or None, default=1
+            Preferred BLAS/OpenMP thread limit; set auto_limit_blas=False to disable
+            thread limiting, or None to fall back to a safe default
+        auto_limit_blas : bool, default=True
+            Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
+            otherwise use max_blas_threads (fallback 2 when None)
         use_decomposed : bool, default=True
             Use decomposed data if available
         cluster_name : str, optional
@@ -350,8 +386,9 @@ class DPAAddService:
         return self._execute(
             selection_name, Z, metric, affinity, density_algo, k_max, D_thr,
             dim_algo, blockAn, block_ratio, frac, halos, method,
-            sample_fraction, knn_neighbors, use_decomposed, cluster_name,
-            data_selector_name, force, override_cache, center_method="mean"
+            sample_fraction, knn_neighbors, n_jobs, max_blas_threads, auto_limit_blas,
+            use_decomposed, cluster_name, data_selector_name, force, override_cache,
+            center_method="mean"
         )
 
     def with_median_centers(
@@ -371,6 +408,9 @@ class DPAAddService:
         method: str = "standard",
         sample_fraction: float = 0.1,
         knn_neighbors: int = 5,
+        n_jobs: int = -1,
+        max_blas_threads: Optional[int] = 1,
+        auto_limit_blas: bool = True,
         use_decomposed: bool = True,
         cluster_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
@@ -412,6 +452,14 @@ class DPAAddService:
             Sampling fraction
         knn_neighbors : int, default=5
             K-NN neighbors
+        n_jobs : int, default=-1
+            Number of parallel jobs (-1 for all processors)
+        max_blas_threads : int or None, default=1
+            Preferred BLAS/OpenMP thread limit; set auto_limit_blas=False to disable
+            thread limiting, or None to fall back to a safe default
+        auto_limit_blas : bool, default=True
+            Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
+            otherwise use max_blas_threads (fallback 2 when None)
         use_decomposed : bool, default=True
             Use decomposed data if available
         cluster_name : str, optional
@@ -430,8 +478,9 @@ class DPAAddService:
         return self._execute(
             selection_name, Z, metric, affinity, density_algo, k_max, D_thr,
             dim_algo, blockAn, block_ratio, frac, halos, method,
-            sample_fraction, knn_neighbors, use_decomposed, cluster_name,
-            data_selector_name, force, override_cache, center_method="median"
+            sample_fraction, knn_neighbors, n_jobs, max_blas_threads, auto_limit_blas,
+            use_decomposed, cluster_name, data_selector_name, force, override_cache,
+            center_method="median"
         )
 
     def with_density_peak_centers(
@@ -451,6 +500,9 @@ class DPAAddService:
         method: str = "standard",
         sample_fraction: float = 0.1,
         knn_neighbors: int = 5,
+        n_jobs: int = -1,
+        max_blas_threads: Optional[int] = 1,
+        auto_limit_blas: bool = True,
         use_decomposed: bool = True,
         cluster_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
@@ -492,6 +544,14 @@ class DPAAddService:
             Sampling fraction
         knn_neighbors : int, default=5
             K-NN neighbors
+        n_jobs : int, default=-1
+            Number of parallel jobs (-1 for all processors)
+        max_blas_threads : int or None, default=1
+            Preferred BLAS/OpenMP thread limit; set auto_limit_blas=False to disable
+            thread limiting, or None to fall back to a safe default
+        auto_limit_blas : bool, default=True
+            Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
+            otherwise use max_blas_threads (fallback 2 when None)
         use_decomposed : bool, default=True
             Use decomposed data if available
         cluster_name : str, optional
@@ -510,8 +570,9 @@ class DPAAddService:
         return self._execute(
             selection_name, Z, metric, affinity, density_algo, k_max, D_thr,
             dim_algo, blockAn, block_ratio, frac, halos, method,
-            sample_fraction, knn_neighbors, use_decomposed, cluster_name,
-            data_selector_name, force, override_cache, center_method="density_peak"
+            sample_fraction, knn_neighbors, n_jobs, max_blas_threads, auto_limit_blas,
+            use_decomposed, cluster_name, data_selector_name, force, override_cache,
+            center_method="density_peak"
         )
 
     def with_median_centroid_centers(
@@ -531,6 +592,9 @@ class DPAAddService:
         method: str = "standard",
         sample_fraction: float = 0.1,
         knn_neighbors: int = 5,
+        n_jobs: int = -1,
+        max_blas_threads: Optional[int] = 1,
+        auto_limit_blas: bool = True,
         use_decomposed: bool = True,
         cluster_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
@@ -572,6 +636,14 @@ class DPAAddService:
             Sampling fraction
         knn_neighbors : int, default=5
             K-NN neighbors
+        n_jobs : int, default=-1
+            Number of parallel jobs (-1 for all processors)
+        max_blas_threads : int or None, default=1
+            Preferred BLAS/OpenMP thread limit; set auto_limit_blas=False to disable
+            thread limiting, or None to fall back to a safe default
+        auto_limit_blas : bool, default=True
+            Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
+            otherwise use max_blas_threads (fallback 2 when None)
         use_decomposed : bool, default=True
             Use decomposed data if available
         cluster_name : str, optional
@@ -590,8 +662,9 @@ class DPAAddService:
         return self._execute(
             selection_name, Z, metric, affinity, density_algo, k_max, D_thr,
             dim_algo, blockAn, block_ratio, frac, halos, method,
-            sample_fraction, knn_neighbors, use_decomposed, cluster_name,
-            data_selector_name, force, override_cache, center_method="median_centroid"
+            sample_fraction, knn_neighbors, n_jobs, max_blas_threads, auto_limit_blas,
+            use_decomposed, cluster_name, data_selector_name, force, override_cache,
+            center_method="median_centroid"
         )
 
     def with_rmsd_centroid_centers(
@@ -611,6 +684,9 @@ class DPAAddService:
         method: str = "standard",
         sample_fraction: float = 0.1,
         knn_neighbors: int = 5,
+        n_jobs: int = -1,
+        max_blas_threads: Optional[int] = 1,
+        auto_limit_blas: bool = True,
         use_decomposed: bool = True,
         cluster_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
@@ -652,6 +728,14 @@ class DPAAddService:
             Sampling fraction
         knn_neighbors : int, default=5
             K-NN neighbors
+        n_jobs : int, default=-1
+            Number of parallel jobs (-1 for all processors)
+        max_blas_threads : int or None, default=1
+            Preferred BLAS/OpenMP thread limit; set auto_limit_blas=False to disable
+            thread limiting, or None to fall back to a safe default
+        auto_limit_blas : bool, default=True
+            Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
+            otherwise use max_blas_threads (fallback 2 when None)
         use_decomposed : bool, default=True
             Use decomposed data if available
         cluster_name : str, optional
@@ -670,8 +754,9 @@ class DPAAddService:
         return self._execute(
             selection_name, Z, metric, affinity, density_algo, k_max, D_thr,
             dim_algo, blockAn, block_ratio, frac, halos, method,
-            sample_fraction, knn_neighbors, use_decomposed, cluster_name,
-            data_selector_name, force, override_cache, center_method="rmsd_centroid"
+            sample_fraction, knn_neighbors, n_jobs, max_blas_threads, auto_limit_blas,
+            use_decomposed, cluster_name, data_selector_name, force, override_cache,
+            center_method="rmsd_centroid"
         )
 
     def _execute(
@@ -691,6 +776,9 @@ class DPAAddService:
         method: str,
         sample_fraction: float,
         knn_neighbors: int,
+        n_jobs: int,
+        max_blas_threads: Optional[int],
+        auto_limit_blas: bool,
         use_decomposed: bool,
         cluster_name: Optional[str],
         data_selector_name: Optional[str],
@@ -733,6 +821,12 @@ class DPAAddService:
             Sampling fraction
         knn_neighbors : int
             K-NN neighbors
+        n_jobs : int
+            Number of parallel jobs
+        max_blas_threads : int or None
+            BLAS/OpenMP thread limit
+        auto_limit_blas : bool
+            Enable auto-limiting for BLAS/OpenMP threads
         use_decomposed : bool
             Use decomposed data
         cluster_name : str, optional
@@ -766,6 +860,9 @@ class DPAAddService:
             sample_fraction=sample_fraction,
             knn_neighbors=knn_neighbors,
             force=force,
+            n_jobs=n_jobs,
+            max_blas_threads=max_blas_threads,
+            auto_limit_blas=auto_limit_blas,
         )
         return self._manager.add_clustering(
             self._pipeline_data,

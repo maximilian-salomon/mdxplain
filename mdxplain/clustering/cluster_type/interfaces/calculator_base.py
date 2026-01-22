@@ -26,6 +26,7 @@ for consistency across different clustering methods.
 """
 
 import warnings
+from contextlib import nullcontext
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional, Tuple
 
@@ -35,7 +36,10 @@ from sklearn.metrics import silhouette_score
 from sklearn.neighbors import KNeighborsClassifier
 
 from ....utils.data_utils import DataUtils
+from ....utils.resource_utils import ResourceUtils
 from ...helper.center_calculation_helper import CenterCalculationHelper
+
+from threadpoolctl import threadpool_limits
 
 
 class CalculatorBase(ABC):
@@ -60,7 +64,9 @@ class CalculatorBase(ABC):
         cache_path: str = "./cache", 
         max_memory_gb: float = 2.0,
         chunk_size: int = 1000,
-        use_memmap: bool = False
+        use_memmap: bool = False,
+        max_blas_threads: Optional[int] = 1,
+        auto_limit_blas: bool = True,
     ) -> None:
         """
         Initialize the clustering calculator.
@@ -75,7 +81,12 @@ class CalculatorBase(ABC):
             Chunk size for processing large datasets. Default is 1000.
         use_memmap : bool, optional
             Whether to use memory mapping for large datasets. Default is False.
-
+        max_blas_threads : int or None, default=1
+            Preferred BLAS/OpenMP thread limit; set auto_limit_blas=False to disable
+            thread limiting, or None to fall back to a safe default
+        auto_limit_blas : bool, default=True
+            Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
+            otherwise use max_blas_threads (fallback 2 when None)
         Returns
         -------
         None
@@ -95,6 +106,53 @@ class CalculatorBase(ABC):
         self.max_memory_bytes = max_memory_gb * (1024**3)
         self.chunk_size = chunk_size
         self.use_memmap = use_memmap
+        self.max_blas_threads = max_blas_threads
+        self.auto_limit_blas = auto_limit_blas
+
+    def _limit_threadpools(self, n_jobs: Optional[int]):
+        """
+        Create a context manager that limits BLAS/OpenMP threadpools.
+
+        Parameters
+        ----------
+        n_jobs : int or None
+            Number of requested parallel jobs
+
+        Returns
+        -------
+        contextlib.AbstractContextManager
+            Context manager that enforces thread limits when enabled
+        """
+        if threadpool_limits is None:
+            return nullcontext()
+        if self.auto_limit_blas:
+            if self._uses_parallel_jobs(n_jobs):
+                limits = 1
+            else:
+                limits = self.max_blas_threads if self.max_blas_threads and self.max_blas_threads > 0 else 2
+            return threadpool_limits(limits=limits)
+        if self.max_blas_threads is None or self.max_blas_threads < 1:
+            return nullcontext()
+        return threadpool_limits(limits=self.max_blas_threads)
+
+    @staticmethod
+    def _uses_parallel_jobs(n_jobs: Optional[int]) -> bool:
+        """
+        Determine whether parallel jobs are requested.
+
+        Parameters
+        ----------
+        n_jobs : int or None
+            Number of requested parallel jobs
+
+        Returns
+        -------
+        bool
+            True if n_jobs requests more than one worker
+        """
+        if n_jobs is None:
+            return False
+        return n_jobs != 1
 
     @abstractmethod
     def compute(self, data: np.ndarray, center_method: str = "centroid", **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
@@ -301,6 +359,7 @@ class CalculatorBase(ABC):
         labels: np.ndarray,
         cluster_model: Any,
         center_method: str = "centroid",
+        n_jobs: int = -1,
     ) -> Tuple[Optional[np.ndarray], str]:
         """
         Calculate cluster centers using built-in or helper method.
@@ -326,11 +385,13 @@ class CalculatorBase(ABC):
             - "density_peak": Point with highest local density
             - "median_centroid": Medoid from median (robust)
             - "rmsd_centroid": Centroid using RMSD metric (structural)
+        n_jobs : int, default=-1
+            Number of parallel jobs for density_peak method
 
         Returns
         -------
         Tuple[Optional[numpy.ndarray], str]
-        
+
             - centers: Array of cluster centers or None
             - method_used: "direct" if built-in, else center_method
 
@@ -349,7 +410,8 @@ class CalculatorBase(ABC):
             data, labels, center_method,
             chunk_size=self.chunk_size,
             use_memmap=self.use_memmap,
-            max_memory_gb=self.max_memory_gb
+            max_memory_gb=self.max_memory_gb,
+            n_jobs=n_jobs
         )
         return centers, center_method
 
@@ -470,7 +532,9 @@ class CalculatorBase(ABC):
         if self.use_memmap:
             filename = f"{algorithm}_{method}_labels.dat"
             path = DataUtils.get_cache_file_path(filename, self.cache_path)
-            return np.memmap(path, dtype=np.int32, mode='w+', shape=(n_samples,))
+            labels = np.memmap(path, dtype=np.int32, mode='w+', shape=(n_samples,))
+            ResourceUtils.tune_memmap(labels, "random")
+            return labels
         else:
             return np.empty(n_samples, dtype=np.int32)
 
@@ -496,7 +560,9 @@ class CalculatorBase(ABC):
             filename = f"{algorithm}_{method}_labels.dat"
             path = DataUtils.get_cache_file_path(filename, self.cache_path)
             memmap_labels = np.memmap(path, dtype=np.int32, mode='w+', shape=labels.shape)
+            ResourceUtils.tune_memmap(memmap_labels, "random")
             memmap_labels[:] = labels
+            memmap_labels.flush()
             return memmap_labels
         return labels
 
@@ -542,6 +608,8 @@ class CalculatorBase(ABC):
         full_labels = self._prepare_labels_storage(n_samples, algorithm, "knn_sampling")
         full_labels[:] = noise_label
         full_labels[sample_indices] = sample_labels
+        if hasattr(full_labels, "flush"):
+            full_labels.flush()
         
         # Use k-NN for non-sampled points (only for non-noise clusters)
         non_noise_mask = sample_labels != noise_label
@@ -557,10 +625,18 @@ class CalculatorBase(ABC):
             if len(remaining_indices) > 0:
                 # Fit k-NN classifier
                 n_neighbors = min(parameters["knn_neighbors"], len(non_noise_sample_data))
-                knn_classifier = KNeighborsClassifier(n_neighbors=n_neighbors)
+                knn_classifier = KNeighborsClassifier(
+                    n_neighbors=n_neighbors, n_jobs=parameters["n_jobs"]
+                )
                 knn_classifier.fit(non_noise_sample_data, non_noise_sample_labels)
                 
                 # Process remaining points in chunks (direct memmap/array writing)
+                is_memmap_labels = isinstance(full_labels, np.memmap)
+                is_memmap_data = DataUtils.is_memmap_view(data)
+                if is_memmap_labels:
+                    ResourceUtils.tune_memmap(full_labels, "sequential")
+                if is_memmap_data:
+                    ResourceUtils.tune_memmap(data, "sequential")
                 for start in ProgressUtils.iterate(
                     range(0, len(remaining_indices), self.chunk_size),
                     desc="k-NN prediction",
@@ -572,5 +648,12 @@ class CalculatorBase(ABC):
                     # k-NN prediction for chunk and write directly
                     chunk_labels = knn_classifier.predict(data[chunk_indices])
                     full_labels[chunk_indices] = chunk_labels
-        
+                    if hasattr(full_labels, "flush"):
+                        full_labels.flush()
+                if is_memmap_labels:
+                    ResourceUtils.tune_memmap(full_labels, "random")
+                if is_memmap_data:
+                    ResourceUtils.tune_memmap(data, "random")
+            
+
         return full_labels

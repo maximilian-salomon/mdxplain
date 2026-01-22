@@ -168,8 +168,8 @@ def create_dask_test_trajectory(
 
     # Create temporary directory and file
     temp_dir = tempfile.mkdtemp(dir=str(base_dir) if base_dir is not None else None)
-    temp_trajectory_file = os.path.join(temp_dir, "test_trajectory.xtc")
-    temp_topology_file = os.path.join(temp_dir, "test_topology.pdb")
+    temp_trajectory_file = os.path.join(temp_dir, f"test_trajectory_c{chunk_size}.xtc")
+    temp_topology_file = os.path.join(temp_dir, f"test_topology_c{chunk_size}.pdb")
 
     # Save trajectory and topology
     regular_traj.save_xtc(temp_trajectory_file)

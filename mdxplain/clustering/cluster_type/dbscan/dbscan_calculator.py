@@ -26,10 +26,12 @@ DBSCAN clustering computation using scikit-learn.
 """
 
 import time
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
 from mdxplain.utils.progress_utils import ProgressUtils
+from mdxplain.utils.resource_utils import ResourceUtils
+from mdxplain.utils.data_utils import DataUtils
 from scipy.sparse import vstack
 from sklearn.cluster import DBSCAN as SklearnDBSCAN
 from sklearn.neighbors import NearestNeighbors
@@ -58,7 +60,9 @@ class DBSCANCalculator(CalculatorBase):
         cache_path: str = "./cache", 
         max_memory_gb: float = 2.0,
         chunk_size: int = 1000,
-        use_memmap: bool = False
+        use_memmap: bool = False,
+        max_blas_threads: Optional[int] = 1,
+        auto_limit_blas: bool = True,
     ) -> None:
         """
         Initialize DBSCAN calculator.
@@ -74,8 +78,21 @@ class DBSCANCalculator(CalculatorBase):
             Used for chunked k-NN prediction and precomputed distance matrix. Default is 1000.
         use_memmap : bool, optional
             Whether to use memory mapping for large datasets. Default is False.
+        max_blas_threads : int or None, default=1
+            Preferred BLAS/OpenMP thread limit; set auto_limit_blas=False to disable
+            thread limiting, or None to fall back to a safe default
+        auto_limit_blas : bool, default=True
+            Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
+            otherwise use max_blas_threads (fallback 2 when None)
         """
-        super().__init__(cache_path, max_memory_gb, chunk_size, use_memmap)
+        super().__init__(
+            cache_path,
+            max_memory_gb,
+            chunk_size,
+            use_memmap,
+            max_blas_threads,
+            auto_limit_blas,
+        )
 
     def compute(self, data: np.ndarray, center_method: str = "centroid", **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
@@ -101,6 +118,7 @@ class DBSCANCalculator(CalculatorBase):
             - min_samples : int, minimum samples in neighborhood
             - method : str, clustering method ('standard', 'precomputed', 'knn_sampling')
             - sample_fraction : float, fraction of data to sample
+            - n_jobs : int, number of parallel jobs (-1 uses all processors)
             - force : bool, override memory and dimensionality checks
 
         Returns
@@ -121,9 +139,10 @@ class DBSCANCalculator(CalculatorBase):
 
         self._validate_memory_and_dimensionality(data, parameters)
 
-        cluster_labels, dbscan_model, computation_time = self._perform_clustering(
-            data, parameters
-        )
+        with self._limit_threadpools(parameters.get("n_jobs")):
+            cluster_labels, dbscan_model, computation_time = self._perform_clustering(
+                data, parameters
+            )
 
         metadata = self._build_metadata(
             data, cluster_labels, dbscan_model, parameters, computation_time, center_method
@@ -162,6 +181,7 @@ class DBSCANCalculator(CalculatorBase):
             "sample_size": sample_size,
             "force": kwargs.get("force", False),
             "knn_neighbors": kwargs.get("knn_neighbors", 5),
+            "n_jobs": kwargs.get("n_jobs", -1),
         }
 
     def _perform_clustering(self, data: np.ndarray, parameters: Dict[str, Any]) -> Tuple[np.ndarray, Any, float]:
@@ -215,6 +235,7 @@ class DBSCANCalculator(CalculatorBase):
         dbscan = SklearnDBSCAN(
             eps=parameters["eps"],
             min_samples=parameters["min_samples"],
+            n_jobs=parameters["n_jobs"],
         )
         cluster_labels = dbscan.fit_predict(data)
         
@@ -246,13 +267,16 @@ class DBSCANCalculator(CalculatorBase):
         
         # Build index ONCE before loop
         print("Building neighbors index on full dataset (this may take a while)...")
-        nbrs = NearestNeighbors(radius=eps, n_jobs=-1)
+        nbrs = NearestNeighbors(radius=eps, n_jobs=parameters["n_jobs"])
         nbrs.fit(data)
         
         # Compute radius neighbors graph chunk-wise
         chunk_size = self.chunk_size
         sparse_matrices = []
-        
+
+        is_memmap_data = DataUtils.is_memmap_view(data)
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data, "sequential")
         for chunk_start in ProgressUtils.iterate(
             range(0, n_samples, chunk_size),
             desc="Building sparse matrix",
@@ -264,6 +288,8 @@ class DBSCANCalculator(CalculatorBase):
             # Only query (no rebuilding index!)
             sparse_matrix = nbrs.radius_neighbors_graph(chunk_data, mode='distance')
             sparse_matrices.append(sparse_matrix)
+        if is_memmap_data:
+            ResourceUtils.tune_memmap(data, "random")
         
         # Combine sparse matrices
         full_sparse_matrix = vstack(sparse_matrices)
@@ -273,7 +299,7 @@ class DBSCANCalculator(CalculatorBase):
             eps=eps,
             min_samples=parameters["min_samples"],
             metric='precomputed',
-            n_jobs=-1
+            n_jobs=parameters["n_jobs"]
         )
         cluster_labels = dbscan.fit_predict(full_sparse_matrix)
         
@@ -310,6 +336,7 @@ class DBSCANCalculator(CalculatorBase):
         dbscan = SklearnDBSCAN(
             eps=parameters["eps"],
             min_samples=parameters["min_samples"],
+            n_jobs=parameters["n_jobs"],
         )
         sample_labels = dbscan.fit_predict(sample_data)
         
@@ -368,7 +395,7 @@ class DBSCANCalculator(CalculatorBase):
 
         # Calculate cluster centers using base class method
         centers, method_used = self._calculate_centers(
-            data, cluster_labels, dbscan_model, center_method
+            data, cluster_labels, dbscan_model, center_method, n_jobs=parameters["n_jobs"]
         )
         metadata["centers"] = centers
         metadata["center_method"] = method_used

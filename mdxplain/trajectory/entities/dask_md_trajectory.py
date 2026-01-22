@@ -47,6 +47,7 @@ from ..helper.dask_trajectory_helper.dask_trajectory_build_helper import DaskMDT
 from ..helper.dask_trajectory_helper.dask_trajectory_store_helper import DaskMDTrajectoryStoreHelper  
 from ..helper.dask_trajectory_helper.dask_trajectory_join_stack_helper import DaskMDTrajectoryJoinStackHelper
 from ..helper.dask_trajectory_helper.parallel_operations_helper import ParallelOperationsHelper
+from ..helper.dask_trajectory_helper.zarr_cache_helper import ZarrCacheHelper
 
 
 class DaskMDTrajectory:
@@ -116,10 +117,6 @@ class DaskMDTrajectory:
         
         # Initialize helper for join/stack operations with cache_dir (already set by builder)
         self._join_stack_helper = DaskMDTrajectoryJoinStackHelper(cache_dir=self._cache_dir)
-        
-        # Temp file tracking for cleanup
-        self._is_temp_store = False  # Flag to track if this is a temporary store
-        self._temp_zarr_path = None  # Path to temp zarr file for cleanup
     
     @classmethod
     def from_mdtraj(cls, mdtraj: md.Trajectory, 
@@ -161,8 +158,6 @@ class DaskMDTrajectory:
         instance = cls.__new__(cls)
         
         # Initialize basic attributes
-        instance._is_temp_store = zarr_cache_path is None
-        instance._temp_zarr_path = None
         
         # Delegate initialization to builder with mdtraj input
         instance._builder = DaskMDTrajectoryBuildHelper()
@@ -291,7 +286,7 @@ class DaskMDTrajectory:
         First frame: 0.0 ps
         """
         if self._time_cache is None:
-            print("⏱️  Loading time data...")
+            print("Loading time data...")
             self._time_cache = self._dask_time.compute()
         return self._time_cache
     
@@ -342,7 +337,7 @@ class DaskMDTrajectory:
         # Large arrays should use indexing: traj[start:end].xyz
         
         if self._xyz_cache is None:
-            print(f"📊 Loading {coords_size_mb:.1f} MB coordinate data...")
+            print(f"Loading {coords_size_mb:.1f} MB coordinate data...")
             self._xyz_cache = self._dask_coords.compute()
         
         return self._xyz_cache
@@ -445,16 +440,13 @@ class DaskMDTrajectory:
         >>> ca_indices = dask_traj.topology.select('name CA')
         >>> dask_traj.atom_slice(ca_indices, inplace=True)  # Modifies dask_traj
         """
-        # Clean up current temp store before creating new one (chained cleanup)
-        if self._is_temp_store:
-            self.cleanup()
         atom_indices = np.asarray(atom_indices)
-        new_zarr_store = self._parallel_ops.atom_slice(atom_indices)
-        new_traj = self._create_from_zarr_store(new_zarr_store)
-
-        if inplace:
-            return self._replace_self_with_new(new_traj)
-        return new_traj
+        return self._handle_inplace_or_new(
+            self._parallel_ops.atom_slice,
+            'atom_slice',
+            inplace,
+            atom_indices=atom_indices
+        )
     
     def center_coordinates(self, mass_weighted: bool = False, inplace: bool = True) -> DaskMDTrajectory:
         """
@@ -483,15 +475,12 @@ class DaskMDTrajectory:
         >>> # Center coordinates using mass weighting, create new trajectory
         >>> mass_centered = dask_traj.center_coordinates(mass_weighted=True, inplace=False)
         """
-        # Clean up current temp store before creating new one (chained cleanup)
-        if self._is_temp_store:
-            self.cleanup()
-        new_zarr_store = self._parallel_ops.center_coordinates(mass_weighted)
-        new_traj = self._create_from_zarr_store(new_zarr_store)
-
-        if inplace:
-            return self._replace_self_with_new(new_traj)
-        return new_traj
+        return self._handle_inplace_or_new(
+            self._parallel_ops.center_coordinates,
+            'center',
+            inplace,
+            mass_weighted=mass_weighted
+        )
     
     def superpose(
             self,
@@ -556,10 +545,6 @@ class DaskMDTrajectory:
 
         # Extract reference frame as md.Trajectory
         ref_traj = ref_trajectory[frame]
-        
-        # Clean up current temp store before creating new one (chained cleanup)
-        if self._is_temp_store:
-            self.cleanup()
             
         # Handle ref_atom_indices for MDTraj compatibility
         if ref_atom_indices is not None and atom_indices is not None:
@@ -574,12 +559,13 @@ class DaskMDTrajectory:
             ref_frame_for_alignment = ref_traj
 
         # Pass reference trajectory to parallel operations
-        new_zarr_store = self._parallel_ops.superpose(ref_frame_for_alignment, atom_indices)
-        new_traj = self._create_from_zarr_store(new_zarr_store)
-
-        if inplace:
-            return self._replace_self_with_new(new_traj)
-        return new_traj
+        return self._handle_inplace_or_new(
+            self._parallel_ops.superpose,
+            'superpose',
+            inplace,
+            reference_traj=ref_frame_for_alignment,
+            atom_indices=atom_indices
+        )
     
     def smooth(
             self,
@@ -617,16 +603,14 @@ class DaskMDTrajectory:
         >>> backbone = dask_traj.topology.select('backbone')
         >>> dask_traj.smooth(width=3, atom_indices=backbone, inplace=True)
         """
-        # Clean up current temp store before creating new one (chained cleanup)
-        if self._is_temp_store:
-            self.cleanup()
-
-        new_zarr_store = self._parallel_ops.smooth(width, order, atom_indices)
-        new_traj = self._create_from_zarr_store(new_zarr_store)
-
-        if inplace:
-            return self._replace_self_with_new(new_traj)
-        return new_traj
+        return self._handle_inplace_or_new(
+            self._parallel_ops.smooth,
+            'smooth',
+            inplace,
+            width=width,
+            order=order,
+            atom_indices=atom_indices
+        )
 
     def image_molecules(self,
                        inplace: bool = True,
@@ -676,21 +660,15 @@ class DaskMDTrajectory:
         ...     inplace=False
         ... )
         """
-        # Clean up current temp store before creating new one
-        if self._is_temp_store:
-            self.cleanup()
-
-        new_zarr_store = self._parallel_ops.image_molecules(
+        return self._handle_inplace_or_new(
+            self._parallel_ops.image_molecules,
+            'image_molecules',
+            inplace,
             anchor_molecules=anchor_molecules,
             other_molecules=other_molecules,
             sorted_bonds=sorted_bonds,
             make_whole=make_whole
         )
-        new_traj = self._create_from_zarr_store(new_zarr_store)
-
-        if inplace:
-            return self._replace_self_with_new(new_traj)
-        return new_traj
 
     def remove_solvent(self,
                       exclude: Optional[list] = None,
@@ -729,16 +707,12 @@ class DaskMDTrajectory:
         >>> # Remove solvent in-place (changes dask_traj)
         >>> dask_traj.remove_solvent(inplace=True)
         """
-        # Clean up current temp store before creating new one
-        if self._is_temp_store:
-            self.cleanup()
-
-        new_zarr_store = self._parallel_ops.remove_solvent(exclude=exclude)
-        new_traj = self._create_from_zarr_store(new_zarr_store)
-
-        if inplace:
-            return self._replace_self_with_new(new_traj)
-        return new_traj
+        return self._handle_inplace_or_new(
+            self._parallel_ops.remove_solvent,
+            'remove_solvent',
+            inplace,
+            exclude=exclude
+        )
 
     def join(self, other: DaskMDTrajectory, check_topology: bool = True) -> DaskMDTrajectory:
         """
@@ -768,11 +742,8 @@ class DaskMDTrajectory:
         ValueError
             If trajectories have different number of atoms when check_topology=True
         """
-        # Clean up current temp store before creating new one (chained cleanup)
-        if self._is_temp_store:
-            self.cleanup()
-            
-        return self._join_stack_helper.join_trajectories(self, other, check_topology)
+        new_path = self._generate_new_path(self.zarr_cache_path, 'join')
+        return self._join_stack_helper.join_trajectories(new_path, self, other, check_topology)
     
     def stack(self, other: DaskMDTrajectory) -> DaskMDTrajectory:
         """
@@ -800,11 +771,8 @@ class DaskMDTrajectory:
         ValueError
             If trajectories have different number of frames
         """
-        # Clean up current temp store before creating new one (chained cleanup)
-        if self._is_temp_store:
-            self.cleanup()
-            
-        return self._join_stack_helper.stack_trajectories(self, other)
+        new_path = self._generate_new_path(self.zarr_cache_path, 'stack')
+        return self._join_stack_helper.stack_trajectories(new_path, self, other)
     
     def slice(self, key: Union[int, slice, np.ndarray], return_dask: bool = True) -> Union[DaskMDTrajectory, md.Trajectory]:
         """
@@ -955,6 +923,33 @@ class DaskMDTrajectory:
     # Additional Methods
     # ============================================================================
     
+    def cleanup(self) -> None:
+        """
+        Clean up memory resources and clear internal caches.
+        
+        This method clears the coordinate and time caches held in memory
+        and releases the handle to the underlying Zarr store. It does NOT
+        delete any files on disk.
+        
+        Returns
+        -------
+        None
+            Clears caches in-place.
+            
+        Examples
+        --------
+        >>> dask_traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
+        >>> # ... perform calculations ...
+        >>> dask_traj.cleanup() # Free memory
+        """
+        # Clear memory caches
+        self._xyz_cache = None
+        self._time_cache = None
+        
+        # Close Zarr store reference
+        if hasattr(self, '_zarr_store'):
+            del self._zarr_store
+
     def memory_usage(self) -> dict:
         """
         Get memory usage information.
@@ -981,61 +976,157 @@ class DaskMDTrajectory:
             'n_workers': self.n_workers
         }
     
-    def cleanup(self):
-        """
-        Clean up resources and temporary files.
-        
-        Parameters
-        ----------
-        None
-        
-        Returns
-        -------
-        None
-            Clears caches and closes zarr store
-        
-        Examples
-        --------
-        >>> dask_traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
-        >>> # Do some work...
-        >>> dask_traj.cleanup()  # Clean up when done
-        """
-        # Clear caches
-        self._xyz_cache = None
-        self._time_cache = None
-        
-        # Close Zarr store
-        if hasattr(self, '_zarr_store'):
-            del self._zarr_store
-            
-        # Remove temporary zarr files if this is a temp store
-        if self._is_temp_store and self._temp_zarr_path and os.path.exists(self._temp_zarr_path):
-            print(f"Cleaning up temp zarr file: {self._temp_zarr_path}")
-            try:
-                shutil.rmtree(self._temp_zarr_path)
-                self._temp_zarr_path = None
-                self._is_temp_store = False
-            except OSError as e:
-                print(f"Warning: Could not remove temp zarr file {self._temp_zarr_path}: {e}")
-                
-    def __del__(self):
-        """
-        Automatic cleanup when object is destroyed.
-        
-        Only cleans up temporary stores to prevent accidental deletion of permanent caches.
-        """
-        # Only cleanup temp stores automatically
-        if hasattr(self, '_is_temp_store') and self._is_temp_store:
-            try:
-                self.cleanup()
-            except:
-                # Suppress all exceptions in destructor to avoid issues during shutdown
-                pass
-    
     # ============================================================================
     # Private Methods
     # ============================================================================
     
+    @staticmethod
+    def _generate_new_path(base_path: str, operation_name: str) -> str:
+        """
+        Generate a new, unique file path for an operation result.
+        
+        Parameters
+        ----------
+        base_path : str
+            The original file path (e.g., 'data/traj.zarr')
+        operation_name : str
+            Name of the operation (e.g., 'atom_slice')
+            
+        Returns
+        -------
+        str
+            A new unique path (e.g., 'data/traj_atom_slice_1.zarr')
+        """
+        directory = os.path.dirname(base_path)
+        filename = os.path.basename(base_path)
+        name, ext = os.path.splitext(filename)
+        
+        counter = 1
+        while True:
+            new_filename = f"{name}_{operation_name}_{counter}{ext}"
+            new_path = os.path.join(directory, new_filename)
+            if not os.path.exists(new_path):
+                return new_path
+            counter += 1
+
+    @staticmethod
+    def _get_swap_path(base_path: str) -> str:
+        """
+        Generate a swap path for atomic overwrites.
+        
+        Parameters
+        ----------
+        base_path : str
+            The original file path
+            
+        Returns
+        -------
+        str
+            Path with .swap extension
+        """
+        return f"{base_path}.swap"
+
+    def _reload_from_cache(self) -> None:
+        """
+        Reload trajectory data and attributes from the existing zarr cache.
+        
+        This method is used after an in-place modification to refresh the
+        Dask arrays, topology, and metadata from the updated Zarr store.
+        
+        Returns
+        -------
+        None
+            Refreshes instance attributes in-place.
+        """
+        # Re-open Zarr store
+        self._zarr_store = zarr.open(self.zarr_cache_path, mode='r')
+        
+        # Reload topology
+        self._topology = ZarrCacheHelper.load_topology(self._zarr_store)
+        
+        # Reload metadata
+        if 'metadata' in self._zarr_store.attrs:
+            self.metadata = dict(self._zarr_store.attrs['metadata'])
+            
+        # Re-create Dask arrays
+        self._dask_coords = da.from_zarr(self.zarr_cache_path, component='coordinates')
+        self._dask_time = da.from_zarr(self.zarr_cache_path, component='time')
+        
+        # Optional unitcell data
+        self._have_unitcell = 'unitcell_vectors' in self._zarr_store
+        if self._have_unitcell:
+            self._dask_unitcell_vectors = da.from_zarr(self.zarr_cache_path, component='unitcell_vectors')
+            self._dask_unitcell_lengths = da.from_zarr(self.zarr_cache_path, component='unitcell_lengths')
+            self._dask_unitcell_angles = da.from_zarr(self.zarr_cache_path, component='unitcell_angles')
+        else:
+            self._dask_unitcell_vectors = None
+            self._dask_unitcell_lengths = None
+            self._dask_unitcell_angles = None
+
+        # Re-initialize parallel operations
+        self._parallel_ops = ParallelOperationsHelper(
+            zarr_path=self.zarr_cache_path, 
+            topology=self._topology, 
+            n_workers=self.n_workers, 
+            chunk_size=self.chunk_size,
+            cache_dir=self._cache_dir
+        )
+        
+        # Clear memory caches
+        self._xyz_cache = None
+        self._time_cache = None
+
+    def _handle_inplace_or_new(self, operation_func: callable, operation_name: str, 
+                              inplace: bool, **kwargs) -> DaskMDTrajectory:
+        """
+        Execute an operation either in-place or creating a new trajectory file.
+        
+        Handles the logic for atomic overwrites (inplace=True) or creating
+        new permanent files (inplace=False).
+        
+        Parameters
+        ----------
+        operation_func : callable
+            Function from ParallelOperationsHelper to execute. Must accept 
+            `result_path` as its first argument.
+        operation_name : str
+            Name of the operation (e.g., 'atom_slice') used for generating
+            new filenames when inplace=False.
+        inplace : bool
+            If True, performs atomic overwrite of the current trajectory.
+            If False, creates a new trajectory file.
+        **kwargs : 
+            Additional keyword arguments passed to `operation_func`.
+            
+        Returns
+        -------
+        DaskMDTrajectory
+            If inplace=True, returns self (refreshed).
+            If inplace=False, returns a new DaskMDTrajectory instance.
+        """
+        if inplace:
+            swap_path = self._get_swap_path(self.zarr_cache_path)
+            
+            # Execute operation to swap path
+            operation_func(swap_path, **kwargs)
+            
+            # Close current store to release file handles
+            if hasattr(self, '_zarr_store'):
+                del self._zarr_store
+            
+            # Replace original with swap
+            if os.path.exists(self.zarr_cache_path):
+                shutil.rmtree(self.zarr_cache_path)
+            shutil.move(swap_path, self.zarr_cache_path)
+            
+            # Reload attributes from the updated store
+            self._reload_from_cache()
+            return self
+        else:
+            new_path = self._generate_new_path(self.zarr_cache_path, operation_name)
+            new_zarr_store = operation_func(new_path, **kwargs)
+            return self._create_from_zarr_store(new_zarr_store)
+
     def _copy_trajectory_chunks(self, target_store: zarr.Group, frame_offset: int = 0):
         """
         Copy trajectory data chunk-wise to target zarr store.
@@ -1124,6 +1215,7 @@ class DaskMDTrajectory:
         new_instance.chunk_size = self.chunk_size
         new_instance.n_workers = self.n_workers
         new_instance._cache_dir = self._cache_dir
+        new_instance.zarr_cache_path = self.zarr_cache_path
         new_instance._builder = self._builder
         
         # Slice the Dask arrays (lazy!)
@@ -1155,11 +1247,7 @@ class DaskMDTrajectory:
         new_instance._parallel_ops = self._parallel_ops
         new_instance._join_stack_helper = self._join_stack_helper
         
-        # Temp tracking
-        new_instance._is_temp_store = False
-        new_instance._temp_zarr_path = None
-        
-        print(f"✅ Sliced DaskMDTrajectory created with {len(indices)} frames (lazy)")
+        print(f"Sliced DaskMDTrajectory created with {len(indices)} frames (lazy)")
         
         return new_instance
     
@@ -1191,6 +1279,7 @@ class DaskMDTrajectory:
         new_instance.chunk_size = config['chunk_size']
         new_instance.n_workers = config['n_workers']
         new_instance._cache_dir = os.path.dirname(config['zarr_path']) if config['zarr_path'] else './cache'
+        new_instance.zarr_cache_path = config['zarr_path']
         
         # Create Dask arrays
         new_instance._dask_coords = da.from_zarr(config['zarr_path'], component='coordinates')
@@ -1219,10 +1308,6 @@ class DaskMDTrajectory:
         new_instance._xyz_cache = None
         new_instance._time_cache = None
         
-        # Mark as temp store for automatic cleanup (chained cleanup)
-        new_instance._is_temp_store = True
-        new_instance._temp_zarr_path = config['zarr_path']
-        
         return new_instance
 
     def _replace_self_with_new(self, new_trajectory: DaskMDTrajectory) -> DaskMDTrajectory:
@@ -1245,14 +1330,6 @@ class DaskMDTrajectory:
         >>> new_traj = dask_traj._create_from_zarr_store(zarr_store)
         >>> dask_traj._replace_self_with_new(new_traj)  # dask_traj is now updated
         """
-        # Clean up current resources FIRST
-        if self._is_temp_store:
-            self.cleanup()
-
-        # Prevent new trajectory from cleaning up (we're taking ownership)
-        new_trajectory._is_temp_store = False
-        new_trajectory._temp_zarr_path = None
-
         # Update self with all attributes from new trajectory
         self.__dict__.update(new_trajectory.__dict__)
 
@@ -1274,7 +1351,8 @@ class DaskMDTrajectory:
         """
         # Delegate to store manager with cache_dir
         store_manager = DaskMDTrajectoryStoreHelper(cache_dir=self._cache_dir)
-        zarr_store = store_manager.create_slice_store(self, key)
+        new_path = self._generate_new_path(self.zarr_cache_path, 'slice')
+        zarr_store = store_manager.create_slice_store(self, key, new_path)
         return self._create_from_zarr_store(zarr_store)
 
     def save(self, filepath: str) -> None:
