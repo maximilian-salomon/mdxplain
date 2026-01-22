@@ -1,5 +1,9 @@
-Performance and System Stability
-================================
+.. raw:: html
+
+   <div class="pagetitle-page">
+
+.. rubric:: Performance and System Stability
+  :class: rubric-h1
 
 Large-scale analyses in mdxplain can stress a machine in ways that are unusual
 for everyday scientific software. This page explains **what we observed**,
@@ -150,7 +154,7 @@ slow the system.
 --------------------------------------------------------------------------
 
 Why even the power button may not work
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 On many modern systems, the power button is not a purely mechanical hardware
 switch. Instead, it generates an event that is handled through firmware and the
@@ -257,3 +261,8 @@ References
 
 - Livelock and resource starvation:
   https://en.wikipedia.org/wiki/Livelock
+
+
+.. raw:: html
+
+   </div>

@@ -60,3 +60,33 @@ footer[role="contentinfo"] .rst-footer-buttons,
 .footer-relations {
     display: none !important;
 }
+
+/* Rubric styled like RTD page title (h1) */
+.rubric.rubric-h1 {
+    font-family: "Roboto Slab","ff-tisa-web-pro","Georgia",Arial,sans-serif;
+    font-size: 1.75em;
+    margin-top: 0px;
+    margin-bottom: 24px !important;
+    line-height: 1.2;
+    color: #404040;
+}
+
+/* Specific styles for a page without singular page title */
+.pagetitle-page h1 {
+    font-size: 1.5em !important;
+    margin-block-start: 0.83em;
+    margin-block-end: 0.83em;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    unicode-bidi: isolate;
+}
+
+/* Specific styles for a page without singular page title */
+.pagetitle-page h2 {
+    font-size: 1.25em !important;
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    unicode-bidi: isolate;
+}
