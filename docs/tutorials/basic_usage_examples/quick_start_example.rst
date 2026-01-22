@@ -1,7 +1,7 @@
 Quick Start Example
 ===================
 
-See :doc:`Complete Workflow Example <../00_introduction>` for a detailed
+See :doc:`Complete Workflow Example <../notebooks/01_Quickstart_VillinHeadpiece_Full_Analysis>` for a detailed
 walkthrough of this workflow.
 
 Here's a complete conformational analysis workflow:
