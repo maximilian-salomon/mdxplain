@@ -106,6 +106,7 @@ class HDBSCAN(ClusterTypeBase):
         auto_limit_blas : bool, default=True
             Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
             otherwise use max_blas_threads (fallback 2 when None)
+            
         Returned Metadata
         -----------------
         algorithm : str

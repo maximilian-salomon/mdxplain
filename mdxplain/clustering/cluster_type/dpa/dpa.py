@@ -110,12 +110,16 @@ class DPA(ClusterTypeBase):
 
             - "nearest_neighbors": construct the affinity matrix by computing a
               graph of nearest neighbors.
+
             - "rbf": construct the affinity matrix using a radial basis function
               (RBF) kernel.
+
             - "precomputed": interpret X as a precomputed affinity matrix.
+
             - "precomputed_nearest_neighbors": interpret X as a sparse graph
               of precomputed nearest neighbors, and constructs the affinity matrix
               by selecting the n_neighbors nearest neighbors.
+
             - one of the kernels supported by sklearn.metrics.pairwise_kernels.
 
         density_algo : string, default="PAk"
@@ -192,6 +196,7 @@ class DPA(ClusterTypeBase):
         auto_limit_blas : bool, default=True
             Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
             otherwise use max_blas_threads (fallback 2 when None)
+            
         Returned Metadata
         -----------------
         algorithm : str
