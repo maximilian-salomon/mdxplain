@@ -40,18 +40,6 @@ Basic Usage Examples
    basic_usage_examples/saving_and_loading
 
 
-Performance and System Stability
---------------------------------
-
-Large KernelPCA and Diffusion Maps runs can overwhelm CPU, memory, and I/O. This
-short explainer summarizes why hard freezes happen and which mdxplain safeguards
-prevent them. See :doc:`performance_and_system_stability` for the full discussion.
-
-.. toctree::
-   :maxdepth: 1
-
-   performance_and_system_stability
-
 Tutorials
 ---------
 
@@ -66,3 +54,16 @@ Here's a complete conformational analysis workflow:
    notebooks/02_VillinHeadpiece_Full_Analysis
 
 .. toctree notebooks end
+
+
+Performance and System Stability
+--------------------------------
+
+Large KernelPCA and Diffusion Maps runs can overwhelm CPU, memory, and I/O. This
+short explainer summarizes why hard freezes happen and which mdxplain safeguards
+prevent them. See :doc:`performance_and_system_stability` for the full discussion.
+
+.. toctree::
+   :maxdepth: 1
+
+   performance_and_system_stability
