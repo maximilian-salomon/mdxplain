@@ -551,20 +551,14 @@ class DaskMDTrajectory:
             if len(ref_atom_indices) != len(atom_indices):
                 raise ValueError(f"atom_indices ({len(atom_indices)}) and ref_atom_indices ({len(ref_atom_indices)}) must have same length")
 
-        # Use ref_atom_indices for reference frame selection if provided
-        if ref_atom_indices is not None:
-            # Extract reference frame with specific atoms for alignment calculation
-            ref_frame_for_alignment = ref_traj.atom_slice(ref_atom_indices)
-        else:
-            ref_frame_for_alignment = ref_traj
-
         # Pass reference trajectory to parallel operations
         return self._handle_inplace_or_new(
             self._parallel_ops.superpose,
             'superpose',
             inplace,
-            reference_traj=ref_frame_for_alignment,
-            atom_indices=atom_indices
+            reference_traj=ref_traj,
+            atom_indices=atom_indices,
+            ref_atom_indices=ref_atom_indices,
         )
     
     def smooth(

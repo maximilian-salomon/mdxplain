@@ -320,8 +320,13 @@ class ParallelOperationsHelper:
         
         return result_store
     
-    def superpose(self, result_path: str, reference_traj: md.Trajectory,
-                 atom_indices: Optional[np.ndarray] = None) -> zarr.Group:
+    def superpose(
+        self,
+        result_path: str,
+        reference_traj: md.Trajectory,
+        atom_indices: Optional[np.ndarray] = None,
+        ref_atom_indices: Optional[np.ndarray] = None,
+    ) -> zarr.Group:
         """
         Superpose trajectory to reference trajectory using real MDTraj method chunkwise.
         
@@ -332,7 +337,9 @@ class ParallelOperationsHelper:
         reference_traj : md.Trajectory
             Reference trajectory (single frame) to align to
         atom_indices : np.ndarray, optional
-            Atoms to use for alignment
+            Atoms to use for alignment on this trajectory
+        ref_atom_indices : np.ndarray, optional
+            Atoms to use for alignment on the reference trajectory
             
         Returns
         -------
@@ -359,8 +366,18 @@ class ParallelOperationsHelper:
         print(f"Superposing to reference trajectory...")
         
         # Define operation function for superpose
-        def superpose_operation(chunk_traj: md.Trajectory, reference_traj: md.Trajectory, atom_indices: Optional[np.ndarray]) -> None:
-            chunk_traj.superpose(reference_traj, frame=0, atom_indices=atom_indices)
+        def superpose_operation(
+            chunk_traj: md.Trajectory,
+            reference_traj: md.Trajectory,
+            atom_indices: Optional[np.ndarray],
+            ref_atom_indices: Optional[np.ndarray],
+        ) -> None:
+            chunk_traj.superpose(
+                reference_traj,
+                frame=0,
+                atom_indices=atom_indices,
+                ref_atom_indices=ref_atom_indices,
+            )
         
         # Use generic helper method
         return self._process_trajectory_chunked(
@@ -368,7 +385,8 @@ class ParallelOperationsHelper:
             result_path=result_path,
             result_shape=(self.n_frames, self.n_atoms, 3),
             reference_traj=reference_traj,
-            atom_indices=atom_indices
+            atom_indices=atom_indices,
+            ref_atom_indices=ref_atom_indices,
         )
     
     def smooth(self, result_path: str, width: int, order: Optional[int] = None, 

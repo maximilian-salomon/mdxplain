@@ -201,11 +201,30 @@ class PostSelectionReductionHelper:
             selected_data = data_matrix[:, selection_indices]
             temp_path = None
 
+        # Build feature metadata for selected columns to match selected_data
+        selected_feature_metadata = None
+        source_metadata = (
+            feature_data.reduced_feature_metadata if use_reduced else feature_data.feature_metadata
+        )
+        if source_metadata is not None:
+            features_list = source_metadata.get("features")
+            if features_list is None:
+                raise ValueError(
+                    f"Feature metadata missing 'features' for '{feature_key}' "
+                    f"(trajectory {traj_idx})."
+                )
+            if isinstance(features_list, np.ndarray):
+                selected_feature_metadata = features_list[selection_indices]
+            else:
+                selected_feature_metadata = [
+                    features_list[idx] for idx in selection_indices
+                ]
+
         # Apply calculator
         calculator = feature_data.feature_type.calculator
         result = PostSelectionReductionHelper._apply_calculator(
             calculator, selected_data, reduction_config,
-            feature_data.feature_metadata, feature_data.cache_path
+            selected_feature_metadata, feature_data.cache_path
         )
 
         # Map indices back to original

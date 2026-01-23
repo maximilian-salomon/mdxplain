@@ -1484,7 +1484,12 @@ class TrajectoryManager:
 
             # Perform alignment
             result = self._call_traj_method(
-                trajectory, "superpose", reference=ref_frame, atom_indices=traj_atom_indices, inplace=inplace
+                trajectory,
+                "superpose",
+                reference=ref_frame,
+                atom_indices=traj_atom_indices,
+                ref_atom_indices=ref_atom_indices,
+                inplace=inplace,
             )
             
             # Update trajectory in pipeline data
