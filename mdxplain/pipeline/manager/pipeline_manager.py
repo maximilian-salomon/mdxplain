@@ -470,7 +470,9 @@ class PipelineManager:
         self._decomposition_manager = DecompositionManager(
             use_memmap=use_memmap, chunk_size=chunk_size, cache_dir=cache_dir
         )
-        self._feature_selector_manager = FeatureSelectorManager()
+        self._feature_selector_manager = FeatureSelectorManager(
+            use_memmap=use_memmap, chunk_size=chunk_size, cache_dir=cache_dir
+        )
 
         self._data_selector_manager = DataSelectorManager()
         self._comparison_manager = ComparisonManager()
