@@ -189,53 +189,194 @@ class PostSelectionReductionHelper:
         selection_indices = traj_results["indices"]
         use_reduced = selection_dict["use_reduced"]
 
-        # Choose data matrix
-        data_matrix = feature_data.reduced_data if use_reduced else feature_data.data
+        selected_data, temp_path = PostSelectionReductionHelper._select_data(
+            feature_data, selection_indices, use_reduced, use_memmap, chunk_size, cache_dir
+        )
+        selected_feature_metadata = PostSelectionReductionHelper._get_selected_feature_metadata(
+            feature_data, selection_indices, use_reduced, feature_key, traj_idx
+        )
 
-        # Extract selected columns
+        calculator = feature_data.feature_type.calculator
+        temp_output_path = PostSelectionReductionHelper._create_temp_output_path(
+            use_memmap, cache_dir
+        )
+        result = PostSelectionReductionHelper._apply_calculator(
+            calculator, selected_data, reduction_config,
+            selected_feature_metadata, temp_output_path
+        )
+
+        kept_original = PostSelectionReductionHelper._map_kept_indices(
+            selection_indices, result["indices"]
+        )
+        PostSelectionReductionHelper._cleanup_temp_output(result, temp_output_path)
+
+        return kept_original, temp_path
+
+    @staticmethod
+    def _select_data(
+        feature_data: Any,
+        selection_indices: List[int],
+        use_reduced: bool,
+        use_memmap: bool,
+        chunk_size: int,
+        cache_dir: str
+    ) -> Tuple[np.ndarray, Optional[str]]:
+        """
+        Select columns from feature data, optionally using memmap extraction.
+
+        Parameters
+        ----------
+        feature_data : Any
+            Feature data container for the trajectory
+        selection_indices : list
+            Column indices to select
+        use_reduced : bool
+            Whether to use reduced data
+        use_memmap : bool
+            Whether to use memmap extraction
+        chunk_size : int
+            Chunk size for memmap extraction
+        cache_dir : str
+            Directory for temporary cache files
+
+        Returns
+        -------
+        tuple
+            (selected_data, temp_path or None)
+        """
+        data_matrix = feature_data.reduced_data if use_reduced else feature_data.data
         if use_memmap:
-            selected_data, temp_path = PostSelectionReductionHelper._extract_memmap_columns(
+            return PostSelectionReductionHelper._extract_memmap_columns(
                 data_matrix, selection_indices, chunk_size, cache_dir
             )
-        else:
-            selected_data = data_matrix[:, selection_indices]
-            temp_path = None
+        return data_matrix[:, selection_indices], None
 
-        # Build feature metadata for selected columns to match selected_data
-        selected_feature_metadata = None
+    @staticmethod
+    def _get_selected_feature_metadata(
+        feature_data: Any,
+        selection_indices: List[int],
+        use_reduced: bool,
+        feature_key: str,
+        traj_idx: int
+    ) -> Optional[List[Any]]:
+        """
+        Extract feature metadata for selected columns.
+
+        Parameters
+        ----------
+        feature_data : Any
+            Feature data container for the trajectory
+        selection_indices : list
+            Column indices to select
+        use_reduced : bool
+            Whether to use reduced metadata
+        feature_key : str
+            Feature type key
+        traj_idx : int
+            Trajectory index
+
+        Returns
+        -------
+        list or None
+            Selected feature metadata or None if unavailable
+        """
         source_metadata = (
             feature_data.reduced_feature_metadata if use_reduced else feature_data.feature_metadata
         )
-        if source_metadata is not None:
-            features_list = source_metadata.get("features")
-            if features_list is None:
-                raise ValueError(
-                    f"Feature metadata missing 'features' for '{feature_key}' "
-                    f"(trajectory {traj_idx})."
-                )
-            if isinstance(features_list, np.ndarray):
-                selected_feature_metadata = features_list[selection_indices]
-            else:
-                selected_feature_metadata = [
-                    features_list[idx] for idx in selection_indices
-                ]
+        if source_metadata is None:
+            return None
+        features_list = source_metadata.get("features")
+        if features_list is None:
+            raise ValueError(
+                f"Feature metadata missing 'features' for '{feature_key}' "
+                f"(trajectory {traj_idx})."
+            )
+        if isinstance(features_list, np.ndarray):
+            return features_list[selection_indices]
+        return [features_list[idx] for idx in selection_indices]
 
-        # Apply calculator
-        calculator = feature_data.feature_type.calculator
-        result = PostSelectionReductionHelper._apply_calculator(
-            calculator, selected_data, reduction_config,
-            selected_feature_metadata, feature_data.cache_path
-        )
+    @staticmethod
+    def _create_temp_output_path(use_memmap: bool, cache_dir: str) -> Optional[str]:
+        """
+        Create a temporary memmap output path when memmap is enabled.
 
-        # Map indices back to original
-        kept_local_indices = result["indices"]
+        Parameters
+        ----------
+        use_memmap : bool
+            Whether to use memmap output
+        cache_dir : str
+            Directory for temporary cache files
+
+        Returns
+        -------
+        str or None
+            Temporary file path or None when memmap is disabled
+        """
+        if not use_memmap:
+            return None
+        os.makedirs(cache_dir, exist_ok=True)
+        temp_fd, temp_path = tempfile.mkstemp(suffix=".dat", dir=cache_dir)
+        os.close(temp_fd)
+        return temp_path
+
+    @staticmethod
+    def _map_kept_indices(
+        selection_indices: List[int],
+        kept_local_indices: Any
+    ) -> List[int]:
+        """
+        Map kept local indices back to original selection indices.
+
+        Parameters
+        ----------
+        selection_indices : list
+            Original selected column indices
+        kept_local_indices : Any
+            Indices retained after reduction (local to selection)
+
+        Returns
+        -------
+        list
+            Original indices retained after reduction
+        """
         if isinstance(kept_local_indices, np.ndarray):
             kept_local_indices = kept_local_indices.tolist()
-
         selection_array = np.array(selection_indices)
-        kept_original = selection_array[kept_local_indices].tolist()
+        return selection_array[kept_local_indices].tolist()
 
-        return kept_original, temp_path
+    @staticmethod
+    def _cleanup_temp_output(result: Dict, temp_output_path: Optional[str]) -> None:
+        """
+        Clean up temporary output memmap file.
+
+        Parameters
+        ----------
+        result : dict
+            Calculator result containing optional dynamic_data
+        temp_output_path : str or None
+            Temporary output path to delete
+
+        Returns
+        -------
+        None
+            Deletes temp output file if present
+        """
+        if not temp_output_path:
+            return
+        dynamic_data = result.get("dynamic_data")
+        if isinstance(dynamic_data, np.memmap):
+            try:
+                dynamic_data.flush()
+            except Exception:
+                pass
+            mm = getattr(dynamic_data, "_mmap", None)
+            if mm is not None:
+                try:
+                    mm.close()
+                except Exception:
+                    pass
+        if os.path.exists(temp_output_path):
+            os.unlink(temp_output_path)
 
     @staticmethod
     def _update_trajectory_results(
@@ -409,7 +550,7 @@ class PostSelectionReductionHelper:
         selected_data: np.ndarray,
         reduction_config: Dict,
         metadata: Dict,
-        output_path: str
+        output_path: Optional[str]
     ) -> Dict:
         """
         Apply calculator with reduction parameters.
@@ -427,8 +568,8 @@ class PostSelectionReductionHelper:
             Full reduction configuration
         metadata : dict
             Feature metadata
-        output_path : str
-            Output path for calculator operations
+        output_path : str, optional
+            Output path for calculator operations (memmap output)
 
         Returns
         -------
@@ -447,8 +588,9 @@ class PostSelectionReductionHelper:
             "threshold_min": reduction_config.get("threshold_min"),
             "threshold_max": reduction_config.get("threshold_max"),
             "feature_metadata": metadata,
-            "output_path": output_path
         }
+        if output_path is not None:
+            params["output_path"] = output_path
 
         # Optional transition parameters
         for key in ["transition_threshold", "window_size", "transition_mode", "lag_time"]:

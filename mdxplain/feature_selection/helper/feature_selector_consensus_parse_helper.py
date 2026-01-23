@@ -499,11 +499,6 @@ class FeatureSelectorConsensusParseHelper:
 
         return feature_indices, residue_indices
 
-
-
-
-
-
     @staticmethod
     def _extract_unique_partners(features: List[List[Dict[str, Any]]]) -> List[Dict[str, Any]]:
         """
