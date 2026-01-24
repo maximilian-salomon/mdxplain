@@ -40,12 +40,14 @@ if TYPE_CHECKING:
     from ...pipeline.entities.pipeline_data import PipelineData
     from ...feature.feature_type.interfaces.calculator_base import CalculatorBase
 
+_WARNED_LEGACY_CROSS_TRAJECTORY = False
+
 
 class PostSelectionReductionHelper:
     """
     Helper for applying post-selection reduction.
 
-    Imnportant: Reduction is applied ONLY to the specific selection where it's defined,
+    Important: Reduction is applied ONLY to the specific selection where it's defined,
     not to all selections of that feature type.
 
     This helper applies statistical reduction to features after initial selection.
@@ -55,7 +57,7 @@ class PostSelectionReductionHelper:
     The reduction process:
     1. Get feature data for each trajectory
     2. Calculate which columns to remove using calculator
-    3. Apply cross-trajectory common denominator
+    3. Apply reduction mode (intersection/union/pooled or per_trajectory)
     4. Update trajectory_results with reduced indices
     """
 
@@ -76,7 +78,7 @@ class PostSelectionReductionHelper:
         Process:
         1. Get feature data for each trajectory
         2. Calculate which columns to remove using calculator
-        3. Apply cross-trajectory common denominator
+        3. Apply reduction mode (intersection/union/pooled or per_trajectory)
         4. Update trajectory_results
 
         Parameters
@@ -112,34 +114,524 @@ class PostSelectionReductionHelper:
         if not reduction_config:
             return trajectory_results
 
-        cross_trajectory = reduction_config.get("cross_trajectory", True)
+        mode = PostSelectionReductionHelper._resolve_reduction_mode(reduction_config)
 
-        # Process each trajectory and collect temp paths
-        reduced_indices_per_traj = {}
-        temp_paths = []
-
-        for traj_idx in selected_traj_indices:
-            if traj_idx not in trajectory_results:
-                continue
-
-            kept_indices, temp_path = PostSelectionReductionHelper._process_trajectory(
-                pipeline_data, feature_key, traj_idx, trajectory_results[traj_idx],
-                selection_dict, reduction_config, use_memmap, chunk_size, cache_dir
+        if mode == "pooled":
+            return PostSelectionReductionHelper._apply_pooled_reduction(
+                pipeline_data,
+                feature_key,
+                selection_dict,
+                trajectory_results,
+                selected_traj_indices,
+                reduction_config,
+                use_memmap,
+                chunk_size,
+                cache_dir,
             )
-            reduced_indices_per_traj[traj_idx] = kept_indices
-            if temp_path:
-                temp_paths.append(temp_path)
+
+        reduced_indices_per_traj, temp_paths = PostSelectionReductionHelper._collect_reduction_results(
+            pipeline_data,
+            feature_key,
+            selection_dict,
+            trajectory_results,
+            selected_traj_indices,
+            reduction_config,
+            use_memmap,
+            chunk_size,
+            cache_dir,
+        )
 
         # Apply cross-trajectory logic
         PostSelectionReductionHelper._update_trajectory_results(
-            trajectory_results, reduced_indices_per_traj,
-            selected_traj_indices, selection_dict, cross_trajectory
+            trajectory_results,
+            reduced_indices_per_traj,
+            selected_traj_indices,
+            selection_dict,
+            mode,
         )
 
         # Clean up temporary files
         PostSelectionReductionHelper._cleanup_temp_files(temp_paths)
 
         return trajectory_results
+
+    @staticmethod
+    def _collect_reduction_results(
+        pipeline_data: PipelineData,
+        feature_key: str,
+        selection_dict: Dict[str, Any],
+        trajectory_results: Dict[int, Dict],
+        selected_traj_indices: List[int],
+        reduction_config: Dict[str, Any],
+        use_memmap: bool,
+        chunk_size: int,
+        cache_dir: str,
+    ) -> Tuple[Dict[int, List[int]], List[str]]:
+        """
+        Collect reduced indices and temp paths for per-trajectory reduction.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data container
+        feature_key : str
+            Feature type key
+        selection_dict : dict
+            Selection configuration
+        trajectory_results : dict
+            Current selection results per trajectory
+        selected_traj_indices : list
+            Trajectory indices for this selection
+        reduction_config : dict
+            Reduction configuration
+        use_memmap : bool
+            Whether to use memmap processing
+        chunk_size : int
+            Chunk size for processing
+        cache_dir : str
+            Cache directory for temporary files
+
+        Returns
+        -------
+        tuple
+            (reduced_indices_per_traj, temp_paths)
+        """
+        reduced_indices_per_traj: Dict[int, List[int]] = {}
+        temp_paths: List[str] = []
+
+        for traj_idx in selected_traj_indices:
+            if traj_idx not in trajectory_results:
+                continue
+
+            kept_indices, temp_path = PostSelectionReductionHelper._process_trajectory(
+                pipeline_data,
+                feature_key,
+                traj_idx,
+                trajectory_results[traj_idx],
+                selection_dict,
+                reduction_config,
+                use_memmap,
+                chunk_size,
+                cache_dir,
+            )
+            reduced_indices_per_traj[traj_idx] = kept_indices
+            if temp_path:
+                temp_paths.append(temp_path)
+
+        return reduced_indices_per_traj, temp_paths
+
+    @staticmethod
+    def _resolve_reduction_mode(reduction_config: Dict[str, Any]) -> str:
+        """
+        Resolve reduction mode from configuration.
+
+        Priority:
+        1) Explicit mode flags (intersection/union/pooled)
+        2) Legacy cross_trajectory flag
+
+        Parameters
+        ----------
+        reduction_config : dict
+            Reduction configuration
+
+        Returns
+        -------
+        str
+            Reduction mode ("intersection", "union", "pooled", or "per_trajectory")
+
+        Notes
+        -----
+        Only one explicit mode flag may be True. When no explicit or legacy flag
+        is provided, the default is per_trajectory.
+        """
+        mode = PostSelectionReductionHelper._resolve_explicit_reduction_mode(
+            reduction_config
+        )
+        if mode != "per_trajectory":
+            return mode
+        legacy = reduction_config.get("cross_trajectory", None)
+        if legacy is None:
+            return mode
+        return PostSelectionReductionHelper._resolve_legacy_reduction_mode(legacy)
+
+    @staticmethod
+    def _resolve_explicit_reduction_mode(reduction_config: Dict[str, Any]) -> str:
+        """
+        Resolve explicit cross-trajectory mode flags.
+
+        Parameters
+        ----------
+        reduction_config : dict
+            Reduction configuration
+
+        Returns
+        -------
+        str
+            Explicit mode or per_trajectory when no explicit flags are True
+        """
+        flags = {
+            "intersection": reduction_config.get("cross_trajectory_intersection"),
+            "union": reduction_config.get("cross_trajectory_union"),
+            "pooled": reduction_config.get("cross_trajectory_pooled"),
+        }
+        enabled = [name for name, value in flags.items() if value]
+        if len(enabled) > 1:
+            raise ValueError(
+                "Only one of cross_trajectory_intersection, cross_trajectory_union, "
+                "or cross_trajectory_pooled can be True."
+            )
+        if enabled:
+            return enabled[0]
+        return "per_trajectory"
+
+    @staticmethod
+    def _resolve_legacy_reduction_mode(legacy: bool) -> str:
+        """
+        Resolve legacy cross_trajectory mode with deprecation handling.
+
+        Parameters
+        ----------
+        legacy : bool
+            Legacy cross_trajectory value
+
+        Returns
+        -------
+        str
+            Legacy reduction mode
+        """
+        PostSelectionReductionHelper._warn_legacy_cross_trajectory()
+        return "intersection" if legacy else "per_trajectory"
+
+    @staticmethod
+    def _warn_legacy_cross_trajectory() -> None:
+        """
+        Emit a deprecation warning for legacy cross_trajectory usage.
+
+        Returns
+        -------
+        None
+        """
+        global _WARNED_LEGACY_CROSS_TRAJECTORY
+        if _WARNED_LEGACY_CROSS_TRAJECTORY:
+            return
+        warnings.warn(
+            "cross_trajectory is deprecated; use cross_trajectory_intersection, "
+            "cross_trajectory_union, or cross_trajectory_pooled instead.",
+            DeprecationWarning,
+            stacklevel=3,
+        )
+        _WARNED_LEGACY_CROSS_TRAJECTORY = True
+
+    @staticmethod
+    def _apply_pooled_reduction(
+        pipeline_data: PipelineData,
+        feature_key: str,
+        selection_dict: Dict[str, Any],
+        trajectory_results: Dict[int, Dict],
+        selected_traj_indices: List[int],
+        reduction_config: Dict[str, Any],
+        use_memmap: bool,
+        chunk_size: int,
+        cache_dir: str,
+    ) -> Dict[int, Dict]:
+        """
+        Apply pooled reduction across trajectories.
+
+        Delegates pooled metric computation to calculators, which should apply
+        boundary-safe logic where needed.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data container
+        feature_key : str
+            Feature type key
+        selection_dict : dict
+            Selection configuration
+        trajectory_results : dict
+            Current selection results per trajectory
+        selected_traj_indices : list
+            Trajectory indices to include
+        reduction_config : dict
+            Reduction configuration
+        use_memmap : bool
+            Whether to use memory-mapped files
+        chunk_size : int
+            Chunk size for processing
+        cache_dir : str
+            Cache directory for temporary files
+
+        Returns
+        -------
+        dict
+            Updated trajectory_results
+        """
+        selected_segments, temp_paths = (
+            PostSelectionReductionHelper._collect_pooled_segments(
+                pipeline_data,
+                feature_key,
+                selection_dict,
+                trajectory_results,
+                selected_traj_indices,
+                use_memmap,
+                chunk_size,
+                cache_dir,
+            )
+        )
+
+        if not selected_segments:
+            PostSelectionReductionHelper._cleanup_temp_files(temp_paths)
+            return trajectory_results
+
+        kept_local_indices = PostSelectionReductionHelper._get_pooled_kept_indices(
+            pipeline_data,
+            feature_key,
+            reduction_config,
+            selected_segments,
+            use_memmap,
+            chunk_size,
+        )
+        PostSelectionReductionHelper._apply_kept_indices_to_segments(
+            trajectory_results,
+            selected_segments,
+            kept_local_indices,
+            selection_dict["use_reduced"],
+        )
+
+        PostSelectionReductionHelper._cleanup_temp_files(temp_paths)
+        return trajectory_results
+
+    @staticmethod
+    def _collect_pooled_segments(
+        pipeline_data: PipelineData,
+        feature_key: str,
+        selection_dict: Dict[str, Any],
+        trajectory_results: Dict[int, Dict],
+        selected_traj_indices: List[int],
+        use_memmap: bool,
+        chunk_size: int,
+        cache_dir: str,
+    ) -> Tuple[List[Tuple[int, List[int], np.ndarray]], List[str]]:
+        """
+        Collect selected data segments for pooled reduction.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data container
+        feature_key : str
+            Feature type key
+        selection_dict : dict
+            Selection configuration
+        trajectory_results : dict
+            Current selection results per trajectory
+        selected_traj_indices : list
+            Trajectory indices to include
+        use_memmap : bool
+            Whether to use memmap extraction
+        chunk_size : int
+            Chunk size for extraction
+        cache_dir : str
+            Cache directory for temporary files
+
+        Returns
+        -------
+        tuple
+            (segments, temp_paths)
+        """
+        selected_segments: List[Tuple[int, List[int], np.ndarray]] = []
+        temp_paths: List[str] = []
+        n_cols: Optional[int] = None
+
+        for traj_idx in selected_traj_indices:
+            if traj_idx not in trajectory_results:
+                continue
+            feature_data = pipeline_data.feature_data[feature_key][traj_idx]
+            selection_indices = trajectory_results[traj_idx]["indices"]
+            selected_data, temp_path = PostSelectionReductionHelper._select_data(
+                feature_data,
+                selection_indices,
+                selection_dict["use_reduced"],
+                use_memmap,
+                chunk_size,
+                cache_dir,
+            )
+            n_cols = PostSelectionReductionHelper._update_pooled_shape(
+                n_cols,
+                selected_data,
+                temp_paths,
+            )
+            selected_segments.append((traj_idx, selection_indices, selected_data))
+            if temp_path:
+                temp_paths.append(temp_path)
+
+        return selected_segments, temp_paths
+
+    @staticmethod
+    def _update_pooled_shape(
+        n_cols: Optional[int],
+        selected_data: np.ndarray,
+        temp_paths: List[str],
+    ) -> int:
+        """
+        Validate pooled column counts across trajectories.
+
+        Parameters
+        ----------
+        n_cols : int or None
+            Current expected column count
+        selected_data : np.ndarray
+            Selected data for the current segment
+        temp_paths : list
+            Temporary file paths to clean on error
+
+        Returns
+        -------
+        int
+            Updated expected column count
+        """
+        if n_cols is None:
+            return selected_data.shape[1]
+
+        if selected_data.shape[1] != n_cols:
+            PostSelectionReductionHelper._cleanup_temp_files(temp_paths)
+            raise ValueError(
+                "Pooled reduction requires the same number of selected features "
+                "across trajectories. Use common_denominator=True or ensure "
+                "consistent selections."
+            )
+
+        return n_cols
+
+    @staticmethod
+    def _get_pooled_kept_indices(
+        pipeline_data: PipelineData,
+        feature_key: str,
+        reduction_config: Dict[str, Any],
+        selected_segments: List[Tuple[int, List[int], np.ndarray]],
+        use_memmap: bool,
+        chunk_size: int,
+    ) -> List[int]:
+        """
+        Determine kept indices from pooled metric values.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data container
+        feature_key : str
+            Feature type key
+        reduction_config : dict
+            Reduction configuration
+        selected_segments : list
+            Selected trajectory segments
+        use_memmap : bool
+            Whether to use memmap output
+        chunk_size : int
+            Chunk size for processing
+
+        Returns
+        -------
+        list
+            Kept local indices for pooled selection
+        """
+        metric = reduction_config.get("metric")
+        calculator = pipeline_data.feature_data[feature_key][selected_segments[0][0]].feature_type.calculator
+        segments = [segment for _, _, segment in selected_segments]
+        params = {"chunk_size": chunk_size, "use_memmap": use_memmap}
+        for key in [
+            "transition_threshold",
+            "window_size",
+            "transition_mode",
+            "lag_time",
+        ]:
+            value = reduction_config.get(key)
+            if value is not None:
+                params[key] = value
+        mask = calculator.compute_pooled_selection_mask(
+            segments,
+            metric,
+            threshold_min=reduction_config.get("threshold_min"),
+            threshold_max=reduction_config.get("threshold_max"),
+            **params,
+        )
+        kept_local_indices = np.where(mask.flatten())[0].tolist()
+        PostSelectionReductionHelper._validate_selection_results(
+            len(kept_local_indices),
+            reduction_config.get("metric"),
+            reduction_config.get("threshold_min"),
+            reduction_config.get("threshold_max"),
+        )
+        return kept_local_indices
+
+    @staticmethod
+    def _apply_kept_indices_to_segments(
+        trajectory_results: Dict[int, Dict],
+        selected_segments: List[Tuple[int, List[int], np.ndarray]],
+        kept_local_indices: List[int],
+        use_reduced: bool,
+    ) -> None:
+        """
+        Map pooled kept indices back to trajectory-specific indices.
+
+        Parameters
+        ----------
+        trajectory_results : dict
+            Results to update in-place
+        selected_segments : list
+            Selected trajectory segments
+        kept_local_indices : list
+            Kept local indices from pooled selection
+        use_reduced : bool
+            Whether reduced data is used
+
+        Returns
+        -------
+        None
+        """
+        for traj_idx, selection_indices, _ in selected_segments:
+            kept_original = PostSelectionReductionHelper._map_kept_indices(
+                selection_indices, kept_local_indices
+            )
+            PostSelectionReductionHelper._set_trajectory_indices(
+                trajectory_results,
+                traj_idx,
+                kept_original,
+                use_reduced,
+            )
+
+    @staticmethod
+    def _validate_selection_results(
+        n_selected: int,
+        metric_name: Optional[str],
+        threshold_min: Optional[float],
+        threshold_max: Optional[float],
+    ) -> None:
+        """
+        Warn if no values were selected by thresholds.
+
+        Parameters
+        ----------
+        n_selected : int
+            Number of selected values
+        metric_name : str or None
+            Metric name for reporting
+        threshold_min : float, optional
+            Minimum threshold
+        threshold_max : float, optional
+            Maximum threshold
+
+        Returns
+        -------
+        None
+        """
+        if n_selected != 0:
+            return
+        threshold_desc = f"min={threshold_min}, max={threshold_max}"
+        warnings.warn(
+            "No values found within the specified threshold criteria. "
+            f"Metric: {metric_name}, Thresholds: {threshold_desc}"
+        )
 
     @staticmethod
     def _process_trajectory(
@@ -280,17 +772,96 @@ class PostSelectionReductionHelper:
         list or None
             Selected feature metadata or None if unavailable
         """
-        source_metadata = (
-            feature_data.reduced_feature_metadata if use_reduced else feature_data.feature_metadata
+        source_metadata = PostSelectionReductionHelper._get_metadata_container(
+            feature_data,
+            use_reduced,
         )
         if source_metadata is None:
             return None
+        features_list = PostSelectionReductionHelper._require_features_list(
+            source_metadata,
+            feature_key,
+            traj_idx,
+        )
+        return PostSelectionReductionHelper._select_feature_metadata(
+            features_list,
+            selection_indices,
+        )
+
+    @staticmethod
+    def _get_metadata_container(feature_data: Any, use_reduced: bool) -> Optional[Dict[str, Any]]:
+        """
+        Retrieve feature metadata container based on reduction flag.
+
+        Parameters
+        ----------
+        feature_data : Any
+            Feature data container
+        use_reduced : bool
+            Whether to use reduced metadata
+
+        Returns
+        -------
+        dict or None
+            Metadata container or None
+        """
+        return (
+            feature_data.reduced_feature_metadata
+            if use_reduced
+            else feature_data.feature_metadata
+        )
+
+    @staticmethod
+    def _require_features_list(
+        source_metadata: Dict[str, Any],
+        feature_key: str,
+        traj_idx: int,
+    ) -> Any:
+        """
+        Fetch the feature list from metadata or raise a descriptive error.
+
+        Parameters
+        ----------
+        source_metadata : dict
+            Metadata container
+        feature_key : str
+            Feature type key
+        traj_idx : int
+            Trajectory index
+
+        Returns
+        -------
+        Any
+            Feature list object
+        """
         features_list = source_metadata.get("features")
         if features_list is None:
             raise ValueError(
                 f"Feature metadata missing 'features' for '{feature_key}' "
                 f"(trajectory {traj_idx})."
             )
+        return features_list
+
+    @staticmethod
+    def _select_feature_metadata(
+        features_list: Any,
+        selection_indices: List[int],
+    ) -> Any:
+        """
+        Select metadata entries by index.
+
+        Parameters
+        ----------
+        features_list : Any
+            Features list or array
+        selection_indices : list
+            Indices to select
+
+        Returns
+        -------
+        Any
+            Selected feature metadata
+        """
         if isinstance(features_list, np.ndarray):
             return features_list[selection_indices]
         return [features_list[idx] for idx in selection_indices]
@@ -363,20 +934,53 @@ class PostSelectionReductionHelper:
         """
         if not temp_output_path:
             return
-        dynamic_data = result.get("dynamic_data")
-        if isinstance(dynamic_data, np.memmap):
-            try:
-                dynamic_data.flush()
-            except Exception:
-                pass
-            mm = getattr(dynamic_data, "_mmap", None)
-            if mm is not None:
-                try:
-                    mm.close()
-                except Exception:
-                    pass
-        if os.path.exists(temp_output_path):
-            os.unlink(temp_output_path)
+        PostSelectionReductionHelper._flush_memmap(result.get("dynamic_data"))
+        PostSelectionReductionHelper._unlink_path(temp_output_path)
+
+    @staticmethod
+    def _flush_memmap(data: Any) -> None:
+        """
+        Flush and close memmap data if applicable.
+
+        Parameters
+        ----------
+        data : Any
+            Data that may be a memmap
+
+        Returns
+        -------
+        None
+        """
+        if not isinstance(data, np.memmap):
+            return
+        try:
+            data.flush()
+        except Exception:
+            pass
+        mm = getattr(data, "_mmap", None)
+        if mm is None:
+            return
+        try:
+            mm.close()
+        except Exception:
+            pass
+
+    @staticmethod
+    def _unlink_path(path: str) -> None:
+        """
+        Remove a file path if it exists.
+
+        Parameters
+        ----------
+        path : str
+            Path to remove
+
+        Returns
+        -------
+        None
+        """
+        if os.path.exists(path):
+            os.unlink(path)
 
     @staticmethod
     def _update_trajectory_results(
@@ -384,13 +988,12 @@ class PostSelectionReductionHelper:
         reduced_indices_per_traj: Dict,
         selected_traj_indices: List[int],
         selection_dict: Dict,
-        cross_trajectory: bool
+        mode: str
     ) -> None:
         """
-        Update trajectory results based on cross_trajectory setting.
+        Update trajectory results based on reduction mode.
 
-        Handles common denominator (cross_trajectory=True) or individual
-        trajectory reduction (cross_trajectory=False).
+        Handles intersection, union, or per-trajectory reduction.
 
         Parameters
         ----------
@@ -402,8 +1005,8 @@ class PostSelectionReductionHelper:
             Selected trajectory indices
         selection_dict : dict
             Selection configuration
-        cross_trajectory : bool
-            Apply common denominator
+        mode : str
+            Reduction mode: 'intersection', 'union', or 'per_trajectory'
 
         Returns
         -------
@@ -411,38 +1014,115 @@ class PostSelectionReductionHelper:
             Updates trajectory_results in-place
         """
         if len(reduced_indices_per_traj) <= 1:
-            # Single trajectory - simple update
-            for traj_idx, indices in reduced_indices_per_traj.items():
-                trajectory_results[traj_idx]["indices"] = indices
-                trajectory_results[traj_idx]["use_reduced"] = [
-                    selection_dict["use_reduced"]
-                ] * len(indices)
+            PostSelectionReductionHelper._apply_direct_updates(
+                trajectory_results,
+                reduced_indices_per_traj,
+                selection_dict["use_reduced"],
+            )
             return
 
-        if cross_trajectory:
-            PostSelectionReductionHelper._apply_common_denominator(
-                trajectory_results, reduced_indices_per_traj,
-                selected_traj_indices, selection_dict
+        handler = {
+            "intersection": PostSelectionReductionHelper._apply_intersection,
+            "union": PostSelectionReductionHelper._apply_union,
+        }.get(mode)
+        if handler is not None:
+            handler(
+                trajectory_results,
+                reduced_indices_per_traj,
+                selected_traj_indices,
+                selection_dict,
             )
-        else:
-            warnings.warn(
-                "cross_trajectory=False: Features may differ between trajectories!"
-            )
-            for traj_idx, indices in reduced_indices_per_traj.items():
-                trajectory_results[traj_idx]["indices"] = indices
-                trajectory_results[traj_idx]["use_reduced"] = [
-                    selection_dict["use_reduced"]
-                ] * len(indices)
+            return
+
+        reduction_config = selection_dict.get("reduction", {})
+        if reduction_config.get("cross_trajectory") is False:
+            PostSelectionReductionHelper._warn_per_trajectory_reduction()
+        PostSelectionReductionHelper._apply_direct_updates(
+            trajectory_results,
+            reduced_indices_per_traj,
+            selection_dict["use_reduced"],
+        )
 
     @staticmethod
-    def _apply_common_denominator(
+    def _apply_direct_updates(
+        trajectory_results: Dict,
+        reduced_indices_per_traj: Dict,
+        use_reduced: bool,
+    ) -> None:
+        """
+        Apply per-trajectory reduced indices directly.
+
+        Parameters
+        ----------
+        trajectory_results : dict
+            Results to update in-place
+        reduced_indices_per_traj : dict
+            Reduced indices per trajectory
+        use_reduced : bool
+            Whether reduced data is used
+
+        Returns
+        -------
+        None
+        """
+        for traj_idx, indices in reduced_indices_per_traj.items():
+            PostSelectionReductionHelper._set_trajectory_indices(
+                trajectory_results,
+                traj_idx,
+                indices,
+                use_reduced,
+            )
+
+    @staticmethod
+    def _set_trajectory_indices(
+        trajectory_results: Dict,
+        traj_idx: int,
+        indices: List[int],
+        use_reduced: bool,
+    ) -> None:
+        """
+        Update one trajectory's indices and reduction flag.
+
+        Parameters
+        ----------
+        trajectory_results : dict
+            Results to update in-place
+        traj_idx : int
+            Trajectory index
+        indices : list
+            Selected indices
+        use_reduced : bool
+            Whether reduced data is used
+
+        Returns
+        -------
+        None
+        """
+        trajectory_results[traj_idx]["indices"] = indices
+        trajectory_results[traj_idx]["use_reduced"] = [use_reduced] * len(indices)
+
+    @staticmethod
+    def _warn_per_trajectory_reduction() -> None:
+        """
+        Warn about per-trajectory reduction behavior.
+
+        Returns
+        -------
+        None
+        """
+        warnings.warn(
+            "per-trajectory reduction: Features may differ between trajectories!"
+        )
+
+    @staticmethod
+    def _apply_intersection(
         trajectory_results: Dict,
         reduced_indices_per_traj: Dict,
         selected_traj_indices: List[int],
         selection_dict: Dict
     ) -> None:
         """
-        Apply common denominator to all trajectories.
+        Apply intersection of reduced features to all trajectories.
 
         Finds intersection of reduced indices across trajectories and
         updates all trajectories with common features only.
@@ -463,20 +1143,189 @@ class PostSelectionReductionHelper:
         None
             Updates trajectory_results in-place
         """
-        # Find intersection
-        common = set(reduced_indices_per_traj[selected_traj_indices[0]])
-        for traj_idx in selected_traj_indices[1:]:
-            if traj_idx in reduced_indices_per_traj:
-                common &= set(reduced_indices_per_traj[traj_idx])
+        common = PostSelectionReductionHelper._compute_common_indices(
+            reduced_indices_per_traj,
+            selected_traj_indices,
+        )
+        
+        PostSelectionReductionHelper._apply_index_set(
+            trajectory_results,
+            common,
+            selection_dict["use_reduced"],
+        )
 
-        # Update all with common indices
+    @staticmethod
+    def _apply_union(
+        trajectory_results: Dict,
+        reduced_indices_per_traj: Dict,
+        selected_traj_indices: List[int],
+        selection_dict: Dict
+    ) -> None:
+        """
+        Apply union of reduced indices across trajectories.
+
+        Keeps features that pass in any trajectory, then applies the union
+        to all trajectories to keep column counts consistent.
+
+        Parameters
+        ----------
+        trajectory_results : dict
+            Results to update in-place
+        reduced_indices_per_traj : dict
+            Reduced indices per trajectory
+        selected_traj_indices : list
+            Selected trajectory indices
+        selection_dict : dict
+            Selection configuration
+
+        Returns
+        -------
+        None
+        """
+        union_set = PostSelectionReductionHelper._compute_union_indices(
+            reduced_indices_per_traj,
+            selected_traj_indices,
+        )
+        PostSelectionReductionHelper._apply_index_set(
+            trajectory_results,
+            union_set,
+            selection_dict["use_reduced"],
+        )
+
+    @staticmethod
+    def _compute_common_indices(
+        reduced_indices_per_traj: Dict,
+        selected_traj_indices: List[int],
+    ) -> set:
+        """
+        Compute intersection of indices across selected trajectories.
+
+        Parameters
+        ----------
+        reduced_indices_per_traj : dict
+            Reduced indices per trajectory
+        selected_traj_indices : list
+            Trajectory indices to consider
+
+        Returns
+        -------
+        set
+            Common indices
+        """
+        index_sets = PostSelectionReductionHelper._index_sets(
+            reduced_indices_per_traj,
+            selected_traj_indices,
+        )
+        if not index_sets:
+            return set()
+        return set.intersection(*index_sets)
+
+    @staticmethod
+    def _compute_union_indices(
+        reduced_indices_per_traj: Dict,
+        selected_traj_indices: List[int],
+    ) -> set:
+        """
+        Compute union of indices across selected trajectories.
+
+        Parameters
+        ----------
+        reduced_indices_per_traj : dict
+            Reduced indices per trajectory
+        selected_traj_indices : list
+            Trajectory indices to consider
+
+        Returns
+        -------
+        set
+            Union of indices
+        """
+        index_sets = PostSelectionReductionHelper._index_sets(
+            reduced_indices_per_traj,
+            selected_traj_indices,
+        )
+        if not index_sets:
+            return set()
+        return set().union(*index_sets)
+
+    @staticmethod
+    def _index_sets(
+        reduced_indices_per_traj: Dict,
+        selected_traj_indices: List[int],
+    ) -> List[set]:
+        """
+        Build list of index sets for selected trajectories.
+
+        Parameters
+        ----------
+        reduced_indices_per_traj : dict
+            Reduced indices per trajectory
+        selected_traj_indices : list
+            Trajectory indices to consider
+
+        Returns
+        -------
+        list
+            List of index sets
+        """
+        return [
+            set(reduced_indices_per_traj[traj_idx])
+            for traj_idx in selected_traj_indices
+            if traj_idx in reduced_indices_per_traj
+        ]
+
+    @staticmethod
+    def _apply_index_set(
+        trajectory_results: Dict,
+        index_set: set,
+        use_reduced: bool,
+    ) -> None:
+        """
+        Apply a kept index set to all trajectories.
+
+        Parameters
+        ----------
+        trajectory_results : dict
+            Results to update in-place
+        index_set : set
+            Allowed indices
+        use_reduced : bool
+            Whether reduced data is used
+
+        Returns
+        -------
+        None
+        """
         for traj_idx in trajectory_results:
-            old = trajectory_results[traj_idx]["indices"]
-            new = [idx for idx in old if idx in common]
-            trajectory_results[traj_idx]["indices"] = new
-            trajectory_results[traj_idx]["use_reduced"] = [
-                selection_dict["use_reduced"]
-            ] * len(new)
+            kept = PostSelectionReductionHelper._filter_indices(
+                trajectory_results[traj_idx]["indices"],
+                index_set,
+            )
+            PostSelectionReductionHelper._set_trajectory_indices(
+                trajectory_results,
+                traj_idx,
+                kept,
+                use_reduced,
+            )
+
+    @staticmethod
+    def _filter_indices(indices: List[int], index_set: set) -> List[int]:
+        """
+        Filter indices to those contained in the index set.
+
+        Parameters
+        ----------
+        indices : list
+            Indices to filter
+        index_set : set
+            Allowed indices
+
+        Returns
+        -------
+        list
+            Filtered indices
+        """
+        return [idx for idx in indices if idx in index_set]
 
     @staticmethod
     def _extract_memmap_columns(

@@ -25,6 +25,8 @@ Analysis methods for coordinate calculations with statistical computations
 and support for memory-mapped arrays and structural mobility analysis.
 """
 
+from typing import List
+
 import numpy as np
 
 from ..helper.calculator_stat_helper import CalculatorStatHelper
@@ -438,4 +440,95 @@ class CoordinatesCalculatorAnalysis:
         """
         return CalculatorStatHelper.compute_differences(
             coordinates1, coordinates2, self.chunk_size, self.use_memmap, preprocessing_func
+        )
+
+    def compute_pooled_metric_values(
+        self,
+        segments: List[np.ndarray],
+        metric: str,
+        transition_threshold: float = 1.0,
+        window_size: int = 10,
+        transition_mode: str = "window",
+        lag_time: int = 1,
+    ) -> np.ndarray:
+        """
+        Compute pooled metric values across segments.
+
+        Parameters
+        ----------
+        segments : list
+            List of coordinate arrays
+        metric : str
+            Metric name
+        transition_threshold : float, default=1.0
+            Threshold for detecting transitions
+        window_size : int, default=10
+            Window size for transition analysis
+        transition_mode : str, default='window'
+            Transition mode ('window' or 'lagtime')
+        lag_time : int, default=1
+            Lag time for transition analysis
+
+        Returns
+        -------
+        numpy.ndarray
+            Pooled metric values per coordinate
+        """
+        if not segments:
+            return np.array([])
+        if metric == "transitions":
+            window = lag_time if transition_mode == "lagtime" else window_size
+            transitions, _ = CalculatorStatHelper.compute_pooled_transitions(
+                segments,
+                transition_threshold,
+                window,
+                self.chunk_size,
+                self.use_memmap,
+                mode=transition_mode,
+            )
+            return transitions
+        if metric == "stability":
+            window = lag_time if transition_mode == "lagtime" else window_size
+            return CalculatorStatHelper.compute_pooled_stability(
+                segments,
+                transition_threshold,
+                window,
+                self.chunk_size,
+                self.use_memmap,
+                mode=transition_mode,
+            )
+        pooled = np.concatenate(segments, axis=0)
+        return self._metric_from_pooled(pooled, metric)
+
+    def _metric_from_pooled(self, pooled: np.ndarray, metric: str) -> np.ndarray:
+        """
+        Compute metric values on pooled data.
+
+        Parameters
+        ----------
+        pooled : np.ndarray
+            Pooled coordinate array
+        metric : str
+            Metric name
+
+        Returns
+        -------
+        numpy.ndarray
+            Metric values per coordinate
+        """
+        metrics = {
+            "std": self.compute_std,
+            "variance": self.compute_variance,
+            "min": self.compute_min,
+            "mad": self.compute_mad,
+            "mean": self.compute_mean,
+            "max": self.compute_max,
+            "cv": self.compute_cv,
+            "range": self.compute_range,
+            "rmsf": self.compute_rmsf,
+        }
+        if metric in metrics:
+            return metrics[metric](pooled)
+        raise ValueError(
+            f"Unknown metric: {metric}. Supported: {list(metrics.keys()) + ['transitions', 'stability']}"
         )

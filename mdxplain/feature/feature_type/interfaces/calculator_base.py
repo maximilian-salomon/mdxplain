@@ -31,6 +31,8 @@ from typing import Any, Dict, Optional, Tuple, Union, List
 
 import numpy as np
 
+from ..helper.calculator_compute_helper import CalculatorComputeHelper
+
 
 class CalculatorBase(ABC):
     """
@@ -82,6 +84,79 @@ class CalculatorBase(ABC):
 
         # Analysis object will be set by subclasses
         self.analysis = None
+
+    def compute_pooled_metric_values(
+        self,
+        segments: List[np.ndarray],
+        metric: str,
+        **params
+    ) -> np.ndarray:
+        """
+        Compute metric values for pooled segments.
+
+        Default implementation stacks frames across segments and delegates
+        to the calculator's metric computation pipeline.
+
+        Parameters
+        ----------
+        segments : list
+            List of (n_frames, n_features) arrays to pool
+        metric : str
+            Metric name
+        params : dict
+            Additional metric parameters
+
+        Returns
+        -------
+        np.ndarray
+            Metric values per feature
+        """
+        if not segments:
+            return np.array([])
+        pooled = np.concatenate(segments, axis=0)
+        metric_values = self._compute_metric_values(
+            pooled,
+            metric,
+            params.get("transition_threshold", 1.0),
+            params.get("window_size", 1),
+            params.get("transition_mode", "lagtime"),
+            params.get("lag_time", 1),
+        )
+        return metric_values
+
+    def compute_pooled_selection_mask(
+        self,
+        segments: List[np.ndarray],
+        metric: str,
+        threshold_min: Optional[float] = None,
+        threshold_max: Optional[float] = None,
+        **params
+    ) -> np.ndarray:
+        """
+        Compute pooled selection mask based on thresholded metric values.
+
+        Parameters
+        ----------
+        segments : list
+            List of (n_frames, n_features) arrays to pool
+        metric : str
+            Metric name
+        threshold_min : float, optional
+            Minimum threshold (metric_values >= threshold_min)
+        threshold_max : float, optional
+            Maximum threshold (metric_values <= threshold_max)
+        params : dict
+            Additional metric parameters
+
+        Returns
+        -------
+        np.ndarray
+            Boolean mask of kept features
+        """
+        metric_values = self.compute_pooled_metric_values(segments, metric, **params)
+        return CalculatorComputeHelper._create_threshold_mask(
+            metric_values, threshold_min, threshold_max
+        )
 
     @abstractmethod
     def compute(self, input_data: Any, **kwargs) -> Tuple[np.ndarray, dict]:

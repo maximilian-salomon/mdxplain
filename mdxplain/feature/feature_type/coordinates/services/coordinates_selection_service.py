@@ -125,11 +125,14 @@ class CoordinatesSelectionService(SelectionServiceBase):
         selection: str = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
-        cross_trajectory: bool = True,
+        cross_trajectory: Optional[bool] = None,
         use_reduced: bool = False,
         common_denominator: bool = True,
         traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all",
         require_all_partners: bool = False,
+        cross_trajectory_intersection: Optional[bool] = None,
+        cross_trajectory_union: Optional[bool] = None,
+        cross_trajectory_pooled: Optional[bool] = None,
     ) -> None:
         """
         Add coordinates with RMSF (Root Mean Square Fluctuation) reduction.
@@ -147,8 +150,15 @@ class CoordinatesSelectionService(SelectionServiceBase):
             Minimum RMSF threshold (Ångströms)
         threshold_max : float, optional
             Maximum RMSF threshold (Ångströms)
-        cross_trajectory : bool, default=True
-            If True, only keep features that pass threshold in ALL trajectories
+        cross_trajectory : bool, optional
+            Deprecated legacy flag; use explicit cross_trajectory_intersection/union/pooled.
+        cross_trajectory_intersection : bool, optional
+            If True, require thresholds in ALL trajectories (intersection)
+        cross_trajectory_union : bool, optional
+            If True, keep features that pass in ANY trajectory (union)
+        cross_trajectory_pooled : bool, optional
+            If True, pool trajectories first, then reduce once
+            Only one of the three flags can be True; default is per_trajectory
         use_reduced : bool, default=False
             Whether to use reduced data
         common_denominator : bool, default=True
@@ -171,7 +181,14 @@ class CoordinatesSelectionService(SelectionServiceBase):
         self(selector_name, selection, use_reduced, common_denominator,
              traj_selection, require_all_partners)
         self._add_reduction_config(
-            selector_name, "rmsf", threshold_min, threshold_max, cross_trajectory
+            selector_name,
+            "rmsf",
+            threshold_min,
+            threshold_max,
+            cross_trajectory,
+            cross_trajectory_intersection,
+            cross_trajectory_union,
+            cross_trajectory_pooled,
         )
 
     def with_std_reduction(
@@ -180,11 +197,14 @@ class CoordinatesSelectionService(SelectionServiceBase):
         selection: str = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
-        cross_trajectory: bool = True,
+        cross_trajectory: Optional[bool] = None,
         use_reduced: bool = False,
         common_denominator: bool = True,
         traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all",
         require_all_partners: bool = False,
+        cross_trajectory_intersection: Optional[bool] = None,
+        cross_trajectory_union: Optional[bool] = None,
+        cross_trajectory_pooled: Optional[bool] = None,
     ) -> None:
         """
         Add coordinates with standard deviation reduction.
@@ -202,8 +222,15 @@ class CoordinatesSelectionService(SelectionServiceBase):
             Minimum standard deviation threshold (Ångströms)
         threshold_max : float, optional
             Maximum standard deviation threshold (Ångströms)
-        cross_trajectory : bool, default=True
-            If True, only keep features that pass threshold in ALL trajectories
+        cross_trajectory : bool, optional
+            Deprecated legacy flag; use explicit cross_trajectory_intersection/union/pooled.
+        cross_trajectory_intersection : bool, optional
+            If True, require thresholds in ALL trajectories (intersection)
+        cross_trajectory_union : bool, optional
+            If True, keep features that pass in ANY trajectory (union)
+        cross_trajectory_pooled : bool, optional
+            If True, pool trajectories first, then reduce once
+            Only one of the three flags can be True; default is per_trajectory
         use_reduced : bool, default=False
             Whether to use reduced data
         common_denominator : bool, default=True
@@ -226,7 +253,14 @@ class CoordinatesSelectionService(SelectionServiceBase):
         self(selector_name, selection, use_reduced, common_denominator,
              traj_selection, require_all_partners)
         self._add_reduction_config(
-            selector_name, "std", threshold_min, threshold_max, cross_trajectory
+            selector_name,
+            "std",
+            threshold_min,
+            threshold_max,
+            cross_trajectory,
+            cross_trajectory_intersection,
+            cross_trajectory_union,
+            cross_trajectory_pooled,
         )
 
     def with_cv_reduction(
@@ -235,11 +269,14 @@ class CoordinatesSelectionService(SelectionServiceBase):
         selection: str = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
-        cross_trajectory: bool = True,
+        cross_trajectory: Optional[bool] = None,
         use_reduced: bool = False,
         common_denominator: bool = True,
         traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all",
         require_all_partners: bool = False,
+        cross_trajectory_intersection: Optional[bool] = None,
+        cross_trajectory_union: Optional[bool] = None,
+        cross_trajectory_pooled: Optional[bool] = None,
     ) -> None:
         """
         Add coordinates with CV (coefficient of variation) reduction.
@@ -258,8 +295,15 @@ class CoordinatesSelectionService(SelectionServiceBase):
             Minimum CV threshold
         threshold_max : float, optional
             Maximum CV threshold
-        cross_trajectory : bool, default=True
-            If True, only keep features that pass threshold in ALL trajectories
+        cross_trajectory : bool, optional
+            Deprecated legacy flag; use explicit cross_trajectory_intersection/union/pooled.
+        cross_trajectory_intersection : bool, optional
+            If True, require thresholds in ALL trajectories (intersection)
+        cross_trajectory_union : bool, optional
+            If True, keep features that pass in ANY trajectory (union)
+        cross_trajectory_pooled : bool, optional
+            If True, pool trajectories first, then reduce once
+            Only one of the three flags can be True; default is per_trajectory
         use_reduced : bool, default=False
             Whether to use reduced data
         common_denominator : bool, default=True
@@ -282,7 +326,14 @@ class CoordinatesSelectionService(SelectionServiceBase):
         self(selector_name, selection, use_reduced, common_denominator,
              traj_selection, require_all_partners)
         self._add_reduction_config(
-            selector_name, "cv", threshold_min, threshold_max, cross_trajectory
+            selector_name,
+            "cv",
+            threshold_min,
+            threshold_max,
+            cross_trajectory,
+            cross_trajectory_intersection,
+            cross_trajectory_union,
+            cross_trajectory_pooled,
         )
 
     def with_variance_reduction(
@@ -291,11 +342,14 @@ class CoordinatesSelectionService(SelectionServiceBase):
         selection: str = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
-        cross_trajectory: bool = True,
+        cross_trajectory: Optional[bool] = None,
         use_reduced: bool = False,
         common_denominator: bool = True,
         traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all",
         require_all_partners: bool = False,
+        cross_trajectory_intersection: Optional[bool] = None,
+        cross_trajectory_union: Optional[bool] = None,
+        cross_trajectory_pooled: Optional[bool] = None,
     ) -> None:
         """
         Add coordinates with variance reduction.
@@ -314,8 +368,15 @@ class CoordinatesSelectionService(SelectionServiceBase):
             Minimum variance threshold (Ångströms²)
         threshold_max : float, optional
             Maximum variance threshold (Ångströms²)
-        cross_trajectory : bool, default=True
-            If True, only keep features that pass threshold in ALL trajectories
+        cross_trajectory : bool, optional
+            Deprecated legacy flag; use explicit cross_trajectory_intersection/union/pooled.
+        cross_trajectory_intersection : bool, optional
+            If True, require thresholds in ALL trajectories (intersection)
+        cross_trajectory_union : bool, optional
+            If True, keep features that pass in ANY trajectory (union)
+        cross_trajectory_pooled : bool, optional
+            If True, pool trajectories first, then reduce once
+            Only one of the three flags can be True; default is per_trajectory
         use_reduced : bool, default=False
             Whether to use reduced data
         common_denominator : bool, default=True
@@ -338,7 +399,14 @@ class CoordinatesSelectionService(SelectionServiceBase):
         self(selector_name, selection, use_reduced, common_denominator,
              traj_selection, require_all_partners)
         self._add_reduction_config(
-            selector_name, "variance", threshold_min, threshold_max, cross_trajectory
+            selector_name,
+            "variance",
+            threshold_min,
+            threshold_max,
+            cross_trajectory,
+            cross_trajectory_intersection,
+            cross_trajectory_union,
+            cross_trajectory_pooled,
         )
 
     def with_range_reduction(
@@ -347,11 +415,14 @@ class CoordinatesSelectionService(SelectionServiceBase):
         selection: str = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
-        cross_trajectory: bool = True,
+        cross_trajectory: Optional[bool] = None,
         use_reduced: bool = False,
         common_denominator: bool = True,
         traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all",
         require_all_partners: bool = False,
+        cross_trajectory_intersection: Optional[bool] = None,
+        cross_trajectory_union: Optional[bool] = None,
+        cross_trajectory_pooled: Optional[bool] = None,
     ) -> None:
         """
         Add coordinates with range reduction.
@@ -370,8 +441,15 @@ class CoordinatesSelectionService(SelectionServiceBase):
             Minimum range threshold (Ångströms)
         threshold_max : float, optional
             Maximum range threshold (Ångströms)
-        cross_trajectory : bool, default=True
-            If True, only keep features that pass threshold in ALL trajectories
+        cross_trajectory : bool, optional
+            Deprecated legacy flag; use explicit cross_trajectory_intersection/union/pooled.
+        cross_trajectory_intersection : bool, optional
+            If True, require thresholds in ALL trajectories (intersection)
+        cross_trajectory_union : bool, optional
+            If True, keep features that pass in ANY trajectory (union)
+        cross_trajectory_pooled : bool, optional
+            If True, pool trajectories first, then reduce once
+            Only one of the three flags can be True; default is per_trajectory
         use_reduced : bool, default=False
             Whether to use reduced data
         common_denominator : bool, default=True
@@ -394,7 +472,14 @@ class CoordinatesSelectionService(SelectionServiceBase):
         self(selector_name, selection, use_reduced, common_denominator,
              traj_selection, require_all_partners)
         self._add_reduction_config(
-            selector_name, "range", threshold_min, threshold_max, cross_trajectory
+            selector_name,
+            "range",
+            threshold_min,
+            threshold_max,
+            cross_trajectory,
+            cross_trajectory_intersection,
+            cross_trajectory_union,
+            cross_trajectory_pooled,
         )
 
     def with_mad_reduction(
@@ -403,11 +488,14 @@ class CoordinatesSelectionService(SelectionServiceBase):
         selection: str = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
-        cross_trajectory: bool = True,
+        cross_trajectory: Optional[bool] = None,
         use_reduced: bool = False,
         common_denominator: bool = True,
         traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all",
         require_all_partners: bool = False,
+        cross_trajectory_intersection: Optional[bool] = None,
+        cross_trajectory_union: Optional[bool] = None,
+        cross_trajectory_pooled: Optional[bool] = None,
     ) -> None:
         """
         Add coordinates with MAD (median absolute deviation) reduction.
@@ -426,8 +514,15 @@ class CoordinatesSelectionService(SelectionServiceBase):
             Minimum MAD threshold (Ångströms)
         threshold_max : float, optional
             Maximum MAD threshold (Ångströms)
-        cross_trajectory : bool, default=True
-            If True, only keep features that pass threshold in ALL trajectories
+        cross_trajectory : bool, optional
+            Deprecated legacy flag; use explicit cross_trajectory_intersection/union/pooled.
+        cross_trajectory_intersection : bool, optional
+            If True, require thresholds in ALL trajectories (intersection)
+        cross_trajectory_union : bool, optional
+            If True, keep features that pass in ANY trajectory (union)
+        cross_trajectory_pooled : bool, optional
+            If True, pool trajectories first, then reduce once
+            Only one of the three flags can be True; default is per_trajectory
         use_reduced : bool, default=False
             Whether to use reduced data
         common_denominator : bool, default=True
@@ -450,7 +545,14 @@ class CoordinatesSelectionService(SelectionServiceBase):
         self(selector_name, selection, use_reduced, common_denominator,
              traj_selection, require_all_partners)
         self._add_reduction_config(
-            selector_name, "mad", threshold_min, threshold_max, cross_trajectory
+            selector_name,
+            "mad",
+            threshold_min,
+            threshold_max,
+            cross_trajectory,
+            cross_trajectory_intersection,
+            cross_trajectory_union,
+            cross_trajectory_pooled,
         )
 
     def with_mean_reduction(
@@ -459,11 +561,14 @@ class CoordinatesSelectionService(SelectionServiceBase):
         selection: str = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
-        cross_trajectory: bool = True,
+        cross_trajectory: Optional[bool] = None,
         use_reduced: bool = False,
         common_denominator: bool = True,
         traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all",
         require_all_partners: bool = False,
+        cross_trajectory_intersection: Optional[bool] = None,
+        cross_trajectory_union: Optional[bool] = None,
+        cross_trajectory_pooled: Optional[bool] = None,
     ) -> None:
         """
         Add coordinates with mean reduction.
@@ -482,8 +587,15 @@ class CoordinatesSelectionService(SelectionServiceBase):
             Minimum mean threshold (Ångströms)
         threshold_max : float, optional
             Maximum mean threshold (Ångströms)
-        cross_trajectory : bool, default=True
-            If True, only keep features that pass threshold in ALL trajectories
+        cross_trajectory : bool, optional
+            Deprecated legacy flag; use explicit cross_trajectory_intersection/union/pooled.
+        cross_trajectory_intersection : bool, optional
+            If True, require thresholds in ALL trajectories (intersection)
+        cross_trajectory_union : bool, optional
+            If True, keep features that pass in ANY trajectory (union)
+        cross_trajectory_pooled : bool, optional
+            If True, pool trajectories first, then reduce once
+            Only one of the three flags can be True; default is per_trajectory
         use_reduced : bool, default=False
             Whether to use reduced data
         common_denominator : bool, default=True
@@ -506,7 +618,14 @@ class CoordinatesSelectionService(SelectionServiceBase):
         self(selector_name, selection, use_reduced, common_denominator,
              traj_selection, require_all_partners)
         self._add_reduction_config(
-            selector_name, "mean", threshold_min, threshold_max, cross_trajectory
+            selector_name,
+            "mean",
+            threshold_min,
+            threshold_max,
+            cross_trajectory,
+            cross_trajectory_intersection,
+            cross_trajectory_union,
+            cross_trajectory_pooled,
         )
 
     def with_min_reduction(
@@ -515,11 +634,14 @@ class CoordinatesSelectionService(SelectionServiceBase):
         selection: str = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
-        cross_trajectory: bool = True,
+        cross_trajectory: Optional[bool] = None,
         use_reduced: bool = False,
         common_denominator: bool = True,
         traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all",
         require_all_partners: bool = False,
+        cross_trajectory_intersection: Optional[bool] = None,
+        cross_trajectory_union: Optional[bool] = None,
+        cross_trajectory_pooled: Optional[bool] = None,
     ) -> None:
         """
         Add coordinates with minimum value reduction.
@@ -538,8 +660,15 @@ class CoordinatesSelectionService(SelectionServiceBase):
             Minimum threshold for minimum values (Ångströms)
         threshold_max : float, optional
             Maximum threshold for minimum values (Ångströms)
-        cross_trajectory : bool, default=True
-            If True, only keep features that pass threshold in ALL trajectories
+        cross_trajectory : bool, optional
+            Deprecated legacy flag; use explicit cross_trajectory_intersection/union/pooled.
+        cross_trajectory_intersection : bool, optional
+            If True, require thresholds in ALL trajectories (intersection)
+        cross_trajectory_union : bool, optional
+            If True, keep features that pass in ANY trajectory (union)
+        cross_trajectory_pooled : bool, optional
+            If True, pool trajectories first, then reduce once
+            Only one of the three flags can be True; default is per_trajectory
         use_reduced : bool, default=False
             Whether to use reduced data
         common_denominator : bool, default=True
@@ -562,7 +691,14 @@ class CoordinatesSelectionService(SelectionServiceBase):
         self(selector_name, selection, use_reduced, common_denominator,
              traj_selection, require_all_partners)
         self._add_reduction_config(
-            selector_name, "min", threshold_min, threshold_max, cross_trajectory
+            selector_name,
+            "min",
+            threshold_min,
+            threshold_max,
+            cross_trajectory,
+            cross_trajectory_intersection,
+            cross_trajectory_union,
+            cross_trajectory_pooled,
         )
 
     def with_max_reduction(
@@ -571,11 +707,14 @@ class CoordinatesSelectionService(SelectionServiceBase):
         selection: str = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
-        cross_trajectory: bool = True,
+        cross_trajectory: Optional[bool] = None,
         use_reduced: bool = False,
         common_denominator: bool = True,
         traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all",
         require_all_partners: bool = False,
+        cross_trajectory_intersection: Optional[bool] = None,
+        cross_trajectory_union: Optional[bool] = None,
+        cross_trajectory_pooled: Optional[bool] = None,
     ) -> None:
         """
         Add coordinates with maximum value reduction.
@@ -594,8 +733,15 @@ class CoordinatesSelectionService(SelectionServiceBase):
             Minimum threshold for maximum values (Ångströms)
         threshold_max : float, optional
             Maximum threshold for maximum values (Ångströms)
-        cross_trajectory : bool, default=True
-            If True, only keep features that pass threshold in ALL trajectories
+        cross_trajectory : bool, optional
+            Deprecated legacy flag; use explicit cross_trajectory_intersection/union/pooled.
+        cross_trajectory_intersection : bool, optional
+            If True, require thresholds in ALL trajectories (intersection)
+        cross_trajectory_union : bool, optional
+            If True, keep features that pass in ANY trajectory (union)
+        cross_trajectory_pooled : bool, optional
+            If True, pool trajectories first, then reduce once
+            Only one of the three flags can be True; default is per_trajectory
         use_reduced : bool, default=False
             Whether to use reduced data
         common_denominator : bool, default=True
@@ -618,7 +764,14 @@ class CoordinatesSelectionService(SelectionServiceBase):
         self(selector_name, selection, use_reduced, common_denominator,
              traj_selection, require_all_partners)
         self._add_reduction_config(
-            selector_name, "max", threshold_min, threshold_max, cross_trajectory
+            selector_name,
+            "max",
+            threshold_min,
+            threshold_max,
+            cross_trajectory,
+            cross_trajectory_intersection,
+            cross_trajectory_union,
+            cross_trajectory_pooled,
         )
 
     def with_transitions_reduction(
@@ -631,11 +784,14 @@ class CoordinatesSelectionService(SelectionServiceBase):
         window_size: int = 10,
         transition_mode: str = 'window',
         lag_time: int = 1,
-        cross_trajectory: bool = True,
+        cross_trajectory: Optional[bool] = None,
         use_reduced: bool = False,
         common_denominator: bool = True,
         traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all",
         require_all_partners: bool = False,
+        cross_trajectory_intersection: Optional[bool] = None,
+        cross_trajectory_union: Optional[bool] = None,
+        cross_trajectory_pooled: Optional[bool] = None,
     ) -> None:
         """
         Add coordinates with transitions reduction.
@@ -662,8 +818,15 @@ class CoordinatesSelectionService(SelectionServiceBase):
             Mode for transition calculation ('window' or 'direct')
         lag_time : int, default=1
             Lag time for transition detection
-        cross_trajectory : bool, default=True
-            If True, only keep features that pass threshold in ALL trajectories
+        cross_trajectory : bool, optional
+            Deprecated legacy flag; use explicit cross_trajectory_intersection/union/pooled.
+        cross_trajectory_intersection : bool, optional
+            If True, require thresholds in ALL trajectories (intersection)
+        cross_trajectory_union : bool, optional
+            If True, keep features that pass in ANY trajectory (union)
+        cross_trajectory_pooled : bool, optional
+            If True, pool trajectories first, then reduce once
+            Only one of the three flags can be True; default is per_trajectory
         use_reduced : bool, default=False
             Whether to use reduced data
         common_denominator : bool, default=True
@@ -694,7 +857,13 @@ class CoordinatesSelectionService(SelectionServiceBase):
             "lag_time": lag_time
         }
         self._add_reduction_config(
-            selector_name, "transitions", threshold_min, threshold_max,
-            cross_trajectory, extra_params
+            selector_name,
+            "transitions",
+            threshold_min,
+            threshold_max,
+            cross_trajectory,
+            cross_trajectory_intersection,
+            cross_trajectory_union,
+            cross_trajectory_pooled,
+            extra_params,
         )
-

@@ -207,7 +207,7 @@ class FeatureSelectorManager:
         >>> manager = FeatureSelectorManager()
         >>> manager.add_selection(pipeline_data, "analysis", "distances", "res ALA")  # pipeline_data required
         >>> manager.add_selection(pipeline_data, "analysis", "distances", "all",
-        ...     reduction={"metric": "mean", "threshold_min": 7.0, "cross_trajectory": False})
+        ...     reduction={"metric": "mean", "threshold_min": 7.0})
 
         Parameters
         ----------
@@ -240,7 +240,11 @@ class FeatureSelectorManager:
             - metric : str - Reduction metric (e.g., "max", "min", "mean", "std")
             - threshold_min : float, optional - Minimum threshold
             - threshold_max : float, optional - Maximum threshold
-            - cross_trajectory : bool, default=True - Apply common denominator
+            - cross_trajectory : bool, optional - Deprecated legacy flag; use explicit mode flags
+            - cross_trajectory_intersection : bool, optional - Require thresholds in ALL trajectories
+            - cross_trajectory_union : bool, optional - Keep features that pass in ANY trajectory
+            - cross_trajectory_pooled : bool, optional - Pool trajectories then reduce once
+              (Only one of the three flags can be True; default is per_trajectory)
             - Additional metric-specific parameters (e.g., transition_threshold)
 
         Returns

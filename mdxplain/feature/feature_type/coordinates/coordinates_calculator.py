@@ -25,7 +25,7 @@ Utility class for extracting XYZ coordinates from MD trajectories with
 flexible atom selection. Supports memory mapping for large datasets.
 """
 
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, List, Tuple
 import warnings
 
 import mdtraj as md
@@ -531,4 +531,36 @@ class CoordinatesCalculator(CalculatorBase):
         raise ValueError(
             f"Unknown transition mode: {transition_mode}. "
             f"Supported: 'window', 'lagtime'"
+        )
+
+    def compute_pooled_metric_values(
+        self,
+        segments: List[np.ndarray],
+        metric: str,
+        **params
+    ) -> np.ndarray:
+        """
+        Compute pooled metric values with boundary-safe transitions.
+
+        Parameters
+        ----------
+        segments : list
+            List of (n_frames, n_features) arrays to pool
+        metric : str
+            Metric name
+        params : dict
+            Additional metric parameters
+
+        Returns
+        -------
+        np.ndarray
+            Metric values per feature
+        """
+        return self.analysis.compute_pooled_metric_values(
+            segments,
+            metric,
+            transition_threshold=params.get("transition_threshold", 1.0),
+            window_size=params.get("window_size", 10),
+            transition_mode=params.get("transition_mode", "window"),
+            lag_time=params.get("lag_time", 1),
         )

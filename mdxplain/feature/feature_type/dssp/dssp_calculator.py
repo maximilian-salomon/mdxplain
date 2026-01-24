@@ -25,7 +25,7 @@ Utility class for computing secondary structure assignments using DSSP algorithm
 with support for multiple encoding formats and memory mapping.
 """
 
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, List, Tuple
 
 import mdtraj as md
 import numpy as np
@@ -647,3 +647,35 @@ class DSSPCalculator(CalculatorBase):
             "transitions", "transition_frequency", "stability", "class_frequencies"
         ]
         raise ValueError(f"Unknown metric: {metric}. Supported: {supported_metrics}")
+
+    def compute_pooled_metric_values(
+        self,
+        segments: List[np.ndarray],
+        metric: str,
+        **params
+    ) -> np.ndarray:
+        """
+        Compute pooled metric values with boundary-safe transitions.
+
+        Parameters
+        ----------
+        segments : list
+            List of (n_frames, n_features) arrays to pool
+        metric : str
+            Metric name
+        params : dict
+            Additional metric parameters
+
+        Returns
+        -------
+        np.ndarray
+            Metric values per feature
+        """
+        return self.analysis.compute_pooled_metric_values(
+            segments,
+            metric,
+            transition_mode=params.get("transition_mode", "window"),
+            window_size=params.get("window_size", 10),
+            lag_time=params.get("lag_time", 1),
+            simplified=True,
+        )

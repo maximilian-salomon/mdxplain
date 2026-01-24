@@ -25,7 +25,7 @@ Utility class for computing contact maps from distance arrays using distance cut
 Supports memory mapping for large datasets and provides statistical analysis capabilities.
 """
 
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 
@@ -243,6 +243,38 @@ class ContactCalculator(CalculatorBase):
             )
         raise ValueError(
             f"Unknown transition mode: {transition_mode}. Supported: 'window', 'lagtime'"
+        )
+
+    def compute_pooled_metric_values(
+        self,
+        segments: List[np.ndarray],
+        metric: str,
+        **params
+    ) -> np.ndarray:
+        """
+        Compute pooled metric values with boundary-safe transitions.
+
+        Parameters
+        ----------
+        segments : list
+            List of (n_frames, n_features) arrays to pool
+        metric : str
+            Metric name
+        params : dict
+            Additional metric parameters
+
+        Returns
+        -------
+        np.ndarray
+            Metric values per feature
+        """
+        return self.analysis.compute_pooled_metric_values(
+            segments,
+            metric,
+            transition_threshold=params.get("transition_threshold", 2.0),
+            window_size=params.get("window_size", 10),
+            transition_mode=params.get("transition_mode", "window"),
+            lag_time=params.get("lag_time", 1),
         )
 
     def compute_dynamic_values(

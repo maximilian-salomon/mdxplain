@@ -130,7 +130,7 @@ class DSSPSelectionService(SelectionServiceBase):
             use_reduced, common_denominator, traj_selection, require_all_partners
         )
 
-    def with_transitions_reduction(self, selector_name: str, selection: str = "all", threshold_min: Optional[float] = None, threshold_max: Optional[float] = None, cross_trajectory: bool = True, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False, window_size: int = 10, transition_mode: str = 'direct', lag_time: int = 1) -> None:
+    def with_transitions_reduction(self, selector_name: str, selection: str = "all", threshold_min: Optional[float] = None, threshold_max: Optional[float] = None, cross_trajectory: Optional[bool] = None, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False, window_size: int = 10, transition_mode: str = 'direct', lag_time: int = 1, cross_trajectory_intersection: Optional[bool] = None, cross_trajectory_union: Optional[bool] = None, cross_trajectory_pooled: Optional[bool] = None) -> None:
         """
         Add DSSP with transitions reduction.
 
@@ -147,8 +147,15 @@ class DSSPSelectionService(SelectionServiceBase):
             Minimum number of transitions
         threshold_max : float, optional
             Maximum number of transitions
-        cross_trajectory : bool, default=True
-            If True, only keep features that pass threshold in ALL trajectories
+        cross_trajectory : bool, optional
+            Deprecated legacy flag; use explicit cross_trajectory_intersection/union/pooled.
+        cross_trajectory_intersection : bool, optional
+            If True, require thresholds in ALL trajectories (intersection)
+        cross_trajectory_union : bool, optional
+            If True, keep features that pass in ANY trajectory (union)
+        cross_trajectory_pooled : bool, optional
+            If True, pool trajectories first, then reduce once
+            Only one of the three flags can be True; default is per_trajectory
         use_reduced : bool, default=False
             Whether to use reduced data
         common_denominator : bool, default=True
@@ -177,9 +184,9 @@ class DSSPSelectionService(SelectionServiceBase):
         """
         self(selector_name, selection, use_reduced, common_denominator, traj_selection, require_all_partners)
         extra_params = {"window_size": window_size, "transition_mode": transition_mode, "lag_time": lag_time}
-        self._add_reduction_config(selector_name, "transitions", threshold_min, threshold_max, cross_trajectory, extra_params)
+        self._add_reduction_config(selector_name, "transitions", threshold_min, threshold_max, cross_trajectory, cross_trajectory_intersection, cross_trajectory_union, cross_trajectory_pooled, extra_params)
 
-    def with_transition_frequency_reduction(self, selector_name: str, selection: str = "all", threshold_min: Optional[float] = None, threshold_max: Optional[float] = None, cross_trajectory: bool = True, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False) -> None:
+    def with_transition_frequency_reduction(self, selector_name: str, selection: str = "all", threshold_min: Optional[float] = None, threshold_max: Optional[float] = None, cross_trajectory: Optional[bool] = None, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False, cross_trajectory_intersection: Optional[bool] = None, cross_trajectory_union: Optional[bool] = None, cross_trajectory_pooled: Optional[bool] = None) -> None:
         """
         Add DSSP with transition frequency reduction.
 
@@ -197,8 +204,15 @@ class DSSPSelectionService(SelectionServiceBase):
             Minimum transition frequency threshold
         threshold_max : float, optional
             Maximum transition frequency threshold
-        cross_trajectory : bool, default=True
-            If True, only keep features that pass threshold in ALL trajectories
+        cross_trajectory : bool, optional
+            Deprecated legacy flag; use explicit cross_trajectory_intersection/union/pooled.
+        cross_trajectory_intersection : bool, optional
+            If True, require thresholds in ALL trajectories (intersection)
+        cross_trajectory_union : bool, optional
+            If True, keep features that pass in ANY trajectory (union)
+        cross_trajectory_pooled : bool, optional
+            If True, pool trajectories first, then reduce once
+            Only one of the three flags can be True; default is per_trajectory
         use_reduced : bool, default=False
             Whether to use reduced data
         common_denominator : bool, default=True
@@ -219,9 +233,9 @@ class DSSPSelectionService(SelectionServiceBase):
         >>> service.with_transition_frequency_reduction("test", "dynamic_loops", threshold_min=0.2)
         """
         self(selector_name, selection, use_reduced, common_denominator, traj_selection, require_all_partners)
-        self._add_reduction_config(selector_name, "transition_frequency", threshold_min, threshold_max, cross_trajectory)
+        self._add_reduction_config(selector_name, "transition_frequency", threshold_min, threshold_max, cross_trajectory, cross_trajectory_intersection, cross_trajectory_union, cross_trajectory_pooled)
 
-    def with_stability_reduction(self, selector_name: str, selection: str = "all", threshold_min: Optional[float] = None, threshold_max: Optional[float] = None, cross_trajectory: bool = True, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False) -> None:
+    def with_stability_reduction(self, selector_name: str, selection: str = "all", threshold_min: Optional[float] = None, threshold_max: Optional[float] = None, cross_trajectory: Optional[bool] = None, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False, cross_trajectory_intersection: Optional[bool] = None, cross_trajectory_union: Optional[bool] = None, cross_trajectory_pooled: Optional[bool] = None) -> None:
         """
         Add DSSP with stability reduction.
 
@@ -238,8 +252,15 @@ class DSSPSelectionService(SelectionServiceBase):
             Minimum stability fraction
         threshold_max : float, optional
             Maximum stability fraction
-        cross_trajectory : bool, default=True
-            If True, only keep features that pass threshold in ALL trajectories
+        cross_trajectory : bool, optional
+            Deprecated legacy flag; use explicit cross_trajectory_intersection/union/pooled.
+        cross_trajectory_intersection : bool, optional
+            If True, require thresholds in ALL trajectories (intersection)
+        cross_trajectory_union : bool, optional
+            If True, keep features that pass in ANY trajectory (union)
+        cross_trajectory_pooled : bool, optional
+            If True, pool trajectories first, then reduce once
+            Only one of the three flags can be True; default is per_trajectory
         use_reduced : bool, default=False
             Whether to use reduced data
         common_denominator : bool, default=True
@@ -261,9 +282,9 @@ class DSSPSelectionService(SelectionServiceBase):
         ...     threshold_min=0.9)
         """
         self(selector_name, selection, use_reduced, common_denominator, traj_selection, require_all_partners)
-        self._add_reduction_config(selector_name, "stability", threshold_min, threshold_max, cross_trajectory)
+        self._add_reduction_config(selector_name, "stability", threshold_min, threshold_max, cross_trajectory, cross_trajectory_intersection, cross_trajectory_union, cross_trajectory_pooled)
 
-    def with_class_frequencies_reduction(self, selector_name: str, selection: str = "all", threshold_min: Optional[float] = None, threshold_max: Optional[float] = None, cross_trajectory: bool = True, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False, target_classes: Optional[List[str]] = None) -> None:
+    def with_class_frequencies_reduction(self, selector_name: str, selection: str = "all", threshold_min: Optional[float] = None, threshold_max: Optional[float] = None, cross_trajectory: Optional[bool] = None, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False, target_classes: Optional[List[str]] = None, cross_trajectory_intersection: Optional[bool] = None, cross_trajectory_union: Optional[bool] = None, cross_trajectory_pooled: Optional[bool] = None) -> None:
         """
         Add DSSP with class frequencies reduction.
 
@@ -282,8 +303,15 @@ class DSSPSelectionService(SelectionServiceBase):
             Minimum class frequency threshold
         threshold_max : float, optional
             Maximum class frequency threshold
-        cross_trajectory : bool, default=True
-            If True, only keep features that pass threshold in ALL trajectories
+        cross_trajectory : bool, optional
+            Deprecated legacy flag; use explicit cross_trajectory_intersection/union/pooled.
+        cross_trajectory_intersection : bool, optional
+            If True, require thresholds in ALL trajectories (intersection)
+        cross_trajectory_union : bool, optional
+            If True, keep features that pass in ANY trajectory (union)
+        cross_trajectory_pooled : bool, optional
+            If True, pool trajectories first, then reduce once
+            Only one of the three flags can be True; default is per_trajectory
         use_reduced : bool, default=False
             Whether to use reduced data
         common_denominator : bool, default=True
@@ -309,5 +337,4 @@ class DSSPSelectionService(SelectionServiceBase):
         """
         self(selector_name, selection, use_reduced, common_denominator, traj_selection, require_all_partners)
         extra_params = {"target_classes": target_classes} if target_classes else {}
-        self._add_reduction_config(selector_name, "class_frequencies", threshold_min, threshold_max, cross_trajectory, extra_params)
-
+        self._add_reduction_config(selector_name, "class_frequencies", threshold_min, threshold_max, cross_trajectory, cross_trajectory_intersection, cross_trajectory_union, cross_trajectory_pooled, extra_params)

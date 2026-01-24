@@ -130,7 +130,7 @@ class SasaSelectionService(SelectionServiceBase):
             use_reduced, common_denominator, traj_selection, require_all_partners
         )
 
-    def with_cv_reduction(self, selector_name: str, selection: str = "all", threshold_min: Optional[float] = None, threshold_max: Optional[float] = None, cross_trajectory: bool = True, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False) -> None:
+    def with_cv_reduction(self, selector_name: str, selection: str = "all", threshold_min: Optional[float] = None, threshold_max: Optional[float] = None, cross_trajectory: Optional[bool] = None, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False, cross_trajectory_intersection: Optional[bool] = None, cross_trajectory_union: Optional[bool] = None, cross_trajectory_pooled: Optional[bool] = None) -> None:
         """
         Add SASA with CV (coefficient of variation) reduction.
 
@@ -147,8 +147,15 @@ class SasaSelectionService(SelectionServiceBase):
             Minimum CV threshold (features with CV below this are removed)
         threshold_max : float, optional
             Maximum CV threshold (features with CV above this are removed)
-        cross_trajectory : bool, default=True
-            If True, only keep features that pass threshold in ALL trajectories
+        cross_trajectory : bool, optional
+            Deprecated legacy flag; use explicit cross_trajectory_intersection/union/pooled.
+        cross_trajectory_intersection : bool, optional
+            If True, require thresholds in ALL trajectories (intersection)
+        cross_trajectory_union : bool, optional
+            If True, keep features that pass in ANY trajectory (union)
+        cross_trajectory_pooled : bool, optional
+            If True, pool trajectories first, then reduce once
+            Only one of the three flags can be True; default is per_trajectory
         use_reduced : bool, default=False
             Whether to use reduced data
         common_denominator : bool, default=True
@@ -169,9 +176,9 @@ class SasaSelectionService(SelectionServiceBase):
         >>> service.with_cv_reduction("test", "res ALA", threshold_min=0.05, threshold_max=0.8)
         """
         self(selector_name, selection, use_reduced, common_denominator, traj_selection, require_all_partners)
-        self._add_reduction_config(selector_name, "cv", threshold_min, threshold_max, cross_trajectory)
+        self._add_reduction_config(selector_name, "cv", threshold_min, threshold_max, cross_trajectory, cross_trajectory_intersection, cross_trajectory_union, cross_trajectory_pooled)
 
-    def with_range_reduction(self, selector_name: str, selection: str = "all", threshold_min: Optional[float] = None, threshold_max: Optional[float] = None, cross_trajectory: bool = True, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False) -> None:
+    def with_range_reduction(self, selector_name: str, selection: str = "all", threshold_min: Optional[float] = None, threshold_max: Optional[float] = None, cross_trajectory: Optional[bool] = None, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False, cross_trajectory_intersection: Optional[bool] = None, cross_trajectory_union: Optional[bool] = None, cross_trajectory_pooled: Optional[bool] = None) -> None:
         """
         Add SASA with range reduction.
 
@@ -189,8 +196,15 @@ class SasaSelectionService(SelectionServiceBase):
             Minimum range threshold (Å²)
         threshold_max : float, optional
             Maximum range threshold (Å²)
-        cross_trajectory : bool, default=True
-            If True, only keep features that pass threshold in ALL trajectories
+        cross_trajectory : bool, optional
+            Deprecated legacy flag; use explicit cross_trajectory_intersection/union/pooled.
+        cross_trajectory_intersection : bool, optional
+            If True, require thresholds in ALL trajectories (intersection)
+        cross_trajectory_union : bool, optional
+            If True, keep features that pass in ANY trajectory (union)
+        cross_trajectory_pooled : bool, optional
+            If True, pool trajectories first, then reduce once
+            Only one of the three flags can be True; default is per_trajectory
         use_reduced : bool, default=False
             Whether to use reduced data
         common_denominator : bool, default=True
@@ -211,9 +225,9 @@ class SasaSelectionService(SelectionServiceBase):
         >>> service.with_range_reduction("test", "dynamic_surface", threshold_min=50.0)
         """
         self(selector_name, selection, use_reduced, common_denominator, traj_selection, require_all_partners)
-        self._add_reduction_config(selector_name, "range", threshold_min, threshold_max, cross_trajectory)
+        self._add_reduction_config(selector_name, "range", threshold_min, threshold_max, cross_trajectory, cross_trajectory_intersection, cross_trajectory_union, cross_trajectory_pooled)
 
-    def with_std_reduction(self, selector_name: str, selection: str = "all", threshold_min: Optional[float] = None, threshold_max: Optional[float] = None, cross_trajectory: bool = True, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False) -> None:
+    def with_std_reduction(self, selector_name: str, selection: str = "all", threshold_min: Optional[float] = None, threshold_max: Optional[float] = None, cross_trajectory: Optional[bool] = None, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False, cross_trajectory_intersection: Optional[bool] = None, cross_trajectory_union: Optional[bool] = None, cross_trajectory_pooled: Optional[bool] = None) -> None:
         """
         Add SASA with standard deviation reduction.
 
@@ -231,8 +245,15 @@ class SasaSelectionService(SelectionServiceBase):
             Minimum standard deviation threshold (Å²)
         threshold_max : float, optional
             Maximum standard deviation threshold (Å²)
-        cross_trajectory : bool, default=True
-            If True, only keep features that pass threshold in ALL trajectories
+        cross_trajectory : bool, optional
+            Deprecated legacy flag; use explicit cross_trajectory_intersection/union/pooled.
+        cross_trajectory_intersection : bool, optional
+            If True, require thresholds in ALL trajectories (intersection)
+        cross_trajectory_union : bool, optional
+            If True, keep features that pass in ANY trajectory (union)
+        cross_trajectory_pooled : bool, optional
+            If True, pool trajectories first, then reduce once
+            Only one of the three flags can be True; default is per_trajectory
         use_reduced : bool, default=False
             Whether to use reduced data
         common_denominator : bool, default=True
@@ -253,9 +274,9 @@ class SasaSelectionService(SelectionServiceBase):
         >>> service.with_std_reduction("test", "variable_exposure", threshold_min=15.0)
         """
         self(selector_name, selection, use_reduced, common_denominator, traj_selection, require_all_partners)
-        self._add_reduction_config(selector_name, "std", threshold_min, threshold_max, cross_trajectory)
+        self._add_reduction_config(selector_name, "std", threshold_min, threshold_max, cross_trajectory, cross_trajectory_intersection, cross_trajectory_union, cross_trajectory_pooled)
 
-    def with_variance_reduction(self, selector_name: str, selection: str = "all", threshold_min: Optional[float] = None, threshold_max: Optional[float] = None, cross_trajectory: bool = True, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False) -> None:
+    def with_variance_reduction(self, selector_name: str, selection: str = "all", threshold_min: Optional[float] = None, threshold_max: Optional[float] = None, cross_trajectory: Optional[bool] = None, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False, cross_trajectory_intersection: Optional[bool] = None, cross_trajectory_union: Optional[bool] = None, cross_trajectory_pooled: Optional[bool] = None) -> None:
         """
         Add SASA with variance reduction.
 
@@ -273,8 +294,15 @@ class SasaSelectionService(SelectionServiceBase):
             Minimum variance threshold (Ų)
         threshold_max : float, optional
             Maximum variance threshold (Ų)
-        cross_trajectory : bool, default=True
-            If True, only keep features that pass threshold in ALL trajectories
+        cross_trajectory : bool, optional
+            Deprecated legacy flag; use explicit cross_trajectory_intersection/union/pooled.
+        cross_trajectory_intersection : bool, optional
+            If True, require thresholds in ALL trajectories (intersection)
+        cross_trajectory_union : bool, optional
+            If True, keep features that pass in ANY trajectory (union)
+        cross_trajectory_pooled : bool, optional
+            If True, pool trajectories first, then reduce once
+            Only one of the three flags can be True; default is per_trajectory
         use_reduced : bool, default=False
             Whether to use reduced data
         common_denominator : bool, default=True
@@ -295,9 +323,9 @@ class SasaSelectionService(SelectionServiceBase):
         >>> service.with_variance_reduction("test", "high_variance", threshold_min=200.0)
         """
         self(selector_name, selection, use_reduced, common_denominator, traj_selection, require_all_partners)
-        self._add_reduction_config(selector_name, "variance", threshold_min, threshold_max, cross_trajectory)
+        self._add_reduction_config(selector_name, "variance", threshold_min, threshold_max, cross_trajectory, cross_trajectory_intersection, cross_trajectory_union, cross_trajectory_pooled)
 
-    def with_mad_reduction(self, selector_name: str, selection: str = "all", threshold_min: Optional[float] = None, threshold_max: Optional[float] = None, cross_trajectory: bool = True, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False) -> None:
+    def with_mad_reduction(self, selector_name: str, selection: str = "all", threshold_min: Optional[float] = None, threshold_max: Optional[float] = None, cross_trajectory: Optional[bool] = None, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False, cross_trajectory_intersection: Optional[bool] = None, cross_trajectory_union: Optional[bool] = None, cross_trajectory_pooled: Optional[bool] = None) -> None:
         """
         Add SASA with MAD (median absolute deviation) reduction.
 
@@ -315,8 +343,15 @@ class SasaSelectionService(SelectionServiceBase):
             Minimum MAD threshold (Å²)
         threshold_max : float, optional
             Maximum MAD threshold (Å²)
-        cross_trajectory : bool, default=True
-            If True, only keep features that pass threshold in ALL trajectories
+        cross_trajectory : bool, optional
+            Deprecated legacy flag; use explicit cross_trajectory_intersection/union/pooled.
+        cross_trajectory_intersection : bool, optional
+            If True, require thresholds in ALL trajectories (intersection)
+        cross_trajectory_union : bool, optional
+            If True, keep features that pass in ANY trajectory (union)
+        cross_trajectory_pooled : bool, optional
+            If True, pool trajectories first, then reduce once
+            Only one of the three flags can be True; default is per_trajectory
         use_reduced : bool, default=False
             Whether to use reduced data
         common_denominator : bool, default=True
@@ -337,9 +372,9 @@ class SasaSelectionService(SelectionServiceBase):
         >>> service.with_mad_reduction("test", "robust_variable", threshold_min=12.0)
         """
         self(selector_name, selection, use_reduced, common_denominator, traj_selection, require_all_partners)
-        self._add_reduction_config(selector_name, "mad", threshold_min, threshold_max, cross_trajectory)
+        self._add_reduction_config(selector_name, "mad", threshold_min, threshold_max, cross_trajectory, cross_trajectory_intersection, cross_trajectory_union, cross_trajectory_pooled)
 
-    def with_mean_reduction(self, selector_name: str, selection: str = "all", threshold_min: Optional[float] = None, threshold_max: Optional[float] = None, cross_trajectory: bool = True, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False) -> None:
+    def with_mean_reduction(self, selector_name: str, selection: str = "all", threshold_min: Optional[float] = None, threshold_max: Optional[float] = None, cross_trajectory: Optional[bool] = None, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False, cross_trajectory_intersection: Optional[bool] = None, cross_trajectory_union: Optional[bool] = None, cross_trajectory_pooled: Optional[bool] = None) -> None:
         """
         Add SASA with mean reduction.
 
@@ -357,8 +392,15 @@ class SasaSelectionService(SelectionServiceBase):
             Minimum mean threshold (Å²)
         threshold_max : float, optional
             Maximum mean threshold (Å²)
-        cross_trajectory : bool, default=True
-            If True, only keep features that pass threshold in ALL trajectories
+        cross_trajectory : bool, optional
+            Deprecated legacy flag; use explicit cross_trajectory_intersection/union/pooled.
+        cross_trajectory_intersection : bool, optional
+            If True, require thresholds in ALL trajectories (intersection)
+        cross_trajectory_union : bool, optional
+            If True, keep features that pass in ANY trajectory (union)
+        cross_trajectory_pooled : bool, optional
+            If True, pool trajectories first, then reduce once
+            Only one of the three flags can be True; default is per_trajectory
         use_reduced : bool, default=False
             Whether to use reduced data
         common_denominator : bool, default=True
@@ -379,9 +421,9 @@ class SasaSelectionService(SelectionServiceBase):
         >>> service.with_mean_reduction("test", "exposed_residues", threshold_min=50.0, threshold_max=150.0)
         """
         self(selector_name, selection, use_reduced, common_denominator, traj_selection, require_all_partners)
-        self._add_reduction_config(selector_name, "mean", threshold_min, threshold_max, cross_trajectory)
+        self._add_reduction_config(selector_name, "mean", threshold_min, threshold_max, cross_trajectory, cross_trajectory_intersection, cross_trajectory_union, cross_trajectory_pooled)
 
-    def with_min_reduction(self, selector_name: str, selection: str = "all", threshold_min: Optional[float] = None, threshold_max: Optional[float] = None, cross_trajectory: bool = True, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False) -> None:
+    def with_min_reduction(self, selector_name: str, selection: str = "all", threshold_min: Optional[float] = None, threshold_max: Optional[float] = None, cross_trajectory: Optional[bool] = None, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False, cross_trajectory_intersection: Optional[bool] = None, cross_trajectory_union: Optional[bool] = None, cross_trajectory_pooled: Optional[bool] = None) -> None:
         """
         Add SASA with minimum value reduction.
 
@@ -399,8 +441,15 @@ class SasaSelectionService(SelectionServiceBase):
             Minimum threshold for minimum values (Å²)
         threshold_max : float, optional
             Maximum threshold for minimum values (Å²)
-        cross_trajectory : bool, default=True
-            If True, only keep features that pass threshold in ALL trajectories
+        cross_trajectory : bool, optional
+            Deprecated legacy flag; use explicit cross_trajectory_intersection/union/pooled.
+        cross_trajectory_intersection : bool, optional
+            If True, require thresholds in ALL trajectories (intersection)
+        cross_trajectory_union : bool, optional
+            If True, keep features that pass in ANY trajectory (union)
+        cross_trajectory_pooled : bool, optional
+            If True, pool trajectories first, then reduce once
+            Only one of the three flags can be True; default is per_trajectory
         use_reduced : bool, default=False
             Whether to use reduced data
         common_denominator : bool, default=True
@@ -421,9 +470,9 @@ class SasaSelectionService(SelectionServiceBase):
         >>> service.with_min_reduction("test", "sometimes_buried", threshold_max=10.0)
         """
         self(selector_name, selection, use_reduced, common_denominator, traj_selection, require_all_partners)
-        self._add_reduction_config(selector_name, "min", threshold_min, threshold_max, cross_trajectory)
+        self._add_reduction_config(selector_name, "min", threshold_min, threshold_max, cross_trajectory, cross_trajectory_intersection, cross_trajectory_union, cross_trajectory_pooled)
 
-    def with_max_reduction(self, selector_name: str, selection: str = "all", threshold_min: Optional[float] = None, threshold_max: Optional[float] = None, cross_trajectory: bool = True, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False) -> None:
+    def with_max_reduction(self, selector_name: str, selection: str = "all", threshold_min: Optional[float] = None, threshold_max: Optional[float] = None, cross_trajectory: Optional[bool] = None, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False, cross_trajectory_intersection: Optional[bool] = None, cross_trajectory_union: Optional[bool] = None, cross_trajectory_pooled: Optional[bool] = None) -> None:
         """
         Add SASA with maximum value reduction.
 
@@ -441,8 +490,15 @@ class SasaSelectionService(SelectionServiceBase):
             Minimum threshold for maximum values (Å²)
         threshold_max : float, optional
             Maximum threshold for maximum values (Å²)
-        cross_trajectory : bool, default=True
-            If True, only keep features that pass threshold in ALL trajectories
+        cross_trajectory : bool, optional
+            Deprecated legacy flag; use explicit cross_trajectory_intersection/union/pooled.
+        cross_trajectory_intersection : bool, optional
+            If True, require thresholds in ALL trajectories (intersection)
+        cross_trajectory_union : bool, optional
+            If True, keep features that pass in ANY trajectory (union)
+        cross_trajectory_pooled : bool, optional
+            If True, pool trajectories first, then reduce once
+            Only one of the three flags can be True; default is per_trajectory
         use_reduced : bool, default=False
             Whether to use reduced data
         common_denominator : bool, default=True
@@ -463,9 +519,9 @@ class SasaSelectionService(SelectionServiceBase):
         >>> service.with_max_reduction("test", "highly_exposed", threshold_min=150.0, threshold_max=250.0)
         """
         self(selector_name, selection, use_reduced, common_denominator, traj_selection, require_all_partners)
-        self._add_reduction_config(selector_name, "max", threshold_min, threshold_max, cross_trajectory)
+        self._add_reduction_config(selector_name, "max", threshold_min, threshold_max, cross_trajectory, cross_trajectory_intersection, cross_trajectory_union, cross_trajectory_pooled)
 
-    def with_burial_fraction_reduction(self, selector_name: str, selection: str = "all", burial_threshold: float = 0.2, cross_trajectory: bool = True, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False) -> None:
+    def with_burial_fraction_reduction(self, selector_name: str, selection: str = "all", burial_threshold: float = 0.2, cross_trajectory: Optional[bool] = None, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False, cross_trajectory_intersection: Optional[bool] = None, cross_trajectory_union: Optional[bool] = None, cross_trajectory_pooled: Optional[bool] = None) -> None:
         """
         Add SASA with burial fraction reduction.
 
@@ -481,8 +537,15 @@ class SasaSelectionService(SelectionServiceBase):
             Selection criteria string
         burial_threshold : float, default=0.2
             SASA threshold (Å²) below which residue is considered buried.
-        cross_trajectory : bool, default=True
-            If True, only keep features that pass threshold in ALL trajectories
+        cross_trajectory : bool, optional
+            Deprecated legacy flag; use explicit cross_trajectory_intersection/union/pooled.
+        cross_trajectory_intersection : bool, optional
+            If True, require thresholds in ALL trajectories (intersection)
+        cross_trajectory_union : bool, optional
+            If True, keep features that pass in ANY trajectory (union)
+        cross_trajectory_pooled : bool, optional
+            If True, pool trajectories first, then reduce once
+            Only one of the three flags can be True; default is per_trajectory
         use_reduced : bool, default=False
             Whether to use reduced data
         common_denominator : bool, default=True
@@ -503,9 +566,9 @@ class SasaSelectionService(SelectionServiceBase):
         >>> service.with_burial_fraction_reduction("test", "core_residues", burial_threshold=0.1)
         """
         self(selector_name, selection, use_reduced, common_denominator, traj_selection, require_all_partners)
-        self._add_reduction_config(selector_name, "burial_fraction", burial_threshold, None, cross_trajectory)
+        self._add_reduction_config(selector_name, "burial_fraction", burial_threshold, None, cross_trajectory, cross_trajectory_intersection, cross_trajectory_union, cross_trajectory_pooled)
 
-    def with_exposure_fraction_reduction(self, selector_name: str, selection: str = "all", exposure_threshold: float = 0.2, cross_trajectory: bool = True, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False) -> None:
+    def with_exposure_fraction_reduction(self, selector_name: str, selection: str = "all", exposure_threshold: float = 0.2, cross_trajectory: Optional[bool] = None, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False, cross_trajectory_intersection: Optional[bool] = None, cross_trajectory_union: Optional[bool] = None, cross_trajectory_pooled: Optional[bool] = None) -> None:
         """
         Add SASA with exposure fraction reduction.
 
@@ -521,8 +584,15 @@ class SasaSelectionService(SelectionServiceBase):
             Selection criteria string
         exposure_threshold : float, default=0.2
             SASA threshold (Å²) above which residue is considered exposed.
-        cross_trajectory : bool, default=True
-            If True, only keep features that pass threshold in ALL trajectories
+        cross_trajectory : bool, optional
+            Deprecated legacy flag; use explicit cross_trajectory_intersection/union/pooled.
+        cross_trajectory_intersection : bool, optional
+            If True, require thresholds in ALL trajectories (intersection)
+        cross_trajectory_union : bool, optional
+            If True, keep features that pass in ANY trajectory (union)
+        cross_trajectory_pooled : bool, optional
+            If True, pool trajectories first, then reduce once
+            Only one of the three flags can be True; default is per_trajectory
         use_reduced : bool, default=False
             Whether to use reduced data
         common_denominator : bool, default=True
@@ -543,9 +613,9 @@ class SasaSelectionService(SelectionServiceBase):
         >>> service.with_exposure_fraction_reduction("test", "surface_residues", exposure_threshold=0.5)
         """
         self(selector_name, selection, use_reduced, common_denominator, traj_selection, require_all_partners)
-        self._add_reduction_config(selector_name, "exposure_fraction", None, exposure_threshold, cross_trajectory)
+        self._add_reduction_config(selector_name, "exposure_fraction", None, exposure_threshold, cross_trajectory, cross_trajectory_intersection, cross_trajectory_union, cross_trajectory_pooled)
 
-    def with_transitions_reduction(self, selector_name: str, selection: str = "all", threshold_min: Optional[float] = None, threshold_max: Optional[float] = None, transition_threshold: float = 10.0, window_size: int = 10, transition_mode: str = 'window', lag_time: int = 1, cross_trajectory: bool = True, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False) -> None:
+    def with_transitions_reduction(self, selector_name: str, selection: str = "all", threshold_min: Optional[float] = None, threshold_max: Optional[float] = None, transition_threshold: float = 10.0, window_size: int = 10, transition_mode: str = 'window', lag_time: int = 1, cross_trajectory: Optional[bool] = None, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False, cross_trajectory_intersection: Optional[bool] = None, cross_trajectory_union: Optional[bool] = None, cross_trajectory_pooled: Optional[bool] = None) -> None:
         """
         Add SASA with transitions reduction.
 
@@ -571,8 +641,15 @@ class SasaSelectionService(SelectionServiceBase):
             Mode for transition calculation ('window' or 'direct')
         lag_time : int, default=1
             Lag time for transition detection
-        cross_trajectory : bool, default=True
-            If True, only keep features that pass threshold in ALL trajectories
+        cross_trajectory : bool, optional
+            Deprecated legacy flag; use explicit cross_trajectory_intersection/union/pooled.
+        cross_trajectory_intersection : bool, optional
+            If True, require thresholds in ALL trajectories (intersection)
+        cross_trajectory_union : bool, optional
+            If True, keep features that pass in ANY trajectory (union)
+        cross_trajectory_pooled : bool, optional
+            If True, pool trajectories first, then reduce once
+            Only one of the three flags can be True; default is per_trajectory
         use_reduced : bool, default=False
             Whether to use reduced data
         common_denominator : bool, default=True
@@ -595,5 +672,4 @@ class SasaSelectionService(SelectionServiceBase):
         """
         self(selector_name, selection, use_reduced, common_denominator, traj_selection, require_all_partners)
         extra_params = {"transition_threshold": transition_threshold, "window_size": window_size, "transition_mode": transition_mode, "lag_time": lag_time}
-        self._add_reduction_config(selector_name, "transitions", threshold_min, threshold_max, cross_trajectory, extra_params)
-
+        self._add_reduction_config(selector_name, "transitions", threshold_min, threshold_max, cross_trajectory, cross_trajectory_intersection, cross_trajectory_union, cross_trajectory_pooled, extra_params)

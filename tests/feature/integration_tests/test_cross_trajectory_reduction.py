@@ -193,7 +193,6 @@ class TestCrossTrajectoryReduction:
         # Traj2: features [1,3] pass (max > 7.0)
         self.pipeline.feature.reduce.distances.max(
             threshold_min=7.0,
-            cross_trajectory=False
         )
 
         # EXPECTED: Each trajectory keeps different columns based on max values
@@ -304,7 +303,6 @@ class TestCrossTrajectoryReduction:
         # Test independent reduction first
         self.pipeline.feature.reduce.distances.min(
             threshold_max=2.8,
-            cross_trajectory=False
         )
 
         # EXPECTED for independent:

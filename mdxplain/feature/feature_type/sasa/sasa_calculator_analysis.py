@@ -25,6 +25,8 @@ Analysis utilities for SASA data including surface area dynamics,
 burial analysis, and solvent exposure variability calculations.
 """
 
+from typing import List
+
 import numpy as np
 
 from ..helper.calculator_stat_helper import CalculatorStatHelper
@@ -699,3 +701,116 @@ class SASACalculatorAnalysis:
             exposure_fractions = exposed_frames / sasa_data.shape[0]
 
         return exposure_fractions
+
+    def compute_pooled_metric_values(
+        self,
+        segments: List[np.ndarray],
+        metric: str,
+        transition_threshold: float = 0.5,
+        window_size: int = 10,
+        transition_mode: str = "window",
+        lag_time: int = 1,
+        threshold_min: float = None,
+        threshold_max: float = None,
+    ) -> np.ndarray:
+        """
+        Compute pooled metric values across segments.
+
+        Parameters
+        ----------
+        segments : list
+            List of SASA arrays
+        metric : str
+            Metric name
+        transition_threshold : float, default=0.5
+            Threshold for detecting transitions
+        window_size : int, default=10
+            Window size for transition analysis
+        transition_mode : str, default='window'
+            Transition mode ('window' or 'lagtime')
+        lag_time : int, default=1
+            Lag time for transition analysis
+        threshold_min : float, optional
+            Minimum threshold (used for burial_fraction)
+        threshold_max : float, optional
+            Maximum threshold (used for exposure_fraction)
+
+        Returns
+        -------
+        numpy.ndarray
+            Pooled metric values per SASA feature
+        """
+        if not segments:
+            return np.array([])
+        if metric == "transitions":
+            window = lag_time if transition_mode == "lagtime" else window_size
+            transitions, _ = CalculatorStatHelper.compute_pooled_transitions(
+                segments,
+                transition_threshold,
+                window,
+                self.chunk_size,
+                self.use_memmap,
+                mode=transition_mode,
+            )
+            return transitions
+        if metric == "stability":
+            window = lag_time if transition_mode == "lagtime" else window_size
+            return CalculatorStatHelper.compute_pooled_stability(
+                segments,
+                transition_threshold,
+                window,
+                self.chunk_size,
+                self.use_memmap,
+                mode=transition_mode,
+            )
+        pooled = np.concatenate(segments, axis=0)
+        return self._metric_from_pooled(pooled, metric, threshold_min, threshold_max)
+
+    def _metric_from_pooled(
+        self,
+        pooled: np.ndarray,
+        metric: str,
+        threshold_min: float = None,
+        threshold_max: float = None,
+    ) -> np.ndarray:
+        """
+        Compute metric values on pooled data.
+
+        Parameters
+        ----------
+        pooled : np.ndarray
+            Pooled SASA array
+        metric : str
+            Metric name
+        threshold_min : float, optional
+            Minimum threshold (used for burial_fraction)
+        threshold_max : float, optional
+            Maximum threshold (used for exposure_fraction)
+
+        Returns
+        -------
+        numpy.ndarray
+            Metric values per SASA feature
+        """
+        metrics = {
+            "std": self.compute_std,
+            "variance": self.compute_variance,
+            "min": self.compute_min,
+            "max": self.compute_max,
+            "mad": self.compute_mad,
+            "mean": self.compute_mean,
+            "cv": self.compute_cv,
+            "range": self.compute_range,
+            "dynamic_range": self.compute_range,
+        }
+        if metric in metrics:
+            return metrics[metric](pooled)
+        if metric == "burial_fraction":
+            cutoff = threshold_min if threshold_min is not None else 0.1
+            return self.compute_burial_fraction(pooled, cutoff)
+        if metric == "exposure_fraction":
+            cutoff = threshold_max if threshold_max is not None else 1.0
+            return self.compute_exposure_fraction(pooled, cutoff)
+        raise ValueError(
+            f"Unknown metric: {metric}. Supported: {list(metrics.keys()) + ['transitions', 'stability', 'burial_fraction', 'exposure_fraction']}"
+        )
