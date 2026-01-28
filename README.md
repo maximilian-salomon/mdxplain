@@ -26,7 +26,7 @@ cd mdxplain
 Create a new conda environment with production dependencies, Jupyter, and nglview:
 
 ```bash
-make setup
+make setup-conda
 conda activate mdxplain
 ```
 
