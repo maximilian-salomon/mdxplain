@@ -53,7 +53,7 @@ class TestKernelPCALandmarkSelection:
                 n_components=2,
                 use_nystrom=True,
                 n_landmarks=n_landmarks,
-                landmark_selection="kmeans",
+                landmark_selection_mode="kmeans",
                 random_state=42
             )
 
@@ -93,7 +93,7 @@ class TestKernelPCALandmarkSelection:
             n_components=2,
             use_nystrom=True,
             n_landmarks=n_landmarks,
-            landmark_selection="random",
+            landmark_selection_mode="random",
             random_state=42
         )
 
@@ -150,7 +150,7 @@ class TestKernelPCALandmarkSelection:
                 n_components=n_components,
                 use_nystrom=True,
                 n_landmarks=5,
-                landmark_selection="random"
+                landmark_selection_mode="random"
             )
             
             # Check if warning was printed
@@ -165,14 +165,14 @@ class TestKernelPCALandmarkSelection:
             assert kwargs['batch_size'] >= n_components
 
     def test_invalid_landmark_selection(self):
-        """Test that a ValueError is raised for invalid landmark_selection values."""
+        """Test that a ValueError is raised for invalid landmark_selection_mode values."""
         calculator = KernelPCACalculator(use_memmap=False)
         data = np.random.rand(100, 10)
         
-        with pytest.raises(ValueError, match="Invalid landmark_selection"):
+        with pytest.raises(ValueError, match="Invalid landmark_selection_mode"):
             calculator.compute(
                 data,
                 n_components=2,
                 use_nystrom=True,
-                landmark_selection="invalid_method"
+                landmark_selection_mode="invalid_method"
             )

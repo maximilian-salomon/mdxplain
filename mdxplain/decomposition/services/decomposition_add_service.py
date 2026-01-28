@@ -153,7 +153,7 @@ class DecompositionAddService:
         gamma: Union[float, str, None] = "scale",
         use_nystrom: bool = False,
         n_landmarks: int = 10000,
-        landmark_selection: str = "kmeans",
+        landmark_selection_mode: str = "kmeans",
         random_state: Optional[int] = None,
         use_parallel: bool = False,
         n_jobs: int = -1,
@@ -191,7 +191,7 @@ class DecompositionAddService:
             Whether to use Nyström approximation for large datasets
         n_landmarks : int, default=10000
             Number of landmarks for Nyström approximation
-        landmark_selection : str, default="kmeans"
+        landmark_selection_mode : str, default="kmeans"
             Method for landmark selection in Nyström approximation:
             - "kmeans": Use KMeans centroids as landmarks (better coverage)
             - "random": Use random sampling from data
@@ -260,7 +260,7 @@ class DecompositionAddService:
             gamma=gamma,
             use_nystrom=use_nystrom,
             n_landmarks=n_landmarks,
-            landmark_selection=landmark_selection,
+            landmark_selection_mode=landmark_selection_mode,
             random_state=random_state,
             use_parallel=use_parallel,
             n_jobs=n_jobs,
@@ -414,7 +414,12 @@ class DecompositionAddService:
         epsilon: Optional[float] = None,
         use_nystrom: bool = False,
         n_landmarks: int = 1000,
+        landmark_selection_mode: str = "kmeans",
+        alpha: float = 0.0,
         random_state: Optional[int] = None,
+        epsilon_k: Optional[int] = None,
+        epsilon_n_samples: Optional[int] = None,
+        epsilon_ref_size: Optional[int] = None,
         decomposition_name: Optional[str] = None,
         data_selector_name: Optional[str] = None,
         force: bool = False,
@@ -438,8 +443,21 @@ class DecompositionAddService:
             Whether to use Nyström approximation for very large datasets
         n_landmarks : int, default=1000
             Number of landmarks for Nyström approximation
+        landmark_selection_mode : str, default="kmeans"
+            Landmark selection mode for Nyström approximation ("kmeans" or "random")
+        alpha : float, default=0.0
+            Diffusion maps alpha normalization parameter (0.0 = no density correction)
         random_state : int, optional
             Random state for reproducible results
+        epsilon_k : int, optional, default=None
+            k for k-NN epsilon estimation when epsilon is None. If None,
+            defaults to clamp(5 * log(n_frames), 20, 100).
+        epsilon_n_samples : int, optional, default=None
+            Number of samples used for epsilon estimation. If None, defaults
+            to 5% of frames (capped by ref size).
+        epsilon_ref_size : int, optional, default=None
+            Reference pool size used for epsilon estimation. If None, defaults
+            to 25% of frames.
         decomposition_name : str, optional
             Name for the decomposition result
         data_selector_name : str, optional
@@ -485,7 +503,12 @@ class DecompositionAddService:
             epsilon=epsilon,
             use_nystrom=use_nystrom,
             n_landmarks=n_landmarks,
+            landmark_selection_mode=landmark_selection_mode,
+            alpha=alpha,
             random_state=random_state,
+            epsilon_k=epsilon_k,
+            epsilon_n_samples=epsilon_n_samples,
+            epsilon_ref_size=epsilon_ref_size,
         )
         return self._manager.add_decomposition(
             self._pipeline_data,

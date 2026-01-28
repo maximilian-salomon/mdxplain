@@ -186,7 +186,7 @@ class KernelPCACalculator(CalculatorBase):
                 Whether to use Nyström approximation (default: False)
             - n_landmarks : int, optional
                 Number of landmarks for Nyström approximation (default: 10000)
-            - landmark_selection : str, optional
+            - landmark_selection_mode : str, optional
                 Method for landmark selection in Nyström approximation (default: "kmeans")
                 - "kmeans": Use KMeans centroids as landmarks (better coverage)
                 - "random": Use random sampling from data
@@ -342,7 +342,7 @@ class KernelPCACalculator(CalculatorBase):
         gamma = kwargs.get("gamma", None)
         use_nystrom = kwargs.get("use_nystrom", False)
         n_landmarks = kwargs.get("n_landmarks", 10000)
-        landmark_selection = kwargs.get("landmark_selection", "kmeans")
+        landmark_selection_mode = kwargs.get("landmark_selection_mode", "kmeans")
         random_state = kwargs.get("random_state", None)
         offset = kwargs.get("offset", 0)
 
@@ -354,8 +354,10 @@ class KernelPCACalculator(CalculatorBase):
             data, use_nystrom, n_landmarks, n_components
         )
 
-        if use_nystrom and landmark_selection not in ["kmeans", "random"]:
-            raise ValueError(f"Invalid landmark_selection: '{landmark_selection}'. Must be 'kmeans' or 'random'.")
+        if use_nystrom and landmark_selection_mode not in ["kmeans", "random"]:
+            raise ValueError(
+                f"Invalid landmark_selection_mode: '{landmark_selection_mode}'. Must be 'kmeans' or 'random'."
+            )
 
         return {
             "n_components": n_components,
@@ -363,7 +365,7 @@ class KernelPCACalculator(CalculatorBase):
             "gamma": gamma,
             "use_nystrom": use_nystrom,
             "n_landmarks": n_landmarks,
-            "landmark_selection": landmark_selection,
+            "landmark_selection_mode": landmark_selection_mode,
             "random_state": random_state,
             "auto_select": auto_select,
             "offset": offset,
@@ -911,7 +913,7 @@ class KernelPCACalculator(CalculatorBase):
         is_memmap_data = DataUtils.is_memmap_view(data)
         n_landmarks = hyperparameters["n_landmarks"]
         n_components = hyperparameters["n_components"]
-        landmark_selection = hyperparameters.get("landmark_selection", "kmeans")
+        landmark_selection_mode = hyperparameters.get("landmark_selection_mode", "kmeans")
 
         # Validate chunk size for IncrementalPCA
         # IPCA requires batch_size >= n_components
@@ -925,7 +927,7 @@ class KernelPCACalculator(CalculatorBase):
             if processing_chunk_size > n_samples:
                  raise ValueError(f"n_components ({n_components}) cannot be larger than n_samples ({n_samples})")
 
-        if landmark_selection == "kmeans":
+        if landmark_selection_mode == "kmeans":
             # Use optimized chunk-wise MiniBatchKMeans from base class
             # Returns indices of real data points closest to centroids
             landmark_idx = self._select_landmarks_kmeans(
@@ -947,7 +949,7 @@ class KernelPCACalculator(CalculatorBase):
             )
             nystroem.fit(landmarks)
 
-        elif landmark_selection == "random":
+        elif landmark_selection_mode == "random":
             rng = np.random.RandomState(hyperparameters["random_state"])
             landmark_idx = rng.choice(n_samples, n_landmarks, replace=False)
             landmark_idx = np.sort(landmark_idx)
@@ -962,7 +964,7 @@ class KernelPCACalculator(CalculatorBase):
             )
             nystroem.fit(landmarks)
         else:
-            raise ValueError("The parameter landmark_selection only knows 'random' or 'kmeans'.")
+            raise ValueError("The parameter landmark_selection_mode only knows 'random' or 'kmeans'.")
         
         # Step 2: IncrementalPCA for features (this is correct - PCA on features!)
         ipca = IncrementalPCA(

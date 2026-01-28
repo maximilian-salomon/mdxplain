@@ -128,7 +128,12 @@ class DiffusionMaps(DecompositionTypeBase):
         epsilon: Optional[float] = None,
         use_nystrom: bool = False,
         n_landmarks: int = 1000,
+        landmark_selection_mode: str = "kmeans",
+        alpha: float = 0.0,
         random_state: Optional[int] = None,
+        epsilon_k: Optional[int] = None,
+        epsilon_n_samples: Optional[int] = None,
+        epsilon_ref_size: Optional[int] = None,
     ) -> None:
         """
         Initialize Diffusion Maps decomposition type.
@@ -147,8 +152,21 @@ class DiffusionMaps(DecompositionTypeBase):
             Whether to use Nyström approximation for very large datasets
         n_landmarks : int, default=1000
             Number of landmarks for Nyström approximation
+        landmark_selection_mode : str, default="kmeans"
+            Landmark selection mode for Nyström approximation ("kmeans" or "random")
+        alpha : float, default=0.0
+            Diffusion maps alpha normalization parameter (0.0 = no density correction)
         random_state : int, optional
             Random state for reproducible results
+        epsilon_k : int, optional, default=None
+            k for k-NN epsilon estimation when epsilon is None. If None,
+            defaults to clamp(5 * log(n_frames), 20, 100).
+        epsilon_n_samples : int, optional, default=None
+            Number of samples used for epsilon estimation. If None, defaults
+            to 5% of frames (capped by ref size).
+        epsilon_ref_size : int, optional, default=None
+            Reference pool size used for epsilon estimation. If None, defaults
+            to 25% of frames.
 
         Returned Metadata
         -----------------
@@ -186,7 +204,12 @@ class DiffusionMaps(DecompositionTypeBase):
         self.epsilon = epsilon
         self.use_nystrom = use_nystrom
         self.n_landmarks = n_landmarks
+        self.landmark_selection_mode = landmark_selection_mode
+        self.alpha = alpha
         self.random_state = random_state
+        self.epsilon_k = epsilon_k
+        self.epsilon_n_samples = epsilon_n_samples
+        self.epsilon_ref_size = epsilon_ref_size
 
     @classmethod
     def get_type_name(cls) -> str:
@@ -333,6 +356,11 @@ class DiffusionMaps(DecompositionTypeBase):
             epsilon=self.epsilon,
             use_nystrom=self.use_nystrom,
             n_landmarks=self.n_landmarks,
+            landmark_selection_mode=self.landmark_selection_mode,
+            alpha=self.alpha,
             random_state=self.random_state,
+            epsilon_k=self.epsilon_k,
+            epsilon_n_samples=self.epsilon_n_samples,
+            epsilon_ref_size=self.epsilon_ref_size,
             **kwargs,
         )
