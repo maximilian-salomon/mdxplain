@@ -847,6 +847,7 @@ class DataSelectorManager:
         clustering_name: str,
         cluster_ids: Union[List[int], None] = None,
         noise_id: Union[int, None] = -1,
+        min_cluster_size: Union[int, None] = 2,
         force: bool = False,
     ) -> None:
         """
@@ -871,6 +872,11 @@ class DataSelectorManager:
             Cluster ID that represents noise/outliers to filter out.
             - If int: Filters out this specific cluster ID (e.g., -1 for sklearn)
             - If None: No filtering, creates selectors for ALL cluster IDs
+        min_cluster_size : int or None, optional
+            Minimum number of frames required for a cluster to be included.
+            If None, includes all clusters (except noise filtering).
+            Default is 2 to avoid single-frame clusters.
+            This is necessary for decision trees to work properly.
         force : bool, default=False
             Whether to overwrite existing selectors with same names.
             If False, raises ValueError when selector already exists.
@@ -913,6 +919,7 @@ class DataSelectorManager:
             clustering_name,
             cluster_ids,
             noise_id,
+            min_cluster_size,
             force,
         )
         pipeline_data.data_selector_groups[group_name] = group

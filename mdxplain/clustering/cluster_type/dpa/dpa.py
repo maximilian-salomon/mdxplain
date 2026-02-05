@@ -69,7 +69,7 @@ class DPA(ClusterTypeBase):
         self,
         Z: float = 1.0,
         metric: str = "euclidean",
-        affinity: str = "precomputed",
+        affinity: str = "nearest_neighbors",
         density_algo: str = "PAk",
         k_max: int = 1000,
         D_thr: float = 23.92812698,
@@ -105,7 +105,7 @@ class DPA(ClusterTypeBase):
             should take two arrays from X as input and return a value indicating
             the distance between them.
 
-        affinity : string or callable, default='precomputed'
+        affinity : string or callable, default='nearest_neighbors'
             How to construct the affinity matrix.
 
             - "nearest_neighbors": construct the affinity matrix by computing a
