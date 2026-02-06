@@ -632,7 +632,7 @@ def main() -> int:
     results_dir = Path("benchmark_results")
     cache_root = Path("cache/benchmark")
 
-    factors = [1, 5, 10, 30, 50]
+    factors = [1, 2, 3, 5, 10, 30, 50]
 
     datasets: List[tuple[str, Path]] = []
     for factor in factors:
