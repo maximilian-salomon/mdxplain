@@ -60,7 +60,7 @@ def main() -> int:
 
     noise_sigma_nm = 0.01
     seed = 7
-    factors = [5, 10, 30, 50]
+    factors = [2, 3, 5, 10, 30, 50]
 
     src_pdb, src_traj = _find_input_files(data_dir)
 

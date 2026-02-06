@@ -1,16 +1,17 @@
 #!/usr/bin/env python
-# Benchmark: create stacked trajectories + run standard pipeline (with plots).
+# Benchmark_standard_full: full in-memory baseline (no memmap), limited dataset sizes.
 
 from __future__ import annotations
 
 import json
 import os
 import shutil
+import sys
 import threading
 import time
 from dataclasses import dataclass, asdict
 from pathlib import Path
-from typing import Callable, List
+from typing import Callable, List, Optional, Tuple
 
 os.environ.setdefault("MPLBACKEND", "Agg")
 
@@ -72,8 +73,178 @@ def _get_rss_bytes() -> int:
     return 0
 
 
+def _read_smaps_rollup_kb(pid: int) -> dict[str, int]:
+    path = Path(f"/proc/{pid}/smaps_rollup")
+    if not path.exists():
+        return {}
+
+    stats: dict[str, int] = {}
+    try:
+        for line in path.read_text(encoding="utf-8", errors="ignore").splitlines():
+            if ":" not in line:
+                continue
+            key, rest = line.split(":", maxsplit=1)
+            value_str = rest.strip().split()[0]
+            stats[key] = int(value_str)
+    except (OSError, ValueError):
+        return {}
+    return stats
+
+
+def _get_non_cache_bytes() -> int:
+    # Linux-only approximation of "pressure memory":
+    # subtract clean file-backed pages (reclaimable cache) from RSS.
+    if not sys.platform.startswith("linux"):
+        return _get_rss_bytes()
+
+    try:
+        import psutil  # noqa: WPS433
+
+        process = psutil.Process(os.getpid())
+        all_processes = [process] + process.children(recursive=True)
+    except Exception:
+        all_processes = []
+
+    total_bytes = 0
+    found_any = False
+    for proc in all_processes:
+        try:
+            stats = _read_smaps_rollup_kb(proc.pid)
+        except Exception:
+            continue
+        if not stats:
+            continue
+        found_any = True
+        rss_kb = int(stats.get("Rss", 0))
+        clean_file_kb = int(stats.get("Shared_Clean", 0)) + int(stats.get("Private_Clean", 0))
+        non_cache_kb = max(0, rss_kb - clean_file_kb)
+        total_bytes += non_cache_kb * 1024
+
+    if found_any:
+        return total_bytes
+    return _get_rss_bytes()
+
+
+_CGROUP_MEMORY_FILES: Optional[Tuple[Optional[Path], Optional[Path]]] = None
+
+
+def _read_int_from_file(path: Optional[Path]) -> Optional[int]:
+    if path is None or not path.exists():
+        return None
+    try:
+        raw = path.read_text(encoding="utf-8", errors="ignore").strip()
+    except OSError:
+        return None
+    if not raw or raw == "max":
+        return None
+    try:
+        return int(raw)
+    except ValueError:
+        return None
+
+
+def _get_mem_available_bytes() -> Optional[int]:
+    if not sys.platform.startswith("linux"):
+        return None
+
+    meminfo_path = Path("/proc/meminfo")
+    if not meminfo_path.exists():
+        return None
+
+    try:
+        for line in meminfo_path.read_text(encoding="utf-8", errors="ignore").splitlines():
+            if not line.startswith("MemAvailable:"):
+                continue
+            value_kb = int(line.split()[1])
+            return value_kb * 1024
+    except (OSError, ValueError, IndexError):
+        return None
+    return None
+
+
+def _resolve_cgroup_memory_files() -> Tuple[Optional[Path], Optional[Path]]:
+    if not sys.platform.startswith("linux"):
+        return None, None
+
+    cgroup_file = Path("/proc/self/cgroup")
+    if not cgroup_file.exists():
+        return None, None
+
+    try:
+        lines = cgroup_file.read_text(encoding="utf-8", errors="ignore").splitlines()
+    except OSError:
+        return None, None
+
+    # cgroup v2
+    rel_path_v2: Optional[str] = None
+    for line in lines:
+        parts = line.split(":")
+        if len(parts) == 3 and parts[0] == "0" and parts[1] == "":
+            rel_path_v2 = parts[2].strip()
+            break
+    if rel_path_v2 is not None:
+        base = Path("/sys/fs/cgroup")
+        group_dir = base / rel_path_v2.lstrip("/")
+        current_candidates = [group_dir / "memory.current", base / "memory.current"]
+        limit_candidates = [group_dir / "memory.max", base / "memory.max"]
+        current = next((p for p in current_candidates if p.exists()), None)
+        limit = next((p for p in limit_candidates if p.exists()), None)
+        if current is not None or limit is not None:
+            return current, limit
+
+    # cgroup v1 (memory controller)
+    rel_path_v1: Optional[str] = None
+    for line in lines:
+        parts = line.split(":")
+        if len(parts) != 3:
+            continue
+        controllers = parts[1].split(",")
+        if "memory" in controllers:
+            rel_path_v1 = parts[2].strip()
+            break
+    if rel_path_v1 is not None:
+        base = Path("/sys/fs/cgroup/memory")
+        group_dir = base / rel_path_v1.lstrip("/")
+        current_candidates = [group_dir / "memory.usage_in_bytes", base / "memory.usage_in_bytes"]
+        limit_candidates = [group_dir / "memory.limit_in_bytes", base / "memory.limit_in_bytes"]
+        current = next((p for p in current_candidates if p.exists()), None)
+        limit = next((p for p in limit_candidates if p.exists()), None)
+        if current is not None or limit is not None:
+            return current, limit
+
+    return None, None
+
+
+def _get_cgroup_memory_bytes() -> Tuple[Optional[int], Optional[int]]:
+    global _CGROUP_MEMORY_FILES
+
+    if _CGROUP_MEMORY_FILES is None:
+        _CGROUP_MEMORY_FILES = _resolve_cgroup_memory_files()
+
+    current_path, limit_path = _CGROUP_MEMORY_FILES
+    current = _read_int_from_file(current_path)
+    limit = _read_int_from_file(limit_path)
+
+    # Some kernels expose a very large sentinel value as "unlimited".
+    if limit is not None and limit >= (1 << 60):
+        limit = None
+    return current, limit
+
+
 def _bytes_to_mb(value: int) -> float:
     return value / (1024 * 1024)
+
+
+def _bytes_to_mb_optional(value: Optional[int]) -> Optional[float]:
+    if value is None:
+        return None
+    return _bytes_to_mb(value)
+
+
+def _fmt_optional_mb(value: Optional[float]) -> str:
+    if value is None:
+        return "n/a"
+    return f"{value:.2f}"
 
 
 def _dir_size_bytes(path: Path) -> int:
@@ -94,6 +265,10 @@ class MemorySampler:
         self.interval_s = interval_s
         self._stop = threading.Event()
         self.max_rss = 0
+        self.max_non_cache = 0
+        self.min_mem_available: Optional[int] = None
+        self.max_cgroup_current = 0
+        self.cgroup_limit: Optional[int] = None
         self._thread = threading.Thread(target=self._run, daemon=True)
 
     def _run(self) -> None:
@@ -101,10 +276,27 @@ class MemorySampler:
             rss = _get_rss_bytes()
             if rss > self.max_rss:
                 self.max_rss = rss
+            non_cache = _get_non_cache_bytes()
+            if non_cache > self.max_non_cache:
+                self.max_non_cache = non_cache
+            mem_available = _get_mem_available_bytes()
+            if mem_available is not None:
+                if self.min_mem_available is None or mem_available < self.min_mem_available:
+                    self.min_mem_available = mem_available
+            cgroup_current, cgroup_limit = _get_cgroup_memory_bytes()
+            if cgroup_current is not None and cgroup_current > self.max_cgroup_current:
+                self.max_cgroup_current = cgroup_current
+            if cgroup_limit is not None:
+                self.cgroup_limit = cgroup_limit
             time.sleep(self.interval_s)
 
     def __enter__(self) -> "MemorySampler":
         self.max_rss = _get_rss_bytes()
+        self.max_non_cache = _get_non_cache_bytes()
+        self.min_mem_available = _get_mem_available_bytes()
+        cgroup_current, cgroup_limit = _get_cgroup_memory_bytes()
+        self.max_cgroup_current = cgroup_current or 0
+        self.cgroup_limit = cgroup_limit
         self._thread.start()
         return self
 
@@ -125,6 +317,16 @@ class StepResult:
     rss_start_mb: float
     rss_end_mb: float
     rss_peak_mb: float
+    non_cache_start_mb: float
+    non_cache_end_mb: float
+    non_cache_peak_mb: float
+    mem_available_start_mb: Optional[float]
+    mem_available_end_mb: Optional[float]
+    mem_available_min_mb: Optional[float]
+    cgroup_current_start_mb: Optional[float]
+    cgroup_current_end_mb: Optional[float]
+    cgroup_current_peak_mb: Optional[float]
+    cgroup_limit_mb: Optional[float]
     cache_size_mb: float
 
 
@@ -134,8 +336,7 @@ def _run_pipeline(dataset_dir: Path, cache_dir: Path, results_path: Path) -> Non
     cache_dir.mkdir(parents=True, exist_ok=True)
 
     pipeline = PipelineManager(
-        use_memmap=True,
-        chunk_size=2000,
+        use_memmap=False,
         show_progress=False,
         cache_dir=str(cache_dir),
     )
@@ -148,7 +349,7 @@ def _run_pipeline(dataset_dir: Path, cache_dir: Path, results_path: Path) -> Non
     def add_step(name: str, func: Callable[[], None]) -> None:
         steps.append((name, func))
 
-    # Standard pipeline (from tutorials/02_VillinHeadpiece_Full_Analysis.ipynb)
+    # Full standard profile pipeline (from tutorials/02_VillinHeadpiece_Full_Analysis.ipynb)
     add_step("load_trajectories", lambda: pipeline.trajectory.load_trajectories(str(dataset_dir)))
     add_step("add_labels", lambda: pipeline.trajectory.add_labels(traj_selection="all"))
     add_step("add_distances", lambda: pipeline.feature.add.distances())
@@ -162,8 +363,6 @@ def _run_pipeline(dataset_dir: Path, cache_dir: Path, results_path: Path) -> Non
             n_components=4,
             selection_name="contacts_only",
             decomposition_name="ContactKernelPCA",
-            use_nystrom=True,
-            n_landmarks=2000,
         ),
     )
     add_step(
@@ -174,7 +373,7 @@ def _run_pipeline(dataset_dir: Path, cache_dir: Path, results_path: Path) -> Non
             metric="euclidean",
             affinity="nearest_neighbors",
             cluster_name="DPA_ContactKernelPCA",
-            method="knn_sampling",
+            method="standard",
         ),
     )
     add_step(
@@ -314,12 +513,19 @@ def _run_pipeline(dataset_dir: Path, cache_dir: Path, results_path: Path) -> Non
 
     for name, func in steps:
         rss_start = _get_rss_bytes()
+        non_cache_start = _get_non_cache_bytes()
+        mem_available_start = _get_mem_available_bytes()
+        cgroup_current_start, cgroup_limit_start = _get_cgroup_memory_bytes()
         t0 = time.perf_counter()
         with MemorySampler() as sampler:
             func()
         elapsed = time.perf_counter() - t0
         rss_end = _get_rss_bytes()
+        non_cache_end = _get_non_cache_bytes()
+        mem_available_end = _get_mem_available_bytes()
+        cgroup_current_end, cgroup_limit_end = _get_cgroup_memory_bytes()
         cache_size = _dir_size_bytes(cache_dir)
+        cgroup_limit = cgroup_limit_start or cgroup_limit_end or sampler.cgroup_limit
 
         results.append(
             StepResult(
@@ -328,6 +534,18 @@ def _run_pipeline(dataset_dir: Path, cache_dir: Path, results_path: Path) -> Non
                 rss_start_mb=_bytes_to_mb(rss_start),
                 rss_end_mb=_bytes_to_mb(rss_end),
                 rss_peak_mb=_bytes_to_mb(sampler.max_rss),
+                non_cache_start_mb=_bytes_to_mb(non_cache_start),
+                non_cache_end_mb=_bytes_to_mb(non_cache_end),
+                non_cache_peak_mb=_bytes_to_mb(sampler.max_non_cache),
+                mem_available_start_mb=_bytes_to_mb_optional(mem_available_start),
+                mem_available_end_mb=_bytes_to_mb_optional(mem_available_end),
+                mem_available_min_mb=_bytes_to_mb_optional(sampler.min_mem_available),
+                cgroup_current_start_mb=_bytes_to_mb_optional(cgroup_current_start),
+                cgroup_current_end_mb=_bytes_to_mb_optional(cgroup_current_end),
+                cgroup_current_peak_mb=_bytes_to_mb_optional(
+                    sampler.max_cgroup_current if sampler.max_cgroup_current > 0 else None
+                ),
+                cgroup_limit_mb=_bytes_to_mb_optional(cgroup_limit),
                 cache_size_mb=_bytes_to_mb(cache_size),
             )
         )
@@ -338,12 +556,27 @@ def _run_pipeline(dataset_dir: Path, cache_dir: Path, results_path: Path) -> Non
         )
         print(
             f"[{results_path.parent.name}] step={name} "
-            f"seconds={elapsed:.2f} rss_peak_mb={_bytes_to_mb(sampler.max_rss):.2f}",
+            f"seconds={elapsed:.2f} "
+            f"rss_peak_mb={_bytes_to_mb(sampler.max_rss):.2f} "
+            f"non_cache_peak_mb={_bytes_to_mb(sampler.max_non_cache):.2f} "
+            f"mem_available_min_mb={_fmt_optional_mb(_bytes_to_mb_optional(sampler.min_mem_available))} "
+            f"cgroup_peak_mb={_fmt_optional_mb(_bytes_to_mb_optional(sampler.max_cgroup_current if sampler.max_cgroup_current > 0 else None))}",
             flush=True,
         )
 
     total_seconds = sum(step.seconds for step in results)
     peak_rss_mb = max((step.rss_peak_mb for step in results), default=0.0)
+    peak_non_cache_mb = max((step.non_cache_peak_mb for step in results), default=0.0)
+    mem_available_values = [step.mem_available_min_mb for step in results if step.mem_available_min_mb is not None]
+    min_mem_available_mb = min(mem_available_values) if mem_available_values else None
+    cgroup_peak_values = [
+        step.cgroup_current_peak_mb for step in results if step.cgroup_current_peak_mb is not None
+    ]
+    peak_cgroup_current_mb = max(cgroup_peak_values) if cgroup_peak_values else None
+    cgroup_limit_mb = next((step.cgroup_limit_mb for step in results if step.cgroup_limit_mb is not None), None)
+    cgroup_peak_of_limit_pct = None
+    if cgroup_limit_mb and peak_cgroup_current_mb:
+        cgroup_peak_of_limit_pct = (peak_cgroup_current_mb / cgroup_limit_mb) * 100.0
     cache_size_mb = _bytes_to_mb(_dir_size_bytes(cache_dir))
 
     summary_path = output_root / "summary.json"
@@ -352,15 +585,29 @@ def _run_pipeline(dataset_dir: Path, cache_dir: Path, results_path: Path) -> Non
             {
                 "total_seconds": total_seconds,
                 "peak_rss_mb": peak_rss_mb,
+                "peak_non_cache_mb": peak_non_cache_mb,
+                "min_mem_available_mb": min_mem_available_mb,
+                "peak_cgroup_current_mb": peak_cgroup_current_mb,
+                "cgroup_limit_mb": cgroup_limit_mb,
+                "cgroup_peak_of_limit_pct": cgroup_peak_of_limit_pct,
                 "cache_size_mb": cache_size_mb,
             },
             indent=2,
         ),
         encoding="utf-8",
     )
+    cgroup_pct_str = (
+        f"{cgroup_peak_of_limit_pct:.2f}" if cgroup_peak_of_limit_pct is not None else "n/a"
+    )
     print(
         f"[{output_root.name}] total_seconds={total_seconds:.2f}, "
-        f"peak_rss_mb={peak_rss_mb:.2f}, cache_size_mb={cache_size_mb:.2f}"
+        f"peak_rss_mb={peak_rss_mb:.2f}, "
+        f"peak_non_cache_mb={peak_non_cache_mb:.2f}, "
+        f"min_mem_available_mb={_fmt_optional_mb(min_mem_available_mb)}, "
+        f"peak_cgroup_current_mb={_fmt_optional_mb(peak_cgroup_current_mb)}, "
+        f"cgroup_limit_mb={_fmt_optional_mb(cgroup_limit_mb)}, "
+        f"cgroup_peak_of_limit_pct={cgroup_pct_str}, "
+        f"cache_size_mb={cache_size_mb:.2f}"
     )
 
     plots_dir = output_root / "plots"
@@ -379,19 +626,17 @@ def _run_pipeline(dataset_dir: Path, cache_dir: Path, results_path: Path) -> Non
 
 def main() -> int:
     out_root = Path("data/benchmarks")
-    results_dir = Path("benchmark_results")
-    cache_root = Path("cache/benchmark")
+    results_dir = Path("benchmark_results_standard_full")
+    cache_root = Path("cache/benchmark_standard_full")
 
-    factors = [1, 5, 10, 30, 50]
+    dataset_specs: List[tuple[str, Path]] = [
+        ("2RJY", Path("data/2RJY")),
+        ("2RJY_frames20k", out_root / "2RJY_frames20k"),
+        ("2RJY_frames30k", out_root / "2RJY_frames30k"),
+    ]
 
     datasets: List[tuple[str, Path]] = []
-    for factor in factors:
-        if factor == 1:
-            name = "2RJY"
-            out_dir = Path("data/2RJY")
-        else:
-            name = f"2RJY_stack{factor}x"
-            out_dir = out_root / name
+    for name, out_dir in dataset_specs:
         if not out_dir.exists():
             raise FileNotFoundError(
                 f"Missing dataset: {out_dir}. Run dev_scripts/benchmark_generate_data.py first."
