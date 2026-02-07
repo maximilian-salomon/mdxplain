@@ -631,8 +631,8 @@ def main() -> int:
 
     dataset_specs: List[tuple[str, Path]] = [
         ("2RJY", Path("data/2RJY")),
-        ("2RJY_frames20k", out_root / "2RJY_frames20k"),
-        ("2RJY_frames30k", out_root / "2RJY_frames30k"),
+        ("2RJY_stack2x", out_root / "2RJY_stack2x"),
+        ("2RJY_stack3x", out_root / "2RJY_stack3x"),
     ]
 
     datasets: List[tuple[str, Path]] = []
