@@ -106,6 +106,9 @@ class LandscapePlotter:
         center_marker: str = 'X',
         center_size: int = 200,
         scatter_size: int = 1,
+        background_color: Union[bool, str] = True,
+        class_colors: Union[bool, Dict, List] = True,
+        tag_densities: bool = False,
         title: Optional[str] = None,
         xaxis_label: Optional[str] = None,
         yaxis_label: Optional[str] = None,
@@ -188,6 +191,20 @@ class LandscapePlotter:
             points (cluster-colored, tag-colored, gray, and unselected).
             Typical values: 1 (tiny), 5-10 (small), 20-50 (medium), 100+ (large).
             Note: Cluster centers use `center_size` parameter separately.
+        background_color : Union[bool, str], default=True
+            Background colormap control:
+            - True: default background (current behavior)
+            - False: disable background
+            - str/Colormap: custom background colormap
+        class_colors : Union[bool, Dict, List], default=True
+            Class color control:
+            - True: default colors (current behavior)
+            - False: all classes gray
+            - Dict: explicit mapping (cluster_id/tag -> color)
+            - List: colors assigned in plotting order
+        tag_densities : bool, default=False
+            If True and tag_coloring is set, plot tag densities (KDE contours)
+            instead of tag scatter.
         title : Optional[str], default=None
             Custom title (overrides auto-generated)
         xaxis_label : Optional[str], default=None
@@ -283,6 +300,11 @@ class LandscapePlotter:
                 clustering_name, scatter_show_all, labels
             )
 
+        # Apply class color overrides if requested
+        cluster_colors, tag_colors = self._apply_class_colors(
+            class_colors, labels, cluster_colors, frame_tag_map, tag_colors
+        )
+
         # Setup figure layout
         dim_pairs = LayoutCalculatorHelper.create_dimension_pairs(dimensions)
         fig, axes, n_plots, n_rows, n_cols, fig_width, fig_height = self._setup_figure(
@@ -316,6 +338,8 @@ class LandscapePlotter:
                 center_marker,
                 center_size,
                 scatter_size,
+                background_color,
+                tag_densities,
                 xaxis_label,
                 yaxis_label,
                 xlim,
@@ -501,6 +525,93 @@ class LandscapePlotter:
             unselected_mask = labels == -1
             return np.where(unselected_mask)[0].tolist()
         return None
+
+    def _apply_class_colors(
+        self,
+        class_colors: Union[bool, Dict, List, None],
+        labels: Optional[np.ndarray],
+        cluster_colors: Optional[Dict[int, str]],
+        frame_tag_map: Optional[Dict[int, str]],
+        tag_colors: Optional[Dict[str, str]]
+    ) -> Tuple[Optional[Dict[int, str]], Optional[Dict[str, str]]]:
+        """
+        Apply class color overrides for clusters/tags.
+
+        Parameters
+        ----------
+        class_colors : Union[bool, Dict, List, None]
+            True = default, False = all gray, Dict = explicit mapping,
+            List = assign in plotting order.
+        labels : Optional[np.ndarray]
+            Cluster labels
+        cluster_colors : Optional[Dict[int, str]]
+            Default cluster colors
+        frame_tag_map : Optional[Dict[int, str]]
+            Tag mapping (if tag coloring used)
+        tag_colors : Optional[Dict[str, str]]
+            Default tag colors
+
+        Returns
+        -------
+        Tuple[Optional[Dict[int, str]], Optional[Dict[str, str]]]
+            Updated cluster_colors, tag_colors
+        """
+        if class_colors is None:
+            class_colors = False
+
+        if class_colors is True:
+            return cluster_colors, tag_colors
+
+        gray = "#808080"
+
+        if class_colors is False:
+            if cluster_colors is not None:
+                cluster_colors = {k: gray for k in cluster_colors.keys()}
+            if tag_colors is not None:
+                tag_colors = {k: gray for k in tag_colors.keys()}
+            return cluster_colors, tag_colors
+
+        if isinstance(class_colors, dict):
+            if cluster_colors is not None:
+                cluster_colors = {**cluster_colors}
+                for key, color in class_colors.items():
+                    if key in cluster_colors:
+                        cluster_colors[key] = color
+            if tag_colors is not None:
+                tag_colors = {**tag_colors}
+                for key, color in class_colors.items():
+                    if key in tag_colors:
+                        tag_colors[key] = color
+            return cluster_colors, tag_colors
+
+        if isinstance(class_colors, (list, tuple)):
+            colors_list = list(class_colors)
+            if colors_list:
+                if tag_colors is not None and frame_tag_map is not None:
+                    tag_order = self._ordered_unique(list(frame_tag_map.values()))
+                    tag_colors = {tag: colors_list[i % len(colors_list)] for i, tag in enumerate(tag_order)}
+                if cluster_colors is not None and labels is not None:
+                    cluster_colors = {**cluster_colors}
+                    cluster_order = self._ordered_unique([int(lbl) for lbl in labels if lbl >= 0])
+                    for i, cluster_id in enumerate(cluster_order):
+                        cluster_colors[cluster_id] = colors_list[i % len(colors_list)]
+            return cluster_colors, tag_colors
+
+        return cluster_colors, tag_colors
+
+    @staticmethod
+    def _ordered_unique(items: List) -> List:
+        """
+        Return unique items preserving order.
+        """
+        seen = set()
+        ordered = []
+        for item in items:
+            if item in seen:
+                continue
+            seen.add(item)
+            ordered.append(item)
+        return ordered
 
     def _determine_legend_type(
         self,
@@ -721,6 +832,8 @@ class LandscapePlotter:
         center_marker: str,
         center_size: int,
         scatter_size: int,
+        background_color: Union[bool, str],
+        tag_densities: bool,
         xaxis_label: Optional[str],
         yaxis_label: Optional[str],
         xlim: Optional[Tuple[float, float]],
@@ -801,7 +914,7 @@ class LandscapePlotter:
 
         self._plot_background(
             ax, data_x, data_y, bins, temperature, xlim, ylim,
-            energy_values, use_kde, mask_empty_bins,
+            energy_values, use_kde, mask_empty_bins, background_color,
             contour_label_fontsize, tick_fontsize
         )
 
@@ -809,6 +922,7 @@ class LandscapePlotter:
             ax, data_x, data_y, labels, cluster_colors, alpha,
             cluster_contour, cluster_contour_voronoi, bins, data_scatter,
             contour_label_fontsize, frame_tag_map, tag_colors, unselected_indices,
+            tag_densities,
             scatter_size
         )
 
@@ -901,6 +1015,7 @@ class LandscapePlotter:
         energy_values: bool,
         use_kde: bool,
         mask_empty_bins: bool,
+        background_color: Union[bool, str],
         contour_label_fontsize: Optional[int],
         tick_fontsize: Optional[int]
     ) -> None:
@@ -938,10 +1053,16 @@ class LandscapePlotter:
         -------
         None
         """
+        if background_color is False:
+            return
+
+        cmap = None if background_color is True else background_color
+
         if energy_values:
             LandscapeRenderingHelper.plot_energy_background(
                 ax, data_x, data_y, bins, temperature, xlim, ylim,
                 use_kde=use_kde, mask_empty_bins=mask_empty_bins,
+                cmap=cmap,
                 contour_label_fontsize=contour_label_fontsize,
                 tick_fontsize=tick_fontsize
             )
@@ -949,6 +1070,7 @@ class LandscapePlotter:
             LandscapeRenderingHelper.plot_density_background(
                 ax, data_x, data_y, bins, xlim, ylim,
                 use_kde=use_kde, mask_empty_bins=mask_empty_bins,
+                cmap=cmap,
                 contour_label_fontsize=contour_label_fontsize,
                 tick_fontsize=tick_fontsize
             )
@@ -969,6 +1091,7 @@ class LandscapePlotter:
         frame_tag_map: Optional[Dict[int, str]],
         tag_colors: Optional[Dict[str, str]],
         unselected_indices: Optional[List[int]],
+        tag_densities: bool,
         scatter_size: int
     ) -> None:
         """
@@ -1011,6 +1134,16 @@ class LandscapePlotter:
         -------
         None
         """
+        if frame_tag_map is not None and tag_densities:
+            LandscapeRenderingHelper._plot_unselected_if_needed(
+                ax, data_x, data_y, unselected_indices, alpha, scatter_size
+            )
+            LandscapeRenderingHelper.plot_tag_density_contours(
+                ax, data_x, data_y, frame_tag_map, tag_colors, bins,
+                contour_label_fontsize=contour_label_fontsize
+            )
+            return
+
         if labels is not None and cluster_contour:
             if cluster_contour_voronoi:
                 LandscapeRenderingHelper.plot_cluster_voronoi(
