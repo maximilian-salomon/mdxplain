@@ -30,7 +30,8 @@ import os
 import numpy as np
 from typing import Dict, Tuple, Optional, List, Any, TYPE_CHECKING
 
-from ...utils.data_utils import DataUtils
+from ...utils.memmap_utils import MemmapUtils
+from ...utils.path_utils import PathUtils
 from ...utils.resource_utils import ResourceUtils
 
 if TYPE_CHECKING:
@@ -162,6 +163,7 @@ class SelectionMatrixHelper:
             Matrix and frame mapping, or None if cache invalid
         """
         memmap_path, frame_mapping = pipeline_data._matrix_cache[cache_key]
+        memmap_path = PathUtils.prepare_file_path(memmap_path)
 
         # Verify cached file exists
         if not os.path.exists(memmap_path):
@@ -183,10 +185,13 @@ class SelectionMatrixHelper:
             return None
 
         # Load cached memmap
-        matrix = np.memmap(
-            memmap_path, dtype=pipeline_data.dtype, mode='r+', shape=(n_rows, n_cols)
+        matrix = MemmapUtils.create_memmap(
+            path=memmap_path,
+            dtype=pipeline_data.dtype,
+            mode="r+",
+            shape=(n_rows, n_cols),
+            close_existing=False,
         )
-        ResourceUtils.tune_memmap(matrix, "random")
 
         return matrix, frame_mapping
 
@@ -265,16 +270,18 @@ class SelectionMatrixHelper:
         """
         if use_memmap:
             # Generate memmap path
-            memmap_path = DataUtils.get_cache_file_path(
+            memmap_path = PathUtils.get_cache_file_path(
                 cache_path=cache_dir,
                 cache_name=f"selection_matrix_{name}.dat"
             )
 
             # Create new memmap
-            matrix = np.memmap(
-                memmap_path, dtype=dtype, mode='w+', shape=shape
+            matrix = MemmapUtils.create_memmap(
+                path=memmap_path,
+                dtype=dtype,
+                mode="w+",
+                shape=shape,
             )
-            ResourceUtils.tune_memmap(matrix, "random")
 
             return matrix, memmap_path
 

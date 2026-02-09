@@ -28,6 +28,7 @@ for efficient processing of large trajectory files.
 from __future__ import annotations
 
 from typing import Optional, Union, Tuple
+import gc
 import os
 import pickle
 import shutil
@@ -36,6 +37,8 @@ import zarr
 import dask.array as da
 import mdtraj as md
 
+from ...utils.cleanup_utils import CleanupUtils
+from ...utils.path_utils import PathUtils
 from ...utils.progress_utils import ProgressUtils
 
 from zarr.codecs import BloscCodec
@@ -939,10 +942,46 @@ class DaskMDTrajectory:
         # Clear memory caches
         self._xyz_cache = None
         self._time_cache = None
-        
-        # Close Zarr store reference
-        if hasattr(self, '_zarr_store'):
-            del self._zarr_store
+
+        # Release Dask-backed array references that may keep file handles alive.
+        if hasattr(self, "_dask_coords"):
+            self._dask_coords = None
+        if hasattr(self, "_dask_time"):
+            self._dask_time = None
+        if hasattr(self, "_dask_unitcell_vectors"):
+            self._dask_unitcell_vectors = None
+        if hasattr(self, "_dask_unitcell_lengths"):
+            self._dask_unitcell_lengths = None
+        if hasattr(self, "_dask_unitcell_angles"):
+            self._dask_unitcell_angles = None
+
+        # Release helper-held zarr references.
+        parallel_ops = getattr(self, "_parallel_ops", None)
+        if parallel_ops is not None and hasattr(parallel_ops, "cleanup"):
+            parallel_ops.cleanup()
+        self._parallel_ops = None
+
+        # Close and drop the direct zarr store reference.
+        zarr_store = getattr(self, "_zarr_store", None)
+        if zarr_store is not None:
+            CleanupUtils.close_zarr_store(zarr_store)
+            self._zarr_store = None
+
+        gc.collect()
+
+    def __del__(self) -> None:
+        """
+        Best-effort release of runtime resources during object destruction.
+
+        Returns
+        -------
+        None
+            Calls cleanup() and suppresses any teardown exceptions.
+        """
+        try:
+            self.cleanup()
+        except Exception:
+            pass
 
     def memory_usage(self) -> dict:
         """
@@ -1102,15 +1141,18 @@ class DaskMDTrajectory:
             swap_path = self._get_swap_path(self.zarr_cache_path)
             
             # Execute operation to swap path
-            operation_func(swap_path, **kwargs)
+            result_store = operation_func(swap_path, **kwargs)
+            CleanupUtils.close_zarr_store(result_store)
             
-            # Close current store to release file handles
-            if hasattr(self, '_zarr_store'):
-                del self._zarr_store
+            # Release current in-memory/zarr handles before replacing cache.
+            self.cleanup()
             
             # Replace original with swap
             if os.path.exists(self.zarr_cache_path):
-                shutil.rmtree(self.zarr_cache_path)
+                CleanupUtils.remove_tree(
+                    self.zarr_cache_path,
+                    purpose="trajectory zarr cache directory",
+                )
             shutil.move(swap_path, self.zarr_cache_path)
             
             # Reload attributes from the updated store
@@ -1374,10 +1416,11 @@ class DaskMDTrajectory:
         >>> traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
         >>> traj.save('output/my_traj.pkl')
         """
-        # Ensure parent directory exists
-        parent_dir = os.path.dirname(filepath)
-        if parent_dir:
-            os.makedirs(parent_dir, exist_ok=True)
+        filepath = PathUtils.prepare_file_path(
+            filepath,
+            create_parent=True,
+            purpose="trajectory save path",
+        )
         
         with open(filepath, 'wb') as f:
             pickle.dump(self, f)
@@ -1410,6 +1453,11 @@ class DaskMDTrajectory:
         --------
         >>> traj = DaskMDTrajectory.load('output/my_traj.pkl')
         """
+        filepath = PathUtils.prepare_file_path(
+            filepath,
+            create_parent=False,
+            purpose="trajectory load path",
+        )
         if not os.path.exists(filepath):
             raise FileNotFoundError(f"Trajectory file not found: {filepath}")
             

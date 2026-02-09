@@ -31,7 +31,7 @@ from typing import Any, Dict, Optional, Tuple
 import numpy as np
 from mdxplain.utils.progress_utils import ProgressUtils
 from mdxplain.utils.resource_utils import ResourceUtils
-from mdxplain.utils.data_utils import DataUtils
+from mdxplain.utils.memmap_utils import MemmapUtils
 from scipy.sparse import vstack
 from sklearn.cluster import DBSCAN as SklearnDBSCAN
 from sklearn.neighbors import NearestNeighbors
@@ -274,7 +274,7 @@ class DBSCANCalculator(CalculatorBase):
         chunk_size = self.chunk_size
         sparse_matrices = []
 
-        is_memmap_data = DataUtils.is_memmap_view(data)
+        is_memmap_data = MemmapUtils.is_memmap_view(data)
         if is_memmap_data:
             ResourceUtils.tune_memmap(data, "sequential")
         for chunk_start in ProgressUtils.iterate(

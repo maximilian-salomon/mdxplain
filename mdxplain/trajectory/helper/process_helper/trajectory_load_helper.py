@@ -34,6 +34,7 @@ from pathlib import Path
 import mdtraj as md
 
 from mdxplain.utils.progress_utils import ProgressUtils
+from mdxplain.utils.path_utils import PathUtils
 
 from ...entities.dask_md_trajectory import DaskMDTrajectory
 
@@ -122,7 +123,21 @@ class TrajectoryLoadHelper:
             return TrajectoryLoadHelper._load_from_list(data_input, concat, selection, use_memmap, chunk_size, cache_dir)
 
         if isinstance(data_input, str) and os.path.exists(data_input):
-            return TrajectoryLoadHelper._load_from_directory(data_input, concat, stride, selection, use_memmap, chunk_size, cache_dir)
+            normalized_input = PathUtils.prepare_directory_path(
+                data_input,
+                create=False,
+                purpose="trajectory input directory",
+            )
+            if os.path.exists(normalized_input):
+                return TrajectoryLoadHelper._load_from_directory(
+                    normalized_input,
+                    concat,
+                    stride,
+                    selection,
+                    use_memmap,
+                    chunk_size,
+                    cache_dir,
+                )
 
         warnings.warn(
             f"Invalid data input: {data_input}. Expected list of trajectories or valid path."

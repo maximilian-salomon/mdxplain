@@ -31,7 +31,7 @@ import numpy as np
 
 from mdxplain.utils.progress_utils import ProgressUtils
 from mdxplain.utils.resource_utils import ResourceUtils
-from mdxplain.utils.data_utils import DataUtils
+from mdxplain.utils.memmap_utils import MemmapUtils
 
 from ..helper.calculator_compute_helper import CalculatorComputeHelper
 from ..interfaces.calculator_base import CalculatorBase
@@ -133,8 +133,8 @@ class ContactCalculator(CalculatorBase):
         if self.chunk_size is None:
             self.chunk_size = distances.shape[0]
 
-        is_memmap_contacts = DataUtils.is_memmap_view(contacts)
-        is_memmap_distances = DataUtils.is_memmap_view(distances)
+        is_memmap_contacts = MemmapUtils.is_memmap_view(contacts)
+        is_memmap_distances = MemmapUtils.is_memmap_view(distances)
         if is_memmap_contacts:
             ResourceUtils.tune_memmap(contacts, "sequential")
         if is_memmap_distances:

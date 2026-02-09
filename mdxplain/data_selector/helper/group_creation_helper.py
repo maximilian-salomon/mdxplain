@@ -63,6 +63,7 @@ class GroupCreationHelper:
         clustering_name: str,
         cluster_ids: Union[List[int], None] = None,
         noise_id: Union[int, None] = -1,
+        min_cluster_size: Union[int, None] = 2,
         force: bool = False,
     ) -> DataSelectorGroup:
         """
@@ -89,6 +90,10 @@ class GroupCreationHelper:
             
             - If int: Filters out this specific cluster ID (e.g., -1 for sklearn)
             - If None: No filtering, creates selectors for ALL cluster IDs
+        min_cluster_size : int or None, optional
+            Minimum number of frames required for a cluster to be included.
+            Default is 2 to avoid single-frame clusters (Decision Trees need >=2).
+            If None, includes all clusters (except noise filtering).
         force : bool, default=False
             Whether to overwrite existing selectors with same names.
             If False, raises ValueError when selector already exists.
@@ -132,6 +137,10 @@ class GroupCreationHelper:
         )
         cluster_data = pipeline_data.cluster_data[clustering_name]
         labels = cluster_data.get_labels()
+        counts = {}
+        for label in labels:
+            key = int(label)
+            counts[key] = counts.get(key, 0) + 1
         all_cluster_ids = [int(cid) for cid in sorted(set(labels))]
 
         group = DataSelectorGroup(group_name)
@@ -141,6 +150,10 @@ class GroupCreationHelper:
                 continue
             # Skip if not in filter
             if cluster_ids is not None and cid not in cluster_ids:
+                continue
+            # Skip if cluster is too small
+            # Decision Trees fail on single-frame clusters, so filter them by default.
+            if min_cluster_size is not None and counts.get(cid, 0) < min_cluster_size:
                 continue
             GroupCreationHelper._create_cluster_selector(
                 pipeline_data, manager, group, group_name, clustering_name, cid, force

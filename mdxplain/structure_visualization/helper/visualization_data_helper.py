@@ -29,7 +29,6 @@ and StructureVizFeatureService.
 
 from __future__ import annotations
 
-import os
 from typing import Dict, List, Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -38,6 +37,7 @@ if TYPE_CHECKING:
 
 from ...utils.color_utils import ColorUtils
 from ...utils.feature_metadata_utils import FeatureMetadataUtils
+from ...utils.path_utils import PathUtils
 from ...utils.top_features_utils import TopFeaturesUtils
 
 
@@ -93,7 +93,7 @@ class VisualizationDataHelper:
 
         Notes
         -----
-        - Paths converted to absolute using os.path.abspath()
+        - Paths normalized via PathUtils.prepare_file_path()
         - Colors generated using ColorUtils.generate_distinct_colors()
         - Color assignment follows sub-comparison order
         """
@@ -110,7 +110,11 @@ class VisualizationDataHelper:
 
             if pdb_path is not None:
                 pdb_info[comp_id] = {
-                    "path": os.path.abspath(pdb_path),
+                    "path": PathUtils.prepare_file_path(
+                        pdb_path,
+                        create_parent=False,
+                        purpose="pdb path",
+                    ),
                     "color": structure_colors[i]
                 }
 
@@ -151,7 +155,7 @@ class VisualizationDataHelper:
 
         Notes
         -----
-        - Paths converted to absolute using os.path.abspath()
+        - Paths normalized via PathUtils.prepare_file_path()
         - Colors generated using ColorUtils.generate_distinct_colors()
         - Color assignment follows dictionary iteration order
         """
@@ -166,7 +170,11 @@ class VisualizationDataHelper:
         # Build pdb_info with assigned colors
         for i, (struct_id, pdb_path) in enumerate(all_pdbs.items()):
             pdb_info[struct_id] = {
-                "path": os.path.abspath(pdb_path),
+                "path": PathUtils.prepare_file_path(
+                    pdb_path,
+                    create_parent=False,
+                    purpose="pdb path",
+                ),
                 "color": structure_colors[i]
             }
 

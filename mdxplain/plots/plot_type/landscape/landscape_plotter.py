@@ -37,7 +37,7 @@ from .helper.landscape_tag_coloring_helper import LandscapeTagColoringHelper
 from ...helper.validation_helper import ValidationHelper
 from ...helper.clustering_data_helper import ClusteringDataHelper
 from ...helper.svg_export_helper import SvgExportHelper
-from ....utils.data_utils import DataUtils
+from ....utils.path_utils import PathUtils
 from ....decomposition.entities.decomposition_data import DecompositionData
 
 
@@ -1398,6 +1398,6 @@ class LandscapePlotter:
             )
         if not filename.endswith(f".{file_format}"):
             filename = f"{filename}.{file_format}"
-        filepath = DataUtils.get_cache_file_path(filename, self.cache_dir)
+        filepath = PathUtils.get_cache_file_path(filename, self.cache_dir)
         fig.savefig(filepath, dpi=dpi, format=file_format, bbox_inches='tight')
         print(f"Figure saved to: {filepath}")

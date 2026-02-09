@@ -28,7 +28,8 @@ chunk-wise processing for large datasets.
 """
 
 import numpy as np
-from .....utils import DataUtils
+from .....utils.memmap_utils import MemmapUtils
+from .....utils import PathUtils
 from .....utils.resource_utils import ResourceUtils
 
 
@@ -78,11 +79,14 @@ class DSSPEncodingHelper:
         Space conversion happens centrally in dssp_calculator before this method
         is called, so dssp_data is already cleaned.
         """
-        cache_file = DataUtils.get_cache_file_path(
+        cache_file = PathUtils.get_cache_file_path(
             f'dssp_char_{id(dssp_data)}.dat', cache_path
         )
-        encoded = np.memmap(
-            cache_file, dtype='U1', mode='w+', shape=dssp_data.shape
+        encoded = MemmapUtils.create_memmap(
+            path=cache_file,
+            dtype="U1",
+            mode="w+",
+            shape=dssp_data.shape,
         )
 
         ResourceUtils.tune_memmap(encoded, "sequential")
@@ -151,11 +155,14 @@ class DSSPEncodingHelper:
         """
         class_to_idx = {cls: idx for idx, cls in enumerate(classes)}
         
-        cache_file = DataUtils.get_cache_file_path(
+        cache_file = PathUtils.get_cache_file_path(
             f'dssp_int_{id(dssp_data)}.dat', cache_path
         )
-        encoded = np.memmap(
-            cache_file, dtype=np.int8, mode='w+', shape=dssp_data.shape
+        encoded = MemmapUtils.create_memmap(
+            path=cache_file,
+            dtype=np.int8,
+            mode="w+",
+            shape=dssp_data.shape,
         )
         
         ResourceUtils.tune_memmap(encoded, "sequential")
@@ -207,11 +214,14 @@ class DSSPEncodingHelper:
         shape = (n_frames, n_residues * n_classes)
         
         # Use memmap and chunk-wise processing for large datasets
-        cache_file = DataUtils.get_cache_file_path(
+        cache_file = PathUtils.get_cache_file_path(
             f'dssp_onehot_{id(dssp_data)}.dat', cache_path
         )
-        encoded = np.memmap(
-            cache_file, dtype=np.float32, mode='w+', shape=shape
+        encoded = MemmapUtils.create_memmap(
+            path=cache_file,
+            dtype=np.float32,
+            mode="w+",
+            shape=shape,
         )
         
         # Process in chunks

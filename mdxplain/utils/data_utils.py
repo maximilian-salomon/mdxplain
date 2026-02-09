@@ -27,9 +27,6 @@ Preserves memmap properties correctly.
 """
 
 from typing import Any, Union
-import os
-
-import numpy as np
 
 from .helper.load_and_save_helper import LoadAndSaveHelper
 
@@ -107,74 +104,6 @@ class DataUtils:
         >>> DataUtils.load_object(my_obj, 'outputs/analysis.pkl')
         """       
         LoadAndSaveHelper.load_object(obj, load_path)
-
-    @staticmethod
-    def get_cache_file_path(cache_name: str, cache_path: str = "./cache") -> str:
-        """
-        Get cache file path from cache_path and cache_name.
-
-        Parameters
-        ----------
-        cache_name : str
-            Name for the cache file (e.g., 'pca.dat', 'kernel_pca.dat')
-        cache_path : str, default="./cache"
-            Base cache path (can be directory or full file path)
-
-        Returns
-        -------
-        str
-            Full path to the cache file
-
-        Examples
-        --------
-        >>> # With directory cache_path
-        >>> path = DataUtils.get_cache_file_path("pca.dat", "./cache")
-        >>> print(path)  # "./cache/pca.dat"
-
-        >>> # With full file cache_path
-        >>> path = DataUtils.get_cache_file_path("pca.dat", "./cache/my_data.dat")
-        >>> print(path)  # "./cache/my_data.dat"
-        """
-        if cache_path:
-            # Check if cache_path is a directory or full file path
-            if cache_path.endswith(".dat") or "." in os.path.basename(cache_path):
-                # Full file path provided, use it directly
-                cache_dir = os.path.dirname(cache_path)
-                os.makedirs(cache_dir, exist_ok=True)
-                return cache_path
-            else:
-                # Directory path provided, append cache_name
-                os.makedirs(cache_path, exist_ok=True)
-                return os.path.join(cache_path, cache_name)
-        else:
-            # Default cache path
-            default_path = "./cache"
-            os.makedirs(default_path, exist_ok=True)
-            return os.path.join(default_path, cache_name)
-
-    @staticmethod
-    def is_memmap_view(array: Any) -> bool:
-        """
-        Check whether an array is backed by a numpy memmap (including views).
-
-        Parameters
-        ----------
-        array : Any
-            Array or view to check.
-
-        Returns
-        -------
-        bool
-            True if the array is a memmap or view on a memmap.
-        """
-        base = array
-        seen = set()
-        while base is not None and id(base) not in seen:
-            if isinstance(base, np.memmap):
-                return True
-            seen.add(id(base))
-            base = getattr(base, "base", None)
-        return False
 
     @staticmethod
     def get_type_key(type_obj: Union[str, type, object]) -> str:

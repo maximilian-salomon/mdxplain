@@ -25,6 +25,7 @@ It is used to add, reset, and reduce features to the pipeline data.
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Callable, List, Optional, Union
+import gc
 import os
 
 import numpy as np
@@ -46,6 +47,9 @@ from ..services.feature_add_service import FeatureAddService
 from ..services.feature_reduce_service import FeatureReduceService
 from ..services.feature_analysis_service import FeatureAnalysisService
 from ...utils.data_utils import DataUtils
+from ...utils.cleanup_utils import CleanupUtils
+from ...utils.memmap_utils import MemmapUtils
+from ...utils.path_utils import PathUtils
 
 
 class FeatureManager:
@@ -87,8 +91,11 @@ class FeatureManager:
         """
         self.use_memmap = use_memmap
         self.chunk_size = chunk_size
-        self.cache_dir = cache_dir
-        os.makedirs(self.cache_dir, exist_ok=True)
+        self.cache_dir = PathUtils.prepare_directory_path(
+            cache_dir,
+            create=True,
+            purpose="cache directory",
+        )
 
         if chunk_size <= 0 and not isinstance(chunk_size, int):
             raise ValueError("Chunk size must be a positive integer.")
@@ -259,6 +266,10 @@ class FeatureManager:
             )
 
         feature_key = DataUtils.get_type_key(feature_type)
+        if force:
+            self._cleanup_force_recompute_cache_files(
+                pipeline_data, feature_key, traj_indices
+            )
 
         FeatureComputationHelper.check_feature_existence(
             pipeline_data, feature_key, traj_indices, force
@@ -292,6 +303,59 @@ class FeatureManager:
         for selector_name, selector_data in pipeline_data.selected_feature_data.items():
             if feature_key in selector_data.selections:
                 pipeline_data.clear_matrix_cache(feature_selector=selector_name)
+
+    def _cleanup_force_recompute_cache_files(
+        self,
+        pipeline_data: PipelineData,
+        feature_key: str,
+        traj_indices: List[int],
+    ) -> None:
+        """
+        Cleanup old cache files before force-recomputing a feature.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data object.
+        feature_key : str
+            Feature key to clean.
+        traj_indices : list
+            Trajectories selected for recomputation.
+
+        Returns
+        -------
+        None
+            Closes memmap handles and removes old cache files.
+        """
+        feature_dict = pipeline_data.feature_data.get(feature_key)
+        if feature_dict is None:
+            return
+
+        for traj_idx in traj_indices:
+            feature_data = feature_dict.get(traj_idx)
+            if feature_data is None:
+                continue
+            cache_path = feature_data.cache_path
+            reduced_cache_path = feature_data.reduced_cache_path
+            MemmapUtils.close_memmap_view(feature_data.data)
+            MemmapUtils.close_memmap_view(feature_data.reduced_data)
+            feature_data.data = None
+            feature_data.reduced_data = None
+            # Remove dict reference before file delete to release memmap refs.
+            del feature_dict[traj_idx]
+            gc.collect()
+
+            if cache_path and os.path.exists(cache_path):
+                CleanupUtils.remove_file(
+                    cache_path,
+                    purpose="feature cache file",
+                )
+
+            if reduced_cache_path and os.path.exists(reduced_cache_path):
+                CleanupUtils.remove_file(
+                    reduced_cache_path,
+                    purpose="reduced feature cache file",
+                )
 
     def reset_reduction(self, pipeline_data: PipelineData, feature_type: FeatureTypeBase) -> None:
         """

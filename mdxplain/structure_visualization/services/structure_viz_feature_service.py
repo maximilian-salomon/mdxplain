@@ -41,7 +41,7 @@ from ..entities.structure_visualization_data import StructureVisualizationData
 from ..helper.pdb_beta_factor_helper import PdbBetaFactorHelper
 from ..helper.validation_helper import ValidationHelper
 from ..helper.visualization_data_helper import VisualizationDataHelper
-from ...utils.data_utils import DataUtils
+from ...utils.path_utils import PathUtils
 
 
 class StructureVizFeatureService:
@@ -177,7 +177,7 @@ class StructureVizFeatureService:
             beta_factors = np.zeros(topology.n_atoms)
 
             # Create PDB
-            pdb_path = DataUtils.get_cache_file_path(
+            pdb_path = PathUtils.get_cache_file_path(
                 f"{ds_name}.pdb", output_dir
             )
             PdbBetaFactorHelper.create_pdb_with_beta_factors(
@@ -372,7 +372,7 @@ class StructureVizFeatureService:
         )
 
         # Save script
-        script_path = DataUtils.get_cache_file_path(
+        script_path = PathUtils.get_cache_file_path(
             f"{structure_viz_name}.pml", output_dir
         )
         with open(script_path, 'w') as f:

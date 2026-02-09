@@ -33,8 +33,10 @@ import warnings
 import os
 import tempfile
 
+from mdxplain.utils.cleanup_utils import CleanupUtils
 from mdxplain.utils.resource_utils import ResourceUtils
-from mdxplain.utils.data_utils import DataUtils
+from mdxplain.utils.memmap_utils import MemmapUtils
+from mdxplain.utils.path_utils import PathUtils
 
 if TYPE_CHECKING:
     from ...pipeline.entities.pipeline_data import PipelineData
@@ -885,7 +887,11 @@ class PostSelectionReductionHelper:
         """
         if not use_memmap:
             return None
-        os.makedirs(cache_dir, exist_ok=True)
+        cache_dir = PathUtils.prepare_directory_path(
+            cache_dir,
+            create=True,
+            purpose="cache directory",
+        )
         temp_fd, temp_path = tempfile.mkstemp(suffix=".dat", dir=cache_dir)
         os.close(temp_fd)
         return temp_path
@@ -979,8 +985,12 @@ class PostSelectionReductionHelper:
         -------
         None
         """
-        if os.path.exists(path):
-            os.unlink(path)
+        CleanupUtils.remove_file(
+            path,
+            missing_ok=True,
+            ignore_errors=False,
+            purpose="temporary reduction file",
+        )
 
     @staticmethod
     def _update_trajectory_results(
@@ -1367,18 +1377,24 @@ class PostSelectionReductionHelper:
         n_selected = len(column_indices)
 
         # Create temporary memmap file
-        os.makedirs(cache_dir, exist_ok=True)
+        cache_dir = PathUtils.prepare_directory_path(
+            cache_dir,
+            create=True,
+            purpose="cache directory",
+        )
         temp_fd, temp_path = tempfile.mkstemp(suffix='.dat', dir=cache_dir)
         os.close(temp_fd)
 
         # Create memmap for output
-        selected_data = np.memmap(
-            temp_path, dtype=data_matrix.dtype, mode='w+',
-            shape=(n_frames, n_selected)
+        selected_data = MemmapUtils.create_memmap(
+            path=temp_path,
+            dtype=data_matrix.dtype,
+            mode="w+",
+            shape=(n_frames, n_selected),
         )
 
         # Copy chunk-wise
-        is_memmap_data = DataUtils.is_memmap_view(data_matrix)
+        is_memmap_data = MemmapUtils.is_memmap_view(data_matrix)
         if is_memmap_data:
             ResourceUtils.tune_memmap(data_matrix, "sequential")
         ResourceUtils.tune_memmap(selected_data, "sequential")
@@ -1463,5 +1479,10 @@ class PostSelectionReductionHelper:
         None
         """
         for path in temp_paths:
-            if path and os.path.exists(path):
-                os.unlink(path)
+            if path:
+                CleanupUtils.remove_file(
+                    path,
+                    missing_ok=True,
+                    ignore_errors=False,
+                    purpose="temporary reduction file",
+                )

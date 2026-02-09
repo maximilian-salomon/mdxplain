@@ -22,10 +22,13 @@
 
 import numpy as np
 import pytest
+import tempfile
+from pathlib import Path
 from scipy.linalg import eig
 from unittest.mock import patch, MagicMock
 
 from mdxplain.decomposition.decomposition_type.diffusion_maps.diffusion_maps_calculator import DiffusionMapsCalculator
+from mdxplain.utils.memmap_utils import MemmapUtils
 
 # Helper functions for tests inspired by test_todo.md
 def create_two_clusters_data(n_points_per_cluster=50, n_dims=3, separation=10):
@@ -78,7 +81,7 @@ def test_normalize_to_transition_matrix(calculator):
     kernel_matrix = np.array([[2.0, 1.0, 0.0],
                               [1.0, 2.0, 1.0],
                               [0.0, 1.0, 2.0]])
-    transition_matrix = calculator._normalize_to_transition_matrix(kernel_matrix)
+    transition_matrix, _ = calculator._normalize_to_transition_matrix(kernel_matrix)
     row_sums = np.sum(transition_matrix, axis=1)
     np.testing.assert_allclose(row_sums, 1.0, rtol=1e-7)
     expected_matrix = np.array([[2/3, 1/3, 0],
@@ -416,7 +419,7 @@ def test_nystrom_metadata_includes_epsilon_diagnostics(calculator):
         with patch.object(calculator, "_estimate_epsilon_from_landmarks", return_value=(1.0, diagnostics)):
             with patch.object(calculator, "_compute_landmarks_kernel", return_value=np.ones((2, 2), dtype=np.float32)):
                 with patch.object(calculator, "_nystrom_normalize_to_markov", return_value=(np.eye(2), np.ones(2))):
-                    with patch.object(calculator, "_nystrom_solve_eigenvalue_problem", return_value=(np.array([1.0]), np.eye(2))):
+                    with patch.object(calculator, "_solve_markov_eigenvalue_problem", return_value=(np.array([1.0]), np.eye(2))):
                         with patch.object(calculator, "_compute_all_to_landmarks_kernel", return_value=np.zeros((6, 2), dtype=np.float32)):
                             with patch.object(calculator, "_nystrom_extend_eigenvectors", return_value=np.zeros((6, 2), dtype=np.float32)):
                                 with patch.object(calculator, "_nystrom_extract_coordinates", return_value=(np.zeros((6, 1)), np.array([1.0]))):
@@ -457,7 +460,7 @@ def test_markov_matrix_row_stochastic(calculator, mock_hyperparameters):
 
     rmsd_matrix = calculator._compute_rmsd_distance_matrix(test_data, 1)
     kernel_matrix, _ = calculator._compute_kernel_matrix(rmsd_matrix, epsilon=0.1)
-    transition_matrix = calculator._normalize_to_transition_matrix(kernel_matrix)
+    transition_matrix, _ = calculator._normalize_to_transition_matrix(kernel_matrix)
     
     row_sums = np.sum(transition_matrix, axis=1)
     np.testing.assert_allclose(row_sums, 1.0, rtol=1e-6)
@@ -473,7 +476,7 @@ def test_eigenvalue_properties(calculator, mock_hyperparameters):
 
     rmsd_matrix = calculator._compute_rmsd_distance_matrix(test_data, 1)
     kernel_matrix, _ = calculator._compute_kernel_matrix(rmsd_matrix, epsilon=1.0)
-    transition_matrix = calculator._normalize_to_transition_matrix(kernel_matrix)
+    transition_matrix, _ = calculator._normalize_to_transition_matrix(kernel_matrix)
     
     eigenvals, _ = eig(transition_matrix)
     
@@ -488,8 +491,7 @@ def test_eigenvalue_properties(calculator, mock_hyperparameters):
     assert np.all(np.abs(eigenvals) <= 1.0 + 1e-9)
 
 # 3. Tests for Known Structures
-@patch('mdxplain.decomposition.decomposition_type.diffusion_maps.diffusion_maps_calculator.eig')
-def test_two_separate_clusters(mock_eig, calculator, mock_hyperparameters):
+def test_two_separate_clusters(calculator, mock_hyperparameters):
     """
     Test core diffusion maps functionality: two distinct clusters should be separated.
     
@@ -509,11 +511,15 @@ def test_two_separate_clusters(mock_eig, calculator, mock_hyperparameters):
     mock_eigenvecs = np.zeros((n_per_cluster * 2, 3))
     mock_eigenvecs[:, 0] = 1.0  # Trivial eigenvector
     mock_eigenvecs[:, 1] = ideal_eigenvec # Our perfect separator
-    mock_eig.return_value = (mock_eigenvals, mock_eigenvecs)
-
     mock_hyperparameters["epsilon"] = 5.0 
-    
-    coords, _ = calculator._compute_standard_diffusion_maps(test_data_flat, mock_hyperparameters)
+    with patch.object(
+        calculator,
+        "_solve_markov_eigenvalue_problem",
+        return_value=(mock_eigenvals, mock_eigenvecs),
+    ):
+        coords, _ = calculator._compute_standard_diffusion_maps(
+            test_data_flat, mock_hyperparameters
+        )
     
     # The first diffusion coordinate should be our ideal eigenvector
     first_coord = np.real(coords[:, 0])
@@ -522,8 +528,7 @@ def test_two_separate_clusters(mock_eig, calculator, mock_hyperparameters):
     correlation = np.corrcoef(first_coord, ideal_eigenvec)[0, 1]
     assert np.abs(correlation) > 0.999
 
-@patch('mdxplain.decomposition.decomposition_type.diffusion_maps.diffusion_maps_calculator.eig')
-def test_linear_data_structure(mock_eig, calculator, mock_hyperparameters):
+def test_linear_data_structure(calculator, mock_hyperparameters):
     """
     Test that linear data structure is captured in first diffusion coordinate.
     
@@ -543,11 +548,15 @@ def test_linear_data_structure(mock_eig, calculator, mock_hyperparameters):
     mock_eigenvecs = np.zeros((n_points, 3))
     mock_eigenvecs[:, 0] = 1.0 # Trivial eigenvector
     mock_eigenvecs[:, 1] = ideal_eigenvec # Our perfect linear vector
-    mock_eig.return_value = (mock_eigenvals, mock_eigenvecs)
-
     mock_hyperparameters["epsilon"] = 0.05
-    
-    coords, _ = calculator._compute_standard_diffusion_maps(test_data_flat, mock_hyperparameters)
+    with patch.object(
+        calculator,
+        "_solve_markov_eigenvalue_problem",
+        return_value=(mock_eigenvals, mock_eigenvecs),
+    ):
+        coords, _ = calculator._compute_standard_diffusion_maps(
+            test_data_flat, mock_hyperparameters
+        )
     
     first_coord = np.real(coords[:, 0])
     
@@ -594,6 +603,94 @@ def test_compute_calls_nystrom(mock_nystrom, calculator):
     mock_nystrom.return_value = (np.array([]), {})
     calculator.compute(test_data, n_components=2, epsilon=0.1, use_nystrom=True, n_landmarks=10)
     mock_nystrom.assert_called_once()
+
+@patch("mdxplain.decomposition.decomposition_type.diffusion_maps.diffusion_maps_calculator.CleanupUtils.remove_file")
+def test_compute_cleans_tracked_temp_memmaps_iterative(mock_remove_file):
+    """compute() should cleanup all tracked temp memmaps after iterative path."""
+    calculator = DiffusionMapsCalculator(use_memmap=True)
+    test_data = create_linear_data(n_points=30).reshape(30, -1)
+
+    def _fake_iterative(_, __):
+        calculator._temp_memmap_paths = ["iter_temp_a.dat", "iter_temp_b.dat"]
+        return np.zeros((30, 2), dtype=np.float32), {"method": "iterative_diffusion_maps"}
+
+    with patch.object(calculator, "_compute_iterative_diffusion_maps", side_effect=_fake_iterative):
+        calculator.compute(test_data, n_components=2, epsilon=0.1)
+
+    assert mock_remove_file.call_count == 2
+    assert calculator._temp_memmap_paths == []
+
+@patch("mdxplain.decomposition.decomposition_type.diffusion_maps.diffusion_maps_calculator.CleanupUtils.remove_file")
+def test_compute_cleans_tracked_temp_memmaps_nystrom(mock_remove_file):
+    """compute() should cleanup all tracked temp memmaps after Nyström path."""
+    calculator = DiffusionMapsCalculator(use_memmap=True)
+    test_data = create_linear_data(n_points=30).reshape(30, -1)
+
+    def _fake_nystrom(_, __):
+        calculator._temp_memmap_paths = ["nys_temp_a.dat", "nys_temp_b.dat"]
+        return np.zeros((30, 2), dtype=np.float32), {"method": "nystrom_diffusion_maps"}
+
+    with patch.object(calculator, "_compute_nystrom_diffusion_maps", side_effect=_fake_nystrom):
+        calculator.compute(
+            test_data,
+            n_components=2,
+            epsilon=0.1,
+            use_nystrom=True,
+            n_landmarks=10,
+        )
+
+    assert mock_remove_file.call_count == 2
+    assert calculator._temp_memmap_paths == []
+
+def test_iterative_compute_removes_temporary_memmap_files():
+    """Iterative diffusion maps should clean up temporary rmsd/kernel memmaps."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        calculator = DiffusionMapsCalculator(
+            use_memmap=True,
+            cache_path=tmpdir,
+            chunk_size=16,
+        )
+        test_data = create_linear_data(n_points=32).reshape(32, -1).astype(np.float32)
+
+        coords, metadata = calculator.compute(
+            test_data,
+            n_components=2,
+            epsilon=0.2,
+            use_nystrom=False,
+        )
+
+        assert metadata["method"] == "iterative_diffusion_maps"
+        dat_files = {path.name for path in Path(tmpdir).glob("*.dat")}
+        assert "diffusion_maps_iterative_rmsd_matrix.dat" not in dat_files
+        assert "diffusion_maps_iterative_kernel_matrix.dat" not in dat_files
+        MemmapUtils.close_memmap_view(coords)
+
+
+def test_nystrom_compute_removes_temporary_memmap_files():
+    """Nyström diffusion maps should clean up temporary extension memmaps."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        calculator = DiffusionMapsCalculator(
+            use_memmap=True,
+            cache_path=tmpdir,
+            chunk_size=16,
+        )
+        test_data = create_linear_data(n_points=32).reshape(32, -1).astype(np.float32)
+
+        coords, metadata = calculator.compute(
+            test_data,
+            n_components=2,
+            epsilon=0.2,
+            use_nystrom=True,
+            n_landmarks=8,
+            landmark_selection_mode="random",
+            random_state=42,
+        )
+
+        assert metadata["method"] == "nystrom_diffusion_maps"
+        dat_files = {path.name for path in Path(tmpdir).glob("*.dat")}
+        assert "diffusion_maps_nystrom_K_all.dat" not in dat_files
+        assert "diffusion_maps_nystrom_eigenvectors_full.dat" not in dat_files
+        MemmapUtils.close_memmap_view(coords)
 
 # 5. Test Nyström Method Steps
 @patch('mdxplain.decomposition.decomposition_type.interfaces.calculator_base.MiniBatchKMeans')
@@ -644,7 +741,9 @@ def test_nystrom_solve_eigenvalue_problem(calculator):
     """
     K_landmarks = np.array([[2.0, 1.0], [1.0, 3.0]])
     M_small, inv_row_sums = calculator._nystrom_normalize_to_markov(K_landmarks)
-    eigvals, eigvecs = calculator._nystrom_solve_eigenvalue_problem(M_small, inv_row_sums)
+    eigvals, eigvecs = calculator._solve_markov_eigenvalue_problem(
+        M_small, inv_row_sums
+    )
     
     # Eigenvalues should be real and sorted descending
     assert np.all(np.isreal(eigvals))

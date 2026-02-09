@@ -30,7 +30,8 @@ from typing import List
 import numpy as np
 from mdxplain.utils.progress_utils import ProgressUtils
 
-from ...utils.data_utils import DataUtils
+from ...utils.memmap_utils import MemmapUtils
+from ...utils.path_utils import PathUtils
 from ...utils.resource_utils import ResourceUtils
 
 
@@ -84,17 +85,16 @@ class SelectionMemmapHelper:
         n_rows, _ = data.shape
         n_cols = len(indices)
 
-        cache_path = DataUtils.get_cache_file_path(
+        cache_path = PathUtils.get_cache_file_path(
             f"{name}_{feature_type}_{data_type}_selection.dat", cache_dir
         )
-
-        result = np.memmap(
-            cache_path,
+        result = MemmapUtils.create_memmap(
+            path=cache_path,
             dtype=data.dtype,
             mode="w+",
             shape=(n_rows, n_cols),
         )
-        is_memmap_data = DataUtils.is_memmap_view(data)
+        is_memmap_data = MemmapUtils.is_memmap_view(data)
         if is_memmap_data:
             ResourceUtils.tune_memmap(data, "sequential")
         ResourceUtils.tune_memmap(result, "sequential")
@@ -144,11 +144,11 @@ class SelectionMemmapHelper:
         result_dtype = np.result_type(*dtypes)
 
         # Create cache path for the stacked matrix
-        cache_path = DataUtils.get_cache_file_path(f"{name}.dat", cache_dir)
+        cache_path = PathUtils.get_cache_file_path(f"{name}.dat", cache_dir)
 
         # Create memmap for the result
-        result = np.memmap(
-            cache_path,
+        result = MemmapUtils.create_memmap(
+            path=cache_path,
             dtype=result_dtype,
             mode="w+",
             shape=(total_samples, total_features),
@@ -160,7 +160,7 @@ class SelectionMemmapHelper:
             col_end = col_start + matrix.shape[1]
 
             # Process in chunks to avoid loading entire matrix into memory
-            is_memmap_matrix = DataUtils.is_memmap_view(matrix)
+            is_memmap_matrix = MemmapUtils.is_memmap_view(matrix)
             if is_memmap_matrix:
                 ResourceUtils.tune_memmap(matrix, "sequential")
             ResourceUtils.tune_memmap(result, "sequential")
@@ -220,19 +220,18 @@ class SelectionMemmapHelper:
         n_selected_frames = len(frame_indices)
         _, n_cols = data.shape
 
-        cache_path = DataUtils.get_cache_file_path(
+        cache_path = PathUtils.get_cache_file_path(
             f"{name}_frame_selection.dat", cache_dir
         )
-
-        result = np.memmap(
-            cache_path,
+        result = MemmapUtils.create_memmap(
+            path=cache_path,
             dtype=data.dtype,
             mode="w+",
             shape=(n_selected_frames, n_cols),
         )
 
         # Process in chunks to avoid loading entire data into memory
-        is_memmap_data = DataUtils.is_memmap_view(data)
+        is_memmap_data = MemmapUtils.is_memmap_view(data)
         if is_memmap_data:
             ResourceUtils.tune_memmap(data, "sequential")
         ResourceUtils.tune_memmap(result, "sequential")

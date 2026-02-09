@@ -35,6 +35,7 @@ from ..services.feature_importance_facade import FeatureImportanceFacade
 from ..services.feature_facade import FeatureFacade
 from ..plot_type.landscape import LandscapePlotter
 from ..plot_type.membership import MembershipPlotter
+from ...utils.path_utils import PathUtils
 
 
 class PlotsManager:
@@ -106,7 +107,11 @@ class PlotsManager:
         """
         self.use_memmap = use_memmap
         self.chunk_size = chunk_size
-        self.cache_dir = cache_dir
+        self.cache_dir = PathUtils.prepare_directory_path(
+            cache_dir,
+            create=True,
+            purpose="cache directory",
+        )
 
     @property
     def decomposition(self) -> DecompositionFacade:

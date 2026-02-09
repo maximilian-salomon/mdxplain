@@ -75,6 +75,11 @@ class BoundMethod:
         Any
             Result from the original method
         """
+        if self.feature_data is None or self.original_method is None:
+            raise RuntimeError(
+                f"Cannot call bound method '{self.method_name}': method has been released."
+            )
+
         # Determine which data to use
         if self.method_name in self.requires_full_data:
             data = self.feature_data.data

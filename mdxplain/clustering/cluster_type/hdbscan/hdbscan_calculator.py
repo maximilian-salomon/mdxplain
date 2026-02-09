@@ -33,7 +33,7 @@ import numpy as np
 
 from mdxplain.utils.progress_utils import ProgressUtils
 from mdxplain.utils.resource_utils import ResourceUtils
-from mdxplain.utils.data_utils import DataUtils
+from mdxplain.utils.memmap_utils import MemmapUtils
 
 from ..interfaces.calculator_base import CalculatorBase
 
@@ -293,7 +293,7 @@ class HDBSCANCalculator(CalculatorBase):
         full_labels = self._prepare_labels_storage(n_samples, "hdbscan", "approximate_predict")
         chunk_size = self.chunk_size
         is_memmap_labels = isinstance(full_labels, np.memmap)
-        is_memmap_data = DataUtils.is_memmap_view(data)
+        is_memmap_data = MemmapUtils.is_memmap_view(data)
         if is_memmap_labels:
             ResourceUtils.tune_memmap(full_labels, "sequential")
         if is_memmap_data:

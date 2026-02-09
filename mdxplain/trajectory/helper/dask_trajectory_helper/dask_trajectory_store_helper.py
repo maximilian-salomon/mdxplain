@@ -33,6 +33,7 @@ import numpy as np
 import zarr
 
 from .zarr_cache_helper import ZarrCacheHelper
+from ....utils.path_utils import PathUtils
 
 if TYPE_CHECKING:
     from ...entities.dask_md_trajectory import DaskMDTrajectory
@@ -59,7 +60,11 @@ class DaskMDTrajectoryStoreHelper:
         None
             Initializes store manager instance
         """
-        self.cache_dir = cache_dir
+        self.cache_dir = PathUtils.prepare_directory_path(
+            cache_dir,
+            create=True,
+            purpose="cache directory",
+        )
     
     def create_slice_store(self, dask_traj: DaskMDTrajectory, key: Union[slice, np.ndarray], result_path: str) -> zarr.Group:
         """
@@ -85,7 +90,11 @@ class DaskMDTrajectoryStoreHelper:
         >>> zarr_store = store_mgr.create_slice_store(dask_traj, slice(0, 100), 'slice.zarr')
         >>> # Creates store with first 100 frames
         """
-        # Create result zarr store
+        result_path = PathUtils.prepare_file_path(
+            result_path,
+            create_parent=True,
+            purpose="zarr result path",
+        )
         temp_store = zarr.open(result_path, mode='w')
         
         # Get sliced data

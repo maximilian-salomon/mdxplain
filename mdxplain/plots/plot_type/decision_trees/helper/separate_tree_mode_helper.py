@@ -28,13 +28,13 @@ All methods are stateless and receive required state as parameters.
 from typing import Optional, Union, List
 import matplotlib
 import matplotlib.pyplot as plt
-import os
 import uuid
 
 from .decision_tree_visualizer import DecisionTreeVisualizer
 from .decision_tree_visualization_config import DecisionTreeVisualizationConfig
 from .plot_configuration_helper import PlotConfigurationHelper
-from .....utils.data_utils import DataUtils
+from .....utils.cleanup_utils import CleanupUtils
+from .....utils.path_utils import PathUtils
 from ....helper.svg_export_helper import SvgExportHelper
 
 TREE_CONFIG = DecisionTreeVisualizationConfig()
@@ -512,7 +512,7 @@ class SeparateTreeModeHelper:
 
         tree_filename = (f"decision_trees_{feature_importance_name}_"
                         f"comparison_{idx:02d}_{comparison_name}.{file_format}")
-        tree_path = DataUtils.get_cache_file_path(tree_filename, cache_dir)
+        tree_path = PathUtils.get_cache_file_path(tree_filename, cache_dir)
         fig.savefig(tree_path, dpi=dpi, bbox_inches='tight')
         saved_files.append(tree_path)
         print(f"Saved: {tree_path}")
@@ -554,7 +554,7 @@ class SeparateTreeModeHelper:
         SvgExportHelper.apply_svg_config_if_needed(file_format)
 
         temp_filename = f"tree_temp_{uuid.uuid4().hex}.{file_format}"
-        temp_path = DataUtils.get_cache_file_path(temp_filename, cache_dir)
+        temp_path = PathUtils.get_cache_file_path(temp_filename, cache_dir)
         fig.savefig(temp_path, dpi=dpi, bbox_inches='tight')
         temp_files.append(temp_path)
         SeparateTreeModeHelper._display_image_in_jupyter(temp_path)
@@ -611,7 +611,9 @@ class SeparateTreeModeHelper:
             matplotlib.use(old_backend)
 
         for temp_file in temp_files:
-            try:
-                os.remove(temp_file)
-            except OSError:
-                pass
+            CleanupUtils.remove_file(
+                temp_file,
+                missing_ok=True,
+                ignore_errors=True,
+                purpose="temporary tree image path",
+            )

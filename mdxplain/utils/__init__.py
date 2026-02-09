@@ -24,12 +24,18 @@
 """Utility functions and helper classes for mdxplain package."""
 
 from .data_utils import DataUtils
+from .memmap_utils import MemmapUtils
+from .path_utils import PathUtils
+from .cleanup_utils import CleanupUtils
 from .color_utils import ColorUtils
 from .top_features_utils import TopFeaturesUtils
 from .resource_utils import ResourceUtils
 
 __all__ = [
     "DataUtils",
+    "MemmapUtils",
+    "PathUtils",
+    "CleanupUtils",
     "ColorUtils",
     "TopFeaturesUtils",
     "ResourceUtils",
