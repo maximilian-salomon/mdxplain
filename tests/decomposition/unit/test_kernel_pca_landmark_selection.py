@@ -21,7 +21,10 @@
 import pytest
 from unittest.mock import MagicMock, patch, ANY
 import numpy as np
+import tempfile
+from pathlib import Path
 from mdxplain.decomposition.decomposition_type.kernel_pca.kernel_pca_calculator import KernelPCACalculator
+from mdxplain.utils.memmap_utils import MemmapUtils
 
 class TestKernelPCALandmarkSelection:
     """Test landmark selection in KernelPCA."""
@@ -176,3 +179,66 @@ class TestKernelPCALandmarkSelection:
                 use_nystrom=True,
                 landmark_selection_mode="invalid_method"
             )
+
+    @patch("mdxplain.decomposition.decomposition_type.kernel_pca.kernel_pca_calculator.CleanupUtils.remove_file")
+    def test_compute_cleans_tracked_temp_memmaps_incremental(self, mock_remove_file):
+        """compute() should cleanup all tracked temp memmaps after incremental path."""
+        calculator = KernelPCACalculator(use_memmap=True)
+        data = np.random.rand(10, 4).astype(np.float32)
+
+        def _fake_incremental(_, __):
+            calculator._temp_memmap_paths = ["temp_a.dat", "temp_b.dat"]
+            return np.zeros((10, 2), dtype=np.float32), {"method": "iterative_kernel_pca"}
+
+        with patch.object(calculator, "_compute_incremental_kernel_pca", side_effect=_fake_incremental):
+            calculator.compute(data, n_components=2, gamma=0.1)
+
+        assert mock_remove_file.call_count == 2
+        assert calculator._temp_memmap_paths == []
+
+    @patch("mdxplain.decomposition.decomposition_type.kernel_pca.kernel_pca_calculator.CleanupUtils.remove_file")
+    def test_compute_cleans_tracked_temp_memmaps_nystrom(self, mock_remove_file):
+        """compute() should cleanup all tracked temp memmaps after Nyström path."""
+        calculator = KernelPCACalculator(use_memmap=True)
+        data = np.random.rand(10, 4).astype(np.float32)
+
+        def _fake_nystrom(_, __):
+            calculator._temp_memmap_paths = ["temp_c.dat", "temp_d.dat"]
+            return np.zeros((10, 2), dtype=np.float32), {"method": "nystrom_kernel_pca"}
+
+        with patch.object(calculator, "_compute_nystrom_kernel_pca", side_effect=_fake_nystrom):
+            calculator.compute(
+                data,
+                n_components=2,
+                use_nystrom=True,
+                n_landmarks=4,
+                gamma=0.1,
+            )
+
+        assert mock_remove_file.call_count == 2
+        assert calculator._temp_memmap_paths == []
+
+    def test_incremental_compute_removes_temporary_kernel_memmap_file(self):
+        """Incremental KernelPCA should remove temporary kernel matrix memmap file."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            calculator = KernelPCACalculator(
+                use_memmap=True,
+                cache_path=tmpdir,
+                chunk_size=32,
+                use_parallel=False,
+            )
+            data = np.random.rand(64, 12).astype(np.float32)
+
+            transformed, metadata = calculator.compute(
+                data,
+                n_components=3,
+                gamma=0.05,
+                use_nystrom=False,
+            )
+
+            assert metadata["method"] == "iterative_kernel_pca"
+            dat_files = {path.name for path in Path(tmpdir).glob("*.dat")}
+            assert "kernel_pca_iterative.dat" in dat_files
+            assert "kernel_pca_kernel_matrix.dat" not in dat_files
+
+            MemmapUtils.close_memmap_view(transformed)

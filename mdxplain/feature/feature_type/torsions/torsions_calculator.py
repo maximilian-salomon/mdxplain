@@ -32,7 +32,7 @@ import numpy as np
 
 from mdxplain.utils.progress_utils import ProgressUtils
 from mdxplain.utils.resource_utils import ResourceUtils
-from mdxplain.utils.data_utils import DataUtils
+from mdxplain.utils.memmap_utils import MemmapUtils
 
 from ..helper.calculator_compute_helper import CalculatorComputeHelper
 from ..interfaces.calculator_base import CalculatorBase
@@ -219,7 +219,7 @@ class TorsionsCalculator(CalculatorBase):
         """
         if self.use_memmap:
             # Chunk-wise processing for memory efficiency
-            if DataUtils.is_memmap_view(torsions_array):
+            if MemmapUtils.is_memmap_view(torsions_array):
                 ResourceUtils.tune_memmap(torsions_array, "sequential")
             for i in ProgressUtils.iterate(
                 range(0, trajectory.n_frames, self.chunk_size),

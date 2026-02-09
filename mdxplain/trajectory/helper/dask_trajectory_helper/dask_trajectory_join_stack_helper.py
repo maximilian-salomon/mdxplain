@@ -33,6 +33,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import zarr
 from mdxplain.utils.progress_utils import ProgressUtils
+from mdxplain.utils.path_utils import PathUtils
 from zarr.codecs import BloscCodec
 
 from .zarr_cache_helper import ZarrCacheHelper
@@ -66,7 +67,11 @@ class DaskMDTrajectoryJoinStackHelper:
         None
             Initializes helper instance
         """
-        self.cache_dir = cache_dir
+        self.cache_dir = PathUtils.prepare_directory_path(
+            cache_dir,
+            create=True,
+            purpose="cache directory",
+        )
     
     def join_trajectories(self, result_path: str, traj1: DaskMDTrajectory, traj2: DaskMDTrajectory, 
                          check_topology: bool = True) -> DaskMDTrajectory:
@@ -109,7 +114,11 @@ class DaskMDTrajectoryJoinStackHelper:
         
         print(f"Joining trajectories: {traj1.n_frames} + {traj2.n_frames} = {traj1.n_frames + traj2.n_frames} frames")
         
-        # Create result zarr store
+        result_path = PathUtils.prepare_file_path(
+            result_path,
+            create_parent=True,
+            purpose="zarr result path",
+        )
         temp_store = zarr.open(result_path, mode='w')
         
         # Calculate final dimensions
@@ -179,7 +188,11 @@ class DaskMDTrajectoryJoinStackHelper:
         
         print(f"Stacking trajectories: {traj1.n_atoms} + {traj2.n_atoms} = {traj1.n_atoms + traj2.n_atoms} atoms")
         
-        # Create result zarr store
+        result_path = PathUtils.prepare_file_path(
+            result_path,
+            create_parent=True,
+            purpose="zarr result path",
+        )
         temp_store = zarr.open(result_path, mode='w')
         
         # Calculate final dimensions

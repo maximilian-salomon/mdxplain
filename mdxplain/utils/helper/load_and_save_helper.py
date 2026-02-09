@@ -25,10 +25,12 @@ Helper class for saving and loading objects with memmap metadata.
 from typing import Any, Dict, Optional
 import os
 import pickle
+import warnings
 
 import numpy as np
 
-from ..resource_utils import ResourceUtils
+from ..memmap_utils import MemmapUtils
+from ..path_utils import PathUtils
 
 
 class LoadAndSaveHelper:
@@ -84,6 +86,30 @@ class LoadAndSaveHelper:
         LoadAndSaveHelper._restore_memmaps_after_load(obj)
 
     @staticmethod
+    def peek_cache_dir(load_path: str) -> Optional[str]:
+        """
+        Read and return ``cache_dir`` from a saved payload when available.
+
+        Parameters
+        ----------
+        load_path : str
+            Path to the saved pickle payload.
+
+        Returns
+        -------
+        str or None
+            Saved ``cache_dir`` value if present and non-empty, otherwise None.
+        """
+        payload = LoadAndSaveHelper._load_pickle(load_path)
+        if not isinstance(payload, dict):
+            return None
+        candidate = payload.get("cache_dir")
+        if not isinstance(candidate, str):
+            return None
+        candidate = candidate.strip()
+        return candidate if candidate else None
+
+    @staticmethod
     def _dump_pickle(payload: Dict[str, Any], save_path: str) -> None:
         """
         Dump a payload to a pickle file.
@@ -99,6 +125,11 @@ class LoadAndSaveHelper:
         -------
         None
         """
+        save_path = PathUtils.prepare_file_path(
+            save_path,
+            create_parent=True,
+            purpose="save path",
+        )
         with open(save_path, "wb") as handle:
             pickle.dump(payload, handle, protocol=4)
 
@@ -117,6 +148,11 @@ class LoadAndSaveHelper:
         dict
             Loaded payload.
         """
+        load_path = PathUtils.prepare_file_path(
+            load_path,
+            create_parent=False,
+            purpose="load path",
+        )
         with open(load_path, "rb") as handle:
             return pickle.load(handle)
 
@@ -135,12 +171,14 @@ class LoadAndSaveHelper:
         dict
             Attribute payload for saving.
         """
-        payload: Dict[str, Any] = {}
-        for attr_name in dir(obj):
-            if attr_name.startswith("_"):
-                continue
-            payload[attr_name] = getattr(obj, attr_name)
-        return payload
+        # Persist only public instance state.
+        # Private attributes are implementation details and intentionally
+        # excluded from the serialized payload.
+        return {
+            key: value
+            for key, value in vars(obj).items()
+            if not key.startswith("_")
+        }
 
     @staticmethod
     def _restore_object_attributes(obj: Any, loaded_obj: Dict[str, Any]) -> None:
@@ -714,9 +752,23 @@ class LoadAndSaveHelper:
         )
         if restored is not None:
             return restored
-        return LoadAndSaveHelper._try_restore_from_alternative_path(
-            obj, attr_name, memmap_info, original_path
+
+        alternative_path = LoadAndSaveHelper._resolve_alternative_path(
+            obj, attr_name, original_path
         )
+        if alternative_path is not None:
+            restored = LoadAndSaveHelper._try_restore_from_path(
+                alternative_path, memmap_info
+            )
+            if restored is not None:
+                return restored
+
+        LoadAndSaveHelper._warn_missing_memmap_path(
+            attr_name=attr_name,
+            original_path=original_path,
+            alternative_path=alternative_path,
+        )
+        return None
 
     @staticmethod
     def _try_restore_from_path(
@@ -738,25 +790,24 @@ class LoadAndSaveHelper:
             Restored memmap if file exists, None otherwise.
         """
         if os.path.exists(path):
-            memmap_array = np.memmap(
-                path,
+            memmap_array = MemmapUtils.create_memmap(
+                path=path,
                 dtype=memmap_info["dtype"],
                 mode="r",
                 shape=tuple(memmap_info["shape"]),
+                close_existing=False,
             )
-            ResourceUtils.tune_memmap(memmap_array, "random")
             return memmap_array
         return None
 
     @staticmethod
-    def _try_restore_from_alternative_path(
+    def _resolve_alternative_path(
         obj: Any,
         attr_name: str,
-        memmap_info: Dict[str, Any],
         original_path: str,
-    ) -> Optional[np.memmap]:
+    ) -> Optional[str]:
         """
-        Try to restore memmap from alternative path.
+        Resolve alternative memmap restore path from object state.
 
         Parameters
         ----------
@@ -764,15 +815,13 @@ class LoadAndSaveHelper:
             Target object for memmap restoration.
         attr_name : str
             Attribute name for the memmap.
-        memmap_info : dict
-            Metadata dictionary with memmap information.
         original_path : str
             Original file path that failed.
 
         Returns
         -------
-        np.memmap or None
-            Restored memmap from alternative path or None if not possible.
+        str or None
+            Alternative path when available and valid, otherwise None.
         """
         if not LoadAndSaveHelper._check_supports_alternative_path(
             obj, attr_name
@@ -783,9 +832,47 @@ class LoadAndSaveHelper:
             target_path, original_path
         ):
             return None
-        return LoadAndSaveHelper._try_restore_from_path(
-            target_path, memmap_info
+        return target_path
+
+    @staticmethod
+    def _warn_missing_memmap_path(
+        attr_name: str,
+        original_path: str,
+        alternative_path: Optional[str],
+    ) -> None:
+        """
+        Emit runtime warning when a saved memmap cannot be restored.
+
+        Parameters
+        ----------
+        attr_name : str
+            Attribute name currently being restored.
+        original_path : str
+            Original path from serialized metadata.
+        alternative_path : str or None
+            Alternative path considered during restore.
+
+        Returns
+        -------
+        None
+            Warns and continues loading with ``None`` for this attribute.
+        """
+        message = (
+            f"Memmap restore skipped for '{attr_name}': "
+            f"missing file '{original_path}'"
         )
+        if alternative_path is not None:
+            message += f" and alternative '{alternative_path}'"
+        message += (
+            ". Memmap-backed data expects the original cache files from the "
+            "save environment. This can happen when loading from a different "
+            "working directory or with relative cache paths. Run the load "
+            "from the same location used for save_to_single_file, or request "
+            "a sharable archive created via create_sharable_archive "
+            "(archive includes cache data). Continuing load with attribute "
+            "set to None."
+        )
+        warnings.warn(message, RuntimeWarning, stacklevel=3)
 
     @staticmethod
     def _check_supports_alternative_path(obj: Any, attr_name: str) -> bool:

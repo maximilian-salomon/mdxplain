@@ -33,7 +33,9 @@ from typing import Any, Dict, Optional, Tuple, Union
 import numpy as np
 from mdxplain.utils.progress_utils import ProgressUtils
 from mdxplain.utils.resource_utils import ResourceUtils
-from mdxplain.utils.data_utils import DataUtils
+from mdxplain.utils.cleanup_utils import CleanupUtils
+from mdxplain.utils.memmap_utils import MemmapUtils
+from mdxplain.utils.path_utils import PathUtils
 from scipy.sparse.linalg import LinearOperator, eigsh, ArpackNoConvergence
 
 from ..interfaces.calculator_base import CalculatorBase
@@ -127,6 +129,7 @@ class DiffusionMapsCalculator(CalculatorBase):
         """
         super().__init__(use_memmap, cache_path, chunk_size)
         self._cache_prefix = "diffusion_maps"
+        self._temp_memmap_paths = []
 
     def compute(self, data, **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
@@ -189,6 +192,7 @@ class DiffusionMapsCalculator(CalculatorBase):
         """
         self._validate_input_data(data)
         hyperparameters, epsilon_diagnostics = self._extract_hyperparameters(data, kwargs)
+        self._temp_memmap_paths = []
 
         if hyperparameters["use_nystrom"]:
             coords, metadata = self._compute_nystrom_diffusion_maps(data, hyperparameters)
@@ -200,6 +204,7 @@ class DiffusionMapsCalculator(CalculatorBase):
         if epsilon_diagnostics is not None:
             metadata["epsilon_diagnostics"] = epsilon_diagnostics
 
+        self._cleanup_tracked_temp_memmaps()
         return coords, metadata
 
     def _validate_input_data(self, data) -> None:
@@ -459,6 +464,7 @@ class DiffusionMapsCalculator(CalculatorBase):
         # Step 1: Compute RMSD matrix as memmap
         # Reference: Coifman & Lafon (2006), memory-efficient approach
         rmsd_matrix = self._compute_rmsd_distance_matrix(data, n_atoms, "iterative_rmsd_matrix.dat")
+        self._track_temp_memmap(rmsd_matrix)
 
         # Step 2: Compute kernel matrix as memmap and collect row sums
         kernel_matrix, inv_row_sums = self._compute_kernel_matrix(
@@ -467,6 +473,7 @@ class DiffusionMapsCalculator(CalculatorBase):
             hyperparameters["alpha"],
             "iterative_kernel_matrix.dat",
         )
+        self._track_temp_memmap(kernel_matrix)
 
         # Step 3: Symmetric eigendecomposition using sparse methods
         # This avoids materializing the full transition matrix
@@ -480,16 +487,6 @@ class DiffusionMapsCalculator(CalculatorBase):
         diff_eigenvals, diff_coords = self._extract_diffusion_coordinates(
             eigenvals, eigenvecs, hyperparameters["n_components"]
         )
-
-        # Step 5: Cleanup temporary files (only if memmap was used)
-        if self.use_memmap:
-            memmap_paths = []
-            if hasattr(rmsd_matrix, 'filename') and rmsd_matrix.filename:
-                memmap_paths.append(rmsd_matrix.filename)
-            if hasattr(kernel_matrix, 'filename') and kernel_matrix.filename:
-                memmap_paths.append(kernel_matrix.filename)
-            if memmap_paths:
-                self._cleanup_memmaps(memmap_paths)
 
         metadata = self._prepare_metadata(hyperparameters, (n_frames, n_features))
         metadata.update({
@@ -604,6 +601,7 @@ class DiffusionMapsCalculator(CalculatorBase):
         K_all_to_landmarks = self._compute_all_to_landmarks_kernel(
             data, landmark_idx, epsilon, n_atoms, n_frames, n_landmarks
         )
+        self._track_temp_memmap(K_all_to_landmarks)
         if alpha != 0.0:
             # Coifman & Lafon (2006), Section 3.1: k^α(x,y) = k(x,y) / (q(x)^α q(y)^α).
             # K^(α)(x,ℓ) = K(x,ℓ) / (q(x)^α q(ℓ)^α).
@@ -623,6 +621,7 @@ class DiffusionMapsCalculator(CalculatorBase):
         eigenvectors_full = self._nystrom_extend_eigenvectors(
             K_all_to_landmarks, eigvecs_small, eigvals_small, n_frames
         )
+        self._track_temp_memmap(eigenvectors_full)
 
         # STEP 7: Extract Diffusion Coordinates
         # Coifman & Lafon (2006): Skip first eigenvector (stationary distribution)
@@ -630,12 +629,8 @@ class DiffusionMapsCalculator(CalculatorBase):
         diff_coords, diff_eigenvals = self._nystrom_extract_coordinates(
             eigenvectors_full, eigvals_small, hyperparameters["n_components"]
         )
-
-        # Cleanup memmap files if used
-        if hasattr(K_all_to_landmarks, 'filename') and K_all_to_landmarks.filename:
-            memmap_paths = [K_all_to_landmarks.filename]
-            del K_all_to_landmarks
-            self._cleanup_memmaps(memmap_paths)
+        if MemmapUtils.is_memmap_view(diff_coords):
+            diff_coords = np.array(diff_coords, copy=True)
 
         metadata = self._prepare_metadata(hyperparameters, (n_frames, n_features))
         metadata.update({
@@ -688,7 +683,7 @@ class DiffusionMapsCalculator(CalculatorBase):
         )
         if self.use_memmap:
             ResourceUtils.tune_memmap(rmsd_matrix, "sequential")
-        is_memmap_data = DataUtils.is_memmap_view(data)
+        is_memmap_data = MemmapUtils.is_memmap_view(data)
         if is_memmap_data:
             ResourceUtils.tune_memmap(data, "sequential")
         
@@ -837,7 +832,7 @@ class DiffusionMapsCalculator(CalculatorBase):
             LinearOperator that computes S*v without materializing S
         """
         n_frames = kernel_matrix.shape[0]
-        is_memmap_kernel = DataUtils.is_memmap_view(kernel_matrix)
+        is_memmap_kernel = MemmapUtils.is_memmap_view(kernel_matrix)
 
         def matvec_mult(v):
             result = np.empty_like(v)
@@ -1105,11 +1100,47 @@ class DiffusionMapsCalculator(CalculatorBase):
             List of paths to memory-mapped files to remove
         """
         for path in memmap_paths:
-            try:
-                if os.path.exists(path):
-                    os.remove(path)
-            except OSError:
-                print(f"Warning: Could not remove temporary file {path}")
+            CleanupUtils.remove_file(
+                path,
+                missing_ok=True,
+                ignore_errors=True,
+                purpose="temporary memmap path",
+            )
+
+    def _track_temp_memmap(self, array: np.ndarray) -> None:
+        """
+        Track a temporary memmap-backed array for cleanup after compute().
+
+        Parameters
+        ----------
+        array : numpy.ndarray
+            Array that may be backed by a temporary memmap file.
+
+        Returns
+        -------
+        None
+        """
+        if not self.use_memmap:
+            return
+        if not MemmapUtils.is_memmap_view(array):
+            return
+        path = getattr(array, "filename", None)
+        if isinstance(path, str) and path and path not in self._temp_memmap_paths:
+            self._temp_memmap_paths.append(path)
+
+    def _cleanup_tracked_temp_memmaps(self) -> None:
+        """
+        Cleanup all tracked temporary memmap files from the current compute run.
+
+        Returns
+        -------
+        None
+        """
+        if not self.use_memmap:
+            self._temp_memmap_paths = []
+            return
+        self._cleanup_memmaps(self._temp_memmap_paths)
+        self._temp_memmap_paths = []
 
     def _estimate_epsilon_knn(
         self,
@@ -1435,7 +1466,7 @@ class DiffusionMapsCalculator(CalculatorBase):
         sample_xyz = sample_coords.reshape(n_atoms, 3)
         sample_centered = sample_xyz - sample_xyz.mean(axis=0)
 
-        is_memmap_data = DataUtils.is_memmap_view(data)
+        is_memmap_data = MemmapUtils.is_memmap_view(data)
         if is_memmap_data:
             ResourceUtils.tune_memmap(data, "sequential")
 
@@ -1626,7 +1657,7 @@ class DiffusionMapsCalculator(CalculatorBase):
         # This is allowed, cause we need to do it also at other places and warned the user. 
         # Usually this should not be a problem, if users choose a normal size.
         landmark_coords = data[landmark_idx]
-        is_memmap_data = DataUtils.is_memmap_view(data)
+        is_memmap_data = MemmapUtils.is_memmap_view(data)
         if is_memmap_data:
             ResourceUtils.tune_memmap(data, "sequential")
         
@@ -1693,7 +1724,7 @@ class DiffusionMapsCalculator(CalculatorBase):
         )
         if self.use_memmap:
             ResourceUtils.tune_memmap(K_all_to_landmarks, "sequential")
-        is_memmap_data = DataUtils.is_memmap_view(data)
+        is_memmap_data = MemmapUtils.is_memmap_view(data)
         if is_memmap_data:
             ResourceUtils.tune_memmap(data, "sequential")
 

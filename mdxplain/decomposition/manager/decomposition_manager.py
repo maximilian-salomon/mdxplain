@@ -28,6 +28,7 @@ Used to add, reset, and manage decomposition data in trajectory data objects.
 from __future__ import annotations
 
 from typing import Optional, Any, Tuple, TYPE_CHECKING
+import gc
 import os
 import numpy as np
 
@@ -35,6 +36,9 @@ from ..entities.decomposition_data import DecompositionData
 from ..decomposition_type.interfaces.decomposition_type_base import DecompositionTypeBase
 from ..services.decomposition_add_service import DecompositionAddService
 from ...utils.data_utils import DataUtils
+from ...utils.cleanup_utils import CleanupUtils
+from ...utils.memmap_utils import MemmapUtils
+from ...utils.path_utils import PathUtils
 
 if TYPE_CHECKING:
     from ...pipeline.entities.pipeline_data import PipelineData
@@ -98,8 +102,11 @@ class DecompositionManager:
         """
         self.use_memmap = use_memmap
         self.chunk_size = chunk_size
-        self.cache_dir = cache_dir
-        os.makedirs(self.cache_dir, exist_ok=True)
+        self.cache_dir = PathUtils.prepare_directory_path(
+            cache_dir,
+            create=True,
+            purpose="cache directory",
+        )
 
         if chunk_size <= 0 and not isinstance(chunk_size, int):
             raise ValueError("Chunk size must be a positive integer.")
@@ -253,7 +260,20 @@ class DecompositionManager:
                 print(
                     f"WARNING: Decomposition for selection '{selection_name}' already exists. Forcing recomputation."
                 )
+                old_data = pipeline_data.decomposition_data[selection_name]
+                cache_path = old_data.cache_path
+                old_array = old_data.data
+                old_data.data = None
                 del pipeline_data.decomposition_data[selection_name]
+                gc.collect()
+                MemmapUtils.close_memmap_view(old_array)
+                old_array = None
+                gc.collect()
+                if cache_path and os.path.exists(cache_path):
+                    CleanupUtils.remove_path(
+                        cache_path,
+                        purpose="decomposition cache path",
+                    )
             else:
                 raise ValueError(
                     f"Decomposition for selection '{selection_name}' already exists."

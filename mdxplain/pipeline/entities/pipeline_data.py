@@ -612,9 +612,9 @@ class PipelineData:
         >>> pipeline_data.save('analysis_results/pipeline_data.pkl')
 
         >>> # Save with specific path structure
-        >>> import os
-        >>> save_dir = 'project_results/session_001'
-        >>> os.makedirs(save_dir, exist_ok=True)
+        >>> from pathlib import Path
+        >>> save_dir = Path('project_results/session_001')
+        >>> save_dir.mkdir(parents=True, exist_ok=True)
         >>> pipeline_data.save(f'{save_dir}/pipeline_analysis.pkl')
 
         Notes

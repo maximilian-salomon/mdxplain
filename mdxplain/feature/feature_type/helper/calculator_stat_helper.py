@@ -32,7 +32,7 @@ import numpy as np
 
 from mdxplain.utils.progress_utils import ProgressUtils
 from mdxplain.utils.resource_utils import ResourceUtils
-from mdxplain.utils.data_utils import DataUtils
+from mdxplain.utils.memmap_utils import MemmapUtils
 
 from .feature_shape_helper import FeatureShapeHelper
 
@@ -157,7 +157,7 @@ class CalculatorStatHelper:
 
         # Process in chunks
         result_chunks = []
-        is_memmap_input = DataUtils.is_memmap_view(flat_array)
+        is_memmap_input = MemmapUtils.is_memmap_view(flat_array)
         if is_memmap_input:
             ResourceUtils.tune_memmap(flat_array, "sequential")
         for i in ProgressUtils.iterate(
@@ -254,7 +254,7 @@ class CalculatorStatHelper:
             Statistical values per frame
         """
         result_chunks = []
-        is_memmap_input = DataUtils.is_memmap_view(array)
+        is_memmap_input = MemmapUtils.is_memmap_view(array)
         if is_memmap_input:
             ResourceUtils.tune_memmap(array, "sequential")
         for i in ProgressUtils.iterate(
@@ -398,7 +398,7 @@ class CalculatorStatHelper:
             Statistical values per column
         """
         result_chunks = []
-        is_memmap_input = DataUtils.is_memmap_view(array)
+        is_memmap_input = MemmapUtils.is_memmap_view(array)
         if is_memmap_input:
             ResourceUtils.tune_memmap(array, "sequential")
         for i in ProgressUtils.iterate(
@@ -699,8 +699,8 @@ class CalculatorStatHelper:
             Modifies result array in-place
         """
         flat_result = result.flatten()
-        is_memmap_input = DataUtils.is_memmap_view(array)
-        is_memmap_result = DataUtils.is_memmap_view(result)
+        is_memmap_input = MemmapUtils.is_memmap_view(array)
+        is_memmap_result = MemmapUtils.is_memmap_view(result)
         if is_memmap_input:
             ResourceUtils.tune_memmap(array, "sequential")
         if is_memmap_result:

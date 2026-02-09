@@ -36,6 +36,7 @@ if TYPE_CHECKING:
 from ..helper.residue_importance_calculator import ResidueImportanceCalculator
 from ..helper.pdb_beta_factor_helper import PdbBetaFactorHelper
 from ...utils.top_features_utils import TopFeaturesUtils
+from ...utils.path_utils import PathUtils
 
 
 class StructureVisualizationManager:
@@ -106,11 +107,18 @@ class StructureVisualizationManager:
         """
         self.use_memmap = use_memmap
         self.chunk_size = chunk_size
-        self.cache_dir = cache_dir
+        self.cache_dir = PathUtils.prepare_directory_path(
+            cache_dir,
+            create=True,
+            purpose="cache directory",
+        )
 
         # Create dedicated output directory for structure visualization
-        self.output_dir = os.path.join(cache_dir, "structure_viz")
-        os.makedirs(self.output_dir, exist_ok=True)
+        self.output_dir = PathUtils.prepare_directory_path(
+            os.path.join(self.cache_dir, "structure_viz"),
+            create=True,
+            purpose="structure visualization output directory",
+        )
 
     @property
     def feature_importance(self):

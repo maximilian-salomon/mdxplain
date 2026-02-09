@@ -26,12 +26,12 @@ including existence checks, dependency validation, and result storage
 in the FeatureManager.
 """
 from __future__ import annotations
-
 import numpy as np
 from typing import Tuple, Any, Dict, List, TYPE_CHECKING
 
 from ..entities.feature_data import FeatureData
 from ..feature_type.interfaces.feature_type_base import FeatureTypeBase
+from .feature_binding_helper import FeatureBindingHelper
 
 if TYPE_CHECKING:
     from ...pipeline.entities.pipeline_data import PipelineData
@@ -146,6 +146,9 @@ class FeatureComputationHelper:
         if feature_key in pipeline_data.feature_data:
             for traj_idx in traj_indices:
                 if traj_idx in pipeline_data.feature_data[feature_key]:
+                    FeatureBindingHelper.release_bound_methods(
+                        pipeline_data.feature_data[feature_key][traj_idx]
+                    )
                     del pipeline_data.feature_data[feature_key][traj_idx]
 
     @staticmethod

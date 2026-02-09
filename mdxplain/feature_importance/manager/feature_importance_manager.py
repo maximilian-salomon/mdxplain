@@ -39,6 +39,7 @@ from ..helper.analysis_runner_helper import AnalysisRunnerHelper
 from ..helper.feature_importance_validation_helper import FeatureImportanceValidationHelper
 from ..helper.top_features_helper import TopFeaturesHelper
 from ...utils.data_utils import DataUtils
+from ...utils.path_utils import PathUtils
 from ..services.feature_importance_add_service import FeatureImportanceAddService
 from ..helper.representative_finder_helper import RepresentativeFinderHelper
 
@@ -98,7 +99,11 @@ class FeatureImportanceManager:
         """
         self.use_memmap = use_memmap
         self.chunk_size = chunk_size
-        self.cache_dir = cache_dir
+        self.cache_dir = PathUtils.prepare_directory_path(
+            cache_dir,
+            create=True,
+            purpose="cache directory",
+        )
 
     def add_analysis(
         self,

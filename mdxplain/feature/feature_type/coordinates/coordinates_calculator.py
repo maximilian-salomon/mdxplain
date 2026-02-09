@@ -33,7 +33,7 @@ import numpy as np
 
 from mdxplain.utils.progress_utils import ProgressUtils
 from mdxplain.utils.resource_utils import ResourceUtils
-from mdxplain.utils.data_utils import DataUtils
+from mdxplain.utils.memmap_utils import MemmapUtils
 
 from ..helper.calculator_compute_helper import CalculatorComputeHelper
 from ..interfaces.calculator_base import CalculatorBase
@@ -241,7 +241,7 @@ class CoordinatesCalculator(CalculatorBase):
         numpy.ndarray
             Filled coordinates array
         """
-        is_memmap = DataUtils.is_memmap_view(coordinates)
+        is_memmap = MemmapUtils.is_memmap_view(coordinates)
         if self.use_memmap or hasattr(coordinates, 'flush'):
             if is_memmap:
                 ResourceUtils.tune_memmap(coordinates, "sequential")

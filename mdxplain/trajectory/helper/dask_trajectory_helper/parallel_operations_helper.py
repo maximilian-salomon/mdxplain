@@ -28,13 +28,16 @@ import multiprocessing
 import os
 import tempfile
 import time
+import gc
 from typing import Optional, Tuple, Any
 
 import dask.array as da
 import mdtraj as md
 import numpy as np
 import zarr
+from mdxplain.utils.cleanup_utils import CleanupUtils
 from mdxplain.utils.progress_utils import ProgressUtils
+from mdxplain.utils.path_utils import PathUtils
 from zarr.codecs import BloscCodec
 
 # Default compression for all zarr operations
@@ -75,25 +78,64 @@ class ParallelOperationsHelper:
             Initializes parallel operations
         """
         
-        self.zarr_path = zarr_path
-        self.zarr_store = zarr.open(zarr_path, mode='r')
+        self.zarr_path = PathUtils.prepare_file_path(
+            zarr_path,
+            create_parent=False,
+            purpose="zarr path",
+        )
+        self.zarr_store = zarr.open(self.zarr_path, mode='r')
         self.topology = topology
         self.n_workers = n_workers if n_workers is not None else multiprocessing.cpu_count()
         self.chunk_size = chunk_size
-        self.cache_dir = cache_dir
+        self.cache_dir = PathUtils.prepare_directory_path(
+            cache_dir,
+            create=True,
+            purpose="cache directory",
+        )
         
         # Create Dask arrays from Zarr path 
-        self.dask_coords = da.from_zarr(zarr_path, component='coordinates')
-        self.dask_time = da.from_zarr(zarr_path, component='time')
+        self.dask_coords = da.from_zarr(self.zarr_path, component='coordinates')
+        self.dask_time = da.from_zarr(self.zarr_path, component='time')
         
         # Optional unitcell data
         self.has_unitcell = 'unitcell_vectors' in self.zarr_store
         if self.has_unitcell:
-            self.dask_unitcell_vectors = da.from_zarr(zarr_path, component='unitcell_vectors')
-            self.dask_unitcell_lengths = da.from_zarr(zarr_path, component='unitcell_lengths')
-            self.dask_unitcell_angles = da.from_zarr(zarr_path, component='unitcell_angles')
+            self.dask_unitcell_vectors = da.from_zarr(
+                self.zarr_path, component='unitcell_vectors'
+            )
+            self.dask_unitcell_lengths = da.from_zarr(
+                self.zarr_path, component='unitcell_lengths'
+            )
+            self.dask_unitcell_angles = da.from_zarr(
+                self.zarr_path, component='unitcell_angles'
+            )
         
         self.n_frames, self.n_atoms = self.dask_coords.shape[:2]
+
+    def cleanup(self) -> None:
+        """
+        Release in-memory and zarr-store references held by this helper.
+
+        Returns
+        -------
+        None
+            Clears Dask array references and closes store handles when possible.
+        """
+        self.dask_coords = None
+        self.dask_time = None
+        if hasattr(self, "dask_unitcell_vectors"):
+            self.dask_unitcell_vectors = None
+        if hasattr(self, "dask_unitcell_lengths"):
+            self.dask_unitcell_lengths = None
+        if hasattr(self, "dask_unitcell_angles"):
+            self.dask_unitcell_angles = None
+
+        zarr_store = getattr(self, "zarr_store", None)
+        if zarr_store is not None:
+            CleanupUtils.close_zarr_store(zarr_store)
+            self.zarr_store = None
+
+        gc.collect()
         
     def center_coordinates(self, result_path: str, mass_weighted: bool = False) -> zarr.Group:
         """
@@ -249,6 +291,11 @@ class ParallelOperationsHelper:
             Configured zarr store with empty arrays
         """
         n_frames, n_atoms = result_shape[:2]
+        result_path = PathUtils.prepare_file_path(
+            result_path,
+            create_parent=True,
+            purpose="zarr result path",
+        )
         result_store = zarr.open(result_path, mode='w')
         compressor = DEFAULT_COMPRESSOR
         
@@ -855,6 +902,11 @@ class ParallelOperationsHelper:
         >>> print(f"Created store with {coords.shape[0]} frames")
         """
         
+        result_path = PathUtils.prepare_file_path(
+            result_path,
+            create_parent=True,
+            purpose="zarr result path",
+        )
         new_store = zarr.open(result_path, mode='w')
         
         n_frames_new, n_atoms_new = new_coords.shape[:2]

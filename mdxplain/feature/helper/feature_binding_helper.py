@@ -165,6 +165,35 @@ class FeatureBindingHelper:
         return BoundMethod(feature_data, original_method, method_name, requires_full_data)
 
     @staticmethod
+    def release_bound_methods(feature_data: FeatureData) -> None:
+        """
+        Release bound method references to break feature<->analysis cycles.
+
+        Parameters
+        ----------
+        feature_data : FeatureData
+            Feature data object whose bound analysis methods should be released.
+
+        Returns
+        -------
+        None
+            Clears bound references and detaches the analysis container.
+        """
+        if not hasattr(feature_data, "analysis") or feature_data.analysis is None:
+            return
+
+        for method_name in dir(feature_data.analysis):
+            if method_name.startswith("_"):
+                continue
+
+            bound_method = getattr(feature_data.analysis, method_name)
+            if isinstance(bound_method, BoundMethod):
+                bound_method.feature_data = None
+                bound_method.original_method = None
+
+        feature_data.analysis = None
+
+    @staticmethod
     def repair_bound_methods(feature_data: FeatureData) -> None:
         """
         Repair BoundMethod objects after unpickling.

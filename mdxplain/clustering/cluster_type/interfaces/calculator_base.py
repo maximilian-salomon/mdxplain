@@ -35,7 +35,8 @@ from mdxplain.utils.progress_utils import ProgressUtils
 from sklearn.metrics import silhouette_score
 from sklearn.neighbors import KNeighborsClassifier
 
-from ....utils.data_utils import DataUtils
+from ....utils.memmap_utils import MemmapUtils
+from ....utils.path_utils import PathUtils
 from ....utils.resource_utils import ResourceUtils
 from ...helper.center_calculation_helper import CenterCalculationHelper
 
@@ -532,9 +533,13 @@ class CalculatorBase(ABC):
         """
         if self.use_memmap:
             filename = f"{algorithm}_{method}_labels.dat"
-            path = DataUtils.get_cache_file_path(filename, self.cache_path)
-            labels = np.memmap(path, dtype=np.int32, mode='w+', shape=(n_samples,))
-            ResourceUtils.tune_memmap(labels, "random")
+            path = PathUtils.get_cache_file_path(filename, self.cache_path)
+            labels = MemmapUtils.create_memmap(
+                path=path,
+                dtype=np.int32,
+                mode="w+",
+                shape=(n_samples,),
+            )
             return labels
         else:
             return np.empty(n_samples, dtype=np.int32)
@@ -559,9 +564,13 @@ class CalculatorBase(ABC):
         """
         if self.use_memmap and not isinstance(labels, np.memmap):
             filename = f"{algorithm}_{method}_labels.dat"
-            path = DataUtils.get_cache_file_path(filename, self.cache_path)
-            memmap_labels = np.memmap(path, dtype=np.int32, mode='w+', shape=labels.shape)
-            ResourceUtils.tune_memmap(memmap_labels, "random")
+            path = PathUtils.get_cache_file_path(filename, self.cache_path)
+            memmap_labels = MemmapUtils.create_memmap(
+                path=path,
+                dtype=np.int32,
+                mode="w+",
+                shape=labels.shape,
+            )
             memmap_labels[:] = labels
             memmap_labels.flush()
             return memmap_labels
@@ -633,7 +642,7 @@ class CalculatorBase(ABC):
                 
                 # Process remaining points in chunks (direct memmap/array writing)
                 is_memmap_labels = isinstance(full_labels, np.memmap)
-                is_memmap_data = DataUtils.is_memmap_view(data)
+                is_memmap_data = MemmapUtils.is_memmap_view(data)
                 if is_memmap_labels:
                     ResourceUtils.tune_memmap(full_labels, "sequential")
                 if is_memmap_data:

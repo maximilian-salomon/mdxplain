@@ -29,6 +29,8 @@ structures (from FI sub-comparisons or data selectors).
 
 from typing import Dict, Optional, List, Any
 
+from ...utils.path_utils import PathUtils
+
 
 class StructureVisualizationData:
     """
@@ -155,7 +157,11 @@ class StructureVisualizationData:
         >>> viz_data = StructureVisualizationData("my_viz")
         >>> viz_data.add_pdb("cluster_0_vs_rest", "/path/to/structure.pdb")
         """
-        self.pdb_paths[sub_comparison] = pdb_path
+        self.pdb_paths[sub_comparison] = PathUtils.prepare_file_path(
+            pdb_path,
+            create_parent=False,
+            purpose="pdb path",
+        )
 
     def get_pdb(self, sub_comparison: str) -> Optional[str]:
         """

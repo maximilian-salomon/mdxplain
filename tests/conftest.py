@@ -19,9 +19,62 @@
 
 """Global test configuration and fixtures."""
 
+import gc
 import pytest
 import shutil
+import time
 from pathlib import Path
+
+from mdxplain.utils.memmap_utils import MemmapUtils
+
+
+def _close_memmaps_under_path(path: Path) -> None:
+    """
+    Force-close tracked memmaps only under the given path.
+    """
+    MemmapUtils.close_memmaps_under_path(path)
+
+
+def _safe_rmtree(path: Path, retries: int = 8, delay_seconds: float = 0.15) -> bool:
+    """
+    Best-effort directory removal with retries for Windows file locks.
+    """
+    for attempt in range(retries):
+        try:
+            if path.exists():
+                shutil.rmtree(path)
+            return True
+        except (OSError, PermissionError):
+            if attempt == retries - 1:
+                return False
+            _close_memmaps_under_path(path)
+            gc.collect()
+            time.sleep(delay_seconds)
+    return not path.exists()
+
+
+def _cleanup_cache_dirs(project_root: Path) -> None:
+    """
+    Cleanup shared cache folders used by tests.
+    """
+    cache_dirs = [
+        project_root / "cache",
+        project_root / "test_cache",
+    ]
+    failed = []
+    for cache_dir in cache_dirs:
+        _close_memmaps_under_path(cache_dir)
+        if not _safe_rmtree(cache_dir):
+            failed.append(str(cache_dir))
+
+    # Most tests assume ./cache exists.
+    (project_root / "cache").mkdir(exist_ok=True)
+
+    if failed:
+        raise RuntimeError(
+            "Failed to cleanup test cache directories (likely open memmap lock): "
+            + ", ".join(failed)
+        )
 
 
 @pytest.fixture(autouse=True)
@@ -40,46 +93,13 @@ def cleanup_test_artifacts():
     None
         Yields control to test, then performs cleanup
     """
+    project_root = Path(__file__).parent.parent
+
+    # Pre-cleanup: avoid stale locks/files from previous failed tests.
+    _cleanup_cache_dirs(project_root)
+
     # Run test
     yield
     
-    # Cleanup after test
-    project_root = Path(__file__).parent.parent
-    
-    # Clean cache directory
-    cache_dir = project_root / "cache"
-    if cache_dir.exists():
-        shutil.rmtree(cache_dir)
-        cache_dir.mkdir(exist_ok=True)  # Recreate empty cache dir
-    
-    # Remove temporary data files
-    temp_patterns = [
-        "*.dat",
-        "*.npy", 
-        "*.memmap"
-    ]
-    
-    for pattern in temp_patterns:
-        for temp_file in project_root.rglob(pattern):
-            try:
-                if temp_file.is_file():
-                    temp_file.unlink()
-            except (OSError, PermissionError):
-                # Some files might be in use, skip them
-                pass
-    
-    # Clean pytest cache in tests directory
-    pytest_cache = project_root / "tests" / ".pytest_cache"
-    if pytest_cache.exists():
-        try:
-            shutil.rmtree(pytest_cache)
-        except (OSError, PermissionError):
-            pass
-    
-    # Clean __pycache__ directories in tests
-    for pycache in (project_root / "tests").rglob("__pycache__"):
-        try:
-            if pycache.is_dir():
-                shutil.rmtree(pycache)
-        except (OSError, PermissionError):
-            pass
+    # Post-cleanup
+    _cleanup_cache_dirs(project_root)

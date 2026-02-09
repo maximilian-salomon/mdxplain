@@ -39,6 +39,7 @@ from ..helper.feature_selector_parse_core_helper import FeatureSelectorParseCore
 from ..helper.common_denominator_helper import CommonDenominatorHelper
 from ..helper.post_selection_reduction_helper import PostSelectionReductionHelper
 from ...utils.data_utils import DataUtils
+from ...utils.path_utils import PathUtils
 from ...feature.services.feature_selector_add_service import FeatureSelectorAddService
 
 
@@ -75,7 +76,11 @@ class FeatureSelectorManager:
         """
         self.use_memmap = use_memmap
         self.chunk_size = chunk_size
-        self.cache_dir = cache_dir
+        self.cache_dir = PathUtils.prepare_directory_path(
+            cache_dir,
+            create=True,
+            purpose="cache directory",
+        )
 
     def create(self, pipeline_data: PipelineData, name: str) -> None:
         """

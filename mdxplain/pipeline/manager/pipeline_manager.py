@@ -30,18 +30,28 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional, cast
 from types import SimpleNamespace
+from datetime import datetime
+import gc
+import re
 import os
 import shutil
 import tempfile
 import numpy as np
 from pathlib import Path
+import uuid
 
 from ..entities.pipeline_data import PipelineData
+from ..helper.cache_remap_helper import CacheRemapHelper
 from .auto_inject_proxy import AutoInjectProxy
 from .performance_config import PerformanceConfig
 from ...utils.archive_utils import ArchiveUtils
+from ...utils.cleanup_utils import CleanupUtils
+from ...utils.helper.load_and_save_helper import LoadAndSaveHelper
+from ...utils.memmap_utils import MemmapUtils
+from ...utils.path_utils import PathUtils
 from ...utils.progress_utils import ProgressUtils
 from ...utils.resource_utils import ResourceUtils
+from ...feature.helper.feature_binding_helper import FeatureBindingHelper
 
 from ...trajectory import TrajectoryManager
 from ...feature import FeatureManager
@@ -198,7 +208,14 @@ class PipelineManager:
             Initializes PipelineManager with automatic data injection
         """
         self._validate_init_params(stride=stride, chunk_size=chunk_size)
-        os.makedirs(cache_dir, exist_ok=True)
+        self._pipeline_uuid = uuid.uuid4().hex
+        self._pipeline_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        cache_dir = PathUtils.create_pipeline_cache_dir(
+            cache_dir,
+            pipeline_uuid=self._pipeline_uuid,
+            pipeline_timestamp=self._pipeline_timestamp,
+            purpose="cache directory",
+        )
 
         self._init_performance_config(
             use_memmap=use_memmap,
@@ -221,6 +238,7 @@ class PipelineManager:
         )
         self._apply_show_progress(show_progress)
         self.report_resource_limits()
+        self._closed = False
 
     def _validate_init_params(self, stride: int, chunk_size: int) -> None:
         """
@@ -816,6 +834,84 @@ class PipelineManager:
         """
         self._data.clear_all_data()
 
+    def close(self) -> None:
+        """
+        Release in-memory resources and memmap handles owned by this pipeline.
+
+        This method closes memmap-backed arrays and trajectory runtime caches
+        without deleting cache files on disk. It is safe to call multiple times.
+
+        Returns
+        -------
+        None
+            Frees resources and detaches in-memory references.
+        """
+        if getattr(self, "_closed", False):
+            return
+
+        if not hasattr(self, "_data"):
+            self._closed = True
+            return
+
+        # Release trajectory runtime caches (e.g., DaskMDTrajectory caches).
+        for trajectory in getattr(self._data.trajectory_data, "trajectories", []):
+            cleanup = getattr(trajectory, "cleanup", None)
+            if callable(cleanup):
+                try:
+                    cleanup()
+                except Exception:
+                    pass
+
+        # Release feature memmaps and analysis binding cycles.
+        for feature_traj_dict in self._data.feature_data.values():
+            for feature_data in feature_traj_dict.values():
+                FeatureBindingHelper.release_bound_methods(feature_data)
+                MemmapUtils.close_memmap_view(feature_data.data)
+                MemmapUtils.close_memmap_view(feature_data.reduced_data)
+                if MemmapUtils.is_memmap_view(feature_data.data):
+                    feature_data.data = None
+                if MemmapUtils.is_memmap_view(feature_data.reduced_data):
+                    feature_data.reduced_data = None
+
+        # Release decomposition memmaps.
+        for decomposition_data in self._data.decomposition_data.values():
+            MemmapUtils.close_memmap_view(decomposition_data.data)
+            if MemmapUtils.is_memmap_view(decomposition_data.data):
+                decomposition_data.data = None
+
+        # Release clustering memmaps (labels and optional centers).
+        for cluster_data in self._data.cluster_data.values():
+            MemmapUtils.close_memmap_view(cluster_data.labels)
+            if MemmapUtils.is_memmap_view(cluster_data.labels):
+                cluster_data.labels = None
+            if isinstance(cluster_data.metadata, dict):
+                centers = cluster_data.metadata.get("centers")
+                MemmapUtils.close_memmap_view(centers)
+                if MemmapUtils.is_memmap_view(centers):
+                    cluster_data.metadata["centers"] = None
+
+        # Release feature-importance memmaps if present.
+        for feature_importance_data in self._data.feature_importance_data.values():
+            for idx, scores in enumerate(feature_importance_data.data):
+                MemmapUtils.close_memmap_view(scores)
+                if MemmapUtils.is_memmap_view(scores):
+                    feature_importance_data.data[idx] = None
+
+        # Clear selector matrix cache metadata (files remain on disk).
+        self._data.clear_matrix_cache()
+
+        gc.collect()
+        self._closed = True
+
+    def __del__(self) -> None:
+        """
+        Best-effort fallback cleanup when the pipeline object is garbage-collected.
+        """
+        try:
+            self.close()
+        except Exception:
+            pass
+
     def save_to_single_file(self, save_path: str) -> None:
         """
         Save complete pipeline to single pickle file.
@@ -838,12 +934,17 @@ class PipelineManager:
         --------
         >>> pipeline.save_to_single_file('complete_analysis.pkl')
         """
+        save_path = PathUtils.prepare_file_path(
+            save_path,
+            create_parent=True,
+            purpose="save path",
+        )
         self._data.save(save_path)
 
     @staticmethod
     def load_from_single_file(
         load_path: str,
-        cache_dir: str = "./cache",
+        cache_dir: Optional[str] = "./cache",
         chunk_size: int = 1000,
         stride: int = 1,
         concat: bool = False,
@@ -861,8 +962,10 @@ class PipelineManager:
         ----------
         load_path : str
             Path to the saved pipeline pickle file
-        cache_dir : str, default="./cache"
-            Cache directory where memmap files are located
+        cache_dir : str, optional
+            Fallback cache directory used only when saved cache metadata
+            is unavailable. By default, the cache scope stored in the
+            single-file payload is reused to preserve pipeline identity.
         chunk_size : int, default=1000
             Default chunk size for future operations
         stride : int, default=1
@@ -898,8 +1001,23 @@ class PipelineManager:
         >>> # Now load additional trajectories with stride=10
         >>> loaded_pipeline.trajectory.load_trajectories('new_data/')
         """
+        load_path = PathUtils.prepare_file_path(
+            load_path,
+            create_parent=False,
+            purpose="load path",
+        )
+
+        saved_cache_dir = LoadAndSaveHelper.peek_cache_dir(load_path)
+
+        target_cache_dir = saved_cache_dir or cache_dir or "./cache"
+        target_cache_dir = PathUtils.prepare_directory_path(
+            target_cache_dir,
+            create=True,
+            purpose="cache directory",
+        )
+
         pipeline = PipelineManager(
-            cache_dir=cache_dir,
+            cache_dir=target_cache_dir,
             chunk_size=chunk_size,
             stride=stride,
             concat=concat,
@@ -907,6 +1025,30 @@ class PipelineManager:
             show_progress=show_progress,
         )
         pipeline._data.load(load_path)
+
+        loaded_cache_dir = PathUtils.prepare_directory_path(
+            pipeline._data.cache_dir,
+            create=True,
+            purpose="cache directory",
+        )
+        pipeline._data.cache_dir = loaded_cache_dir
+        pipeline._trajectory_manager.cache_dir = loaded_cache_dir
+        pipeline._feature_manager.cache_dir = loaded_cache_dir
+        pipeline._decomposition_manager.cache_dir = loaded_cache_dir
+        pipeline._cluster_manager.cache_dir = loaded_cache_dir
+        pipeline._feature_importance_manager.cache_dir = loaded_cache_dir
+        pipeline._plots_manager.cache_dir = loaded_cache_dir
+        pipeline._structure_visualization_manager.cache_dir = loaded_cache_dir
+
+        scoped_name = os.path.basename(os.path.normpath(loaded_cache_dir))
+        scope_match = re.fullmatch(
+            r"cache_([0-9a-f]{32})_(\d{8}_\d{6})",
+            scoped_name,
+        )
+        if scope_match is not None:
+            pipeline._pipeline_uuid = scope_match.group(1)
+            pipeline._pipeline_timestamp = scope_match.group(2)
+
         return pipeline
 
     def create_sharable_archive(
@@ -914,7 +1056,11 @@ class PipelineManager:
         archive_path: str,
         compression: str = "xz",
         exclude_visualizations: bool = True,
-        include_structure_files: bool = True
+        include_structure_files: bool = True,
+        compression_level: Optional[int] = None,
+        xz_threads: Optional[int] = None,
+        xz_reserve_cores: int = 2,
+        xz_max_memory_gb: Optional[float] = None,
     ) -> str:
         """
         Create sharable compressed archive with pipeline and essential data.
@@ -933,6 +1079,15 @@ class PipelineManager:
             If True, exclude PNG/PDF/SVG plot outputs
         include_structure_files : bool, default=True
             If True, include PDB/PML structure files
+        compression_level : int, optional
+            Compression level override (e.g. xz preset 0-9).
+        xz_threads : int, optional
+            Thread count for xz compression. If None, chosen automatically.
+        xz_reserve_cores : int, default=2
+            Number of CPU cores to keep free when xz thread count is automatic.
+        xz_max_memory_gb : float, optional
+            Soft memory cap for xz compression in GiB. If None, uses
+            ``pipeline_data.max_memory_gb``.
 
         Returns
         -------
@@ -959,17 +1114,27 @@ class PipelineManager:
         Notes
         -----
         - xz compression provides best compression ratio
+        - xz compression is multithreaded by default
+        - xz thread count is reduced automatically to respect memory budget
         - With use_memmap=False: Archive contains only pipeline.pkl + optional PDB/PML
         - With use_memmap=True: Archive contains pipeline.pkl + .dat files + zarr directories
         - Paths are preserved relative to cache directory
         - Memmap and zarr only included when use_memmap=True
         """
+        resolved_xz_max_memory_gb = xz_max_memory_gb
+        if compression == "xz" and resolved_xz_max_memory_gb is None:
+            resolved_xz_max_memory_gb = self._data.max_memory_gb
+
         return ArchiveUtils.create_archive(
             self._data,
             archive_path,
             compression,
             exclude_visualizations,
-            include_structure_files
+            include_structure_files,
+            compression_level=compression_level,
+            xz_threads=xz_threads if compression == "xz" else None,
+            reserve_cores=xz_reserve_cores if compression == "xz" else 2,
+            xz_max_memory_gb=resolved_xz_max_memory_gb if compression == "xz" else None,
         )
 
     @staticmethod
@@ -1038,6 +1203,28 @@ class PipelineManager:
         - Automatically repairs memmap paths for portability
         - Cache directory created if it doesn't exist
         """
+        archive_path = PathUtils.prepare_file_path(
+            archive_path,
+            create_parent=False,
+            purpose="archive path",
+        )
+        cache_dir = PathUtils.prepare_directory_path(
+            cache_dir,
+            create=True,
+            purpose="cache directory",
+        )
+
+        # Create loaded pipeline first to obtain a fresh scoped runtime cache dir.
+        pipeline = PipelineManager(
+            cache_dir=cache_dir,
+            chunk_size=chunk_size,
+            stride=stride,
+            concat=concat,
+            selection=selection,
+            show_progress=show_progress,
+        )
+        runtime_cache_dir = pipeline.get_config()["cache_dir"]
+
         # Extract into a temporary directory to avoid clashes with existing cache
         temp_extract_dir = tempfile.mkdtemp(prefix="mdxplain_archive_")
         extract_dir = ArchiveUtils.extract_archive(
@@ -1052,45 +1239,41 @@ class PipelineManager:
 
         # Move cache files to target cache_dir
         extracted_cache = extract_dir / "cache"
-        target_cache = Path(cache_dir)
+        target_cache = Path(runtime_cache_dir)
         target_cache.mkdir(parents=True, exist_ok=True)
 
         if extracted_cache.exists():
             for item in extracted_cache.iterdir():
                 target_item = target_cache / item.name
                 if target_item.exists():
-                    if target_item.is_dir():
-                        shutil.rmtree(target_item)
-                    else:
-                        target_item.unlink()
+                    CleanupUtils.remove_path(target_item, purpose="cache path")
                 shutil.move(str(item), str(target_item))
 
-        # Load with custom cache_dir, chunk_size and trajectory defaults
-        pipeline = PipelineManager(
-            cache_dir=cache_dir,
-            chunk_size=chunk_size,
-            stride=stride,
-            concat=concat,
-            selection=selection,
-            show_progress=show_progress,
-        )
         pipeline._data.load(str(pkl_path))
 
         # Force update cache_dir to match extracted file location
-        # This prevents path nesting issues on repeated save/load cycles
-        pipeline._data.cache_dir = cache_dir
+        pipeline._data.cache_dir = runtime_cache_dir
 
         # Update all manager cache_dirs for consistency
-        pipeline._trajectory_manager.cache_dir = cache_dir
-        pipeline._feature_manager.cache_dir = cache_dir
-        pipeline._decomposition_manager.cache_dir = cache_dir
-        pipeline._cluster_manager.cache_dir = cache_dir
-        pipeline._feature_importance_manager.cache_dir = cache_dir
-        pipeline._plots_manager.cache_dir = cache_dir
-        pipeline._structure_visualization_manager.cache_dir = cache_dir
+        pipeline._trajectory_manager.cache_dir = runtime_cache_dir
+        pipeline._feature_manager.cache_dir = runtime_cache_dir
+        pipeline._decomposition_manager.cache_dir = runtime_cache_dir
+        pipeline._cluster_manager.cache_dir = runtime_cache_dir
+        pipeline._feature_importance_manager.cache_dir = runtime_cache_dir
+        pipeline._plots_manager.cache_dir = runtime_cache_dir
+        pipeline._structure_visualization_manager.cache_dir = runtime_cache_dir
+
+        CacheRemapHelper.remap_pipeline_memmaps(
+            pipeline._data,
+            runtime_cache_dir=runtime_cache_dir,
+        )
 
         # Cleanup extracted temporary directory
-        shutil.rmtree(extract_dir, ignore_errors=True)
+        CleanupUtils.remove_tree(
+            extract_dir,
+            ignore_errors=True,
+            purpose="temporary extraction directory",
+        )
 
         return pipeline
 
@@ -1218,15 +1401,12 @@ class PipelineManager:
                 raise ValueError("chunk_size must be a positive integer")
 
         if cache_dir is not None:
-            if not isinstance(cache_dir, str):
-                raise ValueError("cache_dir must be a string")
-            # Create directory if it doesn't exist
-            try:
-                os.makedirs(cache_dir, exist_ok=True)
-            except OSError as e:
-                raise OSError(
-                    f"Cannot create cache directory '{cache_dir}': {e}"
-                )
+            cache_dir = PathUtils.create_pipeline_cache_dir(
+                cache_dir,
+                pipeline_uuid=self._pipeline_uuid,
+                pipeline_timestamp=self._pipeline_timestamp,
+                purpose="cache directory",
+            )
 
         if use_memmap is not None:
             if not isinstance(use_memmap, bool):

@@ -31,6 +31,7 @@ from typing import List, Optional, Tuple
 import mdtraj as md
 import numpy as np
 
+from mdxplain.utils.memmap_utils import MemmapUtils
 from mdxplain.utils.progress_utils import ProgressUtils
 from mdxplain.utils.resource_utils import ResourceUtils
 
@@ -190,13 +191,12 @@ class FeatureShapeHelper:
             Output array for condensed format
         """
         if output_path is not None:
-            output = np.memmap(
-                output_path,
+            output = MemmapUtils.create_memmap(
+                path=output_path,
                 dtype=dtype,
                 mode="w+",
                 shape=(n_frames, n_contacts),
             )
-            ResourceUtils.tune_memmap(output, "random")
             return output
         else:
             return np.zeros((n_frames, n_contacts), dtype=dtype)
@@ -389,13 +389,12 @@ class FeatureShapeHelper:
         n_frames = condensed_array.shape[0]
 
         if output_path is not None:
-            square_array = np.memmap(
-                output_path,
+            square_array = MemmapUtils.create_memmap(
+                path=output_path,
                 dtype=condensed_array.dtype,
                 mode="w+",
                 shape=(n_frames, n_residues, n_residues),
             )
-            ResourceUtils.tune_memmap(square_array, "random")
         else:
             square_array = np.zeros(
                 (n_frames, n_residues, n_residues), dtype=condensed_array.dtype

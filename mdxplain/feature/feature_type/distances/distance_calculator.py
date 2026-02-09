@@ -33,7 +33,7 @@ import numpy as np
 
 from mdxplain.utils.progress_utils import ProgressUtils
 from mdxplain.utils.resource_utils import ResourceUtils
-from mdxplain.utils.data_utils import DataUtils
+from mdxplain.utils.memmap_utils import MemmapUtils
 
 from ..helper.calculator_compute_helper import CalculatorComputeHelper
 from ..helper.feature_shape_helper import FeatureShapeHelper
@@ -454,7 +454,7 @@ class DistanceCalculator(CalculatorBase):
         None
         """
         if FeatureShapeHelper.is_memmap(distances) or self.use_memmap:
-            if DataUtils.is_memmap_view(distances):
+            if MemmapUtils.is_memmap_view(distances):
                 ResourceUtils.tune_memmap(distances, "sequential")
             for i in ProgressUtils.iterate(
                 range(0, total_frames, self.chunk_size),
@@ -465,7 +465,7 @@ class DistanceCalculator(CalculatorBase):
                 distances[i:end_idx] *= 10
                 if hasattr(distances, "flush"):
                     distances.flush()
-            if DataUtils.is_memmap_view(distances):
+            if MemmapUtils.is_memmap_view(distances):
                 ResourceUtils.tune_memmap(distances, "random")
         else:
             distances *= 10
@@ -556,7 +556,7 @@ class DistanceCalculator(CalculatorBase):
             if hasattr(distances, "flush"):
                 distances.flush()
         else:
-            if DataUtils.is_memmap_view(distances):
+            if MemmapUtils.is_memmap_view(distances):
                 ResourceUtils.tune_memmap(distances, "sequential")
             for frame_start in ProgressUtils.iterate(
                 range(0, traj.n_frames, self.chunk_size),
@@ -577,7 +577,7 @@ class DistanceCalculator(CalculatorBase):
                 distances[frame_start : frame_start + frames_to_process] = dist
                 if hasattr(distances, "flush"):
                     distances.flush()
-            if DataUtils.is_memmap_view(distances):
+            if MemmapUtils.is_memmap_view(distances):
                 ResourceUtils.tune_memmap(distances, "random")
 
         return distances, res_list
