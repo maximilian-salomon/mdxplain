@@ -633,6 +633,7 @@ def main() -> int:
         ("2RJY", Path("data/2RJY")),
         ("2RJY_stack2x", out_root / "2RJY_stack2x"),
         ("2RJY_stack3x", out_root / "2RJY_stack3x"),
+        ("2RJY_stack5x", out_root / "2RJY_stack5x"),
     ]
 
     datasets: List[tuple[str, Path]] = []
