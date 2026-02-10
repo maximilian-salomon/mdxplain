@@ -70,6 +70,7 @@ class LandscapeRenderingHelper:
         ylim: Tuple[float, float],
         use_kde: bool = False,
         mask_empty_bins: bool = True,
+        cmap=None,
         contour_label_fontsize: Optional[int] = None,
         tick_fontsize: Optional[int] = None
     ) -> None:
@@ -122,7 +123,8 @@ class LandscapeRenderingHelper:
         energy_plot = LandscapeRenderingHelper._prepare_energy_plot_data(
             energy, mask_empty_bins, vmin, vmax
         )
-        cmap = ColorMappingHelper.get_landscape_colormap(energy_values=True)
+        if cmap is None:
+            cmap = ColorMappingHelper.get_landscape_colormap(energy_values=True)
 
         cf = ax.contourf(X, Y, energy_plot, levels=bins, cmap=cmap,
                          vmin=vmin, vmax=vmax, alpha=0.8)
@@ -267,6 +269,7 @@ class LandscapeRenderingHelper:
         ylim: Tuple[float, float],
         use_kde: bool = False,
         mask_empty_bins: bool = True,
+        cmap=None,
         contour_label_fontsize: Optional[int] = None,
         tick_fontsize: Optional[int] = None
     ) -> None:
@@ -324,7 +327,8 @@ class LandscapeRenderingHelper:
             density_plot
         )
 
-        cmap = ColorMappingHelper.get_landscape_colormap(energy_values=False)
+        if cmap is None:
+            cmap = ColorMappingHelper.get_landscape_colormap(energy_values=False)
 
         cf = ax.contourf(X, Y, density_plot, levels=bins, cmap=cmap,
                          vmin=vmin, vmax=vmax, alpha=0.8)
@@ -877,6 +881,91 @@ class LandscapeRenderingHelper:
                 X, Y, density_grid,
                 levels=levels_to_plot,
                 colors=[cluster_colors[cluster_id]],
+                linewidths=2
+            )
+
+            fmt = {
+                level: f'{100-pct:.0f}%'
+                for level, pct in zip(levels_to_plot, percentile_levels)
+            }
+            ax.clabel(CS, CS.levels, inline=True, fmt=fmt, fontsize=contour_label_fontsize or 10)
+
+    @staticmethod
+    def plot_tag_density_contours(
+        ax,
+        data_x: np.ndarray,
+        data_y: np.ndarray,
+        frame_tag_map: Dict[int, str],
+        tag_colors: Optional[Dict[str, str]],
+        bins: int,
+        percentile_levels: List[int] = [20, 40, 60, 80],
+        contour_label_fontsize: Optional[int] = None
+    ) -> None:
+        """
+        Plot tag density contours with percentile labels.
+
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            Axis to plot on
+        data_x : numpy.ndarray
+            X-axis data
+        data_y : numpy.ndarray
+            Y-axis data
+        frame_tag_map : Dict[int, str]
+            Mapping from frame index to tag
+        tag_colors : Optional[Dict[str, str]]
+            Tag -> color mapping
+        bins : int
+            Grid resolution for KDE evaluation
+        percentile_levels : List[int], default=[20, 40, 60, 80]
+            Percentile levels for contour lines
+        contour_label_fontsize : int, optional
+            Font size for contour labels
+        """
+        if not frame_tag_map:
+            return
+        if tag_colors is None:
+            return
+
+        indices = list(frame_tag_map.keys())
+        tags = [frame_tag_map[i] for i in indices]
+
+        x_vals = data_x[indices]
+        y_vals = data_y[indices]
+
+        # Create grid for KDE evaluation
+        x_grid = np.linspace(data_x.min(), data_x.max(), bins)
+        y_grid = np.linspace(data_y.min(), data_y.max(), bins)
+        X, Y = np.meshgrid(x_grid, y_grid)
+
+        # Ordered unique tags
+        seen = set()
+        ordered_tags = []
+        for tag in tags:
+            if tag in seen:
+                continue
+            seen.add(tag)
+            ordered_tags.append(tag)
+
+        for tag in ordered_tags:
+            mask = [t == tag for t in tags]
+            tag_points = np.vstack([x_vals[mask], y_vals[mask]])
+
+            if tag_points.shape[1] < 3:
+                continue
+
+            kde = gaussian_kde(tag_points)
+            point_densities = kde(tag_points)
+            levels_to_plot = np.percentile(point_densities, percentile_levels)
+
+            density_grid = kde(np.vstack([X.ravel(), Y.ravel()])).reshape(X.shape)
+
+            color = tag_colors.get(tag, "#808080")
+            CS = ax.contour(
+                X, Y, density_grid,
+                levels=levels_to_plot,
+                colors=[color],
                 linewidths=2
             )
 
