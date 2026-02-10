@@ -27,16 +27,16 @@ files and structure files for flexible archive creation.
 """
 
 import os
+import shutil
+import subprocess
 import tarfile
 import tempfile
 import warnings
 from pathlib import Path
 from typing import List, Optional, Tuple
 
-import psutil
 from .path_utils import PathUtils
 from .progress_utils import ProgressUtils
-from xopen import xopen
 
 
 class ArchiveUtils:
@@ -448,42 +448,11 @@ class ArchiveUtils:
 
         per_thread_mib = ArchiveUtils._estimate_xz_memory_per_thread_mib(xz_level)
         budget_mib = int(xz_max_memory_gb * 1024)
-
-        rss_mib = ArchiveUtils._get_current_process_rss_mib()
-        available_mib = budget_mib - rss_mib
-
-        if available_mib < per_thread_mib:
-            warnings.warn(
-                (
-                    "Available archive memory is below one xz thread estimate; "
-                    f"budget={xz_max_memory_gb:.3f} GiB ({budget_mib} MiB), "
-                    f"rss_mib={rss_mib}, "
-                    f"per_thread_estimate={per_thread_mib} MiB. "
-                    "Proceeding with threads=1."
-                ),
-                RuntimeWarning,
-                stacklevel=2,
-            )
-            return 1
-
-        max_threads_by_memory = max(1, available_mib // per_thread_mib)
+        max_threads_by_memory = max(1, budget_mib // per_thread_mib)
         return max(1, min(resolved_threads, max_threads_by_memory))
 
     @staticmethod
-    def _get_current_process_rss_mib() -> int:
-        """
-        Return current process RSS in MiB.
-
-        Returns
-        -------
-        int
-            Current RSS in MiB.
-        """
-        rss_bytes = int(psutil.Process(os.getpid()).memory_info().rss)
-        return max(0, rss_bytes // (1024 * 1024))
-
-    @staticmethod
-    def _estimate_xz_memory_per_thread_mib(xz_level: int, safety_factor: float = 1.5) -> int:
+    def _estimate_xz_memory_per_thread_mib(xz_level: int) -> int:
         """
         Estimate xz compressor memory usage per thread in MiB.
 
@@ -498,8 +467,6 @@ class ArchiveUtils:
         ----------
         xz_level : int
             xz compression level (preset 0-9).
-        safety_factor : float, optional
-            Safety factor to account for memory overhead, by default 1.5.
 
         Returns
         -------
@@ -522,7 +489,262 @@ class ArchiveUtils:
         }
         if xz_level not in per_thread_mib:
             raise ValueError("xz_level must be in range 0-9")
-        return per_thread_mib[xz_level] * safety_factor
+        return per_thread_mib[xz_level]
+
+    @staticmethod
+    def _get_xz_memlimit_bytes(xz_max_memory_gb: Optional[float]) -> Optional[int]:
+        """
+        Convert GiB memory budget to bytes for xz memlimit flags.
+
+        Parameters
+        ----------
+        xz_max_memory_gb : float, optional
+            Memory budget in GiB.
+
+        Returns
+        -------
+        int or None
+            Budget in bytes for xz CLI, or None when disabled.
+        """
+        if xz_max_memory_gb is None or xz_max_memory_gb <= 0:
+            return None
+        return max(1, int(xz_max_memory_gb * (1024 ** 3)))
+
+    @staticmethod
+    def _create_xz_archive_with_subprocess(
+        archive_full_path: str,
+        temp_pkl: str,
+        files_to_archive: List[Tuple[str, str]],
+        xz_level: int,
+        xz_threads: int,
+        xz_max_memory_gb: Optional[float],
+    ) -> None:
+        """
+        Create xz-compressed tar archive via external xz process.
+
+        This path allows passing xz memory limits directly to the compressor
+        via ``--memlimit-compress``. If an external ``xz`` executable is not
+        available, it falls back to Python's built-in ``tarfile`` xz mode.
+
+        Parameters
+        ----------
+        archive_full_path : str
+            Output archive path (including extension).
+        temp_pkl : str
+            Temporary path to ``pipeline.pkl``.
+        files_to_archive : list of tuple[str, str]
+            Archive entries as ``(source_path, archive_path)``.
+        xz_level : int
+            xz compression preset (0-9).
+        xz_threads : int
+            Thread count passed to external ``xz`` via ``-T``.
+        xz_max_memory_gb : float, optional
+            Compression memory budget in GiB. When provided, forwarded to
+            external ``xz`` as ``--memlimit-compress``.
+
+        Returns
+        -------
+        None
+            Creates archive at ``archive_full_path``.
+        """
+        xz_binary = shutil.which("xz")
+        if xz_binary is None:
+            warnings.warn(
+                (
+                    "External xz executable not found; falling back to "
+                    "Python tarfile xz compression."
+                ),
+                RuntimeWarning,
+                stacklevel=2,
+            )
+            ArchiveUtils._create_xz_archive_with_tarfile_fallback(
+                archive_full_path=archive_full_path,
+                temp_pkl=temp_pkl,
+                files_to_archive=files_to_archive,
+                xz_level=xz_level,
+            )
+            return
+
+        command = ArchiveUtils._build_xz_command(
+            xz_binary=xz_binary,
+            xz_level=xz_level,
+            xz_threads=xz_threads,
+            xz_max_memory_gb=xz_max_memory_gb,
+        )
+        ArchiveUtils._run_xz_archive_process(
+            command=command,
+            archive_full_path=archive_full_path,
+            temp_pkl=temp_pkl,
+            files_to_archive=files_to_archive,
+        )
+
+    @staticmethod
+    def _create_xz_archive_with_tarfile_fallback(
+        archive_full_path: str,
+        temp_pkl: str,
+        files_to_archive: List[Tuple[str, str]],
+        xz_level: int,
+    ) -> None:
+        """
+        Create xz archive using Python's built-in tarfile compressor.
+
+        This fallback is used when no external ``xz`` binary is available.
+
+        Parameters
+        ----------
+        archive_full_path : str
+            Output archive path (including extension).
+        temp_pkl : str
+            Temporary path to ``pipeline.pkl``.
+        files_to_archive : list of tuple[str, str]
+            Archive entries as ``(source_path, archive_path)``.
+        xz_level : int
+            xz compression preset (0-9), passed as ``compresslevel``.
+
+        Returns
+        -------
+        None
+            Creates archive at ``archive_full_path``.
+        """
+        with tarfile.open(
+            archive_full_path,
+            mode="w:xz",
+            compresslevel=xz_level,
+        ) as tar:
+            ArchiveUtils._add_archive_items(
+                tar=tar,
+                temp_pkl=temp_pkl,
+                files_to_archive=files_to_archive,
+            )
+
+    @staticmethod
+    def _build_xz_command(
+        xz_binary: str,
+        xz_level: int,
+        xz_threads: int,
+        xz_max_memory_gb: Optional[float],
+    ) -> List[str]:
+        """
+        Build subprocess command for external xz compression.
+
+        Parameters
+        ----------
+        xz_binary : str
+            Path to the external ``xz`` executable.
+        xz_level : int
+            xz compression preset (0-9), passed as ``-<level>``.
+        xz_threads : int
+            Thread count passed as ``-T<threads>``.
+        xz_max_memory_gb : float, optional
+            Compression memory budget in GiB. When provided, converted to bytes
+            and appended as ``--memlimit-compress=<bytes>``.
+
+        Returns
+        -------
+        list of str
+            Command argument list for ``subprocess.Popen``.
+        """
+        command = [xz_binary, f"-{xz_level}", f"-T{xz_threads}", "-c"]
+        memlimit_bytes = ArchiveUtils._get_xz_memlimit_bytes(xz_max_memory_gb)
+        if memlimit_bytes is not None:
+            command.append(f"--memlimit-compress={memlimit_bytes}")
+        return command
+
+    @staticmethod
+    def _run_xz_archive_process(
+        command: List[str],
+        archive_full_path: str,
+        temp_pkl: str,
+        files_to_archive: List[Tuple[str, str]],
+    ) -> None:
+        """
+        Run external xz process and stream tar payload into it.
+
+        Parameters
+        ----------
+        command : list of str
+            Command argument list for launching ``xz``.
+        archive_full_path : str
+            Output archive path (including extension).
+        temp_pkl : str
+            Temporary path to ``pipeline.pkl``.
+        files_to_archive : list of tuple[str, str]
+            Archive entries as ``(source_path, archive_path)``.
+
+        Returns
+        -------
+        None
+            Creates archive at ``archive_full_path``.
+
+        Raises
+        ------
+        RuntimeError
+            If the xz subprocess exits with non-zero return code.
+        """
+        return_code, stderr_bytes = ArchiveUtils._stream_tar_payload_to_xz(
+            command=command,
+            archive_full_path=archive_full_path,
+            temp_pkl=temp_pkl,
+            files_to_archive=files_to_archive,
+        )
+        if return_code != 0:
+            stderr_text = stderr_bytes.decode("utf-8", errors="replace").strip()
+            raise RuntimeError(
+                f"xz compression failed with code {return_code}: {stderr_text}"
+            )
+
+    @staticmethod
+    def _stream_tar_payload_to_xz(
+        command: List[str],
+        archive_full_path: str,
+        temp_pkl: str,
+        files_to_archive: List[Tuple[str, str]],
+    ) -> Tuple[int, bytes]:
+        """
+        Stream tar entries into xz subprocess.
+
+        Parameters
+        ----------
+        command : list of str
+            Command argument list for launching ``xz``.
+        archive_full_path : str
+            Output archive path (including extension).
+        temp_pkl : str
+            Temporary path to ``pipeline.pkl``.
+        files_to_archive : list of tuple[str, str]
+            Archive entries as ``(source_path, archive_path)``.
+
+        Returns
+        -------
+        tuple[int, bytes]
+            ``(return_code, stderr_bytes)`` from the xz subprocess.
+
+        Raises
+        ------
+        RuntimeError
+            If subprocess stdin is unexpectedly unavailable.
+        """
+        with open(archive_full_path, "wb") as output_file:
+            with subprocess.Popen(
+                command,
+                stdin=subprocess.PIPE,
+                stdout=output_file,
+                stderr=subprocess.PIPE,
+            ) as process:
+                if process.stdin is None:
+                    raise RuntimeError("Failed to open xz subprocess stdin.")
+
+                with tarfile.open(fileobj=process.stdin, mode="w|") as tar:
+                    ArchiveUtils._add_archive_items(
+                        tar=tar,
+                        temp_pkl=temp_pkl,
+                        files_to_archive=files_to_archive,
+                    )
+
+                process.stdin.close()
+                stderr_bytes = process.stderr.read() if process.stderr else b""
+                return_code = process.wait()
+        return return_code, stderr_bytes
 
     @staticmethod
     def _add_archive_items(
@@ -583,7 +805,7 @@ class ArchiveUtils:
         compression_level : int, optional
             Compression level override. For xz this maps to preset (0-9).
         xz_threads : int, optional
-            Thread count for xz compression via xopen. If None, uses
+            Thread count for xz compression via external xz. If None, uses
             ``max(1, cpu_count - reserve_cores)``.
         reserve_cores : int, default=2
             Number of CPU cores to keep free for automatic xz thread selection.
@@ -614,7 +836,8 @@ class ArchiveUtils:
         - Uses tempfile for pickle creation
         - Preserves relative paths in archive
         - xz provides best compression ratio
-        - xz archives are written with multithreading via xopen
+        - xz archives are written via external xz when available
+        - xz memory cap is passed to external xz via --memlimit-compress
         - With use_memmap=False: Only pickle needed (all data in objects)
         - With use_memmap=True: Pickle + .dat files + zarr directories
         - tar.add() automatically handles both files and directories
@@ -656,18 +879,14 @@ class ArchiveUtils:
                     xz_level=xz_level,
                     xz_max_memory_gb=xz_max_memory_gb,
                 )
-                with xopen(
-                    archive_full_path,
-                    mode="wb",
-                    compresslevel=xz_level,
-                    threads=threads,
-                ) as compressed_file:
-                    with tarfile.open(fileobj=compressed_file, mode="w|") as tar:
-                        ArchiveUtils._add_archive_items(
-                            tar=tar,
-                            temp_pkl=temp_pkl,
-                            files_to_archive=files_to_archive,
-                        )
+                ArchiveUtils._create_xz_archive_with_subprocess(
+                    archive_full_path=archive_full_path,
+                    temp_pkl=temp_pkl,
+                    files_to_archive=files_to_archive,
+                    xz_level=xz_level,
+                    xz_threads=threads,
+                    xz_max_memory_gb=xz_max_memory_gb,
+                )
             else:
                 tar_kwargs = {}
                 if compression_level is not None:
