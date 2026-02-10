@@ -1054,13 +1054,12 @@ class PipelineManager:
     def create_sharable_archive(
         self,
         archive_path: str,
-        compression: str = "xz",
+        compression: str = "zst",
         exclude_visualizations: bool = True,
         include_structure_files: bool = True,
         compression_level: Optional[int] = None,
-        xz_threads: Optional[int] = None,
-        xz_reserve_cores: int = 2,
-        xz_max_memory_gb: Optional[float] = None,
+        zstd_threads: Optional[int] = None,
+        zstd_reserve_cores: int = 2,
     ) -> str:
         """
         Create sharable compressed archive with pipeline and essential data.
@@ -1073,21 +1072,18 @@ class PipelineManager:
         ----------
         archive_path : str
             Path for output archive (extension added automatically)
-        compression : str, default="xz"
-            Compression method: "xz", "bz2", or "gz"
+        compression : str, default="zst"
+            Compression method: "zst", "bz2", or "gz"
         exclude_visualizations : bool, default=True
             If True, exclude PNG/PDF/SVG plot outputs
         include_structure_files : bool, default=True
             If True, include PDB/PML structure files
         compression_level : int, optional
-            Compression level override (e.g. xz preset 0-9).
-        xz_threads : int, optional
-            Thread count for xz compression. If None, chosen automatically.
-        xz_reserve_cores : int, default=2
-            Number of CPU cores to keep free when xz thread count is automatic.
-        xz_max_memory_gb : float, optional
-            Soft memory cap for xz compression in GiB. If None, uses the
-            current runtime value ``pipeline_data.max_memory_gb``.
+            Compression level override (e.g. zst level 1-19).
+        zstd_threads : int, optional
+            Thread count for zstd compression. If None, chosen automatically.
+        zstd_reserve_cores : int, default=2
+            Number of CPU cores to keep free when zstd thread count is automatic.
 
         Returns
         -------
@@ -1097,34 +1093,29 @@ class PipelineManager:
         Examples
         --------
         >>> # Minimal archive (only data)
-        >>> pipeline.create_sharable_archive("analysis.tar.xz")
+        >>> pipeline.create_sharable_archive("analysis.tar.zst")
 
         >>> # Full archive (with visualizations)
         >>> pipeline.create_sharable_archive(
-        ...     "analysis_full.tar.xz",
+        ...     "analysis_full.tar.zst",
         ...     exclude_visualizations=False
         ... )
 
         >>> # Data only (no structure files)
         >>> pipeline.create_sharable_archive(
-        ...     "analysis_data.tar.xz",
+        ...     "analysis_data.tar.zst",
         ...     include_structure_files=False
         ... )
 
         Notes
         -----
-        - xz compression provides best compression ratio
-        - xz compression is multithreaded by default
-        - xz thread count is reduced automatically to respect memory budget
+        - zstd compression is optimized for fast runtime and low memory pressure
+        - zstd compression is multithreaded by default
         - With use_memmap=False: Archive contains only pipeline.pkl + optional PDB/PML
         - With use_memmap=True: Archive contains pipeline.pkl + .dat files + zarr directories
         - Paths are preserved relative to cache directory
         - Memmap and zarr only included when use_memmap=True
         """
-        resolved_xz_max_memory_gb = xz_max_memory_gb
-        if compression == "xz" and resolved_xz_max_memory_gb is None:
-            resolved_xz_max_memory_gb = self._data.max_memory_gb
-
         return ArchiveUtils.create_archive(
             self._data,
             archive_path,
@@ -1132,9 +1123,8 @@ class PipelineManager:
             exclude_visualizations,
             include_structure_files,
             compression_level=compression_level,
-            xz_threads=xz_threads if compression == "xz" else None,
-            reserve_cores=xz_reserve_cores if compression == "xz" else 2,
-            xz_max_memory_gb=resolved_xz_max_memory_gb if compression == "xz" else None,
+            zstd_threads=zstd_threads if compression == "zst" else None,
+            reserve_cores=zstd_reserve_cores if compression == "zst" else 2,
         )
 
     @staticmethod
@@ -1179,18 +1169,18 @@ class PipelineManager:
         Examples
         --------
         >>> # Load from archive (default cache_dir)
-        >>> pipeline = PipelineManager.load_from_archive("analysis.tar.xz")
+        >>> pipeline = PipelineManager.load_from_archive("analysis.tar.zst")
         >>> pipeline.print_info()
 
         >>> # Load with custom cache directory
         >>> pipeline = PipelineManager.load_from_archive(
-        ...     "analysis.tar.xz",
+        ...     "analysis.tar.zst",
         ...     cache_dir="./my_cache"
         ... )
 
         >>> # Load with trajectory defaults for adding more data
         >>> pipeline = PipelineManager.load_from_archive(
-        ...     "analysis.tar.xz",
+        ...     "analysis.tar.zst",
         ...     cache_dir="./cache",
         ...     chunk_size=500,
         ...     stride=10

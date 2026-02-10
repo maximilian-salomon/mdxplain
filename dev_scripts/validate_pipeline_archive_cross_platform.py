@@ -345,7 +345,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "archive",
         type=Path,
-        help="Path to pipeline archive (e.g. pipeline.tar.xz).",
+        help="Path to pipeline archive (e.g. pipeline.tar.zst).",
     )
     parser.add_argument(
         "--cycles",
@@ -358,8 +358,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--roundtrip-compression",
-        choices=("xz", "gz", "bz2"),
-        default="gz",
+        choices=("zst", "gz", "bz2"),
+        default="zst",
         help="Compression for roundtrip archives created during validation.",
     )
     parser.add_argument(

@@ -22,7 +22,6 @@
 
 from pathlib import Path
 import os
-import tempfile
 import tarfile
 
 import pytest
@@ -133,52 +132,11 @@ def test_collect_cache_files_missing_cache_returns_empty(tmp_path):
     assert items == []
 
 
-def test_estimate_xz_memory_per_thread_mib_level_6():
-    """Level 6 should use the expected per-thread memory estimate."""
-    assert ArchiveUtils._estimate_xz_memory_per_thread_mib(6) == 94
-
-
-def test_resolve_xz_threads_auto_reserve_cores(monkeypatch):
-    """Automatic thread selection should keep reserve_cores free."""
+def test_resolve_zstd_threads_auto_reserve_cores(monkeypatch):
+    """Automatic zstd thread selection should keep reserve_cores free."""
     monkeypatch.setattr("mdxplain.utils.archive_utils.os.cpu_count", lambda: 12)
-    threads = ArchiveUtils._resolve_xz_threads(reserve_cores=2)
+    threads = ArchiveUtils._resolve_zstd_threads(reserve_cores=2)
     assert threads == 10
-
-
-def test_resolve_xz_threads_respects_memory_cap_auto(monkeypatch):
-    """Memory cap should reduce automatically chosen thread count."""
-    monkeypatch.setattr("mdxplain.utils.archive_utils.os.cpu_count", lambda: 16)
-    threads = ArchiveUtils._resolve_xz_threads(
-        xz_threads=None,
-        reserve_cores=2,
-        xz_level=6,
-        xz_max_memory_gb=0.2,  # ~204 MiB => max 2 threads at ~94 MiB/thread
-    )
-    assert threads == 2
-
-
-def test_resolve_xz_threads_respects_memory_cap_explicit():
-    """Memory cap should also bound explicitly requested thread count."""
-    threads = ArchiveUtils._resolve_xz_threads(
-        xz_threads=8,
-        reserve_cores=2,
-        xz_level=6,
-        xz_max_memory_gb=0.1,  # ~102 MiB => max 1 thread at ~94 MiB/thread
-    )
-    assert threads == 1
-
-
-def test_get_xz_memlimit_bytes_from_gib():
-    """xz memlimit conversion should map GiB budgets to bytes."""
-    assert ArchiveUtils._get_xz_memlimit_bytes(None) is None
-    assert ArchiveUtils._get_xz_memlimit_bytes(0) is None
-    assert ArchiveUtils._get_xz_memlimit_bytes(1.0) == 1024 ** 3
-
-
-def test_estimate_xz_memory_per_thread_invalid_level_raises():
-    """Invalid xz level should raise ValueError."""
-    with pytest.raises(ValueError, match="xz_level must be in range 0-9"):
-        ArchiveUtils._estimate_xz_memory_per_thread_mib(11)
 
 
 @pytest.mark.parametrize(
@@ -190,16 +148,30 @@ def test_estimate_xz_memory_per_thread_invalid_level_raises():
         (4, 2, 4),
     ],
 )
-def test_resolve_xz_threads_bounds(monkeypatch, threads, reserve, expected):
-    """Thread resolving should clamp to sane values."""
+def test_resolve_zstd_threads_bounds(monkeypatch, threads, reserve, expected):
+    """zstd thread resolving should clamp to sane values."""
     monkeypatch.setattr("mdxplain.utils.archive_utils.os.cpu_count", lambda: 8)
-    value = ArchiveUtils._resolve_xz_threads(
-        xz_threads=threads,
+    value = ArchiveUtils._resolve_zstd_threads(
+        zstd_threads=threads,
         reserve_cores=reserve,
-        xz_level=6,
-        xz_max_memory_gb=None,
     )
     assert value == expected
+
+
+def test_normalize_archive_output_path_replaces_known_tar_suffixes():
+    """Known tar suffixes should be normalized to requested compression."""
+    assert (
+        ArchiveUtils._normalize_archive_output_path("analysis.tar.xz", "zst")
+        == "analysis.tar.zst"
+    )
+    assert (
+        ArchiveUtils._normalize_archive_output_path("analysis.tar.gz", "zst")
+        == "analysis.tar.zst"
+    )
+    assert (
+        ArchiveUtils._normalize_archive_output_path("analysis", "zst")
+        == "analysis.tar.zst"
+    )
 
 
 def test_create_archive_invalid_compression_raises(tmp_path):
@@ -213,21 +185,21 @@ def test_create_archive_invalid_compression_raises(tmp_path):
         )
 
 
-def test_create_archive_xz_invalid_level_raises(tmp_path):
-    """Out-of-range xz compression_level should raise ValueError."""
+def test_create_archive_zst_invalid_level_raises(tmp_path):
+    """Out-of-range zst compression_level should raise ValueError."""
     cache = tmp_path / "cache"
     cache.mkdir()
     pipeline_data = _DummyPipelineData(str(cache), use_memmap=False)
-    with pytest.raises(ValueError, match="compression_level for xz must be in range 0-9"):
+    with pytest.raises(ValueError, match="compression_level for zst must be in range 1-19"):
         ArchiveUtils.create_archive(
             pipeline_data,
             str(tmp_path / "archive"),
-            compression="xz",
-            compression_level=10,
+            compression="zst",
+            compression_level=20,
         )
 
 
-@pytest.mark.parametrize("compression", ["xz", "bz2", "gz"])
+@pytest.mark.parametrize("compression", ["zst", "bz2", "gz"])
 def test_create_archive_writes_expected_extension(tmp_path, compression):
     """create_archive should append extension automatically if missing."""
     cache = tmp_path / "cache"
@@ -255,7 +227,7 @@ def test_create_archive_and_extract_roundtrip(tmp_path):
     archive = ArchiveUtils.create_archive(
         pipeline_data,
         str(tmp_path / "roundtrip"),
-        compression="gz",
+        compression="zst",
         exclude_visualizations=True,
         include_structure_files=True,
     )
@@ -271,7 +243,7 @@ def test_create_archive_and_extract_roundtrip(tmp_path):
 def test_extract_archive_missing_file_raises(tmp_path):
     """extract_archive should raise FileNotFoundError for missing archive."""
     with pytest.raises(FileNotFoundError, match="Archive not found"):
-        ArchiveUtils.extract_archive(str(tmp_path / "missing.tar.xz"))
+        ArchiveUtils.extract_archive(str(tmp_path / "missing.tar.zst"))
 
 
 def test_extract_archive_custom_target_directory(tmp_path):

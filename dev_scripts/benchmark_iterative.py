@@ -507,7 +507,7 @@ def _run_pipeline(dataset_dir: Path, cache_dir: Path, results_path: Path) -> Non
     )
     add_step(
         "create_archive",
-        lambda: pipeline.create_sharable_archive(str(output_root / "pipeline.tar.xz")),
+        lambda: pipeline.create_sharable_archive(str(output_root / "pipeline.tar.zst")),
     )
 
     results: List[StepResult] = []
