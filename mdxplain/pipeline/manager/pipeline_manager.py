@@ -1086,8 +1086,8 @@ class PipelineManager:
         xz_reserve_cores : int, default=2
             Number of CPU cores to keep free when xz thread count is automatic.
         xz_max_memory_gb : float, optional
-            Soft memory cap for xz compression in GiB. If None, uses
-            ``pipeline_data.max_memory_gb``.
+            Soft memory cap for xz compression in GiB. If None, uses the
+            current runtime value ``pipeline_data.max_memory_gb``.
 
         Returns
         -------

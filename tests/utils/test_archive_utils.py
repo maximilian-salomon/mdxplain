@@ -134,8 +134,9 @@ def test_collect_cache_files_missing_cache_returns_empty(tmp_path):
 
 
 def test_estimate_xz_memory_per_thread_mib_level_6():
-    """Level 6 should use the expected per-thread memory estimate."""
-    assert ArchiveUtils._estimate_xz_memory_per_thread_mib(6) == 94
+    """Level 6 should reflect raw and safety-scaled per-thread estimates."""
+    assert ArchiveUtils._estimate_xz_memory_per_thread_mib(6, safety_factor=1.0) == 94
+    assert ArchiveUtils._estimate_xz_memory_per_thread_mib(6) == pytest.approx(141.0)
 
 
 def test_resolve_xz_threads_auto_reserve_cores(monkeypatch):
@@ -146,25 +147,46 @@ def test_resolve_xz_threads_auto_reserve_cores(monkeypatch):
 
 
 def test_resolve_xz_threads_respects_memory_cap_auto(monkeypatch):
-    """Memory cap should reduce automatically chosen thread count."""
+    """Memory cap should include current process RSS when auto-selecting threads."""
     monkeypatch.setattr("mdxplain.utils.archive_utils.os.cpu_count", lambda: 16)
+    monkeypatch.setattr(
+        ArchiveUtils, "_get_current_process_rss_mib", staticmethod(lambda: 1800)
+    )
     threads = ArchiveUtils._resolve_xz_threads(
         xz_threads=None,
         reserve_cores=2,
         xz_level=6,
-        xz_max_memory_gb=0.2,  # ~204 MiB => max 2 threads at ~94 MiB/thread
+        xz_max_memory_gb=2.0,  # 2048-1800=248 MiB -> floor(248/141)=1
     )
-    assert threads == 2
+    assert threads == 1
 
 
-def test_resolve_xz_threads_respects_memory_cap_explicit():
-    """Memory cap should also bound explicitly requested thread count."""
+def test_resolve_xz_threads_respects_memory_cap_explicit(monkeypatch):
+    """Memory cap should also bound explicitly requested thread count with RSS."""
+    monkeypatch.setattr(
+        ArchiveUtils, "_get_current_process_rss_mib", staticmethod(lambda: 1800)
+    )
     threads = ArchiveUtils._resolve_xz_threads(
         xz_threads=8,
         reserve_cores=2,
         xz_level=6,
-        xz_max_memory_gb=0.1,  # ~102 MiB => max 1 thread at ~94 MiB/thread
+        xz_max_memory_gb=2.0,
     )
+    assert threads == 1
+
+
+def test_resolve_xz_threads_warns_when_available_memory_too_small(monkeypatch):
+    """Insufficient available memory should warn and force single-thread mode."""
+    monkeypatch.setattr(
+        ArchiveUtils, "_get_current_process_rss_mib", staticmethod(lambda: 2000)
+    )
+    with pytest.warns(RuntimeWarning, match="Available archive memory is below one xz thread"):
+        threads = ArchiveUtils._resolve_xz_threads(
+            xz_threads=8,
+            reserve_cores=2,
+            xz_level=6,
+            xz_max_memory_gb=2.0,  # 2048-2000=48 MiB < 94 MiB per thread
+        )
     assert threads == 1
 
 

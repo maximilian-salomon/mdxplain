@@ -29,9 +29,11 @@ files and structure files for flexible archive creation.
 import os
 import tarfile
 import tempfile
+import warnings
 from pathlib import Path
 from typing import List, Optional, Tuple
 
+import psutil
 from .path_utils import PathUtils
 from .progress_utils import ProgressUtils
 from xopen import xopen
@@ -446,11 +448,42 @@ class ArchiveUtils:
 
         per_thread_mib = ArchiveUtils._estimate_xz_memory_per_thread_mib(xz_level)
         budget_mib = int(xz_max_memory_gb * 1024)
-        max_threads_by_memory = max(1, budget_mib // per_thread_mib)
+
+        rss_mib = ArchiveUtils._get_current_process_rss_mib()
+        available_mib = budget_mib - rss_mib
+
+        if available_mib < per_thread_mib:
+            warnings.warn(
+                (
+                    "Available archive memory is below one xz thread estimate; "
+                    f"budget={xz_max_memory_gb:.3f} GiB ({budget_mib} MiB), "
+                    f"rss_mib={rss_mib}, "
+                    f"per_thread_estimate={per_thread_mib} MiB. "
+                    "Proceeding with threads=1."
+                ),
+                RuntimeWarning,
+                stacklevel=2,
+            )
+            return 1
+
+        max_threads_by_memory = max(1, available_mib // per_thread_mib)
         return max(1, min(resolved_threads, max_threads_by_memory))
 
     @staticmethod
-    def _estimate_xz_memory_per_thread_mib(xz_level: int) -> int:
+    def _get_current_process_rss_mib() -> int:
+        """
+        Return current process RSS in MiB.
+
+        Returns
+        -------
+        int
+            Current RSS in MiB.
+        """
+        rss_bytes = int(psutil.Process(os.getpid()).memory_info().rss)
+        return max(0, rss_bytes // (1024 * 1024))
+
+    @staticmethod
+    def _estimate_xz_memory_per_thread_mib(xz_level: int, safety_factor: float = 1.5) -> int:
         """
         Estimate xz compressor memory usage per thread in MiB.
 
@@ -465,6 +498,8 @@ class ArchiveUtils:
         ----------
         xz_level : int
             xz compression level (preset 0-9).
+        safety_factor : float, optional
+            Safety factor to account for memory overhead, by default 1.5.
 
         Returns
         -------
@@ -487,7 +522,7 @@ class ArchiveUtils:
         }
         if xz_level not in per_thread_mib:
             raise ValueError("xz_level must be in range 0-9")
-        return per_thread_mib[xz_level]
+        return per_thread_mib[xz_level] * safety_factor
 
     @staticmethod
     def _add_archive_items(
