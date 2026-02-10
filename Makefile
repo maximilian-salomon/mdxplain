@@ -1,4 +1,4 @@
-.PHONY: help setup-conda setup-dev-conda setup-pymol-conda setup-venv setup-dev-venv setup-pymol-venv install install-dev install-jupyter install-pymol install-full test lint format jupyter notebook html clean
+.PHONY: help setup-conda setup-dev-conda setup-pymol-conda setup-venv setup-dev-venv setup-pymol-venv install install-dev install-jupyter install-pymol install-full test lint format jupyter notebook html clean pack-benchmark-jsons validate-archive run-benchmarks-pack
 
 # Default target
 help:
@@ -27,6 +27,9 @@ help:
 	@echo ""
 	@echo "Development:"
 	@echo "  test                Run tests with pytest"
+	@echo "  pack-benchmark-jsons Pack benchmark JSON outputs into one zip"
+	@echo "  validate-archive    Validate archive portability (ARCHIVE=<path> required)"
+	@echo "  run-benchmarks-pack Run all benchmark scripts and package JSON outputs"
 	@echo "  lint                Run code quality checks"
 	@echo "  format              Format code with black and isort"
 	@echo "  clean               Remove environments and cache files"
@@ -140,6 +143,21 @@ install-full:
 # Run tests
 test:
 	python -m pytest
+
+# Pack benchmark JSON outputs from benchmark scripts
+pack-benchmark-jsons:
+	python dev_scripts/pack_benchmark_jsons.py
+
+# Validate cross-platform archive load/save/load behavior
+validate-archive:
+ifndef ARCHIVE
+	$(error ARCHIVE is required. Example: make validate-archive ARCHIVE=benchmark_results/2RJY/pipeline.tar.xz)
+endif
+	python dev_scripts/validate_pipeline_archive_cross_platform.py "$(ARCHIVE)"
+
+# Run benchmark scripts and package JSON outputs
+run-benchmarks-pack:
+	python dev_scripts/run_all_benchmarks_and_pack.py
 
 # Run code quality checks
 lint:
