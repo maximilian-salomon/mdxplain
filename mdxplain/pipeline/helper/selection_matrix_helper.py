@@ -26,6 +26,7 @@ memory management, and frame mapping instead of collecting and merging matrices.
 """
 from __future__ import annotations
 
+import hashlib
 import os
 import numpy as np
 from typing import Dict, Tuple, Optional, List, Any, TYPE_CHECKING
@@ -229,7 +230,8 @@ class SelectionMatrixHelper:
         # Create matrix
         matrix, memmap_path = SelectionMatrixHelper._create_matrix(
             (n_rows, n_cols), pipeline_data.use_memmap,
-            pipeline_data.cache_dir, feature_selector_name, pipeline_data.dtype
+            pipeline_data.cache_dir, feature_selector_name, cache_key,
+            pipeline_data.dtype
         )
 
         # Fill matrix and create frame mapping
@@ -245,7 +247,12 @@ class SelectionMatrixHelper:
 
     @staticmethod
     def _create_matrix(
-        shape: Tuple[int, int], use_memmap: bool, cache_dir: str, name: str, dtype: type
+        shape: Tuple[int, int],
+        use_memmap: bool,
+        cache_dir: str,
+        feature_selector_name: str,
+        cache_key: str,
+        dtype: type
     ) -> Tuple[np.ndarray, Optional[str]]:
         """
         Create matrix with optimal memory management.
@@ -258,8 +265,10 @@ class SelectionMatrixHelper:
             Whether to use memory mapping
         cache_dir : str
             Cache directory for memmap files
-        name : str
-            Matrix name for memmap filename
+        feature_selector_name : str
+            Feature selector name
+        cache_key : str
+            Unique cache key for feature/data selector combination
         dtype : type
             Data type for matrix (float32 or float64)
 
@@ -269,10 +278,13 @@ class SelectionMatrixHelper:
             Matrix and memmap path (None if not using memmap)
         """
         if use_memmap:
-            # Generate memmap path
+            # Generate unique memmap path for each cache key to avoid collisions
+            cache_filename = SelectionMatrixHelper._build_memmap_cache_filename(
+                feature_selector_name, cache_key
+            )
             memmap_path = PathUtils.get_cache_file_path(
                 cache_path=cache_dir,
-                cache_name=f"selection_matrix_{name}.dat"
+                cache_name=cache_filename
             )
 
             # Create new memmap
@@ -286,6 +298,35 @@ class SelectionMatrixHelper:
             return matrix, memmap_path
 
         return np.zeros(shape, dtype=dtype), None
+
+    @staticmethod
+    def _build_memmap_cache_filename(
+        feature_selector_name: str, cache_key: str
+    ) -> str:
+        """
+        Build a collision-safe memmap filename for a selector/cache-key pair.
+
+        Parameters
+        ----------
+        feature_selector_name : str
+            Feature selector name (for readability in filename)
+        cache_key : str
+            Unique cache key used by PipelineData
+
+        Returns
+        -------
+        str
+            Stable memmap filename
+        """
+        safe_selector = "".join(
+            ch if (ch.isascii() and (ch.isalnum() or ch in {"_", "-"})) else "_"
+            for ch in feature_selector_name
+        ).strip("_")
+        if not safe_selector:
+            safe_selector = "selector"
+        safe_selector = safe_selector[:48]
+        key_hash = hashlib.sha1(cache_key.encode("utf-8")).hexdigest()[:16]
+        return f"selection_matrix_{safe_selector}_{key_hash}.dat"
 
     @staticmethod
     def _fill_matrix(
