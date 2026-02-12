@@ -27,7 +27,7 @@ with proper bug fixes for auto-detection, circular logic, and legend display.
 
 from __future__ import annotations
 
-from typing import Dict, List, Optional, TYPE_CHECKING
+from typing import Dict, List, Optional, Tuple, TYPE_CHECKING
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -366,7 +366,8 @@ class TimeSeriesTagColoringHelper:
         feat_idx: int,
         tag_map: Dict[int, List[str]],
         tag_colors: Dict[str, str],
-        feature_selector_name: str,
+        matrix: np.ndarray,
+        frame_mapping: Dict[int, Tuple[int, int]],
         use_time: bool,
         smoothing: bool = True,
         smoothing_method: str = "savitzky",
@@ -389,8 +390,10 @@ class TimeSeriesTagColoringHelper:
             Tag mapping
         tag_colors : Dict[str, str]
             Tag color mapping
-        feature_selector_name : str
-            Feature selector name
+        matrix : np.ndarray
+            Preloaded selection matrix for this plot call
+        frame_mapping : Dict[int, Tuple[int, int]]
+            Preloaded frame mapping for this plot call
         use_time : bool
             Use time (True) or frames (False)
         smoothing : bool, default=True
@@ -411,15 +414,15 @@ class TimeSeriesTagColoringHelper:
         Examples
         --------
         >>> TimeSeriesTagColoringHelper.plot_feature_with_tag_colors(
-        ...     ax, pipeline_data, 0, tag_map, colors, "selector", True
+        ...     ax, pipeline_data, 0, tag_map, colors, matrix, frame_mapping, True
         ... )
         """
         for traj_idx, tags in tag_map.items():
             for tag in tags:
                 color = tag_colors.get(tag, "black")
                 TimeSeriesTagColoringHelper._plot_single_line(
-                    ax, pipeline_data, traj_idx, feat_idx,
-                    feature_selector_name, use_time, color,
+                    ax, pipeline_data, matrix, frame_mapping,
+                    traj_idx, feat_idx, use_time, color,
                     smoothing, smoothing_method, smoothing_window,
                     smoothing_polyorder, show_unsmoothed_background
                 )
@@ -431,7 +434,8 @@ class TimeSeriesTagColoringHelper:
         feat_idx: int,
         tag_map: Dict[int, List[str]],
         traj_colors: Dict[str, str],
-        feature_selector_name: str,
+        matrix: np.ndarray,
+        frame_mapping: Dict[int, Tuple[int, int]],
         use_time: bool,
         smoothing: bool = True,
         smoothing_method: str = "savitzky",
@@ -454,8 +458,10 @@ class TimeSeriesTagColoringHelper:
             Tag mapping (keys used for trajectory indices)
         traj_colors : Dict[str, str]
             Trajectory name -> color mapping
-        feature_selector_name : str
-            Feature selector name
+        matrix : np.ndarray
+            Preloaded selection matrix for this plot call
+        frame_mapping : Dict[int, Tuple[int, int]]
+            Preloaded frame mapping for this plot call
         use_time : bool
             Use time (True) or frames (False)
         smoothing : bool, default=True
@@ -476,15 +482,15 @@ class TimeSeriesTagColoringHelper:
         Examples
         --------
         >>> TimeSeriesTagColoringHelper.plot_feature_with_trajectory_colors(
-        ...     ax, pipeline_data, 0, tag_map, colors, "selector", True
+        ...     ax, pipeline_data, 0, tag_map, colors, matrix, frame_mapping, True
         ... )
         """
         for traj_idx in tag_map.keys():
             traj_name = pipeline_data.trajectory_data.trajectory_names[traj_idx]
             color = traj_colors.get(traj_name, "black")
             TimeSeriesTagColoringHelper._plot_single_line(
-                ax, pipeline_data, traj_idx, feat_idx,
-                feature_selector_name, use_time, color,
+                ax, pipeline_data, matrix, frame_mapping,
+                traj_idx, feat_idx, use_time, color,
                 smoothing, smoothing_method, smoothing_window,
                 smoothing_polyorder, show_unsmoothed_background
             )
@@ -493,9 +499,10 @@ class TimeSeriesTagColoringHelper:
     def _plot_single_line(
         ax: plt.Axes,
         pipeline_data: PipelineData,
+        matrix: np.ndarray,
+        frame_mapping: Dict[int, Tuple[int, int]],
         traj_idx: int,
         feat_idx: int,
-        feature_selector_name: str,
         use_time: bool,
         color: str,
         smoothing: bool = True,
@@ -513,12 +520,14 @@ class TimeSeriesTagColoringHelper:
             Axes to plot on
         pipeline_data : PipelineData
             Pipeline data container
+        matrix : np.ndarray
+            Preloaded selection matrix for this plot call
+        frame_mapping : Dict[int, Tuple[int, int]]
+            Preloaded frame mapping for this plot call
         traj_idx : int
             Trajectory index
         feat_idx : int
             Feature index
-        feature_selector_name : str
-            Feature selector name
         use_time : bool
             Use time or frames
         color : str
@@ -541,13 +550,10 @@ class TimeSeriesTagColoringHelper:
         Examples
         --------
         >>> TimeSeriesTagColoringHelper._plot_single_line(
-        ...     ax, pipeline_data, 0, 5, "selector", True, "blue"
+        ...     ax, pipeline_data, matrix, frame_mapping, 0, 5, True, "blue"
         ... )
         """
         trajectory = pipeline_data.trajectory_data.trajectories[traj_idx]
-        matrix, frame_mapping = pipeline_data.get_selected_data(
-            feature_selector_name, return_frame_mapping=True
-        )
 
         traj_frame_indices = TimeSeriesTagColoringHelper._get_trajectory_frame_indices(
             frame_mapping, traj_idx
@@ -577,13 +583,9 @@ class TimeSeriesTagColoringHelper:
         else:
             ax.plot(x_values, y_values, color=color, linewidth=1.0, alpha=0.8)
 
-        if hasattr(matrix, '_mmap') and matrix._mmap is not None:
-            matrix._mmap.close()
-        del matrix
-
     @staticmethod
     def _get_trajectory_frame_indices(
-        frame_mapping: Dict[int, tuple],
+        frame_mapping: Dict[int, Tuple[int, int]],
         traj_idx: int
     ) -> List[int]:
         """

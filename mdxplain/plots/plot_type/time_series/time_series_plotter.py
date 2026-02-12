@@ -42,6 +42,7 @@ from ...helper.grid_layout_helper import GridLayoutHelper
 from ...helper.contact_to_distances_converter import ContactToDistancesConverter
 from ...helper.title_legend_helper import TitleLegendHelper
 from ...helper.svg_export_helper import SvgExportHelper
+from ....utils.memmap_utils import MemmapUtils
 
 
 class TimeSeriesPlotter(FeatureImportanceBasePlotter):
@@ -258,6 +259,8 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         config.feature_selector_name = plot_data['feature_selector_name']
         config.is_temporary = plot_data['is_temporary']
         config.tag_map = plot_data['tag_map']
+        config.selected_matrix = plot_data['selected_matrix']
+        config.frame_mapping = plot_data['frame_mapping']
 
         config.all_features = self._flatten_features(config.feature_data)
 
@@ -281,9 +284,11 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
                 config.fig, config.gs, config.n_rows, config
             )
 
+        # Release matrix before final cleanup (e.g. temporary selector removal).
+        self._release_selected_matrix(config)
+
         # Cleanup and finalize
         self._cleanup_and_finalize(config)
-
         return config.fig
 
     def _prepare_layout_and_dimensions(self, config: TimeSeriesPlotConfig):
@@ -320,7 +325,9 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         # Calculate membership dimensions if clustering enabled
         if config.clustering_name:
             membership_indices = self._get_trajectory_indices(
-                config.membership_traj_selection, config.feature_selector_name
+                config.membership_traj_selection,
+                config.feature_selector_name,
+                frame_mapping=config.frame_mapping,
             )
             n_traj = len(membership_indices)
 
@@ -364,7 +371,8 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         total_rows, height_ratios = TimeSeriesGridLayoutHelper.calculate_grid_dimensions(
             config.n_rows, config.clustering_name, config.membership_per_feature,
             config.membership_traj_selection, config.feature_selector_name,
-            config.membership_bar_height, config.subplot_height, config.pipeline_data
+            config.membership_bar_height, config.subplot_height, config.pipeline_data,
+            config.frame_mapping
         )
 
         config.gs, config.wrapped_title, config.top = TimeSeriesGridLayoutHelper.create_gridspec(
@@ -434,7 +442,15 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
                 config.pipeline_data, config.mode_name, config.contact_transformation
             )
 
-        traj_indices = self._get_trajectory_indices(config.traj_selection, feature_selector_name)
+        selected_matrix, frame_mapping = config.pipeline_data.get_selected_data(
+            feature_selector_name, return_frame_mapping=True
+        )
+
+        traj_indices = self._get_trajectory_indices(
+            config.traj_selection,
+            feature_selector_name,
+            frame_mapping=frame_mapping,
+        )
         tag_map = TimeSeriesTagColoringHelper.build_tag_map(
             config.pipeline_data, traj_indices, config.tags_for_coloring, config.allow_multi_tag_plotting
         )
@@ -446,7 +462,9 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             'contact_cutoff': contact_cutoff,
             'feature_selector_name': feature_selector_name,
             'is_temporary': is_temporary,
-            'tag_map': tag_map
+            'tag_map': tag_map,
+            'selected_matrix': selected_matrix,
+            'frame_mapping': frame_mapping
         }
 
     def _create_figure_dynamic(
@@ -625,7 +643,7 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             TitleLegendHelper.add_title(fig, wrapped_title, title_y=title_y, fontsize=title_fontsize or 18)
 
     def _get_trajectory_indices(
-        self, traj_selection, feature_selector_name
+        self, traj_selection, feature_selector_name, frame_mapping: Optional[Dict[int, Tuple[int, int]]] = None
     ) -> List[int]:
         """
         Get trajectory indices with data.
@@ -649,11 +667,29 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         selected = self.pipeline_data.trajectory_data.get_trajectory_indices(
             traj_selection
         )
-        _, frame_mapping = self.pipeline_data.get_selected_data(
-            feature_selector_name, return_frame_mapping=True
-        )
+        if frame_mapping is None:
+            _, frame_mapping = self.pipeline_data.get_selected_data(
+                feature_selector_name, return_frame_mapping=True
+            )
         traj_in_data = set(traj_idx for traj_idx, _ in frame_mapping.values())
         return [idx for idx in selected if idx in traj_in_data]
+
+    @staticmethod
+    def _release_selected_matrix(config: TimeSeriesPlotConfig) -> None:
+        """
+        Release matrix handle loaded for one plot call.
+
+        Parameters
+        ----------
+        config : TimeSeriesPlotConfig
+            Central configuration object
+        """
+        matrix = config.selected_matrix
+        if matrix is None:
+            return
+
+        MemmapUtils.close_memmap_view(matrix)
+        config.selected_matrix = None
 
     def _add_combined_legend(
         self, fig, wrapped_title, _top, rightmost_ax_first_row,

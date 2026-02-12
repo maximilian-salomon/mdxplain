@@ -26,6 +26,7 @@ from typing import List, Dict, Tuple, Optional, Union, TYPE_CHECKING
 from dataclasses import dataclass, field
 
 if TYPE_CHECKING:
+    import numpy as np
     from ....pipeline.entities.pipeline_data import PipelineData
     from matplotlib.figure import Figure
     from matplotlib.gridspec import GridSpec
@@ -112,6 +113,10 @@ class TimeSeriesPlotConfig:
         Trajectory to tags mapping
     all_features : List[Tuple[str, str]]
         List of (feature_type, feature_name) tuples
+    selected_matrix : Optional[np.ndarray]
+        Preloaded selected matrix for this plot call (np.ndarray or np.memmap)
+    frame_mapping : Dict[int, Tuple[int, int]]
+        Preloaded frame mapping for this plot call
     layout : List
         Grid layout information
     n_rows : int
@@ -219,6 +224,8 @@ class TimeSeriesPlotConfig:
     is_temporary: bool = False
     tag_map: Dict[int, List[str]] = field(default_factory=dict)
     all_features: List[Tuple[str, str]] = field(default_factory=list)
+    selected_matrix: Optional[np.ndarray] = None
+    frame_mapping: Dict[int, Tuple[int, int]] = field(default_factory=dict)
 
     # Layout data (set during plotting)
     layout: List = field(default_factory=list)
