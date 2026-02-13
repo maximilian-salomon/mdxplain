@@ -36,6 +36,8 @@ import re
 import os
 import shutil
 import tempfile
+import sys
+import warnings
 import numpy as np
 from pathlib import Path
 import uuid
@@ -825,6 +827,68 @@ class PipelineManager:
         """
         return self._data.get_data_summary()
 
+    def add_custom_metadata(
+        self,
+        name: str,
+        value: Any,
+        overwrite: bool = False,
+        warn_if_large: bool = True,
+        max_size_gb: Optional[float] = None,
+    ) -> None:
+        """
+        Register user-defined custom metadata in the pipeline state.
+
+        Parameters
+        ----------
+        name : str
+            Metadata key.
+        value : Any
+            Metadata payload to persist with the pipeline.
+        overwrite : bool, default=False
+            If False, existing keys raise ValueError.
+        warn_if_large : bool, default=True
+            Emit RuntimeWarning when the estimated object size exceeds the
+            configured threshold.
+        max_size_gb : float, optional
+            Explicit warning threshold in GB.
+            If None, uses ``pipeline.data.max_memory_gb``.
+
+        Returns
+        -------
+        None
+            Stores metadata in-place.
+
+        Notes
+        -----
+        TODO: Add optional disk-backed backend (e.g. zarr/proxy) for large
+        nested metadata payloads. Current implementation keeps metadata in RAM.
+        """
+        # TODO: Add optional disk-backed custom-metadata backends (e.g. zarr).
+        self._data.add_custom_metadata(name=name, value=value, overwrite=overwrite)
+
+        if warn_if_large:
+            self._warn_if_custom_metadata_large(
+                name=name,
+                value=value,
+                max_size_gb=max_size_gb
+            )
+
+    def get_custom_metadata(self, name: str) -> Any:
+        """
+        Retrieve a registered custom metadata payload by key.
+
+        Parameters
+        ----------
+        name : str
+            Metadata key.
+
+        Returns
+        -------
+        Any
+            Stored metadata payload.
+        """
+        return self._data.get_custom_metadata(name)
+
     def clear_all(self) -> None:
         """
         Clear all pipeline data.
@@ -833,6 +897,103 @@ class PipelineManager:
         trajectories, features, clustering, and decomposition results.
         """
         self._data.clear_all_data()
+
+    def _warn_if_custom_metadata_large(
+        self,
+        name: str,
+        value: Any,
+        max_size_gb: Optional[float]
+    ) -> None:
+        """
+        Emit a warning when custom metadata size exceeds the configured budget.
+
+        Parameters
+        ----------
+        name : str
+            Metadata key.
+        value : Any
+            Metadata payload.
+        max_size_gb : Optional[float]
+            Maximum allowed size in GB. If None, uses ``pipeline.data.max_memory_gb``.
+            
+        Returns
+        -------
+        None
+        """
+        if max_size_gb is not None:
+            if isinstance(max_size_gb, bool) or not isinstance(max_size_gb, (int, float)):
+                raise ValueError("max_size_gb must be a positive numeric value.")
+        threshold_gb = self._data.max_memory_gb if max_size_gb is None else max_size_gb
+        if threshold_gb <= 0:
+            raise ValueError("max_size_gb must be > 0 when provided.")
+
+        estimated_bytes = self._estimate_object_size_bytes(value, visited=set())
+        threshold_bytes = int(threshold_gb * (1024 ** 3))
+        if estimated_bytes <= threshold_bytes:
+            return
+
+        estimated_gb = estimated_bytes / (1024 ** 3)
+        warnings.warn(
+            (
+                f"Custom metadata '{name}' is estimated at {estimated_gb:.3f} GB, "
+                f"which exceeds the warning threshold of {threshold_gb:.3f} GB. "
+                "This payload is currently kept in RAM and can increase memory "
+                "pressure. TODO: disk-backed metadata backend support will be "
+                "added in a future release."
+            ),
+            RuntimeWarning,
+            stacklevel=2,
+        )
+
+    @staticmethod
+    def _estimate_object_size_bytes(value: Any, visited: set) -> int:
+        """
+        Recursively estimate object size in bytes.
+
+        Parameters
+        ----------
+        value : Any
+            Object to estimate size of.
+        visited : set
+            Set of visited object IDs to avoid cycles.
+
+        Returns
+        -------
+        int
+            Estimated size in bytes.
+        """
+        value_id = id(value)
+        if value_id in visited:
+            return 0
+        visited.add(value_id)
+
+        if isinstance(value, np.ndarray):
+            return int(value.nbytes)
+
+        if isinstance(value, (str, bytes, bytearray, memoryview)):
+            return sys.getsizeof(value)
+
+        if isinstance(value, (int, float, bool, complex, np.generic, type(None))):
+            return sys.getsizeof(value)
+
+        size = sys.getsizeof(value)
+
+        if isinstance(value, dict):
+            for key, item in value.items():
+                size += PipelineManager._estimate_object_size_bytes(key, visited)
+                size += PipelineManager._estimate_object_size_bytes(item, visited)
+            return size
+
+        if isinstance(value, (list, tuple, set, frozenset)):
+            for item in value:
+                size += PipelineManager._estimate_object_size_bytes(item, visited)
+            return size
+
+        if hasattr(value, "__dict__"):
+            size += PipelineManager._estimate_object_size_bytes(vars(value), visited)
+            return size
+
+        return size
 
     def close(self) -> None:
         """
@@ -1338,7 +1499,8 @@ class PipelineManager:
             f"{summary['decompositions_computed']} decompositions, "
             f"{summary['data_selectors_created']} data selectors, "
             f"{summary['comparisons_created']} comparisons, "
-            f"{summary['feature_importance_analyses']} feature importance analyses"
+            f"{summary['feature_importance_analyses']} feature importance analyses, "
+            f"{summary['custom_metadata_entries']} custom metadata entries"
         )
 
     def update_config(

@@ -303,7 +303,7 @@ class TimeSeriesFeaturePlotHelper:
             Axes to draw the marker lines on.
         config : TimeSeriesPlotConfig
             Central plotting configuration containing
-            `resolved_vertical_markers`.
+            `resolved_vertical_markers` tuples `(x, color, label)`.
 
         Returns
         -------
@@ -314,7 +314,7 @@ class TimeSeriesFeaturePlotHelper:
             return
 
         line_width = max(1.0, config.thickness)
-        for x_position, color in config.resolved_vertical_markers:
+        for x_position, color, _ in config.resolved_vertical_markers:
             ax.axvline(
                 x=x_position,
                 color=color,

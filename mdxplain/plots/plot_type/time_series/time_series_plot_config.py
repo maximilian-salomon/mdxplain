@@ -121,6 +121,9 @@ class TimeSeriesPlotConfig:
         Optional marker specification for vertical guide lines.
         Keys are trajectory selectors or tag names (depending on mode), values
         are x-positions (single float or list of floats).
+    vertical_marker_labels : Optional[Union[str, Dict[Union[int, str], Union[str, List[str]]]]]
+        Optional legend labels for vertical markers:
+        global string, per-key string, or per-position labels per key.
     vertical_marker_mode : str
         Marker key interpretation mode:
         "auto", "trajectory", or "tag".
@@ -172,9 +175,9 @@ class TimeSeriesPlotConfig:
         Effective discrete layout after resolving "auto"
     effective_subplot_height : float
         Internally adjusted subplot height that includes discrete-layout spacing
-    resolved_vertical_markers : List[Tuple[float, str]]
-        Pre-resolved marker lines as `(x_position, color)` tuples used by all
-        feature subplots.
+    resolved_vertical_markers : List[Tuple[float, str, Optional[str]]]
+        Pre-resolved marker lines as `(x_position, color, label)` tuples used
+        by all feature subplots.
     fig : Optional[Figure]
         Matplotlib figure (set after creation)
     gs : Optional[GridSpec]
@@ -252,6 +255,7 @@ class TimeSeriesPlotConfig:
     thickness: float = 1.0
     colors: Optional[Union[str, Dict[str, str]]] = None
     vertical_markers: Optional[Dict[Union[int, str], Union[float, List[float]]]] = None
+    vertical_marker_labels: Optional[Union[str, Dict[Union[int, str], Union[str, List[str]]]]] = None
     vertical_marker_mode: str = "auto"
 
     # Font size parameters
@@ -291,7 +295,7 @@ class TimeSeriesPlotConfig:
     has_discrete_features: bool = False
     resolved_discrete_layout: str = "overlay"
     effective_subplot_height: float = 0.0
-    resolved_vertical_markers: List[Tuple[float, str]] = field(default_factory=list)
+    resolved_vertical_markers: List[Tuple[float, str, Optional[str]]] = field(default_factory=list)
 
     # Figure data (set during plotting)
     fig: Optional[Figure] = None

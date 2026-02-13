@@ -97,6 +97,8 @@ class PipelineData:
         Dictionary of feature importance results by analysis name
     structure_visualization_data : Dict[str, StructureVisualizationData]
         Dictionary of structure visualization data by session name
+    custom_metadata : Dict[str, Any]
+        User-defined custom metadata attached to the pipeline state
 
     Examples
     --------
@@ -178,6 +180,7 @@ class PipelineData:
         self.comparison_data: Dict[str, ComparisonData] = {}
         self.feature_importance_data: Dict[str, FeatureImportanceData] = {}
         self.structure_visualization_data: Dict[str, StructureVisualizationData] = {}
+        self.custom_metadata: Dict[str, Any] = {}
 
         # Matrix caching for memmap (only used when use_memmap=True)
         # Stores: {cache_key: (memmap_path, frame_mapping)}
@@ -217,6 +220,7 @@ class PipelineData:
         self.comparison_data.clear()
         self.feature_importance_data.clear()
         self.structure_visualization_data.clear()
+        self.custom_metadata.clear()
 
     def update_max_memory_from_trajectories(self, max_atoms: int) -> None:
         """
@@ -283,7 +287,67 @@ class PipelineData:
             "data_selectors_created": len(self.data_selector_data),
             "comparisons_created": len(self.comparison_data),
             "feature_importance_analyses": len(self.feature_importance_data),
+            "custom_metadata_entries": len(self.custom_metadata),
         }
+
+    def add_custom_metadata(
+        self,
+        name: str,
+        value: Any,
+        overwrite: bool = False
+    ) -> None:
+        """
+        Register custom metadata payload in the pipeline state.
+
+        Parameters
+        ----------
+        name : str
+            Metadata key.
+        value : Any
+            Metadata payload to store.
+        overwrite : bool, default=False
+            If False, existing keys raise ValueError.
+
+        Returns
+        -------
+        None
+            Stores metadata in-place.
+        """
+        if not isinstance(name, str) or not name.strip():
+            raise ValueError("Custom metadata name must be a non-empty string.")
+        if (not overwrite) and name in self.custom_metadata:
+            raise ValueError(
+                f"Custom metadata key '{name}' already exists. "
+                "Use overwrite=True to replace it."
+            )
+        self.custom_metadata[name] = value
+
+    def get_custom_metadata(self, name: str) -> Any:
+        """
+        Get a previously registered custom metadata payload.
+
+        Parameters
+        ----------
+        name : str
+            Metadata key.
+
+        Returns
+        -------
+        Any
+            Stored payload.
+
+        Raises
+        ------
+        ValueError
+            If the key does not exist.
+        """
+        if name not in self.custom_metadata:
+            available = sorted(self.custom_metadata.keys())
+            raise ValueError(
+                f"Custom metadata '{name}' not found. "
+                f"Available keys: {available}"
+            )
+        return self.custom_metadata[name]
 
     def has_trajectories(self) -> bool:
         """

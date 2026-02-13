@@ -29,6 +29,7 @@ from typing import Optional, List, Union, Dict, Tuple
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+from matplotlib.lines import Line2D
 
 from .time_series_plot_config import TimeSeriesPlotConfig
 from .helper import TimeSeriesDataPreparer
@@ -43,6 +44,7 @@ from ...helper.contact_to_distances_converter import ContactToDistancesConverter
 from ...helper.title_legend_helper import TitleLegendHelper
 from ...helper.svg_export_helper import SvgExportHelper
 from ...helper.validation_helper import ValidationHelper
+from ...helper.vertical_marker_helper import VerticalMarkerHelper
 from ....utils.memmap_utils import MemmapUtils
 
 
@@ -105,6 +107,7 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         thickness: float = 1.0,
         colors: Optional[Union[str, Dict[str, str]]] = None,
         vertical_markers: Optional[Dict[Union[int, str], Union[float, List[float]]]] = None,
+        vertical_marker_labels: Optional[Union[str, Dict[Union[int, str], Union[str, List[str]]]]] = None,
         vertical_marker_mode: str = "auto"
     ) -> Figure:
         """
@@ -204,6 +207,11 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             Dictionary keys are interpreted as trajectory selectors or tags
             (depending on `vertical_marker_mode`), and values are one or more
             x-axis positions where dashed vertical lines are drawn.
+        vertical_marker_labels : str or Dict[int or str, str or List[str]], optional
+            Optional legend labels for vertical markers:
+            - str: one shared label for all markers
+            - dict[key] = str: one label for all markers of one key
+            - dict[key] = list[str]: one label per position of one key
         vertical_marker_mode : str, default="auto"
             Marker key interpretation mode:
             - "auto": use "tag" when tag coloring is active, else "trajectory"
@@ -260,6 +268,7 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         self._validate_thickness(thickness)
         self._validate_vertical_marker_mode(vertical_marker_mode)
         self._validate_vertical_markers(vertical_markers)
+        self._validate_vertical_marker_labels(vertical_markers, vertical_marker_labels)
 
         # Apply mode-based defaults for membership_bar_height
         if membership_bar_height is None:
@@ -304,6 +313,7 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             thickness=thickness,
             colors=colors,
             vertical_markers=vertical_markers,
+            vertical_marker_labels=vertical_marker_labels,
             vertical_marker_mode=vertical_marker_mode,
             title_fontsize=title_fontsize,
             subplot_title_fontsize=subplot_title_fontsize,
@@ -597,7 +607,7 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
 
     def _prepare_vertical_markers(self, config: TimeSeriesPlotConfig) -> None:
         """
-        Resolve vertical marker specifications to `(x, color)` tuples.
+        Resolve vertical marker specifications to `(x, color, label)` tuples.
 
         Parameters
         ----------
@@ -615,10 +625,20 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
 
         mode = self._resolve_vertical_marker_mode(config)
         if mode == "tag":
-            config.resolved_vertical_markers = self._resolve_vertical_markers_by_tag(config)
+            config.resolved_vertical_markers = VerticalMarkerHelper.resolve_markers(
+                marker_positions=config.vertical_markers,
+                marker_labels=config.vertical_marker_labels,
+                color_resolver=lambda key: self._resolve_marker_colors_for_tag(config, key)
+            )
             return
 
-        config.resolved_vertical_markers = self._resolve_vertical_markers_by_trajectory(config)
+        config.resolved_vertical_markers = VerticalMarkerHelper.resolve_markers(
+            marker_positions=config.vertical_markers,
+            marker_labels=config.vertical_marker_labels,
+            color_resolver=lambda key: self._resolve_marker_colors_for_trajectory_selector(
+                config, key
+            )
+        )
 
     @staticmethod
     def _resolve_vertical_marker_mode(config: TimeSeriesPlotConfig) -> str:
@@ -639,94 +659,77 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             return config.vertical_marker_mode
         return "tag" if config.use_tag_coloring else "trajectory"
 
-    def _resolve_vertical_markers_by_tag(
+    def _resolve_marker_colors_for_tag(
         self,
-        config: TimeSeriesPlotConfig
-    ) -> List[Tuple[float, str]]:
+        config: TimeSeriesPlotConfig,
+        marker_key: Union[int, str]
+    ) -> List[str]:
         """
-        Resolve vertical markers from tag keys to colored marker tuples.
+        Resolve marker colors for one tag-key entry.
 
         Parameters
         ----------
         config : TimeSeriesPlotConfig
             Central configuration object.
+        marker_key : int or str
+            Marker dictionary key interpreted as tag.
 
         Returns
         -------
-        List[Tuple[float, str]]
-            Unique `(x_position, color)` markers.
+        List[str]
+            List with zero or one colors for this tag key.
         """
-        resolved: List[Tuple[float, str]] = []
-        seen = set()
+        tag = str(marker_key)
+        color = config.tag_colors.get(tag)
+        if color is None:
+            return []
+        return [color]
 
-        for tag_key, raw_positions in config.vertical_markers.items():
-            tag = str(tag_key)
-            color = config.tag_colors.get(tag)
-            if color is None:
-                continue
-
-            x_positions = self._normalize_vertical_marker_positions(raw_positions, tag_key)
-            for x_pos in x_positions:
-                marker = (x_pos, color)
-                if marker in seen:
-                    continue
-                seen.add(marker)
-                resolved.append(marker)
-
-        return resolved
-
-    def _resolve_vertical_markers_by_trajectory(
+    def _resolve_marker_colors_for_trajectory_selector(
         self,
-        config: TimeSeriesPlotConfig
-    ) -> List[Tuple[float, str]]:
+        config: TimeSeriesPlotConfig,
+        selector: Union[int, str]
+    ) -> List[str]:
         """
-        Resolve vertical markers from trajectory selectors to marker tuples.
+        Resolve marker colors for one trajectory-selector marker key.
 
         Parameters
         ----------
         config : TimeSeriesPlotConfig
             Central configuration object.
+        selector : int or str
+            Marker key interpreted as trajectory selector.
 
         Returns
         -------
-        List[Tuple[float, str]]
-            Unique `(x_position, color)` markers.
+        List[str]
+            Unique colors for trajectories matching this selector.
         """
-        resolved: List[Tuple[float, str]] = []
-        seen = set()
         plotted_traj_indices = set(config.tag_map.keys())
 
-        for selector, raw_positions in config.vertical_markers.items():
-            try:
-                selected_indices = config.pipeline_data.trajectory_data.get_trajectory_indices(
-                    selector
-                )
-            except Exception as exc:
-                raise ValueError(
-                    f"Invalid trajectory selector in vertical_markers: {selector!r}."
-                ) from exc
+        try:
+            selected_indices = config.pipeline_data.trajectory_data.get_trajectory_indices(
+                selector
+            )
+        except Exception as exc:
+            raise ValueError(
+                f"Invalid trajectory selector in vertical_markers: {selector!r}."
+            ) from exc
 
-            matching_indices = [
-                traj_idx for traj_idx in selected_indices
-                if traj_idx in plotted_traj_indices
-            ]
-            if not matching_indices:
+        matching_indices = [
+            traj_idx for traj_idx in selected_indices
+            if traj_idx in plotted_traj_indices
+        ]
+        if not matching_indices:
+            return []
+
+        colors: List[str] = []
+        for traj_idx in matching_indices:
+            color = self._resolve_trajectory_marker_color(config, traj_idx)
+            if color is None or color in colors:
                 continue
-
-            x_positions = self._normalize_vertical_marker_positions(raw_positions, selector)
-            for traj_idx in matching_indices:
-                color = self._resolve_trajectory_marker_color(config, traj_idx)
-                if color is None:
-                    continue
-
-                for x_pos in x_positions:
-                    marker = (x_pos, color)
-                    if marker in seen:
-                        continue
-                    seen.add(marker)
-                    resolved.append(marker)
-
-        return resolved
+            colors.append(color)
+        return colors
 
     @staticmethod
     def _resolve_trajectory_marker_color(
@@ -758,50 +761,6 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             if color is not None:
                 return color
         return None
-
-    @staticmethod
-    def _normalize_vertical_marker_positions(
-        raw_positions: Union[float, List[float]],
-        selector_key: Union[int, str]
-    ) -> List[float]:
-        """
-        Normalize one marker value entry to a list of numeric x-positions.
-
-        Parameters
-        ----------
-        raw_positions : float or List[float]
-            Raw value from one `vertical_markers` dictionary entry.
-        selector_key : int or str
-            Key used in `vertical_markers`, used for validation messages.
-
-        Returns
-        -------
-        List[float]
-            Normalized x-positions as float values.
-
-        Raises
-        ------
-        ValueError
-            If `raw_positions` contains unsupported values.
-        """
-        if isinstance(raw_positions, (int, float)) and not isinstance(raw_positions, bool):
-            return [float(raw_positions)]
-
-        if isinstance(raw_positions, (list, tuple)):
-            values: List[float] = []
-            for value in raw_positions:
-                if isinstance(value, bool) or not isinstance(value, (int, float)):
-                    raise ValueError(
-                        "vertical_markers values must be numeric or lists of numeric values. "
-                        f"Invalid value for key {selector_key!r}: {value!r}."
-                    )
-                values.append(float(value))
-            return values
-
-        raise ValueError(
-            "vertical_markers values must be numeric or lists of numeric values. "
-            f"Invalid value for key {selector_key!r}: {raw_positions!r}."
-        )
 
     def _prepare_plot_data(self, config: TimeSeriesPlotConfig):
         """
@@ -953,13 +912,19 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             )
 
         legend_colors = config.tag_colors if config.use_tag_coloring else config.traj_colors
+        marker_legend_handles = VerticalMarkerHelper.build_legend_handles(
+            resolved_markers=config.resolved_vertical_markers,
+            line_width=max(1.0, config.thickness),
+            alpha=0.85
+        )
 
         self._add_legend_or_title(
             config.fig, config.show_legend, legend_colors,
             config.wrapped_title, config.top, config.rightmost_ax_first_row,
             config.contact_threshold, config.clustering_name, config.membership_per_feature,
             config.title_fontsize, config.legend_fontsize, config.legend_title_fontsize,
-            config.use_tag_coloring
+            config.use_tag_coloring,
+            marker_legend_handles
         )
 
         if config.show_legend and config.discrete_state_colors:
@@ -986,7 +951,8 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         wrapped_title, top, rightmost_ax_first_row,
         contact_threshold, clustering_name, membership_per_feature,
         title_fontsize, legend_fontsize, legend_title_fontsize,
-        use_tag_coloring: bool = False
+        use_tag_coloring: bool = False,
+        vertical_marker_legend_handles: Optional[List] = None,
     ):
         """
         Add legend or title only.
@@ -1019,6 +985,8 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             Font size for legend title
         use_tag_coloring : bool, default=False
             If True, the primary legend describes tags instead of trajectories.
+        vertical_marker_legend_handles : List, optional
+            Additional line handles for vertical marker labels.
 
         Returns
         -------
@@ -1035,13 +1003,15 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
                 self._add_combined_legend(
                     fig, wrapped_title, top, rightmost_ax_first_row,
                     legend_colors, clustering_name, title_fontsize, legend_fontsize,
-                    use_tag_coloring
+                    use_tag_coloring,
+                    vertical_marker_legend_handles
                 )
             else:
                 self._add_title_and_legend_positioned(
                     fig, wrapped_title, top, rightmost_ax_first_row,
                     legend_colors, default_legend_title, None, contact_threshold,
-                    title_fontsize, legend_fontsize, legend_title_fontsize
+                    title_fontsize, legend_fontsize, legend_title_fontsize,
+                    additional_legend_handles=vertical_marker_legend_handles
                 )
         else:
             title_offset_from_top = 0.15
@@ -1098,9 +1068,10 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         config.selected_matrix = None
 
     def _add_combined_legend(
-        self, fig, wrapped_title, _top, rightmost_ax_first_row,
+        self, fig, wrapped_title, top, rightmost_ax_first_row,
         traj_colors, clustering_name, title_fontsize, legend_fontsize,
-        use_tag_coloring: bool = False
+        use_tag_coloring: bool = False,
+        additional_handles: Optional[List] = None,
     ):
         """
         Add title and combined Trajectories + Clusters legend.
@@ -1111,8 +1082,8 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             Figure
         wrapped_title : str
             Title text
-        _top : float
-            Top position (unused, kept for signature compatibility)
+        top : float
+            Top position (currently unused, kept for signature compatibility)
         rightmost_ax_first_row
             Rightmost axes
         traj_colors : Dict[str, str]
@@ -1125,6 +1096,9 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             Font size for legend entries
         use_tag_coloring : bool, default=False
             If True, first legend section is labeled \"Tags\".
+        additional_handles : List, optional
+            Additional handles (e.g. vertical marker labels) appended as a
+            dedicated section.
 
         Returns
         -------
@@ -1138,6 +1112,7 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         title_offset_from_top = 0.15
         title_y = 1.0 - (title_offset_from_top / fig.get_figheight())
         TitleLegendHelper.add_title(fig, wrapped_title, title_y=title_y, fontsize=title_fontsize or 18)
+        _ = top  # retained for signature compatibility
 
         # Create combined legend handles (inlined from _create_combined_legend_handles)
         handles = []
@@ -1165,15 +1140,27 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
                     mpatches.Patch(color=cluster_colors[i], label=f'  Cluster {i}')
                 )
 
-        # Calculate legend position
-        pos = rightmost_ax_first_row.get_position()
-        gap_inches = 0.1
-        legend_x = pos.x1 + (gap_inches / fig.get_figwidth())
+        if additional_handles:
+            handles.append(mpatches.Patch(color='none', label=''))
+            handles.append(mpatches.Patch(color='none', label='Markers:'))
+            for marker_handle in additional_handles:
+                handles.append(
+                    Line2D(
+                        [0], [0],
+                        color=marker_handle.get_color(),
+                        linestyle=marker_handle.get_linestyle(),
+                        linewidth=marker_handle.get_linewidth(),
+                        alpha=marker_handle.get_alpha(),
+                        label=f"  {marker_handle.get_label()}"
+                    )
+                )
 
-        # Position legend relative to title, not GridSpec top
-        gap_to_legend = 0.05
-        legend_offset_from_top = title_offset_from_top + gap_to_legend
-        legend_y = 1.0 - (legend_offset_from_top / fig.get_figheight())
+        legend_x, legend_y = TitleLegendHelper.get_side_legend_anchor(
+            fig=fig,
+            rightmost_ax_first_row=rightmost_ax_first_row,
+            gap_inches=0.1,
+            y_offset=0.0
+        )
 
         # Add legend
         fig.legend(
@@ -1189,7 +1176,7 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         self,
         fig: Figure,
         wrapped_title: str,
-        _top: float,
+        top: float,
         rightmost_ax_first_row,
         data_selector_colors: Dict[str, str],
         legend_title: Optional[str],
@@ -1197,7 +1184,8 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         active_threshold: Optional[float],
         title_fontsize: Optional[int] = None,
         legend_fontsize: Optional[int] = None,
-        legend_title_fontsize: Optional[int] = None
+        legend_title_fontsize: Optional[int] = None,
+        additional_legend_handles: Optional[List] = None
     ) -> None:
         """
         Add title and legend with calculated positions.
@@ -1210,8 +1198,8 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             Figure to add title/legend to
         wrapped_title : str
             Pre-wrapped title text
-        _top : float
-            Top position (unused, kept for base class signature compatibility)
+        top : float
+            Top position (currently unused, kept for base class signature compatibility)
         rightmost_ax_first_row
             Rightmost axes in first row
         data_selector_colors : Dict[str, str]
@@ -1228,6 +1216,8 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             Font size for legend entries (default: 14)
         legend_title_fontsize : int, optional
             Font size for legend title (default: 16)
+        additional_legend_handles : List, optional
+            Additional legend handles appended to the first legend.
 
         Returns
         -------
@@ -1242,15 +1232,14 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         title_offset_from_top = 0.15
         title_y = 1.0 - (title_offset_from_top / fig.get_figheight())
         TitleLegendHelper.add_title(fig, wrapped_title, title_y=title_y, fontsize=title_fontsize or 18)
+        _ = top  # retained for signature compatibility
 
-        pos = rightmost_ax_first_row.get_position()
-        gap_inches = 0.1
-        legend_x = pos.x1 + (gap_inches / fig.get_figwidth())
-
-        # Position legend relative to title, not GridSpec top
-        gap_to_legend = 0.05
-        legend_offset_from_top = title_offset_from_top + gap_to_legend
-        legend_y = 1.0 - (legend_offset_from_top / fig.get_figheight())
+        legend_x, legend_y = TitleLegendHelper.get_side_legend_anchor(
+            fig=fig,
+            rightmost_ax_first_row=rightmost_ax_first_row,
+            gap_inches=0.1,
+            y_offset=0.0
+        )
 
         TitleLegendHelper.add_legend(
             fig, data_selector_colors,
@@ -1258,7 +1247,8 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             contact_threshold=active_threshold,
             legend_x=legend_x, legend_y=legend_y,
             fontsize=legend_fontsize or 14,
-            title_fontsize=legend_title_fontsize or 16
+            title_fontsize=legend_title_fontsize or 16,
+            additional_handles=additional_legend_handles
         )
 
     @staticmethod
@@ -1299,13 +1289,14 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         if rightmost_ax_first_row is None:
             return
 
-        pos = rightmost_ax_first_row.get_position()
-        gap_inches = 0.1
-        legend_x = pos.x1 + (gap_inches / fig.get_figwidth())
-
-        # Keep this legend below the main trajectory/tag legend.
-        legend_offset_from_top = 0.9 if clustering_name else 0.65
-        legend_y = 1.0 - (legend_offset_from_top / fig.get_figheight())
+        legend_x, first_legend_y = TitleLegendHelper.get_side_legend_anchor(
+            fig=fig,
+            rightmost_ax_first_row=rightmost_ax_first_row,
+            gap_inches=0.1,
+            y_offset=0.0
+        )
+        legend_drop = 0.22 if clustering_name else 0.16
+        legend_y = max(0.05, first_legend_y - legend_drop)
 
         handles = [
             mpatches.Patch(color=color, label=label)
@@ -1396,15 +1387,15 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         discrete offset/occupancy modes to avoid row overlap.
         """
         wspace = 0.25 if long_labels else 0.15
-        hspace = 0.4
+        hspace = 0.36
 
         if long_labels and has_discrete_features:
-            hspace += 0.08
+            hspace += 0.06
 
         if has_discrete_features and resolved_discrete_layout == "offset":
-            hspace += 0.28
+            hspace += 0.24
         elif has_discrete_features and resolved_discrete_layout == "occupancy":
-            hspace += 0.14
+            hspace += 0.12
 
         # Add extra vertical space for larger ticks on membership plots
         if membership_per_feature and tick_fontsize and tick_fontsize > 10:
@@ -1722,42 +1713,32 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         ValueError
             If structure or value types are invalid.
         """
-        if vertical_markers is None:
-            return
+        VerticalMarkerHelper.validate_markers(
+            marker_positions=vertical_markers,
+            key_context="trajectory selectors or tag names"
+        )
 
-        if not isinstance(vertical_markers, dict):
-            raise ValueError(
-                "vertical_markers must be a dictionary mapping selector/tag keys "
-                "to numeric x-positions."
-            )
+    @staticmethod
+    def _validate_vertical_marker_labels(
+        vertical_markers: Optional[Dict[Union[int, str], Union[float, List[float]]]],
+        vertical_marker_labels: Optional[Union[str, Dict[Union[int, str], Union[str, List[str]]]]]
+    ) -> None:
+        """
+        Validate vertical marker label structure.
 
-        for key, raw_positions in vertical_markers.items():
-            if isinstance(key, bool) or not isinstance(key, (int, str)):
-                raise ValueError(
-                    "vertical_markers keys must be trajectory selectors "
-                    "(int/str) or tag names (str). "
-                    f"Invalid key: {key!r}."
-                )
+        Parameters
+        ----------
+        vertical_markers : dict, optional
+            Marker position dictionary.
+        vertical_marker_labels : str or dict, optional
+            Marker legend labels.
 
-            if isinstance(raw_positions, bool):
-                raise ValueError(
-                    "vertical_markers values must be numeric or lists of numeric values. "
-                    f"Invalid value for key {key!r}: {raw_positions!r}."
-                )
-
-            if isinstance(raw_positions, (int, float)):
-                continue
-
-            if isinstance(raw_positions, (list, tuple)):
-                for value in raw_positions:
-                    if isinstance(value, bool) or not isinstance(value, (int, float)):
-                        raise ValueError(
-                            "vertical_markers values must be numeric or lists of numeric values. "
-                            f"Invalid value for key {key!r}: {value!r}."
-                        )
-                continue
-
-            raise ValueError(
-                "vertical_markers values must be numeric or lists of numeric values. "
-                f"Invalid value for key {key!r}: {raw_positions!r}."
-            )
+        Returns
+        -------
+        None
+            Validation helper; returns only when values are valid.
+        """
+        VerticalMarkerHelper.validate_labels(
+            marker_positions=vertical_markers,
+            marker_labels=vertical_marker_labels
+        )

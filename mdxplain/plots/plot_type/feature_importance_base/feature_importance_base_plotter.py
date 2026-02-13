@@ -367,7 +367,7 @@ class FeatureImportanceBasePlotter:
         )
 
         wspace = 0.8 if (long_labels and has_discrete) else 0.4
-        hspace = 0.25
+        hspace = 0.23
         return has_discrete, wspace, hspace
 
     def _create_gridspec_with_title(
@@ -437,7 +437,8 @@ class FeatureImportanceBasePlotter:
         active_threshold: Optional[float],
         title_fontsize: Optional[int] = None,
         legend_fontsize: Optional[int] = None,
-        legend_title_fontsize: Optional[int] = None
+        legend_title_fontsize: Optional[int] = None,
+        additional_legend_handles: Optional[List] = None,
     ) -> None:
         """
         Add title and legend with calculated positions.
@@ -449,7 +450,7 @@ class FeatureImportanceBasePlotter:
         wrapped_title : str
             Pre-wrapped title text
         top : float
-            Top position for GridSpec
+            Top position for GridSpec (currently unused, kept for signature compatibility)
         rightmost_ax_first_row
             Rightmost axes in first row
         data_selector_colors : Dict[str, str]
@@ -466,6 +467,8 @@ class FeatureImportanceBasePlotter:
             Font size for legend entries (default: 14)
         legend_title_fontsize : int, optional
             Font size for legend title (default: 16)
+        additional_legend_handles : List, optional
+            Additional legend handles appended to the DataSelector legend.
 
         Returns
         -------
@@ -479,10 +482,12 @@ class FeatureImportanceBasePlotter:
             fontsize=title_fontsize or 18
         )
 
-        pos = rightmost_ax_first_row.get_position()
-        gap_inches = 0.1
-        legend_x = pos.x1 + (gap_inches / fig.get_figwidth())
-        legend_y = top + 0.01
+        legend_x, legend_y = TitleLegendHelper.get_side_legend_anchor(
+            fig=fig,
+            rightmost_ax_first_row=rightmost_ax_first_row,
+            gap_inches=0.1,
+            y_offset=0.0
+        )
 
         TitleLegendHelper.add_legend(
             fig, data_selector_colors,
@@ -490,7 +495,8 @@ class FeatureImportanceBasePlotter:
             contact_threshold=active_threshold,
             legend_x=legend_x, legend_y=legend_y,
             fontsize=legend_fontsize or 14,
-            title_fontsize=legend_title_fontsize or 16
+            title_fontsize=legend_title_fontsize or 16,
+            additional_handles=additional_legend_handles
         )
 
     def _save_figure(

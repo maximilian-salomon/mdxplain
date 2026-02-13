@@ -234,6 +234,8 @@ class FeatureFacade:
         fill: bool = True,
         discrete_plot_mode: str = "density",
         colors: Optional[Union[str, Dict[str, str]]] = None,
+        vertical_markers: Optional[Dict[Union[int, str], Union[float, List[float]]]] = None,
+        vertical_marker_labels: Optional[Union[str, Dict[Union[int, str], Union[str, List[str]]]]] = None,
     ) -> Figure:
         """
         Create density plots from manual feature selection.
@@ -278,6 +280,10 @@ class FeatureFacade:
             - dict: explicit DataSelector -> color mapping
             - None: automatic cluster-consistent DataSelector mapping
               (cluster_* names keep their cluster color)
+        vertical_markers : Dict[int or str, float or List[float]], optional
+            Optional vertical guide markers keyed by DataSelector.
+        vertical_marker_labels : str or Dict[int or str, str or List[str]], optional
+            Optional labels for marker legend entries.
         contact_threshold : float, optional
             Distance threshold for contact threshold line
         title : str, optional
@@ -365,6 +371,8 @@ class FeatureFacade:
             fill=fill,
             discrete_plot_mode=discrete_plot_mode,
             colors=colors,
+            vertical_markers=vertical_markers,
+            vertical_marker_labels=vertical_marker_labels,
             contact_threshold=contact_threshold,
             title=title,
             legend_title=legend_title,
@@ -423,6 +431,7 @@ class FeatureFacade:
         thickness: float = 1.0,
         colors: Optional[Union[str, Dict[str, str]]] = None,
         vertical_markers: Optional[Dict[Union[int, str], Union[float, List[float]]]] = None,
+        vertical_marker_labels: Optional[Union[str, Dict[Union[int, str], Union[str, List[str]]]]] = None,
         vertical_marker_mode: str = "auto",
     ) -> Figure:
         """
@@ -511,6 +520,8 @@ class FeatureFacade:
             Keys are trajectory selectors or tag names (depending on
             `vertical_marker_mode`), values are x-positions where colored
             vertical lines are drawn.
+        vertical_marker_labels : str or Dict[int or str, str or List[str]], optional
+            Optional legend labels for marker lines.
         vertical_marker_mode : str, default="auto"
             Marker key interpretation mode:
             "auto", "trajectory", or "tag".
@@ -605,6 +616,7 @@ class FeatureFacade:
             thickness=thickness,
             colors=colors,
             vertical_markers=vertical_markers,
+            vertical_marker_labels=vertical_marker_labels,
             vertical_marker_mode=vertical_marker_mode,
             title_fontsize=title_fontsize,
             subplot_title_fontsize=subplot_title_fontsize,

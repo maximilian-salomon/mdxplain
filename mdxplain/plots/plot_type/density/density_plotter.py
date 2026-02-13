@@ -34,6 +34,7 @@ from ...helper.validation_helper import ValidationHelper
 from ...helper.title_legend_helper import TitleLegendHelper
 from ...helper.svg_export_helper import SvgExportHelper
 from ...helper.color_resolution_helper import ColorResolutionHelper
+from ...helper.vertical_marker_helper import VerticalMarkerHelper
 from .helper.density_data_preparer import DensityDataPreparer
 from .helper.density_calculation_helper import DensityCalculationHelper
 from .helper.density_discrete_bar_helper import DensityDiscreteBarHelper
@@ -103,6 +104,8 @@ class DensityPlotter(FeatureImportanceBasePlotter):
         fill: bool = True,
         discrete_plot_mode: str = "density",
         colors: Optional[Union[str, Dict[str, str]]] = None,
+        vertical_markers: Optional[Dict[Union[int, str], Union[float, List[float]]]] = None,
+        vertical_marker_labels: Optional[Union[str, Dict[Union[int, str], Union[str, List[str]]]]] = None,
     ) -> Figure:
         """
         Create density plots from feature importance or manual selection.
@@ -160,6 +163,16 @@ class DensityPlotter(FeatureImportanceBasePlotter):
             - dict: explicit DataSelector -> color mapping
             - None: automatic cluster-consistent DataSelector colors
               (cluster_* selectors keep their cluster colors)
+        vertical_markers : Dict[int or str, float or List[float]], optional
+            Optional vertical guide markers.
+            Keys are DataSelector names (or selector-compatible identifiers),
+            values are one or more x-positions where dashed marker lines are
+            drawn in matching DataSelector colors.
+        vertical_marker_labels : str or Dict[int or str, str or List[str]], optional
+            Optional legend labels for vertical markers:
+            - str: one label for all marker lines
+            - dict[key] = str: one label for all markers of one key
+            - dict[key] = list[str]: one label per marker position for one key
         contact_threshold : float, optional
             Distance threshold in Angstrom for drawing contact threshold line
             on distance features. If provided, draws a red dashed vertical line
@@ -249,6 +262,14 @@ class DensityPlotter(FeatureImportanceBasePlotter):
             feature_importance_name, feature_selector, data_selectors
         )
         self._validate_discrete_plot_mode(discrete_plot_mode)
+        VerticalMarkerHelper.validate_markers(
+            marker_positions=vertical_markers,
+            key_context="DataSelector names"
+        )
+        VerticalMarkerHelper.validate_labels(
+            marker_positions=vertical_markers,
+            marker_labels=vertical_marker_labels
+        )
 
         # 2. Prepare density data
         density_data, metadata_map, default_selector_colors, contact_cutoff = self._prepare_density_data(
@@ -259,6 +280,16 @@ class DensityPlotter(FeatureImportanceBasePlotter):
             labels=list(default_selector_colors.keys()),
             colors=colors,
             default_colors=default_selector_colors
+        )
+        resolved_vertical_markers = self._resolve_vertical_markers(
+            vertical_markers=vertical_markers,
+            vertical_marker_labels=vertical_marker_labels,
+            data_selector_colors=resolved_selector_colors
+        )
+        marker_legend_handles = VerticalMarkerHelper.build_legend_handles(
+            resolved_markers=resolved_vertical_markers,
+            line_width=max(1.0, line_width * 0.75),
+            alpha=0.85
         )
 
         # 3. Flatten to feature list
@@ -289,6 +320,7 @@ class DensityPlotter(FeatureImportanceBasePlotter):
             fig, gs, all_features, layout, density_data, metadata_map,
             resolved_selector_colors, long_labels, kde_bandwidth, base_sigma, max_sigma,
             alpha, line_width, fill, discrete_plot_mode, contact_threshold, contact_cutoff,
+            resolved_vertical_markers,
             subplot_title_fontsize, xlabel_fontsize, ylabel_fontsize, tick_fontsize
         )
 
@@ -296,7 +328,8 @@ class DensityPlotter(FeatureImportanceBasePlotter):
         self._add_title_and_legend_positioned(
             fig, wrapped_title, top, rightmost_ax_first_row,
             resolved_selector_colors, legend_title, legend_labels, active_threshold,
-            title_fontsize, legend_fontsize, legend_title_fontsize
+            title_fontsize, legend_fontsize, legend_title_fontsize,
+            additional_legend_handles=marker_legend_handles
         )
 
         # 9. Save if requested
@@ -350,12 +383,12 @@ class DensityPlotter(FeatureImportanceBasePlotter):
 
         if long_labels and has_discrete:
             DensityPlotter._expand_figure_height_for_long_labels(fig, n_rows)
-            return wspace, 1.05
+            return wspace, 0.95
 
         if long_labels:
-            return wspace, 0.65
+            return wspace, 0.60
 
-        return wspace, 0.45
+        return wspace, 0.42
 
     @staticmethod
     def _expand_figure_height_for_long_labels(fig: Figure, n_rows: int) -> None:
@@ -462,6 +495,7 @@ class DensityPlotter(FeatureImportanceBasePlotter):
         discrete_plot_mode: str,
         contact_threshold: Optional[float],
         contact_cutoff: Optional[float],
+        resolved_vertical_markers: List[Tuple[float, str, Optional[str]]],
         subplot_title_fontsize: Optional[int],
         xlabel_fontsize: Optional[int],
         ylabel_fontsize: Optional[int],
@@ -552,7 +586,7 @@ class DensityPlotter(FeatureImportanceBasePlotter):
                 feat_metadata, data_selector_colors,
                 kde_bandwidth, base_sigma, max_sigma,
                 alpha, line_width, fill, discrete_plot_mode,
-                long_labels, resolved_threshold
+                long_labels, resolved_threshold, resolved_vertical_markers
             )
 
             self._style_subplot(
@@ -576,7 +610,8 @@ class DensityPlotter(FeatureImportanceBasePlotter):
         fill: bool,
         discrete_plot_mode: str,
         long_labels: bool,
-        resolved_threshold: Optional[float]
+        resolved_threshold: Optional[float],
+        resolved_vertical_markers: List[Tuple[float, str, Optional[str]]]
     ):
         """
         Plot overlaid density curves for one feature.
@@ -664,6 +699,61 @@ class DensityPlotter(FeatureImportanceBasePlotter):
                 alpha=0.7,
                 zorder=5
             )
+
+        # Draw optional user-provided vertical markers.
+        for x_pos, color, _ in resolved_vertical_markers:
+            ax.axvline(
+                x=x_pos,
+                color=color,
+                linestyle="--",
+                linewidth=max(1.0, line_width * 0.75),
+                alpha=0.85,
+                zorder=6
+            )
+
+    @staticmethod
+    def _resolve_vertical_markers(
+        vertical_markers: Optional[Dict[Union[int, str], Union[float, List[float]]]],
+        vertical_marker_labels: Optional[Union[str, Dict[Union[int, str], Union[str, List[str]]]]],
+        data_selector_colors: Dict[str, str]
+    ) -> List[Tuple[float, str, Optional[str]]]:
+        """
+        Resolve density marker dictionaries to `(x, color, label)` tuples.
+
+        Parameters
+        ----------
+        vertical_markers : dict, optional
+            Marker position dictionary keyed by DataSelector.
+        vertical_marker_labels : str or dict, optional
+            Marker label definition for legend entries.
+        data_selector_colors : Dict[str, str]
+            Effective DataSelector color mapping.
+
+        Returns
+        -------
+        List[Tuple[float, str, Optional[str]]]
+            Resolved marker tuples for plotting and legend construction.
+        """
+        if not vertical_markers:
+            return []
+
+        available = sorted(data_selector_colors.keys())
+
+        def color_resolver(key: Union[int, str]) -> List[str]:
+            selector_name = str(key)
+            color = data_selector_colors.get(selector_name)
+            if color is None:
+                raise ValueError(
+                    f"Unknown DataSelector in vertical_markers: {key!r}. "
+                    f"Available selectors: {available}"
+                )
+            return [color]
+
+        return VerticalMarkerHelper.resolve_markers(
+            marker_positions=vertical_markers,
+            marker_labels=vertical_marker_labels,
+            color_resolver=color_resolver
+        )
 
     @staticmethod
     def _validate_discrete_plot_mode(discrete_plot_mode: str) -> None:
