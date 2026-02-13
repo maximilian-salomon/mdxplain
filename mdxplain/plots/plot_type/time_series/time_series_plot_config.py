@@ -88,7 +88,7 @@ class TimeSeriesPlotConfig:
     dpi : int
         Resolution
     smoothing : bool
-        Enable or disable data smoothing
+        Enable or disable data smoothing for continuous features
     smoothing_method : str
         Smoothing method ("moving_average" or "savitzky")
     smoothing_window : int
@@ -97,6 +97,12 @@ class TimeSeriesPlotConfig:
         Polynomial order for Savitzky-Golay filter
     show_unsmoothed_background : bool
         Show unsmoothed data as transparent background when smoothing is enabled
+    discrete_plot_style : str
+        Rendering style for discrete features ("line", "step", or "scatter")
+    colors : Optional[Union[str, Dict[str, str]]]
+        Color configuration for trajectories/tags:
+        colormap name, explicit mapping, or None for automatic palette
+        assignment (tag colors when tag coloring is active, else trajectory colors)
     feature_data : Dict
         Prepared feature data
     feature_indices : Dict[int, str]
@@ -205,6 +211,8 @@ class TimeSeriesPlotConfig:
     smoothing_window: int = 51
     smoothing_polyorder: int = 3
     show_unsmoothed_background: bool = True
+    discrete_plot_style: str = "step"
+    colors: Optional[Union[str, Dict[str, str]]] = None
 
     # Font size parameters
     title_fontsize: int = None

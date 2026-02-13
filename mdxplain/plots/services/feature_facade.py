@@ -231,6 +231,9 @@ class FeatureFacade:
         tick_fontsize: Optional[int] = None,
         legend_fontsize: Optional[int] = None,
         legend_title_fontsize: Optional[int] = None,
+        fill: bool = True,
+        discrete_plot_mode: str = "density",
+        colors: Optional[Union[str, Dict[str, str]]] = None,
     ) -> Figure:
         """
         Create density plots from manual feature selection.
@@ -262,6 +265,19 @@ class FeatureFacade:
             Transparency for filled density curves
         line_width : float, default=2.0
             Width of density curve contour lines
+        fill : bool, default=True
+            If True, draw filled density areas in addition to contour lines.
+            If False, draw contour lines only.
+        discrete_plot_mode : str, default="density"
+            Rendering mode for discrete features:
+            - "density": Gaussian-smoothed discrete distributions
+            - "bar": grouped probability bars
+        colors : str or Dict[str, str], optional
+            Color configuration for DataSelectors:
+            - str: matplotlib colormap name
+            - dict: explicit DataSelector -> color mapping
+            - None: automatic cluster-consistent DataSelector mapping
+              (cluster_* names keep their cluster color)
         contact_threshold : float, optional
             Distance threshold for contact threshold line
         title : str, optional
@@ -346,6 +362,9 @@ class FeatureFacade:
             max_sigma=max_sigma,
             alpha=alpha,
             line_width=line_width,
+            fill=fill,
+            discrete_plot_mode=discrete_plot_mode,
+            colors=colors,
             contact_threshold=contact_threshold,
             title=title,
             legend_title=legend_title,
@@ -397,6 +416,8 @@ class FeatureFacade:
         tick_fontsize: Optional[int] = None,
         legend_fontsize: Optional[int] = None,
         legend_title_fontsize: Optional[int] = None,
+        discrete_plot_style: str = "step",
+        colors: Optional[Union[str, Dict[str, str]]] = None,
     ) -> Figure:
         """
         Create time series plots from manual feature selection.
@@ -448,7 +469,8 @@ class FeatureFacade:
         dpi : int, default=300
             Resolution for saved figure
         smoothing : bool, default=True
-            Enable or disable data smoothing
+            Enable or disable data smoothing for continuous features.
+            Discrete features are always plotted without smoothing.
         smoothing_method : str, default="savitzky"
             Smoothing method ("moving_average" or "savitzky")
         smoothing_window : int, default=51
@@ -457,6 +479,14 @@ class FeatureFacade:
             Polynomial order for Savitzky-Golay filter (ignored for moving_average)
         show_unsmoothed_background : bool, default=True
             Show unsmoothed data as transparent background line when smoothing is enabled
+        discrete_plot_style : str, default="step"
+            Rendering style for discrete features: "line", "step", or "scatter".
+        colors : str or Dict[str, str], optional
+            Color configuration for trajectories/tags:
+            - str: matplotlib colormap name
+            - dict: explicit mapping (trajectory_name -> color or tag -> color)
+            - None: automatic palette assignment.
+              Uses tag colors if tag coloring is active, otherwise trajectory colors.
         title_fontsize : int, optional
             Font size for the main title.
         subplot_title_fontsize : int, optional
@@ -538,6 +568,8 @@ class FeatureFacade:
             smoothing_window=smoothing_window,
             smoothing_polyorder=smoothing_polyorder,
             show_unsmoothed_background=show_unsmoothed_background,
+            discrete_plot_style=discrete_plot_style,
+            colors=colors,
             title_fontsize=title_fontsize,
             subplot_title_fontsize=subplot_title_fontsize,
             xlabel_fontsize=xlabel_fontsize,

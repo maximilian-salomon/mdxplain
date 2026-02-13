@@ -167,20 +167,31 @@ class TimeSeriesFeaturePlotHelper:
         """
         ax.set_title(feat_name, fontsize=config.subplot_title_fontsize or 14, pad=8)
 
-        TimeSeriesFeaturePlotHelper._plot_feature_lines(ax, feat_idx, config)
+        feature_metadata = config.metadata_map.get(feat_type, {}).get(feat_name, {})
+        type_metadata = feature_metadata.get("type_metadata", {})
+        viz = type_metadata.get("visualization", {})
+        is_discrete = viz.get("is_discrete", False)
+
+        TimeSeriesFeaturePlotHelper._plot_feature_lines(
+            ax, feat_idx, config, is_discrete=is_discrete
+        )
 
         # Get x_values from first trajectory for xlim synchronization
         x_values = TimeSeriesDataPreparer.get_x_values(
             config.pipeline_data, 0, config.use_time
         )
 
-        feature_metadata = config.metadata_map.get(feat_type, {}).get(feat_name, {})
         TimeSeriesFeaturePlotHelper._configure_axes(
             ax, feat_type, feature_metadata, config, x_values
         )
 
     @staticmethod
-    def _plot_feature_lines(ax: plt.Axes, feat_idx: int, config):
+    def _plot_feature_lines(
+        ax: plt.Axes,
+        feat_idx: int,
+        config,
+        is_discrete: bool = False
+    ):
         """
         Plot feature lines with appropriate coloring.
 
@@ -201,19 +212,24 @@ class TimeSeriesFeaturePlotHelper:
         --------
         >>> TimeSeriesFeaturePlotHelper._plot_feature_lines(ax, 0, config)
         """
+        apply_smoothing = config.smoothing and not is_discrete
+        plot_style = config.discrete_plot_style if is_discrete else "line"
+
         if config.use_tag_coloring:
             TimeSeriesTagColoringHelper.plot_feature_with_tag_colors(
                 ax, config.pipeline_data, feat_idx, config.tag_map,
                 config.tag_colors, config.selected_matrix, config.frame_mapping, config.use_time,
-                config.smoothing, config.smoothing_method, config.smoothing_window,
-                config.smoothing_polyorder, config.show_unsmoothed_background
+                apply_smoothing, config.smoothing_method, config.smoothing_window,
+                config.smoothing_polyorder, config.show_unsmoothed_background,
+                plot_style
             )
         else:
             TimeSeriesTagColoringHelper.plot_feature_with_trajectory_colors(
                 ax, config.pipeline_data, feat_idx, config.tag_map,
                 config.traj_colors, config.selected_matrix, config.frame_mapping, config.use_time,
-                config.smoothing, config.smoothing_method, config.smoothing_window,
-                config.smoothing_polyorder, config.show_unsmoothed_background
+                apply_smoothing, config.smoothing_method, config.smoothing_window,
+                config.smoothing_polyorder, config.show_unsmoothed_background,
+                plot_style
             )
 
     @staticmethod

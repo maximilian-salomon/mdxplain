@@ -27,14 +27,14 @@ with proper bug fixes for auto-detection, circular logic, and legend display.
 
 from __future__ import annotations
 
-from typing import Dict, List, Optional, Tuple, TYPE_CHECKING
+from typing import Dict, List, Optional, Tuple, TYPE_CHECKING, Union
 import numpy as np
 import matplotlib.pyplot as plt
 
 if TYPE_CHECKING:
     from .....pipeline.entities.pipeline_data import PipelineData
 
-from ....helper.color_mapping_helper import ColorMappingHelper
+from ....helper.color_resolution_helper import ColorResolutionHelper
 from .smoothing_helper import SmoothingHelper
 
 
@@ -285,7 +285,8 @@ class TimeSeriesTagColoringHelper:
 
     @staticmethod
     def prepare_tag_legend_colors(
-        tag_map: Dict[int, List[str]]
+        tag_map: Dict[int, List[str]],
+        colors: Optional[Union[str, Dict[str, str]]] = None
     ) -> Dict[str, str]:
         """
         Prepare tag-to-color mapping for legend.
@@ -296,6 +297,12 @@ class TimeSeriesTagColoringHelper:
         ----------
         tag_map : Dict[int, List[str]]
             Tag mapping from build_tag_map()
+        colors : str or Dict[str, str], optional
+            Color specification:
+            - str: matplotlib colormap name
+            - dict: explicit tag -> color mapping
+            - None: automatic colors for the tags present in this plot
+              (deterministic by sorted tag names)
 
         Returns
         -------
@@ -317,14 +324,16 @@ class TimeSeriesTagColoringHelper:
         # Sort for consistent color assignment
         sorted_existing_tags = sorted(existing_tags)
 
-        # Assign colors only to existing tags
-        colors = ColorMappingHelper.get_cluster_colors(len(sorted_existing_tags))
-        return {tag: colors[i] for i, tag in enumerate(sorted_existing_tags)}
+        return ColorResolutionHelper.resolve_label_colors(
+            labels=sorted_existing_tags,
+            colors=colors
+        )
 
     @staticmethod
     def prepare_trajectory_legend_colors(
         pipeline_data: PipelineData,
-        tag_map: Dict[int, List[str]]
+        tag_map: Dict[int, List[str]],
+        colors: Optional[Union[str, Dict[str, str]]] = None
     ) -> Dict[str, str]:
         """
         Prepare trajectory-name-to-color mapping for legend.
@@ -337,6 +346,12 @@ class TimeSeriesTagColoringHelper:
             Pipeline data container
         tag_map : Dict[int, List[str]]
             Tag mapping (keys are trajectory indices)
+        colors : str or Dict[str, str], optional
+            Color specification:
+            - str: matplotlib colormap name
+            - dict: explicit trajectory_name -> color mapping
+            - None: automatic colors for plotted trajectories
+              (trajectory index order)
 
         Returns
         -------
@@ -351,13 +366,15 @@ class TimeSeriesTagColoringHelper:
         >>> print(colors)  # {"system_A_run1": "#color", "system_B_run1": "#color2"}
         """
         traj_indices = sorted(tag_map.keys())
-        colors_list = ColorMappingHelper.get_cluster_colors(len(traj_indices), include_noise=False)
+        traj_names = [
+            pipeline_data.trajectory_data.trajectory_names[idx]
+            for idx in traj_indices
+        ]
 
-        # Use REAL trajectory names
-        return {
-            pipeline_data.trajectory_data.trajectory_names[idx]: colors_list[i]
-            for i, idx in enumerate(traj_indices)
-        }
+        return ColorResolutionHelper.resolve_label_colors(
+            labels=traj_names,
+            colors=colors
+        )
 
     @staticmethod
     def plot_feature_with_tag_colors(
@@ -373,7 +390,8 @@ class TimeSeriesTagColoringHelper:
         smoothing_method: str = "savitzky",
         smoothing_window: int = 51,
         smoothing_polyorder: int = 3,
-        show_unsmoothed_background: bool = True
+        show_unsmoothed_background: bool = True,
+        plot_style: str = "line"
     ) -> None:
         """
         Plot feature lines colored by tags.
@@ -424,7 +442,8 @@ class TimeSeriesTagColoringHelper:
                     ax, pipeline_data, matrix, frame_mapping,
                     traj_idx, feat_idx, use_time, color,
                     smoothing, smoothing_method, smoothing_window,
-                    smoothing_polyorder, show_unsmoothed_background
+                    smoothing_polyorder, show_unsmoothed_background,
+                    plot_style
                 )
 
     @staticmethod
@@ -441,7 +460,8 @@ class TimeSeriesTagColoringHelper:
         smoothing_method: str = "savitzky",
         smoothing_window: int = 51,
         smoothing_polyorder: int = 3,
-        show_unsmoothed_background: bool = True
+        show_unsmoothed_background: bool = True,
+        plot_style: str = "line"
     ) -> None:
         """
         Plot feature lines colored by trajectory.
@@ -492,7 +512,8 @@ class TimeSeriesTagColoringHelper:
                 ax, pipeline_data, matrix, frame_mapping,
                 traj_idx, feat_idx, use_time, color,
                 smoothing, smoothing_method, smoothing_window,
-                smoothing_polyorder, show_unsmoothed_background
+                smoothing_polyorder, show_unsmoothed_background,
+                plot_style
             )
 
     @staticmethod
@@ -509,7 +530,8 @@ class TimeSeriesTagColoringHelper:
         smoothing_method: str = "savitzky",
         smoothing_window: int = 51,
         smoothing_polyorder: int = 3,
-        show_unsmoothed_background: bool = True
+        show_unsmoothed_background: bool = True,
+        plot_style: str = "line"
     ) -> None:
         """
         Plot single trajectory line.
@@ -579,9 +601,16 @@ class TimeSeriesTagColoringHelper:
             y_smoothed = SmoothingHelper.apply_smoothing(
                 y_values, effective_smoothing_method, smoothing_window, smoothing_polyorder
             )
-            ax.plot(x_values, y_smoothed, color=color, linewidth=1.0, alpha=0.8)
+            y_plot_values = y_smoothed
         else:
-            ax.plot(x_values, y_values, color=color, linewidth=1.0, alpha=0.8)
+            y_plot_values = y_values
+
+        if plot_style == "scatter":
+            ax.scatter(x_values, y_plot_values, color=color, s=12, alpha=0.8, linewidths=0)
+        elif plot_style == "step":
+            ax.step(x_values, y_plot_values, where="post", color=color, linewidth=1.0, alpha=0.8)
+        else:
+            ax.plot(x_values, y_plot_values, color=color, linewidth=1.0, alpha=0.8)
 
     @staticmethod
     def _get_trajectory_frame_indices(

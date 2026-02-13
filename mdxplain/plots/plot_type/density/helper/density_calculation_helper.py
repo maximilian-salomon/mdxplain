@@ -141,27 +141,13 @@ class DensityCalculationHelper:
 
         # Check if feature is discrete
         if viz.get("is_discrete", False):
-            # Build axis_config from visualization metadata
-            tick_labels_dict = viz.get("tick_labels", {})
-            tick_labels = tick_labels_dict.get("short", [])
-
-            if tick_labels:
-                # Use tick labels to build positions
-                n_positions = len(tick_labels)
-                positions = list(range(n_positions))
-                value_to_position = {i: i for i in range(n_positions)}
-                xlim = (-0.3, n_positions - 1 + 0.3)
-            else:
-                # Fallback for binary without tick labels
-                positions = [0, 1]
-                value_to_position = {0: 0, 1: 1}
-                xlim = (-0.3, 1.3)
-
-            axis_config = {
-                "positions": positions,
-                "value_to_position": value_to_position,
-                "xlim": xlim
-            }
+            axis_config = DiscreteFeatureHelper.build_axis_config(
+                selector_data={"_density": data},
+                viz=viz,
+                long_labels=False,
+                x_padding=0.3,
+                fallback_from_data=False
+            )
 
             return DensityCalculationHelper._calculate_discrete_gaussians(
                 data, axis_config, base_sigma, max_sigma
@@ -244,8 +230,8 @@ class DensityCalculationHelper:
         xlim = axis_config["xlim"]
 
         # 2. Convert data to positions if needed
-        position_data = DiscreteFeatureHelper.prepare_discrete_data(
-            data, value_to_position
+        probabilities = DiscreteFeatureHelper.calculate_discrete_probabilities(
+            data, value_to_position, len(positions)
         )
 
         # 3. Create x-axis grid based on xlim
@@ -255,9 +241,8 @@ class DensityCalculationHelper:
         density = np.zeros_like(x_range)
 
         # 5. Create Gaussian bell for each position
-        for pos in positions:
-            # Calculate probability for this position
-            prob = np.sum(position_data == pos) / len(position_data)
+        for position_idx, pos in enumerate(positions):
+            prob = probabilities[position_idx]
 
             # Calculate width based on probability
             sigma = base_sigma + (max_sigma - base_sigma) * prob

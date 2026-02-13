@@ -18,9 +18,22 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""Helper modules for density plot calculations."""
+"""
+Helper modules for density plot calculations.
+
+Exports the helper classes used by `DensityPlotter` for:
+
+- density curve computation
+- plot data preparation
+- discrete bar rendering
+"""
 
 from .density_calculation_helper import DensityCalculationHelper
 from .density_data_preparer import DensityDataPreparer
+from .density_discrete_bar_helper import DensityDiscreteBarHelper
 
-__all__ = ["DensityCalculationHelper", "DensityDataPreparer"]
+__all__ = [
+    "DensityCalculationHelper",
+    "DensityDataPreparer",
+    "DensityDiscreteBarHelper",
+]

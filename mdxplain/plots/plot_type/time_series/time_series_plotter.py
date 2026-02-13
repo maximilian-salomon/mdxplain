@@ -96,7 +96,9 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         ylabel_fontsize: Optional[int] = None,
         tick_fontsize: Optional[int] = None,
         legend_fontsize: Optional[int] = None,
-        legend_title_fontsize: Optional[int] = None
+        legend_title_fontsize: Optional[int] = None,
+        discrete_plot_style: str = "step",
+        colors: Optional[Union[str, Dict[str, str]]] = None
     ) -> Figure:
         """
         Create time series plots from feature importance or manual selection.
@@ -153,7 +155,8 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         dpi : int, default=300
             Resolution
         smoothing : bool, default=True
-            Enable or disable data smoothing
+            Enable or disable data smoothing for continuous features.
+            Discrete features are never smoothed.
         smoothing_method : str, default="savitzky"
             Smoothing method ("moving_average" or "savitzky")
         smoothing_window : int, default=51
@@ -162,6 +165,15 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             Polynomial order for Savitzky-Golay filter (ignored for moving_average)
         show_unsmoothed_background : bool, default=True
             Show unsmoothed data as transparent background line when smoothing is enabled
+        discrete_plot_style : str, default="step"
+            Rendering style for discrete features. Must be one of:
+            "line", "step", or "scatter".
+        colors : str or Dict[str, str], optional
+            Color configuration for trajectories/tags:
+            - str: matplotlib colormap name
+            - dict: explicit mapping (trajectory_name -> color or tag -> color)
+            - None: automatic palette assignment.
+              Uses tag colors when tag coloring is active, otherwise trajectory colors.
         title_fontsize : int, optional
             Font size for main figure title (default: 18)
         subplot_title_fontsize : int, optional
@@ -204,6 +216,7 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         mode_type, mode_name = self._validate_and_determine_mode(
             feature_importance_name, feature_selector, None
         )
+        self._validate_discrete_plot_style(discrete_plot_style)
 
         # Apply mode-based defaults for membership_bar_height
         if membership_bar_height is None:
@@ -241,6 +254,8 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             smoothing_window=smoothing_window,
             smoothing_polyorder=smoothing_polyorder,
             show_unsmoothed_background=show_unsmoothed_background,
+            discrete_plot_style=discrete_plot_style,
+            colors=colors,
             title_fontsize=title_fontsize,
             subplot_title_fontsize=subplot_title_fontsize,
             xlabel_fontsize=xlabel_fontsize,
@@ -404,13 +419,15 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
 
         if config.use_tag_coloring:
             config.tag_colors = TimeSeriesTagColoringHelper.prepare_tag_legend_colors(
-                config.tag_map
+                config.tag_map,
+                colors=config.colors
             )
             config.traj_colors = {}
         else:
             config.tag_colors = {}
             config.traj_colors = TimeSeriesTagColoringHelper.prepare_trajectory_legend_colors(
-                config.pipeline_data, config.tag_map
+                config.pipeline_data, config.tag_map,
+                colors=config.colors
             )
 
     def _prepare_plot_data(self, config: TimeSeriesPlotConfig):
@@ -1052,4 +1069,30 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         if not feature_importance_name and not feature_selector:
             raise ValueError(
                 "Must provide either feature_importance_name or feature_selector."
+            )
+
+    @staticmethod
+    def _validate_discrete_plot_style(discrete_plot_style: str) -> None:
+        """
+        Validate discrete plot style parameter.
+
+        Parameters
+        ----------
+        discrete_plot_style : str
+            Rendering style for discrete features
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError
+            If style is not one of supported values
+        """
+        allowed_styles = {"line", "step", "scatter"}
+        if discrete_plot_style not in allowed_styles:
+            raise ValueError(
+                f"Invalid discrete_plot_style: {discrete_plot_style}. "
+                f"Expected one of {sorted(allowed_styles)}."
             )
