@@ -269,9 +269,14 @@ class DensityPlotter(FeatureImportanceBasePlotter):
             all_features, max_cols
         )
 
-        # 5. Configure spacing (density needs custom hspace)
-        wspace = 0.4
-        hspace = 0.7 if long_labels else 0.45
+        # 5. Configure spacing and ensure enough vertical room for long labels.
+        wspace, hspace = self._configure_density_spacing(
+            fig=fig,
+            all_features=all_features,
+            metadata_map=metadata_map,
+            n_rows=n_rows,
+            long_labels=long_labels
+        )
 
         # 6. Create GridSpec with title
         gs, wrapped_title, top = self._create_gridspec_with_title(
@@ -305,6 +310,80 @@ class DensityPlotter(FeatureImportanceBasePlotter):
             )
 
         return fig
+
+    @staticmethod
+    def _configure_density_spacing(
+        fig: Figure,
+        all_features: List[Tuple[str, str]],
+        metadata_map: Dict[str, Dict[str, Dict[str, any]]],
+        n_rows: int,
+        long_labels: bool
+    ) -> Tuple[float, float]:
+        """
+        Configure subplot spacing for density plots.
+
+        Applies a larger vertical gap when long discrete tick labels are
+        requested, and expands figure height to prevent row overlap.
+
+        Parameters
+        ----------
+        fig : Figure
+            Figure object whose size may be adjusted.
+        all_features : List[Tuple[str, str]]
+            Flattened list of plotted features as (feature_type, feature_name).
+        metadata_map : Dict[str, Dict[str, Dict[str, any]]]
+            Metadata map used to detect discrete features.
+        n_rows : int
+            Number of subplot rows in the grid.
+        long_labels : bool
+            Whether long discrete tick labels are enabled.
+
+        Returns
+        -------
+        Tuple[float, float]
+            Tuple of `(wspace, hspace)` for GridSpec creation.
+        """
+        wspace = 0.4
+        has_discrete = ValidationHelper.has_discrete_features(
+            all_features, metadata_map
+        )
+
+        if long_labels and has_discrete:
+            DensityPlotter._expand_figure_height_for_long_labels(fig, n_rows)
+            return wspace, 1.05
+
+        if long_labels:
+            return wspace, 0.65
+
+        return wspace, 0.45
+
+    @staticmethod
+    def _expand_figure_height_for_long_labels(fig: Figure, n_rows: int) -> None:
+        """
+        Increase figure height for long discrete tick labels.
+
+        Long, rotated X-tick labels on discrete density subplots can collide
+        with the next row. This method adds extra vertical space per row to
+        keep subplot rows visually separated.
+
+        Parameters
+        ----------
+        fig : Figure
+            Figure to resize.
+        n_rows : int
+            Number of subplot rows.
+
+        Returns
+        -------
+        None
+            Modifies `fig` in place.
+        """
+        if n_rows <= 0:
+            return
+
+        fig_width, fig_height = fig.get_size_inches()
+        extra_height = 1.0 * n_rows
+        fig.set_size_inches(fig_width, fig_height + extra_height, forward=True)
 
     def _prepare_density_data(
         self,

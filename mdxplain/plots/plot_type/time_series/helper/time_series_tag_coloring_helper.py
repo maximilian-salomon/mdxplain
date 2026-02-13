@@ -391,7 +391,7 @@ class TimeSeriesTagColoringHelper:
         smoothing_window: int = 51,
         smoothing_polyorder: int = 3,
         show_unsmoothed_background: bool = True,
-        plot_style: str = "line"
+        thickness: float = 1.0
     ) -> None:
         """
         Plot feature lines colored by tags.
@@ -424,6 +424,8 @@ class TimeSeriesTagColoringHelper:
             Polynomial order for Savitzky-Golay
         show_unsmoothed_background : bool, default=True
             Show unsmoothed data as transparent background when smoothing is enabled
+        thickness : float, default=1.0
+            Line width for continuous feature traces.
 
         Returns
         -------
@@ -442,8 +444,7 @@ class TimeSeriesTagColoringHelper:
                     ax, pipeline_data, matrix, frame_mapping,
                     traj_idx, feat_idx, use_time, color,
                     smoothing, smoothing_method, smoothing_window,
-                    smoothing_polyorder, show_unsmoothed_background,
-                    plot_style
+                    smoothing_polyorder, show_unsmoothed_background, thickness
                 )
 
     @staticmethod
@@ -461,7 +462,7 @@ class TimeSeriesTagColoringHelper:
         smoothing_window: int = 51,
         smoothing_polyorder: int = 3,
         show_unsmoothed_background: bool = True,
-        plot_style: str = "line"
+        thickness: float = 1.0
     ) -> None:
         """
         Plot feature lines colored by trajectory.
@@ -494,6 +495,8 @@ class TimeSeriesTagColoringHelper:
             Polynomial order for Savitzky-Golay
         show_unsmoothed_background : bool, default=True
             Show unsmoothed data as transparent background when smoothing is enabled
+        thickness : float, default=1.0
+            Line width for continuous feature traces.
 
         Returns
         -------
@@ -512,8 +515,7 @@ class TimeSeriesTagColoringHelper:
                 ax, pipeline_data, matrix, frame_mapping,
                 traj_idx, feat_idx, use_time, color,
                 smoothing, smoothing_method, smoothing_window,
-                smoothing_polyorder, show_unsmoothed_background,
-                plot_style
+                smoothing_polyorder, show_unsmoothed_background, thickness
             )
 
     @staticmethod
@@ -531,7 +533,7 @@ class TimeSeriesTagColoringHelper:
         smoothing_window: int = 51,
         smoothing_polyorder: int = 3,
         show_unsmoothed_background: bool = True,
-        plot_style: str = "line"
+        thickness: float = 1.0
     ) -> None:
         """
         Plot single trajectory line.
@@ -564,6 +566,8 @@ class TimeSeriesTagColoringHelper:
             Polynomial order for Savitzky-Golay
         show_unsmoothed_background : bool, default=True
             Show unsmoothed data as transparent background when smoothing is enabled
+        thickness : float, default=1.0
+            Line width for continuous feature traces.
 
         Returns
         -------
@@ -594,7 +598,7 @@ class TimeSeriesTagColoringHelper:
 
         # Plot unsmoothed background if requested
         if effective_smoothing_method and show_unsmoothed_background:
-            ax.plot(x_values, y_values, color=color, linewidth=1.0, alpha=0.15)
+            ax.plot(x_values, y_values, color=color, linewidth=thickness, alpha=0.15)
 
         # Plot smoothed or original data
         if effective_smoothing_method:
@@ -605,12 +609,13 @@ class TimeSeriesTagColoringHelper:
         else:
             y_plot_values = y_values
 
-        if plot_style == "scatter":
-            ax.scatter(x_values, y_plot_values, color=color, s=12, alpha=0.8, linewidths=0)
-        elif plot_style == "step":
-            ax.step(x_values, y_plot_values, where="post", color=color, linewidth=1.0, alpha=0.8)
-        else:
-            ax.plot(x_values, y_plot_values, color=color, linewidth=1.0, alpha=0.8)
+        ax.plot(
+            x_values,
+            y_plot_values,
+            color=color,
+            linewidth=thickness,
+            alpha=0.8
+        )
 
     @staticmethod
     def _get_trajectory_frame_indices(

@@ -4,25 +4,30 @@
 #
 # This program is free software under GNU LGPL v3.
 
-"""Helper for feature plotting in time series."""
+"""Helper for feature-level orchestration in time-series plots."""
 
 from __future__ import annotations
 
-from typing import Dict, TYPE_CHECKING
+from typing import Any, Dict, Optional, TYPE_CHECKING
 import matplotlib.pyplot as plt
-import numpy as np
 
 if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.gridspec import GridSpec
     from ..time_series_plot_config import TimeSeriesPlotConfig
 
-from .time_series_tag_coloring_helper import TimeSeriesTagColoringHelper
 from .time_series_data_preparer import TimeSeriesDataPreparer
+from .time_series_discrete_plot_helper import TimeSeriesDiscretePlotHelper
+from .time_series_tag_coloring_helper import TimeSeriesTagColoringHelper
 
 
 class TimeSeriesFeaturePlotHelper:
-    """Helper for feature plotting with tag/trajectory coloring."""
+    """
+    Orchestrator for feature subplot creation and rendering in time-series plots.
+
+    Discrete-specific rendering details are delegated to
+    `TimeSeriesDiscretePlotHelper` to keep this helper focused on subplot flow.
+    """
 
     @staticmethod
     def plot_all_features(
@@ -31,104 +36,103 @@ class TimeSeriesFeaturePlotHelper:
         config: TimeSeriesPlotConfig
     ) -> plt.Axes:
         """
-        Plot all features in grid.
+        Plot all configured features in the prepared grid layout.
 
         Parameters
         ----------
         fig : Figure
-            Figure to plot on
+            Figure object receiving the feature subplots.
         gs : GridSpec
-            GridSpec layout
+            Grid specification used to position feature subplots.
         config : TimeSeriesPlotConfig
-            Central configuration object
+            Central time-series plotting configuration.
 
         Returns
         -------
-        plt.Axes
-            Rightmost axes in first row
-
-        Examples
-        --------
-        >>> ax = TimeSeriesFeaturePlotHelper.plot_all_features(fig, gs, config)
+        matplotlib.axes.Axes
+            Rightmost axes in the first row, used for legend anchoring.
         """
         col_offset = TimeSeriesFeaturePlotHelper._get_column_offset(config)
         rightmost_ax_first_row = None
 
-        for i, (feat_type, feat_name) in enumerate(config.all_features):
+        for feature_idx, (feat_type, feat_name) in enumerate(config.all_features):
             ax, is_first_row = TimeSeriesFeaturePlotHelper._create_feature_subplot(
-                fig, gs, config, i, col_offset
+                fig=fig,
+                gs=gs,
+                config=config,
+                feature_index=feature_idx,
+                col_offset=col_offset
             )
-
             if is_first_row:
                 rightmost_ax_first_row = ax
 
             feat_idx = TimeSeriesFeaturePlotHelper._find_feature_index(
-                config.feature_indices, feat_name
+                feature_indices=config.feature_indices,
+                feat_name=feat_name
             )
+            if feat_idx is None:
+                continue
 
-            if feat_idx is not None:
-                TimeSeriesFeaturePlotHelper._plot_single_feature(
-                    ax, feat_idx, feat_type, feat_name, config
-                )
+            TimeSeriesFeaturePlotHelper._plot_single_feature(
+                ax=ax,
+                feat_idx=feat_idx,
+                feat_type=feat_type,
+                feat_name=feat_name,
+                config=config
+            )
 
         return rightmost_ax_first_row
 
     @staticmethod
     def _get_column_offset(config: TimeSeriesPlotConfig) -> int:
         """
-        Get column offset for label column.
+        Return grid column offset for optional membership label column.
 
         Parameters
         ----------
         config : TimeSeriesPlotConfig
-            Configuration object
+            Central plotting configuration.
 
         Returns
         -------
         int
-            Column offset (1 if label column exists, 0 otherwise)
-
-        Examples
-        --------
-        >>> offset = TimeSeriesFeaturePlotHelper._get_column_offset(config)
+            `1` when a dedicated label column is present, otherwise `0`.
         """
         has_label_column = config.clustering_name and config.membership_per_feature
         return 1 if has_label_column else 0
 
     @staticmethod
-    def _create_feature_subplot(fig, gs, config, feature_index, col_offset):
+    def _create_feature_subplot(
+        fig: Figure,
+        gs: GridSpec,
+        config: TimeSeriesPlotConfig,
+        feature_index: int,
+        col_offset: int
+    ) -> tuple[plt.Axes, bool]:
         """
-        Create subplot for feature.
+        Create subplot axes for one feature based on precomputed layout.
 
         Parameters
         ----------
         fig : Figure
-            Figure object
+            Target figure.
         gs : GridSpec
-            GridSpec layout
+            Precomputed grid specification.
         config : TimeSeriesPlotConfig
-            Configuration object
+            Central plotting configuration.
         feature_index : int
-            Index in config.all_features
+            Index into `config.all_features`.
         col_offset : int
-            Column offset for label column
+            Horizontal offset for optional label column.
 
         Returns
         -------
-        tuple
-            (axes, is_first_row)
-
-        Examples
-        --------
-        >>> ax, is_first = TimeSeriesFeaturePlotHelper._create_feature_subplot(
-        ...     fig, gs, config, 0, 1
-        ... )
+        tuple[matplotlib.axes.Axes, bool]
+            Tuple `(ax, is_first_row)`.
         """
         _, row, col, colspan = config.layout[feature_index]
-
         actual_row = row * 2 if config.membership_per_feature else row
         ax = fig.add_subplot(gs[actual_row, col + col_offset: col + col_offset + colspan])
-
         return ax, row == 0
 
     @staticmethod
@@ -138,260 +142,317 @@ class TimeSeriesFeaturePlotHelper:
         feat_type: str,
         feat_name: str,
         config: TimeSeriesPlotConfig
-    ):
+    ) -> None:
         """
-        Plot single feature on axes.
+        Render one feature subplot including traces and axis styling.
 
         Parameters
         ----------
         ax : matplotlib.axes.Axes
-            Axes to plot on
+            Subplot axes for this feature.
         feat_idx : int
-            Feature index
+            Feature index in the selected matrix.
         feat_type : str
-            Feature type
+            Feature type key.
         feat_name : str
-            Feature name
+            Feature display name.
         config : TimeSeriesPlotConfig
-            Central configuration object
+            Central plotting configuration.
 
         Returns
         -------
         None
-
-        Examples
-        --------
-        >>> TimeSeriesFeaturePlotHelper._plot_single_feature(
-        ...     ax, 0, "distances", "CA-CB", config
-        ... )
+            Modifies the axes in place.
         """
         ax.set_title(feat_name, fontsize=config.subplot_title_fontsize or 14, pad=8)
 
         feature_metadata = config.metadata_map.get(feat_type, {}).get(feat_name, {})
         type_metadata = feature_metadata.get("type_metadata", {})
         viz = type_metadata.get("visualization", {})
-        is_discrete = viz.get("is_discrete", False)
+        is_discrete = bool(viz.get("is_discrete", False))
+
+        discrete_axis_config = None
+        if is_discrete:
+            discrete_axis_config = TimeSeriesDiscretePlotHelper.build_axis_config(
+                config=config,
+                feat_idx=feat_idx,
+                viz=viz
+            )
 
         TimeSeriesFeaturePlotHelper._plot_feature_lines(
-            ax, feat_idx, config, is_discrete=is_discrete
+            ax=ax,
+            feat_idx=feat_idx,
+            config=config,
+            is_discrete=is_discrete,
+            discrete_axis_config=discrete_axis_config
+        )
+        TimeSeriesFeaturePlotHelper._plot_vertical_markers(
+            ax=ax,
+            config=config
         )
 
-        # Get x_values from first trajectory for xlim synchronization
         x_values = TimeSeriesDataPreparer.get_x_values(
-            config.pipeline_data, 0, config.use_time
+            config.pipeline_data,
+            traj_idx=0,
+            use_time=config.use_time
         )
-
         TimeSeriesFeaturePlotHelper._configure_axes(
-            ax, feat_type, feature_metadata, config, x_values
+            ax=ax,
+            feat_type=feat_type,
+            feature_metadata=feature_metadata,
+            config=config,
+            x_values=x_values,
+            is_discrete=is_discrete,
+            discrete_axis_config=discrete_axis_config
         )
 
     @staticmethod
     def _plot_feature_lines(
         ax: plt.Axes,
         feat_idx: int,
-        config,
-        is_discrete: bool = False
-    ):
+        config: TimeSeriesPlotConfig,
+        is_discrete: bool = False,
+        discrete_axis_config: Optional[Dict[str, Any]] = None
+    ) -> None:
         """
-        Plot feature lines with appropriate coloring.
+        Render feature traces using continuous or discrete rendering path.
 
         Parameters
         ----------
         ax : matplotlib.axes.Axes
-            Axes to plot on
+            Axes to draw on.
         feat_idx : int
-            Feature index
+            Feature index in the selected matrix.
         config : TimeSeriesPlotConfig
-            Configuration object
+            Central plotting configuration.
+        is_discrete : bool, default=False
+            Whether this feature is discrete.
+        discrete_axis_config : Dict[str, Any], optional
+            Axis configuration prepared for discrete value mapping.
 
         Returns
         -------
         None
-
-        Examples
-        --------
-        >>> TimeSeriesFeaturePlotHelper._plot_feature_lines(ax, 0, config)
+            Modifies the axes in place.
         """
-        apply_smoothing = config.smoothing and not is_discrete
-        plot_style = config.discrete_plot_style if is_discrete else "line"
+        if is_discrete:
+            if config.resolved_discrete_layout == "occupancy":
+                TimeSeriesDiscretePlotHelper.plot_discrete_occupancy(
+                    ax=ax,
+                    feat_idx=feat_idx,
+                    config=config,
+                    axis_config=discrete_axis_config
+                )
+            else:
+                TimeSeriesDiscretePlotHelper.plot_discrete_overlay_or_offset(
+                    ax=ax,
+                    feat_idx=feat_idx,
+                    config=config,
+                    axis_config=discrete_axis_config,
+                    apply_offsets=(config.resolved_discrete_layout == "offset")
+                )
+            return
 
         if config.use_tag_coloring:
             TimeSeriesTagColoringHelper.plot_feature_with_tag_colors(
-                ax, config.pipeline_data, feat_idx, config.tag_map,
-                config.tag_colors, config.selected_matrix, config.frame_mapping, config.use_time,
-                apply_smoothing, config.smoothing_method, config.smoothing_window,
-                config.smoothing_polyorder, config.show_unsmoothed_background,
-                plot_style
+                ax=ax,
+                pipeline_data=config.pipeline_data,
+                feat_idx=feat_idx,
+                tag_map=config.tag_map,
+                tag_colors=config.tag_colors,
+                matrix=config.selected_matrix,
+                frame_mapping=config.frame_mapping,
+                use_time=config.use_time,
+                smoothing=config.smoothing,
+                smoothing_method=config.smoothing_method,
+                smoothing_window=config.smoothing_window,
+                smoothing_polyorder=config.smoothing_polyorder,
+                show_unsmoothed_background=config.show_unsmoothed_background,
+                thickness=config.thickness
             )
-        else:
-            TimeSeriesTagColoringHelper.plot_feature_with_trajectory_colors(
-                ax, config.pipeline_data, feat_idx, config.tag_map,
-                config.traj_colors, config.selected_matrix, config.frame_mapping, config.use_time,
-                apply_smoothing, config.smoothing_method, config.smoothing_window,
-                config.smoothing_polyorder, config.show_unsmoothed_background,
-                plot_style
-            )
+            return
+
+        TimeSeriesTagColoringHelper.plot_feature_with_trajectory_colors(
+            ax=ax,
+            pipeline_data=config.pipeline_data,
+            feat_idx=feat_idx,
+            tag_map=config.tag_map,
+            traj_colors=config.traj_colors,
+            matrix=config.selected_matrix,
+            frame_mapping=config.frame_mapping,
+            use_time=config.use_time,
+            smoothing=config.smoothing,
+            smoothing_method=config.smoothing_method,
+            smoothing_window=config.smoothing_window,
+            smoothing_polyorder=config.smoothing_polyorder,
+            show_unsmoothed_background=config.show_unsmoothed_background,
+            thickness=config.thickness
+        )
 
     @staticmethod
-    def _configure_axes(ax, feat_type, feature_metadata, config, x_values):
+    def _plot_vertical_markers(
+        ax: plt.Axes,
+        config: TimeSeriesPlotConfig
+    ) -> None:
         """
-        Configure axes labels and limits.
+        Plot pre-resolved vertical guide markers for one feature subplot.
 
         Parameters
         ----------
         ax : matplotlib.axes.Axes
-            Axes to configure
-        feat_type : str
-            Feature type
-        feature_metadata : Dict
-            Feature metadata
+            Axes to draw the marker lines on.
         config : TimeSeriesPlotConfig
-            Configuration object
-        x_values : np.ndarray
-            X-axis values for xlim synchronization
+            Central plotting configuration containing
+            `resolved_vertical_markers`.
 
         Returns
         -------
         None
+            Modifies the axes in place.
+        """
+        if not config.resolved_vertical_markers:
+            return
 
-        Examples
-        --------
-        >>> TimeSeriesFeaturePlotHelper._configure_axes(
-        ...     ax, "distances", metadata, config, x_values
-        ... )
+        line_width = max(1.0, config.thickness)
+        for x_position, color in config.resolved_vertical_markers:
+            ax.axvline(
+                x=x_position,
+                color=color,
+                linestyle="--",
+                linewidth=line_width,
+                alpha=0.85,
+                zorder=6
+            )
+
+    @staticmethod
+    def _configure_axes(
+        ax: plt.Axes,
+        feat_type: str,
+        feature_metadata: Dict[str, Any],
+        config: TimeSeriesPlotConfig,
+        x_values,
+        is_discrete: bool = False,
+        discrete_axis_config: Optional[Dict[str, Any]] = None
+    ) -> None:
+        """
+        Apply axis labels, limits, and feature-specific reference styling.
+
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            Axes to configure.
+        feat_type : str
+            Feature type key.
+        feature_metadata : Dict[str, Any]
+            Metadata for the current feature.
+        config : TimeSeriesPlotConfig
+            Central plotting configuration.
+        x_values : np.ndarray
+            Reference x-values for x-limits.
+        is_discrete : bool, default=False
+            Whether this feature is discrete.
+        discrete_axis_config : Dict[str, Any], optional
+            Prepared discrete axis configuration.
+
+        Returns
+        -------
+        None
+            Modifies the axes in place.
         """
         y_label = TimeSeriesFeaturePlotHelper._get_feature_y_label(
-            feat_type, feature_metadata
+            feat_type=feat_type,
+            feature_metadata=feature_metadata,
+            is_discrete=is_discrete,
+            resolved_discrete_layout=config.resolved_discrete_layout
         )
         ax.set_ylabel(y_label, fontsize=config.ylabel_fontsize or 12)
         ax.set_xlabel("Time (ns)" if config.use_time else "Frame", fontsize=config.xlabel_fontsize or 12)
-        ax.tick_params(axis='both', labelsize=config.tick_fontsize or 10)
+        ax.tick_params(axis="both", labelsize=config.tick_fontsize or 10)
         ax.grid(True, alpha=0.3)
 
-        # Set xlim explicitly for exact alignment with membership plots
-        x_range = x_values[-1] - x_values[0]
-        x_margin = x_range * 0.05
-        ax.set_xlim(x_values[0] - x_margin, x_values[-1] + x_margin)
+        if len(x_values) >= 2:
+            x_range = x_values[-1] - x_values[0]
+            x_margin = x_range * 0.05
+            ax.set_xlim(x_values[0] - x_margin, x_values[-1] + x_margin)
+        elif len(x_values) == 1:
+            ax.set_xlim(x_values[0] - 0.5, x_values[0] + 0.5)
 
         type_metadata = feature_metadata.get("type_metadata", {})
         viz = type_metadata.get("visualization", {})
-        if viz.get("is_discrete", False):
-            TimeSeriesFeaturePlotHelper._configure_discrete_y_axis(
-                ax, viz, config.long_labels, config.tick_fontsize
+        if is_discrete and config.resolved_discrete_layout == "occupancy":
+            ax.set_ylim(-0.02, 1.02)
+        elif bool(viz.get("is_discrete", False)):
+            TimeSeriesDiscretePlotHelper.configure_discrete_y_axis(
+                ax=ax,
+                viz=viz,
+                long_labels=config.long_labels,
+                tick_fontsize=config.tick_fontsize,
+                axis_config=discrete_axis_config,
+                resolved_discrete_layout=config.resolved_discrete_layout,
+                discrete_offset_span=config.discrete_offset_span
             )
 
         if feat_type == "distances" and config.contact_threshold is not None:
-            ax.axhline(y=config.contact_threshold, color='red', linestyle='--',
-                      linewidth=1.5, alpha=0.7, zorder=5)
+            ax.axhline(
+                y=config.contact_threshold,
+                color="red",
+                linestyle="--",
+                linewidth=1.5,
+                alpha=0.7,
+                zorder=5
+            )
 
     @staticmethod
-    def _get_feature_y_label(feat_type: str, feature_metadata: Dict) -> str:
+    def _get_feature_y_label(
+        feat_type: str,
+        feature_metadata: Dict[str, Any],
+        is_discrete: bool,
+        resolved_discrete_layout: str
+    ) -> str:
         """
-        Get Y-axis label from metadata.
+        Resolve y-axis label from metadata and discrete rendering context.
 
         Parameters
         ----------
         feat_type : str
-            Feature type
-        feature_metadata : Dict
-            Feature metadata
+            Feature type key.
+        feature_metadata : Dict[str, Any]
+            Metadata for the current feature.
+        is_discrete : bool
+            Whether this feature is discrete.
+        resolved_discrete_layout : str
+            Effective discrete layout mode.
 
         Returns
         -------
         str
-            Y-axis label
-
-        Examples
-        --------
-        >>> label = TimeSeriesFeaturePlotHelper._get_feature_y_label(
-        ...     "distances", {"type_metadata": {"visualization": {"axis_label": "Distance (Å)"}}}
-        ... )
-        >>> print(label)  # "Distance (Å)"
-
-        Notes
-        -----
-        Falls back to capitalized feature type if no axis_label in metadata.
+            Y-axis label for the subplot.
         """
+        if is_discrete and resolved_discrete_layout == "occupancy":
+            return "Probability"
+
         type_metadata = feature_metadata.get("type_metadata", {})
         viz = type_metadata.get("visualization", {})
         return viz.get("axis_label", feat_type.capitalize())
 
     @staticmethod
-    def _find_feature_index(feature_indices: Dict[int, str], feat_name: str) -> int:
+    def _find_feature_index(feature_indices: Dict[int, str], feat_name: str) -> Optional[int]:
         """
-        Find feature index by name.
+        Find matrix feature index for a given feature name.
 
         Parameters
         ----------
         feature_indices : Dict[int, str]
-            Feature index to name mapping
+            Mapping from matrix index to feature name.
         feat_name : str
-            Feature name to search for
+            Feature name to look up.
 
         Returns
         -------
         int or None
-            Feature index if found, None otherwise
-
-        Examples
-        --------
-        >>> idx = TimeSeriesFeaturePlotHelper._find_feature_index(
-        ...     {0: "CA-CB", 1: "CA-CG"}, "CA-CB"
-        ... )
-        >>> print(idx)  # 0
-
-        Notes
-        -----
-        Linear search - acceptable since feature_indices is typically small.
+            Matching index if found, otherwise `None`.
         """
         for idx, name in feature_indices.items():
             if name == feat_name:
                 return idx
         return None
-
-    @staticmethod
-    def _configure_discrete_y_axis(ax, viz: Dict, long_labels: bool, tick_fontsize: int = None):
-        """
-        Configure Y-axis for discrete features.
-
-        Parameters
-        ----------
-        ax : matplotlib.axes.Axes
-            Axes to configure
-        viz : Dict
-            Visualization metadata from feature
-        long_labels : bool
-            Use long labels (True) or short labels (False)
-        tick_fontsize : int, optional
-            Font size for tick labels (default: 10)
-
-        Returns
-        -------
-        None
-            Modifies ax in place
-
-        Examples
-        --------
-        >>> TimeSeriesFeaturePlotHelper._configure_discrete_y_axis(
-        ...     ax, {"tick_labels": {"short": ["H", "E"], "long": ["Helix", "Sheet"]}}, True, 10
-        ... )
-
-        Notes
-        -----
-        Sets Y-ticks, tick labels, and Y-limits based on metadata.
-        Falls back silently if tick_labels are missing.
-        """
-        tick_labels_dict = viz.get("tick_labels", {})
-        label_key = "long" if long_labels else "short"
-        tick_labels = tick_labels_dict.get(label_key, [])
-
-        if not tick_labels:
-            return
-
-        n_ticks = len(tick_labels)
-        positions = list(range(n_ticks))
-        ylim = (-0.3, n_ticks - 1 + 0.3)
-
-        ax.set_yticks(positions)
-        ax.set_yticklabels(tick_labels, fontsize=tick_fontsize or 10)
-        ax.set_ylim(ylim)

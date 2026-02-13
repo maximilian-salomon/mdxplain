@@ -417,7 +417,13 @@ class FeatureFacade:
         legend_fontsize: Optional[int] = None,
         legend_title_fontsize: Optional[int] = None,
         discrete_plot_style: str = "step",
+        discrete_layout: str = "auto",
+        discrete_offset_span: float = 0.28,
+        discrete_auto_offset_threshold: int = 15,
+        thickness: float = 1.0,
         colors: Optional[Union[str, Dict[str, str]]] = None,
+        vertical_markers: Optional[Dict[Union[int, str], Union[float, List[float]]]] = None,
+        vertical_marker_mode: str = "auto",
     ) -> Figure:
         """
         Create time series plots from manual feature selection.
@@ -480,13 +486,37 @@ class FeatureFacade:
         show_unsmoothed_background : bool, default=True
             Show unsmoothed data as transparent background line when smoothing is enabled
         discrete_plot_style : str, default="step"
-            Rendering style for discrete features: "line", "step", or "scatter".
+            Rendering style for discrete features:
+            "line", "step", "segments", or "scatter".
+        discrete_layout : str, default="auto"
+            Discrete rendering layout mode:
+            "auto", "overlay", "offset", or "occupancy".
+            In "occupancy", discrete lines represent states as probabilities
+            over time instead of individual trajectories.
+        discrete_offset_span : float, default=0.28
+            Vertical half-span for discrete "offset" layout.
+        discrete_auto_offset_threshold : int, default=15
+            Number of discrete traces at which "auto" switches to "offset".
+        thickness : float, default=1.0
+            Global rendering thickness for all feature traces:
+            marker size factor for "scatter" and line width for line-based styles.
         colors : str or Dict[str, str], optional
             Color configuration for trajectories/tags:
             - str: matplotlib colormap name
             - dict: explicit mapping (trajectory_name -> color or tag -> color)
             - None: automatic palette assignment.
               Uses tag colors if tag coloring is active, otherwise trajectory colors.
+        vertical_markers : Dict[int or str, float or List[float]], optional
+            Optional vertical guide markers.
+            Keys are trajectory selectors or tag names (depending on
+            `vertical_marker_mode`), values are x-positions where colored
+            vertical lines are drawn.
+        vertical_marker_mode : str, default="auto"
+            Marker key interpretation mode:
+            "auto", "trajectory", or "tag".
+            In "auto", tag mode is used when tag coloring is active.
+            In "trajectory" mode with tag coloring enabled, the first matching
+            tag color per trajectory is used.
         title_fontsize : int, optional
             Font size for the main title.
         subplot_title_fontsize : int, optional
@@ -569,7 +599,13 @@ class FeatureFacade:
             smoothing_polyorder=smoothing_polyorder,
             show_unsmoothed_background=show_unsmoothed_background,
             discrete_plot_style=discrete_plot_style,
+            discrete_layout=discrete_layout,
+            discrete_offset_span=discrete_offset_span,
+            discrete_auto_offset_threshold=discrete_auto_offset_threshold,
+            thickness=thickness,
             colors=colors,
+            vertical_markers=vertical_markers,
+            vertical_marker_mode=vertical_marker_mode,
             title_fontsize=title_fontsize,
             subplot_title_fontsize=subplot_title_fontsize,
             xlabel_fontsize=xlabel_fontsize,
