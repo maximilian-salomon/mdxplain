@@ -105,7 +105,8 @@ class DensityPlotter(FeatureImportanceBasePlotter):
         discrete_plot_mode: str = "density",
         colors: Optional[Union[str, Dict[str, str]]] = None,
         vertical_markers: Optional[Dict[Union[int, str], Union[float, List[float]]]] = None,
-        vertical_marker_labels: Optional[Union[str, Dict[Union[int, str], Union[str, List[str]]]]] = None,
+        vertical_marker_labels: Optional[Union[str, Dict[Union[int, str], str]]] = None,
+        vertical_marker_label_colors: Optional[Union[str, Dict[str, str]]] = None,
     ) -> Figure:
         """
         Create density plots from feature importance or manual selection.
@@ -168,11 +169,14 @@ class DensityPlotter(FeatureImportanceBasePlotter):
             Keys are DataSelector names (or selector-compatible identifiers),
             values are one or more x-positions where dashed marker lines are
             drawn in matching DataSelector colors.
-        vertical_marker_labels : str or Dict[int or str, str or List[str]], optional
+        vertical_marker_labels : str or dict, optional
             Optional legend labels for vertical markers:
-            - str: one label for all marker lines
-            - dict[key] = str: one label for all markers of one key
-            - dict[key] = list[str]: one label per marker position for one key
+            - str: one shared label for all marker lines
+            - dict[key] = str: one label per marker key
+        vertical_marker_label_colors : str or dict, optional
+            Optional legend color override for marker labels:
+            - str: one shared legend color for all marker labels
+            - dict[label] = color: per-label legend colors
         contact_threshold : float, optional
             Distance threshold in Angstrom for drawing contact threshold line
             on distance features. If provided, draws a red dashed vertical line
@@ -270,6 +274,10 @@ class DensityPlotter(FeatureImportanceBasePlotter):
             marker_positions=vertical_markers,
             marker_labels=vertical_marker_labels
         )
+        VerticalMarkerHelper.validate_label_colors(
+            marker_labels=vertical_marker_labels,
+            label_colors=vertical_marker_label_colors
+        )
 
         # 2. Prepare density data
         density_data, metadata_map, default_selector_colors, contact_cutoff = self._prepare_density_data(
@@ -281,13 +289,17 @@ class DensityPlotter(FeatureImportanceBasePlotter):
             colors=colors,
             default_colors=default_selector_colors
         )
+        marker_legend_entries: Dict[str, str] = {}
         resolved_vertical_markers = self._resolve_vertical_markers(
             vertical_markers=vertical_markers,
             vertical_marker_labels=vertical_marker_labels,
-            data_selector_colors=resolved_selector_colors
+            vertical_marker_label_colors=vertical_marker_label_colors,
+            data_selector_colors=resolved_selector_colors,
+            legend_entries=marker_legend_entries
         )
         marker_legend_handles = VerticalMarkerHelper.build_legend_handles(
             resolved_markers=resolved_vertical_markers,
+            legend_entries=marker_legend_entries,
             line_width=max(1.0, line_width * 0.75),
             alpha=0.85
         )
@@ -714,8 +726,10 @@ class DensityPlotter(FeatureImportanceBasePlotter):
     @staticmethod
     def _resolve_vertical_markers(
         vertical_markers: Optional[Dict[Union[int, str], Union[float, List[float]]]],
-        vertical_marker_labels: Optional[Union[str, Dict[Union[int, str], Union[str, List[str]]]]],
-        data_selector_colors: Dict[str, str]
+        vertical_marker_labels: Optional[Union[str, Dict[Union[int, str], str]]],
+        vertical_marker_label_colors: Optional[Union[str, Dict[str, str]]],
+        data_selector_colors: Dict[str, str],
+        legend_entries: Optional[Dict[str, str]] = None
     ) -> List[Tuple[float, str, Optional[str]]]:
         """
         Resolve density marker dictionaries to `(x, color, label)` tuples.
@@ -726,8 +740,12 @@ class DensityPlotter(FeatureImportanceBasePlotter):
             Marker position dictionary keyed by DataSelector.
         vertical_marker_labels : str or dict, optional
             Marker label definition for legend entries.
+        vertical_marker_label_colors : str or dict, optional
+            Shared or per-label legend color override.
         data_selector_colors : Dict[str, str]
             Effective DataSelector color mapping.
+        legend_entries : Dict[str, str], optional
+            Optional output mapping populated as label -> color.
 
         Returns
         -------
@@ -752,7 +770,9 @@ class DensityPlotter(FeatureImportanceBasePlotter):
         return VerticalMarkerHelper.resolve_markers(
             marker_positions=vertical_markers,
             marker_labels=vertical_marker_labels,
-            color_resolver=color_resolver
+            color_resolver=color_resolver,
+            legend_entries=legend_entries,
+            label_colors=vertical_marker_label_colors
         )
 
     @staticmethod

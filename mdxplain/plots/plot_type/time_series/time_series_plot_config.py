@@ -121,9 +121,12 @@ class TimeSeriesPlotConfig:
         Optional marker specification for vertical guide lines.
         Keys are trajectory selectors or tag names (depending on mode), values
         are x-positions (single float or list of floats).
-    vertical_marker_labels : Optional[Union[str, Dict[Union[int, str], Union[str, List[str]]]]]
+    vertical_marker_labels : Optional[Union[str, Dict[Union[int, str], str]]]
         Optional legend labels for vertical markers:
-        global string, per-key string, or per-position labels per key.
+        one shared label string or one label string per marker key.
+    vertical_marker_label_colors : Optional[Union[str, Dict[str, str]]]
+        Optional legend color override for marker labels:
+        one shared color string or per-label color mapping.
     vertical_marker_mode : str
         Marker key interpretation mode:
         "auto", "trajectory", or "tag".
@@ -178,6 +181,9 @@ class TimeSeriesPlotConfig:
     resolved_vertical_markers : List[Tuple[float, str, Optional[str]]]
         Pre-resolved marker lines as `(x_position, color, label)` tuples used
         by all feature subplots.
+    resolved_vertical_marker_legend_entries : Dict[str, str]
+        Pre-resolved legend mapping for markers (`label -> color`) in
+        first-seen order.
     fig : Optional[Figure]
         Matplotlib figure (set after creation)
     gs : Optional[GridSpec]
@@ -255,7 +261,8 @@ class TimeSeriesPlotConfig:
     thickness: float = 1.0
     colors: Optional[Union[str, Dict[str, str]]] = None
     vertical_markers: Optional[Dict[Union[int, str], Union[float, List[float]]]] = None
-    vertical_marker_labels: Optional[Union[str, Dict[Union[int, str], Union[str, List[str]]]]] = None
+    vertical_marker_labels: Optional[Union[str, Dict[Union[int, str], str]]] = None
+    vertical_marker_label_colors: Optional[Union[str, Dict[str, str]]] = None
     vertical_marker_mode: str = "auto"
 
     # Font size parameters
@@ -296,6 +303,7 @@ class TimeSeriesPlotConfig:
     resolved_discrete_layout: str = "overlay"
     effective_subplot_height: float = 0.0
     resolved_vertical_markers: List[Tuple[float, str, Optional[str]]] = field(default_factory=list)
+    resolved_vertical_marker_legend_entries: Dict[str, str] = field(default_factory=dict)
 
     # Figure data (set during plotting)
     fig: Optional[Figure] = None

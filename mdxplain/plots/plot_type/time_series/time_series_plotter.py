@@ -107,7 +107,8 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         thickness: float = 1.0,
         colors: Optional[Union[str, Dict[str, str]]] = None,
         vertical_markers: Optional[Dict[Union[int, str], Union[float, List[float]]]] = None,
-        vertical_marker_labels: Optional[Union[str, Dict[Union[int, str], Union[str, List[str]]]]] = None,
+        vertical_marker_labels: Optional[Union[str, Dict[Union[int, str], str]]] = None,
+        vertical_marker_label_colors: Optional[Union[str, Dict[str, str]]] = None,
         vertical_marker_mode: str = "auto"
     ) -> Figure:
         """
@@ -207,11 +208,14 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             Dictionary keys are interpreted as trajectory selectors or tags
             (depending on `vertical_marker_mode`), and values are one or more
             x-axis positions where dashed vertical lines are drawn.
-        vertical_marker_labels : str or Dict[int or str, str or List[str]], optional
+        vertical_marker_labels : str or dict, optional
             Optional legend labels for vertical markers:
             - str: one shared label for all markers
-            - dict[key] = str: one label for all markers of one key
-            - dict[key] = list[str]: one label per position of one key
+            - dict[key] = str: one label per marker key
+        vertical_marker_label_colors : str or dict, optional
+            Optional legend color override for marker labels:
+            - str: one shared legend color for all marker labels
+            - dict[label] = color: per-label legend colors
         vertical_marker_mode : str, default="auto"
             Marker key interpretation mode:
             - "auto": use "tag" when tag coloring is active, else "trajectory"
@@ -269,6 +273,7 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         self._validate_vertical_marker_mode(vertical_marker_mode)
         self._validate_vertical_markers(vertical_markers)
         self._validate_vertical_marker_labels(vertical_markers, vertical_marker_labels)
+        self._validate_vertical_marker_label_colors(vertical_marker_labels, vertical_marker_label_colors)
 
         # Apply mode-based defaults for membership_bar_height
         if membership_bar_height is None:
@@ -314,6 +319,7 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             colors=colors,
             vertical_markers=vertical_markers,
             vertical_marker_labels=vertical_marker_labels,
+            vertical_marker_label_colors=vertical_marker_label_colors,
             vertical_marker_mode=vertical_marker_mode,
             title_fontsize=title_fontsize,
             subplot_title_fontsize=subplot_title_fontsize,
@@ -620,6 +626,7 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             Updates `config.resolved_vertical_markers` in place.
         """
         config.resolved_vertical_markers = []
+        config.resolved_vertical_marker_legend_entries = {}
         if not config.vertical_markers:
             return
 
@@ -628,7 +635,9 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             config.resolved_vertical_markers = VerticalMarkerHelper.resolve_markers(
                 marker_positions=config.vertical_markers,
                 marker_labels=config.vertical_marker_labels,
-                color_resolver=lambda key: self._resolve_marker_colors_for_tag(config, key)
+                color_resolver=lambda key: self._resolve_marker_colors_for_tag(config, key),
+                legend_entries=config.resolved_vertical_marker_legend_entries,
+                label_colors=config.vertical_marker_label_colors
             )
             return
 
@@ -637,7 +646,9 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             marker_labels=config.vertical_marker_labels,
             color_resolver=lambda key: self._resolve_marker_colors_for_trajectory_selector(
                 config, key
-            )
+            ),
+            legend_entries=config.resolved_vertical_marker_legend_entries,
+            label_colors=config.vertical_marker_label_colors
         )
 
     @staticmethod
@@ -914,6 +925,7 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         legend_colors = config.tag_colors if config.use_tag_coloring else config.traj_colors
         marker_legend_handles = VerticalMarkerHelper.build_legend_handles(
             resolved_markers=config.resolved_vertical_markers,
+            legend_entries=config.resolved_vertical_marker_legend_entries,
             line_width=max(1.0, config.thickness),
             alpha=0.85
         )
@@ -1721,7 +1733,7 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
     @staticmethod
     def _validate_vertical_marker_labels(
         vertical_markers: Optional[Dict[Union[int, str], Union[float, List[float]]]],
-        vertical_marker_labels: Optional[Union[str, Dict[Union[int, str], Union[str, List[str]]]]]
+        vertical_marker_labels: Optional[Union[str, Dict[Union[int, str], str]]]
     ) -> None:
         """
         Validate vertical marker label structure.
@@ -1741,4 +1753,29 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         VerticalMarkerHelper.validate_labels(
             marker_positions=vertical_markers,
             marker_labels=vertical_marker_labels
+        )
+
+    @staticmethod
+    def _validate_vertical_marker_label_colors(
+        vertical_marker_labels: Optional[Union[str, Dict[Union[int, str], str]]],
+        vertical_marker_label_colors: Optional[Union[str, Dict[str, str]]]
+    ) -> None:
+        """
+        Validate optional marker-label color overrides.
+
+        Parameters
+        ----------
+        vertical_marker_labels : str or dict, optional
+            Marker legend labels.
+        vertical_marker_label_colors : str or dict, optional
+            Shared or per-label legend color override.
+
+        Returns
+        -------
+        None
+            Validation helper; returns only when values are valid.
+        """
+        VerticalMarkerHelper.validate_label_colors(
+            marker_labels=vertical_marker_labels,
+            label_colors=vertical_marker_label_colors
         )

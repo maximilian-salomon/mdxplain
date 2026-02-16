@@ -235,7 +235,8 @@ class FeatureFacade:
         discrete_plot_mode: str = "density",
         colors: Optional[Union[str, Dict[str, str]]] = None,
         vertical_markers: Optional[Dict[Union[int, str], Union[float, List[float]]]] = None,
-        vertical_marker_labels: Optional[Union[str, Dict[Union[int, str], Union[str, List[str]]]]] = None,
+        vertical_marker_labels: Optional[Union[str, Dict[Union[int, str], str]]] = None,
+        vertical_marker_label_colors: Optional[Union[str, Dict[str, str]]] = None,
     ) -> Figure:
         """
         Create density plots from manual feature selection.
@@ -282,8 +283,12 @@ class FeatureFacade:
               (cluster_* names keep their cluster color)
         vertical_markers : Dict[int or str, float or List[float]], optional
             Optional vertical guide markers keyed by DataSelector.
-        vertical_marker_labels : str or Dict[int or str, str or List[str]], optional
+        vertical_marker_labels : str or dict, optional
             Optional labels for marker legend entries.
+            Use one shared label string or `dict[key] = label`.
+        vertical_marker_label_colors : str or dict, optional
+            Optional legend color override for marker labels:
+            one shared color or `dict[label] = color`.
         contact_threshold : float, optional
             Distance threshold for contact threshold line
         title : str, optional
@@ -373,6 +378,7 @@ class FeatureFacade:
             colors=colors,
             vertical_markers=vertical_markers,
             vertical_marker_labels=vertical_marker_labels,
+            vertical_marker_label_colors=vertical_marker_label_colors,
             contact_threshold=contact_threshold,
             title=title,
             legend_title=legend_title,
@@ -431,7 +437,8 @@ class FeatureFacade:
         thickness: float = 1.0,
         colors: Optional[Union[str, Dict[str, str]]] = None,
         vertical_markers: Optional[Dict[Union[int, str], Union[float, List[float]]]] = None,
-        vertical_marker_labels: Optional[Union[str, Dict[Union[int, str], Union[str, List[str]]]]] = None,
+        vertical_marker_labels: Optional[Union[str, Dict[Union[int, str], str]]] = None,
+        vertical_marker_label_colors: Optional[Union[str, Dict[str, str]]] = None,
         vertical_marker_mode: str = "auto",
     ) -> Figure:
         """
@@ -520,8 +527,12 @@ class FeatureFacade:
             Keys are trajectory selectors or tag names (depending on
             `vertical_marker_mode`), values are x-positions where colored
             vertical lines are drawn.
-        vertical_marker_labels : str or Dict[int or str, str or List[str]], optional
+        vertical_marker_labels : str or dict, optional
             Optional legend labels for marker lines.
+            Use one shared label string or `dict[key] = label`.
+        vertical_marker_label_colors : str or dict, optional
+            Optional legend color override for marker labels:
+            one shared color or `dict[label] = color`.
         vertical_marker_mode : str, default="auto"
             Marker key interpretation mode:
             "auto", "trajectory", or "tag".
@@ -617,6 +628,7 @@ class FeatureFacade:
             colors=colors,
             vertical_markers=vertical_markers,
             vertical_marker_labels=vertical_marker_labels,
+            vertical_marker_label_colors=vertical_marker_label_colors,
             vertical_marker_mode=vertical_marker_mode,
             title_fontsize=title_fontsize,
             subplot_title_fontsize=subplot_title_fontsize,

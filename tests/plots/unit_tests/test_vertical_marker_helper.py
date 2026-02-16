@@ -46,23 +46,26 @@ class TestVerticalMarkerHelper:
 
     def test_resolve_markers_deduplicates_by_position_and_color(self):
         """Markers with same x/color are collapsed into one draw instruction."""
+        legend_entries = {}
         resolved = VerticalMarkerHelper.resolve_markers(
             marker_positions={"a": [1.0, 2.0], "b": 1.0},
             marker_labels="event",
-            color_resolver=lambda _: ["#ff0000"]
+            color_resolver=lambda _: ["#ff0000"],
+            legend_entries=legend_entries
         )
 
-        assert len(resolved) == 2
-        assert (1.0, "#ff0000", "event") in resolved
-        assert (2.0, "#ff0000", "event") in resolved
+        assert set(resolved) == {
+            (1.0, "#ff0000", "event"),
+            (2.0, "#ff0000", "event")
+        }
+        assert legend_entries == {"event": "#ff0000"}
 
-    def test_resolve_markers_raises_for_label_length_mismatch(self):
-        """Per-position labels must match the number of marker positions."""
-        with pytest.raises(ValueError, match="list length must match"):
-            VerticalMarkerHelper.resolve_markers(
+    def test_validate_labels_rejects_non_string_per_key_values(self):
+        """Per-key labels must be plain strings."""
+        with pytest.raises(ValueError, match="must be a string"):
+            VerticalMarkerHelper.validate_labels(
                 marker_positions={"a": [1.0, 2.0]},
-                marker_labels={"a": ["first"] * 3},
-                color_resolver=lambda _: ["#00ff00"]
+                marker_labels={"a": ["first"]}  # type: ignore[arg-type]
             )
 
     def test_build_legend_handles_uses_unique_labels(self):
@@ -78,3 +81,45 @@ class TestVerticalMarkerHelper:
 
         labels = [handle.get_label() for handle in handles]
         assert labels == ["event", "other"]
+
+    def test_validate_label_colors_accepts_per_label_mapping(self):
+        """Legend colors can be overridden per label."""
+        VerticalMarkerHelper.validate_label_colors(
+            marker_labels={"a": "release"},
+            label_colors={"release": "#224466"}
+        )
+
+    def test_resolve_markers_prefers_label_color_override(self):
+        """Legend color overrides should win over marker-derived colors."""
+        legend_entries = {}
+        resolved = VerticalMarkerHelper.resolve_markers(
+            marker_positions={"a": [1.0, 2.0]},
+            marker_labels={"a": "release"},
+            color_resolver=lambda _: ["#99ccff"],
+            legend_entries=legend_entries,
+            label_colors={"release": "#224466"}
+        )
+
+        assert set(resolved) == {
+            (1.0, "#99ccff", "release"),
+            (2.0, "#99ccff", "release")
+        }
+        assert legend_entries == {"release": "#224466"}
+
+    def test_validate_label_colors_rejects_unknown_label(self):
+        """Color overrides must reference known marker labels."""
+        with pytest.raises(ValueError, match="unknown label"):
+            VerticalMarkerHelper.validate_label_colors(
+                marker_labels={"a": "release"},
+                label_colors={"other": "#224466"}
+            )
+
+    def test_build_legend_handles_uses_pre_resolved_entries(self):
+        """Legend handles should be constructible without scanning marker tuples."""
+        handles = VerticalMarkerHelper.build_legend_handles(
+            resolved_markers=[],
+            legend_entries={"release": "#224466", "other": "#556677"}
+        )
+
+        assert [h.get_label() for h in handles] == ["release", "other"]
+        assert [h.get_color() for h in handles] == ["#224466", "#556677"]
