@@ -287,14 +287,14 @@ class SASAAnalysisService(AnalysisServiceBase):
         )
         return self._calculator.compute_cv(data)
     
-    def burial_fraction(self, threshold: float = 0.1, feature_selector: Optional[str] = None, 
+    def burial_fraction(self, threshold: float = 10.0, feature_selector: Optional[str] = None, 
                        traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
         """
         Compute burial fraction for each residue/atom.
         
         Parameters
         ----------
-        threshold : float, default=0.1
+        threshold : float, default=10.0
             SASA threshold below which residue is considered buried
         feature_selector : str, optional
             Name of feature selector for column selection
@@ -308,11 +308,11 @@ class SASAAnalysisService(AnalysisServiceBase):
             
         Examples
         --------
-        >>> # Find frequently buried residues (< 0.1 nm²)
-        >>> pipeline.analysis.features.sasa.burial_fraction(threshold=0.1)
+        >>> # Find frequently buried residues (< 10.0 Å²)
+        >>> pipeline.analysis.features.sasa.burial_fraction(threshold=10.0)
         
         >>> # More restrictive burial criteria
-        >>> pipeline.analysis.features.sasa.burial_fraction(threshold=0.05)
+        >>> pipeline.analysis.features.sasa.burial_fraction(threshold=5.0)
         """
         data = AnalysisDataHelper.get_selected_data(
             self._pipeline_data, self._feature_type,
@@ -320,14 +320,14 @@ class SASAAnalysisService(AnalysisServiceBase):
         )
         return self._calculator.compute_burial_fraction(data, threshold)
     
-    def exposure_fraction(self, threshold: float = 1.0, feature_selector: Optional[str] = None, 
+    def exposure_fraction(self, threshold: float = 100.0, feature_selector: Optional[str] = None, 
                          traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
         """
         Compute exposure fraction for each residue/atom.
         
         Parameters
         ----------
-        threshold : float, default=1.0
+        threshold : float, default=100.0
             SASA threshold above which residue is considered exposed
         feature_selector : str, optional
             Name of feature selector for column selection
@@ -341,11 +341,11 @@ class SASAAnalysisService(AnalysisServiceBase):
             
         Examples
         --------
-        >>> # Find frequently exposed residues (> 1.0 nm²)
-        >>> pipeline.analysis.features.sasa.exposure_fraction(threshold=1.0)
+        >>> # Find frequently exposed residues (> 100.0 Å²)
+        >>> pipeline.analysis.features.sasa.exposure_fraction(threshold=100.0)
         
         >>> # Higher exposure threshold
-        >>> pipeline.analysis.features.sasa.exposure_fraction(threshold=2.0)
+        >>> pipeline.analysis.features.sasa.exposure_fraction(threshold=200.0)
         """
         data = AnalysisDataHelper.get_selected_data(
             self._pipeline_data, self._feature_type,
@@ -546,7 +546,7 @@ class SASAAnalysisService(AnalysisServiceBase):
     
     # === TRANSITIONS/DYNAMICS METHODS ===
     
-    def transitions_lagtime(self, threshold: float = 0.5, lag_time: int = 1,
+    def transitions_lagtime(self, threshold: float = 50.0, lag_time: int = 1,
                            feature_selector: Optional[str] = None, 
                            traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
         """
@@ -554,7 +554,7 @@ class SASAAnalysisService(AnalysisServiceBase):
         
         Parameters
         ----------
-        threshold : float, default=0.5
+        threshold : float, default=50.0
             SASA change threshold for detecting transitions
         lag_time : int, default=1
             Number of frames to look ahead
@@ -570,12 +570,12 @@ class SASAAnalysisService(AnalysisServiceBase):
             
         Examples
         --------
-        >>> # Find dynamic surface areas with 0.5 nm² threshold
-        >>> pipeline.analysis.features.sasa.transitions_lagtime(threshold=0.5)
+        >>> # Find dynamic surface areas with 50.0 Å² threshold
+        >>> pipeline.analysis.features.sasa.transitions_lagtime(threshold=50.0)
         
         >>> # Slower dynamics with longer lag time
         >>> pipeline.analysis.features.sasa.transitions_lagtime(
-        ...     threshold=1.0, lag_time=10
+        ...     threshold=100.0, lag_time=10
         ... )
         """
         data = AnalysisDataHelper.get_selected_data(
@@ -584,7 +584,7 @@ class SASAAnalysisService(AnalysisServiceBase):
         )
         return self._calculator.compute_transitions_lagtime(data, threshold, lag_time)
     
-    def transitions_window(self, threshold: float = 0.5, window_size: int = 10,
+    def transitions_window(self, threshold: float = 50.0, window_size: int = 10,
                           feature_selector: Optional[str] = None, 
                           traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
         """
@@ -592,7 +592,7 @@ class SASAAnalysisService(AnalysisServiceBase):
         
         Parameters
         ----------
-        threshold : float, default=0.5
+        threshold : float, default=50.0
             SASA change threshold for detecting transitions
         window_size : int, default=10
             Size of sliding window
@@ -610,7 +610,7 @@ class SASAAnalysisService(AnalysisServiceBase):
         --------
         >>> # Window-based transition detection
         >>> pipeline.analysis.features.sasa.transitions_window(
-        ...     threshold=0.5, window_size=10
+        ...     threshold=50.0, window_size=10
         ... )
         """
         data = AnalysisDataHelper.get_selected_data(
@@ -619,7 +619,7 @@ class SASAAnalysisService(AnalysisServiceBase):
         )
         return self._calculator.compute_transitions_window(data, threshold, window_size)
     
-    def stability(self, threshold: float = 0.5, window_size: int = 10, mode: str = "lagtime",
+    def stability(self, threshold: float = 50.0, window_size: int = 10, mode: str = "lagtime",
                  feature_selector: Optional[str] = None, 
                  traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
         """
@@ -627,7 +627,7 @@ class SASAAnalysisService(AnalysisServiceBase):
         
         Parameters
         ----------
-        threshold : float, default=0.5
+        threshold : float, default=50.0
             SASA change threshold for stability detection
         window_size : int, default=10
             Window size for calculation
@@ -647,7 +647,7 @@ class SASAAnalysisService(AnalysisServiceBase):
         --------
         >>> # Find most stable surface areas
         >>> pipeline.analysis.features.sasa.stability(
-        ...     threshold=0.5, window_size=10, mode='window'
+        ...     threshold=50.0, window_size=10, mode='window'
         ... )
         """
         data = AnalysisDataHelper.get_selected_data(

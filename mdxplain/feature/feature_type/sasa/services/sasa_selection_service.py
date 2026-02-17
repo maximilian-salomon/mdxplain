@@ -521,7 +521,7 @@ class SasaSelectionService(SelectionServiceBase):
         self(selector_name, selection, use_reduced, common_denominator, traj_selection, require_all_partners)
         self._add_reduction_config(selector_name, "max", threshold_min, threshold_max, cross_trajectory, cross_trajectory_intersection, cross_trajectory_union, cross_trajectory_pooled)
 
-    def with_burial_fraction_reduction(self, selector_name: str, selection: str = "all", burial_threshold: float = 0.2, cross_trajectory: Optional[bool] = None, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False, cross_trajectory_intersection: Optional[bool] = None, cross_trajectory_union: Optional[bool] = None, cross_trajectory_pooled: Optional[bool] = None) -> None:
+    def with_burial_fraction_reduction(self, selector_name: str, selection: str = "all", burial_threshold: float = 20.0, cross_trajectory: Optional[bool] = None, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False, cross_trajectory_intersection: Optional[bool] = None, cross_trajectory_union: Optional[bool] = None, cross_trajectory_pooled: Optional[bool] = None) -> None:
         """
         Add SASA with burial fraction reduction.
 
@@ -535,7 +535,7 @@ class SasaSelectionService(SelectionServiceBase):
             Name of the feature selector configuration
         selection : str, default="all"
             Selection criteria string
-        burial_threshold : float, default=0.2
+        burial_threshold : float, default=20.0
             SASA threshold (Å²) below which residue is considered buried.
         cross_trajectory : bool, optional
             Deprecated legacy flag; use explicit cross_trajectory_intersection/union/pooled.
@@ -562,13 +562,13 @@ class SasaSelectionService(SelectionServiceBase):
 
         Examples
         --------
-        >>> service.with_burial_fraction_reduction("test", "res ALA", burial_threshold=0.15)
-        >>> service.with_burial_fraction_reduction("test", "core_residues", burial_threshold=0.1)
+        >>> service.with_burial_fraction_reduction("test", "res ALA", burial_threshold=15.0)
+        >>> service.with_burial_fraction_reduction("test", "core_residues", burial_threshold=10.0)
         """
         self(selector_name, selection, use_reduced, common_denominator, traj_selection, require_all_partners)
         self._add_reduction_config(selector_name, "burial_fraction", burial_threshold, None, cross_trajectory, cross_trajectory_intersection, cross_trajectory_union, cross_trajectory_pooled)
 
-    def with_exposure_fraction_reduction(self, selector_name: str, selection: str = "all", exposure_threshold: float = 0.2, cross_trajectory: Optional[bool] = None, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False, cross_trajectory_intersection: Optional[bool] = None, cross_trajectory_union: Optional[bool] = None, cross_trajectory_pooled: Optional[bool] = None) -> None:
+    def with_exposure_fraction_reduction(self, selector_name: str, selection: str = "all", exposure_threshold: float = 20.0, cross_trajectory: Optional[bool] = None, use_reduced: bool = False, common_denominator: bool = True, traj_selection: Union[int, str, List[Union[int, str]], "all"] = "all", require_all_partners: bool = False, cross_trajectory_intersection: Optional[bool] = None, cross_trajectory_union: Optional[bool] = None, cross_trajectory_pooled: Optional[bool] = None) -> None:
         """
         Add SASA with exposure fraction reduction.
 
@@ -582,7 +582,7 @@ class SasaSelectionService(SelectionServiceBase):
             Name of the feature selector configuration
         selection : str, default="all"
             Selection criteria string
-        exposure_threshold : float, default=0.2
+        exposure_threshold : float, default=20.0
             SASA threshold (Å²) above which residue is considered exposed.
         cross_trajectory : bool, optional
             Deprecated legacy flag; use explicit cross_trajectory_intersection/union/pooled.
@@ -609,8 +609,8 @@ class SasaSelectionService(SelectionServiceBase):
 
         Examples
         --------
-        >>> service.with_exposure_fraction_reduction("test", "res ALA", exposure_threshold=0.3)
-        >>> service.with_exposure_fraction_reduction("test", "surface_residues", exposure_threshold=0.5)
+        >>> service.with_exposure_fraction_reduction("test", "res ALA", exposure_threshold=30.0)
+        >>> service.with_exposure_fraction_reduction("test", "surface_residues", exposure_threshold=50.0)
         """
         self(selector_name, selection, use_reduced, common_denominator, traj_selection, require_all_partners)
         self._add_reduction_config(selector_name, "exposure_fraction", None, exposure_threshold, cross_trajectory, cross_trajectory_intersection, cross_trajectory_union, cross_trajectory_pooled)
