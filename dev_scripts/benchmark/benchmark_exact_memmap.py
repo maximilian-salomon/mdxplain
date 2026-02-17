@@ -72,7 +72,7 @@ def _exact_memmap_profile() -> _BenchmarkProfile:
         chunk_size=2000,
         use_nystrom=False,
         n_landmarks=None,
-        dpa_method="knn_sampling",
+        dpa_method="standard",
     )
 
 
