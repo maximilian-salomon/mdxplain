@@ -20,34 +20,34 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-"""Run the Standard Full benchmark profile and persist benchmark metrics.
+"""Run the Exact Memmap benchmark profile and persist benchmark metrics.
 
 File Description
 ----------------
-This script defines the "Standard Full" benchmark profile parameters and
-reuses the shared benchmark runner in ``benchmark_fast_standard.py``.
+This script defines the "Exact Memmap" benchmark profile parameters and delegates
+execution to the shared benchmark runner in ``benchmark_approx_memmap.py``.
 
 How To Use
 ----------
 Run from project root:
 
-- ``python dev_scripts/benchmark/benchmark_standard_full.py``
+- ``python dev_scripts/benchmark/benchmark_exact_memmap.py``
 """
 
 from __future__ import annotations
 
 from pathlib import Path
 
-from benchmark_fast_standard import _BenchmarkProfile, _run_profile
+from benchmark_approx_memmap import _BenchmarkProfile, _run_profile
 
 
-results_dir = Path("benchmark_results_standard_full")
-cache_root = Path("cache/benchmark_standard_full")
-dataset_factors = [1, 2, 3, 5]
+results_dir = Path("benchmark_results_exact_memmap")
+cache_root = Path("cache/benchmark_exact_memmap")
+dataset_factors = [1, 2, 3, 5, 10]
 
 
-def _standard_full_profile() -> _BenchmarkProfile:
-    """Build Standard Full benchmark profile configuration.
+def _exact_memmap_profile() -> _BenchmarkProfile:
+    """Build Exact Memmap benchmark profile configuration.
 
     Parameters
     ----------
@@ -56,28 +56,28 @@ def _standard_full_profile() -> _BenchmarkProfile:
     Returns
     -------
     _BenchmarkProfile
-        Standard Full profile instance.
+        Exact Memmap profile instance.
 
     Notes
     -----
-    Standard Full profile disables memmap/chunking and uses standard DPA.
+    Exact Memmap profile uses memmap/chunking and disables Nyström decomposition.
     """
-    # Build profile matching previous standard-full benchmark behavior.
+    # Build profile matching previous exact-memmap benchmark behavior.
     return _BenchmarkProfile(
-        name="standard_full",
+        name="exact_memmap",
         results_dir=results_dir,
         cache_root=cache_root,
         dataset_factors=list(dataset_factors),
-        use_memmap=False,
-        chunk_size=None,
+        use_memmap=True,
+        chunk_size=2000,
         use_nystrom=False,
         n_landmarks=None,
-        dpa_method="standard",
+        dpa_method="knn_sampling",
     )
 
 
 def main() -> int:
-    """Run the Standard Full benchmark profile.
+    """Run the Exact Memmap benchmark profile.
 
     Parameters
     ----------
@@ -95,10 +95,10 @@ def main() -> int:
     Examples
     --------
     >>> # CLI usage
-    >>> # python dev_scripts/benchmark/benchmark_standard_full.py
+    >>> # python dev_scripts/benchmark/benchmark_exact_memmap.py
     """
     # Build profile and execute it via shared benchmark engine.
-    return _run_profile(_standard_full_profile())
+    return _run_profile(_exact_memmap_profile())
 
 
 if __name__ == "__main__":

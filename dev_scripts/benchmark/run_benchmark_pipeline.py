@@ -51,9 +51,9 @@ DATA_SCRIPT = Path("dev_scripts/benchmark/benchmark_generate_data.py")
 PACK_SCRIPT = Path("dev_scripts/benchmark/pack_benchmark_jsons.py")
 ANALYSIS_SCRIPT = Path("dev_scripts/benchmark/benchmark_analysis_report.py")
 BENCHMARK_SCRIPTS = [
-    Path("dev_scripts/benchmark/benchmark_fast_standard.py"),
-    Path("dev_scripts/benchmark/benchmark_iterative.py"),
-    Path("dev_scripts/benchmark/benchmark_standard_full.py"),
+    Path("dev_scripts/benchmark/benchmark_approx_memmap.py"),
+    Path("dev_scripts/benchmark/benchmark_exact_memmap.py"),
+    Path("dev_scripts/benchmark/benchmark_exact_ram.py"),
 ]
 
 

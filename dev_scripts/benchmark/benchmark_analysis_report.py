@@ -57,21 +57,21 @@ import pandas as pd
 
 
 PROFILE_DIRS = {
-    "fast_standard": "benchmark_results",
-    "iterative": "benchmark_results_iterative",
-    "standard_full": "benchmark_results_standard_full",
+    "approx_memmap": "benchmark_results_approx_memmap",
+    "exact_memmap": "benchmark_results_exact_memmap",
+    "exact_ram": "benchmark_results_exact_ram",
 }
 
 PROFILE_LABELS = {
-    "fast_standard": "Fast Standard",
-    "iterative": "Iterative",
-    "standard_full": "Standard Full",
+    "approx_memmap": "Approx (Memmap)",
+    "exact_memmap": "Exact (Memmap)",
+    "exact_ram": "Exact (RAM)",
 }
 
 PROFILE_COLOR_MAP = {
-    "Fast Standard": "#1f77b4",
-    "Iterative": "#2ca02c",
-    "Standard Full": "#d62728",
+    "Approx (Memmap)": "#1f77b4",
+    "Exact (Memmap)": "#2ca02c",
+    "Exact (RAM)": "#d62728",
 }
 
 GLOBAL_STYLE = {
@@ -162,9 +162,9 @@ def _set_plot_style() -> None:
     plt.rcParams.update(GLOBAL_STYLE)
     plt.rcParams["axes.prop_cycle"] = plt.cycler(
         color=[
-            PROFILE_COLOR_MAP["Fast Standard"],
-            PROFILE_COLOR_MAP["Iterative"],
-            PROFILE_COLOR_MAP["Standard Full"],
+            PROFILE_COLOR_MAP["Approx (Memmap)"],
+            PROFILE_COLOR_MAP["Exact (Memmap)"],
+            PROFILE_COLOR_MAP["Exact (RAM)"],
         ]
     )
 
@@ -857,11 +857,11 @@ def _select_profile_order(totals: pd.DataFrame) -> list[str]:
 
     Notes
     -----
-    Preferred order is Fast Standard, Iterative, Standard Full.
+    Preferred order is Approx (Memmap), Exact (Memmap), Exact (RAM).
     """
     order = [
         profile
-        for profile in ["Fast Standard", "Iterative", "Standard Full"]
+        for profile in ["Approx (Memmap)", "Exact (Memmap)", "Exact (RAM)"]
         if profile in totals["profile_label"].unique()
     ]
     return order or sorted(totals["profile_label"].unique())
@@ -988,11 +988,11 @@ def _build_bubble_transition_order(profiles: list[str]) -> list[str]:
 
     Notes
     -----
-    Preferred sequence is Standard Full -> Iterative -> Fast Standard.
+    Preferred sequence is Exact (RAM) -> Exact (Memmap) -> Approx (Memmap).
     """
     order = [
         profile
-        for profile in ["Standard Full", "Iterative", "Fast Standard"]
+        for profile in ["Exact (RAM)", "Exact (Memmap)", "Approx (Memmap)"]
         if profile in profiles
     ]
     return order or list(profiles)
@@ -1572,7 +1572,7 @@ def _target_profile_scale_pairs(ctx: AnalysisContext) -> list[tuple[str, int]]:
     for scale in [1, 3, 5]:
         for profile in ctx.profile_order:
             pairs.append((profile, scale))
-    pairs.extend([("Iterative", 10), ("Fast Standard", 50)])
+    pairs.extend([("Exact (Memmap)", 10), ("Approx (Memmap)", 50)])
     return pairs
 
 

@@ -20,19 +20,19 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-"""Run the Fast Standard benchmark profile and persist benchmark metrics.
+"""Run the Approx Memmap benchmark profile and persist benchmark metrics.
 
 File Description
 ----------------
 This script executes the full MDXplain benchmark workflow for the
-"Fast Standard" profile and writes per-step metrics, run summaries,
+"Approx Memmap" profile and writes per-step metrics, run summaries,
 plot artifacts, and a profile-level summary JSON.
 
 How To Use
 ----------
 Run from project root:
 
-- ``python dev_scripts/benchmark/benchmark_fast_standard.py``
+- ``python dev_scripts/benchmark/benchmark_approx_memmap.py``
 """
 
 from __future__ import annotations
@@ -55,8 +55,8 @@ from mdxplain import PipelineManager
 import psutil
 
 
-results_dir = Path("benchmark_results")
-cache_root = Path("cache/benchmark")
+results_dir = Path("benchmark_results_approx_memmap")
+cache_root = Path("cache/benchmark_approx_memmap")
 dataset_factors = [1, 2, 3, 5, 10, 30, 50]
 
 data_root = Path("data/benchmarks")
@@ -1636,8 +1636,8 @@ def _run_profile(profile: _BenchmarkProfile) -> int:
     return 0
 
 
-def _fast_standard_profile() -> _BenchmarkProfile:
-    """Build Fast Standard benchmark profile configuration.
+def _approx_memmap_profile() -> _BenchmarkProfile:
+    """Build Approx Memmap benchmark profile configuration.
 
     Parameters
     ----------
@@ -1646,15 +1646,15 @@ def _fast_standard_profile() -> _BenchmarkProfile:
     Returns
     -------
     _BenchmarkProfile
-        Fast Standard profile instance.
+        Approx Memmap profile instance.
 
     Notes
     -----
     These values preserve the existing benchmark behavior.
     """
-    # Configure memmap + Nyström Fast Standard profile parameters.
+    # Configure memmap + Nyström Approx Memmap profile parameters.
     return _BenchmarkProfile(
-        name="fast_standard",
+        name="approx_memmap",
         results_dir=results_dir,
         cache_root=cache_root,
         dataset_factors=list(dataset_factors),
@@ -1667,7 +1667,7 @@ def _fast_standard_profile() -> _BenchmarkProfile:
 
 
 def main() -> int:
-    """Run the Fast Standard benchmark profile.
+    """Run the Approx Memmap benchmark profile.
 
     Parameters
     ----------
@@ -1680,15 +1680,15 @@ def main() -> int:
 
     Notes
     -----
-    This CLI entry point runs the predefined Fast Standard configuration.
+    This CLI entry point runs the predefined Approx Memmap configuration.
 
     Examples
     --------
     >>> # CLI usage
-    >>> # python dev_scripts/benchmark/benchmark_fast_standard.py
+    >>> # python dev_scripts/benchmark/benchmark_approx_memmap.py
     """
     # Build profile and delegate execution to shared profile runner.
-    return _run_profile(_fast_standard_profile())
+    return _run_profile(_approx_memmap_profile())
 
 
 if __name__ == "__main__":
