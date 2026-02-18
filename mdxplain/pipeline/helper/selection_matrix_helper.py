@@ -230,7 +230,7 @@ class SelectionMatrixHelper:
         # Create matrix
         matrix, memmap_path = SelectionMatrixHelper._create_matrix(
             (n_rows, n_cols), pipeline_data.use_memmap,
-            pipeline_data.cache_dir, feature_selector_name, cache_key,
+            pipeline_data.cache_dir, feature_selector_name, data_selector_name, cache_key,
             pipeline_data.dtype
         )
 
@@ -251,6 +251,7 @@ class SelectionMatrixHelper:
         use_memmap: bool,
         cache_dir: str,
         feature_selector_name: str,
+        data_selector_name: Optional[str],
         cache_key: str,
         dtype: type
     ) -> Tuple[np.ndarray, Optional[str]]:
@@ -267,6 +268,8 @@ class SelectionMatrixHelper:
             Cache directory for memmap files
         feature_selector_name : str
             Feature selector name
+        data_selector_name : str, optional
+            Data selector name
         cache_key : str
             Unique cache key for feature/data selector combination
         dtype : type
@@ -280,7 +283,7 @@ class SelectionMatrixHelper:
         if use_memmap:
             # Generate unique memmap path for each cache key to avoid collisions
             cache_filename = SelectionMatrixHelper._build_memmap_cache_filename(
-                feature_selector_name, cache_key
+                feature_selector_name, data_selector_name, cache_key
             )
             memmap_path = PathUtils.get_cache_file_path(
                 cache_path=cache_dir,
@@ -301,7 +304,7 @@ class SelectionMatrixHelper:
 
     @staticmethod
     def _build_memmap_cache_filename(
-        feature_selector_name: str, cache_key: str
+        feature_selector_name: str, data_selector_name: Optional[str], cache_key: str
     ) -> str:
         """
         Build a collision-safe memmap filename for a selector/cache-key pair.
@@ -310,6 +313,8 @@ class SelectionMatrixHelper:
         ----------
         feature_selector_name : str
             Feature selector name (for readability in filename)
+        data_selector_name : str, optional
+            Data selector name (for readability in filename)
         cache_key : str
             Unique cache key used by PipelineData
 
@@ -318,15 +323,44 @@ class SelectionMatrixHelper:
         str
             Stable memmap filename
         """
-        safe_selector = "".join(
+        safe_feature = SelectionMatrixHelper._sanitize_filename_component(
+            feature_selector_name, "selector"
+        )
+        safe_data_selector = SelectionMatrixHelper._sanitize_filename_component(
+            data_selector_name if data_selector_name is not None else "all_frames",
+            "all_frames",
+        )
+        key_hash = hashlib.sha1(cache_key.encode("utf-8")).hexdigest()[:12]
+        return f"selection_matrix_{safe_feature}_{safe_data_selector}_{key_hash}.dat"
+
+    @staticmethod
+    def _sanitize_filename_component(
+        value: str, fallback: str, limit: int = 40
+    ) -> str:
+        """
+        Sanitize a filename component to a safe ASCII token.
+
+        Parameters
+        ----------
+        value : str
+            Raw component value to sanitize.
+        fallback : str
+            Replacement token used if sanitization yields an empty string.
+        limit : int, default=40
+            Maximum number of characters to keep.
+
+        Returns
+        -------
+        str
+            Sanitized component containing only ``[A-Za-z0-9_-]``.
+        """
+        safe = "".join(
             ch if (ch.isascii() and (ch.isalnum() or ch in {"_", "-"})) else "_"
-            for ch in feature_selector_name
+            for ch in value
         ).strip("_")
-        if not safe_selector:
-            safe_selector = "selector"
-        safe_selector = safe_selector[:48]
-        key_hash = hashlib.sha1(cache_key.encode("utf-8")).hexdigest()[:16]
-        return f"selection_matrix_{safe_selector}_{key_hash}.dat"
+        if not safe:
+            safe = fallback
+        return safe[:limit]
 
     @staticmethod
     def _fill_matrix(
