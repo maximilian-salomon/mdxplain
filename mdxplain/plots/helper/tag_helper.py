@@ -89,7 +89,8 @@ class TagHelper:
         traj_tags = trajectory_data.get_trajectory_tags(traj_idx)
         if traj_tags is None:
             return []
-        return [tag for tag in tags_for_coloring if tag in traj_tags]
+        traj_tag_set = set(traj_tags)
+        return [tag for tag in tags_for_coloring if tag in traj_tag_set]
 
     @staticmethod
     def filter_by_priority(
@@ -121,11 +122,13 @@ class TagHelper:
         ... )
         >>> print(best)  # "unbiased"
         """
-        best_tag = None
-        for tag in tags_for_coloring:
-            if tag in matching_tags:
-                best_tag = tag
-        return best_tag
+        if not matching_tags:
+            return None
+        matching_tag_set = set(matching_tags)
+        for tag in reversed(tags_for_coloring):
+            if tag in matching_tag_set:
+                return tag
+        return None
 
     @staticmethod
     def prepare_tag_colors(tags_for_coloring: List[str]) -> Dict[str, str]:

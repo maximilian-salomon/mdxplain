@@ -30,6 +30,7 @@ from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.lines import Line2D
+import numpy as np
 
 from .time_series_plot_config import TimeSeriesPlotConfig
 from .helper import TimeSeriesDataPreparer
@@ -341,6 +342,7 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         config.tag_map = plot_data['tag_map']
         config.selected_matrix = plot_data['selected_matrix']
         config.frame_mapping = plot_data['frame_mapping']
+        self._prepare_trajectory_runtime_caches(config)
 
         config.all_features = self._flatten_features(config.feature_data)
 
@@ -371,6 +373,48 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         # Cleanup and finalize
         self._cleanup_and_finalize(config)
         return config.fig
+
+    def _prepare_trajectory_runtime_caches(self, config: TimeSeriesPlotConfig) -> None:
+        """
+        Precompute reusable trajectory index and x-axis caches for this plot call.
+
+        Parameters
+        ----------
+        config : TimeSeriesPlotConfig
+            Central configuration object.
+
+        Returns
+        -------
+        None
+            Populates cache dictionaries on config in-place.
+        """
+        relevant_traj_indices = set(config.tag_map.keys())
+        pairs_by_traj: Dict[int, List[Tuple[int, int]]] = {}
+        for global_idx, (traj_idx, local_idx) in config.frame_mapping.items():
+            if traj_idx not in relevant_traj_indices:
+                continue
+            pairs_by_traj.setdefault(traj_idx, []).append((global_idx, local_idx))
+
+        config.global_frame_indices_by_traj = {}
+        config.local_frame_indices_by_traj = {}
+        config.x_values_by_traj = {}
+
+        for traj_idx, pairs in pairs_by_traj.items():
+            if not pairs:
+                continue
+            pairs.sort(key=lambda item: item[0])
+            global_indices = [item[0] for item in pairs]
+            local_indices = [item[1] for item in pairs]
+
+            config.global_frame_indices_by_traj[traj_idx] = global_indices
+            config.local_frame_indices_by_traj[traj_idx] = local_indices
+
+            if config.use_time:
+                trajectory = config.pipeline_data.trajectory_data.trajectories[traj_idx]
+                x_values = np.asarray(trajectory.time[local_indices], dtype=float) / 1000.0
+            else:
+                x_values = np.arange(len(local_indices), dtype=float)
+            config.x_values_by_traj[traj_idx] = x_values
 
     def _prepare_layout_and_dimensions(self, config: TimeSeriesPlotConfig):
         """

@@ -507,13 +507,16 @@ class SeparateTreeModeHelper:
         ...     fig, "analysis", 0, "comp0", "png", 300, True, "./cache", saved
         ... )
         """
-        # Configure SVG export for editable text
-        SvgExportHelper.apply_svg_config_if_needed(file_format)
-
         tree_filename = (f"decision_trees_{feature_importance_name}_"
                         f"comparison_{idx:02d}_{comparison_name}.{file_format}")
         tree_path = PathUtils.get_cache_file_path(tree_filename, cache_dir)
-        fig.savefig(tree_path, dpi=dpi, bbox_inches='tight')
+        SvgExportHelper.save_figure_with_export_optimizations(
+            fig=fig,
+            filepath=tree_path,
+            file_format=file_format,
+            dpi=dpi,
+            bbox_inches='tight',
+        )
         saved_files.append(tree_path)
         print(f"Saved: {tree_path}")
 
@@ -550,12 +553,15 @@ class SeparateTreeModeHelper:
         ...     fig, "png", 300, "./cache", temp
         ... )
         """
-        # Configure SVG export for editable text
-        SvgExportHelper.apply_svg_config_if_needed(file_format)
-
         temp_filename = f"tree_temp_{uuid.uuid4().hex}.{file_format}"
         temp_path = PathUtils.get_cache_file_path(temp_filename, cache_dir)
-        fig.savefig(temp_path, dpi=dpi, bbox_inches='tight')
+        SvgExportHelper.save_figure_with_export_optimizations(
+            fig=fig,
+            filepath=temp_path,
+            file_format=file_format,
+            dpi=dpi,
+            bbox_inches='tight',
+        )
         temp_files.append(temp_path)
         SeparateTreeModeHelper._display_image_in_jupyter(temp_path)
 

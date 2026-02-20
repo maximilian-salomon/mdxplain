@@ -391,7 +391,10 @@ class TimeSeriesTagColoringHelper:
         smoothing_window: int = 51,
         smoothing_polyorder: int = 3,
         show_unsmoothed_background: bool = True,
-        thickness: float = 1.0
+        thickness: float = 1.0,
+        global_frame_indices_by_traj: Optional[Dict[int, List[int]]] = None,
+        local_frame_indices_by_traj: Optional[Dict[int, List[int]]] = None,
+        x_values_by_traj: Optional[Dict[int, np.ndarray]] = None
     ) -> None:
         """
         Plot feature lines colored by tags.
@@ -444,7 +447,10 @@ class TimeSeriesTagColoringHelper:
                     ax, pipeline_data, matrix, frame_mapping,
                     traj_idx, feat_idx, use_time, color,
                     smoothing, smoothing_method, smoothing_window,
-                    smoothing_polyorder, show_unsmoothed_background, thickness
+                    smoothing_polyorder, show_unsmoothed_background, thickness,
+                    traj_frame_indices=None if global_frame_indices_by_traj is None else global_frame_indices_by_traj.get(traj_idx),
+                    traj_local_frames=None if local_frame_indices_by_traj is None else local_frame_indices_by_traj.get(traj_idx),
+                    traj_x_values=None if x_values_by_traj is None else x_values_by_traj.get(traj_idx)
                 )
 
     @staticmethod
@@ -462,7 +468,10 @@ class TimeSeriesTagColoringHelper:
         smoothing_window: int = 51,
         smoothing_polyorder: int = 3,
         show_unsmoothed_background: bool = True,
-        thickness: float = 1.0
+        thickness: float = 1.0,
+        global_frame_indices_by_traj: Optional[Dict[int, List[int]]] = None,
+        local_frame_indices_by_traj: Optional[Dict[int, List[int]]] = None,
+        x_values_by_traj: Optional[Dict[int, np.ndarray]] = None
     ) -> None:
         """
         Plot feature lines colored by trajectory.
@@ -515,7 +524,10 @@ class TimeSeriesTagColoringHelper:
                 ax, pipeline_data, matrix, frame_mapping,
                 traj_idx, feat_idx, use_time, color,
                 smoothing, smoothing_method, smoothing_window,
-                smoothing_polyorder, show_unsmoothed_background, thickness
+                smoothing_polyorder, show_unsmoothed_background, thickness,
+                traj_frame_indices=None if global_frame_indices_by_traj is None else global_frame_indices_by_traj.get(traj_idx),
+                traj_local_frames=None if local_frame_indices_by_traj is None else local_frame_indices_by_traj.get(traj_idx),
+                traj_x_values=None if x_values_by_traj is None else x_values_by_traj.get(traj_idx)
             )
 
     @staticmethod
@@ -533,7 +545,10 @@ class TimeSeriesTagColoringHelper:
         smoothing_window: int = 51,
         smoothing_polyorder: int = 3,
         show_unsmoothed_background: bool = True,
-        thickness: float = 1.0
+        thickness: float = 1.0,
+        traj_frame_indices: Optional[List[int]] = None,
+        traj_local_frames: Optional[List[int]] = None,
+        traj_x_values: Optional[np.ndarray] = None
     ) -> None:
         """
         Plot single trajectory line.
@@ -579,17 +594,22 @@ class TimeSeriesTagColoringHelper:
         ...     ax, pipeline_data, matrix, frame_mapping, 0, 5, True, "blue"
         ... )
         """
-        trajectory = pipeline_data.trajectory_data.trajectories[traj_idx]
-
-        traj_frame_indices = TimeSeriesTagColoringHelper._get_trajectory_frame_indices(
-            frame_mapping, traj_idx
-        )
+        if traj_frame_indices is None:
+            traj_frame_indices = TimeSeriesTagColoringHelper._get_trajectory_frame_indices(
+                frame_mapping, traj_idx
+            )
 
         y_values = matrix[traj_frame_indices, feat_idx]
 
-        if use_time:
-            local_frames = [frame_mapping[i][1] for i in traj_frame_indices]
-            x_values = trajectory.time[local_frames] / 1000
+        if traj_x_values is not None:
+            x_values = np.asarray(traj_x_values)
+            if x_values.size != len(y_values):
+                x_values = x_values[:len(y_values)]
+        elif use_time:
+            if traj_local_frames is None:
+                traj_local_frames = [frame_mapping[i][1] for i in traj_frame_indices]
+            trajectory = pipeline_data.trajectory_data.trajectories[traj_idx]
+            x_values = trajectory.time[traj_local_frames] / 1000
         else:
             x_values = np.arange(len(y_values))
 

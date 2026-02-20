@@ -908,8 +908,20 @@ class LandscapePlotter:
         """
         data_x = decomp_data[:, dim_x]
         data_y = decomp_data[:, dim_y]
+        data_bounds = (
+            float(np.min(data_x)),
+            float(np.max(data_x)),
+            float(np.min(data_y)),
+            float(np.max(data_y)),
+        )
 
-        xlim, ylim = self._calculate_plot_limits(data_x, data_y, xlim, ylim)
+        xlim, ylim = self._calculate_plot_limits(
+            data_x=data_x,
+            data_y=data_y,
+            xlim=xlim,
+            ylim=ylim,
+            data_bounds=data_bounds
+        )
         bins = self._calculate_bins(data_x, data_y, bins)
 
         self._plot_background(
@@ -923,7 +935,8 @@ class LandscapePlotter:
             cluster_contour, cluster_contour_voronoi, bins, data_scatter,
             contour_label_fontsize, frame_tag_map, tag_colors, unselected_indices,
             tag_densities,
-            scatter_size
+            scatter_size,
+            data_bounds
         )
 
         if centers is not None:
@@ -943,7 +956,8 @@ class LandscapePlotter:
         data_x: np.ndarray,
         data_y: np.ndarray,
         xlim: Optional[Tuple[float, float]],
-        ylim: Optional[Tuple[float, float]]
+        ylim: Optional[Tuple[float, float]],
+        data_bounds: Optional[Tuple[float, float, float, float]] = None
     ) -> Tuple[Tuple[float, float], Tuple[float, float]]:
         """
         Calculate plot limits with 5% padding if not provided.
@@ -966,12 +980,20 @@ class LandscapePlotter:
         ylim : Tuple[float, float]
             Y-axis limits
         """
+        if data_bounds is None:
+            x_min = float(np.min(data_x))
+            x_max = float(np.max(data_x))
+            y_min = float(np.min(data_y))
+            y_max = float(np.max(data_y))
+        else:
+            x_min, x_max, y_min, y_max = data_bounds
+
         if xlim is None:
-            x_range = data_x.max() - data_x.min()
-            xlim = (data_x.min() - 0.05 * x_range, data_x.max() + 0.05 * x_range)
+            x_range = x_max - x_min
+            xlim = (x_min - 0.05 * x_range, x_max + 0.05 * x_range)
         if ylim is None:
-            y_range = data_y.max() - data_y.min()
-            ylim = (data_y.min() - 0.05 * y_range, data_y.max() + 0.05 * y_range)
+            y_range = y_max - y_min
+            ylim = (y_min - 0.05 * y_range, y_max + 0.05 * y_range)
         return xlim, ylim
 
     def _calculate_bins(
@@ -1092,7 +1114,8 @@ class LandscapePlotter:
         tag_colors: Optional[Dict[str, str]],
         unselected_indices: Optional[List[int]],
         tag_densities: bool,
-        scatter_size: int
+        scatter_size: int,
+        data_bounds: Optional[Tuple[float, float, float, float]] = None
     ) -> None:
         """
         Plot cluster overlay as contours or scatter.
@@ -1140,10 +1163,12 @@ class LandscapePlotter:
             )
             LandscapeRenderingHelper.plot_tag_density_contours(
                 ax, data_x, data_y, frame_tag_map, tag_colors, bins,
-                contour_label_fontsize=contour_label_fontsize
+                contour_label_fontsize=contour_label_fontsize,
+                data_bounds=data_bounds
             )
             return
 
+        unique_labels = np.unique(labels) if labels is not None else None
         if labels is not None and cluster_contour:
             if cluster_contour_voronoi:
                 LandscapeRenderingHelper.plot_cluster_voronoi(
@@ -1152,13 +1177,16 @@ class LandscapePlotter:
             else:
                 LandscapeRenderingHelper.plot_cluster_density_contours(
                     ax, data_x, data_y, labels, cluster_colors, bins,
-                    contour_label_fontsize=contour_label_fontsize
+                    contour_label_fontsize=contour_label_fontsize,
+                    unique_labels=unique_labels,
+                    data_bounds=data_bounds
                 )
         else:
             LandscapeRenderingHelper.create_scatter(
                 ax, data_x, data_y, labels, cluster_colors, alpha, data_scatter,
                 frame_tag_map=frame_tag_map, tag_colors=tag_colors,
-                unselected_indices=unselected_indices, scatter_size=scatter_size
+                unselected_indices=unselected_indices, scatter_size=scatter_size,
+                unique_labels=unique_labels
             )
 
     def _load_clustering_data(
@@ -1399,5 +1427,11 @@ class LandscapePlotter:
         if not filename.endswith(f".{file_format}"):
             filename = f"{filename}.{file_format}"
         filepath = PathUtils.get_cache_file_path(filename, self.cache_dir)
-        fig.savefig(filepath, dpi=dpi, format=file_format, bbox_inches='tight')
+        SvgExportHelper.save_figure_with_export_optimizations(
+            fig=fig,
+            filepath=filepath,
+            file_format=file_format,
+            dpi=dpi,
+            bbox_inches='tight',
+        )
         print(f"Figure saved to: {filepath}")

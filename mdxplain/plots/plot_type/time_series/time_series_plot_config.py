@@ -285,6 +285,9 @@ class TimeSeriesPlotConfig:
     all_features: List[Tuple[str, str]] = field(default_factory=list)
     selected_matrix: Optional[np.ndarray] = None
     frame_mapping: Dict[int, Tuple[int, int]] = field(default_factory=dict)
+    global_frame_indices_by_traj: Dict[int, List[int]] = field(default_factory=dict)
+    local_frame_indices_by_traj: Dict[int, List[int]] = field(default_factory=dict)
+    x_values_by_traj: Dict[int, np.ndarray] = field(default_factory=dict)
 
     # Layout data (set during plotting)
     layout: List = field(default_factory=list)

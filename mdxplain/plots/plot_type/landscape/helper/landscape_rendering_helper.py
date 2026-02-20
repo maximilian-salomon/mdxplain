@@ -27,8 +27,6 @@ and cluster centers in landscape visualizations.
 
 from typing import Dict, List, Optional, Tuple
 import numpy as np
-import pandas as pd
-import seaborn as sns
 import matplotlib.pyplot as plt
 from scipy.spatial import cKDTree
 from scipy.stats import gaussian_kde
@@ -490,7 +488,8 @@ class LandscapeRenderingHelper:
         frame_tag_map: Optional[Dict[int, str]] = None,
         tag_colors: Optional[Dict[str, str]] = None,
         unselected_indices: Optional[List[int]] = None,
-        scatter_size: int = 1
+        scatter_size: int = 1,
+        unique_labels: Optional[np.ndarray] = None
     ) -> None:
         """
         Create scatter plot - clustered, tag-based, or gray.
@@ -549,7 +548,7 @@ class LandscapeRenderingHelper:
             )
         elif labels is not None:
             LandscapeRenderingHelper._plot_cluster_colored_scatter(
-                ax, data_x, data_y, labels, cluster_colors, alpha, scatter_size
+                ax, data_x, data_y, labels, cluster_colors, alpha, scatter_size, unique_labels
             )
         elif data_scatter:
             LandscapeRenderingHelper._plot_gray_scatter(
@@ -631,25 +630,43 @@ class LandscapeRenderingHelper:
         -------
         None
         """
-        indices = list(frame_tag_map.keys())
-        tags = [frame_tag_map[i] for i in indices]
-        df = pd.DataFrame({
-            'x': data_x[indices],
-            'y': data_y[indices],
-            'tag': tags
-        })
-        sns.scatterplot(
-            data=df,
-            x='x',
-            y='y',
-            hue='tag',
-            palette=tag_colors,
-            ax=ax,
-            s=scatter_size,
-            alpha=alpha,
-            legend=False,
-            zorder=2
-        )
+        if not frame_tag_map:
+            return
+
+        tag_index_groups = LandscapeRenderingHelper._build_tag_index_groups(frame_tag_map)
+        for tag, tag_indices in tag_index_groups.items():
+            color = tag_colors.get(tag, "#808080") if tag_colors else "#808080"
+            ax.scatter(
+                data_x[tag_indices],
+                data_y[tag_indices],
+                color=color,
+                s=scatter_size,
+                alpha=alpha,
+                zorder=2
+            )
+
+    @staticmethod
+    def _build_tag_index_groups(frame_tag_map: Dict[int, str]) -> Dict[str, np.ndarray]:
+        """
+        Build ordered `tag -> frame-indices` groups from a frame-tag mapping.
+
+        Parameters
+        ----------
+        frame_tag_map : Dict[int, str]
+            Mapping from frame index to tag.
+
+        Returns
+        -------
+        Dict[str, np.ndarray]
+            Ordered mapping of tag names to frame index arrays.
+        """
+        groups: Dict[str, List[int]] = {}
+        for frame_idx, tag in frame_tag_map.items():
+            groups.setdefault(tag, []).append(int(frame_idx))
+        return {
+            tag: np.asarray(indices, dtype=int)
+            for tag, indices in groups.items()
+        }
 
     @staticmethod
     def _plot_cluster_colored_scatter(
@@ -659,7 +676,8 @@ class LandscapeRenderingHelper:
         labels: np.ndarray,
         cluster_colors: Dict[int, str],
         alpha: float,
-        scatter_size: int = 1
+        scatter_size: int = 1,
+        unique_labels: Optional[np.ndarray] = None
     ) -> None:
         """
         Plot scatter with cluster-based coloring.
@@ -685,19 +703,21 @@ class LandscapeRenderingHelper:
         -------
         None
         """
-        df = pd.DataFrame({'x': data_x, 'y': data_y, 'cluster': labels})
-        sns.scatterplot(
-            data=df,
-            x='x',
-            y='y',
-            hue='cluster',
-            palette=cluster_colors,
-            ax=ax,
-            s=scatter_size,
-            alpha=alpha,
-            legend=False,
-            zorder=2
-        )
+        if unique_labels is None:
+            unique_labels = np.unique(labels)
+        for label in unique_labels:
+            cluster_mask = labels == label
+            if not np.any(cluster_mask):
+                continue
+            color = cluster_colors.get(label, "#808080") if cluster_colors else "#808080"
+            ax.scatter(
+                data_x[cluster_mask],
+                data_y[cluster_mask],
+                color=color,
+                s=scatter_size,
+                alpha=alpha,
+                zorder=2
+            )
 
     @staticmethod
     def _plot_gray_scatter(
@@ -727,14 +747,12 @@ class LandscapeRenderingHelper:
         -------
         None
         """
-        sns.scatterplot(
-            x=data_x,
-            y=data_y,
-            ax=ax,
+        ax.scatter(
+            data_x,
+            data_y,
             color='gray',
             s=scatter_size,
             alpha=alpha,
-            legend=False,
             zorder=2
         )
 
@@ -818,7 +836,9 @@ class LandscapeRenderingHelper:
         cluster_colors: Dict[int, str],
         bins: int,
         percentile_levels: List[int] = [20, 40, 60, 80],
-        contour_label_fontsize: Optional[int] = None
+        contour_label_fontsize: Optional[int] = None,
+        unique_labels: Optional[np.ndarray] = None,
+        data_bounds: Optional[Tuple[float, float, float, float]] = None
     ) -> None:
         """
         Plot cluster density contours with percentile labels.
@@ -856,12 +876,26 @@ class LandscapeRenderingHelper:
         ...     ax, data_x, data_y, labels, colors, 50, [20, 40, 60, 80]
         ... )
         """
-        # Create grid for KDE evaluation
-        x_grid = np.linspace(data_x.min(), data_x.max(), bins)
-        y_grid = np.linspace(data_y.min(), data_y.max(), bins)
-        X, Y = np.meshgrid(x_grid, y_grid)
+        if unique_labels is None:
+            unique_labels = np.unique(labels)
 
-        for cluster_id in np.unique(labels):
+        if data_bounds is None:
+            x_min = float(np.min(data_x))
+            x_max = float(np.max(data_x))
+            y_min = float(np.min(data_y))
+            y_max = float(np.max(data_y))
+        else:
+            x_min, x_max, y_min, y_max = data_bounds
+
+        # Create grid for KDE evaluation
+        x_grid = np.linspace(x_min, x_max, bins)
+        y_grid = np.linspace(y_min, y_max, bins)
+        X, Y = np.meshgrid(x_grid, y_grid)
+        query_points = np.vstack([X.ravel(), Y.ravel()])
+        percentile_labels = [f'{100-pct:.0f}%' for pct in percentile_levels]
+        kde_cache: Dict[int, gaussian_kde] = {}
+
+        for cluster_id in unique_labels:
             if cluster_id < 0:
                 continue
 
@@ -871,11 +905,14 @@ class LandscapeRenderingHelper:
             if cluster_points.shape[1] < 3:
                 continue
 
-            kde = gaussian_kde(cluster_points)
+            kde = kde_cache.get(int(cluster_id))
+            if kde is None:
+                kde = gaussian_kde(cluster_points)
+                kde_cache[int(cluster_id)] = kde
             point_densities = kde(cluster_points)
             levels_to_plot = np.percentile(point_densities, percentile_levels)
 
-            density_grid = kde(np.vstack([X.ravel(), Y.ravel()])).reshape(X.shape)
+            density_grid = kde(query_points).reshape(X.shape)
 
             CS = ax.contour(
                 X, Y, density_grid,
@@ -885,8 +922,8 @@ class LandscapeRenderingHelper:
             )
 
             fmt = {
-                level: f'{100-pct:.0f}%'
-                for level, pct in zip(levels_to_plot, percentile_levels)
+                level: label
+                for level, label in zip(levels_to_plot, percentile_labels)
             }
             ax.clabel(CS, CS.levels, inline=True, fmt=fmt, fontsize=contour_label_fontsize or 10)
 
@@ -899,7 +936,8 @@ class LandscapeRenderingHelper:
         tag_colors: Optional[Dict[str, str]],
         bins: int,
         percentile_levels: List[int] = [20, 40, 60, 80],
-        contour_label_fontsize: Optional[int] = None
+        contour_label_fontsize: Optional[int] = None,
+        data_bounds: Optional[Tuple[float, float, float, float]] = None
     ) -> None:
         """
         Plot tag density contours with percentile labels.
@@ -928,38 +966,43 @@ class LandscapeRenderingHelper:
         if tag_colors is None:
             return
 
-        indices = list(frame_tag_map.keys())
-        tags = [frame_tag_map[i] for i in indices]
-
+        indices = np.fromiter(frame_tag_map.keys(), dtype=int, count=len(frame_tag_map))
+        tags = np.asarray([frame_tag_map[int(i)] for i in indices], dtype=object)
         x_vals = data_x[indices]
         y_vals = data_y[indices]
 
-        # Create grid for KDE evaluation
-        x_grid = np.linspace(data_x.min(), data_x.max(), bins)
-        y_grid = np.linspace(data_y.min(), data_y.max(), bins)
-        X, Y = np.meshgrid(x_grid, y_grid)
+        if data_bounds is None:
+            x_min = float(np.min(data_x))
+            x_max = float(np.max(data_x))
+            y_min = float(np.min(data_y))
+            y_max = float(np.max(data_y))
+        else:
+            x_min, x_max, y_min, y_max = data_bounds
 
-        # Ordered unique tags
-        seen = set()
-        ordered_tags = []
-        for tag in tags:
-            if tag in seen:
-                continue
-            seen.add(tag)
-            ordered_tags.append(tag)
+        # Create grid for KDE evaluation
+        x_grid = np.linspace(x_min, x_max, bins)
+        y_grid = np.linspace(y_min, y_max, bins)
+        X, Y = np.meshgrid(x_grid, y_grid)
+        query_points = np.vstack([X.ravel(), Y.ravel()])
+        ordered_tags = list(dict.fromkeys(tags.tolist()))
+        percentile_labels = [f'{100-pct:.0f}%' for pct in percentile_levels]
+        kde_cache: Dict[str, gaussian_kde] = {}
 
         for tag in ordered_tags:
-            mask = [t == tag for t in tags]
+            mask = tags == tag
             tag_points = np.vstack([x_vals[mask], y_vals[mask]])
 
             if tag_points.shape[1] < 3:
                 continue
 
-            kde = gaussian_kde(tag_points)
+            kde = kde_cache.get(tag)
+            if kde is None:
+                kde = gaussian_kde(tag_points)
+                kde_cache[tag] = kde
             point_densities = kde(tag_points)
             levels_to_plot = np.percentile(point_densities, percentile_levels)
 
-            density_grid = kde(np.vstack([X.ravel(), Y.ravel()])).reshape(X.shape)
+            density_grid = kde(query_points).reshape(X.shape)
 
             color = tag_colors.get(tag, "#808080")
             CS = ax.contour(
@@ -970,8 +1013,8 @@ class LandscapeRenderingHelper:
             )
 
             fmt = {
-                level: f'{100-pct:.0f}%'
-                for level, pct in zip(levels_to_plot, percentile_levels)
+                level: label
+                for level, label in zip(levels_to_plot, percentile_labels)
             }
             ax.clabel(CS, CS.levels, inline=True, fmt=fmt, fontsize=contour_label_fontsize or 10)
 

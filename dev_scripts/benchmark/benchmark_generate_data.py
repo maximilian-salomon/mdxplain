@@ -38,6 +38,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 import shutil
+from typing import Optional
 
 import mdtraj as md
 import numpy as np
@@ -77,14 +78,64 @@ def _find_input_files(data_dir: Path) -> tuple[Path, Path]:
     return pdb_files[0], traj_files[0]
 
 
-def _build_stacked_trajectory(
+def _write_trajectory_chunk(writer, chunk: md.Trajectory, xyz: np.ndarray) -> None:
+    """Write one trajectory chunk using a writer with version-safe fallbacks.
+
+    Parameters
+    ----------
+    writer : object
+        MDTraj trajectory writer object from ``md.open``.
+    chunk : md.Trajectory
+        Source chunk providing metadata fields.
+    xyz : np.ndarray
+        Chunk coordinates to write.
+
+    Returns
+    -------
+    None
+        Chunk is written to output writer.
+
+    Notes
+    -----
+    Different MDTraj backends expose slightly different ``write`` signatures.
+    """
+    time_values = getattr(chunk, "time", None)
+    cell_vectors = getattr(chunk, "unitcell_vectors", None)
+    cell_lengths = getattr(chunk, "unitcell_lengths", None)
+    cell_angles = getattr(chunk, "unitcell_angles", None)
+    last_error: Optional[Exception] = None
+    write_attempts = []
+    if cell_vectors is not None:
+        write_attempts.append(lambda: writer.write(xyz, time=time_values, box=cell_vectors))
+    if (cell_lengths is not None) and (cell_angles is not None):
+        write_attempts.append(lambda: writer.write(xyz, time=time_values, cell_lengths=cell_lengths, cell_angles=cell_angles))
+        write_attempts.append(lambda: writer.write(xyz, time_values, cell_lengths, cell_angles))
+    write_attempts.extend(
+        [
+            lambda: writer.write(xyz, time=time_values),
+            lambda: writer.write(xyz),
+        ]
+    )
+    for attempt in write_attempts:
+        try:
+            attempt()
+            return
+        except (TypeError, ValueError) as exc:
+            last_error = exc
+    if last_error is not None:
+        raise last_error
+
+
+def _stream_stacked_trajectory(
     src_traj: Path,
     src_pdb: Path,
+    out_traj: Path,
     factor: int,
     noise_sigma_nm: float,
     seed: int,
-) -> md.Trajectory:
-    """Load, stack, and optionally perturb the source trajectory.
+    chunk_frames: int = 200,
+) -> None:
+    """Stream stacked trajectory to disk with bounded memory usage.
 
     Parameters
     ----------
@@ -92,37 +143,35 @@ def _build_stacked_trajectory(
         Input trajectory file path.
     src_pdb : Path
         Input topology path.
+    out_traj : Path
+        Output trajectory file path.
     factor : int
         Number of times frames are repeated along the frame axis.
     noise_sigma_nm : float
         Standard deviation of Gaussian coordinate noise in nanometers.
     seed : int
         Base random seed used to create deterministic noise per factor.
+    chunk_frames : int, default=200
+        Frames per streamed source chunk.
 
     Returns
     -------
-    md.Trajectory
-        New trajectory instance containing stacked frames.
+    None
+        Stacked trajectory is written to disk.
 
     Notes
     -----
-    Noise is generated with ``numpy.random.default_rng`` and cast to the source
-    coordinate dtype to avoid unnecessary precision changes.
+    This avoids materializing ``factor`` copies in RAM.
     """
-    # Load source trajectory with explicit topology to preserve atom mapping.
-    source = md.load(str(src_traj), top=str(src_pdb))
-
-    # Stack coordinates and timestamps by requested multiplicative factor.
-    stacked_xyz = np.concatenate([source.xyz] * factor, axis=0)
-    stacked_time = np.concatenate([source.time] * factor, axis=0)
-
-    # Apply optional reproducible Gaussian perturbation to stacked coordinates.
-    if noise_sigma_nm > 0.0:
-        rng = np.random.default_rng(seed + factor)
-        noise = rng.normal(0.0, noise_sigma_nm, size=stacked_xyz.shape)
-        stacked_xyz = stacked_xyz + noise.astype(stacked_xyz.dtype, copy=False)
-
-    return md.Trajectory(xyz=stacked_xyz, topology=source.topology, time=stacked_time)
+    rng = np.random.default_rng(seed + factor)
+    with md.open(str(out_traj), mode="w") as writer:
+        for _ in range(int(factor)):
+            for chunk in md.iterload(str(src_traj), top=str(src_pdb), chunk=int(chunk_frames)):
+                xyz = chunk.xyz
+                if noise_sigma_nm > 0.0:
+                    noise = rng.normal(0.0, noise_sigma_nm, size=xyz.shape)
+                    xyz = xyz + noise.astype(xyz.dtype, copy=False)
+                _write_trajectory_chunk(writer, chunk, xyz)
 
 
 def _write_stacked_dataset(
@@ -169,8 +218,7 @@ def _write_stacked_dataset(
     shutil.copy2(src_pdb, out_pdb)
 
     # Build and persist stacked trajectory for this benchmark factor.
-    stacked = _build_stacked_trajectory(src_traj, src_pdb, factor, noise_sigma_nm, seed)
-    stacked.save_xtc(str(out_traj))
+    _stream_stacked_trajectory(src_traj, src_pdb, out_traj, factor, noise_sigma_nm, seed)
 
 
 def parse_args() -> argparse.Namespace:

@@ -196,6 +196,9 @@ class TimeSeriesFeaturePlotHelper:
             traj_idx=0,
             use_time=config.use_time
         )
+        cached_reference = config.x_values_by_traj.get(0)
+        if cached_reference is not None and cached_reference.size > 0:
+            x_values = cached_reference
         TimeSeriesFeaturePlotHelper._configure_axes(
             ax=ax,
             feat_type=feat_type,
@@ -268,7 +271,10 @@ class TimeSeriesFeaturePlotHelper:
                 smoothing_window=config.smoothing_window,
                 smoothing_polyorder=config.smoothing_polyorder,
                 show_unsmoothed_background=config.show_unsmoothed_background,
-                thickness=config.thickness
+                thickness=config.thickness,
+                global_frame_indices_by_traj=config.global_frame_indices_by_traj,
+                local_frame_indices_by_traj=config.local_frame_indices_by_traj,
+                x_values_by_traj=config.x_values_by_traj
             )
             return
 
@@ -286,7 +292,10 @@ class TimeSeriesFeaturePlotHelper:
             smoothing_window=config.smoothing_window,
             smoothing_polyorder=config.smoothing_polyorder,
             show_unsmoothed_background=config.show_unsmoothed_background,
-            thickness=config.thickness
+            thickness=config.thickness,
+            global_frame_indices_by_traj=config.global_frame_indices_by_traj,
+            local_frame_indices_by_traj=config.local_frame_indices_by_traj,
+            x_values_by_traj=config.x_values_by_traj
         )
 
     @staticmethod

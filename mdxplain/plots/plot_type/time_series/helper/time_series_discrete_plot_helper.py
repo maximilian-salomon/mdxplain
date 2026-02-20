@@ -84,8 +84,12 @@ class TimeSeriesDiscretePlotHelper:
                 fallback_from_data=True
             )
 
-        frame_indices_by_traj = TimeSeriesDiscretePlotHelper._build_frame_indices_by_trajectory(
-            config.frame_mapping
+        frame_indices_by_traj = (
+            config.global_frame_indices_by_traj
+            if config.global_frame_indices_by_traj
+            else TimeSeriesDiscretePlotHelper._build_frame_indices_by_trajectory(
+                config.frame_mapping
+            )
         )
         selector_data = TimeSeriesDiscretePlotHelper._collect_selector_data_for_axis(
             config=config,
@@ -129,8 +133,12 @@ class TimeSeriesDiscretePlotHelper:
             return
 
         value_to_position = axis_config.get("value_to_position", {})
-        frame_indices_by_traj = TimeSeriesDiscretePlotHelper._build_frame_indices_by_trajectory(
-            config.frame_mapping
+        frame_indices_by_traj = (
+            config.global_frame_indices_by_traj
+            if config.global_frame_indices_by_traj
+            else TimeSeriesDiscretePlotHelper._build_frame_indices_by_trajectory(
+                config.frame_mapping
+            )
         )
         n_traces = TimeSeriesDiscretePlotHelper._count_overlay_traces(
             config=config,
@@ -228,8 +236,12 @@ class TimeSeriesDiscretePlotHelper:
             return
 
         value_to_position = axis_config.get("value_to_position", {})
-        frame_indices_by_traj = TimeSeriesDiscretePlotHelper._build_frame_indices_by_trajectory(
-            config.frame_mapping
+        frame_indices_by_traj = (
+            config.global_frame_indices_by_traj
+            if config.global_frame_indices_by_traj
+            else TimeSeriesDiscretePlotHelper._build_frame_indices_by_trajectory(
+                config.frame_mapping
+            )
         )
         mapped_series: List[np.ndarray] = []
         reference_traj_idx: Optional[int] = None
@@ -509,8 +521,12 @@ class TimeSeriesDiscretePlotHelper:
             (x_values, y_values)
         """
         if traj_frame_indices is None:
-            frame_indices_by_traj = TimeSeriesDiscretePlotHelper._build_frame_indices_by_trajectory(
-                config.frame_mapping
+            frame_indices_by_traj = (
+                config.global_frame_indices_by_traj
+                if config.global_frame_indices_by_traj
+                else TimeSeriesDiscretePlotHelper._build_frame_indices_by_trajectory(
+                    config.frame_mapping
+                )
             )
             traj_frame_indices = frame_indices_by_traj.get(traj_idx, [])
         if not traj_frame_indices:
@@ -702,11 +718,20 @@ class TimeSeriesDiscretePlotHelper:
             return np.array([], dtype=float)
 
         if config.use_time:
-            trajectory = config.pipeline_data.trajectory_data.trajectories[traj_idx]
-            local_frames = [config.frame_mapping[i][1] for i in traj_frame_indices]
-            x_values = np.asarray(trajectory.time[local_frames], dtype=float) / 1000.0
+            if config.x_values_by_traj and traj_idx in config.x_values_by_traj:
+                x_values = np.asarray(config.x_values_by_traj[traj_idx], dtype=float)
+            else:
+                trajectory = config.pipeline_data.trajectory_data.trajectories[traj_idx]
+                if config.local_frame_indices_by_traj and traj_idx in config.local_frame_indices_by_traj:
+                    local_frames = config.local_frame_indices_by_traj[traj_idx]
+                else:
+                    local_frames = [config.frame_mapping[i][1] for i in traj_frame_indices]
+                x_values = np.asarray(trajectory.time[local_frames], dtype=float) / 1000.0
         else:
-            x_values = np.arange(len(traj_frame_indices), dtype=float)
+            if config.x_values_by_traj and traj_idx in config.x_values_by_traj:
+                x_values = np.asarray(config.x_values_by_traj[traj_idx], dtype=float)
+            else:
+                x_values = np.arange(len(traj_frame_indices), dtype=float)
 
         if n_points is None:
             return x_values

@@ -94,11 +94,14 @@ class MembershipBarRenderer:
         labels, cluster_colors = ClusteringDataHelper.load_clustering_data(
             pipeline_data, clustering_name
         )
+        trajectory_start_offsets = MembershipBarRenderer._build_trajectory_start_offsets(
+            pipeline_data
+        )
 
         prepared_data = {}
         for traj_idx in traj_indices:
             traj_labels = MembershipBarRenderer._get_trajectory_labels(
-                pipeline_data, labels, traj_idx
+                pipeline_data, labels, traj_idx, trajectory_start_offsets
             )
             blocks = BlockOptimizerHelper.labels_to_blocks(traj_labels)
             x_values = TimeSeriesDataPreparer.get_x_values(
@@ -163,7 +166,8 @@ class MembershipBarRenderer:
     def _get_trajectory_labels(
         pipeline_data: PipelineData,
         labels: np.ndarray,
-        traj_idx: int
+        traj_idx: int,
+        trajectory_start_offsets: Dict[int, int]
     ) -> np.ndarray:
         """
         Extract labels for trajectory.
@@ -182,12 +186,33 @@ class MembershipBarRenderer:
         numpy.ndarray
             Labels for this trajectory
         """
-        start_frame = sum(
-            pipeline_data.trajectory_data.trajectories[i].n_frames
-            for i in range(traj_idx)
-        )
+        start_frame = trajectory_start_offsets.get(traj_idx, 0)
         end_frame = start_frame + pipeline_data.trajectory_data.trajectories[traj_idx].n_frames
         return labels[start_frame:end_frame]
+
+    @staticmethod
+    def _build_trajectory_start_offsets(
+        pipeline_data: PipelineData
+    ) -> Dict[int, int]:
+        """
+        Build cumulative frame start offsets for all loaded trajectories.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data container.
+
+        Returns
+        -------
+        Dict[int, int]
+            Mapping `trajectory_index -> start_frame_global`.
+        """
+        offsets: Dict[int, int] = {}
+        current = 0
+        for traj_idx, trajectory in enumerate(pipeline_data.trajectory_data.trajectories):
+            offsets[traj_idx] = current
+            current += int(trajectory.n_frames)
+        return offsets
 
     @staticmethod
     def _render_blocks(

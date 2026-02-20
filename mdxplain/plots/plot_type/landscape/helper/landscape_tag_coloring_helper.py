@@ -129,13 +129,16 @@ class LandscapeTagColoringHelper:
 
         frame_mapping = decomp_obj.get_frame_mapping()
         n_frames = decomp_obj.data.shape[0]
+        traj_tag_map = LandscapeTagColoringHelper._build_trajectory_tag_map(
+            frame_mapping=frame_mapping,
+            n_frames=n_frames,
+            trajectory_data=trajectory_data,
+            tags_for_coloring=tags_for_coloring
+        )
 
         for frame_idx in range(n_frames):
             traj_idx, _ = frame_mapping[frame_idx]
-            matching_tags = TagHelper.get_matching_tags(
-                trajectory_data, traj_idx, tags_for_coloring
-            )
-            best_tag = TagHelper.filter_by_priority(matching_tags, tags_for_coloring)
+            best_tag = traj_tag_map.get(traj_idx)
 
             if best_tag is not None:
                 frame_tag_map[frame_idx] = best_tag
@@ -143,3 +146,48 @@ class LandscapeTagColoringHelper:
                 unselected_indices.append(frame_idx)
 
         return frame_tag_map, unselected_indices
+
+    @staticmethod
+    def _build_trajectory_tag_map(
+        frame_mapping: Dict[int, Tuple[int, int]],
+        n_frames: int,
+        trajectory_data: TrajectoryData,
+        tags_for_coloring: List[str]
+    ) -> Dict[int, str]:
+        """
+        Build `traj_idx -> best_tag` once and reuse for all frame assignments.
+
+        Parameters
+        ----------
+        frame_mapping : Dict[int, Tuple[int, int]]
+            Global frame mapping from decomposition.
+        n_frames : int
+            Number of selected decomposition frames.
+        trajectory_data : TrajectoryData
+            Trajectory metadata source.
+        tags_for_coloring : List[str]
+            Tag priority list (last wins).
+
+        Returns
+        -------
+        Dict[int, str]
+            Mapping from trajectory index to best matching tag.
+        """
+        unique_traj_indices = {
+            frame_mapping[frame_idx][0]
+            for frame_idx in range(n_frames)
+        }
+        traj_tag_map: Dict[int, str] = {}
+        for traj_idx in unique_traj_indices:
+            matching_tags = TagHelper.get_matching_tags(
+                trajectory_data=trajectory_data,
+                traj_idx=traj_idx,
+                tags_for_coloring=tags_for_coloring
+            )
+            best_tag = TagHelper.filter_by_priority(
+                matching_tags=matching_tags,
+                tags_for_coloring=tags_for_coloring
+            )
+            if best_tag is not None:
+                traj_tag_map[traj_idx] = best_tag
+        return traj_tag_map

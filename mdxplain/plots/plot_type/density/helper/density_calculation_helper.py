@@ -28,6 +28,7 @@ height-dependent Gaussian bells.
 
 from typing import Tuple, Union, Optional, Dict, Any
 import numpy as np
+from numpy.linalg import LinAlgError
 from scipy.stats import gaussian_kde
 
 from mdxplain.plots.helper.discrete_feature_helper import DiscreteFeatureHelper
@@ -308,16 +309,55 @@ class DensityCalculationHelper:
         - "silverman": Bandwidth = n^(-1/5) x min(σ, IQR/1.34)
         - float: Multiply default bandwidth by this factor
         """
-        # Create Gaussian KDE with specified bandwidth
-        kde = gaussian_kde(data, bw_method=kde_bandwidth)
+        data = np.asarray(data, dtype=float)
+        if data.size == 0:
+            return np.array([], dtype=float), np.array([], dtype=float)
+
+        data_min = float(np.min(data))
+        data_max = float(np.max(data))
+        data_range = data_max - data_min
+        if data.size <= 1 or np.isclose(data_range, 0.0):
+            return DensityCalculationHelper._calculate_constant_density(
+                center=data_min
+            )
+
+        # Create Gaussian KDE with specified bandwidth.
+        try:
+            kde = gaussian_kde(data, bw_method=kde_bandwidth)
+        except LinAlgError:
+            if np.isclose(data_range, 0.0):
+                return DensityCalculationHelper._calculate_constant_density(
+                    center=float(np.mean(data))
+                )
+            raise
 
         # Calculate auto-range with 20% padding for nice visualization
-        data_range = data.max() - data.min()
-        x_min = data.min() - 0.2 * data_range
-        x_max = data.max() + 0.2 * data_range
+        x_min = data_min - 0.2 * data_range
+        x_max = data_max + 0.2 * data_range
         x_range = np.linspace(x_min, x_max, 300)
 
         # Evaluate KDE at x_range points
         density = kde(x_range)
 
+        return x_range, density
+
+    @staticmethod
+    def _calculate_constant_density(center: float) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Build a narrow Gaussian-like fallback density for constant data.
+
+        Parameters
+        ----------
+        center : float
+            Constant feature value around which fallback density is centered.
+
+        Returns
+        -------
+        Tuple[np.ndarray, np.ndarray]
+            X-grid and normalized bell-shaped density values.
+        """
+        sigma = max(abs(center) * 1e-3, 1e-6)
+        x_range = np.linspace(center - 3.0 * sigma, center + 3.0 * sigma, 300)
+        z = (x_range - center) / sigma
+        density = np.exp(-0.5 * z * z) / (np.sqrt(2.0 * np.pi) * sigma)
         return x_range, density

@@ -19,35 +19,47 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-SVG export helper for editable text elements.
+SVG export helper for editable text and large-plot export stability.
 
-Configures matplotlib to export SVG files with editable text elements
-instead of converting text to paths, allowing full editability in
-SVG editors like Inkscape or Adobe Illustrator.
+Provides utilities that keep SVG text editable and apply save-time
+rendering heuristics for very large artists to reduce vector export cost.
 """
 
+from pathlib import Path
+from typing import Dict, Iterator, List, Optional, Tuple, Union
 import matplotlib.pyplot as plt
-from typing import Dict
+from matplotlib.artist import Artist
+from matplotlib.collections import LineCollection, PathCollection, PolyCollection
+from matplotlib.figure import Figure
+from matplotlib.lines import Line2D
 
 
 class SvgExportHelper:
     """
-    Helper for configuring SVG export with editable text.
+    Helper for plot export configuration and optimizations.
 
-    Provides methods to configure matplotlib's SVG backend to preserve
-    text as editable <text> elements instead of converting them to
-    <path> elements, ensuring compatibility with SVG editors.
+    Centralizes save-time behavior for plot outputs:
+
+    - keep SVG text editable (`svg.fonttype='none'`)
+    - selectively rasterize very heavy artists in vector outputs
+    - temporarily tune path rcParams for very large polylines
 
     Examples
     --------
-    >>> # Before saving as SVG
-    >>> SvgExportHelper.configure_svg_text_editability()
+    >>> SvgExportHelper.apply_svg_config_if_needed("svg")
     >>> fig.savefig("plot.svg", format="svg")
-
-    >>> # Use context manager for temporary configuration
-    >>> with SvgExportHelper.svg_text_editable():
-    ...     fig.savefig("plot.svg", format="svg")
+    >>> SvgExportHelper.save_figure_with_export_optimizations(
+    ...     fig=fig, filepath="plot.svg", file_format="svg", dpi=300
+    ... )
     """
+
+    _VECTOR_FORMATS = {"svg", "pdf", "eps", "ps"}
+    _SCATTER_RASTERIZE_THRESHOLD = 50_000
+    _LINE_RASTERIZE_THRESHOLD = 80_000
+    _POLY_RASTERIZE_THRESHOLD = 80_000
+    _LINE_CHUNKSIZE_THRESHOLD = 100_000
+    _LINE_CHUNKSIZE_VALUE = 20_000
+    _CONSERVATIVE_SIMPLIFY_THRESHOLD = 0.05
 
     @staticmethod
     def configure_svg_text_editability() -> None:
@@ -164,3 +176,288 @@ class SvgExportHelper:
         """
         if file_format.lower() == 'svg':
             SvgExportHelper.configure_svg_text_editability()
+
+    @staticmethod
+    def save_figure_with_export_optimizations(
+        fig: Figure,
+        filepath: Union[str, Path],
+        file_format: str,
+        dpi: int,
+        bbox_inches: str = "tight",
+    ) -> None:
+        """
+        Save figure with export-time performance optimizations.
+
+        Applies optional, human-equivalent optimizations for large plots:
+
+        - editable text config for SVG output
+        - selective rasterization of very heavy artists on vector backends
+        - temporary path rcParam tuning for very large polylines
+
+        Parameters
+        ----------
+        fig : matplotlib.figure.Figure
+            Figure to save.
+        filepath : str or Path
+            Output file path.
+        file_format : str
+            Export format.
+        dpi : int
+            Output resolution in dots per inch.
+        bbox_inches : str, default="tight"
+            Bounding box mode forwarded to ``Figure.savefig``.
+
+        Returns
+        -------
+        None
+            Figure is written to disk.
+
+        Notes
+        -----
+        Temporary artist and rcParam changes are restored in ``finally``.
+        """
+        SvgExportHelper.apply_svg_config_if_needed(file_format)
+
+        old_path_rcparams = SvgExportHelper._apply_path_rendering_rcparams_if_needed(fig)
+        rasterized_states = SvgExportHelper._apply_rasterization_if_needed(fig, file_format)
+        try:
+            fig.savefig(filepath, dpi=dpi, format=file_format, bbox_inches=bbox_inches)
+        finally:
+            SvgExportHelper._restore_rasterized_states(rasterized_states)
+            SvgExportHelper._restore_path_rendering_rcparams(old_path_rcparams)
+
+    @staticmethod
+    def _is_vector_format(file_format: str) -> bool:
+        """
+        Check whether output format is treated as vector backend.
+
+        Parameters
+        ----------
+        file_format : str
+            Requested export format.
+
+        Returns
+        -------
+        bool
+            True when format is one of SVG/PDF/EPS/PS.
+        """
+        return file_format.lower() in SvgExportHelper._VECTOR_FORMATS
+
+    @staticmethod
+    def _iter_data_artists(fig: Figure) -> Iterator[Artist]:
+        """
+        Iterate over data-carrying artists in all figure axes.
+
+        Parameters
+        ----------
+        fig : matplotlib.figure.Figure
+            Figure containing axes and artists.
+
+        Yields
+        ------
+        matplotlib.artist.Artist
+            Line artists and collection artists from each axis.
+        """
+        for ax in fig.get_axes():
+            for line in ax.lines:
+                yield line
+            for collection in ax.collections:
+                yield collection
+
+    @staticmethod
+    def _estimate_artist_points(artist: Artist) -> int:
+        """
+        Estimate plotted point/vertex count for supported artists.
+
+        Parameters
+        ----------
+        artist : matplotlib.artist.Artist
+            Artist instance to inspect.
+
+        Returns
+        -------
+        int
+            Estimated number of points/vertices for threshold checks.
+        """
+        if isinstance(artist, Line2D):
+            x_data = artist.get_xdata(orig=False)
+            return int(len(x_data))
+
+        if isinstance(artist, PathCollection):
+            offsets = artist.get_offsets()
+            shape = getattr(offsets, "shape", None)
+            if shape is not None and len(shape) > 0:
+                return int(shape[0])
+            return int(len(offsets))
+
+        if isinstance(artist, LineCollection):
+            segments = artist.get_segments()
+            return int(sum(len(seg) for seg in segments))
+
+        if isinstance(artist, PolyCollection):
+            paths = artist.get_paths()
+            return int(sum(len(path.vertices) for path in paths))
+
+        return 0
+
+    @staticmethod
+    def _should_rasterize_artist(artist: Artist, n_points: int) -> bool:
+        """
+        Decide if an artist should be rasterized by size heuristic.
+
+        Parameters
+        ----------
+        artist : matplotlib.artist.Artist
+            Candidate artist.
+        n_points : int
+            Estimated number of points/vertices in artist.
+
+        Returns
+        -------
+        bool
+            True when artist is above the configured rasterization threshold.
+        """
+        if isinstance(artist, PathCollection):
+            return n_points >= SvgExportHelper._SCATTER_RASTERIZE_THRESHOLD
+        if isinstance(artist, Line2D):
+            return n_points >= SvgExportHelper._LINE_RASTERIZE_THRESHOLD
+        if isinstance(artist, (LineCollection, PolyCollection)):
+            return n_points >= SvgExportHelper._POLY_RASTERIZE_THRESHOLD
+        return False
+
+    @staticmethod
+    def _apply_rasterization_if_needed(
+        fig: Figure,
+        file_format: str
+    ) -> List[Tuple[Artist, Optional[bool]]]:
+        """
+        Rasterize heavy data artists for vector outputs only.
+
+        Parameters
+        ----------
+        fig : matplotlib.figure.Figure
+            Figure to inspect and modify before save.
+        file_format : str
+            Output format to check for vector rendering.
+
+        Returns
+        -------
+        List[Tuple[matplotlib.artist.Artist, Optional[bool]]]
+            Pairs of ``(artist, previous_rasterized_state)`` for restoration.
+        """
+        if not SvgExportHelper._is_vector_format(file_format):
+            return []
+
+        original_states: List[Tuple[Artist, Optional[bool]]] = []
+        for artist in SvgExportHelper._iter_data_artists(fig):
+            n_points = SvgExportHelper._estimate_artist_points(artist)
+            if not SvgExportHelper._should_rasterize_artist(artist, n_points):
+                continue
+            original_states.append((artist, artist.get_rasterized()))
+            artist.set_rasterized(True)
+        return original_states
+
+    @staticmethod
+    def _restore_rasterized_states(
+        rasterized_states: List[Tuple[Artist, Optional[bool]]]
+    ) -> None:
+        """
+        Restore artist rasterization flags after save operation.
+
+        Parameters
+        ----------
+        rasterized_states : List[Tuple[matplotlib.artist.Artist, Optional[bool]]]
+            Previously captured ``(artist, state)`` entries.
+
+        Returns
+        -------
+        None
+            Restores in-memory artist flags.
+        """
+        for artist, old_state in rasterized_states:
+            artist.set_rasterized(old_state)
+
+    @staticmethod
+    def _get_max_polyline_points(fig: Figure) -> int:
+        """
+        Get maximum point count among line-like artists in figure.
+
+        Parameters
+        ----------
+        fig : matplotlib.figure.Figure
+            Figure to inspect.
+
+        Returns
+        -------
+        int
+            Maximum estimated point count of ``Line2D``/``LineCollection``.
+        """
+        max_points = 0
+        for artist in SvgExportHelper._iter_data_artists(fig):
+            if isinstance(artist, (Line2D, LineCollection)):
+                max_points = max(max_points, SvgExportHelper._estimate_artist_points(artist))
+        return max_points
+
+    @staticmethod
+    def _apply_path_rendering_rcparams_if_needed(
+        fig: Figure
+    ) -> Optional[Tuple[int, bool, float]]:
+        """
+        Apply path-rendering rcParams when very large polylines are present.
+
+        Parameters
+        ----------
+        fig : matplotlib.figure.Figure
+            Figure to inspect.
+
+        Returns
+        -------
+        Optional[Tuple[int, bool, float]]
+            Captured old values for ``agg.path.chunksize``,
+            ``path.simplify``, and ``path.simplify_threshold``.
+            Returns None when no changes were necessary.
+        """
+        max_points = SvgExportHelper._get_max_polyline_points(fig)
+        if max_points < SvgExportHelper._LINE_CHUNKSIZE_THRESHOLD:
+            return None
+
+        old_chunksize = int(plt.rcParams.get('agg.path.chunksize', 0))
+        old_simplify = bool(plt.rcParams.get('path.simplify', True))
+        old_simplify_threshold = float(plt.rcParams.get('path.simplify_threshold', 0.0))
+
+        plt.rcParams['agg.path.chunksize'] = max(
+            old_chunksize,
+            SvgExportHelper._LINE_CHUNKSIZE_VALUE
+        )
+        plt.rcParams['path.simplify'] = True
+        plt.rcParams['path.simplify_threshold'] = min(
+            old_simplify_threshold,
+            SvgExportHelper._CONSERVATIVE_SIMPLIFY_THRESHOLD
+        )
+
+        return old_chunksize, old_simplify, old_simplify_threshold
+
+    @staticmethod
+    def _restore_path_rendering_rcparams(
+        old_values: Optional[Tuple[int, bool, float]]
+    ) -> None:
+        """
+        Restore previously captured path-rendering rcParams.
+
+        Parameters
+        ----------
+        old_values : Optional[Tuple[int, bool, float]]
+            Tuple returned by
+            ``_apply_path_rendering_rcparams_if_needed``.
+
+        Returns
+        -------
+        None
+            Restores global matplotlib rcParams when values are provided.
+        """
+        if old_values is None:
+            return
+        old_chunksize, old_simplify, old_simplify_threshold = old_values
+        plt.rcParams['agg.path.chunksize'] = old_chunksize
+        plt.rcParams['path.simplify'] = old_simplify
+        plt.rcParams['path.simplify_threshold'] = old_simplify_threshold

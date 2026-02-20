@@ -608,13 +608,16 @@ class DecisionTreePlotter:
             Figure if render=True, else None
         """
         if save_fig:
-            # Configure SVG export for editable text
-            SvgExportHelper.apply_svg_config_if_needed(file_format)
-
             if filename is None:
                 filename = f"decision_trees_{feature_importance_name}.{file_format}"
             filepath = PathUtils.get_cache_file_path(filename, self.cache_dir)
-            fig.savefig(filepath, dpi=dpi, bbox_inches='tight')
+            SvgExportHelper.save_figure_with_export_optimizations(
+                fig=fig,
+                filepath=filepath,
+                file_format=file_format,
+                dpi=dpi,
+                bbox_inches='tight',
+            )
             print(f"Figure saved: {filepath}")
 
         if render:
