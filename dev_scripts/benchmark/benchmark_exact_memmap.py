@@ -36,9 +36,11 @@ Run from project root:
 
 from __future__ import annotations
 
+import argparse
+from dataclasses import replace
 from pathlib import Path
 
-from benchmark_approx_memmap import _BenchmarkProfile, _run_profile
+from benchmark_approx_memmap import _BenchmarkProfile, _parse_bool, _run_profile
 
 
 results_dir = Path("benchmark_results_exact_memmap")
@@ -76,6 +78,30 @@ def _exact_memmap_profile() -> _BenchmarkProfile:
     )
 
 
+def parse_args() -> argparse.Namespace:
+    """Parse CLI arguments for Exact Memmap benchmark execution.
+
+    Returns
+    -------
+    argparse.Namespace
+        Parsed CLI options.
+
+    Notes
+    -----
+    Defaults preserve the existing full-profile behavior.
+    """
+    parser = argparse.ArgumentParser(description="Run Exact Memmap benchmark profile.")
+    parser.add_argument(
+        "--stacks",
+        nargs="+",
+        type=int,
+        default=list(dataset_factors),
+        help="Stack factors to run. Default: all configured factors.",
+    )
+    parser.add_argument("--remove", type=_parse_bool, default=True, help="Allow cleanup/overwrite behavior (true/false). Default: true.")
+    return parser.parse_args()
+
+
 def main() -> int:
     """Run the Exact Memmap benchmark profile.
 
@@ -97,8 +123,10 @@ def main() -> int:
     >>> # CLI usage
     >>> # python dev_scripts/benchmark/benchmark_exact_memmap.py
     """
-    # Build profile and execute it via shared benchmark engine.
-    return _run_profile(_exact_memmap_profile())
+    # Build profile from CLI selection and execute via shared benchmark engine.
+    args = parse_args()
+    profile = replace(_exact_memmap_profile(), dataset_factors=list(args.stacks))
+    return _run_profile(profile, remove=bool(args.remove))
 
 
 if __name__ == "__main__":

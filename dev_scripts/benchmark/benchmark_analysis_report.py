@@ -88,6 +88,8 @@ GLOBAL_STYLE = {
     "grid.alpha": 0.25,
 }
 
+BASE_FRAMES_PER_FACTOR = 10_000
+
 
 @dataclass
 class AnalysisContext:
@@ -241,6 +243,121 @@ def _as_float(value) -> float:
         return float(value)
     except Exception:
         return float("nan")
+
+
+def _scale_to_frames(scale_factor: float) -> float:
+    """Convert one scale factor to an absolute frame count.
+
+    Parameters
+    ----------
+    scale_factor : float
+        Benchmark stack factor.
+
+    Returns
+    -------
+    float
+        Absolute frame count using ``BASE_FRAMES_PER_FACTOR``.
+
+    Notes
+    -----
+    ``1x`` corresponds to ``10k`` frames in this benchmark suite.
+    """
+    return float(scale_factor) * float(BASE_FRAMES_PER_FACTOR)
+
+
+def _format_frames_short(value: float) -> str:
+    """Format absolute frame count using compact ``k`` groups.
+
+    Parameters
+    ----------
+    value : float
+        Absolute frame count.
+
+    Returns
+    -------
+    str
+        Compact frame label like ``500k`` or ``10kk``.
+
+    Notes
+    -----
+    The formatter shortens powers of 1000 to repeated ``k``.
+    """
+    if not np.isfinite(float(value)):
+        return "nan"
+    rounded = int(np.round(float(value)))
+    sign = "-" if rounded < 0 else ""
+    remaining = abs(rounded)
+    suffix = ""
+    while remaining >= 1000 and remaining % 1000 == 0:
+        remaining //= 1000
+        suffix += "k"
+    return f"{sign}{remaining}{suffix}" if suffix else f"{sign}{remaining}"
+
+
+def _format_scale_as_frames(scale_factor: float) -> str:
+    """Format one scale factor as compact absolute frame label.
+
+    Parameters
+    ----------
+    scale_factor : float
+        Benchmark stack factor.
+
+    Returns
+    -------
+    str
+        Compact frame label like ``10k`` or ``500k``.
+
+    Notes
+    -----
+    Formatting delegates to ``_format_frames_short`` after conversion.
+    """
+    return _format_frames_short(_scale_to_frames(scale_factor))
+
+
+def _format_run_scale_label(run_name: str) -> str:
+    """Format run name as compact frame-count label.
+
+    Parameters
+    ----------
+    run_name : str
+        Benchmark run folder name.
+
+    Returns
+    -------
+    str
+        Compact frame label derived from run scale factor.
+
+    Notes
+    -----
+    Scale extraction falls back to ``1`` when no suffix is present.
+    """
+    return _format_scale_as_frames(_parse_scale_factor(run_name))
+
+
+def _apply_frame_scale_ticks(ax, scales: Sequence[float]) -> None:
+    """Apply frame-based tick labels for scale-factor x-axes.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Target axis.
+    scales : Sequence[float]
+        Scale-factor values used on the x-axis.
+
+    Returns
+    -------
+    None
+        Major x-ticks are updated in place.
+
+    Notes
+    -----
+    Tick positions remain numeric scale factors; labels show frame counts.
+    """
+    valid = sorted({float(value) for value in scales if np.isfinite(float(value)) and float(value) > 0.0})
+    if not valid:
+        return
+    ax.set_xticks(valid)
+    ax.set_xticklabels([_format_scale_as_frames(value) for value in valid])
 
 
 def _parse_scale_factor(run_name: str) -> int:
@@ -727,7 +844,7 @@ def _append_profile_rows(
     for run_name, run_data in runs.items():
         scale_factor = _parse_scale_factor(run_name)
         run_key = f"{profile}::{run_name}"
-        run_label = f"{PROFILE_LABELS[profile]} | {scale_factor}x"
+        run_label = f"{PROFILE_LABELS[profile]} | {_format_scale_as_frames(scale_factor)}"
         summary = run_data.get("summary", {})
         steps = run_data.get("steps", [])
 
@@ -1278,9 +1395,10 @@ def plot_scale_metric(
     if ctx.ref_scale is not None:
         ax.axvline(ctx.ref_scale, linestyle="--", color="gray", alpha=0.45, linewidth=1.0)
     ax.set_title(title, pad=8)
-    ax.set_xlabel("Stack Factor")
+    ax.set_xlabel("Frames")
     ax.set_ylabel(ylabel)
     ax.set_xscale("log")
+    _apply_frame_scale_ticks(ax, ctx.totals_df["scale_factor"].to_numpy(dtype=float))
     if y_log:
         ax.set_yscale("log")
     ax.grid(True, which="both", alpha=GLOBAL_STYLE["grid.alpha"])
@@ -1544,9 +1662,10 @@ def plot_local_exponent(
     if ctx.ref_scale is not None:
         ax.axvline(ctx.ref_scale, linestyle="--", color="gray", alpha=0.35)
     ax.set_title(title, pad=8)
-    ax.set_xlabel("Current Scale")
+    ax.set_xlabel("Current Frames")
     ax.set_ylabel(ylabel)
     ax.set_xscale("log")
+    _apply_frame_scale_ticks(ax, ctx.totals_df["scale_factor"].to_numpy(dtype=float))
     ax.grid(True, which="both", alpha=GLOBAL_STYLE["grid.alpha"])
     _annotate_exponent_means(ax, annotations, ctx.profile_palette)
 
@@ -1683,7 +1802,7 @@ def build_requested_table(ctx: AnalysisContext) -> pd.DataFrame:
 
         rows.append(
             {
-                "Profile": f"{profile} | {int(scale)}x",
+                "Profile": f"{profile} | {_format_scale_as_frames(scale)}",
                 "Runtime [s]": float(sub_tot["total_seconds"].mean()),
                 "Peak RAM Pressure [MB]": float(sub_tot["peak_non_cache_mb"].mean()),
                 "Cache [MB]": float(sub_tot["cache_size_mb"].mean()),
@@ -3919,7 +4038,7 @@ def _annotate_tradeoff_scale_labels(ax, points_df: pd.DataFrame) -> None:
         ax.text(
             row.total_seconds,
             row.peak_non_cache_mb,
-            f"{int(row.scale_factor)}x",
+            _format_scale_as_frames(row.scale_factor),
             ha="center",
             va="center",
             fontsize=7.0,
@@ -4314,10 +4433,11 @@ def _render_pre_master_normalized_scaling_figure(
     Relative metrics are plotted against stack factor in log-log scale.
     """
     fig, axes = plt.subplots(1, 3, figsize=(18, 5), constrained_layout=True)
+    baseline_label = _format_scale_as_frames(1)
     specs = [
-        ("total_seconds_x", "Runtime Relative to 1x"),
-        ("peak_non_cache_mb_x", "Peak Non-Cache Relative to 1x"),
-        ("cache_size_mb_x", "Cache Size Relative to 1x"),
+        ("total_seconds_x", f"Runtime Relative to {baseline_label}"),
+        ("peak_non_cache_mb_x", f"Peak Non-Cache Relative to {baseline_label}"),
+        ("cache_size_mb_x", f"Cache Size Relative to {baseline_label}"),
     ]
     max_scale = float(normalized_scaling["scale_factor"].max()) if not normalized_scaling.empty else np.nan
     for ax, (metric, title) in zip(axes, specs):
@@ -4329,9 +4449,10 @@ def _render_pre_master_normalized_scaling_figure(
         if np.isfinite(max_scale) and max_scale > 1.0:
             ax.plot([1.0, max_scale], [1.0, max_scale], "--", color="gray", alpha=0.5)
         ax.set_title(title)
-        ax.set_xlabel("Stack Factor")
+        ax.set_xlabel("Frames")
         ax.set_ylabel("Relative factor")
         ax.set_xscale("log")
+        _apply_frame_scale_ticks(ax, normalized_scaling["scale_factor"].to_numpy(dtype=float))
         ax.set_yscale("log")
         ax.grid(True, which="major", alpha=GLOBAL_STYLE["grid.alpha"])
     axes[0].legend(loc="upper left", bbox_to_anchor=(1.02, 1.0), title="Profile")
@@ -4458,7 +4579,15 @@ def _plot_pre_master_profile_step_panels(
         pivot = _profile_step_pivot(profile_steps, ordered_runs, step_order, metric)
         for run_name in ordered_runs:
             y_vals = pivot.loc[run_name].to_numpy(dtype=float)
-            axis.plot(x_vals, y_vals, marker="o", linewidth=GLOBAL_STYLE["lines.linewidth"], markersize=GLOBAL_STYLE["lines.markersize"], color=run_palette[run_name], label=run_name)
+            axis.plot(
+                x_vals,
+                y_vals,
+                marker="o",
+                linewidth=GLOBAL_STYLE["lines.linewidth"],
+                markersize=GLOBAL_STYLE["lines.markersize"],
+                color=run_palette[run_name],
+                label=_format_run_scale_label(run_name),
+            )
         axis.set_title(f"{profile} | {title}", fontsize=11)
         axis.set_xticks(x_vals, labels=step_labels, rotation=38, ha="right")
         axis.tick_params(axis="x", labelsize=7)
@@ -4530,6 +4659,7 @@ def _render_pre_master_shared_scale_step_figures(ctx: AnalysisContext) -> list[F
         step_order = sub.groupby("step")["step_index"].median().sort_values().index.tolist()
         if not step_order:
             continue
+        scale_label = _format_scale_as_frames(scale)
         profiles = [profile for profile in ctx.profile_order if profile in set(sub["profile_label"].unique())]
         palette = _get_profile_palette(profiles)
         x_vals = np.arange(len(step_order))
@@ -4542,7 +4672,7 @@ def _render_pre_master_shared_scale_step_figures(ctx: AnalysisContext) -> list[F
             )
             for profile in profiles:
                 ax.plot(x_vals, pivot[profile].to_numpy(dtype=float), marker="o", linewidth=1.9, markersize=4, color=palette[profile], label=profile)
-            ax.set_title(f"{title} | {scale}x")
+            ax.set_title(f"{title} | {scale_label}")
             ax.set_xlabel("Step")
             ax.set_xticks(x_vals, labels=step_labels, rotation=38, ha="right")
             ax.tick_params(axis="x", labelsize=7)
@@ -4551,8 +4681,8 @@ def _render_pre_master_shared_scale_step_figures(ctx: AnalysisContext) -> list[F
                 ax.set_yscale("log")
         axes[0].set_ylabel("Value")
         axes[0].legend(loc="upper left", bbox_to_anchor=(1.02, 1.0), title="Profile", frameon=False)
-        fig.suptitle(f"Step-wise profile comparison at shared scale {scale}x", fontsize=13)
-        fig._mdxplain_filename_hint = f"shared_scale_step_comparison_{scale}x"
+        fig.suptitle(f"Step-wise profile comparison at shared scale {scale_label}", fontsize=13)
+        fig._mdxplain_filename_hint = f"shared_scale_step_comparison_{_slugify(scale_label)}"
         figures.append(fig)
     return figures
 
@@ -4587,9 +4717,10 @@ def _render_pre_master_jump_diagnostics_figure(jump_df: pd.DataFrame) -> Figure:
             ordered = profile_df.sort_values("scale_factor")
             ax.plot(ordered["scale_factor"], ordered["jump_pct"], marker="o", linewidth=2, label=profile)
         ax.set_title(f"{metric_labels[metric]}: Relative Jump [%]")
-        ax.set_xlabel("Scale Factor")
+        ax.set_xlabel("Frames")
         ax.set_ylabel("%")
         ax.set_xscale("log")
+        _apply_frame_scale_ticks(ax, metric_df["scale_factor"].to_numpy(dtype=float))
         ax.grid(True, which="major", alpha=GLOBAL_STYLE["grid.alpha"])
 
         ax = axes[row_idx, 1]
@@ -4598,9 +4729,10 @@ def _render_pre_master_jump_diagnostics_figure(jump_df: pd.DataFrame) -> Figure:
             ax.plot(ordered["scale_factor"], ordered["local_exponent"], marker="o", linewidth=2, label=profile)
         ax.axhline(1.0, linestyle="--", color="gray", alpha=0.6)
         ax.set_title(f"{metric_labels[metric]}: Local Exponent k")
-        ax.set_xlabel("Scale Factor")
+        ax.set_xlabel("Frames")
         ax.set_ylabel("k_local")
         ax.set_xscale("log")
+        _apply_frame_scale_ticks(ax, metric_df["scale_factor"].to_numpy(dtype=float))
         ax.grid(True, which="major", alpha=GLOBAL_STYLE["grid.alpha"])
 
         ax = axes[row_idx, 2]
@@ -4609,9 +4741,10 @@ def _render_pre_master_jump_diagnostics_figure(jump_df: pd.DataFrame) -> Figure:
             ax.plot(ordered["scale_factor"], ordered["overhead_vs_linear"], marker="o", linewidth=2, label=profile)
         ax.axhline(1.0, linestyle="--", color="gray", alpha=0.6)
         ax.set_title(f"{metric_labels[metric]}: Overhead vs Linear")
-        ax.set_xlabel("Scale Factor")
+        ax.set_xlabel("Frames")
         ax.set_ylabel("actual / linear_expected")
         ax.set_xscale("log")
+        _apply_frame_scale_ticks(ax, metric_df["scale_factor"].to_numpy(dtype=float))
         ax.grid(True, which="major", alpha=GLOBAL_STYLE["grid.alpha"])
     axes[0, 2].legend(loc="upper left", bbox_to_anchor=(1.02, 1.0), title="Profile")
     fig._mdxplain_filename_hint = "jump_diagnostics_grid"
@@ -4686,7 +4819,15 @@ def _plot_profile_ram_pressure_rows(
         pivot = _profile_step_pivot(profile_steps, ordered_runs, step_order, metric)
         for run_name in ordered_runs:
             y_vals = pivot.loc[run_name].to_numpy(dtype=float)
-            axis.plot(x_vals, y_vals, marker="o", linewidth=GLOBAL_STYLE["lines.linewidth"], markersize=GLOBAL_STYLE["lines.markersize"], color=run_palette[run_name], label=run_name)
+            axis.plot(
+                x_vals,
+                y_vals,
+                marker="o",
+                linewidth=GLOBAL_STYLE["lines.linewidth"],
+                markersize=GLOBAL_STYLE["lines.markersize"],
+                color=run_palette[run_name],
+                label=_format_run_scale_label(run_name),
+            )
         axis.set_title(f"{profile} | {title}", fontsize=11)
         axis.set_ylabel("MB")
         axis.set_xticks(x_vals, labels=step_labels, rotation=38, ha="right")
@@ -4760,6 +4901,9 @@ def _render_pre_master_stacked_step_breakdown_figures(ctx: AnalysisContext) -> l
             continue
         time_pivot = _profile_step_pivot(profile_steps, ordered_runs, step_order, "seconds")
         cache_pivot = _profile_step_pivot(profile_steps, ordered_runs, step_order, "delta_cache_mb")
+        display_labels = [_format_run_scale_label(run_name) for run_name in ordered_runs]
+        time_pivot.index = display_labels
+        cache_pivot.index = display_labels
         step_colors = _get_shades(ctx.profile_palette.get(profile, "#4c72b0"), max(1, len(step_order)), light=0.30, dark=0.95)
         fig, axes = plt.subplots(1, 2, figsize=(18, 6), constrained_layout=True)
         time_pivot.plot(kind="bar", stacked=True, ax=axes[0], color=step_colors)
@@ -4811,8 +4955,9 @@ def _render_pre_master_profile_scaling_trend_figures(ctx: AnalysisContext) -> li
             y_vals = profile_totals[metric].to_numpy(dtype=float)
             ax.loglog(x_vals, y_vals, marker="o", linewidth=2, color=color)
             ax.set_title(f"{profile} | {title}")
-            ax.set_xlabel("Stack Factor")
+            ax.set_xlabel("Frames")
             ax.set_ylabel("Value")
+            _apply_frame_scale_ticks(ax, x_vals)
             ax.grid(True, which="major", alpha=GLOBAL_STYLE["grid.alpha"])
         fig.suptitle(f"{profile} | Scaling Trends", fontsize=14)
         fig._mdxplain_filename_hint = f"{profile.lower().replace(' ', '_')}_scaling_trends"

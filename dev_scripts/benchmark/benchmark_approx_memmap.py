@@ -37,14 +37,16 @@ Run from project root:
 
 from __future__ import annotations
 
+import argparse
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import sys
 import threading
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from typing import Callable, Optional
 
 os.environ.setdefault("MPLBACKEND", "Agg")
@@ -57,7 +59,7 @@ import psutil
 
 results_dir = Path("benchmark_results_approx_memmap")
 cache_root = Path("cache/benchmark_approx_memmap")
-dataset_factors = [1, 2, 3, 5, 10, 30, 50]
+dataset_factors = [1, 2, 3, 5, 10, 30, 50, 1000]
 
 data_root = Path("data/benchmarks")
 base_dataset = Path("data/2RJY")
@@ -1407,7 +1409,7 @@ def _copy_artifacts(cache_dir: Path, output_root: Path) -> None:
     _copy_structure_artifacts(cache_dir, output_root)
 
 
-def _prepare_run_dirs(profile: _BenchmarkProfile, dataset_name: str) -> tuple[Path, Path, Path]:
+def _prepare_run_dirs(profile: _BenchmarkProfile, dataset_name: str, remove: bool) -> tuple[Path, Path, Path]:
     """Create and normalize run-specific paths for one dataset.
 
     Parameters
@@ -1416,6 +1418,8 @@ def _prepare_run_dirs(profile: _BenchmarkProfile, dataset_name: str) -> tuple[Pa
         Benchmark profile configuration.
     dataset_name : str
         Dataset label used to derive output paths.
+    remove : bool
+        Enables cleanup/overwrite behavior for existing run directories.
 
     Returns
     -------
@@ -1431,15 +1435,21 @@ def _prepare_run_dirs(profile: _BenchmarkProfile, dataset_name: str) -> tuple[Pa
     results_path = output_root / "steps.json"
     run_cache = profile.cache_root / dataset_name
 
-    # Ensure output exists and reset cache to avoid cross-run contamination.
+    # When remove is disabled, never overwrite existing run folders.
+    if (not remove) and output_root.exists():
+        raise FileExistsError(f"Run output already exists and remove=False: {output_root}")
+
+    # Ensure output exists and optionally reset cache to avoid contamination.
     output_root.mkdir(parents=True, exist_ok=True)
     if run_cache.exists():
+        if not remove:
+            raise FileExistsError(f"Run cache already exists and remove=False: {run_cache}")
         shutil.rmtree(run_cache, ignore_errors=True)
     run_cache.mkdir(parents=True, exist_ok=True)
     return results_path, output_root, run_cache
 
 
-def _run_dataset(profile: _BenchmarkProfile, dataset_name: str, dataset_dir: Path) -> None:
+def _run_dataset(profile: _BenchmarkProfile, dataset_name: str, dataset_dir: Path, remove: bool) -> None:
     """Execute full benchmark workflow for one dataset directory.
 
     Parameters
@@ -1450,6 +1460,8 @@ def _run_dataset(profile: _BenchmarkProfile, dataset_name: str, dataset_dir: Pat
         Dataset label.
     dataset_dir : Path
         Dataset directory.
+    remove : bool
+        Enables cleanup/overwrite behavior for existing run directories.
 
     Returns
     -------
@@ -1461,7 +1473,7 @@ def _run_dataset(profile: _BenchmarkProfile, dataset_name: str, dataset_dir: Pat
     This function is the smallest atomic benchmark execution unit.
     """
     # Prepare run directories and initialize pipeline and step list.
-    results_path, output_root, run_cache = _prepare_run_dirs(profile, dataset_name)
+    results_path, output_root, run_cache = _prepare_run_dirs(profile, dataset_name, remove=remove)
     pipeline = _build_pipeline(profile, run_cache)
     steps = _build_steps(pipeline, dataset_dir, output_root, profile)
 
@@ -1495,6 +1507,29 @@ def _dataset_name(factor: int) -> str:
     Factor ``1`` maps to the base ``2RJY`` dataset name.
     """
     return "2RJY" if factor == 1 else f"2RJY_stack{factor}x"
+
+
+def _dataset_factor_key(dataset_name: str) -> int:
+    """Extract numeric factor key from dataset name for stable sorting.
+
+    Parameters
+    ----------
+    dataset_name : str
+        Dataset name such as ``2RJY`` or ``2RJY_stack50x``.
+
+    Returns
+    -------
+    int
+        Parsed factor key, defaults to ``1`` for base dataset.
+
+    Notes
+    -----
+    Unknown names fall back to ``1``.
+    """
+    if dataset_name == "2RJY":
+        return 1
+    match = re.search(r"_stack(\d+)x$", dataset_name)
+    return int(match.group(1)) if match else 1
 
 
 def _dataset_path(factor: int) -> Path:
@@ -1609,13 +1644,43 @@ def _write_profile_summary(profile: _BenchmarkProfile, datasets: list[tuple[str,
     summary_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
 
-def _run_profile(profile: _BenchmarkProfile) -> int:
+def _collect_existing_result_datasets(profile: _BenchmarkProfile) -> list[tuple[str, Path]]:
+    """Collect datasets that already have complete result JSON files.
+
+    Parameters
+    ----------
+    profile : _BenchmarkProfile
+        Benchmark profile configuration.
+
+    Returns
+    -------
+    list[tuple[str, Path]]
+        Dataset names with corresponding output directories.
+
+    Notes
+    -----
+    Only directories containing both ``steps.json`` and ``summary.json`` are
+    included.
+    """
+    if not profile.results_dir.exists():
+        return []
+
+    datasets: list[tuple[str, Path]] = []
+    for run_dir in sorted(path for path in profile.results_dir.iterdir() if path.is_dir()):
+        if (run_dir / "steps.json").exists() and (run_dir / "summary.json").exists():
+            datasets.append((run_dir.name, run_dir))
+    return sorted(datasets, key=lambda item: (_dataset_factor_key(item[0]), item[0]))
+
+
+def _run_profile(profile: _BenchmarkProfile, remove: bool = True) -> int:
     """Run benchmark workflow for every dataset in selected profile.
 
     Parameters
     ----------
     profile : _BenchmarkProfile
         Benchmark profile configuration.
+    remove : bool, default=True
+        Enables cleanup/overwrite behavior for existing run directories.
 
     Returns
     -------
@@ -1629,10 +1694,10 @@ def _run_profile(profile: _BenchmarkProfile) -> int:
     # Resolve datasets once, then execute one run per dataset.
     datasets = _resolve_datasets(profile.dataset_factors)
     for dataset_name, dataset_dir in datasets:
-        _run_dataset(profile, dataset_name, dataset_dir)
+        _run_dataset(profile, dataset_name, dataset_dir, remove=remove)
 
-    # Write cross-dataset summary after all runs completed successfully.
-    _write_profile_summary(profile, datasets)
+    # Rewrite summary from all complete result folders currently on disk.
+    _write_profile_summary(profile, _collect_existing_result_datasets(profile))
     return 0
 
 
@@ -1666,6 +1731,56 @@ def _approx_memmap_profile() -> _BenchmarkProfile:
     )
 
 
+def parse_args() -> argparse.Namespace:
+    """Parse CLI arguments for Approx Memmap benchmark execution.
+
+    Returns
+    -------
+    argparse.Namespace
+        Parsed CLI options.
+
+    Notes
+    -----
+    Defaults preserve the existing full-profile behavior.
+    """
+    parser = argparse.ArgumentParser(description="Run Approx Memmap benchmark profile.")
+    parser.add_argument(
+        "--stacks",
+        nargs="+",
+        type=int,
+        default=list(dataset_factors),
+        help="Stack factors to run. Default: all configured factors.",
+    )
+    parser.add_argument("--remove", type=_parse_bool, default=True, help="Allow cleanup/overwrite behavior (true/false). Default: true.")
+    return parser.parse_args()
+
+
+def _parse_bool(raw_value: str) -> bool:
+    """Parse boolean CLI string values.
+
+    Parameters
+    ----------
+    raw_value : str
+        Raw CLI value.
+
+    Returns
+    -------
+    bool
+        Parsed boolean value.
+
+    Notes
+    -----
+    Accepted true values: ``true,1,yes,on``.
+    Accepted false values: ``false,0,no,off``.
+    """
+    text = str(raw_value).strip().lower()
+    if text in {"1", "true", "yes", "on"}:
+        return True
+    if text in {"0", "false", "no", "off"}:
+        return False
+    raise argparse.ArgumentTypeError(f"Invalid boolean value for --remove: {raw_value!r}")
+
+
 def main() -> int:
     """Run the Approx Memmap benchmark profile.
 
@@ -1687,8 +1802,10 @@ def main() -> int:
     >>> # CLI usage
     >>> # python dev_scripts/benchmark/benchmark_approx_memmap.py
     """
-    # Build profile and delegate execution to shared profile runner.
-    return _run_profile(_approx_memmap_profile())
+    # Build profile from CLI selection and run with selected remove behavior.
+    args = parse_args()
+    profile = replace(_approx_memmap_profile(), dataset_factors=list(args.stacks))
+    return _run_profile(profile, remove=bool(args.remove))
 
 
 if __name__ == "__main__":

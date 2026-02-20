@@ -30,7 +30,7 @@ How To Use
 Run from project root:
 
 - ``python dev_scripts/benchmark/benchmark_generate_data.py``
-- ``python dev_scripts/benchmark/benchmark_generate_data.py --factors 2 3 5 10 30 50``
+- ``python dev_scripts/benchmark/benchmark_generate_data.py --factors 2 3 5 10 30 50 1000``
 """
 
 from __future__ import annotations
@@ -203,7 +203,7 @@ def parse_args() -> argparse.Namespace:
         "--factors",
         nargs="+",
         type=int,
-        default=[2, 3, 5, 10, 30, 50],
+        default=[2, 3, 5, 10, 30, 50, 1000],
         help="Stacking factors to generate.",
     )
     return parser.parse_args()
