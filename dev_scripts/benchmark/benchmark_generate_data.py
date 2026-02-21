@@ -30,7 +30,7 @@ How To Use
 Run from project root:
 
 - ``python dev_scripts/benchmark/benchmark_generate_data.py``
-- ``python dev_scripts/benchmark/benchmark_generate_data.py --factors 2 3 5 10 30 50 1000``
+- ``python dev_scripts/benchmark/benchmark_generate_data.py --factors 2 3 5 10 30 50 500 1000``
 """
 
 from __future__ import annotations
@@ -42,6 +42,9 @@ from typing import Optional
 
 import mdtraj as md
 import numpy as np
+
+DEFAULT_FACTORS = [2, 3, 5, 10, 30, 50, 1000]
+SUPPORTED_FACTORS = [2, 3, 5, 10, 30, 50, 500, 1000]
 
 
 def _find_input_files(data_dir: Path) -> tuple[Path, Path]:
@@ -251,8 +254,9 @@ def parse_args() -> argparse.Namespace:
         "--factors",
         nargs="+",
         type=int,
-        default=[2, 3, 5, 10, 30, 50, 1000],
-        help="Stacking factors to generate.",
+        choices=SUPPORTED_FACTORS,
+        default=DEFAULT_FACTORS,
+        help="Stacking factors to generate. Supported: 2,3,5,10,30,50,500,1000.",
     )
     return parser.parse_args()
 

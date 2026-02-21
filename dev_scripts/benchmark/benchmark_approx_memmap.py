@@ -60,6 +60,7 @@ import psutil
 results_dir = Path("benchmark_results_approx_memmap")
 cache_root = Path("cache/benchmark_approx_memmap")
 dataset_factors = [1, 2, 3, 5, 10, 30, 50, 1000]
+supported_dataset_factors = [1, 2, 3, 5, 10, 30, 50, 500, 1000]
 
 data_root = Path("data/benchmarks")
 base_dataset = Path("data/2RJY")
@@ -1748,8 +1749,9 @@ def parse_args() -> argparse.Namespace:
         "--stacks",
         nargs="+",
         type=int,
+        choices=supported_dataset_factors,
         default=list(dataset_factors),
-        help="Stack factors to run. Default: all configured factors.",
+        help="Stack factors to run. Supported: 1,2,3,5,10,30,50,500,1000. Default: all configured factors.",
     )
     parser.add_argument("--remove", type=_parse_bool, default=True, help="Allow cleanup/overwrite behavior (true/false). Default: true.")
     return parser.parse_args()
