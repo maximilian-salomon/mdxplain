@@ -183,9 +183,9 @@ class PipelineData:
         self.custom_metadata: Dict[str, Any] = {}
 
         # Matrix caching for memmap (only used when use_memmap=True)
-        # Stores: {cache_key: (memmap_path, frame_mapping)}
+        # Stores: {cache_key: (memmap_path, optional_frame_mapping)}
         self._matrix_cache: Dict[
-            str, Tuple[str, Dict[int, Tuple[int, int]]]
+            str, Tuple[str, Optional[Dict[int, Tuple[int, int]]]]
         ] = {}
 
         # Dynamic memory management
@@ -835,8 +835,7 @@ class PipelineData:
         to create a matrix with the desired subset of data. Feature selection is
         required to define which columns to include.
 
-        Frame mapping is ALWAYS created internally to simplify filtering logic,
-        but only returned when requested.
+        Frame mapping is only created when explicitly requested.
 
         Parameters
         ----------
@@ -886,10 +885,17 @@ class PipelineData:
 
         # Build matrix directly with efficient memory usage
         matrix, frame_mapping = SelectionMatrixHelper.build_selection_matrix(
-            self, feature_selector, data_selector
+            self,
+            feature_selector,
+            data_selector,
+            build_frame_mapping=return_frame_mapping,
         )
 
         if return_frame_mapping:
+            if frame_mapping is None:
+                raise ValueError(
+                    "Internal error: frame mapping was requested but not built."
+                )
             return matrix, frame_mapping
         return matrix
 

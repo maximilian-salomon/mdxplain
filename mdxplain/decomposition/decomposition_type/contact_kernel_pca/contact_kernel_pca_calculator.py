@@ -221,11 +221,11 @@ class ContactKernelPCACalculator(KernelPCACalculator):
             if MemmapUtils.is_memmap_view(data):
                 ResourceUtils.tune_memmap(data, "sequential")
             for i in ProgressUtils.iterate(
-                range(0, data.size, self.chunk_size),
+                range(0, data.shape[0], self.chunk_size),
                 desc="Validating binary data",
                 unit="chunks",
             ):
-                chunk = data.flat[i : i + self.chunk_size]
+                chunk = data[i : i + self.chunk_size]
                 if not np.all((chunk == 0) | (chunk == 1)):
                     raise ValueError(
                         "ContactKernelPCA requires binary data. "
