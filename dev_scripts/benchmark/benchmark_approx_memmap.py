@@ -1437,8 +1437,10 @@ def _prepare_run_dirs(profile: _BenchmarkProfile, dataset_name: str, remove: boo
     run_cache = profile.cache_root / dataset_name
 
     # When remove is disabled, never overwrite existing run folders.
-    if (not remove) and output_root.exists():
-        raise FileExistsError(f"Run output already exists and remove=False: {output_root}")
+    if output_root.exists():
+        if not remove:
+            raise FileExistsError(f"Run output already exists and remove=False: {output_root}")
+        shutil.rmtree(output_root, ignore_errors=True)
 
     # Ensure output exists and optionally reset cache to avoid contamination.
     output_root.mkdir(parents=True, exist_ok=True)
