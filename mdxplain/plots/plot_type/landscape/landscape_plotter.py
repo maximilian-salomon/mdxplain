@@ -573,15 +573,20 @@ class LandscapePlotter:
 
         if isinstance(class_colors, dict):
             if cluster_colors is not None:
-                cluster_colors = {**cluster_colors}
-                for key, color in class_colors.items():
-                    if key in cluster_colors:
-                        cluster_colors[key] = color
+                # Only copy and assign if there's actual intersection of keys
+                shared_keys = set(class_colors.keys()).intersection(cluster_colors.keys())
+                if shared_keys:
+                    cluster_colors = {**cluster_colors}
+                    for key in shared_keys:
+                        cluster_colors[key] = class_colors[key]
+                        
             if tag_colors is not None:
-                tag_colors = {**tag_colors}
-                for key, color in class_colors.items():
-                    if key in tag_colors:
-                        tag_colors[key] = color
+                shared_keys = set(class_colors.keys()).intersection(tag_colors.keys())
+                if shared_keys:
+                    tag_colors = {**tag_colors}
+                    for key in shared_keys:
+                        tag_colors[key] = class_colors[key]
+                        
             return cluster_colors, tag_colors
 
         if isinstance(class_colors, (list, tuple)):

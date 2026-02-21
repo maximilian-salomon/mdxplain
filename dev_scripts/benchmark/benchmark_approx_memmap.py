@@ -59,7 +59,7 @@ import psutil
 
 results_dir = Path("benchmark_results_approx_memmap")
 cache_root = Path("cache/benchmark_approx_memmap")
-dataset_factors = [1, 2, 3, 5, 10, 30, 50, 1000]
+dataset_factors = [1, 2, 3, 5, 10, 30, 50, 500]
 supported_dataset_factors = [1, 2, 3, 5, 10, 30, 50, 500, 1000]
 
 data_root = Path("data/benchmarks")

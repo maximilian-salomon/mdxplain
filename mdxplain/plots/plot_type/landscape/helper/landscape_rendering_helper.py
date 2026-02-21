@@ -30,6 +30,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial import cKDTree
 from scipy.stats import gaussian_kde
+from scipy.ndimage import gaussian_filter
 
 from . import EnergyCalculatorHelper
 from ....helper.color_mapping_helper import ColorMappingHelper
@@ -241,19 +242,18 @@ class LandscapeRenderingHelper:
         None
         """
         cbar = plt.colorbar(cf, ax=ax)
+        
         tick_size = tick_fontsize or 10
-        cbar.ax.tick_params(
-            labelsize=tick_size,
-            pad=10 + (tick_fontsize - 10) * 0.5 if tick_fontsize else 5
-        )
+        tick_pad = 10 + (tick_size - 10) * 0.5
+        cbar.ax.tick_params(labelsize=tick_size, pad=tick_pad)
 
         label_size = contour_label_fontsize or 10
-        labelpad = 15 + (contour_label_fontsize - 10) * 1.5 if contour_label_fontsize else 15
+        label_pad = 15 + (label_size - 10) * 1.5
 
         cbar.set_label(
             'Free Energy Δ (kcal/mol)',
             rotation=270,
-            labelpad=labelpad,
+            labelpad=label_pad,
             fontsize=label_size
         )
 
@@ -460,19 +460,18 @@ class LandscapeRenderingHelper:
         None
         """
         cbar = plt.colorbar(cf, ax=ax)
+        
         tick_size = tick_fontsize or 10
-        cbar.ax.tick_params(
-            labelsize=tick_size,
-            pad=10 + (tick_fontsize - 10) * 0.5 if tick_fontsize else 5
-        )
+        tick_pad = 10 + (tick_size - 10) * 0.5
+        cbar.ax.tick_params(labelsize=tick_size, pad=tick_pad)
 
         label_size = contour_label_fontsize or 10
-        labelpad = 15 + (contour_label_fontsize - 10) * 1.5 if contour_label_fontsize else 15
+        label_pad = 15 + (label_size - 10) * 1.5
 
         cbar.set_label(
             'Probability Density',
             rotation=270,
-            labelpad=labelpad,
+            labelpad=label_pad,
             fontsize=label_size
         )
 
@@ -587,11 +586,13 @@ class LandscapeRenderingHelper:
         None
         """
         if unselected_indices is not None and len(unselected_indices) > 0:
-            ax.scatter(
+            ax.plot(
                 data_x[unselected_indices],
                 data_y[unselected_indices],
                 color='gray',
-                s=scatter_size,
+                marker='o',
+                linestyle='none',
+                markersize=np.sqrt(scatter_size),
                 alpha=alpha * 0.4,
                 zorder=1
             )
@@ -636,11 +637,13 @@ class LandscapeRenderingHelper:
         tag_index_groups = LandscapeRenderingHelper._build_tag_index_groups(frame_tag_map)
         for tag, tag_indices in tag_index_groups.items():
             color = tag_colors.get(tag, "#808080") if tag_colors else "#808080"
-            ax.scatter(
+            ax.plot(
                 data_x[tag_indices],
                 data_y[tag_indices],
                 color=color,
-                s=scatter_size,
+                marker='o',
+                linestyle='none',
+                markersize=np.sqrt(scatter_size),
                 alpha=alpha,
                 zorder=2
             )
@@ -710,11 +713,13 @@ class LandscapeRenderingHelper:
             if not np.any(cluster_mask):
                 continue
             color = cluster_colors.get(label, "#808080") if cluster_colors else "#808080"
-            ax.scatter(
+            ax.plot(
                 data_x[cluster_mask],
                 data_y[cluster_mask],
                 color=color,
-                s=scatter_size,
+                marker='o',
+                linestyle='none',
+                markersize=np.sqrt(scatter_size),
                 alpha=alpha,
                 zorder=2
             )
@@ -747,11 +752,13 @@ class LandscapeRenderingHelper:
         -------
         None
         """
-        ax.scatter(
+        ax.plot(
             data_x,
             data_y,
             color='gray',
-            s=scatter_size,
+            marker='o',
+            linestyle='none',
+            markersize=np.sqrt(scatter_size),
             alpha=alpha,
             zorder=2
         )
@@ -805,9 +812,9 @@ class LandscapeRenderingHelper:
         y_grid = np.linspace(data_y.min(), data_y.max(), bins)
         X, Y = np.meshgrid(x_grid, y_grid)
 
-        # Nearest neighbor assignment
-        tree = cKDTree(np.vstack([data_x, data_y]).T)
-        _, indices = tree.query(np.vstack([X.ravel(), Y.ravel()]).T)
+        # Nearest neighbor assignment using direct column stack
+        tree = cKDTree(np.column_stack((data_x, data_y)))
+        _, indices = tree.query(np.column_stack((X.ravel(), Y.ravel())))
         cluster_grid = labels[indices].reshape(X.shape)
 
         # Plot each cluster as transparent region
@@ -876,6 +883,7 @@ class LandscapeRenderingHelper:
         ...     ax, data_x, data_y, labels, colors, 50, [20, 40, 60, 80]
         ... )
         """
+        # Pre-assign unique_labels from cluster data if none are provided
         if unique_labels is None:
             unique_labels = np.unique(labels)
 
@@ -887,44 +895,37 @@ class LandscapeRenderingHelper:
         else:
             x_min, x_max, y_min, y_max = data_bounds
 
-        # Create grid for KDE evaluation
-        x_grid = np.linspace(x_min, x_max, bins)
-        y_grid = np.linspace(y_min, y_max, bins)
-        X, Y = np.meshgrid(x_grid, y_grid)
-        query_points = np.vstack([X.ravel(), Y.ravel()])
-        percentile_labels = [f'{100-pct:.0f}%' for pct in percentile_levels]
-        kde_cache: Dict[int, gaussian_kde] = {}
-
         for cluster_id in unique_labels:
             if cluster_id < 0:
                 continue
 
             mask = labels == cluster_id
-            cluster_points = np.vstack([data_x[mask], data_y[mask]])
+            cluster_points_x = data_x[mask]
+            cluster_points_y = data_y[mask]
 
-            if cluster_points.shape[1] < 3:
+            if cluster_points_x.size < 3:
                 continue
 
-            kde = kde_cache.get(int(cluster_id))
-            if kde is None:
-                kde = gaussian_kde(cluster_points)
-                kde_cache[int(cluster_id)] = kde
-            point_densities = kde(cluster_points)
-            levels_to_plot = np.percentile(point_densities, percentile_levels)
+            density_H, X2, Y2, levels_to_plot, fmt = LandscapeRenderingHelper._calculate_2d_heuristic_kde(
+                points_x=cluster_points_x,
+                points_y=cluster_points_y,
+                bins=bins,
+                x_bounds=(x_min, x_max),
+                y_bounds=(y_min, y_max),
+                percentile_levels=percentile_levels
+            )
 
-            density_grid = kde(query_points).reshape(X.shape)
+            if levels_to_plot.size == 0:
+                continue
 
+            # Draw the contour on the high-res smoothed grid
             CS = ax.contour(
-                X, Y, density_grid,
+                X2, Y2, density_H,
                 levels=levels_to_plot,
                 colors=[cluster_colors[cluster_id]],
                 linewidths=2
             )
 
-            fmt = {
-                level: label
-                for level, label in zip(levels_to_plot, percentile_labels)
-            }
             ax.clabel(CS, CS.levels, inline=True, fmt=fmt, fontsize=contour_label_fontsize or 10)
 
     @staticmethod
@@ -967,56 +968,275 @@ class LandscapeRenderingHelper:
             return
 
         indices = np.fromiter(frame_tag_map.keys(), dtype=int, count=len(frame_tag_map))
+        
+        # Validiere Indizes, falls frame_tag_map über die vorhandenen Daten hinausgeht
+        max_idx = min(len(data_x), len(data_y))
+        valid_indices_mask = (indices >= 0) & (indices < max_idx)
+        indices = indices[valid_indices_mask]
+
+        if indices.size == 0:
+            return
+
         tags = np.asarray([frame_tag_map[int(i)] for i in indices], dtype=object)
         x_vals = data_x[indices]
         y_vals = data_y[indices]
 
         if data_bounds is None:
-            x_min = float(np.min(data_x))
-            x_max = float(np.max(data_x))
-            y_min = float(np.min(data_y))
-            y_max = float(np.max(data_y))
+            if x_vals.size > 0 and y_vals.size > 0:
+                x_min = float(np.min(x_vals))
+                x_max = float(np.max(x_vals))
+                y_min = float(np.min(y_vals))
+                y_max = float(np.max(y_vals))
+            else:
+                x_min = float(np.min(data_x))
+                x_max = float(np.max(data_x))
+                y_min = float(np.min(data_y))
+                y_max = float(np.max(data_y))
         else:
             x_min, x_max, y_min, y_max = data_bounds
 
-        # Create grid for KDE evaluation
-        x_grid = np.linspace(x_min, x_max, bins)
-        y_grid = np.linspace(y_min, y_max, bins)
-        X, Y = np.meshgrid(x_grid, y_grid)
-        query_points = np.vstack([X.ravel(), Y.ravel()])
         ordered_tags = list(dict.fromkeys(tags.tolist()))
-        percentile_labels = [f'{100-pct:.0f}%' for pct in percentile_levels]
-        kde_cache: Dict[str, gaussian_kde] = {}
-
         for tag in ordered_tags:
             mask = tags == tag
-            tag_points = np.vstack([x_vals[mask], y_vals[mask]])
+            tag_points_x = x_vals[mask]
+            tag_points_y = y_vals[mask]
 
-            if tag_points.shape[1] < 3:
+            if tag_points_x.size < 3:
                 continue
 
-            kde = kde_cache.get(tag)
-            if kde is None:
-                kde = gaussian_kde(tag_points)
-                kde_cache[tag] = kde
-            point_densities = kde(tag_points)
-            levels_to_plot = np.percentile(point_densities, percentile_levels)
+            density_H, X2, Y2, levels_to_plot, fmt = LandscapeRenderingHelper._calculate_2d_heuristic_kde(
+                points_x=tag_points_x,
+                points_y=tag_points_y,
+                bins=bins,
+                x_bounds=(x_min, x_max),
+                y_bounds=(y_min, y_max),
+                percentile_levels=percentile_levels
+            )
 
-            density_grid = kde(query_points).reshape(X.shape)
+            if levels_to_plot.size == 0:
+                continue
 
             color = tag_colors.get(tag, "#808080")
             CS = ax.contour(
-                X, Y, density_grid,
+                X2, Y2, density_H,
                 levels=levels_to_plot,
                 colors=[color],
                 linewidths=2
             )
 
-            fmt = {
-                level: label
-                for level, label in zip(levels_to_plot, percentile_labels)
-            }
             ax.clabel(CS, CS.levels, inline=True, fmt=fmt, fontsize=contour_label_fontsize or 10)
+
+    @staticmethod
+    def _calculate_2d_heuristic_kde(
+        points_x: np.ndarray,
+        points_y: np.ndarray,
+        bins: int,
+        x_bounds: Tuple[float, float],
+        y_bounds: Tuple[float, float],
+        percentile_levels: List[int]
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, Dict[float, str]]:
+        """
+        Fast 2D Histogram + Gaussian Filter approach instead of O(N^2) gaussian_kde.
+
+        Parameters
+        ----------
+        points_x : np.ndarray
+            X-axis data
+        points_y : np.ndarray
+            Y-axis data
+        bins : int
+            Grid resolution for KDE evaluation
+        x_bounds : Tuple[float, float]
+            X-axis bounds
+        y_bounds : Tuple[float, float]
+            Y-axis bounds
+        percentile_levels : List[int]
+            Percentile levels for contour lines
+
+        Returns
+        -------
+        Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, Dict[float, str]]
+            Density histogram, X-centers grid, Y-centers grid, valid percentile levels, and label mapping `fmt`
+        """
+        valid_mask = np.isfinite(points_x) & np.isfinite(points_y)
+        points_x = points_x[valid_mask]
+        points_y = points_y[valid_mask]
+
+        if points_x.size < 3:
+            return np.array([]), np.array([]), np.array([]), np.array([]), {}
+
+        # Strictly sort percentile levels as contouring requires monotonic steps
+        percentile_levels = sorted(percentile_levels)
+
+        density_H, xedges, yedges = LandscapeRenderingHelper._create_density_histogram(
+            points_x, points_y, bins, x_bounds, y_bounds
+        )
+
+        point_densities = LandscapeRenderingHelper._calculate_point_densities(
+            points_x, points_y, density_H, xedges, yedges
+        )
+
+        levels_to_plot, fmt = LandscapeRenderingHelper._extract_robust_contour_levels(
+            point_densities, density_H, percentile_levels
+        )
+
+        X_centers, Y_centers = np.meshgrid(
+            (xedges[:-1] + xedges[1:]) / 2,
+            (yedges[:-1] + yedges[1:]) / 2
+        )
+        
+        return density_H, X_centers, Y_centers, levels_to_plot, fmt
+
+    @staticmethod
+    def _create_density_histogram(
+        points_x: np.ndarray,
+        points_y: np.ndarray,
+        bins: int,
+        x_bounds: Tuple[float, float],
+        y_bounds: Tuple[float, float]
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Create a smoothed 2D histogram acting as a fast KDE approximation.
+
+        Parameters
+        ----------
+        points_x : np.ndarray
+            X-axis coordinate data.
+        points_y : np.ndarray
+            Y-axis coordinate data.
+        bins : int
+            Base resolution for the grid.
+        x_bounds : Tuple[float, float]
+            Minimum and maximum limits for the X-axis grid.
+        y_bounds : Tuple[float, float]
+            Minimum and maximum limits for the Y-axis grid.
+
+        Returns
+        -------
+        Tuple[np.ndarray, np.ndarray, np.ndarray]
+            Normalized smoothed density grid, the X bin edges, and the Y bin edges.
+        """
+        hist_bins = min(max(bins, 256), 512)
+        H, xedges, yedges = np.histogram2d(
+            points_x, points_y,
+            bins=hist_bins,
+            range=[[x_bounds[0], x_bounds[1]], [y_bounds[0], y_bounds[1]]]
+        )
+        H = H.T
+
+        sigma_data_x = np.std(points_x) * (points_x.size ** (-1/6.0)) if points_x.size > 0 else 1.0
+        sigma_data_y = np.std(points_y) * (points_y.size ** (-1/6.0)) if points_y.size > 0 else 1.0
+        
+        dx = (xedges[-1] - xedges[0]) / hist_bins
+        dy = (yedges[-1] - yedges[0]) / hist_bins
+        
+        dx = dx if dx > 0 else 1.0
+        dy = dy if dy > 0 else 1.0
+        
+        sigma_bins = (
+            max(sigma_data_y / dy, 0.5), 
+            max(sigma_data_x / dx, 0.5)
+        )
+
+        smoothed_H = gaussian_filter(H, sigma=sigma_bins, mode='constant', cval=0.0)
+
+        area = dx * dy
+        total_sum = np.sum(smoothed_H) * area
+        if total_sum > 0:
+            density_H = smoothed_H / total_sum
+        else:
+            density_H = smoothed_H
+
+        return density_H, xedges, yedges
+
+    @staticmethod
+    def _calculate_point_densities(
+        points_x: np.ndarray,
+        points_y: np.ndarray,
+        density_H: np.ndarray,
+        xedges: np.ndarray,
+        yedges: np.ndarray
+    ) -> np.ndarray:
+        """
+        Map each data point to its corresponding density bin.
+
+        Parameters
+        ----------
+        points_x : np.ndarray
+            X-axis coordinates of the points.
+        points_y : np.ndarray
+            Y-axis coordinates of the points.
+        density_H : np.ndarray
+            2D array representing the full smoothed grid density.
+        xedges : np.ndarray
+            1D array containing the X bin boundaries.
+        yedges : np.ndarray
+            1D array containing the Y bin boundaries.
+
+        Returns
+        -------
+        np.ndarray
+            1D array of extracted density values corresponding to each point.
+        """
+        x_indices = np.clip(np.searchsorted(xedges, points_x, side='right') - 1, 0, len(xedges) - 2)
+        y_indices = np.clip(np.searchsorted(yedges, points_y, side='right') - 1, 0, len(yedges) - 2)
+        return density_H[y_indices, x_indices]
+
+    @staticmethod
+    def _extract_robust_contour_levels(
+        point_densities: np.ndarray,
+        density_H: np.ndarray,
+        percentile_levels: List[int]
+    ) -> Tuple[np.ndarray, Dict[float, str]]:
+        """
+        Calculate contour density thresholds and their labels robustly.
+
+        Parameters
+        ----------
+        point_densities : np.ndarray
+            1D array of estimated density value for each point.
+        density_H : np.ndarray
+            2D array representing the full smoothed density grid.
+        percentile_levels : List[int]
+            Requested percentile contour heights (e.g., [20, 40, 60, 80]).
+
+        Returns
+        -------
+        Tuple[np.ndarray, Dict[float, str]]
+            Array of valid, monotonic density values to plot as contours,
+            and a dictionary mapping those density values to string labels.
+        """
+        if point_densities.size == 0:
+            return np.array([], dtype=float), {}
+
+        raw_levels = np.percentile(point_densities, percentile_levels)
+        percentile_labels = [f'{100-pct:.0f}%' for pct in percentile_levels]
+        
+        fmt = {}
+        unique_levels = []
+        seen = set()
+        
+        for level, label in zip(raw_levels, percentile_labels):
+            key = round(float(level), 12)
+            if key not in seen:
+                seen.add(key)
+                level_float = float(level)
+                fmt[level_float] = label
+                unique_levels.append(level_float)
+                
+        levels_to_plot = np.array(unique_levels, dtype=float)
+        levels_to_plot = np.sort(levels_to_plot)
+
+        dmin = float(np.min(density_H))
+        dmax = float(np.max(density_H))
+        
+        valid_mask = (levels_to_plot > dmin) & (levels_to_plot < dmax)
+        levels_to_plot = levels_to_plot[valid_mask]
+
+        valid_levels_set = set(map(float, levels_to_plot))
+        fmt = {lvl: lbl for lvl, lbl in fmt.items() if lvl in valid_levels_set}
+
+        return levels_to_plot, fmt
 
     @staticmethod
     def plot_centers(
