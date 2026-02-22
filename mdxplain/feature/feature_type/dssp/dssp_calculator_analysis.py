@@ -159,7 +159,7 @@ class DSSPCalculatorAnalysis:
                 end = min(i + self.chunk_size, n_frames)
                 chunk_reshaped = dssp_data[i:end].reshape(-1, n_residues, n_classes)
                 indices[i:end] = np.argmax(chunk_reshaped, axis=2)
-                indices.flush()
+                MemmapUtils.evict_memory_range(indices, i, end)
             
             ResourceUtils.tune_memmap(indices, "random")
             if MemmapUtils.is_memmap_view(dssp_data):

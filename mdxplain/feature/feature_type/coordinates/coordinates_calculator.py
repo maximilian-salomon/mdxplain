@@ -259,10 +259,7 @@ class CoordinatesCalculator(CalculatorBase):
                 
                 # Reshape to flat format (n_frames, n_atoms * 3)
                 coordinates[i:end] = chunk_coords.reshape(end - i, -1)
-                
-                # Flush to disk if memory-mapped
-                if hasattr(coordinates, 'flush'):
-                    coordinates.flush()
+                MemmapUtils.evict_memory_range(coordinates, i, end)
         else:
             # In-memory processing for smaller datasets
             # Convert directly into angstroem

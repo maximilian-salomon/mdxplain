@@ -569,8 +569,6 @@ class SelectionMatrixHelper:
                 build_frame_mapping=build_frame_mapping,
                 chunk_size=pipeline_data.chunk_size,
             )
-            if is_memmap:
-                matrix.flush()
 
         if is_memmap:
             ResourceUtils.tune_memmap(matrix, "random")
@@ -669,6 +667,12 @@ class SelectionMatrixHelper:
                 start_row + row_chunk_start:start_row + row_chunk_end,
                 :,
             ] = chunk_buffer
+            
+            MemmapUtils.evict_memory_range(
+                matrix,
+                start_row + row_chunk_start,
+                start_row + row_chunk_end,
+            )
 
         if build_frame_mapping:
             if mapping_traj_chunks is None or mapping_frame_chunks is None:

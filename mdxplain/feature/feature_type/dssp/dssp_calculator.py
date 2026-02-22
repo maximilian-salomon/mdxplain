@@ -238,8 +238,7 @@ class DSSPCalculator(CalculatorBase):
                 encoded_chunk = self._encode_dssp_assignments(chunk_dssp, encoding, classes, simplified)
 
                 dssp_array[i:end] = encoded_chunk
-                if hasattr(dssp_array, "flush"):
-                    dssp_array.flush()
+                MemmapUtils.evict_memory_range(dssp_array, i, end)
         else:
             # In-memory processing for smaller datasets
             dssp_assignments = md.compute_dssp(trajectory, simplified=simplified)

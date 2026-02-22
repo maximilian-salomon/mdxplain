@@ -235,8 +235,7 @@ class TorsionsCalculator(CalculatorBase):
                 )
                 
                 torsions_array[i:end] = chunk_angles
-                if hasattr(torsions_array, "flush"):
-                    torsions_array.flush()
+                MemmapUtils.evict_memory_range(torsions_array, i, end)
         else:
             # In-memory processing for smaller datasets
             all_angles, _ = self._compute_all_angles(

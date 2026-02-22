@@ -24,6 +24,7 @@ Centralized helpers for memmap path handling and lifecycle operations.
 
 from typing import Any, Optional, Tuple, Union
 import gc
+import mmap
 import os
 
 import numpy as np
@@ -99,6 +100,130 @@ class MemmapUtils:
         return False
 
     @staticmethod
+    def _supports_dontneed(memmap_obj: np.memmap) -> bool:
+        """
+        Check whether MADV_DONTNEED is available for the memmap mapping.
+
+        Parameters
+        ----------
+        memmap_obj : np.memmap
+            Memmap object whose backing mmap should be inspected.
+
+        Returns
+        -------
+        bool
+            True when madvise with MADV_DONTNEED is supported.
+        """
+        mm = getattr(memmap_obj, "_mmap", None)
+        return (
+            mm is not None
+            and hasattr(mm, "madvise")
+            and getattr(mmap, "MADV_DONTNEED", None) is not None
+        )
+
+    @staticmethod
+    def evict_from_os_cache(array: Any) -> None:
+        """
+        Request the OS to release cached pages for a memmap backing an array.
+
+        Parameters
+        ----------
+        array : Any
+            Array, memmap, or view potentially backed by a memmap.
+
+        Returns
+        -------
+        None
+            Applies MADV_DONTNEED when supported; otherwise flushes writeable mappings.
+
+        Notes
+        -----
+        Automatically flushes the array before eviction, so callers do not
+        need to manually issue `.flush()` in addition to this method.
+        """
+        base = array
+        seen = set()
+        while isinstance(base, np.ndarray) and id(base) not in seen:
+            seen.add(id(base))
+            if isinstance(base, np.memmap):
+                if hasattr(base, "flush") and base.flags.writeable:
+                    try:
+                        base.flush()
+                    except ValueError as e:
+                        if "closed" not in str(e).lower() and "invalid" not in str(e).lower():
+                            raise
+                        break  # If closed, we can't evict anyway
+                if (
+                    MemmapUtils._supports_dontneed(base)
+                    and hasattr(base, "filename")
+                    and base.filename is not None
+                ):
+                    ResourceUtils.tune_memmap(base, "dontneed")
+                break
+            base = base.base
+
+    @staticmethod
+    def evict_memory_range(array: Any, start_row: int, end_row: int) -> None:
+        """
+        Request the OS to release cached pages for a specific row range.
+
+        Parameters
+        ----------
+        array : Any
+            Array, memmap, or view potentially backed by a memmap.
+        start_row : int
+            Starting row index (inclusive).
+        end_row : int
+            Ending row index (exclusive).
+
+        Returns
+        -------
+        None
+            Applies MADV_DONTNEED to the row range when supported; otherwise
+            flushes writeable mappings.
+
+        Notes
+        -----
+        This is crucial during large dataset copying inside loops
+        to prevent OS RAM accumulation from read/write caching.
+        Automatically flushes the underlying memmap before eviction.
+        """
+        base = array
+        seen = set()
+        while isinstance(base, np.ndarray) and id(base) not in seen:
+            seen.add(id(base))
+            if isinstance(base, np.memmap):
+                if base.ndim == 0:
+                    return
+
+                row_count = int(base.shape[0])
+                start, end, _ = slice(start_row, end_row).indices(row_count)
+                if start >= end:
+                    return
+
+                if hasattr(base, "flush") and base.flags.writeable:
+                    try:
+                        base.flush()
+                    except ValueError as e:
+                        if "closed" not in str(e).lower() and "invalid" not in str(e).lower():
+                            raise
+                        break  # If closed, we can't evict anyway
+                
+                if (
+                    MemmapUtils._supports_dontneed(base)
+                    and hasattr(base, "filename")
+                    and base.filename is not None
+                ):
+                    # Use first-axis stride to map row ranges to byte ranges.
+                    row_stride = abs(int(base.strides[0])) if base.ndim > 0 else int(base.dtype.itemsize)
+                    view_offset = int(getattr(base, "offset", 0))
+                    start_offset = int(view_offset + start * row_stride)
+                    length = int((end - start) * row_stride)
+                    ResourceUtils.tune_memmap(base, "dontneed", start_offset, length)
+                break
+            base = base.base
+
+    @staticmethod
     def close_memmap_view(array: Any) -> None:
         """
         Close underlying memmap handle(s) for an array or array view.
@@ -111,23 +236,17 @@ class MemmapUtils:
         Returns
         -------
         None
-            Flushes and closes any discovered memmap handles.
+            Flushes, evicts from cache, and closes any discovered memmap handles.
         """
         base = array
         seen = set()
         while isinstance(base, np.ndarray) and id(base) not in seen:
             seen.add(id(base))
             if isinstance(base, np.memmap):
-                try:
-                    base.flush()
-                except Exception:
-                    pass
+                MemmapUtils.evict_from_os_cache(base)
                 mmap_obj = getattr(base, "_mmap", None)
-                if mmap_obj is not None:
-                    try:
-                        mmap_obj.close()
-                    except Exception:
-                        pass
+                if mmap_obj is not None and hasattr(mmap_obj, "close"):
+                    mmap_obj.close()
             base = base.base
 
     @staticmethod

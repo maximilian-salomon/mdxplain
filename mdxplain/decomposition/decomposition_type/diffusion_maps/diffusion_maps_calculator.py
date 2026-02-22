@@ -704,7 +704,7 @@ class DiffusionMapsCalculator(CalculatorBase):
                 rmsd_matrix[i, j_start:j_end] = distances
                 rmsd_matrix[j_start:j_end, i] = distances
             if self.use_memmap:
-                rmsd_matrix.flush()
+                MemmapUtils.evict_memory_range(rmsd_matrix, i, i + 1)
 
         if self.use_memmap:
             ResourceUtils.tune_memmap(rmsd_matrix, "random")
@@ -776,7 +776,7 @@ class DiffusionMapsCalculator(CalculatorBase):
             # q_i ≈ Σ_j K_ij  (discrete estimate of q_ε(x_i)).
             row_sums[i:end_i] = chunk_kernel.sum(axis=1, dtype=np.float64)
             if self.use_memmap:
-                kernel_matrix.flush()
+                MemmapUtils.evict_memory_range(kernel_matrix, i, end_i)
 
         # Enforce exact diagonal (RMSD=0 => K_ii=1).
         np.fill_diagonal(kernel_matrix, 1.0)
@@ -1044,7 +1044,7 @@ class DiffusionMapsCalculator(CalculatorBase):
                 # d_i^(α) = Σ_j K_ij^(α).
                 new_row_sums[i:end_i] = chunk.sum(axis=1)
             if self.use_memmap:
-                kernel_matrix.flush()
+                MemmapUtils.evict_memory_range(kernel_matrix, i, end_i)
 
         # Restore memmap access pattern.
         if self.use_memmap:
@@ -1756,7 +1756,7 @@ class DiffusionMapsCalculator(CalculatorBase):
             # K(x,ℓ) = exp(-RMSD(x,ℓ)^2 / ε)
             K_all_to_landmarks[chunk_start:chunk_end, :] = np.exp(-rmsd_sq / epsilon)
             if self.use_memmap:
-                K_all_to_landmarks.flush()
+                MemmapUtils.evict_memory_range(K_all_to_landmarks, chunk_start, chunk_end)
         
         if self.use_memmap:
             ResourceUtils.tune_memmap(K_all_to_landmarks, "random")
@@ -2175,7 +2175,7 @@ class DiffusionMapsCalculator(CalculatorBase):
                 (P_chunk @ eigvecs_small[:, mask]) / valid_eigvals[mask]
             )
             if self.use_memmap:
-                eigenvectors_full.flush()
+                MemmapUtils.evict_memory_range(eigenvectors_full, chunk_start, chunk_end)
 
         if self.use_memmap:
             ResourceUtils.tune_memmap(eigenvectors_full, "random")

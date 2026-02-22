@@ -94,7 +94,7 @@ class DSSPEncodingHelper:
             end = min(i + chunk_size, dssp_data.shape[0])
             chunk = dssp_data[i:end]
             encoded[i:end] = chunk.astype('U1')
-            encoded.flush()
+            MemmapUtils.evict_memory_range(encoded, i, end)
 
         ResourceUtils.tune_memmap(encoded, "random")
         return encoded
@@ -175,7 +175,7 @@ class DSSPEncodingHelper:
                 chunk_encoded[chunk == class_char] = idx
             
             encoded[i:end] = chunk_encoded
-            encoded.flush()
+            MemmapUtils.evict_memory_range(encoded, i, end)
         
         ResourceUtils.tune_memmap(encoded, "random")
         return encoded
@@ -231,7 +231,7 @@ class DSSPEncodingHelper:
             for class_idx, class_char in enumerate(classes):
                 mask = (dssp_data[i:end] == class_char)
                 encoded[i:end][:, class_idx::n_classes] = mask
-            encoded.flush()
+            MemmapUtils.evict_memory_range(encoded, i, end)
 
         ResourceUtils.tune_memmap(encoded, "random")
         return encoded

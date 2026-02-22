@@ -213,8 +213,7 @@ class SASACalculator(CalculatorBase):
                 )
                 
                 sasa_array[i:end] = chunk_sasa * NM2_TO_ANGSTROM2
-                if hasattr(sasa_array, "flush"):
-                    sasa_array.flush()
+                MemmapUtils.evict_memory_range(sasa_array, i, end)
         else:
             # In-memory processing for smaller datasets
             sasa_values = md.shrake_rupley(

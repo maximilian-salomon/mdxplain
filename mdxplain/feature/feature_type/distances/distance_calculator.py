@@ -463,8 +463,7 @@ class DistanceCalculator(CalculatorBase):
             ):
                 end_idx = min(i + self.chunk_size, total_frames)
                 distances[i:end_idx] *= 10
-                if hasattr(distances, "flush"):
-                    distances.flush()
+                MemmapUtils.evict_memory_range(distances, i, end_idx)
             if MemmapUtils.is_memmap_view(distances):
                 ResourceUtils.tune_memmap(distances, "random")
         else:
@@ -553,8 +552,7 @@ class DistanceCalculator(CalculatorBase):
                 periodic=self.use_pbc,
             )
             distances[:] = dist  # Direct assignment
-            if hasattr(distances, "flush"):
-                distances.flush()
+            MemmapUtils.evict_from_os_cache(distances)
         else:
             if MemmapUtils.is_memmap_view(distances):
                 ResourceUtils.tune_memmap(distances, "sequential")
@@ -575,8 +573,7 @@ class DistanceCalculator(CalculatorBase):
 
                 # Direct assignment - dist is already in condensed format
                 distances[frame_start : frame_start + frames_to_process] = dist
-                if hasattr(distances, "flush"):
-                    distances.flush()
+                MemmapUtils.evict_memory_range(distances, frame_start, frame_start + frames_to_process)
             if MemmapUtils.is_memmap_view(distances):
                 ResourceUtils.tune_memmap(distances, "random")
 

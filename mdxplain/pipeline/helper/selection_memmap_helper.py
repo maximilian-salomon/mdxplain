@@ -43,6 +43,7 @@ class SelectionMemmapHelper:
     horizontally stacking matrices while preserving memmap nature,
     and creating frame selections efficiently.
     """
+    _EVICT_EVERY_N_CHUNKS = 10
 
     @staticmethod
     def create_memmap_selection(
@@ -98,6 +99,8 @@ class SelectionMemmapHelper:
         if is_memmap_data:
             ResourceUtils.tune_memmap(data, "sequential")
         ResourceUtils.tune_memmap(result, "sequential")
+        batch_start = 0
+        chunk_counter = 0
         for row_start in ProgressUtils.iterate(
             range(0, n_rows, chunk_size),
             desc="Selecting columns",
@@ -105,7 +108,16 @@ class SelectionMemmapHelper:
         ):
             row_end = min(row_start + chunk_size, n_rows)
             result[row_start:row_end, :] = data[row_start:row_end, indices]
-            result.flush()
+            chunk_counter += 1
+            if (
+                chunk_counter >= SelectionMemmapHelper._EVICT_EVERY_N_CHUNKS
+                or row_end >= n_rows
+            ):
+                MemmapUtils.evict_memory_range(result, batch_start, row_end)
+                if is_memmap_data:
+                    MemmapUtils.evict_memory_range(data, batch_start, row_end)
+                batch_start = row_end
+                chunk_counter = 0
 
         ResourceUtils.tune_memmap(result, "random")
         if is_memmap_data:
@@ -164,6 +176,8 @@ class SelectionMemmapHelper:
             if is_memmap_matrix:
                 ResourceUtils.tune_memmap(matrix, "sequential")
             ResourceUtils.tune_memmap(result, "sequential")
+            batch_start = 0
+            chunk_counter = 0
             for row_start in ProgressUtils.iterate(
                 range(0, total_samples, chunk_size),
                 desc=f"Concatenating matrix {i+1}/{len(matrices)}",
@@ -174,7 +188,16 @@ class SelectionMemmapHelper:
                 result[row_start:row_end, col_start:col_end] = matrix[
                     row_start:row_end, :
                 ]
-                result.flush()
+                chunk_counter += 1
+                if (
+                    chunk_counter >= SelectionMemmapHelper._EVICT_EVERY_N_CHUNKS
+                    or row_end >= total_samples
+                ):
+                    MemmapUtils.evict_memory_range(result, batch_start, row_end)
+                    if is_memmap_matrix:
+                        MemmapUtils.evict_memory_range(matrix, batch_start, row_end)
+                    batch_start = row_end
+                    chunk_counter = 0
             ResourceUtils.tune_memmap(result, "random")
             if is_memmap_matrix:
                 ResourceUtils.tune_memmap(matrix, "random")
@@ -235,6 +258,8 @@ class SelectionMemmapHelper:
         if is_memmap_data:
             ResourceUtils.tune_memmap(data, "sequential")
         ResourceUtils.tune_memmap(result, "sequential")
+        batch_start = 0
+        chunk_counter = 0
         for chunk_start in ProgressUtils.iterate(
             range(0, n_selected_frames, chunk_size),
             desc="Creating frame selection",
@@ -247,7 +272,14 @@ class SelectionMemmapHelper:
             
             # Copy data for this chunk
             result[chunk_start:chunk_end, :] = data[chunk_indices, :]
-            result.flush()
+            chunk_counter += 1
+            if (
+                chunk_counter >= SelectionMemmapHelper._EVICT_EVERY_N_CHUNKS
+                or chunk_end >= n_selected_frames
+            ):
+                MemmapUtils.evict_memory_range(result, batch_start, chunk_end)
+                batch_start = chunk_end
+                chunk_counter = 0
 
         ResourceUtils.tune_memmap(result, "random")
         if is_memmap_data:

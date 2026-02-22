@@ -721,8 +721,7 @@ class CalculatorStatHelper:
         if is_memmap_input:
             ResourceUtils.tune_memmap(array, "random")
         if is_memmap_result:
-            if hasattr(result, "flush"):
-                result.flush()
+            MemmapUtils.evict_from_os_cache(result)
             ResourceUtils.tune_memmap(result, "random")
 
     @staticmethod

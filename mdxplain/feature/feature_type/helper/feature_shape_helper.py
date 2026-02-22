@@ -164,8 +164,7 @@ class FeatureShapeHelper:
             )
         else:
             result[:] = square_array[:, i_indices, j_indices]
-            if FeatureShapeHelper.is_memmap(result):
-                result.flush()
+            MemmapUtils.evict_from_os_cache(result)
 
         return result
 
@@ -247,7 +246,7 @@ class FeatureShapeHelper:
             chunk = square_array[i:end_idx]
             result[i:end_idx] = chunk[:, i_indices, j_indices]
             if is_memmap_result:
-                result.flush()
+                MemmapUtils.evict_memory_range(result, i, end_idx)
         if is_memmap_input:
             ResourceUtils.tune_memmap(square_array, "random")
         if is_memmap_result:
@@ -416,7 +415,7 @@ class FeatureShapeHelper:
             square_chunk = md.geometry.squareform(chunk, residue_pairs)
             square_array[i:end_idx] = square_chunk
             if is_memmap_output:
-                square_array.flush()
+                MemmapUtils.evict_memory_range(square_array, i, end_idx)
 
         if is_memmap_input:
             ResourceUtils.tune_memmap(condensed_array, "random")

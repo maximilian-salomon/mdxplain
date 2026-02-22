@@ -146,8 +146,7 @@ class ContactCalculator(CalculatorBase):
         ):
             end_idx = min(i + self.chunk_size, distances.shape[0])
             contacts[i:end_idx] = distances[i:end_idx] <= cutoff
-            if hasattr(contacts, "flush"):
-                contacts.flush()
+            MemmapUtils.evict_memory_range(contacts, i, end_idx)
 
         if is_memmap_contacts:
             ResourceUtils.tune_memmap(contacts, "random")

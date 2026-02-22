@@ -572,7 +572,7 @@ class CalculatorBase(ABC):
                 shape=labels.shape,
             )
             memmap_labels[:] = labels
-            memmap_labels.flush()
+            MemmapUtils.evict_from_os_cache(memmap_labels)
             return memmap_labels
         return labels
 
@@ -618,8 +618,7 @@ class CalculatorBase(ABC):
         full_labels = self._prepare_labels_storage(n_samples, algorithm, "knn_sampling")
         full_labels[:] = noise_label
         full_labels[sample_indices] = sample_labels
-        if hasattr(full_labels, "flush"):
-            full_labels.flush()
+        MemmapUtils.evict_from_os_cache(full_labels)
         
         # Use k-NN for non-sampled points (only for non-noise clusters)
         non_noise_mask = sample_labels != noise_label
@@ -658,8 +657,7 @@ class CalculatorBase(ABC):
                     # k-NN prediction for chunk and write directly
                     chunk_labels = knn_classifier.predict(data[chunk_indices])
                     full_labels[chunk_indices] = chunk_labels
-                    if hasattr(full_labels, "flush"):
-                        full_labels.flush()
+                    MemmapUtils.evict_memory_range(full_labels, chunk_indices[0], chunk_indices[-1] + 1)
                 if is_memmap_labels:
                     ResourceUtils.tune_memmap(full_labels, "random")
                 if is_memmap_data:

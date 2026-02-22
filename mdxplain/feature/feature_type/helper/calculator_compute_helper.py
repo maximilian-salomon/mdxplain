@@ -347,8 +347,7 @@ class CalculatorComputeHelper:
             CalculatorComputeHelper._process_chunk(
                 chunk, dynamic_data, mask, i, end_idx, is_square_format
             )
-            if hasattr(dynamic_data, "flush"):
-                dynamic_data.flush()
+            MemmapUtils.evict_memory_range(dynamic_data, i, end_idx)
         if MemmapUtils.is_memmap_view(data):
             ResourceUtils.tune_memmap(data, "random")
         if MemmapUtils.is_memmap_view(dynamic_data):
@@ -392,8 +391,7 @@ class CalculatorComputeHelper:
             ):
                 end_idx = min(i + chunk_size, data.shape[0])
                 dynamic_data[i:end_idx] = data[i:end_idx, indices[0], indices[1]]
-                if hasattr(dynamic_data, "flush"):
-                    dynamic_data.flush()
+                MemmapUtils.evict_memory_range(dynamic_data, i, end_idx)
         else:
             data_flat = data.reshape(data.shape[0], -1)
             for i in ProgressUtils.iterate(
@@ -403,8 +401,7 @@ class CalculatorComputeHelper:
             ):
                 end_idx = min(i + chunk_size, data.shape[0])
                 dynamic_data[i:end_idx] = data_flat[i:end_idx, mask.flatten()]
-                if hasattr(dynamic_data, "flush"):
-                    dynamic_data.flush()
+                MemmapUtils.evict_memory_range(dynamic_data, i, end_idx)
         if is_memmap_data:
             ResourceUtils.tune_memmap(data, "random")
         if is_memmap_output:

@@ -301,3 +301,196 @@ def test_close_memmaps_under_path_accepts_alias_directory_path():
         MemmapUtils.close_memmaps_under_path(alias)
 
         assert mem._mmap.closed is True
+
+
+def test_evict_from_os_cache_flushes_only_writeable_memmaps(monkeypatch):
+    """Read-only memmaps should be evicted without calling flush()."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        path = Path(tmpdir) / "evict_rw_ro.dat"
+        writable = np.memmap(path, dtype=np.float32, mode="w+", shape=(8,))
+        writable[:] = np.arange(8, dtype=np.float32)
+        writable.flush()
+        readonly = np.memmap(path, dtype=np.float32, mode="r", shape=(8,))
+
+        try:
+            calls = {"flush": 0, "tune": 0}
+
+            def _flush_stub(self):
+                calls["flush"] += 1
+
+            def _supports_stub(_memmap_obj):
+                return True
+
+            def _tune_stub(_array, _strategy):
+                calls["tune"] += 1
+                return {"strategy": "dontneed", "applied": False, "errors": []}
+
+            monkeypatch.setattr(np.memmap, "flush", _flush_stub, raising=True)
+            monkeypatch.setattr(
+                "mdxplain.utils.memmap_utils.MemmapUtils._supports_dontneed",
+                staticmethod(_supports_stub),
+            )
+            monkeypatch.setattr(
+                "mdxplain.utils.memmap_utils.ResourceUtils.tune_memmap",
+                _tune_stub,
+            )
+
+            MemmapUtils.evict_from_os_cache(writable)
+            MemmapUtils.evict_from_os_cache(readonly)
+
+            assert calls["flush"] == 1
+            assert calls["tune"] == 2
+        finally:
+            readonly_mmap = getattr(readonly, "_mmap", None)
+            if readonly_mmap is not None and not readonly_mmap.closed:
+                readonly_mmap.close()
+            writable_mmap = getattr(writable, "_mmap", None)
+            if writable_mmap is not None and not writable_mmap.closed:
+                writable_mmap.close()
+
+
+def test_evict_memory_range_normalizes_bounds_and_skips_empty_range(monkeypatch):
+    """Range eviction should clamp bounds and no-op for empty ranges."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        path = Path(tmpdir) / "evict_range.dat"
+        arr = np.memmap(path, dtype=np.float32, mode="w+", shape=(10, 3))
+
+        try:
+            calls = {"flush": 0, "ranges": []}
+
+            def _flush_stub(self):
+                calls["flush"] += 1
+
+            def _supports_stub(_memmap_obj):
+                return True
+
+            def _tune_stub(_array, strategy, start_offset=0, length=0):
+                calls["ranges"].append((strategy, int(start_offset), int(length)))
+                return {"strategy": strategy, "applied": False, "errors": []}
+
+            monkeypatch.setattr(np.memmap, "flush", _flush_stub, raising=True)
+            monkeypatch.setattr(
+                "mdxplain.utils.memmap_utils.MemmapUtils._supports_dontneed",
+                staticmethod(_supports_stub),
+            )
+            monkeypatch.setattr(
+                "mdxplain.utils.memmap_utils.ResourceUtils.tune_memmap",
+                _tune_stub,
+            )
+
+            MemmapUtils.evict_memory_range(arr, -100, 1000)
+            MemmapUtils.evict_memory_range(arr, 5, 5)
+
+            assert calls["flush"] == 1
+            assert calls["ranges"] == [("dontneed", 0, 120)]
+        finally:
+            mmap_obj = getattr(arr, "_mmap", None)
+            if mmap_obj is not None and not mmap_obj.closed:
+                mmap_obj.close()
+
+
+def test_evict_from_os_cache_falls_back_to_flush_without_dontneed(monkeypatch):
+    """Without MADV_DONTNEED support, eviction should still flush writeable memmaps."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        path = Path(tmpdir) / "evict_no_dontneed.dat"
+        arr = np.memmap(path, dtype=np.float32, mode="w+", shape=(6,))
+
+        calls = {"flush": 0, "tune": 0}
+
+        def _flush_stub(self):
+            calls["flush"] += 1
+
+        def _supports_stub(_memmap_obj):
+            return False
+
+        def _tune_stub(*_args, **_kwargs):
+            calls["tune"] += 1
+            return {"strategy": "dontneed", "applied": False, "errors": []}
+
+        monkeypatch.setattr(np.memmap, "flush", _flush_stub, raising=True)
+        monkeypatch.setattr(
+            "mdxplain.utils.memmap_utils.MemmapUtils._supports_dontneed",
+            staticmethod(_supports_stub),
+        )
+        monkeypatch.setattr(
+            "mdxplain.utils.memmap_utils.ResourceUtils.tune_memmap",
+            _tune_stub,
+        )
+
+        MemmapUtils.evict_from_os_cache(arr)
+
+        assert calls["flush"] == 1
+        assert calls["tune"] == 0
+
+        arr._mmap.close()
+
+
+def test_evict_memory_range_falls_back_to_flush_without_dontneed(monkeypatch):
+    """Range eviction should still flush writeable memmaps when dontneed is unavailable."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        path = Path(tmpdir) / "evict_range_no_dontneed.dat"
+        arr = np.memmap(path, dtype=np.float32, mode="w+", shape=(10, 2))
+
+        calls = {"flush": 0, "tune": 0}
+
+        def _flush_stub(self):
+            calls["flush"] += 1
+
+        def _supports_stub(_memmap_obj):
+            return False
+
+        def _tune_stub(*_args, **_kwargs):
+            calls["tune"] += 1
+            return {"strategy": "dontneed", "applied": False, "errors": []}
+
+        monkeypatch.setattr(np.memmap, "flush", _flush_stub, raising=True)
+        monkeypatch.setattr(
+            "mdxplain.utils.memmap_utils.MemmapUtils._supports_dontneed",
+            staticmethod(_supports_stub),
+        )
+        monkeypatch.setattr(
+            "mdxplain.utils.memmap_utils.ResourceUtils.tune_memmap",
+            _tune_stub,
+        )
+
+        MemmapUtils.evict_memory_range(arr, 2, 8)
+
+        assert calls["flush"] == 1
+        assert calls["tune"] == 0
+
+        arr._mmap.close()
+
+
+def test_evict_memory_range_uses_view_offset_for_sliced_memmap(monkeypatch):
+    """Range eviction on memmap views should include the view byte offset."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        path = Path(tmpdir) / "evict_view_offset.dat"
+        arr = np.memmap(path, dtype=np.float32, mode="w+", shape=(10, 3))
+        view = arr[2:]
+
+        calls = {"ranges": []}
+
+        def _supports_stub(_memmap_obj):
+            return True
+
+        def _tune_stub(_array, strategy, start_offset=0, length=0):
+            calls["ranges"].append((strategy, int(start_offset), int(length)))
+            return {"strategy": strategy, "applied": False, "errors": []}
+
+        monkeypatch.setattr(
+            "mdxplain.utils.memmap_utils.MemmapUtils._supports_dontneed",
+            staticmethod(_supports_stub),
+        )
+        monkeypatch.setattr(
+            "mdxplain.utils.memmap_utils.ResourceUtils.tune_memmap",
+            _tune_stub,
+        )
+
+        MemmapUtils.evict_memory_range(view, 1, 4)
+
+        row_stride = abs(int(view.strides[0]))
+        expected_offset = int(getattr(view, "offset", 0) + 1 * row_stride)
+        expected_length = int((4 - 1) * row_stride)
+        assert calls["ranges"] == [("dontneed", expected_offset, expected_length)]
+
+        view._mmap.close()

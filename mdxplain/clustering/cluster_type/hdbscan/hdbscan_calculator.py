@@ -306,8 +306,7 @@ class HDBSCANCalculator(CalculatorBase):
             end = min(start + chunk_size, n_samples)
             chunk_labels, _ = hdbscan.approximate_predict(clusterer, data[start:end])
             full_labels[start:end] = chunk_labels
-            if hasattr(full_labels, "flush"):
-                full_labels.flush()
+            MemmapUtils.evict_memory_range(full_labels, start, end)
         if is_memmap_labels:
             ResourceUtils.tune_memmap(full_labels, "random")
         if is_memmap_data:

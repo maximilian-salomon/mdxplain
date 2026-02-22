@@ -575,7 +575,7 @@ class KernelPCACalculator(CalculatorBase):
                 block = rbf_kernel(chunk_i, chunk_j, gamma=gamma)
                 kernel_matrix[row_start:row_end, col_start:col_end] = block
             if self.use_memmap:
-                kernel_matrix.flush()
+                MemmapUtils.evict_memory_range(kernel_matrix, row_start, row_end)
 
         if self.use_memmap:
             ResourceUtils.tune_memmap(kernel_matrix, "random")
@@ -668,8 +668,7 @@ class KernelPCACalculator(CalculatorBase):
                                     row_means[i:i_end, np.newaxis] - 
                                     col_means[np.newaxis, :] + 
                                     grand_mean)
-            if hasattr(kernel_matrix, "flush"):
-                kernel_matrix.flush()
+            MemmapUtils.evict_memory_range(kernel_matrix, i, i_end)
         if is_memmap:
             ResourceUtils.tune_memmap(kernel_matrix, "random")
 
@@ -746,7 +745,7 @@ class KernelPCACalculator(CalculatorBase):
                 shape=transformed_data.shape,
             )
             transformed_memmap[:] = transformed_data
-            transformed_memmap.flush()
+            MemmapUtils.evict_from_os_cache(transformed_memmap)
             transformed_data = transformed_memmap
 
         metadata = self._prepare_metadata(hyperparameters, data.shape)
@@ -1063,8 +1062,7 @@ class KernelPCACalculator(CalculatorBase):
 
             kernel_features_chunk = nystroem.transform(data_chunk).astype(np.float32, copy=False)
             result[start:end] = ipca.transform(kernel_features_chunk)
-            if hasattr(result, "flush"):
-                result.flush()
+            MemmapUtils.evict_memory_range(result, start, end)
         if is_memmap_result:
             ResourceUtils.tune_memmap(result, "random")
 

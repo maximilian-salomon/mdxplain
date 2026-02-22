@@ -26,7 +26,7 @@ threadpoolctl for portable process priority, I/O priority, CPU affinity,
 and BLAS/OpenMP thread limiting.
 """
 
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 import mmap
 import os
 import sys
@@ -256,74 +256,242 @@ class ResourceUtils:
         return list(range(count))
 
     @staticmethod
-    def tune_memmap(array: Any, strategy: str) -> Dict[str, Any]:
+    def tune_memmap(
+        array: Any, 
+        strategy: str, 
+        start_offset: int = 0, 
+        length: int = 0
+    ) -> Dict[str, Any]:
         """
-        Apply a memory access hint to a numpy memmap via mmap.madvise.
+        Apply a best-effort `madvise` hint to a memmap (or memmap-backed view).
 
         Parameters
         ----------
         array : Any
-            Numpy memmap (or memmap-backed array). Views are supported: the
-            method walks the .base chain to find the underlying mapping.
+            Memmap (or ndarray view backed by a memmap).
         strategy : str
-            Access pattern hint. Supported values:
-            - "sequential": use when writing or reading linearly
-            - "random": use for irregular/random access patterns
-            - "dontneed": advise the OS to drop cached pages after flush
+            One of: ``"sequential"``, ``"random"``, ``"dontneed"``.
+        start_offset : int
+            Byte offset for range-based hints. Default ``0`` (full mapping).
+        length : int
+            Byte length for range-based hints. For known mapping sizes, values
+            ``<=0`` are interpreted as \"until end of mapping\".
 
         Returns
         -------
         dict
-            Dictionary containing applied status and any errors encountered.
-
-        Notes
-        -----
-        On Linux, this uses mmap.madvise with MADV_* constants. On Windows and
-        some macOS builds, madvise may be unavailable; in that case the call
-        is safely ignored and reported in the errors list.
-
-        The hint applies to the full mmap region, not just a slice. Use
-        "dontneed" only when you are done reading or writing the mapping.
+            ``{\"strategy\": ..., \"applied\": bool, \"errors\": [..]}``.
         """
         result: Dict[str, Any] = {"strategy": strategy, "applied": False, "errors": []}
         if array is None:
             return result
 
-        mm = getattr(array, "_mmap", None)
-        base = getattr(array, "base", None)
-        seen = set()
-        while mm is None and base is not None and id(base) not in seen:
-            seen.add(id(base))
-            mm = getattr(base, "_mmap", None)
-            if mm is None and hasattr(base, "madvise"):
-                mm = base
-            base = getattr(base, "base", None)
-        if mm is None or not hasattr(mm, "madvise"):
+        mm = ResourceUtils._resolve_madvise_handle(array)
+        if mm is None:
             result["errors"].append("madvise not supported for this array")
             return result
 
-        strategy_key = strategy.strip().lower()
-        option = None
-        if strategy_key == "sequential":
-            option = getattr(mmap, "MADV_SEQUENTIAL", None)
-        elif strategy_key == "random":
-            option = getattr(mmap, "MADV_RANDOM", None)
-        elif strategy_key == "dontneed":
-            option = getattr(mmap, "MADV_DONTNEED", None)
-        else:
-            raise ValueError("strategy must be one of: sequential, random, dontneed")
-
+        option = ResourceUtils._resolve_madvise_option(strategy)
         if option is None:
-            result["errors"].append(f"madvise option not available for {strategy_key}")
+            result["errors"].append(
+                f"madvise option not available for {strategy.strip().lower()}"
+            )
+            return result
+
+        use_range, start, range_length, range_error = ResourceUtils._normalize_madvise_range(
+            mm, start_offset, length
+        )
+        if range_error is not None:
+            result["errors"].append(range_error)
             return result
 
         try:
-            mm.madvise(option)
+            if use_range:
+                mm.madvise(option, start, range_length)
+            else:
+                mm.madvise(option)
             result["applied"] = True
-        except (AttributeError, OSError, ValueError) as exc:  # pragma: no cover - OS-specific
+        except (AttributeError, OSError, ValueError, TypeError) as exc:  # pragma: no cover - OS-specific
             result["errors"].append(f"madvise failed: {exc}")
 
         return result
+
+    @staticmethod
+    def _resolve_madvise_handle(array: Any) -> Optional[Any]:
+        """
+        Resolve the first mmap-like object in an array/base chain that supports ``madvise``.
+
+        Parameters
+        ----------
+        array : Any
+            Candidate memmap or ndarray view. The function traverses ``array.base``
+            until it finds an object exposing a usable ``madvise`` method.
+
+        Returns
+        -------
+        object or None
+            Resolved mmap-like object that supports ``madvise``, or ``None`` when
+            no suitable handle is available.
+
+        Notes
+        -----
+        A ``seen`` set is used to avoid infinite loops in unusual base chains.
+        """
+        mm = getattr(array, "_mmap", None)
+        if mm is not None and hasattr(mm, "madvise"):
+            return mm
+
+        base = getattr(array, "base", None)
+        seen = set()
+        while base is not None and id(base) not in seen:
+            seen.add(id(base))
+            mm = getattr(base, "_mmap", None)
+            if mm is not None and hasattr(mm, "madvise"):
+                return mm
+            if hasattr(base, "madvise"):
+                return base
+            base = getattr(base, "base", None)
+
+        return None
+
+    @staticmethod
+    def _resolve_madvise_option(strategy: str) -> Optional[int]:
+        """
+        Map a strategy string to the corresponding platform ``madvise`` constant.
+
+        Parameters
+        ----------
+        strategy : str
+            Access hint strategy. Supported values are ``\"sequential\"``,
+            ``\"random\"``, and ``\"dontneed\"``.
+
+        Returns
+        -------
+        int or None
+            Platform-specific ``MADV_*`` constant, or ``None`` if the strategy
+            exists but is not exposed on the current platform.
+
+        Raises
+        ------
+        ValueError
+            If ``strategy`` is not one of the supported values.
+        """
+        strategy_key = strategy.strip().lower()
+        if strategy_key == "sequential":
+            return getattr(mmap, "MADV_SEQUENTIAL", None)
+        if strategy_key == "random":
+            return getattr(mmap, "MADV_RANDOM", None)
+        if strategy_key == "dontneed":
+            return getattr(mmap, "MADV_DONTNEED", None)
+        raise ValueError("strategy must be one of: sequential, random, dontneed")
+
+    @staticmethod
+    def _mmap_size_bytes(mmap_obj: Any) -> Optional[int]:
+        """
+        Best-effort extraction of mapping size in bytes.
+
+        Parameters
+        ----------
+        mmap_obj : Any
+            mmap-like object. The method first tries ``size()``, then falls back
+            to ``len()`` when available.
+
+        Returns
+        -------
+        int or None
+            Non-negative mapping size in bytes, or ``None`` if size cannot be
+            determined reliably.
+        """
+        if hasattr(mmap_obj, "size"):
+            try:
+                size_value = int(mmap_obj.size())
+                if size_value >= 0:
+                    return size_value
+            except (TypeError, ValueError, OSError, OverflowError):
+                pass
+        if hasattr(mmap_obj, "__len__"):
+            try:
+                size_value = int(len(mmap_obj))
+                if size_value >= 0:
+                    return size_value
+            except (TypeError, ValueError, OverflowError):
+                pass
+        return None
+
+    @staticmethod
+    def _normalize_madvise_range(
+        mmap_obj: Any,
+        start_offset: int,
+        length: int,
+    ) -> Tuple[bool, int, int, Optional[str]]:
+        """
+        Normalize and validate range arguments for ranged ``madvise`` calls.
+
+        Parameters
+        ----------
+        mmap_obj : Any
+            mmap-like object used to determine mapping size when available.
+        start_offset : int
+            Requested start offset in bytes.
+        length : int
+            Requested length in bytes. For known mapping sizes, values ``<= 0``
+            are interpreted as \"until end of mapping\".
+
+        Returns
+        -------
+        tuple
+            Tuple ``(use_range, start, normalized_length, error)`` where:
+            - ``use_range`` indicates whether ranged ``madvise`` should be used.
+            - ``start`` is the validated byte offset.
+            - ``normalized_length`` is the validated/clamped byte length.
+            - ``error`` is ``None`` on success, otherwise a human-readable message.
+
+        Notes
+        -----
+        If mapping size is unknown, a strictly positive length is required for
+        ranged calls.
+        """
+        try:
+            start = int(start_offset)
+            normalized_length = int(length)
+        except (TypeError, ValueError, OverflowError):
+            return False, 0, 0, "start_offset and length must be integers"
+
+        if start < 0 or normalized_length < 0:
+            return False, 0, 0, "start_offset and length must be non-negative"
+
+        use_range = start > 0 or normalized_length > 0
+        if not use_range:
+            return False, 0, 0, None
+
+        map_size = ResourceUtils._mmap_size_bytes(mmap_obj)
+        if map_size is None:
+            if normalized_length <= 0:
+                return False, 0, 0, "length must be > 0 when mmap size is unavailable"
+            return True, start, normalized_length, None
+
+        if start >= map_size:
+            return (
+                False,
+                0,
+                0,
+                f"start_offset {start} out of bounds for mapping size {map_size}",
+            )
+
+        if normalized_length <= 0:
+            normalized_length = map_size - start
+        else:
+            normalized_length = min(normalized_length, map_size - start)
+
+        if normalized_length <= 0:
+            return (
+                False,
+                0,
+                0,
+                f"length {length} resolves to empty range at offset {start}",
+            )
+
+        return True, start, normalized_length, None
 
     @staticmethod
     def _map_windows_priority(nice: int) -> int:

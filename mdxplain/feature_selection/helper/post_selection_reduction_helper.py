@@ -940,36 +940,8 @@ class PostSelectionReductionHelper:
         """
         if not temp_output_path:
             return
-        PostSelectionReductionHelper._flush_memmap(result.get("dynamic_data"))
+        MemmapUtils.close_memmap_view(result.get("dynamic_data"))
         PostSelectionReductionHelper._unlink_path(temp_output_path)
-
-    @staticmethod
-    def _flush_memmap(data: Any) -> None:
-        """
-        Flush and close memmap data if applicable.
-
-        Parameters
-        ----------
-        data : Any
-            Data that may be a memmap
-
-        Returns
-        -------
-        None
-        """
-        if not isinstance(data, np.memmap):
-            return
-        try:
-            data.flush()
-        except Exception:
-            pass
-        mm = getattr(data, "_mmap", None)
-        if mm is None:
-            return
-        try:
-            mm.close()
-        except Exception:
-            pass
 
     @staticmethod
     def _unlink_path(path: str) -> None:
@@ -1402,7 +1374,7 @@ class PostSelectionReductionHelper:
             end = min(start + chunk_size, n_frames)
             chunk = data_matrix[start:end, :][:, column_indices]
             selected_data[start:end, :] = chunk
-            selected_data.flush()
+            MemmapUtils.evict_memory_range(selected_data, start, end)
 
         ResourceUtils.tune_memmap(selected_data, "random")
         if is_memmap_data:

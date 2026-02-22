@@ -270,7 +270,7 @@ class PCACalculator(CalculatorBase):
                 shape=transformed_data.shape,
             )
             transformed_memmap[:] = transformed_data
-            transformed_memmap.flush()
+            MemmapUtils.evict_from_os_cache(transformed_memmap)
             transformed_data = transformed_memmap
 
         metadata = self._prepare_metadata(hyperparameters, data.shape)
