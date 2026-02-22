@@ -1499,6 +1499,7 @@ def _run_dataset(profile: _BenchmarkProfile, dataset_name: str, dataset_dir: Pat
     summary = _build_summary(results, run_cache)
     _write_summary(summary, output_root)
     _copy_artifacts(run_cache, output_root)
+    pipeline.close()
 
 
 def _dataset_name(factor: int) -> str:
