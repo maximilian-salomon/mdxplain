@@ -381,6 +381,153 @@ def _parse_scale_factor(run_name: str) -> int:
     return int(match.group(1)) if match else 1
 
 
+def _canonical_os_key(value: str) -> str:
+    """Normalize arbitrary OS labels to canonical benchmark OS keys.
+
+    Parameters
+    ----------
+    value : str
+        Raw OS label.
+
+    Returns
+    -------
+    str
+        Canonical key ``windows``, ``linux``, ``macos``, or ``unknown``.
+    """
+    text = str(value).strip().lower()
+    if text.startswith("win"):
+        return "windows"
+    if text.startswith("linux"):
+        return "linux"
+    if text.startswith("darwin") or text.startswith("mac"):
+        return "macos"
+    return "unknown"
+
+
+def _resolve_run_benchmark_os(summary: dict, legacy_os: str) -> str:
+    """Resolve benchmark OS for one run summary.
+
+    Parameters
+    ----------
+    summary : dict
+        Run summary payload.
+    legacy_os : str
+        CLI-provided legacy fallback (``auto``, ``windows``, ``linux``, ``macos``).
+
+    Returns
+    -------
+    str
+        Canonical benchmark OS key.
+    """
+    resolved = _canonical_os_key(summary.get("benchmark_os", ""))
+    if resolved != "unknown":
+        return resolved
+    if legacy_os != "auto":
+        return _canonical_os_key(legacy_os)
+    return "unknown"
+
+
+def _finite_or_nan(value: object) -> float:
+    """Convert value to finite float or ``nan``.
+
+    Parameters
+    ----------
+    value : object
+        Candidate numeric value.
+
+    Returns
+    -------
+    float
+        Finite float value when possible, otherwise ``nan``.
+    """
+    try:
+        parsed = float(value)
+    except Exception:
+        return float("nan")
+    return parsed if np.isfinite(parsed) else float("nan")
+
+
+def _first_finite(*values: object) -> float:
+    """Return first finite value from candidates.
+
+    Parameters
+    ----------
+    *values : object
+        Candidate numeric values.
+
+    Returns
+    -------
+    float
+        First finite value, or ``nan`` when none are finite.
+    """
+    for value in values:
+        parsed = _finite_or_nan(value)
+        if np.isfinite(parsed):
+            return parsed
+    return float("nan")
+
+
+def _max_finite(*values: object) -> float:
+    """Return finite maximum across candidate values.
+
+    Parameters
+    ----------
+    *values : object
+        Candidate numeric values.
+
+    Returns
+    -------
+    float
+        Finite maximum, or ``nan`` when none are finite.
+    """
+    finite_values = [_finite_or_nan(value) for value in values]
+    finite_values = [value for value in finite_values if np.isfinite(value)]
+    if not finite_values:
+        return float("nan")
+    return float(max(finite_values))
+
+
+def _resolve_ram_pressure_mb(
+    benchmark_os: object,
+    min_necessary_ram_mb: object,
+    non_cache_mb: object,
+    rss_mb: object,
+    private_mb: object,
+) -> float:
+    """Resolve canonical RAM pressure value with backward-compatible fallback.
+
+    Parameters
+    ----------
+    benchmark_os : object
+        Benchmark OS value.
+    min_necessary_ram_mb : object
+        New canonical metric.
+    non_cache_mb : object
+        Legacy non-cache metric.
+    rss_mb : object
+        RSS metric.
+    private_mb : object
+        Windows private metric.
+
+    Returns
+    -------
+    float
+        Canonical RAM pressure metric in MB.
+    """
+    min_necessary = _finite_or_nan(min_necessary_ram_mb)
+    if np.isfinite(min_necessary):
+        return min_necessary
+
+    os_key = _canonical_os_key(str(benchmark_os))
+    if os_key == "windows":
+        return _max_finite(private_mb, rss_mb, non_cache_mb)
+    if os_key == "linux":
+        return _first_finite(non_cache_mb, rss_mb, private_mb)
+    if os_key == "macos":
+        return _first_finite(non_cache_mb, rss_mb, private_mb)
+    return _max_finite(non_cache_mb, rss_mb, private_mb)
+
+
 def _profile_dir_count(root: Path) -> int:
     """Count benchmark profile directories available under one root.
 
@@ -635,6 +782,7 @@ def _build_total_row(
     run_label: str,
     scale_factor: int,
     summary: dict,
+    benchmark_os: str,
 ) -> dict:
     """Build one run-level total metrics row.
 
@@ -652,6 +800,8 @@ def _build_total_row(
         Parsed run scale factor.
     summary : dict
         Run summary JSON payload.
+    benchmark_os : str
+        Canonical benchmark OS key for this run.
 
     Returns
     -------
@@ -669,8 +819,12 @@ def _build_total_row(
         "run_key": run_key,
         "run_label": run_label,
         "scale_factor": scale_factor,
+        "benchmark_os": benchmark_os,
         "total_seconds": _as_float(summary.get("total_seconds")),
+        "peak_rss_mb": _as_float(summary.get("peak_rss_mb")),
+        "peak_private_mb": _as_float(summary.get("peak_private_mb")),
         "peak_non_cache_mb": _as_float(summary.get("peak_non_cache_mb")),
+        "peak_min_necessary_ram_mb": _as_float(summary.get("peak_min_necessary_ram_mb")),
         "min_mem_available_mb": _as_float(summary.get("min_mem_available_mb")),
         "peak_cgroup_current_mb": _as_float(summary.get("peak_cgroup_current_mb")),
         "cgroup_limit_mb": _as_float(summary.get("cgroup_limit_mb")),
@@ -686,6 +840,7 @@ def _build_step_rows(
     run_label: str,
     scale_factor: int,
     steps: list,
+    benchmark_os: str,
 ) -> list[dict]:
     """Build all step-level rows for one run.
 
@@ -703,6 +858,8 @@ def _build_step_rows(
         Parsed run scale factor.
     steps : list
         Step payload list from run JSON.
+    benchmark_os : str
+        Canonical benchmark OS key for this run.
 
     Returns
     -------
@@ -723,12 +880,22 @@ def _build_step_rows(
                 "run_key": run_key,
                 "run_label": run_label,
                 "scale_factor": scale_factor,
+                "benchmark_os": benchmark_os,
                 "step": step.get("name", f"step_{step_idx}"),
                 "step_index": step_idx,
                 "seconds": _as_float(step.get("seconds")),
+                "rss_start_mb": _as_float(step.get("rss_start_mb")),
+                "rss_end_mb": _as_float(step.get("rss_end_mb")),
+                "rss_peak_mb": _as_float(step.get("rss_peak_mb")),
                 "non_cache_start_mb": _as_float(step.get("non_cache_start_mb")),
                 "non_cache_end_mb": _as_float(step.get("non_cache_end_mb")),
                 "non_cache_peak_mb": _as_float(step.get("non_cache_peak_mb")),
+                "private_start_mb": _as_float(step.get("private_start_mb")),
+                "private_end_mb": _as_float(step.get("private_end_mb")),
+                "private_peak_mb": _as_float(step.get("private_peak_mb")),
+                "min_necessary_ram_start_mb": _as_float(step.get("min_necessary_ram_start_mb")),
+                "min_necessary_ram_end_mb": _as_float(step.get("min_necessary_ram_end_mb")),
+                "min_necessary_ram_peak_mb": _as_float(step.get("min_necessary_ram_peak_mb")),
                 "mem_available_start_mb": _as_float(step.get("mem_available_start_mb")),
                 "mem_available_end_mb": _as_float(step.get("mem_available_end_mb")),
                 "mem_available_min_mb": _as_float(step.get("mem_available_min_mb")),
@@ -765,8 +932,59 @@ def _derive_loaded_metrics(totals: pd.DataFrame, steps: pd.DataFrame) -> tuple[p
     totals = totals.sort_values(["profile", "scale_factor", "run"]).reset_index(drop=True)
     steps = steps.sort_values(["profile", "scale_factor", "run", "step_index"]).reset_index(drop=True)
 
+    # Resolve canonical RAM-pressure metrics with backward-compatible fallbacks.
+    totals["peak_ram_pressure_mb"] = totals.apply(
+        lambda row: _resolve_ram_pressure_mb(
+            row.get("benchmark_os", "unknown"),
+            row.get("peak_min_necessary_ram_mb"),
+            row.get("peak_non_cache_mb"),
+            row.get("peak_rss_mb"),
+            row.get("peak_private_mb"),
+        ),
+        axis=1,
+    )
+    totals["peak_min_necessary_ram_mb"] = totals["peak_ram_pressure_mb"]
+    totals["peak_non_cache_mb"] = totals["peak_ram_pressure_mb"]
+
+    steps["ram_pressure_start_mb"] = steps.apply(
+        lambda row: _resolve_ram_pressure_mb(
+            row.get("benchmark_os", "unknown"),
+            row.get("min_necessary_ram_start_mb"),
+            row.get("non_cache_start_mb"),
+            row.get("rss_start_mb"),
+            row.get("private_start_mb"),
+        ),
+        axis=1,
+    )
+    steps["ram_pressure_end_mb"] = steps.apply(
+        lambda row: _resolve_ram_pressure_mb(
+            row.get("benchmark_os", "unknown"),
+            row.get("min_necessary_ram_end_mb"),
+            row.get("non_cache_end_mb"),
+            row.get("rss_end_mb"),
+            row.get("private_end_mb"),
+        ),
+        axis=1,
+    )
+    steps["ram_pressure_peak_mb"] = steps.apply(
+        lambda row: _resolve_ram_pressure_mb(
+            row.get("benchmark_os", "unknown"),
+            row.get("min_necessary_ram_peak_mb"),
+            row.get("non_cache_peak_mb"),
+            row.get("rss_peak_mb"),
+            row.get("private_peak_mb"),
+        ),
+        axis=1,
+    )
+    steps["min_necessary_ram_start_mb"] = steps["ram_pressure_start_mb"]
+    steps["min_necessary_ram_end_mb"] = steps["ram_pressure_end_mb"]
+    steps["min_necessary_ram_peak_mb"] = steps["ram_pressure_peak_mb"]
+    steps["non_cache_start_mb"] = steps["ram_pressure_start_mb"]
+    steps["non_cache_end_mb"] = steps["ram_pressure_end_mb"]
+    steps["non_cache_peak_mb"] = steps["ram_pressure_peak_mb"]
+
     # Compute run-level and step-level derived metrics.
-    totals["non_cache_per_second"] = totals["peak_non_cache_mb"] / totals["total_seconds"]
+    totals["non_cache_per_second"] = totals["peak_ram_pressure_mb"] / totals["total_seconds"]
     steps["delta_cache_mb"] = steps.groupby("run_key")["cache_size_mb"].diff().fillna(steps["cache_size_mb"])
     steps["delta_non_cache_mb"] = steps["non_cache_end_mb"] - steps["non_cache_start_mb"]
     steps["non_cache_peak_over_start_mb"] = steps["non_cache_peak_mb"] - steps["non_cache_start_mb"]
@@ -774,13 +992,17 @@ def _derive_loaded_metrics(totals: pd.DataFrame, steps: pd.DataFrame) -> tuple[p
     return totals, steps
 
 
-def load_all_benchmarks(root: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
+def load_all_benchmarks(root: Path, legacy_os: str = "auto") -> tuple[pd.DataFrame, pd.DataFrame]:
     """Load benchmark totals and step metrics from benchmark root.
 
     Parameters
     ----------
     root : Path
         Resolved benchmark root directory.
+    legacy_os : str, default="auto"
+        Fallback OS interpretation for old benchmark JSON files without
+        ``benchmark_os`` metadata. Allowed values: ``auto``, ``windows``,
+        ``linux``, ``macos``.
 
     Returns
     -------
@@ -804,7 +1026,7 @@ def load_all_benchmarks(root: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
         if not profile_dir.exists():
             continue
         runs = _load_profile_runs(profile_dir)
-        _append_profile_rows(profile, runs, totals_rows, steps_rows)
+        _append_profile_rows(profile, runs, totals_rows, steps_rows, legacy_os)
 
     totals = pd.DataFrame(totals_rows)
     steps = pd.DataFrame(steps_rows)
@@ -818,6 +1040,7 @@ def _append_profile_rows(
     runs: dict[str, dict],
     totals_rows: list[dict],
     steps_rows: list[dict],
+    legacy_os: str,
 ) -> None:
     """Append all rows for one profile into row accumulators.
 
@@ -831,6 +1054,8 @@ def _append_profile_rows(
         Mutable totals-row accumulator.
     steps_rows : list[dict]
         Mutable step-row accumulator.
+    legacy_os : str
+        Legacy OS fallback for old benchmark JSON files.
 
     Returns
     -------
@@ -847,12 +1072,29 @@ def _append_profile_rows(
         run_label = f"{PROFILE_LABELS[profile]} | {_format_scale_as_frames(scale_factor)}"
         summary = run_data.get("summary", {})
         steps = run_data.get("steps", [])
+        benchmark_os = _resolve_run_benchmark_os(summary, legacy_os)
 
         totals_rows.append(
-            _build_total_row(profile, run_name, run_key, run_label, scale_factor, summary)
+            _build_total_row(
+                profile,
+                run_name,
+                run_key,
+                run_label,
+                scale_factor,
+                summary,
+                benchmark_os,
+            )
         )
         steps_rows.extend(
-            _build_step_rows(profile, run_name, run_key, run_label, scale_factor, steps)
+            _build_step_rows(
+                profile,
+                run_name,
+                run_key,
+                run_label,
+                scale_factor,
+                steps,
+                benchmark_os,
+            )
         )
 
 
@@ -2305,7 +2547,15 @@ def _overall_common_columns() -> list[str]:
     -----
     Column order is stable and used across summary and step records.
     """
-    return ["profile", "profile_label", "run", "run_key", "run_label", "scale_factor"]
+    return [
+        "profile",
+        "profile_label",
+        "run",
+        "run_key",
+        "run_label",
+        "scale_factor",
+        "benchmark_os",
+    ]
 
 
 def _overall_summary_metric_columns() -> list[str]:
@@ -2326,7 +2576,10 @@ def _overall_summary_metric_columns() -> list[str]:
     """
     return [
         "total_seconds",
+        "peak_rss_mb",
+        "peak_private_mb",
         "peak_non_cache_mb",
+        "peak_min_necessary_ram_mb",
         "min_mem_available_mb",
         "peak_cgroup_current_mb",
         "cgroup_limit_mb",
@@ -2353,9 +2606,18 @@ def _overall_step_metric_columns() -> list[str]:
     """
     return [
         "seconds",
+        "rss_start_mb",
+        "rss_end_mb",
+        "rss_peak_mb",
         "non_cache_start_mb",
         "non_cache_end_mb",
         "non_cache_peak_mb",
+        "private_start_mb",
+        "private_end_mb",
+        "private_peak_mb",
+        "min_necessary_ram_start_mb",
+        "min_necessary_ram_end_mb",
+        "min_necessary_ram_peak_mb",
         "mem_available_start_mb",
         "mem_available_end_mb",
         "mem_available_min_mb",
@@ -5472,6 +5734,7 @@ def run_report(
     export_dir: Path,
     filetypes: list[str],
     dpi: int,
+    legacy_os: str = "auto",
 ) -> None:
     """Run standalone benchmark analysis and export figures plus CSV tables.
 
@@ -5485,6 +5748,9 @@ def run_report(
         Requested export formats.
     dpi : int
         Export DPI for raster outputs.
+    legacy_os : str, default="auto"
+        Legacy OS interpretation for old benchmark JSON files without
+        ``benchmark_os`` metadata.
 
     Returns
     -------
@@ -5508,7 +5774,7 @@ def run_report(
         # Load benchmark data and build immutable plotting context.
         _set_plot_style()
         resolved_root = resolve_benchmark_root(benchmark_root.resolve())
-        totals, steps = load_all_benchmarks(resolved_root)
+        totals, steps = load_all_benchmarks(resolved_root, legacy_os=legacy_os)
         ctx = _build_context(totals, steps)
 
         # Build all table artifacts once for both CSV export and pre-master plots.
@@ -5574,6 +5840,16 @@ def parse_args() -> argparse.Namespace:
         help="Export file type. Repeat for multiple formats. Default: png.",
     )
     parser.add_argument("--dpi", type=int, default=220, help="Export DPI for raster outputs.")
+    parser.add_argument(
+        "--legacy-os",
+        type=str,
+        default="auto",
+        choices=["auto", "windows", "linux", "macos"],
+        help=(
+            "Fallback OS used for old benchmark JSONs without benchmark_os metadata. "
+            "Default: auto."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -5604,6 +5880,7 @@ def main() -> int:
         export_dir=args.export_dir,
         filetypes=args.filetype or ["png"],
         dpi=args.dpi,
+        legacy_os=args.legacy_os,
     )
     return 0
 

@@ -208,6 +208,18 @@ class _StepResult:
         Non-cache memory after step execution in MB.
     non_cache_peak_mb : float
         Peak non-cache memory observed during step in MB.
+    private_start_mb : float or None
+        Private memory before step execution in MB (Windows).
+    private_end_mb : float or None
+        Private memory after step execution in MB (Windows).
+    private_peak_mb : float or None
+        Peak private memory observed during step in MB (Windows).
+    min_necessary_ram_start_mb : float
+        Canonical minimum necessary RAM before step execution in MB.
+    min_necessary_ram_end_mb : float
+        Canonical minimum necessary RAM after step execution in MB.
+    min_necessary_ram_peak_mb : float
+        Canonical minimum necessary RAM peak observed during step in MB.
     mem_available_start_mb : float or None
         MemAvailable before step execution in MB.
     mem_available_end_mb : float or None
@@ -243,6 +255,12 @@ class _StepResult:
     non_cache_start_mb: float
     non_cache_end_mb: float
     non_cache_peak_mb: float
+    private_start_mb: Optional[float]
+    private_end_mb: Optional[float]
+    private_peak_mb: Optional[float]
+    min_necessary_ram_start_mb: float
+    min_necessary_ram_end_mb: float
+    min_necessary_ram_peak_mb: float
     mem_available_start_mb: Optional[float]
     mem_available_end_mb: Optional[float]
     mem_available_min_mb: Optional[float]
@@ -384,6 +402,50 @@ def _read_smaps_rollup_kb(pid: int) -> dict[str, int]:
     return stats
 
 
+def _benchmark_os_key() -> str:
+    """Return canonical benchmark OS key.
+
+    Parameters
+    ----------
+    None
+
+    Returns
+    -------
+    str
+        Canonical OS key: ``windows``, ``linux``, ``macos``, or ``other``.
+    """
+    if sys.platform.startswith("win"):
+        return "windows"
+    if sys.platform.startswith("linux"):
+        return "linux"
+    if sys.platform.startswith("darwin"):
+        return "macos"
+    return "other"
+
+
+def _get_process_tree() -> list[psutil.Process]:
+    """Resolve current process and recursive children.
+
+    Parameters
+    ----------
+    None
+
+    Returns
+    -------
+    list[psutil.Process]
+        Process tree including the current process as first item.
+
+    Notes
+    -----
+    Returns an empty list on transient psutil failures.
+    """
+    try:
+        process = psutil.Process(os.getpid())
+        return [process] + process.children(recursive=True)
+    except (psutil.Error, OSError):
+        return []
+
+
 def _get_rss_bytes() -> int:
     """Measure current RSS across process tree.
 
@@ -401,10 +463,8 @@ def _get_rss_bytes() -> int:
     Child processes are included recursively to reflect full benchmark usage.
     """
     # Resolve process tree once and gracefully handle psutil failures.
-    try:
-        process = psutil.Process(os.getpid())
-        processes = [process] + process.children(recursive=True)
-    except (psutil.Error, OSError):
+    processes = _get_process_tree()
+    if not processes:
         return 0
 
     # Sum RSS for all alive processes while ignoring transient process exits.
@@ -415,6 +475,38 @@ def _get_rss_bytes() -> int:
         except (psutil.Error, OSError):
             continue
     return total_rss
+
+
+def _get_private_bytes() -> Optional[int]:
+    """Measure total private bytes across process tree on Windows.
+
+    Parameters
+    ----------
+    None
+
+    Returns
+    -------
+    int or None
+        Private bytes on Windows, otherwise ``None``.
+
+    Notes
+    -----
+    ``None`` indicates the metric is not available on the active platform.
+    """
+    if not sys.platform.startswith("win"):
+        return None
+
+    processes = _get_process_tree()
+    if not processes:
+        return 0
+
+    total_private = 0
+    for proc in processes:
+        try:
+            total_private += int(getattr(proc.memory_info(), "private", 0))
+        except (psutil.Error, OSError):
+            continue
+    return total_private
 
 
 def _get_non_cache_bytes() -> int:
@@ -436,22 +528,16 @@ def _get_non_cache_bytes() -> int:
     which exclude file cache. Other platforms fall back to RSS.
     """
     if sys.platform.startswith("win"):
-        try:
-            process = psutil.Process(os.getpid())
-            processes = [process] + process.children(recursive=True)
-            return sum(getattr(p.memory_info(), "private", 0) for p in processes)
-        except (psutil.Error, OSError):
-            return _get_rss_bytes()
+        private_bytes = _get_private_bytes()
+        return int(private_bytes) if private_bytes is not None else _get_rss_bytes()
 
     # Use direct RSS fallback for non-Linux/Windows environments.
     if not sys.platform.startswith("linux"):
         return _get_rss_bytes()
 
     # Collect process list and fall back to RSS on psutil errors.
-    try:
-        process = psutil.Process(os.getpid())
-        processes = [process] + process.children(recursive=True)
-    except (psutil.Error, OSError):
+    processes = _get_process_tree()
+    if not processes:
         return _get_rss_bytes()
 
     # Aggregate rollup-based non-cache usage across the process tree.
@@ -468,6 +554,42 @@ def _get_non_cache_bytes() -> int:
 
     # Use RSS fallback when no rollup information was available.
     return total_non_cache if found_any else _get_rss_bytes()
+
+
+def _compute_min_necessary_ram_bytes(
+    rss_bytes: int,
+    non_cache_bytes: int,
+    private_bytes: Optional[int],
+) -> int:
+    """Compute canonical minimum necessary RAM pressure in bytes.
+
+    Parameters
+    ----------
+    rss_bytes : int
+        RSS memory bytes.
+    non_cache_bytes : int
+        Non-cache memory bytes.
+    private_bytes : int or None
+        Windows private memory bytes when available.
+
+    Returns
+    -------
+    int
+        Canonical minimum necessary RAM pressure bytes.
+
+    Notes
+    -----
+    Linux uses non-cache RAM. Windows uses ``max(RSS, private)``.
+    Other platforms fall back to non-cache, then RSS.
+    """
+    os_key = _benchmark_os_key()
+    if os_key == "windows":
+        if private_bytes is None:
+            return max(int(rss_bytes), int(non_cache_bytes))
+        return max(int(rss_bytes), int(private_bytes))
+    if os_key == "linux":
+        return int(non_cache_bytes)
+    return int(non_cache_bytes) if int(non_cache_bytes) > 0 else int(rss_bytes)
 
 
 def _read_int_from_file(path: Optional[Path]) -> Optional[int]:
@@ -737,7 +859,8 @@ class MemorySampler:
 
     Notes
     -----
-    The sampler captures RSS, non-cache memory, MemAvailable, and cgroup usage.
+    The sampler captures RSS, non-cache memory, private bytes, minimum necessary
+    RAM, MemAvailable, and cgroup usage.
     """
 
     def __init__(self, interval_sec: float = 0.2):
@@ -761,6 +884,12 @@ class MemorySampler:
         self.interval_sec = interval_sec
         self.max_rss = _get_rss_bytes()
         self.max_non_cache = _get_non_cache_bytes()
+        self.max_private = _get_private_bytes()
+        self.max_min_necessary_ram = _compute_min_necessary_ram_bytes(
+            self.max_rss,
+            self.max_non_cache,
+            self.max_private,
+        )
         self.min_mem_available = _get_mem_available_bytes()
 
         # Initialize cgroup tracking values once at sampler creation time.
@@ -788,9 +917,25 @@ class MemorySampler:
         -----
         This method is called repeatedly by the background thread.
         """
-        # Update max RSS and non-cache values from current snapshot.
-        self.max_rss = max(self.max_rss, _get_rss_bytes())
-        self.max_non_cache = max(self.max_non_cache, _get_non_cache_bytes())
+        # Update memory peaks from current process snapshot.
+        current_rss = _get_rss_bytes()
+        current_non_cache = _get_non_cache_bytes()
+        current_private = _get_private_bytes()
+        current_min_necessary_ram = _compute_min_necessary_ram_bytes(
+            current_rss,
+            current_non_cache,
+            current_private,
+        )
+
+        self.max_rss = max(self.max_rss, current_rss)
+        self.max_non_cache = max(self.max_non_cache, current_non_cache)
+        if current_private is not None:
+            self.max_private = (
+                current_private
+                if self.max_private is None
+                else max(self.max_private, current_private)
+            )
+        self.max_min_necessary_ram = max(self.max_min_necessary_ram, current_min_necessary_ram)
 
         # Update minimum available memory when this metric is available.
         available = _get_mem_available_bytes()
@@ -1178,6 +1323,12 @@ def _run_step(name: str, func: StepCallable, cache_dir: Path) -> _StepResult:
     # Capture baseline metrics before running benchmark step logic.
     rss_start = _get_rss_bytes()
     non_cache_start = _get_non_cache_bytes()
+    private_start = _get_private_bytes()
+    min_necessary_start = _compute_min_necessary_ram_bytes(
+        rss_start,
+        non_cache_start,
+        private_start,
+    )
     mem_available_start = _get_mem_available_bytes()
     cgroup_current_start, cgroup_limit_start = _get_cgroup_memory_bytes()
 
@@ -1190,6 +1341,12 @@ def _run_step(name: str, func: StepCallable, cache_dir: Path) -> _StepResult:
     # Capture post-step metrics and map everything into dataclass output.
     rss_end = _get_rss_bytes()
     non_cache_end = _get_non_cache_bytes()
+    private_end = _get_private_bytes()
+    min_necessary_end = _compute_min_necessary_ram_bytes(
+        rss_end,
+        non_cache_end,
+        private_end,
+    )
     mem_available_end = _get_mem_available_bytes()
     cgroup_current_end, cgroup_limit_end = _get_cgroup_memory_bytes()
     cgroup_limit = cgroup_limit_start or cgroup_limit_end or sampler.cgroup_limit
@@ -1203,6 +1360,12 @@ def _run_step(name: str, func: StepCallable, cache_dir: Path) -> _StepResult:
         non_cache_start_mb=_bytes_to_mb(non_cache_start),
         non_cache_end_mb=_bytes_to_mb(non_cache_end),
         non_cache_peak_mb=_bytes_to_mb(sampler.max_non_cache),
+        private_start_mb=_bytes_to_mb_optional(private_start),
+        private_end_mb=_bytes_to_mb_optional(private_end),
+        private_peak_mb=_bytes_to_mb_optional(sampler.max_private),
+        min_necessary_ram_start_mb=_bytes_to_mb(min_necessary_start),
+        min_necessary_ram_end_mb=_bytes_to_mb(min_necessary_end),
+        min_necessary_ram_peak_mb=_bytes_to_mb(sampler.max_min_necessary_ram),
         mem_available_start_mb=_bytes_to_mb_optional(mem_available_start),
         mem_available_end_mb=_bytes_to_mb_optional(mem_available_end),
         mem_available_min_mb=_bytes_to_mb_optional(sampler.min_mem_available),
@@ -1244,7 +1407,9 @@ def _write_step_results(results: list[_StepResult], results_path: Path, dataset_
     print(
         f"[{dataset_name}] step={step.name} "
         f"seconds={step.seconds:.2f} "
+        f"min_necessary_ram_peak_mb={step.min_necessary_ram_peak_mb:.2f} "
         f"rss_peak_mb={step.rss_peak_mb:.2f} "
+        f"private_peak_mb={_fmt_optional_mb(step.private_peak_mb)} "
         f"non_cache_peak_mb={step.non_cache_peak_mb:.2f} "
         f"mem_available_min_mb={_fmt_optional_mb(step.mem_available_min_mb)} "
         f"cgroup_peak_mb={_fmt_optional_mb(step.cgroup_current_peak_mb)}",
@@ -1252,7 +1417,7 @@ def _write_step_results(results: list[_StepResult], results_path: Path, dataset_
     )
 
 
-def _build_summary(results: list[_StepResult], cache_dir: Path) -> dict[str, Optional[float]]:
+def _build_summary(results: list[_StepResult], cache_dir: Path) -> dict[str, object]:
     """Aggregate run-level summary metrics from step results.
 
     Parameters
@@ -1264,7 +1429,7 @@ def _build_summary(results: list[_StepResult], cache_dir: Path) -> dict[str, Opt
 
     Returns
     -------
-    dict[str, float or None]
+    dict[str, object]
         Summary values persisted into ``summary.json``.
 
     Notes
@@ -1273,8 +1438,12 @@ def _build_summary(results: list[_StepResult], cache_dir: Path) -> dict[str, Opt
     """
     # Compute scalar aggregate metrics across all completed step entries.
     total_seconds = sum(item.seconds for item in results)
+    benchmark_os = _benchmark_os_key()
     peak_rss_mb = max((item.rss_peak_mb for item in results), default=0.0)
     peak_non_cache_mb = max((item.non_cache_peak_mb for item in results), default=0.0)
+    peak_private_values = [item.private_peak_mb for item in results if item.private_peak_mb is not None]
+    peak_private_mb = max(peak_private_values) if peak_private_values else None
+    peak_min_necessary_ram_mb = max((item.min_necessary_ram_peak_mb for item in results), default=0.0)
     mem_available_values = [item.mem_available_min_mb for item in results if item.mem_available_min_mb is not None]
     cgroup_current_values = [item.cgroup_current_peak_mb for item in results if item.cgroup_current_peak_mb is not None]
 
@@ -1288,9 +1457,12 @@ def _build_summary(results: list[_StepResult], cache_dir: Path) -> dict[str, Opt
 
     # Return summary payload using stable schema for all benchmark profiles.
     return {
+        "benchmark_os": benchmark_os,
         "total_seconds": total_seconds,
         "peak_rss_mb": peak_rss_mb,
+        "peak_private_mb": peak_private_mb,
         "peak_non_cache_mb": peak_non_cache_mb,
+        "peak_min_necessary_ram_mb": peak_min_necessary_ram_mb,
         "min_mem_available_mb": min_mem_available_mb,
         "peak_cgroup_current_mb": peak_cgroup_current_mb,
         "cgroup_limit_mb": cgroup_limit_mb,
@@ -1299,12 +1471,12 @@ def _build_summary(results: list[_StepResult], cache_dir: Path) -> dict[str, Opt
     }
 
 
-def _write_summary(summary: dict[str, Optional[float]], output_root: Path) -> None:
+def _write_summary(summary: dict[str, object], output_root: Path) -> None:
     """Write dataset-level summary JSON and print one summary line.
 
     Parameters
     ----------
-    summary : dict[str, float or None]
+    summary : dict[str, object]
         Summary payload from ``_build_summary``.
     output_root : Path
         Dataset-specific output directory.
@@ -1325,7 +1497,10 @@ def _write_summary(summary: dict[str, Optional[float]], output_root: Path) -> No
     # Print one compact run-level status line.
     print(
         f"[{output_root.name}] total_seconds={summary['total_seconds']:.2f}, "
+        f"benchmark_os={summary['benchmark_os']}, "
+        f"peak_min_necessary_ram_mb={summary['peak_min_necessary_ram_mb']:.2f}, "
         f"peak_rss_mb={summary['peak_rss_mb']:.2f}, "
+        f"peak_private_mb={_fmt_optional_mb(summary['peak_private_mb'])}, "
         f"peak_non_cache_mb={summary['peak_non_cache_mb']:.2f}, "
         f"min_mem_available_mb={_fmt_optional_mb(summary['min_mem_available_mb'])}, "
         f"peak_cgroup_current_mb={_fmt_optional_mb(summary['peak_cgroup_current_mb'])}, "
