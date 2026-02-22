@@ -214,6 +214,12 @@ class _StepResult:
         Private memory after step execution in MB (Windows).
     private_peak_mb : float or None
         Peak private memory observed during step in MB (Windows).
+    vms_start_mb : float or None
+        VMS/Pagefile memory before step execution in MB (Windows).
+    vms_end_mb : float or None
+        VMS/Pagefile memory after step execution in MB (Windows).
+    vms_peak_mb : float or None
+        Peak VMS/Pagefile memory observed during step in MB (Windows).
     min_necessary_ram_start_mb : float
         Canonical minimum necessary RAM before step execution in MB.
     min_necessary_ram_end_mb : float
@@ -258,6 +264,9 @@ class _StepResult:
     private_start_mb: Optional[float]
     private_end_mb: Optional[float]
     private_peak_mb: Optional[float]
+    vms_start_mb: Optional[float]
+    vms_end_mb: Optional[float]
+    vms_peak_mb: Optional[float]
     min_necessary_ram_start_mb: float
     min_necessary_ram_end_mb: float
     min_necessary_ram_peak_mb: float
@@ -507,6 +516,38 @@ def _get_private_bytes() -> Optional[int]:
         except (psutil.Error, OSError):
             continue
     return total_private
+
+
+def _get_vms_bytes() -> Optional[int]:
+    """Measure total VMS bytes across process tree on Windows.
+
+    Parameters
+    ----------
+    None
+
+    Returns
+    -------
+    int or None
+        VMS bytes on Windows, otherwise ``None``.
+
+    Notes
+    -----
+    ``None`` indicates the metric is not available on the active platform.
+    """
+    if not sys.platform.startswith("win"):
+        return None
+
+    processes = _get_process_tree()
+    if not processes:
+        return 0
+
+    total_vms = 0
+    for proc in processes:
+        try:
+            total_vms += int(getattr(proc.memory_info(), "vms", 0))
+        except (psutil.Error, OSError):
+            continue
+    return total_vms
 
 
 def _get_non_cache_bytes() -> int:
@@ -859,8 +900,8 @@ class MemorySampler:
 
     Notes
     -----
-    The sampler captures RSS, non-cache memory, private bytes, minimum necessary
-    RAM, MemAvailable, and cgroup usage.
+    The sampler captures RSS, non-cache memory, private bytes, VMS bytes,
+    minimum necessary RAM, MemAvailable, and cgroup usage.
     """
 
     def __init__(self, interval_sec: float = 0.2):
@@ -885,6 +926,7 @@ class MemorySampler:
         self.max_rss = _get_rss_bytes()
         self.max_non_cache = _get_non_cache_bytes()
         self.max_private = _get_private_bytes()
+        self.max_vms = _get_vms_bytes()
         self.max_min_necessary_ram = _compute_min_necessary_ram_bytes(
             self.max_rss,
             self.max_non_cache,
@@ -921,6 +963,7 @@ class MemorySampler:
         current_rss = _get_rss_bytes()
         current_non_cache = _get_non_cache_bytes()
         current_private = _get_private_bytes()
+        current_vms = _get_vms_bytes()
         current_min_necessary_ram = _compute_min_necessary_ram_bytes(
             current_rss,
             current_non_cache,
@@ -934,6 +977,12 @@ class MemorySampler:
                 current_private
                 if self.max_private is None
                 else max(self.max_private, current_private)
+            )
+        if current_vms is not None:
+            self.max_vms = (
+                current_vms
+                if self.max_vms is None
+                else max(self.max_vms, current_vms)
             )
         self.max_min_necessary_ram = max(self.max_min_necessary_ram, current_min_necessary_ram)
 
@@ -1324,6 +1373,7 @@ def _run_step(name: str, func: StepCallable, cache_dir: Path) -> _StepResult:
     rss_start = _get_rss_bytes()
     non_cache_start = _get_non_cache_bytes()
     private_start = _get_private_bytes()
+    vms_start = _get_vms_bytes()
     min_necessary_start = _compute_min_necessary_ram_bytes(
         rss_start,
         non_cache_start,
@@ -1342,6 +1392,7 @@ def _run_step(name: str, func: StepCallable, cache_dir: Path) -> _StepResult:
     rss_end = _get_rss_bytes()
     non_cache_end = _get_non_cache_bytes()
     private_end = _get_private_bytes()
+    vms_end = _get_vms_bytes()
     min_necessary_end = _compute_min_necessary_ram_bytes(
         rss_end,
         non_cache_end,
@@ -1363,6 +1414,9 @@ def _run_step(name: str, func: StepCallable, cache_dir: Path) -> _StepResult:
         private_start_mb=_bytes_to_mb_optional(private_start),
         private_end_mb=_bytes_to_mb_optional(private_end),
         private_peak_mb=_bytes_to_mb_optional(sampler.max_private),
+        vms_start_mb=_bytes_to_mb_optional(vms_start),
+        vms_end_mb=_bytes_to_mb_optional(vms_end),
+        vms_peak_mb=_bytes_to_mb_optional(sampler.max_vms),
         min_necessary_ram_start_mb=_bytes_to_mb(min_necessary_start),
         min_necessary_ram_end_mb=_bytes_to_mb(min_necessary_end),
         min_necessary_ram_peak_mb=_bytes_to_mb(sampler.max_min_necessary_ram),
@@ -1410,6 +1464,7 @@ def _write_step_results(results: list[_StepResult], results_path: Path, dataset_
         f"min_necessary_ram_peak_mb={step.min_necessary_ram_peak_mb:.2f} "
         f"rss_peak_mb={step.rss_peak_mb:.2f} "
         f"private_peak_mb={_fmt_optional_mb(step.private_peak_mb)} "
+        f"vms_peak_mb={_fmt_optional_mb(step.vms_peak_mb)} "
         f"non_cache_peak_mb={step.non_cache_peak_mb:.2f} "
         f"mem_available_min_mb={_fmt_optional_mb(step.mem_available_min_mb)} "
         f"cgroup_peak_mb={_fmt_optional_mb(step.cgroup_current_peak_mb)}",
@@ -1443,6 +1498,8 @@ def _build_summary(results: list[_StepResult], cache_dir: Path) -> dict[str, obj
     peak_non_cache_mb = max((item.non_cache_peak_mb for item in results), default=0.0)
     peak_private_values = [item.private_peak_mb for item in results if item.private_peak_mb is not None]
     peak_private_mb = max(peak_private_values) if peak_private_values else None
+    peak_vms_values = [item.vms_peak_mb for item in results if item.vms_peak_mb is not None]
+    peak_vms_mb = max(peak_vms_values) if peak_vms_values else None
     peak_min_necessary_ram_mb = max((item.min_necessary_ram_peak_mb for item in results), default=0.0)
     mem_available_values = [item.mem_available_min_mb for item in results if item.mem_available_min_mb is not None]
     cgroup_current_values = [item.cgroup_current_peak_mb for item in results if item.cgroup_current_peak_mb is not None]
@@ -1461,6 +1518,7 @@ def _build_summary(results: list[_StepResult], cache_dir: Path) -> dict[str, obj
         "total_seconds": total_seconds,
         "peak_rss_mb": peak_rss_mb,
         "peak_private_mb": peak_private_mb,
+        "peak_vms_mb": peak_vms_mb,
         "peak_non_cache_mb": peak_non_cache_mb,
         "peak_min_necessary_ram_mb": peak_min_necessary_ram_mb,
         "min_mem_available_mb": min_mem_available_mb,
@@ -1501,6 +1559,7 @@ def _write_summary(summary: dict[str, object], output_root: Path) -> None:
         f"peak_min_necessary_ram_mb={summary['peak_min_necessary_ram_mb']:.2f}, "
         f"peak_rss_mb={summary['peak_rss_mb']:.2f}, "
         f"peak_private_mb={_fmt_optional_mb(summary['peak_private_mb'])}, "
+        f"peak_vms_mb={_fmt_optional_mb(summary['peak_vms_mb'])}, "
         f"peak_non_cache_mb={summary['peak_non_cache_mb']:.2f}, "
         f"min_mem_available_mb={_fmt_optional_mb(summary['min_mem_available_mb'])}, "
         f"peak_cgroup_current_mb={_fmt_optional_mb(summary['peak_cgroup_current_mb'])}, "
