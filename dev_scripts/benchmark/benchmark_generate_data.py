@@ -43,7 +43,7 @@ from typing import Optional
 import mdtraj as md
 import numpy as np
 
-DEFAULT_FACTORS = [2, 3, 5, 10, 30, 50, 1000]
+DEFAULT_FACTORS = [2, 3, 5, 10, 30, 50, 500]
 SUPPORTED_FACTORS = [2, 3, 5, 10, 30, 50, 500, 1000]
 
 
