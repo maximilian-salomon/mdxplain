@@ -99,6 +99,7 @@ def parse_args() -> argparse.Namespace:
         help="Stack factors to run. Default: all configured factors.",
     )
     parser.add_argument("--remove", type=_parse_bool, default=True, help="Allow cleanup/overwrite behavior (true/false). Default: true.")
+    parser.add_argument("--cache-dir", type=Path, default=None, help="Optional custom cache directory root.")
     return parser.parse_args()
 
 
@@ -125,7 +126,11 @@ def main() -> int:
     """
     # Build profile from CLI selection and execute via shared benchmark engine.
     args = parse_args()
-    profile = replace(_exact_memmap_profile(), dataset_factors=list(args.stacks))
+    profile = _exact_memmap_profile()
+    if args.cache_dir is not None:
+        cache_dir = args.cache_dir.resolve() if getattr(args.cache_dir, 'is_absolute', lambda: False)() else Path.cwd() / args.cache_dir
+        profile = replace(profile, cache_root=cache_dir)
+    profile = replace(profile, dataset_factors=list(args.stacks))
     return _run_profile(profile, remove=bool(args.remove))
 
 

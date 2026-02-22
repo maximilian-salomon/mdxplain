@@ -432,9 +432,18 @@ def _get_non_cache_bytes() -> int:
     Notes
     -----
     On Linux this subtracts clean file-backed pages from RSS via
-    ``smaps_rollup``. On other platforms this falls back to RSS.
+    ``smaps_rollup``. On Windows this reads ``private`` memory bytes
+    which exclude file cache. Other platforms fall back to RSS.
     """
-    # Use direct RSS fallback for non-Linux environments.
+    if sys.platform.startswith("win"):
+        try:
+            process = psutil.Process(os.getpid())
+            processes = [process] + process.children(recursive=True)
+            return sum(getattr(p.memory_info(), "private", 0) for p in processes)
+        except (psutil.Error, OSError):
+            return _get_rss_bytes()
+
+    # Use direct RSS fallback for non-Linux/Windows environments.
     if not sys.platform.startswith("linux"):
         return _get_rss_bytes()
 
@@ -1756,6 +1765,7 @@ def parse_args() -> argparse.Namespace:
         help="Stack factors to run. Supported: 1,2,3,5,10,30,50,500,1000. Default: all configured factors.",
     )
     parser.add_argument("--remove", type=_parse_bool, default=True, help="Allow cleanup/overwrite behavior (true/false). Default: true.")
+    parser.add_argument("--cache-dir", type=Path, default=None, help="Optional custom cache directory root.")
     return parser.parse_args()
 
 
@@ -1806,9 +1816,14 @@ def main() -> int:
     >>> # CLI usage
     >>> # python dev_scripts/benchmark/benchmark_approx_memmap.py
     """
-    # Build profile from CLI selection and run with selected remove behavior.
+    # Build profile from CLI selection and execute via shared benchmark engine.
     args = parse_args()
-    profile = replace(_approx_memmap_profile(), dataset_factors=list(args.stacks))
+    profile = _approx_memmap_profile()
+    if args.cache_dir is not None:
+        # Resolve to absolute path to avoid issues if working directory changes
+        cache_dir = args.cache_dir.resolve() if getattr(args.cache_dir, 'is_absolute', lambda: False)() else Path(os.getcwd()) / args.cache_dir
+        profile = replace(profile, cache_root=cache_dir)
+    profile = replace(profile, dataset_factors=list(args.stacks))
     return _run_profile(profile, remove=bool(args.remove))
 
 

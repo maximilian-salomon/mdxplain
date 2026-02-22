@@ -187,6 +187,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
     # Add project and runtime execution controls.
     parser.add_argument("--project-root", type=Path, default=Path("."), help="Project root directory.")
+    parser.add_argument("--cache-dir", type=Path, default=None, help="Optional custom cache directory where benchmark scripts store memmaps.")
     parser.add_argument("--python-executable", default=sys.executable, help="Python executable for all sub-commands.")
     parser.add_argument("--continue-on-error", action="store_true", help="Continue remaining steps after failures.")
     parser.add_argument("--dry-run", action="store_true", help="Print commands only; do not execute.")
@@ -254,7 +255,7 @@ def _append_data_step(commands: list[PipelineCommand], python_exe: str, include_
         commands.append(PipelineCommand("Generate benchmark datasets", [python_exe, str(DATA_SCRIPT)]))
 
 
-def _append_profile_steps(commands: list[PipelineCommand], python_exe: str) -> None:
+def _append_profile_steps(commands: list[PipelineCommand], python_exe: str, cache_dir: Path | None) -> None:
     """Append benchmark profile script execution steps.
 
     Parameters
@@ -263,6 +264,8 @@ def _append_profile_steps(commands: list[PipelineCommand], python_exe: str) -> N
         Mutable command list being assembled.
     python_exe : str
         Python executable path for subprocess execution.
+    cache_dir : Path or None
+        Optional custom cache directory to pass down.
 
     Returns
     -------
@@ -275,7 +278,10 @@ def _append_profile_steps(commands: list[PipelineCommand], python_exe: str) -> N
     """
     # Add one execution step per benchmark profile script.
     for script in BENCHMARK_SCRIPTS:
-        commands.append(PipelineCommand(f"Run {script.stem}", [python_exe, str(script)]))
+        cmd = [python_exe, str(script)]
+        if cache_dir is not None:
+            cmd.extend(["--cache-dir", str(cache_dir)])
+        commands.append(PipelineCommand(f"Run {script.stem}", cmd))
 
 
 def _append_pack_step(
@@ -377,6 +383,7 @@ def _build_pipeline_commands(
     pack_output: Path | None,
     export_dir: Path,
     filetypes: list[str],
+    cache_dir: Path | None,
 ) -> list[PipelineCommand]:
     """Build full ordered benchmark command sequence.
 
@@ -411,7 +418,7 @@ def _build_pipeline_commands(
     # Assemble pipeline commands in canonical execution order.
     commands: list[PipelineCommand] = []
     _append_data_step(commands, python_exe, include_generate_data)
-    _append_profile_steps(commands, python_exe)
+    _append_profile_steps(commands, python_exe, cache_dir)
     _append_pack_step(commands, python_exe, include_pack, project_root, pack_output)
     _append_analysis_step(commands, python_exe, include_analysis, project_root, export_dir, filetypes)
     return commands
@@ -524,6 +531,7 @@ def main() -> int:
         args.pack_output,
         args.export_dir,
         filetypes,
+        args.cache_dir,
     )
 
     # Execute pipeline and report final failure summary with elapsed time.
