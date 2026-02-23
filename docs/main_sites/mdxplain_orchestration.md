@@ -241,8 +241,8 @@ table.docutils tbody tr.row-alt-odd td:not([rowspan]) {
 </tr>
 <tr class="row-alt-odd">
 <td><p>Landscape-Plotter</p></td>
-<td><p>mdxplain + matplotlib + seaborn + scipy</p></td>
-<td><p>mdxplain implementation using matplotlib and seaborn.<br>
+<td><p>mdxplain + matplotlib + scipy</p></td>
+<td><p>mdxplain implementation using matplotlib.<br>
  <br>
  Uses NumPy for histograms and SciPy for optional KDE smoothing.</p></td>
 </tr>
