@@ -4421,6 +4421,109 @@ def _apply_tradeoff_ticks(ax, emphasize: bool, y_tick_count: Optional[int]) -> N
     ax.set_ylim(y_limits)
 
 
+def _format_seconds_as_hours_tick(value: float) -> str:
+    """Format runtime tick value as ``H:MM``.
+
+    Parameters
+    ----------
+    value : float
+        Runtime value in seconds.
+
+    Returns
+    -------
+    str
+        Time label like ``0:30`` or ``2:00``.
+    """
+    if not np.isfinite(value) or value <= 0.0:
+        return ""
+    total_minutes = int(np.round(float(value) / 60.0))
+    if total_minutes <= 0:
+        return ""
+    hours, minutes = divmod(total_minutes, 60)
+    return f"{hours}:{minutes:02d}"
+
+
+def _format_mb_as_gb_tick(value: float) -> str:
+    """Format memory tick value in gigabytes.
+
+    Parameters
+    ----------
+    value : float
+        Memory value in MB.
+
+    Returns
+    -------
+    str
+        GB label like ``8GB``.
+    """
+    if not np.isfinite(value) or value <= 0.0:
+        return ""
+    gib = float(value) / 1024.0
+    rounded = int(np.round(gib))
+    if abs(gib - rounded) < 1e-6:
+        return f"{rounded}GB"
+    text = f"{gib:.1f}".rstrip("0").rstrip(".")
+    return f"{text}GB"
+
+
+def _apply_tradeoff_hour_gb_ticks(ax) -> None:
+    """Apply fixed log-like tradeoff ticks in hour/GB units.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Target axis.
+
+    Returns
+    -------
+    None
+        Axis tick locators/formatters, labels, and bounds are updated.
+
+    Notes
+    -----
+    Tick candidates follow:
+    ``0:05, 0:10, 0:15, 0:30, 1:00, 2:00, 4:00, 8:00, 16:00``
+    and ``1, 2, 4, 8, 16, 32, 64, 128 GB``.
+    """
+    ax.figure.canvas.draw()
+    x_limits = ax.get_xlim()
+    y_limits = ax.get_ylim()
+    x_min, x_max = sorted((float(x_limits[0]), float(x_limits[1])))
+    y_min, y_max = sorted((float(y_limits[0]), float(y_limits[1])))
+
+    # Keep a stable upper scale for readability/comparability across exports.
+    x_max = max(x_max, 16.0 * 3600.0)  # at least 16h
+    y_max = max(y_max, 64.0 * 1024.0)  # at least 64GB
+    y_min = min(y_min, 1.0 * 1024.0)   # include 1GB tick when feasible
+
+    x_candidates = [
+        5.0 / 60.0,
+        10.0 / 60.0,
+        15.0 / 60.0,
+        30.0 / 60.0,
+        1.0,
+        2.0,
+        4.0,
+        8.0,
+        16.0,
+    ]
+    y_candidates = [1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0]
+    x_ticks = [hours * 3600.0 for hours in x_candidates if x_min <= (hours * 3600.0) <= x_max]
+    y_ticks = [gb * 1024.0 for gb in y_candidates if y_min <= (gb * 1024.0) <= y_max]
+
+    if x_ticks:
+        ax.xaxis.set_major_locator(FixedLocator(x_ticks))
+        ax.xaxis.set_major_formatter(FuncFormatter(lambda value, _pos: _format_seconds_as_hours_tick(value)))
+    if y_ticks:
+        ax.yaxis.set_major_locator(FixedLocator(y_ticks))
+        ax.yaxis.set_major_formatter(FuncFormatter(lambda value, _pos: _format_mb_as_gb_tick(value)))
+
+    ax.set_xlabel("Runtime [h]")
+    ax.set_ylabel("Peak RAM Pressure [GB]")
+    ax.set_xlim((x_min, x_max))
+    ax.set_ylim((y_min, y_max))
+
+
 def plot_tradeoff_bubbles(
     ax,
     ctx: AnalysisContext,
@@ -5455,7 +5558,7 @@ def _render_single_tradeoff_figures(ctx: AnalysisContext) -> list[Figure]:
 
     Notes
     -----
-    Includes baseline and transition-emphasized variants.
+    Includes baseline, transition-emphasized, and hour/GB tick variants.
     """
     figures: list[Figure] = []
 
@@ -5476,6 +5579,21 @@ def _render_single_tradeoff_figures(ctx: AnalysisContext) -> list[Figure]:
         y_tick_count=5,
     )
     fig._mdxplain_filename_hint = "single_tradeoff_bubbles_spread_transitions"
+    figures.append(fig)
+
+    fig, ax = plt.subplots(1, 1, figsize=(9.8, 6.6), constrained_layout=True)
+    plot_tradeoff_bubbles(
+        ax,
+        ctx,
+        title="Trade-off: Runtime vs Peak RAM Pressure",
+        show_legend=True,
+        transition_labels=True,
+        point_spread_log10=0.026,
+        bubble_size_scale=0.78,
+        y_tick_count=5,
+    )
+    _apply_tradeoff_hour_gb_ticks(ax)
+    fig._mdxplain_filename_hint = "single_tradeoff_bubbles_spread_transition_hr"
     figures.append(fig)
     return figures
 
