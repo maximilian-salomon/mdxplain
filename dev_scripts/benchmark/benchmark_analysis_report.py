@@ -266,7 +266,7 @@ def _scale_to_frames(scale_factor: float) -> float:
 
 
 def _format_frames_short(value: float) -> str:
-    """Format absolute frame count using compact ``k`` groups.
+    """Format absolute frame count using compact SI-like suffixes.
 
     Parameters
     ----------
@@ -276,22 +276,25 @@ def _format_frames_short(value: float) -> str:
     Returns
     -------
     str
-        Compact frame label like ``500k`` or ``10kk``.
+        Compact frame label like ``500k`` or ``5M``.
 
     Notes
     -----
-    The formatter shortens powers of 1000 to repeated ``k``.
+    Exact powers of 1000 are shortened with ``k``, ``M``, ``B``, ``T`` suffixes.
     """
     if not np.isfinite(float(value)):
         return "nan"
     rounded = int(np.round(float(value)))
     sign = "-" if rounded < 0 else ""
     remaining = abs(rounded)
-    suffix = ""
+    power = 0
     while remaining >= 1000 and remaining % 1000 == 0:
         remaining //= 1000
-        suffix += "k"
-    return f"{sign}{remaining}{suffix}" if suffix else f"{sign}{remaining}"
+        power += 1
+
+    suffixes = ["", "k", "M", "B", "T"]
+    suffix = suffixes[power] if power < len(suffixes) else f"e{3 * power}"
+    return f"{sign}{remaining}{suffix}"
 
 
 def _format_scale_as_frames(scale_factor: float) -> str:
