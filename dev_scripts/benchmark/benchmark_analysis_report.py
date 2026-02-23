@@ -489,10 +489,10 @@ def _max_finite(*values: object) -> float:
 
 def _resolve_ram_pressure_mb(
     benchmark_os: object,
-    min_necessary_ram_mb: object,
     non_cache_mb: object,
     rss_mb: object,
     private_mb: object,
+    vms_mb: object,
 ) -> float:
     """Resolve canonical RAM pressure value with backward-compatible fallback.
 
@@ -500,32 +500,26 @@ def _resolve_ram_pressure_mb(
     ----------
     benchmark_os : object
         Benchmark OS value.
-    min_necessary_ram_mb : object
-        New canonical metric.
     non_cache_mb : object
         Legacy non-cache metric.
     rss_mb : object
         RSS metric.
     private_mb : object
         Windows private metric.
+    vms_mb : object
+        Virtual memory size metric.
 
     Returns
     -------
     float
         Canonical RAM pressure metric in MB.
     """
-    min_necessary = _finite_or_nan(min_necessary_ram_mb)
-    if np.isfinite(min_necessary):
-        return min_necessary
-
     os_key = _canonical_os_key(str(benchmark_os))
     if os_key == "windows":
-        return _max_finite(private_mb, rss_mb, non_cache_mb)
-    if os_key == "linux":
-        return _first_finite(non_cache_mb, rss_mb, private_mb)
-    if os_key == "macos":
-        return _first_finite(non_cache_mb, rss_mb, private_mb)
-    return _max_finite(non_cache_mb, rss_mb, private_mb)
+        return _first_finite(vms_mb, private_mb, rss_mb)
+    if os_key in {"linux", "macos"}:
+        return _first_finite(non_cache_mb, rss_mb)
+    return _max_finite(non_cache_mb, rss_mb, private_mb, vms_mb)
 
 
 def _profile_dir_count(root: Path) -> int:
@@ -823,6 +817,7 @@ def _build_total_row(
         "total_seconds": _as_float(summary.get("total_seconds")),
         "peak_rss_mb": _as_float(summary.get("peak_rss_mb")),
         "peak_private_mb": _as_float(summary.get("peak_private_mb")),
+        "peak_vms_mb": _as_float(summary.get("peak_vms_mb")),
         "peak_non_cache_mb": _as_float(summary.get("peak_non_cache_mb")),
         "peak_min_necessary_ram_mb": _as_float(summary.get("peak_min_necessary_ram_mb")),
         "min_mem_available_mb": _as_float(summary.get("min_mem_available_mb")),
@@ -887,6 +882,9 @@ def _build_step_rows(
                 "rss_start_mb": _as_float(step.get("rss_start_mb")),
                 "rss_end_mb": _as_float(step.get("rss_end_mb")),
                 "rss_peak_mb": _as_float(step.get("rss_peak_mb")),
+                "vms_start_mb": _as_float(step.get("vms_start_mb")),
+                "vms_end_mb": _as_float(step.get("vms_end_mb")),
+                "vms_peak_mb": _as_float(step.get("vms_peak_mb")),
                 "non_cache_start_mb": _as_float(step.get("non_cache_start_mb")),
                 "non_cache_end_mb": _as_float(step.get("non_cache_end_mb")),
                 "non_cache_peak_mb": _as_float(step.get("non_cache_peak_mb")),
@@ -936,10 +934,10 @@ def _derive_loaded_metrics(totals: pd.DataFrame, steps: pd.DataFrame) -> tuple[p
     totals["peak_ram_pressure_mb"] = totals.apply(
         lambda row: _resolve_ram_pressure_mb(
             row.get("benchmark_os", "unknown"),
-            row.get("peak_min_necessary_ram_mb"),
             row.get("peak_non_cache_mb"),
             row.get("peak_rss_mb"),
             row.get("peak_private_mb"),
+            row.get("peak_vms_mb"),
         ),
         axis=1,
     )
@@ -949,30 +947,30 @@ def _derive_loaded_metrics(totals: pd.DataFrame, steps: pd.DataFrame) -> tuple[p
     steps["ram_pressure_start_mb"] = steps.apply(
         lambda row: _resolve_ram_pressure_mb(
             row.get("benchmark_os", "unknown"),
-            row.get("min_necessary_ram_start_mb"),
             row.get("non_cache_start_mb"),
             row.get("rss_start_mb"),
             row.get("private_start_mb"),
+            row.get("vms_start_mb"),
         ),
         axis=1,
     )
     steps["ram_pressure_end_mb"] = steps.apply(
         lambda row: _resolve_ram_pressure_mb(
             row.get("benchmark_os", "unknown"),
-            row.get("min_necessary_ram_end_mb"),
             row.get("non_cache_end_mb"),
             row.get("rss_end_mb"),
             row.get("private_end_mb"),
+            row.get("vms_end_mb"),
         ),
         axis=1,
     )
     steps["ram_pressure_peak_mb"] = steps.apply(
         lambda row: _resolve_ram_pressure_mb(
             row.get("benchmark_os", "unknown"),
-            row.get("min_necessary_ram_peak_mb"),
             row.get("non_cache_peak_mb"),
             row.get("rss_peak_mb"),
             row.get("private_peak_mb"),
+            row.get("vms_peak_mb"),
         ),
         axis=1,
     )
