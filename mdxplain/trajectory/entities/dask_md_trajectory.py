@@ -49,6 +49,7 @@ DEFAULT_COMPRESSOR = BloscCodec(cname='lz4', clevel=1)
 from ..helper.dask_trajectory_helper.dask_trajectory_build_helper import DaskMDTrajectoryBuildHelper
 from ..helper.dask_trajectory_helper.dask_trajectory_store_helper import DaskMDTrajectoryStoreHelper  
 from ..helper.dask_trajectory_helper.dask_trajectory_join_stack_helper import DaskMDTrajectoryJoinStackHelper
+from ..helper.dask_trajectory_helper.dask_trajectory_archive_helper import DaskMDTrajectoryArchiveHelper
 from ..helper.dask_trajectory_helper.parallel_operations_helper import ParallelOperationsHelper
 from ..helper.dask_trajectory_helper.zarr_cache_helper import ZarrCacheHelper
 
@@ -1393,73 +1394,109 @@ class DaskMDTrajectory:
 
     def save(self, filepath: str) -> None:
         """
-        Save DaskMDTrajectory to file.
-        
+        Save DaskMDTrajectory to a portable self-contained archive.
+
+        Creates a ``.dask_traj`` archive (tar + zstd) containing the object
+        metadata and the underlying Zarr cache.  The archive can be moved or
+        shared freely without the original Zarr cache.
+
         Parameters
         ----------
         filepath : str
-            Path where to save the trajectory. Directory will be created if needed.
-            
+            Destination path.  The ``.dask_traj`` extension is added
+            automatically if not already present.
+
         Returns
         -------
         None
-            Saves trajectory to disk using pickle
-            
-        Notes
-        -----
-        - Creates parent directories if they don't exist
-        - The zarr cache must remain available at its original location
-        - Uses pickle to preserve the complete object state
-        
+
         Examples
         --------
         >>> traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
-        >>> traj.save('output/my_traj.pkl')
+        >>> traj.save('output/my_traj')
+        >>> # Creates 'output/my_traj.dask_traj'
         """
-        filepath = PathUtils.prepare_file_path(
-            filepath,
-            create_parent=True,
-            purpose="trajectory save path",
-        )
-        
-        with open(filepath, 'wb') as f:
-            pickle.dump(self, f)
+        DaskMDTrajectoryArchiveHelper.save(self, filepath)
 
     @classmethod
     def load(cls, filepath: str) -> DaskMDTrajectory:
         """
-        Load DaskMDTrajectory from file.
-        
+        Load DaskMDTrajectory from a ``.dask_traj`` archive.
+
+        Extracts the archive next to the file on first load; subsequent
+        loads reuse the already-extracted Zarr cache.
+
         Parameters
         ----------
         filepath : str
-            Path to the saved trajectory file
-            
+            Path to a ``.dask_traj`` archive created by :py:meth:`save`.
+
         Returns
         -------
         DaskMDTrajectory
-            Loaded trajectory object
-            
+            Fully initialised trajectory with coordinate access ready.
+
         Raises
         ------
         FileNotFoundError
-            If the saved file does not exist
-            
-        Notes
-        -----
-        The zarr cache must still exist at the original location.
-        
+            If the archive does not exist.
+
         Examples
         --------
-        >>> traj = DaskMDTrajectory.load('output/my_traj.pkl')
+        >>> traj = DaskMDTrajectory.load('output/my_traj.dask_traj')
+        >>> print(traj.n_frames)
         """
-        filepath = PathUtils.prepare_file_path(
-            filepath,
-            create_parent=False,
-            purpose="trajectory load path",
-        )
-        if not os.path.exists(filepath):
-            raise FileNotFoundError(f"Trajectory file not found: {filepath}")
-            
-        with open(filepath, 'rb') as f:
-            return pickle.load(f)
+        return DaskMDTrajectoryArchiveHelper.load(filepath)
+
+    def __getstate__(self) -> dict:
+        """
+        Prepare object for pickling by removing transient Dask/Zarr handles.
+        
+        Drops in-memory Dask arrays and open Zarr store references that become
+        stale if the underlying cache directory is modified between runs. All
+        dropped attributes are reconstructed from disk in ``__setstate__``.
+        
+        Returns
+        -------
+        dict
+            Object state without unpicklable or potentially stale handles
+        """
+        state = self.__dict__.copy()
+
+        # Remove handles and arrays that must be re-initialized from disk
+        for key in [
+            '_zarr_store',
+            '_dask_coords',
+            '_dask_time',
+            '_dask_unitcell_vectors',
+            '_dask_unitcell_lengths',
+            '_dask_unitcell_angles',
+            '_parallel_ops',
+        ]:
+            if key in state:
+                del state[key]
+
+        # Clear in-memory data caches
+        state['_xyz_cache'] = None
+        state['_time_cache'] = None
+
+        return state
+
+    def __setstate__(self, state: dict) -> None:
+        """
+        Restore object from pickle state.
+        
+        Reconstructs Dask arrays, topology, and Zarr handles directly from the
+        Zarr cache on disk, ensuring the object is always in sync with the
+        actual files regardless of any modifications made since last pickling.
+        
+        Parameters
+        ----------
+        state : dict
+            Object state as returned by ``__getstate__``
+        """
+        self.__dict__.update(state)
+
+        # Re-initialise all Dask/Zarr handles from the cache on disk
+        if hasattr(self, 'zarr_cache_path') and self.zarr_cache_path and os.path.exists(self.zarr_cache_path):
+            self._reload_from_cache()

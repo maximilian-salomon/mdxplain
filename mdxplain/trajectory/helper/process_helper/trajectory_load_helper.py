@@ -27,6 +27,7 @@ Supports nested directory structures and trajectory concatenation.
 """
 
 import os
+import hashlib
 import warnings
 from typing import Any, Dict, List, Tuple, Union, Optional
 from pathlib import Path
@@ -689,14 +690,14 @@ class TrajectoryLoadHelper:
             traj_path = os.path.join(subdir_path, traj_file)
             traj_basename = os.path.splitext(traj_file)[0]
 
-            traj = TrajectoryLoadHelper._load_single_trajectory(
-                traj_path, top_path, stride, use_memmap, chunk_size, cache_dir
-            )
-            system_trajs.append(traj)
-
             # Generate name: directory_topologyname_trajectoryname
             name = f"{subdir_name}_{top_basename}_{traj_basename}"
             names.append(name)
+
+            traj = TrajectoryLoadHelper._load_single_trajectory(
+                traj_path, top_path, stride, use_memmap, chunk_size, cache_dir, traj_name=name
+            )
+            system_trajs.append(traj)
 
         return {"trajectories": system_trajs, "names": names}
 
@@ -740,14 +741,14 @@ class TrajectoryLoadHelper:
             file_path = os.path.join(subdir_path, file)
             file_basename = os.path.splitext(file)[0]
 
-            traj = TrajectoryLoadHelper._load_single_trajectory(
-                file_path, None, stride, use_memmap, chunk_size, cache_dir
-            )
-            system_trajs.append(traj)
-
             # Generate name: directory_filename
             name = f"{subdir_name}_{file_basename}"
             names.append(name)
+
+            traj = TrajectoryLoadHelper._load_single_trajectory(
+                file_path, None, stride, use_memmap, chunk_size, cache_dir, traj_name=name
+            )
+            system_trajs.append(traj)
 
         return {"trajectories": system_trajs, "names": names}
 
@@ -886,7 +887,8 @@ class TrajectoryLoadHelper:
         stride: int = 1,
         use_memmap: bool = False,
         chunk_size: int = 1000,
-        cache_dir: str = "./cache"
+        cache_dir: str = "./cache",
+        traj_name: Optional[str] = None
     ) -> Union[DaskMDTrajectory, md.Trajectory]:
         """
         Load a single trajectory file using either md.load or DaskMDTrajectory.
@@ -905,6 +907,8 @@ class TrajectoryLoadHelper:
             Chunk size for DaskMDTrajectory
         cache_dir : str, default="./cache"
             Cache directory for DaskMDTrajectory
+        traj_name : str, optional
+            Explicit name for the trajectory. Used for cache path generation.
             
         Returns
         -------
@@ -912,9 +916,12 @@ class TrajectoryLoadHelper:
             Either md.Trajectory or DaskMDTrajectory object
         """
         if use_memmap:
-            # Create cache path
-            traj_path = Path(trajectory_file)
-            zarr_cache_path = os.path.join(cache_dir, f"{traj_path.stem}.dask.zarr")
+            # Create cache path with hash of absolute file path to prevent collisions
+            traj_path_abs = os.path.abspath(trajectory_file)
+            path_hash = hashlib.md5(traj_path_abs.encode('utf-8')).hexdigest()[:8]
+            
+            base_name = traj_name if traj_name else Path(trajectory_file).stem
+            zarr_cache_path = os.path.join(cache_dir, f"{base_name}_{path_hash}.dask.zarr")
             
             # Create DaskMDTrajectory
             dask_traj = DaskMDTrajectory(

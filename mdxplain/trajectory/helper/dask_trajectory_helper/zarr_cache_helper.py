@@ -26,6 +26,7 @@ Handles conversion from trajectory files to optimized Zarr format using md.iterl
 
 import gc
 import os
+import hashlib
 import pickle
 import tempfile
 import time
@@ -79,7 +80,7 @@ class ZarrCacheHelper:
             purpose="cache directory",
         )
         
-    def get_cache_path(self, trajectory_file: str, cache_dir: Optional[str] = None) -> str:
+    def get_cache_path(self, trajectory_file: str, cache_dir: Optional[str] = None, traj_name: Optional[str] = None) -> str:
         """
         Generate cache path for trajectory file.
         
@@ -89,6 +90,8 @@ class ZarrCacheHelper:
             Path to trajectory file
         cache_dir : str, optional
             Directory for cache files (default: ./cache)
+        traj_name : str, optional
+            Explicit name for the trajectory. If None, the file stem is used.
             
         Returns
         -------
@@ -98,12 +101,12 @@ class ZarrCacheHelper:
         Examples
         --------
         >>> cache_manager = ZarrCacheHelper()
-        >>> # Default cache directory
-        >>> path = cache_manager.get_cache_path('/data/traj.xtc')
-        >>> print(path)  # './cache/traj.dask.zarr'
-        >>> # Custom cache directory
-        >>> path = cache_manager.get_cache_path('/data/traj.xtc', '/tmp/cache')
-        >>> print(path)  # '/tmp/cache/traj.dask.zarr'
+        >>> # Using file stem as name (default)
+        >>> path = cache_manager.get_cache_path('/data/run1.xtc')
+        >>> # Output format: './cache/run1_<hash>.dask.zarr'
+        >>> # Using an explicit trajectory name
+        >>> path = cache_manager.get_cache_path('/data/run1.xtc', traj_name='A_Y4R_hpp_run1')
+        >>> # Output format: './cache/A_Y4R_hpp_run1_<hash>.dask.zarr'
         """
         trajectory_file = PathUtils.prepare_file_path(
             trajectory_file,
@@ -119,9 +122,11 @@ class ZarrCacheHelper:
                 purpose="cache directory",
             )
         
-        # Generate cache filename
-        traj_name = Path(trajectory_file).stem
-        cache_filename = f"{traj_name}.dask.zarr"
+        # Generate cache filename with hash of the absolute path to prevent collisions
+        traj_path_abs = os.path.abspath(trajectory_file)
+        path_hash = hashlib.md5(traj_path_abs.encode('utf-8')).hexdigest()[:8]
+        base_name = traj_name if traj_name else Path(trajectory_file).stem
+        cache_filename = f"{base_name}_{path_hash}.dask.zarr"
         
         return PathUtils.prepare_file_path(
             os.path.join(cache_dir, cache_filename),
