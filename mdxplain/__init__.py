@@ -33,6 +33,7 @@ from . import decomposition
 from . import clustering
 from . import pipeline
 from .pipeline import PipelineManager
+from .trajectory import DaskMDTrajectory
 
 __all__ = [
     "PipelineManager",
@@ -41,5 +42,6 @@ __all__ = [
     "feature_selection",
     "decomposition",
     "clustering",
-    "pipeline"
+    "pipeline",
+    "DaskMDTrajectory"
 ]

@@ -28,8 +28,10 @@ nomenclature systems.
 
 from .entities.trajectory_data import TrajectoryData
 from .manager.trajectory_manager import TrajectoryManager
+from .entities.dask_md_trajectory import DaskMDTrajectory
 
 __all__ = [
     "TrajectoryData", 
-    "TrajectoryManager"
+    "TrajectoryManager",
+    "DaskMDTrajectory"
 ]
