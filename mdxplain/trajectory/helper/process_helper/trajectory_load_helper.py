@@ -54,6 +54,7 @@ TOPOLOGY_FORMATS = (
     '.ncrst', '.rst', '.rst7',  # AMBER restart
     '.psf',  # CHARMM/XPLOR
     '.mol2', '.xml', '.gsd', '.stk',  # Others
+    '.gro' # GROMACS
 )
 
 # Self-contained formats (have embedded topology, don't need separate topology file)
