@@ -26,7 +26,9 @@ rendering heuristics for very large artists to reduce vector export cost.
 """
 
 from pathlib import Path
+import re
 from typing import Dict, Iterator, List, Optional, Tuple, Union
+from xml.sax.saxutils import escape
 import matplotlib.pyplot as plt
 from matplotlib.artist import Artist
 from matplotlib.collections import LineCollection, PathCollection, PolyCollection
@@ -222,9 +224,213 @@ class SvgExportHelper:
         rasterized_states = SvgExportHelper._apply_rasterization_if_needed(fig, file_format)
         try:
             fig.savefig(filepath, dpi=dpi, format=file_format, bbox_inches=bbox_inches)
+            if file_format.lower() == "svg":
+                SvgExportHelper._postprocess_svg_superscripts(Path(filepath))
         finally:
             SvgExportHelper._restore_rasterized_states(rasterized_states)
             SvgExportHelper._restore_path_rendering_rcparams(old_path_rcparams)
+
+    @staticmethod
+    def _postprocess_svg_superscripts(filepath: Path) -> None:
+        """
+        Rewrite matplotlib mathtext superscripts into editable SVG tspans.
+
+        Matplotlib's editable SVG export serializes mathtext as many absolute-
+        positioned tspans. That keeps text editable, but some SVG editors render
+        those fragments differently than the on-screen/PNG output. This step
+        collapses those blocks into a single SVG <text> element with a normal
+        baseline text run plus a superscript tspan.
+
+        Parameters
+        ----------
+        filepath : Path
+            Path to the SVG file to process.
+
+        Returns
+        -------
+        None
+            Modifies the SVG file in-place.
+        """
+        if not filepath.exists():
+            return
+
+        svg_text = filepath.read_text(encoding="utf-8")
+        updated = SvgExportHelper._rewrite_mathtext_groups(svg_text)
+        if updated != svg_text:
+            filepath.write_text(updated, encoding="utf-8")
+
+    @staticmethod
+    def _rewrite_mathtext_groups(svg_text: str) -> str:
+        """
+        Replace mathtext-exported feature labels with cleaner editable SVG text.
+
+        Parameters
+        ----------
+        svg_text : str
+            Raw SVG document content.
+
+        Returns
+        -------
+        str
+            SVG content with supported mathtext feature labels rewritten to
+            editable SVG ``<tspan>`` superscripts.
+        """
+        group_pattern = re.compile(
+            r"(?P<indent>[ \t]*)<!-- (?P<label>.*?) -->\s*"
+            r"(?P<group><g(?P<g_attrs>[^>]*)>\s*<text>\s*(?P<body>.*?)\s*</text>\s*</g>)",
+            re.DOTALL,
+        )
+        return group_pattern.sub(SvgExportHelper._replace_mathtext_group_match, svg_text)
+
+    @staticmethod
+    def _replace_mathtext_group_match(match: re.Match) -> str:
+        """
+        Rewrite one SVG mathtext group match if it contains mathtext.
+
+        Parameters
+        ----------
+        match : re.Match
+            Regex match for a comment + ``<g><text>...</text></g>`` block.
+
+        Returns
+        -------
+        str
+            Rewritten SVG fragment, or the original fragment if no mathtext
+            superscript could be derived from the label comment.
+        """
+        label = match.group("label")
+        if "$" not in label:
+            return match.group(0)
+
+        base_style = SvgExportHelper._extract_base_text_style(match.group("body"))
+        if not base_style:
+            return match.group(0)
+
+        rewritten_runs = SvgExportHelper._build_svg_runs_from_mathtext_label(label)
+        if rewritten_runs is None:
+            return match.group(0)
+
+        indent = match.group("indent")
+        g_attrs = match.group("g_attrs")
+        return (
+            f"{indent}<!-- {label} -->\n"
+            f"{indent}<g{g_attrs}>\n"
+            f"{indent} <text style=\"{escape(base_style)}\">{rewritten_runs}</text>\n"
+            f"{indent}</g>"
+        )
+
+    @staticmethod
+    def _extract_base_text_style(body: str) -> Optional[str]:
+        """
+        Extract the style string from the first text-bearing tspan.
+
+        Parameters
+        ----------
+        body : str
+            Inner SVG markup of a ``<text>`` element.
+
+        Returns
+        -------
+        Optional[str]
+            Normalized style string to apply to the rewritten parent text
+            element, or ``None`` if no tspan style could be found.
+        """
+        text_tspan_pattern = re.compile(
+            r'<tspan[^>]*style="(?P<style>[^"]*)"[^>]*>(?P<text>.*?)</tspan>',
+            re.DOTALL,
+        )
+
+        for tspan_match in text_tspan_pattern.finditer(body):
+            tspan_text = tspan_match.group("text").strip()
+            if not tspan_text:
+                continue
+            return SvgExportHelper._normalize_text_style(tspan_match.group("style"))
+
+        return None
+
+    @staticmethod
+    def _normalize_text_style(style: str) -> str:
+        """
+        Normalize rewritten SVG text style for non-math editable text.
+
+        Parameters
+        ----------
+        style : str
+            Style string extracted from a mathtext-generated ``<tspan>``.
+
+        Returns
+        -------
+        str
+            Style string suitable for a normal SVG ``<text>`` node.
+        """
+        font_stack = (
+            "'DejaVu Sans', 'Bitstream Vera Sans', 'Computer Modern Sans Serif', "
+            "'Lucida Grande', 'Verdana', 'Geneva', 'Lucid', 'Arial', 'Helvetica', "
+            "'Avant Garde', sans-serif"
+        )
+
+        if "font-family:" in style:
+            style = re.sub(
+                r"font-family:\s*'DejaVu Sans'",
+                f"font-family: {font_stack}",
+                style,
+            )
+        else:
+            style = f"{style.rstrip(';')}; font-family: {font_stack}"
+        return style
+
+    @staticmethod
+    def _build_svg_runs_from_mathtext_label(label: str) -> Optional[str]:
+        """
+        Convert a mathtext label comment into SVG text/tspan runs.
+
+        Parameters
+        ----------
+        label : str
+            Comment text emitted by matplotlib for a mathtext label.
+
+        Returns
+        -------
+        Optional[str]
+            SVG text fragment containing plain text plus rewritten mathtext
+            superscripts, or ``None`` when no supported mathtext fragment was
+            found.
+        """
+        superscript_style = "font-size: 70%; baseline-shift: super;"
+        token_pattern = re.compile(
+            r"(?:"
+            r"\$\\(?:mathregular|mathrm)\{([^}]*)\}\^\{\\(?:mathregular|mathrm)\{([^}]*)\}\}\$"
+            r"|"
+            r"\$([^$]*?)\^\{([^}]*)\}\$"
+            r")"
+        )
+
+        parts: List[str] = []
+        last_end = 0
+
+        for token in token_pattern.finditer(label):
+            plain_prefix = label[last_end:token.start()]
+            if plain_prefix:
+                parts.append(escape(plain_prefix))
+
+            math_base, math_super, plain_base, plain_super = token.groups()
+            base_text = math_base if math_base is not None else plain_base
+            superscript_text = math_super if math_super is not None else plain_super
+            parts.append(escape(base_text))
+            parts.append(
+                f'<tspan style="{superscript_style}">'
+                f"{escape(superscript_text)}</tspan>"
+            )
+            last_end = token.end()
+
+        if not parts and last_end == 0:
+            return None
+
+        trailing = label[last_end:]
+        if trailing:
+            parts.append(escape(trailing))
+
+        return "".join(parts)
 
     @staticmethod
     def _is_vector_format(file_format: str) -> bool:

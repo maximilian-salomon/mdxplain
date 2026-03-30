@@ -69,6 +69,7 @@ class BaseFeatureImportancePlotDataPreparer:
     @staticmethod
     def _collect_unique_features(
         all_top_features: Dict[str, List[Dict[str, Any]]],
+        metadata_array: Optional[np.ndarray] = None,
     ) -> Dict[int, str]:
         """
         Collect all unique features across comparisons.
@@ -77,6 +78,8 @@ class BaseFeatureImportancePlotDataPreparer:
         ----------
         all_top_features : Dict[str, List[Dict[str, Any]]]
             Top features per comparison
+        metadata_array : np.ndarray, optional
+            Feature metadata used to rebuild plot-formatted feature names.
 
         Returns
         -------
@@ -98,6 +101,13 @@ class BaseFeatureImportancePlotDataPreparer:
             for feat in features:
                 feat_idx = feat["feature_index"]
                 feat_name = feat["feature_name"]
+
+                if metadata_array is not None:
+                    feat_name = FeatureMetadataUtils.get_feature_name(
+                        metadata_array,
+                        feat_idx,
+                        use_for_plotting=True
+                    )
 
                 if feat_idx not in feature_map:
                     feature_map[feat_idx] = feat_name
@@ -198,11 +208,6 @@ class BaseFeatureImportancePlotDataPreparer:
         # Prepare data for plots (grouped by feature type)
         comparison_name = fi_data.comparison_name
 
-        # Collect unique features with their metadata
-        feature_map = BaseFeatureImportancePlotDataPreparer._collect_unique_features(
-            all_top_features
-        )
-
         # Get all DataSelectors from comparison
         comparison_data_selector_names = (
             ComparisonDataExtractor.get_all_data_selectors_from_comparison(
@@ -219,6 +224,12 @@ class BaseFeatureImportancePlotDataPreparer:
 
         # Get metadata for type lookup
         metadata_array = pipeline_data.get_selected_metadata(continuous_selector)
+
+        # Collect unique features with plot-formatted labels
+        feature_map = BaseFeatureImportancePlotDataPreparer._collect_unique_features(
+            all_top_features,
+            metadata_array=metadata_array
+        )
 
         # Build plot data structure
         plot_data = BaseFeatureImportancePlotDataPreparer._build_plot_data(
@@ -332,7 +343,10 @@ class BaseFeatureImportancePlotDataPreparer:
         metadata_array = pipeline_data.get_selected_metadata(continuous_selector)
 
         # Get all features from selector using central utility
-        all_features = FeatureMetadataUtils.create_feature_map(metadata_array)
+        all_features = FeatureMetadataUtils.create_feature_map(
+            metadata_array,
+            use_for_plotting=True
+        )
 
         # Build plot data
         plot_data = BaseFeatureImportancePlotDataPreparer._build_plot_data(

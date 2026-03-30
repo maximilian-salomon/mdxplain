@@ -278,7 +278,10 @@ class FeatureMetadataUtils:
         return residues
 
     @staticmethod
-    def create_feature_map(metadata_array: np.ndarray) -> dict:
+    def create_feature_map(
+        metadata_array: np.ndarray,
+        use_for_plotting: bool = False
+    ) -> dict:
         """
         Create feature index to name mapping from metadata array.
 
@@ -289,6 +292,9 @@ class FeatureMetadataUtils:
         ----------
         metadata_array : np.ndarray
             Feature metadata array from pipeline
+        use_for_plotting : bool, default=False
+            Whether to apply plot-specific formatting when building feature
+            names, such as consensus superscripts.
 
         Returns
         -------
@@ -309,7 +315,7 @@ class FeatureMetadataUtils:
         feature_map = {}
         for idx in range(len(metadata_array)):
             feature_name = FeatureMetadataUtils.get_feature_name(
-                metadata_array, idx
+                metadata_array, idx, use_for_plotting=use_for_plotting
             )
             feature_map[idx] = feature_name
         return feature_map

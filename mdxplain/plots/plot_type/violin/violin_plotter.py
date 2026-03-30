@@ -714,7 +714,8 @@ class ViolinPlotter(FeatureImportanceBasePlotter):
             Modifies ax in place
         """
         wrapped_title = TitleLegendHelper.wrap_title(
-            feat_name, max_chars_per_line=40
+            TitleLegendHelper.format_bold_superscript_title(feat_name),
+            max_chars_per_line=40
         )
         ax.set_title(wrapped_title, fontsize=subplot_title_fontsize or 14, pad=10, fontweight='bold')
 
