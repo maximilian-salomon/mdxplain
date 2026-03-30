@@ -25,6 +25,7 @@ Provides shared utilities for consistent title wrapping, positioning,
 and legend creation across density and violin plots.
 """
 
+import re
 import textwrap
 from typing import Optional, Dict, List, Tuple, Any
 from matplotlib.figure import Figure
@@ -94,6 +95,29 @@ class TitleLegendHelper:
         """
         lines = textwrap.wrap(title, width=max_chars_per_line)
         return '\n'.join(lines)
+
+    @staticmethod
+    def format_bold_superscript_title(title: str) -> str:
+        """
+        Make mathtext superscripts bold for plot titles.
+
+        Parameters
+        ----------
+        title : str
+            Title text that may contain mathtext superscripts like
+            ``$^{A.H6.54}$``.
+
+        Returns
+        -------
+        str
+            Title text with superscript content wrapped in ``\\mathbf{...}``
+            when applicable.
+        """
+        return re.sub(
+            r"\$\^\{([^}]*)\}\$",
+            lambda match: f"$^{{\\mathbf{{{match.group(1)}}}}}$",
+            title,
+        )
 
     @staticmethod
     def estimate_title_height(

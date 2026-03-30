@@ -389,7 +389,7 @@ class DecisionTreeVisualizer:
             self.feature_metadata, feature_idx
         )
         feature_name = FeatureMetadataUtils.get_feature_name(
-            self.feature_metadata, feature_idx
+            self.feature_metadata, feature_idx, use_for_plotting=True
         )
         discrete_labels = NodeTextFormatter.get_discrete_labels(
             feature_idx, self.feature_metadata, self.short_labels

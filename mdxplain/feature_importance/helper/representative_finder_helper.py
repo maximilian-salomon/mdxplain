@@ -111,16 +111,17 @@ class RepresentativeFinderHelper:
         comp_data = pipeline_data.comparison_data[fi_data.comparison_name]
         sub_comp = comp_data.get_sub_comparison(comparison_identifier)
         ds_name = sub_comp["group1_selectors"][0]
+        target_label = sub_comp.get("labels", (0, 1))[0]
 
         if not use_memmap:
             return RepresentativeFinderHelper._find_best_tree_fast(
                 pipeline_data, fi_data, comparison_identifier,
-                ds_name, n_top
+                ds_name, target_label, n_top
             )
         else:
             return RepresentativeFinderHelper._find_best_tree_chunked(
                 pipeline_data, fi_data, comparison_identifier,
-                ds_name, n_top, chunk_size
+                ds_name, target_label, n_top, chunk_size
             )
 
     @staticmethod
@@ -129,6 +130,7 @@ class RepresentativeFinderHelper:
         fi_data: FeatureImportanceData,
         comparison_identifier: str,
         ds_name: str,
+        target_label: int,
         n_top: int
     ) -> Tuple[int, int]:
         """
@@ -144,6 +146,8 @@ class RepresentativeFinderHelper:
             Sub-comparison identifier
         ds_name : str
             DataSelector name
+        target_label : int
+            Label corresponding to group1 in the comparison
         n_top : int
             Number of top features
 
@@ -163,20 +167,19 @@ class RepresentativeFinderHelper:
             raise ValueError("No Decision Tree model found in metadata")
 
         tree_rules = RepresentativeFinderHelper._extract_tree_rules(
-            model, feature_indices
-        )
-
-        is_periodic_mapping = RepresentativeFinderHelper._get_is_periodic_mapping(
-            pipeline_data, fi_data.feature_selector
+            model, feature_indices, target_label
         )
 
         selected_data, frame_mapping = pipeline_data.get_selected_data(
             fi_data.feature_selector, ds_name, return_frame_mapping=True
         )
+        feature_scales = RepresentativeFinderHelper._compute_feature_scales(
+            selected_data, feature_indices
+        )
 
         scores = RepresentativeFinderHelper._score_frames_tree_based(
             selected_data, feature_indices, feature_importances,
-            tree_rules, is_periodic_mapping
+            tree_rules, feature_scales
         )
 
         best_local_idx = np.argmax(scores)
@@ -189,6 +192,7 @@ class RepresentativeFinderHelper:
         fi_data: FeatureImportanceData,
         comparison_identifier: str,
         ds_name: str,
+        target_label: int,
         n_top: int,
         chunk_size: int
     ) -> Tuple[int, int]:
@@ -205,6 +209,8 @@ class RepresentativeFinderHelper:
             Sub-comparison identifier
         ds_name : str
             DataSelector name
+        target_label : int
+            Label corresponding to group1 in the comparison
         n_top : int
             Number of top features
         chunk_size : int
@@ -226,20 +232,19 @@ class RepresentativeFinderHelper:
             raise ValueError("No Decision Tree model found in metadata")
 
         tree_rules = RepresentativeFinderHelper._extract_tree_rules(
-            model, feature_indices
-        )
-
-        is_periodic_mapping = RepresentativeFinderHelper._get_is_periodic_mapping(
-            pipeline_data, fi_data.feature_selector
+            model, feature_indices, target_label
         )
 
         selected_data, frame_mapping = pipeline_data.get_selected_data(
             fi_data.feature_selector, ds_name, return_frame_mapping=True
         )
+        feature_scales = RepresentativeFinderHelper._compute_feature_scales(
+            selected_data, feature_indices, chunk_size
+        )
 
         best_idx = RepresentativeFinderHelper._find_best_in_chunks(
             selected_data, feature_indices, feature_importances,
-            tree_rules, is_periodic_mapping, chunk_size
+            tree_rules, feature_scales, chunk_size
         )
 
         if hasattr(selected_data, '_mmap') and selected_data._mmap is not None:
@@ -253,7 +258,7 @@ class RepresentativeFinderHelper:
         feature_indices: List[int],
         feature_importances: List[float],
         tree_rules: Dict[int, Dict[str, float]],
-        is_periodic_mapping: Dict[int, bool],
+        feature_scales: Dict[int, float],
         chunk_size: int
     ) -> int:
         """
@@ -269,8 +274,8 @@ class RepresentativeFinderHelper:
             Importance weights
         tree_rules : Dict[int, Dict[str, float]]
             Tree split rules
-        is_periodic_mapping : Dict[int, bool]
-            Mapping from feature index to is_periodic flag
+        feature_scales : Dict[int, float]
+            Mapping from feature index to scale for margin normalization
         chunk_size : int
             Chunk size for processing
 
@@ -290,7 +295,7 @@ class RepresentativeFinderHelper:
 
             scores = RepresentativeFinderHelper._score_frames_tree_based(
                 chunk, feature_indices, feature_importances,
-                tree_rules, is_periodic_mapping
+                tree_rules, feature_scales
             )
 
             chunk_max_idx = np.argmax(scores)
@@ -305,12 +310,16 @@ class RepresentativeFinderHelper:
         return best_idx
 
     @staticmethod
-    def _extract_tree_rules(model, feature_indices: List[int]) -> Dict[int, Dict[str, float]]:
+    def _extract_tree_rules(
+        model,
+        feature_indices: List[int],
+        target_label: int,
+    ) -> Dict[int, Dict[str, float]]:
         """
-        Extract split rules from Decision Tree for specified features.
+        Extract one representative split rule per feature from Decision Tree.
 
-        Analyzes the tree structure to find representative thresholds
-        for the most important features.
+        For each feature, selects the single most informative split for
+        separating the target class from the alternative class.
 
         Parameters
         ----------
@@ -318,81 +327,230 @@ class RepresentativeFinderHelper:
             Trained Decision Tree model
         feature_indices : List[int]
             Indices of features to extract rules for
+        target_label : int
+            Label corresponding to group1 in the comparison
 
         Returns
         -------
         Dict[int, Dict[str, float]]
-            Mapping from feature_idx to dict with 'threshold' and 'weight'
+            Mapping from feature_idx to dict with threshold, direction,
+            and weight
         """
         tree = model.tree_
         rules = {}
+        target_class_index = RepresentativeFinderHelper._get_target_class_index(
+            model, target_label
+        )
 
         for feat_idx in feature_indices:
-            thresholds, weights = RepresentativeFinderHelper._collect_feature_splits(
-                tree, feat_idx
+            split_rule = RepresentativeFinderHelper._find_best_feature_split(
+                tree, feat_idx, target_class_index
             )
 
-            if thresholds:
-                weighted_threshold = RepresentativeFinderHelper._compute_weighted_threshold(
-                    thresholds, weights
-                )
-
-                rules[feat_idx] = {
-                    'threshold': weighted_threshold,
-                    'weight': sum(weights)
-                }
+            if split_rule is not None:
+                rules[feat_idx] = split_rule
 
         return rules
 
     @staticmethod
-    def _collect_feature_splits(tree, feat_idx: int) -> Tuple[List[float], List[float]]:
+    def _get_target_class_index(model, target_label: int) -> int:
         """
-        Collect all splits for a specific feature from tree.
+        Resolve target label to class index used by the sklearn tree.
+
+        Parameters
+        ----------
+        model : sklearn DecisionTreeClassifier
+            Trained Decision Tree model
+        target_label : int
+            Label corresponding to group1 in the comparison
+
+        Returns
+        -------
+        int
+            Index of target label in model.classes_
+        """
+        classes = np.asarray(model.classes_)
+        matches = np.where(classes == target_label)[0]
+        if len(matches) == 0:
+            raise ValueError(
+                f"Target label {target_label} not found in model classes "
+                f"{classes.tolist()}"
+            )
+        return int(matches[0])
+
+    @staticmethod
+    def _find_best_feature_split(
+        tree,
+        feat_idx: int,
+        target_class_index: int,
+    ) -> Dict[str, float] | None:
+        """
+        Find the single most informative split for one feature.
 
         Parameters
         ----------
         tree : sklearn tree object
             Tree structure from DecisionTreeClassifier
         feat_idx : int
-            Feature index to collect splits for
+            Feature index to inspect
+        target_class_index : int
+            Target class index in tree.value
 
         Returns
         -------
-        Tuple[List[float], List[float]]
-            Lists of (thresholds, weights) for all splits on this feature
+        Dict[str, float] or None
+            Best split rule or None if feature is not used meaningfully
         """
-        thresholds = []
-        weights = []
+        best_rule = None
+        best_score = -np.inf
 
         for node_idx in range(tree.node_count):
-            if tree.feature[node_idx] == feat_idx:
-                thresholds.append(tree.threshold[node_idx])
-                weights.append(tree.impurity[node_idx])
+            if tree.feature[node_idx] != feat_idx:
+                continue
 
-        return thresholds, weights
+            left_idx = tree.children_left[node_idx]
+            right_idx = tree.children_right[node_idx]
+            if left_idx < 0 or right_idx < 0:
+                continue
+
+            gain = RepresentativeFinderHelper._compute_split_gain(tree, node_idx)
+            if gain <= 0:
+                continue
+
+            left_fraction = RepresentativeFinderHelper._get_target_fraction(
+                tree.value[left_idx], target_class_index
+            )
+            right_fraction = RepresentativeFinderHelper._get_target_fraction(
+                tree.value[right_idx], target_class_index
+            )
+            separation = abs(left_fraction - right_fraction)
+            if separation <= 0:
+                continue
+
+            direction = "le" if left_fraction > right_fraction else "gt"
+            split_score = gain * separation
+
+            if split_score > best_score:
+                best_score = split_score
+                best_rule = {
+                    "threshold": float(tree.threshold[node_idx]),
+                    "weight": float(split_score),
+                    "direction": direction,
+                }
+
+        return best_rule
 
     @staticmethod
-    def _compute_weighted_threshold(thresholds: List[float], weights: List[float]) -> float:
+    def _compute_split_gain(tree, node_idx: int) -> float:
         """
-        Compute weighted average threshold.
+        Compute weighted impurity gain for one split node.
 
         Parameters
         ----------
-        thresholds : List[float]
-            Threshold values
-        weights : List[float]
-            Weight values
+        tree : sklearn tree object
+            Tree structure from DecisionTreeClassifier
+        node_idx : int
+            Node index of the split
 
         Returns
         -------
         float
-            Weighted threshold value
+            Weighted impurity reduction
         """
-        total_weight = sum(weights)
-        if total_weight > 0:
-            return sum(t * w for t, w in zip(thresholds, weights)) / total_weight
-        else:
-            return np.mean(thresholds)
+        left_idx = tree.children_left[node_idx]
+        right_idx = tree.children_right[node_idx]
+        parent_weight = float(tree.weighted_n_node_samples[node_idx])
+        if parent_weight <= 0:
+            return 0.0
+
+        left_weight = float(tree.weighted_n_node_samples[left_idx])
+        right_weight = float(tree.weighted_n_node_samples[right_idx])
+
+        impurity_reduction = (
+            float(tree.impurity[node_idx])
+            - (left_weight / parent_weight) * float(tree.impurity[left_idx])
+            - (right_weight / parent_weight) * float(tree.impurity[right_idx])
+        )
+        return max(parent_weight * impurity_reduction, 0.0)
+
+    @staticmethod
+    def _get_target_fraction(node_value: np.ndarray, target_class_index: int) -> float:
+        """
+        Compute target-class fraction at a tree node.
+
+        Parameters
+        ----------
+        node_value : np.ndarray
+            Tree value array for one node
+        target_class_index : int
+            Target class index in node counts
+
+        Returns
+        -------
+        float
+            Fraction of target class at the node
+        """
+        counts = np.asarray(node_value).reshape(-1)
+        total = float(np.sum(counts))
+        if total <= 0:
+            return 0.0
+        return float(counts[target_class_index] / total)
+
+    @staticmethod
+    def _compute_feature_scales(
+        selected_data: np.ndarray | None,
+        feature_indices: List[int],
+        chunk_size: int | None = None,
+        feature_data_getter=None,
+    ) -> Dict[int, float]:
+        """
+        Compute per-feature scales for margin normalization.
+
+        Parameters
+        ----------
+        selected_data : np.ndarray or None
+            Feature matrix or memmap-backed array
+        feature_indices : List[int]
+            Indices of features to normalize
+        chunk_size : int, optional
+            Chunk size for memmap-safe processing
+        feature_data_getter : callable, optional
+            Lazy getter returning selected_data when needed
+
+        Returns
+        -------
+        Dict[int, float]
+            Mapping from feature index to positive scale
+        """
+        if selected_data is None:
+            if feature_data_getter is None:
+                raise ValueError("Either selected_data or feature_data_getter must be provided")
+            selected_data = feature_data_getter()
+
+        if chunk_size is None or selected_data.shape[0] <= chunk_size:
+            scales = {}
+            for feat_idx in feature_indices:
+                scale = float(np.std(selected_data[:, feat_idx]))
+                scales[feat_idx] = scale if scale > 1e-12 else 1.0
+            return scales
+
+        sums = np.zeros(len(feature_indices), dtype=float)
+        sumsq = np.zeros(len(feature_indices), dtype=float)
+        n_frames = selected_data.shape[0]
+
+        for start_idx in range(0, n_frames, chunk_size):
+            end_idx = min(start_idx + chunk_size, n_frames)
+            chunk = selected_data[start_idx:end_idx][:, feature_indices]
+            sums += np.sum(chunk, axis=0)
+            sumsq += np.sum(np.square(chunk), axis=0)
+
+        means = sums / n_frames
+        variances = np.maximum((sumsq / n_frames) - np.square(means), 0.0)
+
+        return {
+            feat_idx: float(np.sqrt(var)) if var > 1e-12 else 1.0
+            for feat_idx, var in zip(feature_indices, variances)
+        }
 
     @staticmethod
     def _score_frames_tree_based(
@@ -400,10 +558,14 @@ class RepresentativeFinderHelper:
         feature_indices: List[int],
         feature_importances: List[float],
         tree_rules: Dict[int, Dict[str, float]],
-        is_periodic_mapping: Dict[int, bool] = None
+        feature_scales: Dict[int, float],
     ) -> np.ndarray:
         """
-        Score frames based on alignment with tree split rules.
+        Score frames by positive margin beyond the best split threshold.
+
+        A feature contributes only when the frame lies on the side of the
+        threshold that is more characteristic for group1. Larger margins
+        yield higher scores.
 
         Parameters
         ----------
@@ -414,9 +576,9 @@ class RepresentativeFinderHelper:
         feature_importances : List[float]
             Importance weights for each feature
         tree_rules : Dict[int, Dict[str, float]]
-            Tree rules extracted from model
-        is_periodic_mapping : Dict[int, bool], optional
-            Mapping from feature index to is_periodic flag
+            Best split rule per feature
+        feature_scales : Dict[int, float]
+            Scale per feature for margin normalization
 
         Returns
         -------
@@ -432,116 +594,20 @@ class RepresentativeFinderHelper:
 
             rule = tree_rules[feat_idx]
             threshold = rule['threshold']
+            direction = rule['direction']
+            split_weight = rule['weight']
+            scale = feature_scales.get(feat_idx, 1.0)
 
             feature_values = feature_data[:, feat_idx]
+            if direction == "gt":
+                margins = feature_values - threshold
+            else:
+                margins = threshold - feature_values
 
-            raw_distances = feature_values - threshold
-            is_periodic = is_periodic_mapping.get(feat_idx, False) if is_periodic_mapping else False
-            distances = RepresentativeFinderHelper._circular_distance(
-                raw_distances, is_periodic
+            positive_margins = np.maximum(margins, 0.0)
+            feature_scores = importance * split_weight * np.log1p(
+                positive_margins / scale
             )
-
-            feature_scores = importance / (1.0 + distances)
             scores += feature_scores
 
         return scores
-
-    @staticmethod
-    def _get_is_periodic_mapping(
-        pipeline_data: PipelineData,
-        feature_selector_name: str
-    ) -> Dict[int, bool]:
-        """
-        Create mapping from feature index to is_periodic flag.
-
-        Extracts is_periodic information from feature metadata for each
-        feature type in the selector. Used to determine which features
-        require circular distance calculation (e.g., torsion angles).
-
-        Parameters
-        ----------
-        pipeline_data : PipelineData
-            Pipeline data object
-        feature_selector_name : str
-            Feature selector name
-
-        Returns
-        -------
-        Dict[int, bool]
-            Mapping from global feature index to is_periodic flag
-
-        Examples
-        --------
-        >>> is_periodic = RepresentativeFinderHelper._get_is_periodic_mapping(
-        ...     pipeline_data, "my_features"
-        ... )
-        >>> is_periodic[42]  # True for torsion, False for distance
-        """
-        selector_data = pipeline_data.selected_feature_data[feature_selector_name]
-        is_periodic_mapping = {}
-        current_offset = 0
-
-        for feature_key in selector_data.selection_results.keys():
-            feature_data_dict = pipeline_data.feature_data[feature_key]
-            ref_traj = selector_data.reference_trajectory
-            if ref_traj is None:
-                ref_traj = 0
-
-            feature_data_obj = feature_data_dict[ref_traj]
-            is_periodic = feature_data_obj.feature_metadata.get('is_periodic', False)
-
-            result = selector_data.selection_results[feature_key]
-            traj_results = result['trajectory_indices'][ref_traj]
-            n_features = len(traj_results['indices'])
-
-            for i in range(n_features):
-                is_periodic_mapping[current_offset + i] = is_periodic
-
-            current_offset += n_features
-
-        return is_periodic_mapping
-
-    @staticmethod
-    def _circular_distance(
-        distances: np.ndarray,
-        is_periodic: bool
-    ) -> np.ndarray:
-        """
-        Compute circular distance for periodic features.
-
-        For periodic features (torsion angles in degrees), computes the
-        shortest angular distance accounting for periodicity. For non-periodic
-        features, returns absolute distance unchanged.
-
-        Parameters
-        ----------
-        distances : np.ndarray
-            Raw distances (feature_value - threshold)
-        is_periodic : bool
-            Whether feature is periodic (True) or not (False)
-
-        Returns
-        -------
-        np.ndarray
-            Corrected distances accounting for periodicity
-
-        Examples
-        --------
-        >>> # Torsion angle: 350° vs 10° → distance is 20°, not 340°
-        >>> distances = np.array([340.0])  # 350 - 10
-        >>> circular = RepresentativeFinderHelper._circular_distance(
-        ...     distances, is_periodic=True
-        ... )
-        >>> print(circular)  # [20.0]
-
-        >>> # Non-periodic feature: standard absolute distance
-        >>> distances = np.array([5.0, -3.0])
-        >>> result = RepresentativeFinderHelper._circular_distance(
-        ...     distances, is_periodic=False
-        ... )
-        >>> print(result)  # [5.0, 3.0]
-        """
-        if is_periodic:
-            return np.abs((distances + 180) % 360 - 180)
-        else:
-            return np.abs(distances)

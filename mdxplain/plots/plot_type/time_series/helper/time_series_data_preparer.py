@@ -275,7 +275,9 @@ class TimeSeriesDataPreparer:
         index_map = {}
 
         for feat_idx in sorted(feature_indices):
-            feat_name = FeatureMetadataUtils.get_feature_name(feature_metadata, feat_idx)
+            feat_name = FeatureMetadataUtils.get_feature_name(
+                feature_metadata, feat_idx, use_for_plotting=True
+            )
             feat_type = FeatureMetadataUtils.get_feature_type(feature_metadata, feat_idx)
 
             if feat_type not in feature_data:
