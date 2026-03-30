@@ -26,11 +26,12 @@ archives containing pipeline data. Supports filtering of visualization
 files and structure files for flexible archive creation.
 """
 
+import hashlib
 import os
 import tarfile
 import tempfile
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 import zstandard as zstd
 
@@ -505,6 +506,225 @@ class ArchiveUtils:
         return f"{archive_base}.tar.{compression}"
 
     @staticmethod
+    def is_sha256_string(value: str) -> bool:
+        """
+        Check whether ``value`` is a raw SHA256 hex digest.
+
+        Parameters
+        ----------
+        value : str
+            Candidate SHA256 string.
+
+        Returns
+        -------
+        bool
+            True when the value is a 64-character hexadecimal digest.
+        """
+        candidate = value.strip().lower()
+        if len(candidate) != 64:
+            return False
+        return all(char in "0123456789abcdef" for char in candidate)
+
+    @staticmethod
+    def parse_sha256_text(text: str) -> str:
+        """
+        Parse a SHA256 value from raw text or ``sha256sum``-style content.
+
+        Parameters
+        ----------
+        text : str
+            Raw text containing a SHA256 digest.
+
+        Returns
+        -------
+        str
+            Normalized lowercase SHA256 digest.
+
+        Raises
+        ------
+        ValueError
+            If no valid SHA256 digest can be parsed from the text.
+        """
+        stripped = text.strip()
+        if not stripped:
+            raise ValueError("SHA256 input cannot be empty.")
+        token = stripped.split()[0]
+        if not ArchiveUtils.is_sha256_string(token):
+            raise ValueError("Could not parse a valid SHA256 digest.")
+        return token.lower()
+
+    @staticmethod
+    def compute_sha256(file_path: str) -> str:
+        """
+        Compute the SHA256 digest of a local file.
+
+        Parameters
+        ----------
+        file_path : str
+            Path to the file to hash.
+
+        Returns
+        -------
+        str
+            Lowercase SHA256 digest.
+        """
+        normalized = PathUtils.prepare_file_path(
+            file_path,
+            create_parent=False,
+            purpose="SHA256 file path",
+        )
+        digest = hashlib.sha256()
+        with open(normalized, "rb") as handle:
+            while True:
+                chunk = handle.read(1024 * 1024)
+                if not chunk:
+                    break
+                digest.update(chunk)
+        return digest.hexdigest()
+
+    @staticmethod
+    def get_sha256_file_path(archive_path: str) -> str:
+        """
+        Build the sidecar ``.sha`` path for an archive file.
+
+        Parameters
+        ----------
+        archive_path : str
+            Local archive path.
+
+        Returns
+        -------
+        str
+            Normalized absolute path to the sidecar SHA256 file.
+        """
+        normalized = PathUtils.prepare_file_path(
+            archive_path,
+            create_parent=False,
+            purpose="archive path",
+        )
+        return PathUtils.prepare_file_path(
+            f"{normalized}.sha",
+            create_parent=False,
+            purpose="archive SHA256 path",
+        )
+
+    @staticmethod
+    def write_sha256_file(archive_path: str, sha_file_path: Optional[str] = None) -> str:
+        """
+        Write a ``.sha`` sidecar file for an archive.
+
+        Parameters
+        ----------
+        archive_path : str
+            Local archive path.
+        sha_file_path : str, optional
+            Explicit output path for the SHA256 sidecar file.
+
+        Returns
+        -------
+        str
+            Path to the written SHA256 file.
+        """
+        archive_path = PathUtils.prepare_file_path(
+            archive_path,
+            create_parent=False,
+            purpose="archive path",
+        )
+        sha_file_path = sha_file_path or ArchiveUtils.get_sha256_file_path(archive_path)
+        sha_file_path = PathUtils.prepare_file_path(
+            sha_file_path,
+            create_parent=True,
+            purpose="archive SHA256 path",
+        )
+        digest = ArchiveUtils.compute_sha256(archive_path)
+        filename = os.path.basename(archive_path)
+        with open(sha_file_path, "w", encoding="utf-8") as handle:
+            handle.write(f"{digest}  {filename}\n")
+        return sha_file_path
+
+    @staticmethod
+    def _ensure_output_paths_writable(
+        archive_path: str,
+        sha_path: Optional[str],
+        overwrite: bool,
+    ) -> None:
+        """
+        Validate archive output paths against the overwrite policy.
+
+        Parameters
+        ----------
+        archive_path : str
+            Target archive file path.
+        sha_path : str or None
+            Output path for the SHA256 sidecar file when requested.
+        overwrite : bool
+            Whether existing files may be replaced.
+
+        Returns
+        -------
+        None
+            Raises ``FileExistsError`` when overwrite is disabled and a target
+            path already exists.
+        """
+        if overwrite:
+            return
+        if os.path.exists(archive_path):
+            raise FileExistsError(f"Archive output already exists: {archive_path}")
+        if sha_path is not None:
+            if os.path.exists(sha_path):
+                raise FileExistsError(f"Archive SHA256 output already exists: {sha_path}")
+
+    @staticmethod
+    def resolve_sha_output_path(
+        archive_path: str,
+        sha: Union[bool, str],
+    ) -> Optional[str]:
+        """
+        Resolve the requested SHA256 output path for an archive.
+
+        Parameters
+        ----------
+        archive_path : str
+            Target archive file path.
+        sha : bool or str
+            ``False`` disables SHA output, ``True`` uses the default sidecar
+            path, and a string is treated as an explicit SHA256 output path.
+
+        Returns
+        -------
+        str or None
+            Normalized SHA256 output path when enabled, otherwise None.
+        """
+        if sha is False:
+            return None
+        if sha is True:
+            return ArchiveUtils.get_sha256_file_path(archive_path)
+        return PathUtils.prepare_file_path(
+            sha,
+            create_parent=True,
+            purpose="archive SHA256 path",
+        )
+
+    @staticmethod
+    def _replace_file_from_temp(temp_path: str, target_path: str) -> None:
+        """
+        Replace a target file atomically from a temporary file.
+
+        Parameters
+        ----------
+        temp_path : str
+            Temporary file path containing final content.
+        target_path : str
+            Destination file path.
+
+        Returns
+        -------
+        None
+            Replaces the target file atomically.
+        """
+        os.replace(temp_path, target_path)
+
+    @staticmethod
     def _add_archive_items(
         tar: tarfile.TarFile,
         temp_pkl: str,
@@ -540,6 +760,8 @@ class ArchiveUtils:
         compression_level: Optional[int] = None,
         zstd_threads: Optional[int] = None,
         reserve_cores: int = 2,
+        sha: Union[bool, str] = True,
+        overwrite: bool = False,
     ) -> str:
         """
         Create compressed archive with pipeline and cache files.
@@ -566,6 +788,13 @@ class ArchiveUtils:
             ``max(1, cpu_count - reserve_cores)``.
         reserve_cores : int, default=2
             Number of CPU cores to keep free for automatic zstd thread selection.
+        sha : bool or str, default=True
+            If True, write ``<archive>.sha`` next to the created archive.
+            When a string is provided, it is used as the explicit SHA256
+            output path.
+        overwrite : bool, default=False
+            If True, replace existing archive outputs. When False, existing
+            archive or SHA256 files raise ``FileExistsError``.
 
         Returns
         -------
@@ -609,10 +838,23 @@ class ArchiveUtils:
             create_parent=True,
             purpose="archive output path",
         )
+        sha_output_path = ArchiveUtils.resolve_sha_output_path(
+            archive_path=archive_full_path,
+            sha=sha,
+        )
+        ArchiveUtils._ensure_output_paths_writable(
+            archive_path=archive_full_path,
+            sha_path=sha_output_path,
+            overwrite=overwrite,
+        )
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_pkl = os.path.join(temp_dir, "pipeline.pkl")
             pipeline_data.save(temp_pkl)
+            temp_archive_path = os.path.join(
+                temp_dir,
+                os.path.basename(archive_full_path),
+            )
 
             files_to_archive = ArchiveUtils.collect_cache_files(
                 pipeline_data.cache_dir,
@@ -630,7 +872,7 @@ class ArchiveUtils:
                     reserve_cores=reserve_cores,
                 )
                 ArchiveUtils._create_zstd_archive(
-                    archive_full_path=archive_full_path,
+                    archive_full_path=temp_archive_path,
                     temp_pkl=temp_pkl,
                     files_to_archive=files_to_archive,
                     zstd_level=zstd_level,
@@ -642,13 +884,22 @@ class ArchiveUtils:
                     tar_kwargs["compresslevel"] = int(compression_level)
 
                 with tarfile.open(
-                    archive_full_path, compression_modes[compression], **tar_kwargs
+                    temp_archive_path, compression_modes[compression], **tar_kwargs
                 ) as tar:
                     ArchiveUtils._add_archive_items(
                         tar=tar,
                         temp_pkl=temp_pkl,
                         files_to_archive=files_to_archive,
                     )
+            ArchiveUtils._replace_file_from_temp(
+                temp_path=temp_archive_path,
+                target_path=archive_full_path,
+            )
+            if sha_output_path is not None:
+                ArchiveUtils.write_sha256_file(
+                    archive_path=archive_full_path,
+                    sha_file_path=sha_output_path,
+                )
 
         return archive_full_path
 

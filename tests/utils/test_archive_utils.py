@@ -275,3 +275,68 @@ def test_create_archive_contains_pipeline_pkl_entry(tmp_path):
     with tarfile.open(archive, "r:*") as tar:
         names = tar.getnames()
     assert "pipeline.pkl" in names
+
+
+def test_create_archive_with_sha_writes_sidecar_file(tmp_path):
+    """Optional SHA256 sidecar output should be written next to the archive."""
+    cache = tmp_path / "cache"
+    cache.mkdir()
+    pipeline_data = _DummyPipelineData(str(cache), use_memmap=False)
+
+    archive = ArchiveUtils.create_archive(
+        pipeline_data,
+        str(tmp_path / "signed_like_archive"),
+        compression="gz",
+        sha=True,
+    )
+
+    sha_path = Path(ArchiveUtils.get_sha256_file_path(archive))
+    assert sha_path.exists()
+    parsed = ArchiveUtils.parse_sha256_text(sha_path.read_text(encoding="utf-8"))
+    assert parsed == ArchiveUtils.compute_sha256(archive)
+
+
+def test_create_archive_existing_output_without_overwrite_raises(tmp_path):
+    """Existing archive outputs should require overwrite=True."""
+    cache = tmp_path / "cache"
+    cache.mkdir()
+    pipeline_data = _DummyPipelineData(str(cache), use_memmap=False)
+    archive_base = tmp_path / "existing_archive"
+
+    ArchiveUtils.create_archive(
+        pipeline_data,
+        str(archive_base),
+        compression="gz",
+        sha=True,
+    )
+
+    with pytest.raises(FileExistsError, match="Archive output already exists"):
+        ArchiveUtils.create_archive(
+            pipeline_data,
+            str(archive_base),
+            compression="gz",
+            sha=True,
+            overwrite=False,
+        )
+
+
+def test_create_archive_with_custom_sha_output_path(tmp_path):
+    """A custom SHA256 output path should be honored when requested."""
+    cache = tmp_path / "cache"
+    cache.mkdir()
+    pipeline_data = _DummyPipelineData(str(cache), use_memmap=False)
+    custom_sha_path = tmp_path / "checksums" / "archive.sha"
+
+    archive = ArchiveUtils.create_archive(
+        pipeline_data,
+        str(tmp_path / "custom_sha_archive"),
+        compression="gz",
+        sha=str(custom_sha_path),
+    )
+
+    assert Path(archive).exists()
+    assert custom_sha_path.exists()
+    parsed = ArchiveUtils.parse_sha256_text(
+        custom_sha_path.read_text(encoding="utf-8")
+    )
+    assert parsed == ArchiveUtils.compute_sha256(archive)

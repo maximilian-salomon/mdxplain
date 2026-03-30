@@ -37,6 +37,7 @@ from mdxplain.feature.feature_type.contacts import Contacts
 from mdxplain.clustering.cluster_type.dbscan import DBSCAN
 from mdxplain.decomposition.decomposition_type.pca import PCA
 from mdxplain.trajectory.entities.dask_md_trajectory import DaskMDTrajectory
+from mdxplain.utils.archive_utils import ArchiveUtils
 from mdxplain.utils.cleanup_utils import CleanupUtils
 from tests.fixtures.mock_trajectory_factory import MockTrajectoryFactory
 
@@ -807,7 +808,10 @@ class TestPipelineSaveLoad:
         broken_archive = temp_dir / "corrupted_analysis.tar.gz"
         broken_archive.write_bytes(b"not-a-valid-tar-archive")
         with pytest.raises((tarfile.ReadError, EOFError, OSError)):
-            PipelineManager.load_from_archive(str(broken_archive))
+            PipelineManager.load_from_archive(
+                str(broken_archive),
+                verify=False,
+            )
 
     def test_load_from_archive_missing_pipeline_pkl_raises(self, temp_dir):
         """
@@ -825,6 +829,112 @@ class TestPipelineSaveLoad:
             PipelineManager.load_from_archive(
                 str(broken_archive),
                 cache_dir=str(temp_dir / "restore_cache"),
+                verify=False,
+            )
+
+    def test_create_sharable_archive_with_sha_writes_sidecar(self, temp_dir):
+        """
+        Archive creation should optionally emit a SHA256 sidecar file.
+        """
+        pipeline = self._build_non_memmap_pipeline(temp_dir)
+        try:
+            archive_path = pipeline.create_sharable_archive(
+                str(temp_dir / "with_sha"),
+                compression="gz",
+                sha=True,
+            )
+        finally:
+            pipeline.close()
+
+        sha_path = Path(ArchiveUtils.get_sha256_file_path(archive_path))
+        assert sha_path.exists()
+        actual_sha = ArchiveUtils.parse_sha256_text(
+            sha_path.read_text(encoding="utf-8")
+        )
+        assert actual_sha == ArchiveUtils.compute_sha256(archive_path)
+
+    def test_load_from_archive_local_verify_true_accepts_sha_file(self, temp_dir):
+        """
+        Local archive loads should support explicit SHA256 verification.
+        """
+        pipeline = self._build_non_memmap_pipeline(temp_dir)
+        expected_mean = (
+            pipeline._data.feature_data["distances"][0].analysis.compute_mean().copy()
+        )
+        try:
+            archive_path = pipeline.create_sharable_archive(
+                str(temp_dir / "verified_local"),
+                compression="gz",
+                sha=True,
+            )
+        finally:
+            pipeline.close()
+
+        sha_path = ArchiveUtils.get_sha256_file_path(archive_path)
+        loaded = PipelineManager.load_from_archive(
+            archive_path,
+            cache_dir=str(temp_dir / "verified_local_cache"),
+            verify=True,
+            sha=sha_path,
+        )
+        try:
+            loaded_feature = loaded._data.feature_data["distances"][0]
+            np.testing.assert_array_equal(
+                loaded_feature.analysis.compute_mean(),
+                expected_mean,
+            )
+        finally:
+            loaded.close()
+
+    def test_load_from_archive_remote_reuses_existing_download(self, temp_dir):
+        """
+        Remote archive loads should reuse existing downloads when allowed.
+        """
+        pipeline = self._build_non_memmap_pipeline(temp_dir)
+        try:
+            archive_path = pipeline.create_sharable_archive(
+                str(temp_dir / "remote_reuse_source"),
+                compression="gz",
+            )
+        finally:
+            pipeline.close()
+
+        download_target = temp_dir / "downloads" / "archive.tar.gz"
+        download_target.parent.mkdir(parents=True, exist_ok=True)
+        download_target.write_bytes(Path(archive_path).read_bytes())
+
+        with pytest.warns(RuntimeWarning, match="Reusing the existing file"):
+            loaded = PipelineManager.load_from_archive(
+                str(download_target),
+                cache_dir=str(temp_dir / "remote_reuse_cache"),
+                verify=False,
+                download_url=Path(archive_path).resolve().as_uri(),
+                overwrite=False,
+            )
+        try:
+            assert Path(loaded.get_config()["cache_dir"]).exists()
+            assert download_target.read_bytes() == Path(archive_path).read_bytes()
+        finally:
+            loaded.close()
+
+    def test_load_from_archive_default_verify_requires_sha(self, temp_dir):
+        """
+        Default archive verification should require SHA input.
+        """
+        pipeline = self._build_non_memmap_pipeline(temp_dir)
+        try:
+            archive_path = pipeline.create_sharable_archive(
+                str(temp_dir / "remote_verify_required"),
+                compression="gz",
+            )
+        finally:
+            pipeline.close()
+
+        with pytest.raises(ValueError, match="Archive verification requires sha"):
+            PipelineManager.load_from_archive(
+                str(temp_dir / "remote_verify_required.tar.gz"),
+                cache_dir=str(temp_dir / "remote_verify_required_cache"),
+                download_url=Path(archive_path).resolve().as_uri(),
             )
 
     def test_close_is_idempotent_and_keeps_cache_file(self, temp_dir):
@@ -890,6 +1000,7 @@ class TestPipelineSaveLoad:
             loaded = PipelineManager.load_from_archive(
                 archive_path,
                 cache_dir=str(temp_dir / "restored_cache"),
+                verify=False,
             )
             loaded_feature = loaded._data.feature_data["distances"][0]
             assert isinstance(loaded_feature.data, np.memmap)
@@ -933,6 +1044,7 @@ class TestPipelineSaveLoad:
             loaded = PipelineManager.load_from_archive(
                 archive_path,
                 cache_dir=str(temp_dir / "restored_zarr_memmap_single"),
+                verify=False,
             )
             try:
                 runtime_cache = Path(loaded.get_config()["cache_dir"]).resolve()
@@ -996,6 +1108,7 @@ class TestPipelineSaveLoad:
             loaded = PipelineManager.load_from_archive(
                 archive_path,
                 cache_dir=str(temp_dir / "restored_zarr_memmap_multi"),
+                verify=False,
             )
             try:
                 runtime_cache = Path(loaded.get_config()["cache_dir"]).resolve()
@@ -1083,6 +1196,7 @@ class TestPipelineSaveLoad:
             loaded = PipelineManager.load_from_archive(
                 archive_path,
                 cache_dir=str(cache_root),
+                verify=False,
             )
             try:
                 runtime_cache = Path(loaded.get_config()["cache_dir"]).resolve()
@@ -1180,6 +1294,7 @@ class TestPipelineSaveLoad:
             loaded = PipelineManager.load_from_archive(
                 archive_path,
                 cache_dir=str(cache_root),
+                verify=False,
             )
             runtime_cache = Path(loaded.get_config()["cache_dir"]).resolve()
             try:
@@ -1230,6 +1345,7 @@ class TestPipelineSaveLoad:
             loaded = PipelineManager.load_from_archive(
                 archive_path,
                 cache_dir=str(temp_dir / "archive_cache"),
+                verify=False,
             )
             feature = loaded._data.feature_data["distances"][0]
             assert isinstance(feature.data, np.memmap)
@@ -1271,6 +1387,7 @@ class TestPipelineSaveLoad:
         loaded_cycle1 = PipelineManager.load_from_archive(
             archive_path_cycle0,
             cache_dir=str(cache_root),
+            verify=False,
         )
         try:
             runtime_cache_cycle1 = Path(loaded_cycle1.get_config()["cache_dir"])
@@ -1305,6 +1422,7 @@ class TestPipelineSaveLoad:
         loaded_cycle2 = PipelineManager.load_from_archive(
             archive_path_cycle1,
             cache_dir=str(cache_root),
+            verify=False,
         )
         try:
             runtime_cache_cycle2 = Path(loaded_cycle2.get_config()["cache_dir"])
@@ -1390,6 +1508,7 @@ class TestPipelineSaveLoad:
         loaded_cycle1 = PipelineManager.load_from_archive(
             archive_path_cycle0,
             cache_dir=str(cache_root),
+            verify=False,
         )
         try:
             runtime_cache_cycle1 = Path(loaded_cycle1.get_config()["cache_dir"])
@@ -1420,6 +1539,7 @@ class TestPipelineSaveLoad:
         loaded_cycle2 = PipelineManager.load_from_archive(
             archive_path_cycle1,
             cache_dir=str(cache_root),
+            verify=False,
         )
         try:
             runtime_cache_cycle2 = Path(loaded_cycle2.get_config()["cache_dir"])

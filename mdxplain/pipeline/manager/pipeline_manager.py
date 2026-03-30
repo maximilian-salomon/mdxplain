@@ -28,7 +28,7 @@ to automatically inject PipelineData into manager methods that need it.
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional, cast
+from typing import Any, Dict, Optional, Union, cast
 from types import SimpleNamespace
 from datetime import datetime
 import gc
@@ -47,6 +47,7 @@ from ..helper.cache_remap_helper import CacheRemapHelper
 from .auto_inject_proxy import AutoInjectProxy
 from .performance_config import PerformanceConfig
 from ...utils.archive_utils import ArchiveUtils
+from ...utils.archive_fetch_helper import ArchiveFetchHelper
 from ...utils.cleanup_utils import CleanupUtils
 from ...utils.helper.load_and_save_helper import LoadAndSaveHelper
 from ...utils.memmap_utils import MemmapUtils
@@ -1221,6 +1222,8 @@ class PipelineManager:
         compression_level: Optional[int] = None,
         zstd_threads: Optional[int] = None,
         zstd_reserve_cores: int = 2,
+        sha: Union[bool, str] = True,
+        overwrite: bool = False,
     ) -> str:
         """
         Create sharable compressed archive with pipeline and essential data.
@@ -1245,6 +1248,13 @@ class PipelineManager:
             Thread count for zstd compression. If None, chosen automatically.
         zstd_reserve_cores : int, default=2
             Number of CPU cores to keep free when zstd thread count is automatic.
+        sha : bool or str, default=True
+            If True, write ``<archive>.sha`` next to the created archive.
+            When a string is provided, it is used as the explicit SHA256
+            output path.
+        overwrite : bool, default=False
+            If True, replace existing archive outputs. When False, existing
+            archive or SHA256 outputs raise ``FileExistsError``.
 
         Returns
         -------
@@ -1268,6 +1278,11 @@ class PipelineManager:
         ...     include_structure_files=False
         ... )
 
+        >>> pipeline.create_sharable_archive(
+        ...     "analysis.tar.zst",
+        ...     sha="checksums/analysis.sha"
+        ... )
+
         Notes
         -----
         - zstd compression is optimized for fast runtime and low memory pressure
@@ -1286,12 +1301,18 @@ class PipelineManager:
             compression_level=compression_level,
             zstd_threads=zstd_threads if compression == "zst" else None,
             reserve_cores=zstd_reserve_cores if compression == "zst" else 2,
+            sha=sha,
+            overwrite=overwrite,
         )
 
     @staticmethod
     def load_from_archive(
-        archive_path: str,
+        file_path: str,
         cache_dir: str = "./cache",
+        verify: bool = True,
+        sha: Optional[str] = None,
+        download_url: Optional[str] = None,
+        overwrite: bool = False,
         chunk_size: int = 1000,
         stride: int = 1,
         concat: bool = False,
@@ -1307,10 +1328,26 @@ class PipelineManager:
 
         Parameters
         ----------
-        archive_path : str
-            Path to archive file
+        file_path : str
+            Local archive path, local download target, or remote archive URL.
         cache_dir : str, default="./cache"
             Target cache directory for extracted files
+        verify : bool, default=True
+            Whether to validate the archive via SHA256 before loading.
+            When ``sha`` is provided, SHA256 verification is performed even if
+            ``verify`` is False.
+        sha : str, optional
+            SHA256 input used for archive verification. May be provided as a
+            raw SHA256 hex string, a local path to a ``.sha`` file, or a URL.
+            When verification is enabled and ``sha`` is missing, loading fails.
+        download_url : str, optional
+            Remote source URL used when ``file_path`` should act as the local
+            archive target. When omitted and ``file_path`` is itself a URL,
+            downloads are stored under ``<cache_dir>/downloads/``.
+        overwrite : bool, default=False
+            For remote URLs, controls whether an existing local target file is
+            replaced. When False, an existing downloaded file is reused and a
+            warning is emitted.
         chunk_size : int, default=1000
             Default chunk size for future operations
         stride : int, default=1
@@ -1329,22 +1366,19 @@ class PipelineManager:
 
         Examples
         --------
-        >>> # Load from archive (default cache_dir)
-        >>> pipeline = PipelineManager.load_from_archive("analysis.tar.zst")
-        >>> pipeline.print_info()
-
-        >>> # Load with custom cache directory
+        >>> # Load a remote archive with explicit verification disabled
         >>> pipeline = PipelineManager.load_from_archive(
-        ...     "analysis.tar.zst",
-        ...     cache_dir="./my_cache"
+        ...     "local_analysis.tar.zst",
+        ...     cache_dir="./my_cache",
+        ...     download_url="https://example.org/analysis.tar.zst",
+        ...     verify=False
         ... )
 
-        >>> # Load with trajectory defaults for adding more data
+        >>> # Load with SHA256 verification from a sidecar file
         >>> pipeline = PipelineManager.load_from_archive(
         ...     "analysis.tar.zst",
-        ...     cache_dir="./cache",
-        ...     chunk_size=500,
-        ...     stride=10
+        ...     verify=True,
+        ...     sha="analysis.tar.zst.sha"
         ... )
 
         Notes
@@ -1354,16 +1388,24 @@ class PipelineManager:
         - Automatically repairs memmap paths for portability
         - Cache directory created if it doesn't exist
         """
-        archive_path = PathUtils.prepare_file_path(
-            archive_path,
-            create_parent=False,
-            purpose="archive path",
-        )
         cache_dir = PathUtils.prepare_directory_path(
             cache_dir,
             create=True,
             purpose="cache directory",
         )
+        archive_path = ArchiveFetchHelper.resolve_archive_path(
+            file_path=file_path,
+            cache_dir=cache_dir,
+            verify=verify,
+            sha=sha,
+            download_url=download_url,
+            overwrite=overwrite,
+        )
+        if ArchiveFetchHelper.should_verify_archive(verify=verify, sha=sha):
+            ArchiveFetchHelper.verify_archive_sha256(
+                file_path=archive_path,
+                sha=sha,
+            )
 
         # Create loaded pipeline first to obtain a fresh scoped runtime cache dir.
         pipeline = PipelineManager(

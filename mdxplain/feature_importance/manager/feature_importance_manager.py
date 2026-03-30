@@ -498,7 +498,12 @@ class FeatureImportanceManager:
             return {}
 
         feature_indices = [feature["feature_index"] for feature in top_features]
-        return RepresentativeFinderHelper._extract_tree_rules(model, feature_indices)
+        target_label = comparison_metadata.get("labels", (0, 1))[0]
+        return RepresentativeFinderHelper._extract_tree_rules(
+            model,
+            feature_indices,
+            target_label,
+        )
 
     def _format_top_feature_label(
         self,
