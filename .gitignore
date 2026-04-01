@@ -54,7 +54,8 @@ CLAUDE.md
 RULES.md
 tutorials/cache/
 /docs/_build
-
+.codex
+_assets/
 # Benchmarks
 
 cache/
