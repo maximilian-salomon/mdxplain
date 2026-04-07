@@ -7,4 +7,5 @@ Density Helper
    :maxdepth: 1
 
    mdxplain.plots.plot_type.density.helper.density_calculation_helper
+   mdxplain.plots.plot_type.density.helper.density_discrete_bar_helper
    mdxplain.plots.plot_type.density.helper.density_data_preparer
