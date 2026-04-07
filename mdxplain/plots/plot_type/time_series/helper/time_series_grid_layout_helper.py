@@ -8,7 +8,7 @@
 
 from __future__ import annotations
 
-from typing import List, Optional, Tuple, Union, TYPE_CHECKING
+from typing import Dict, List, Optional, Tuple, Union, TYPE_CHECKING
 from matplotlib.gridspec import GridSpec
 from matplotlib.figure import Figure
 
@@ -28,7 +28,8 @@ class TimeSeriesGridLayoutHelper:
         feature_selector_name: str,
         membership_bar_height: float,
         subplot_height: float,
-        pipeline_data: PipelineData
+        pipeline_data: PipelineData,
+        frame_mapping: Optional[Dict[int, Tuple[int, int]]] = None
     ) -> Tuple[int, Optional[List[float]]]:
         """
         Calculate grid dimensions with membership.
@@ -51,6 +52,8 @@ class TimeSeriesGridLayoutHelper:
             Subplot height
         pipeline_data : PipelineData
             Pipeline data
+        frame_mapping : Dict[int, Tuple[int, int]], optional
+            Preloaded frame mapping for selector filtering.
 
         Returns
         -------
@@ -64,7 +67,8 @@ class TimeSeriesGridLayoutHelper:
 
         from .time_series_membership_plot_helper import TimeSeriesMembershipPlotHelper
         membership_indices = TimeSeriesMembershipPlotHelper.get_membership_indices(
-            pipeline_data, membership_traj_selection, feature_selector_name
+            pipeline_data, membership_traj_selection, feature_selector_name,
+            frame_mapping
         )
         n_traj = len(membership_indices)
 

@@ -30,7 +30,8 @@ from typing import List
 import numpy as np
 from mdxplain.utils.progress_utils import ProgressUtils
 
-from ...utils.data_utils import DataUtils
+from ...utils.memmap_utils import MemmapUtils
+from ...utils.path_utils import PathUtils
 from ...utils.resource_utils import ResourceUtils
 
 
@@ -42,6 +43,7 @@ class SelectionMemmapHelper:
     horizontally stacking matrices while preserving memmap nature,
     and creating frame selections efficiently.
     """
+    _EVICT_EVERY_N_CHUNKS = 10
 
     @staticmethod
     def create_memmap_selection(
@@ -84,20 +86,21 @@ class SelectionMemmapHelper:
         n_rows, _ = data.shape
         n_cols = len(indices)
 
-        cache_path = DataUtils.get_cache_file_path(
+        cache_path = PathUtils.get_cache_file_path(
             f"{name}_{feature_type}_{data_type}_selection.dat", cache_dir
         )
-
-        result = np.memmap(
-            cache_path,
+        result = MemmapUtils.create_memmap(
+            path=cache_path,
             dtype=data.dtype,
             mode="w+",
             shape=(n_rows, n_cols),
         )
-        is_memmap_data = DataUtils.is_memmap_view(data)
+        is_memmap_data = MemmapUtils.is_memmap_view(data)
         if is_memmap_data:
             ResourceUtils.tune_memmap(data, "sequential")
         ResourceUtils.tune_memmap(result, "sequential")
+        batch_start = 0
+        chunk_counter = 0
         for row_start in ProgressUtils.iterate(
             range(0, n_rows, chunk_size),
             desc="Selecting columns",
@@ -105,7 +108,16 @@ class SelectionMemmapHelper:
         ):
             row_end = min(row_start + chunk_size, n_rows)
             result[row_start:row_end, :] = data[row_start:row_end, indices]
-            result.flush()
+            chunk_counter += 1
+            if (
+                chunk_counter >= SelectionMemmapHelper._EVICT_EVERY_N_CHUNKS
+                or row_end >= n_rows
+            ):
+                MemmapUtils.evict_memory_range(result, batch_start, row_end)
+                if is_memmap_data:
+                    MemmapUtils.evict_memory_range(data, batch_start, row_end)
+                batch_start = row_end
+                chunk_counter = 0
 
         ResourceUtils.tune_memmap(result, "random")
         if is_memmap_data:
@@ -144,11 +156,11 @@ class SelectionMemmapHelper:
         result_dtype = np.result_type(*dtypes)
 
         # Create cache path for the stacked matrix
-        cache_path = DataUtils.get_cache_file_path(f"{name}.dat", cache_dir)
+        cache_path = PathUtils.get_cache_file_path(f"{name}.dat", cache_dir)
 
         # Create memmap for the result
-        result = np.memmap(
-            cache_path,
+        result = MemmapUtils.create_memmap(
+            path=cache_path,
             dtype=result_dtype,
             mode="w+",
             shape=(total_samples, total_features),
@@ -160,10 +172,12 @@ class SelectionMemmapHelper:
             col_end = col_start + matrix.shape[1]
 
             # Process in chunks to avoid loading entire matrix into memory
-            is_memmap_matrix = DataUtils.is_memmap_view(matrix)
+            is_memmap_matrix = MemmapUtils.is_memmap_view(matrix)
             if is_memmap_matrix:
                 ResourceUtils.tune_memmap(matrix, "sequential")
             ResourceUtils.tune_memmap(result, "sequential")
+            batch_start = 0
+            chunk_counter = 0
             for row_start in ProgressUtils.iterate(
                 range(0, total_samples, chunk_size),
                 desc=f"Concatenating matrix {i+1}/{len(matrices)}",
@@ -174,7 +188,16 @@ class SelectionMemmapHelper:
                 result[row_start:row_end, col_start:col_end] = matrix[
                     row_start:row_end, :
                 ]
-                result.flush()
+                chunk_counter += 1
+                if (
+                    chunk_counter >= SelectionMemmapHelper._EVICT_EVERY_N_CHUNKS
+                    or row_end >= total_samples
+                ):
+                    MemmapUtils.evict_memory_range(result, batch_start, row_end)
+                    if is_memmap_matrix:
+                        MemmapUtils.evict_memory_range(matrix, batch_start, row_end)
+                    batch_start = row_end
+                    chunk_counter = 0
             ResourceUtils.tune_memmap(result, "random")
             if is_memmap_matrix:
                 ResourceUtils.tune_memmap(matrix, "random")
@@ -220,22 +243,23 @@ class SelectionMemmapHelper:
         n_selected_frames = len(frame_indices)
         _, n_cols = data.shape
 
-        cache_path = DataUtils.get_cache_file_path(
+        cache_path = PathUtils.get_cache_file_path(
             f"{name}_frame_selection.dat", cache_dir
         )
-
-        result = np.memmap(
-            cache_path,
+        result = MemmapUtils.create_memmap(
+            path=cache_path,
             dtype=data.dtype,
             mode="w+",
             shape=(n_selected_frames, n_cols),
         )
 
         # Process in chunks to avoid loading entire data into memory
-        is_memmap_data = DataUtils.is_memmap_view(data)
+        is_memmap_data = MemmapUtils.is_memmap_view(data)
         if is_memmap_data:
             ResourceUtils.tune_memmap(data, "sequential")
         ResourceUtils.tune_memmap(result, "sequential")
+        batch_start = 0
+        chunk_counter = 0
         for chunk_start in ProgressUtils.iterate(
             range(0, n_selected_frames, chunk_size),
             desc="Creating frame selection",
@@ -248,7 +272,14 @@ class SelectionMemmapHelper:
             
             # Copy data for this chunk
             result[chunk_start:chunk_end, :] = data[chunk_indices, :]
-            result.flush()
+            chunk_counter += 1
+            if (
+                chunk_counter >= SelectionMemmapHelper._EVICT_EVERY_N_CHUNKS
+                or chunk_end >= n_selected_frames
+            ):
+                MemmapUtils.evict_memory_range(result, batch_start, chunk_end)
+                batch_start = chunk_end
+                chunk_counter = 0
 
         ResourceUtils.tune_memmap(result, "random")
         if is_memmap_data:

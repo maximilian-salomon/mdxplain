@@ -28,6 +28,7 @@ for efficient processing of large trajectory files.
 from __future__ import annotations
 
 from typing import Optional, Union, Tuple
+import gc
 import os
 import pickle
 import shutil
@@ -36,6 +37,8 @@ import zarr
 import dask.array as da
 import mdtraj as md
 
+from ...utils.cleanup_utils import CleanupUtils
+from ...utils.path_utils import PathUtils
 from ...utils.progress_utils import ProgressUtils
 
 from zarr.codecs import BloscCodec
@@ -46,6 +49,7 @@ DEFAULT_COMPRESSOR = BloscCodec(cname='lz4', clevel=1)
 from ..helper.dask_trajectory_helper.dask_trajectory_build_helper import DaskMDTrajectoryBuildHelper
 from ..helper.dask_trajectory_helper.dask_trajectory_store_helper import DaskMDTrajectoryStoreHelper  
 from ..helper.dask_trajectory_helper.dask_trajectory_join_stack_helper import DaskMDTrajectoryJoinStackHelper
+from ..helper.dask_trajectory_helper.dask_trajectory_archive_helper import DaskMDTrajectoryArchiveHelper
 from ..helper.dask_trajectory_helper.parallel_operations_helper import ParallelOperationsHelper
 from ..helper.dask_trajectory_helper.zarr_cache_helper import ZarrCacheHelper
 
@@ -551,20 +555,14 @@ class DaskMDTrajectory:
             if len(ref_atom_indices) != len(atom_indices):
                 raise ValueError(f"atom_indices ({len(atom_indices)}) and ref_atom_indices ({len(ref_atom_indices)}) must have same length")
 
-        # Use ref_atom_indices for reference frame selection if provided
-        if ref_atom_indices is not None:
-            # Extract reference frame with specific atoms for alignment calculation
-            ref_frame_for_alignment = ref_traj.atom_slice(ref_atom_indices)
-        else:
-            ref_frame_for_alignment = ref_traj
-
         # Pass reference trajectory to parallel operations
         return self._handle_inplace_or_new(
             self._parallel_ops.superpose,
             'superpose',
             inplace,
-            reference_traj=ref_frame_for_alignment,
-            atom_indices=atom_indices
+            reference_traj=ref_traj,
+            atom_indices=atom_indices,
+            ref_atom_indices=ref_atom_indices,
         )
     
     def smooth(
@@ -945,10 +943,46 @@ class DaskMDTrajectory:
         # Clear memory caches
         self._xyz_cache = None
         self._time_cache = None
-        
-        # Close Zarr store reference
-        if hasattr(self, '_zarr_store'):
-            del self._zarr_store
+
+        # Release Dask-backed array references that may keep file handles alive.
+        if hasattr(self, "_dask_coords"):
+            self._dask_coords = None
+        if hasattr(self, "_dask_time"):
+            self._dask_time = None
+        if hasattr(self, "_dask_unitcell_vectors"):
+            self._dask_unitcell_vectors = None
+        if hasattr(self, "_dask_unitcell_lengths"):
+            self._dask_unitcell_lengths = None
+        if hasattr(self, "_dask_unitcell_angles"):
+            self._dask_unitcell_angles = None
+
+        # Release helper-held zarr references.
+        parallel_ops = getattr(self, "_parallel_ops", None)
+        if parallel_ops is not None and hasattr(parallel_ops, "cleanup"):
+            parallel_ops.cleanup()
+        self._parallel_ops = None
+
+        # Close and drop the direct zarr store reference.
+        zarr_store = getattr(self, "_zarr_store", None)
+        if zarr_store is not None:
+            CleanupUtils.close_zarr_store(zarr_store)
+            self._zarr_store = None
+
+        gc.collect()
+
+    def __del__(self) -> None:
+        """
+        Best-effort release of runtime resources during object destruction.
+
+        Returns
+        -------
+        None
+            Calls cleanup() and suppresses any teardown exceptions.
+        """
+        try:
+            self.cleanup()
+        except Exception:
+            pass
 
     def memory_usage(self) -> dict:
         """
@@ -1108,15 +1142,18 @@ class DaskMDTrajectory:
             swap_path = self._get_swap_path(self.zarr_cache_path)
             
             # Execute operation to swap path
-            operation_func(swap_path, **kwargs)
+            result_store = operation_func(swap_path, **kwargs)
+            CleanupUtils.close_zarr_store(result_store)
             
-            # Close current store to release file handles
-            if hasattr(self, '_zarr_store'):
-                del self._zarr_store
+            # Release current in-memory/zarr handles before replacing cache.
+            self.cleanup()
             
             # Replace original with swap
             if os.path.exists(self.zarr_cache_path):
-                shutil.rmtree(self.zarr_cache_path)
+                CleanupUtils.remove_tree(
+                    self.zarr_cache_path,
+                    purpose="trajectory zarr cache directory",
+                )
             shutil.move(swap_path, self.zarr_cache_path)
             
             # Reload attributes from the updated store
@@ -1357,67 +1394,109 @@ class DaskMDTrajectory:
 
     def save(self, filepath: str) -> None:
         """
-        Save DaskMDTrajectory to file.
-        
+        Save DaskMDTrajectory to a portable self-contained archive.
+
+        Creates a ``.dask_traj`` archive (tar + zstd) containing the object
+        metadata and the underlying Zarr cache.  The archive can be moved or
+        shared freely without the original Zarr cache.
+
         Parameters
         ----------
         filepath : str
-            Path where to save the trajectory. Directory will be created if needed.
-            
+            Destination path.  The ``.dask_traj`` extension is added
+            automatically if not already present.
+
         Returns
         -------
         None
-            Saves trajectory to disk using pickle
-            
-        Notes
-        -----
-        - Creates parent directories if they don't exist
-        - The zarr cache must remain available at its original location
-        - Uses pickle to preserve the complete object state
-        
+
         Examples
         --------
         >>> traj = DaskMDTrajectory('trajectory.xtc', 'topology.pdb')
-        >>> traj.save('output/my_traj.pkl')
+        >>> traj.save('output/my_traj')
+        >>> # Creates 'output/my_traj.dask_traj'
         """
-        # Ensure parent directory exists
-        parent_dir = os.path.dirname(filepath)
-        if parent_dir:
-            os.makedirs(parent_dir, exist_ok=True)
-        
-        with open(filepath, 'wb') as f:
-            pickle.dump(self, f)
+        DaskMDTrajectoryArchiveHelper.save(self, filepath)
 
     @classmethod
     def load(cls, filepath: str) -> DaskMDTrajectory:
         """
-        Load DaskMDTrajectory from file.
-        
+        Load DaskMDTrajectory from a ``.dask_traj`` archive.
+
+        Extracts the archive next to the file on first load; subsequent
+        loads reuse the already-extracted Zarr cache.
+
         Parameters
         ----------
         filepath : str
-            Path to the saved trajectory file
-            
+            Path to a ``.dask_traj`` archive created by :py:meth:`save`.
+
         Returns
         -------
         DaskMDTrajectory
-            Loaded trajectory object
-            
+            Fully initialised trajectory with coordinate access ready.
+
         Raises
         ------
         FileNotFoundError
-            If the saved file does not exist
-            
-        Notes
-        -----
-        The zarr cache must still exist at the original location.
-        
+            If the archive does not exist.
+
         Examples
         --------
-        >>> traj = DaskMDTrajectory.load('output/my_traj.pkl')
+        >>> traj = DaskMDTrajectory.load('output/my_traj.dask_traj')
+        >>> print(traj.n_frames)
         """
-        if not os.path.exists(filepath):
-            raise FileNotFoundError(f"Trajectory file not found: {filepath}")
-            
-        with open(filepath, 'rb') as f:
-            return pickle.load(f)
+        return DaskMDTrajectoryArchiveHelper.load(filepath)
+
+    def __getstate__(self) -> dict:
+        """
+        Prepare object for pickling by removing transient Dask/Zarr handles.
+        
+        Drops in-memory Dask arrays and open Zarr store references that become
+        stale if the underlying cache directory is modified between runs. All
+        dropped attributes are reconstructed from disk in ``__setstate__``.
+        
+        Returns
+        -------
+        dict
+            Object state without unpicklable or potentially stale handles
+        """
+        state = self.__dict__.copy()
+
+        # Remove handles and arrays that must be re-initialized from disk
+        for key in [
+            '_zarr_store',
+            '_dask_coords',
+            '_dask_time',
+            '_dask_unitcell_vectors',
+            '_dask_unitcell_lengths',
+            '_dask_unitcell_angles',
+            '_parallel_ops',
+        ]:
+            if key in state:
+                del state[key]
+
+        # Clear in-memory data caches
+        state['_xyz_cache'] = None
+        state['_time_cache'] = None
+
+        return state
+
+    def __setstate__(self, state: dict) -> None:
+        """
+        Restore object from pickle state.
+        
+        Reconstructs Dask arrays, topology, and Zarr handles directly from the
+        Zarr cache on disk, ensuring the object is always in sync with the
+        actual files regardless of any modifications made since last pickling.
+        
+        Parameters
+        ----------
+        state : dict
+            Object state as returned by ``__getstate__``
+        """
+        self.__dict__.update(state)
+
+        # Re-initialise all Dask/Zarr handles from the cache on disk
+        if hasattr(self, 'zarr_cache_path') and self.zarr_cache_path and os.path.exists(self.zarr_cache_path):
+            self._reload_from_cache()

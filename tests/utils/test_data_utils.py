@@ -31,6 +31,7 @@ import mdtraj as md
 from unittest.mock import Mock
 
 from mdxplain.utils.data_utils import DataUtils
+from mdxplain.utils.memmap_utils import MemmapUtils
 from mdxplain.trajectory.entities.dask_md_trajectory import DaskMDTrajectory
 
 
@@ -562,6 +563,10 @@ class TestDataUtilsLoadObject:
         
         # Check regular attributes
         assert loaded_obj.regular_attr == "normal_value"
+        MemmapUtils.close_memmap_view(loaded_obj.data1)
+        MemmapUtils.close_memmap_view(loaded_obj.data2)
+        MemmapUtils.close_memmap_view(memmap_object.data1)
+        MemmapUtils.close_memmap_view(memmap_object.data2)
 
     def test_load_nested_memmap_restores_memmap(self, temp_dir):
         """
@@ -605,7 +610,8 @@ class TestDataUtilsLoadObject:
             pickle.dump(fake_memmap_info, f)
         
         loaded_obj = MemmapTestObject(use_memmap=True)
-        DataUtils.load_object(loaded_obj, save_path)
+        with pytest.warns(RuntimeWarning, match="Memmap restore skipped"):
+            DataUtils.load_object(loaded_obj, save_path)
         
         assert loaded_obj.missing_data is None
     
@@ -745,7 +751,8 @@ class TestDataUtilsLoadObject:
             pickle.dump(invalid_memmap_info, f)
         
         # Should not crash, but set attribute to None
-        DataUtils.load_object(obj, invalid_memmap_path)
+        with pytest.warns(RuntimeWarning, match="Memmap restore skipped"):
+            DataUtils.load_object(obj, invalid_memmap_path)
         assert obj.test_data is None
     
     def test_load_overwrites_existing_attributes(self, temp_dir):

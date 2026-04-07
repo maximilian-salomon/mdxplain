@@ -29,6 +29,8 @@ from typing import Optional, List, Union, Dict, Tuple
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+from matplotlib.lines import Line2D
+import numpy as np
 
 from .time_series_plot_config import TimeSeriesPlotConfig
 from .helper import TimeSeriesDataPreparer
@@ -42,6 +44,9 @@ from ...helper.grid_layout_helper import GridLayoutHelper
 from ...helper.contact_to_distances_converter import ContactToDistancesConverter
 from ...helper.title_legend_helper import TitleLegendHelper
 from ...helper.svg_export_helper import SvgExportHelper
+from ...helper.validation_helper import ValidationHelper
+from ...helper.vertical_marker_helper import VerticalMarkerHelper
+from ....utils.memmap_utils import MemmapUtils
 
 
 class TimeSeriesPlotter(FeatureImportanceBasePlotter):
@@ -95,7 +100,17 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         ylabel_fontsize: Optional[int] = None,
         tick_fontsize: Optional[int] = None,
         legend_fontsize: Optional[int] = None,
-        legend_title_fontsize: Optional[int] = None
+        legend_title_fontsize: Optional[int] = None,
+        discrete_plot_style: str = "step",
+        discrete_layout: str = "auto",
+        discrete_offset_span: float = 0.28,
+        discrete_auto_offset_threshold: int = 15,
+        thickness: float = 1.0,
+        colors: Optional[Union[str, Dict[str, str]]] = None,
+        vertical_markers: Optional[Dict[Union[int, str], Union[float, List[float]]]] = None,
+        vertical_marker_labels: Optional[Union[str, Dict[Union[int, str], str]]] = None,
+        vertical_marker_label_colors: Optional[Union[str, Dict[str, str]]] = None,
+        vertical_marker_mode: str = "auto"
     ) -> Figure:
         """
         Create time series plots from feature importance or manual selection.
@@ -152,7 +167,8 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         dpi : int, default=300
             Resolution
         smoothing : bool, default=True
-            Enable or disable data smoothing
+            Enable or disable data smoothing for continuous features.
+            Discrete features are never smoothed.
         smoothing_method : str, default="savitzky"
             Smoothing method ("moving_average" or "savitzky")
         smoothing_window : int, default=51
@@ -161,6 +177,53 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             Polynomial order for Savitzky-Golay filter (ignored for moving_average)
         show_unsmoothed_background : bool, default=True
             Show unsmoothed data as transparent background line when smoothing is enabled
+        discrete_plot_style : str, default="step"
+            Rendering style for discrete features. Must be one of:
+            "line", "step", "segments", or "scatter".
+        discrete_layout : str, default="auto"
+            Discrete rendering layout mode:
+            - "auto": use "offset" when many traces are plotted, else "overlay"
+            - "overlay": draw all discrete traces directly on top of each other
+            - "offset": apply small vertical offsets per trace for readability
+            - "occupancy": draw per-state probabilities over time.
+              In this mode, discrete curves represent states (not trajectories),
+              and the secondary legend uses state colors.
+        discrete_offset_span : float, default=0.28
+            Vertical half-span used by discrete "offset" layout. Traces are
+            distributed in [-discrete_offset_span, +discrete_offset_span].
+        discrete_auto_offset_threshold : int, default=15
+            Number of discrete traces at which "auto" switches from
+            "overlay" to "offset".
+        thickness : float, default=1.0
+            Global rendering thickness for all feature traces:
+            marker size factor for "scatter", line width for all line-based
+            styles ("line", "step", "segments") and for continuous features.
+        colors : str or Dict[str, str], optional
+            Color configuration for trajectories/tags:
+            - str: matplotlib colormap name
+            - dict: explicit mapping (trajectory_name -> color or tag -> color)
+            - None: automatic palette assignment.
+              Uses tag colors when tag coloring is active, otherwise trajectory colors.
+        vertical_markers : Dict[int or str, float or List[float]], optional
+            Optional vertical guide markers.
+            Dictionary keys are interpreted as trajectory selectors or tags
+            (depending on `vertical_marker_mode`), and values are one or more
+            x-axis positions where dashed vertical lines are drawn.
+        vertical_marker_labels : str or dict, optional
+            Optional legend labels for vertical markers:
+            - str: one shared label for all markers
+            - dict[key] = str: one label per marker key
+        vertical_marker_label_colors : str or dict, optional
+            Optional legend color override for marker labels:
+            - str: one shared legend color for all marker labels
+            - dict[label] = color: per-label legend colors
+        vertical_marker_mode : str, default="auto"
+            Marker key interpretation mode:
+            - "auto": use "tag" when tag coloring is active, else "trajectory"
+            - "trajectory": keys are trajectory selectors (same syntax as
+              `traj_selection`). If tag coloring is active, the first matching
+              tag color for each trajectory is used.
+            - "tag": keys are tag names
         title_fontsize : int, optional
             Font size for main figure title (default: 18)
         subplot_title_fontsize : int, optional
@@ -203,6 +266,15 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         mode_type, mode_name = self._validate_and_determine_mode(
             feature_importance_name, feature_selector, None
         )
+        self._validate_discrete_plot_style(discrete_plot_style)
+        self._validate_discrete_layout(discrete_layout)
+        self._validate_discrete_offset_span(discrete_offset_span)
+        self._validate_discrete_auto_offset_threshold(discrete_auto_offset_threshold)
+        self._validate_thickness(thickness)
+        self._validate_vertical_marker_mode(vertical_marker_mode)
+        self._validate_vertical_markers(vertical_markers)
+        self._validate_vertical_marker_labels(vertical_markers, vertical_marker_labels)
+        self._validate_vertical_marker_label_colors(vertical_marker_labels, vertical_marker_label_colors)
 
         # Apply mode-based defaults for membership_bar_height
         if membership_bar_height is None:
@@ -240,6 +312,16 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             smoothing_window=smoothing_window,
             smoothing_polyorder=smoothing_polyorder,
             show_unsmoothed_background=show_unsmoothed_background,
+            discrete_plot_style=discrete_plot_style,
+            discrete_layout=discrete_layout,
+            discrete_offset_span=discrete_offset_span,
+            discrete_auto_offset_threshold=discrete_auto_offset_threshold,
+            thickness=thickness,
+            colors=colors,
+            vertical_markers=vertical_markers,
+            vertical_marker_labels=vertical_marker_labels,
+            vertical_marker_label_colors=vertical_marker_label_colors,
+            vertical_marker_mode=vertical_marker_mode,
             title_fontsize=title_fontsize,
             subplot_title_fontsize=subplot_title_fontsize,
             xlabel_fontsize=xlabel_fontsize,
@@ -258,6 +340,9 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         config.feature_selector_name = plot_data['feature_selector_name']
         config.is_temporary = plot_data['is_temporary']
         config.tag_map = plot_data['tag_map']
+        config.selected_matrix = plot_data['selected_matrix']
+        config.frame_mapping = plot_data['frame_mapping']
+        self._prepare_trajectory_runtime_caches(config)
 
         config.all_features = self._flatten_features(config.feature_data)
 
@@ -269,6 +354,7 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
 
         # Prepare colors for legends
         self._prepare_colors(config)
+        self._prepare_vertical_markers(config)
 
         # Plot features
         config.rightmost_ax_first_row = TimeSeriesFeaturePlotHelper.plot_all_features(
@@ -281,10 +367,54 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
                 config.fig, config.gs, config.n_rows, config
             )
 
+        # Release matrix before final cleanup (e.g. temporary selector removal).
+        self._release_selected_matrix(config)
+
         # Cleanup and finalize
         self._cleanup_and_finalize(config)
-
         return config.fig
+
+    def _prepare_trajectory_runtime_caches(self, config: TimeSeriesPlotConfig) -> None:
+        """
+        Precompute reusable trajectory index and x-axis caches for this plot call.
+
+        Parameters
+        ----------
+        config : TimeSeriesPlotConfig
+            Central configuration object.
+
+        Returns
+        -------
+        None
+            Populates cache dictionaries on config in-place.
+        """
+        relevant_traj_indices = set(config.tag_map.keys())
+        pairs_by_traj: Dict[int, List[Tuple[int, int]]] = {}
+        for global_idx, (traj_idx, local_idx) in config.frame_mapping.items():
+            if traj_idx not in relevant_traj_indices:
+                continue
+            pairs_by_traj.setdefault(traj_idx, []).append((global_idx, local_idx))
+
+        config.global_frame_indices_by_traj = {}
+        config.local_frame_indices_by_traj = {}
+        config.x_values_by_traj = {}
+
+        for traj_idx, pairs in pairs_by_traj.items():
+            if not pairs:
+                continue
+            pairs.sort(key=lambda item: item[0])
+            global_indices = [item[0] for item in pairs]
+            local_indices = [item[1] for item in pairs]
+
+            config.global_frame_indices_by_traj[traj_idx] = global_indices
+            config.local_frame_indices_by_traj[traj_idx] = local_indices
+
+            if config.use_time:
+                trajectory = config.pipeline_data.trajectory_data.trajectories[traj_idx]
+                x_values = np.asarray(trajectory.time[local_indices], dtype=float) / 1000.0
+            else:
+                x_values = np.arange(len(local_indices), dtype=float)
+            config.x_values_by_traj[traj_idx] = x_values
 
     def _prepare_layout_and_dimensions(self, config: TimeSeriesPlotConfig):
         """
@@ -313,6 +443,7 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         config.n_frames = self._get_max_frames_from_plotted_trajectories(
             config.tag_map, config.pipeline_data
         )
+        self._configure_discrete_rendering(config)
 
         config.n_membership_rows = 0
         config.membership_row_height_inches = 0.0
@@ -320,7 +451,9 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         # Calculate membership dimensions if clustering enabled
         if config.clustering_name:
             membership_indices = self._get_trajectory_indices(
-                config.membership_traj_selection, config.feature_selector_name
+                config.membership_traj_selection,
+                config.feature_selector_name,
+                frame_mapping=config.frame_mapping,
             )
             n_traj = len(membership_indices)
 
@@ -349,14 +482,24 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         --------
         >>> self._prepare_grid_and_figure(config)
         """
+        subplot_height = (
+            config.effective_subplot_height
+            if config.effective_subplot_height > 0
+            else config.subplot_height
+        )
+
         config.fig = self._create_figure_dynamic(
             config.n_rows, config.n_cols, config.n_frames, config.n_membership_rows,
-            config.membership_row_height_inches, config.subplot_height,
+            config.membership_row_height_inches, subplot_height,
             config.membership_per_feature, config.tick_fontsize, config.ylabel_fontsize
         )
 
         wspace, hspace = self._configure_plot_spacing(
-            config.long_labels, config.tick_fontsize, config.membership_per_feature
+            config.long_labels,
+            config.tick_fontsize,
+            config.membership_per_feature,
+            config.has_discrete_features,
+            config.resolved_discrete_layout
         )
 
         n_cols_grid, width_ratios = self._calculate_grid_columns_and_ratios(config)
@@ -364,13 +507,118 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         total_rows, height_ratios = TimeSeriesGridLayoutHelper.calculate_grid_dimensions(
             config.n_rows, config.clustering_name, config.membership_per_feature,
             config.membership_traj_selection, config.feature_selector_name,
-            config.membership_bar_height, config.subplot_height, config.pipeline_data
+            config.membership_bar_height, subplot_height, config.pipeline_data,
+            config.frame_mapping
         )
 
         config.gs, config.wrapped_title, config.top = TimeSeriesGridLayoutHelper.create_gridspec(
             config.fig, total_rows, n_cols_grid, wspace, hspace,
             height_ratios, width_ratios, config.title
         )
+
+    def _configure_discrete_rendering(self, config: TimeSeriesPlotConfig) -> None:
+        """
+        Resolve discrete rendering mode and subplot height adjustments.
+
+        Parameters
+        ----------
+        config : TimeSeriesPlotConfig
+            Central configuration object.
+
+        Returns
+        -------
+        None
+            Updates config in place:
+            - has_discrete_features
+            - resolved_discrete_layout
+            - effective_subplot_height
+        """
+        config.has_discrete_features = ValidationHelper.has_discrete_features(
+            config.all_features, config.metadata_map
+        )
+        config.resolved_discrete_layout = self._resolve_discrete_layout(config)
+        config.effective_subplot_height = self._compute_effective_subplot_height(
+            base_subplot_height=config.subplot_height,
+            has_discrete_features=config.has_discrete_features,
+            resolved_discrete_layout=config.resolved_discrete_layout
+        )
+
+    def _resolve_discrete_layout(self, config: TimeSeriesPlotConfig) -> str:
+        """
+        Resolve effective discrete layout mode for this plot call.
+
+        Parameters
+        ----------
+        config : TimeSeriesPlotConfig
+            Central configuration object.
+
+        Returns
+        -------
+        str
+            Effective mode: "overlay", "offset", or "occupancy".
+        """
+        if not config.has_discrete_features:
+            return "overlay"
+
+        if config.discrete_layout in {"overlay", "offset", "occupancy"}:
+            return config.discrete_layout
+
+        n_traces = self._estimate_discrete_trace_count(config)
+        if n_traces >= config.discrete_auto_offset_threshold:
+            return "offset"
+        return "overlay"
+
+    @staticmethod
+    def _estimate_discrete_trace_count(config: TimeSeriesPlotConfig) -> int:
+        """
+        Estimate number of traces used for discrete line rendering.
+
+        Parameters
+        ----------
+        config : TimeSeriesPlotConfig
+            Central configuration object.
+
+        Returns
+        -------
+        int
+            Estimated number of visible discrete traces.
+        """
+        has_tag_matches = any(len(tags) > 0 for tags in config.tag_map.values())
+        if has_tag_matches:
+            return sum(len(tags) for tags in config.tag_map.values())
+        return len(config.tag_map)
+
+    @staticmethod
+    def _compute_effective_subplot_height(
+        base_subplot_height: float,
+        has_discrete_features: bool,
+        resolved_discrete_layout: str
+    ) -> float:
+        """
+        Compute subplot height after discrete-layout adjustments.
+
+        Parameters
+        ----------
+        base_subplot_height : float
+            User-defined base subplot height.
+        has_discrete_features : bool
+            Whether at least one discrete feature is shown.
+        resolved_discrete_layout : str
+            Effective discrete layout mode.
+
+        Returns
+        -------
+        float
+            Adjusted subplot height.
+        """
+        if not has_discrete_features:
+            return base_subplot_height
+
+        if resolved_discrete_layout == "offset":
+            return base_subplot_height + 0.7
+        if resolved_discrete_layout == "occupancy":
+            return base_subplot_height + 0.4
+        return base_subplot_height
 
     def _prepare_colors(self, config: TimeSeriesPlotConfig):
         """
@@ -396,14 +644,178 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
 
         if config.use_tag_coloring:
             config.tag_colors = TimeSeriesTagColoringHelper.prepare_tag_legend_colors(
-                config.tag_map
+                config.tag_map,
+                colors=config.colors
             )
             config.traj_colors = {}
         else:
             config.tag_colors = {}
             config.traj_colors = TimeSeriesTagColoringHelper.prepare_trajectory_legend_colors(
-                config.pipeline_data, config.tag_map
+                config.pipeline_data, config.tag_map,
+                colors=config.colors
             )
+
+    def _prepare_vertical_markers(self, config: TimeSeriesPlotConfig) -> None:
+        """
+        Resolve vertical marker specifications to `(x, color, label)` tuples.
+
+        Parameters
+        ----------
+        config : TimeSeriesPlotConfig
+            Central configuration object.
+
+        Returns
+        -------
+        None
+            Updates `config.resolved_vertical_markers` in place.
+        """
+        config.resolved_vertical_markers = []
+        config.resolved_vertical_marker_legend_entries = {}
+        if not config.vertical_markers:
+            return
+
+        mode = self._resolve_vertical_marker_mode(config)
+        if mode == "tag":
+            config.resolved_vertical_markers = VerticalMarkerHelper.resolve_markers(
+                marker_positions=config.vertical_markers,
+                marker_labels=config.vertical_marker_labels,
+                color_resolver=lambda key: self._resolve_marker_colors_for_tag(config, key),
+                legend_entries=config.resolved_vertical_marker_legend_entries,
+                label_colors=config.vertical_marker_label_colors
+            )
+            return
+
+        config.resolved_vertical_markers = VerticalMarkerHelper.resolve_markers(
+            marker_positions=config.vertical_markers,
+            marker_labels=config.vertical_marker_labels,
+            color_resolver=lambda key: self._resolve_marker_colors_for_trajectory_selector(
+                config, key
+            ),
+            legend_entries=config.resolved_vertical_marker_legend_entries,
+            label_colors=config.vertical_marker_label_colors
+        )
+
+    @staticmethod
+    def _resolve_vertical_marker_mode(config: TimeSeriesPlotConfig) -> str:
+        """
+        Resolve effective vertical marker mode for this plot call.
+
+        Parameters
+        ----------
+        config : TimeSeriesPlotConfig
+            Central configuration object.
+
+        Returns
+        -------
+        str
+            Effective mode: `"trajectory"` or `"tag"`.
+        """
+        if config.vertical_marker_mode in {"trajectory", "tag"}:
+            return config.vertical_marker_mode
+        return "tag" if config.use_tag_coloring else "trajectory"
+
+    def _resolve_marker_colors_for_tag(
+        self,
+        config: TimeSeriesPlotConfig,
+        marker_key: Union[int, str]
+    ) -> List[str]:
+        """
+        Resolve marker colors for one tag-key entry.
+
+        Parameters
+        ----------
+        config : TimeSeriesPlotConfig
+            Central configuration object.
+        marker_key : int or str
+            Marker dictionary key interpreted as tag.
+
+        Returns
+        -------
+        List[str]
+            List with zero or one colors for this tag key.
+        """
+        tag = str(marker_key)
+        color = config.tag_colors.get(tag)
+        if color is None:
+            return []
+        return [color]
+
+    def _resolve_marker_colors_for_trajectory_selector(
+        self,
+        config: TimeSeriesPlotConfig,
+        selector: Union[int, str]
+    ) -> List[str]:
+        """
+        Resolve marker colors for one trajectory-selector marker key.
+
+        Parameters
+        ----------
+        config : TimeSeriesPlotConfig
+            Central configuration object.
+        selector : int or str
+            Marker key interpreted as trajectory selector.
+
+        Returns
+        -------
+        List[str]
+            Unique colors for trajectories matching this selector.
+        """
+        plotted_traj_indices = set(config.tag_map.keys())
+
+        try:
+            selected_indices = config.pipeline_data.trajectory_data.get_trajectory_indices(
+                selector
+            )
+        except Exception as exc:
+            raise ValueError(
+                f"Invalid trajectory selector in vertical_markers: {selector!r}."
+            ) from exc
+
+        matching_indices = [
+            traj_idx for traj_idx in selected_indices
+            if traj_idx in plotted_traj_indices
+        ]
+        if not matching_indices:
+            return []
+
+        colors: List[str] = []
+        for traj_idx in matching_indices:
+            color = self._resolve_trajectory_marker_color(config, traj_idx)
+            if color is None or color in colors:
+                continue
+            colors.append(color)
+        return colors
+
+    @staticmethod
+    def _resolve_trajectory_marker_color(
+        config: TimeSeriesPlotConfig,
+        traj_idx: int
+    ) -> Optional[str]:
+        """
+        Resolve marker color for one trajectory.
+
+        Parameters
+        ----------
+        config : TimeSeriesPlotConfig
+            Central configuration object.
+        traj_idx : int
+            Trajectory index.
+
+        Returns
+        -------
+        Optional[str]
+            Marker color for this trajectory or `None` if unavailable.
+        """
+        if not config.use_tag_coloring:
+            traj_name = config.pipeline_data.trajectory_data.trajectory_names[traj_idx]
+            return config.traj_colors.get(traj_name)
+
+        tags = config.tag_map.get(traj_idx, [])
+        for tag in tags:
+            color = config.tag_colors.get(tag)
+            if color is not None:
+                return color
+        return None
 
     def _prepare_plot_data(self, config: TimeSeriesPlotConfig):
         """
@@ -434,7 +846,15 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
                 config.pipeline_data, config.mode_name, config.contact_transformation
             )
 
-        traj_indices = self._get_trajectory_indices(config.traj_selection, feature_selector_name)
+        selected_matrix, frame_mapping = config.pipeline_data.get_selected_data(
+            feature_selector_name, return_frame_mapping=True
+        )
+
+        traj_indices = self._get_trajectory_indices(
+            config.traj_selection,
+            feature_selector_name,
+            frame_mapping=frame_mapping,
+        )
         tag_map = TimeSeriesTagColoringHelper.build_tag_map(
             config.pipeline_data, traj_indices, config.tags_for_coloring, config.allow_multi_tag_plotting
         )
@@ -446,7 +866,9 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             'contact_cutoff': contact_cutoff,
             'feature_selector_name': feature_selector_name,
             'is_temporary': is_temporary,
-            'tag_map': tag_map
+            'tag_map': tag_map,
+            'selected_matrix': selected_matrix,
+            'frame_mapping': frame_mapping
         }
 
     def _create_figure_dynamic(
@@ -545,13 +967,31 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             )
 
         legend_colors = config.tag_colors if config.use_tag_coloring else config.traj_colors
+        marker_legend_handles = VerticalMarkerHelper.build_legend_handles(
+            resolved_markers=config.resolved_vertical_markers,
+            legend_entries=config.resolved_vertical_marker_legend_entries,
+            line_width=max(1.0, config.thickness),
+            alpha=0.85
+        )
 
         self._add_legend_or_title(
             config.fig, config.show_legend, legend_colors,
             config.wrapped_title, config.top, config.rightmost_ax_first_row,
             config.contact_threshold, config.clustering_name, config.membership_per_feature,
-            config.title_fontsize, config.legend_fontsize, config.legend_title_fontsize
+            config.title_fontsize, config.legend_fontsize, config.legend_title_fontsize,
+            config.use_tag_coloring,
+            marker_legend_handles
         )
+
+        if config.show_legend and config.discrete_state_colors:
+            self._add_discrete_state_legend(
+                fig=config.fig,
+                rightmost_ax_first_row=config.rightmost_ax_first_row,
+                state_colors=config.discrete_state_colors,
+                clustering_name=config.clustering_name,
+                legend_fontsize=config.legend_fontsize,
+                legend_title_fontsize=config.legend_title_fontsize
+            )
 
         if config.save_fig:
             # Configure SVG export for editable text
@@ -566,7 +1006,9 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         self, fig, show_legend, legend_colors,
         wrapped_title, top, rightmost_ax_first_row,
         contact_threshold, clustering_name, membership_per_feature,
-        title_fontsize, legend_fontsize, legend_title_fontsize
+        title_fontsize, legend_fontsize, legend_title_fontsize,
+        use_tag_coloring: bool = False,
+        vertical_marker_legend_handles: Optional[List] = None,
     ):
         """
         Add legend or title only.
@@ -597,6 +1039,10 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             Font size for legend entries
         legend_title_fontsize : int or None
             Font size for legend title
+        use_tag_coloring : bool, default=False
+            If True, the primary legend describes tags instead of trajectories.
+        vertical_marker_legend_handles : List, optional
+            Additional line handles for vertical marker labels.
 
         Returns
         -------
@@ -607,17 +1053,21 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         >>> self._add_legend_or_title(fig, True, {}, "Title", 0.9, ax, None, "dbscan", False)
         """
         if show_legend:
+            default_legend_title = "Tags" if use_tag_coloring else "Trajectories"
             # Use combined legend when clustering is active
             if clustering_name:
                 self._add_combined_legend(
                     fig, wrapped_title, top, rightmost_ax_first_row,
-                    legend_colors, clustering_name, title_fontsize, legend_fontsize
+                    legend_colors, clustering_name, title_fontsize, legend_fontsize,
+                    use_tag_coloring,
+                    vertical_marker_legend_handles
                 )
             else:
                 self._add_title_and_legend_positioned(
                     fig, wrapped_title, top, rightmost_ax_first_row,
-                    legend_colors, None, None, contact_threshold,
-                    title_fontsize, legend_fontsize, legend_title_fontsize
+                    legend_colors, default_legend_title, None, contact_threshold,
+                    title_fontsize, legend_fontsize, legend_title_fontsize,
+                    additional_legend_handles=vertical_marker_legend_handles
                 )
         else:
             title_offset_from_top = 0.15
@@ -625,7 +1075,7 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             TitleLegendHelper.add_title(fig, wrapped_title, title_y=title_y, fontsize=title_fontsize or 18)
 
     def _get_trajectory_indices(
-        self, traj_selection, feature_selector_name
+        self, traj_selection, feature_selector_name, frame_mapping: Optional[Dict[int, Tuple[int, int]]] = None
     ) -> List[int]:
         """
         Get trajectory indices with data.
@@ -649,15 +1099,35 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         selected = self.pipeline_data.trajectory_data.get_trajectory_indices(
             traj_selection
         )
-        _, frame_mapping = self.pipeline_data.get_selected_data(
-            feature_selector_name, return_frame_mapping=True
-        )
+        if frame_mapping is None:
+            _, frame_mapping = self.pipeline_data.get_selected_data(
+                feature_selector_name, return_frame_mapping=True
+            )
         traj_in_data = set(traj_idx for traj_idx, _ in frame_mapping.values())
         return [idx for idx in selected if idx in traj_in_data]
 
+    @staticmethod
+    def _release_selected_matrix(config: TimeSeriesPlotConfig) -> None:
+        """
+        Release matrix handle loaded for one plot call.
+
+        Parameters
+        ----------
+        config : TimeSeriesPlotConfig
+            Central configuration object
+        """
+        matrix = config.selected_matrix
+        if matrix is None:
+            return
+
+        MemmapUtils.close_memmap_view(matrix)
+        config.selected_matrix = None
+
     def _add_combined_legend(
-        self, fig, wrapped_title, _top, rightmost_ax_first_row,
-        traj_colors, clustering_name, title_fontsize, legend_fontsize
+        self, fig, wrapped_title, top, rightmost_ax_first_row,
+        traj_colors, clustering_name, title_fontsize, legend_fontsize,
+        use_tag_coloring: bool = False,
+        additional_handles: Optional[List] = None,
     ):
         """
         Add title and combined Trajectories + Clusters legend.
@@ -668,8 +1138,8 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             Figure
         wrapped_title : str
             Title text
-        _top : float
-            Top position (unused, kept for signature compatibility)
+        top : float
+            Top position (currently unused, kept for signature compatibility)
         rightmost_ax_first_row
             Rightmost axes
         traj_colors : Dict[str, str]
@@ -680,6 +1150,11 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             Font size for title
         legend_fontsize : int or None
             Font size for legend entries
+        use_tag_coloring : bool, default=False
+            If True, first legend section is labeled \"Tags\".
+        additional_handles : List, optional
+            Additional handles (e.g. vertical marker labels) appended as a
+            dedicated section.
 
         Returns
         -------
@@ -693,12 +1168,14 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         title_offset_from_top = 0.15
         title_y = 1.0 - (title_offset_from_top / fig.get_figheight())
         TitleLegendHelper.add_title(fig, wrapped_title, title_y=title_y, fontsize=title_fontsize or 18)
+        _ = top  # retained for signature compatibility
 
         # Create combined legend handles (inlined from _create_combined_legend_handles)
         handles = []
 
         # Section 1: Trajectories
-        handles.append(mpatches.Patch(color='none', label='Trajectories:'))
+        section_title = "Tags:" if use_tag_coloring else "Trajectories:"
+        handles.append(mpatches.Patch(color='none', label=section_title))
         for label, color in traj_colors.items():
             handles.append(mpatches.Patch(color=color, label=f'  {label}'))
 
@@ -719,15 +1196,27 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
                     mpatches.Patch(color=cluster_colors[i], label=f'  Cluster {i}')
                 )
 
-        # Calculate legend position
-        pos = rightmost_ax_first_row.get_position()
-        gap_inches = 0.1
-        legend_x = pos.x1 + (gap_inches / fig.get_figwidth())
+        if additional_handles:
+            handles.append(mpatches.Patch(color='none', label=''))
+            handles.append(mpatches.Patch(color='none', label='Markers:'))
+            for marker_handle in additional_handles:
+                handles.append(
+                    Line2D(
+                        [0], [0],
+                        color=marker_handle.get_color(),
+                        linestyle=marker_handle.get_linestyle(),
+                        linewidth=marker_handle.get_linewidth(),
+                        alpha=marker_handle.get_alpha(),
+                        label=f"  {marker_handle.get_label()}"
+                    )
+                )
 
-        # Position legend relative to title, not GridSpec top
-        gap_to_legend = 0.05
-        legend_offset_from_top = title_offset_from_top + gap_to_legend
-        legend_y = 1.0 - (legend_offset_from_top / fig.get_figheight())
+        legend_x, legend_y = TitleLegendHelper.get_side_legend_anchor(
+            fig=fig,
+            rightmost_ax_first_row=rightmost_ax_first_row,
+            gap_inches=0.1,
+            y_offset=0.0
+        )
 
         # Add legend
         fig.legend(
@@ -743,7 +1232,7 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         self,
         fig: Figure,
         wrapped_title: str,
-        _top: float,
+        top: float,
         rightmost_ax_first_row,
         data_selector_colors: Dict[str, str],
         legend_title: Optional[str],
@@ -751,7 +1240,8 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         active_threshold: Optional[float],
         title_fontsize: Optional[int] = None,
         legend_fontsize: Optional[int] = None,
-        legend_title_fontsize: Optional[int] = None
+        legend_title_fontsize: Optional[int] = None,
+        additional_legend_handles: Optional[List] = None
     ) -> None:
         """
         Add title and legend with calculated positions.
@@ -764,8 +1254,8 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             Figure to add title/legend to
         wrapped_title : str
             Pre-wrapped title text
-        _top : float
-            Top position (unused, kept for base class signature compatibility)
+        top : float
+            Top position (currently unused, kept for base class signature compatibility)
         rightmost_ax_first_row
             Rightmost axes in first row
         data_selector_colors : Dict[str, str]
@@ -782,6 +1272,8 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             Font size for legend entries (default: 14)
         legend_title_fontsize : int, optional
             Font size for legend title (default: 16)
+        additional_legend_handles : List, optional
+            Additional legend handles appended to the first legend.
 
         Returns
         -------
@@ -796,15 +1288,14 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         title_offset_from_top = 0.15
         title_y = 1.0 - (title_offset_from_top / fig.get_figheight())
         TitleLegendHelper.add_title(fig, wrapped_title, title_y=title_y, fontsize=title_fontsize or 18)
+        _ = top  # retained for signature compatibility
 
-        pos = rightmost_ax_first_row.get_position()
-        gap_inches = 0.1
-        legend_x = pos.x1 + (gap_inches / fig.get_figwidth())
-
-        # Position legend relative to title, not GridSpec top
-        gap_to_legend = 0.05
-        legend_offset_from_top = title_offset_from_top + gap_to_legend
-        legend_y = 1.0 - (legend_offset_from_top / fig.get_figheight())
+        legend_x, legend_y = TitleLegendHelper.get_side_legend_anchor(
+            fig=fig,
+            rightmost_ax_first_row=rightmost_ax_first_row,
+            gap_inches=0.1,
+            y_offset=0.0
+        )
 
         TitleLegendHelper.add_legend(
             fig, data_selector_colors,
@@ -812,8 +1303,72 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             contact_threshold=active_threshold,
             legend_x=legend_x, legend_y=legend_y,
             fontsize=legend_fontsize or 14,
-            title_fontsize=legend_title_fontsize or 16
+            title_fontsize=legend_title_fontsize or 16,
+            additional_handles=additional_legend_handles
         )
+
+    @staticmethod
+    def _add_discrete_state_legend(
+        fig: Figure,
+        rightmost_ax_first_row,
+        state_colors: Dict[str, str],
+        clustering_name: Optional[str],
+        legend_fontsize: Optional[int],
+        legend_title_fontsize: Optional[int]
+    ) -> None:
+        """
+        Add secondary legend for discrete occupancy state colors.
+
+        Parameters
+        ----------
+        fig : Figure
+            Figure that receives the legend.
+        rightmost_ax_first_row
+            Rightmost axes in first row, used for relative legend placement.
+        state_colors : Dict[str, str]
+            State label -> color mapping used for occupancy curves.
+        clustering_name : str or None
+            Clustering name. When clustering is active, the first legend is
+            usually larger, so this legend is placed slightly lower.
+        legend_fontsize : int, optional
+            Font size for legend entries.
+        legend_title_fontsize : int, optional
+            Font size for legend title.
+
+        Returns
+        -------
+        None
+            Modifies the figure in place.
+        """
+        if not state_colors:
+            return
+        if rightmost_ax_first_row is None:
+            return
+
+        legend_x, first_legend_y = TitleLegendHelper.get_side_legend_anchor(
+            fig=fig,
+            rightmost_ax_first_row=rightmost_ax_first_row,
+            gap_inches=0.1,
+            y_offset=0.0
+        )
+        legend_drop = 0.22 if clustering_name else 0.16
+        legend_y = max(0.05, first_legend_y - legend_drop)
+
+        handles = [
+            mpatches.Patch(color=color, label=label)
+            for label, color in sorted(state_colors.items(), key=lambda item: item[0])
+        ]
+
+        state_legend = fig.legend(
+            handles=handles,
+            loc="upper left",
+            bbox_to_anchor=(legend_x, legend_y),
+            bbox_transform=fig.transFigure,
+            frameon=True,
+            title="Discrete States",
+            fontsize=legend_fontsize or 10
+        )
+        state_legend.get_title().set_fontsize(legend_title_fontsize or 12)
 
     def _get_max_frames_from_plotted_trajectories(
         self, tag_map: Dict[int, List[str]], pipeline_data
@@ -851,7 +1406,9 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
     def _configure_plot_spacing(
         long_labels: bool,
         tick_fontsize: Optional[int] = None,
-        membership_per_feature: bool = False
+        membership_per_feature: bool = False,
+        has_discrete_features: bool = False,
+        resolved_discrete_layout: str = "overlay"
     ) -> Tuple[float, float]:
         """
         Configure plot spacing for time series plots.
@@ -864,6 +1421,10 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             Font size for tick labels
         membership_per_feature : bool, default=False
             Whether membership bars are shown per feature
+        has_discrete_features : bool, default=False
+            Whether at least one discrete feature is shown.
+        resolved_discrete_layout : str, default="overlay"
+            Effective discrete rendering layout after resolving "auto".
 
         Returns
         -------
@@ -878,10 +1439,19 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         Notes
         -----
         Time series plots use 0.25 for long_labels, 0.15 otherwise.
-        Adds extra hspace for larger tick fonts on membership plots.
+        Adds extra hspace for larger tick fonts on membership plots and for
+        discrete offset/occupancy modes to avoid row overlap.
         """
         wspace = 0.25 if long_labels else 0.15
-        hspace = 0.4
+        hspace = 0.36
+
+        if long_labels and has_discrete_features:
+            hspace += 0.06
+
+        if has_discrete_features and resolved_discrete_layout == "offset":
+            hspace += 0.24
+        elif has_discrete_features and resolved_discrete_layout == "occupancy":
+            hspace += 0.12
 
         # Add extra vertical space for larger ticks on membership plots
         if membership_per_feature and tick_fontsize and tick_fontsize > 10:
@@ -1017,3 +1587,239 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             raise ValueError(
                 "Must provide either feature_importance_name or feature_selector."
             )
+
+    @staticmethod
+    def _validate_discrete_plot_style(discrete_plot_style: str) -> None:
+        """
+        Validate discrete plot style parameter.
+
+        Parameters
+        ----------
+        discrete_plot_style : str
+            Rendering style for discrete features
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError
+            If style is not one of supported values
+        """
+        allowed_styles = {"line", "step", "segments", "scatter"}
+        if discrete_plot_style not in allowed_styles:
+            raise ValueError(
+                f"Invalid discrete_plot_style: {discrete_plot_style}. "
+                f"Expected one of {sorted(allowed_styles)}."
+            )
+
+    @staticmethod
+    def _validate_discrete_layout(discrete_layout: str) -> None:
+        """
+        Validate discrete layout parameter.
+
+        Parameters
+        ----------
+        discrete_layout : str
+            Discrete layout mode requested by the user.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError
+            If layout mode is not supported.
+        """
+        allowed_layouts = {"auto", "overlay", "offset", "occupancy"}
+        if discrete_layout not in allowed_layouts:
+            raise ValueError(
+                f"Invalid discrete_layout: {discrete_layout}. "
+                f"Expected one of {sorted(allowed_layouts)}."
+            )
+
+    @staticmethod
+    def _validate_discrete_offset_span(discrete_offset_span: float) -> None:
+        """
+        Validate vertical offset span for discrete offset mode.
+
+        Parameters
+        ----------
+        discrete_offset_span : float
+            Vertical half-span around state centers for discrete offset mode.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError
+            If span is not strictly positive.
+        """
+        if discrete_offset_span <= 0:
+            raise ValueError(
+                "discrete_offset_span must be > 0. "
+                f"Got: {discrete_offset_span}."
+            )
+
+    @staticmethod
+    def _validate_discrete_auto_offset_threshold(
+        discrete_auto_offset_threshold: int
+    ) -> None:
+        """
+        Validate automatic offset threshold for discrete auto mode.
+
+        Parameters
+        ----------
+        discrete_auto_offset_threshold : int
+            Number of traces where discrete auto switches to offset mode.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError
+            If threshold is not a positive integer.
+        """
+        if not isinstance(discrete_auto_offset_threshold, int):
+            raise ValueError(
+                "discrete_auto_offset_threshold must be an integer. "
+                f"Got: {type(discrete_auto_offset_threshold).__name__}."
+            )
+        if discrete_auto_offset_threshold <= 0:
+            raise ValueError(
+                "discrete_auto_offset_threshold must be > 0. "
+                f"Got: {discrete_auto_offset_threshold}."
+            )
+
+    @staticmethod
+    def _validate_thickness(thickness: float) -> None:
+        """
+        Validate global time-series thickness parameter.
+
+        Parameters
+        ----------
+        thickness : float
+            Rendering thickness used for line widths and scatter marker sizing.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError
+            If thickness is not strictly positive.
+        """
+        if thickness <= 0:
+            raise ValueError(
+                "thickness must be > 0. "
+                f"Got: {thickness}."
+            )
+
+    @staticmethod
+    def _validate_vertical_marker_mode(vertical_marker_mode: str) -> None:
+        """
+        Validate vertical marker interpretation mode.
+
+        Parameters
+        ----------
+        vertical_marker_mode : str
+            Marker interpretation mode requested by the user.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError
+            If mode is not supported.
+        """
+        allowed_modes = {"auto", "trajectory", "tag"}
+        if vertical_marker_mode not in allowed_modes:
+            raise ValueError(
+                f"Invalid vertical_marker_mode: {vertical_marker_mode}. "
+                f"Expected one of {sorted(allowed_modes)}."
+            )
+
+    @staticmethod
+    def _validate_vertical_markers(
+        vertical_markers: Optional[Dict[Union[int, str], Union[float, List[float]]]]
+    ) -> None:
+        """
+        Validate vertical marker dictionary structure.
+
+        Parameters
+        ----------
+        vertical_markers : Dict[int or str, float or List[float]], optional
+            Marker specification dictionary.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError
+            If structure or value types are invalid.
+        """
+        VerticalMarkerHelper.validate_markers(
+            marker_positions=vertical_markers,
+            key_context="trajectory selectors or tag names"
+        )
+
+    @staticmethod
+    def _validate_vertical_marker_labels(
+        vertical_markers: Optional[Dict[Union[int, str], Union[float, List[float]]]],
+        vertical_marker_labels: Optional[Union[str, Dict[Union[int, str], str]]]
+    ) -> None:
+        """
+        Validate vertical marker label structure.
+
+        Parameters
+        ----------
+        vertical_markers : dict, optional
+            Marker position dictionary.
+        vertical_marker_labels : str or dict, optional
+            Marker legend labels.
+
+        Returns
+        -------
+        None
+            Validation helper; returns only when values are valid.
+        """
+        VerticalMarkerHelper.validate_labels(
+            marker_positions=vertical_markers,
+            marker_labels=vertical_marker_labels
+        )
+
+    @staticmethod
+    def _validate_vertical_marker_label_colors(
+        vertical_marker_labels: Optional[Union[str, Dict[Union[int, str], str]]],
+        vertical_marker_label_colors: Optional[Union[str, Dict[str, str]]]
+    ) -> None:
+        """
+        Validate optional marker-label color overrides.
+
+        Parameters
+        ----------
+        vertical_marker_labels : str or dict, optional
+            Marker legend labels.
+        vertical_marker_label_colors : str or dict, optional
+            Shared or per-label legend color override.
+
+        Returns
+        -------
+        None
+            Validation helper; returns only when values are valid.
+        """
+        VerticalMarkerHelper.validate_label_colors(
+            marker_labels=vertical_marker_labels,
+            label_colors=vertical_marker_label_colors
+        )

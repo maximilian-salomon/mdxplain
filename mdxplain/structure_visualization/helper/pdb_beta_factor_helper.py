@@ -30,6 +30,7 @@ from __future__ import annotations
 import numpy as np
 import mdtraj as md
 from typing import List, TYPE_CHECKING
+from ...utils.path_utils import PathUtils
 
 if TYPE_CHECKING:
     from ...pipeline.entities.pipeline_data import PipelineData
@@ -119,6 +120,12 @@ class PdbBetaFactorHelper:
                 f"number of atoms {n_atoms}"
             )
 
+        output_path = PathUtils.prepare_file_path(
+            output_path,
+            create_parent=True,
+            purpose="pdb output path",
+        )
+
         # MDTraj doesn't directly support setting beta factors during save
         # We need to save and then modify the PDB file
         frame.save_pdb(output_path)
@@ -154,6 +161,12 @@ class PdbBetaFactorHelper:
         PDB format: Beta factor is in columns 61-66 (0-indexed: 60-66)
         Format: %6.2f
         """
+        pdb_path = PathUtils.prepare_file_path(
+            pdb_path,
+            create_parent=False,
+            purpose="pdb path",
+        )
+
         with open(pdb_path, 'r') as f:
             lines = f.readlines()
 

@@ -32,7 +32,7 @@ import numpy as np
 
 from mdxplain.utils.progress_utils import ProgressUtils
 from mdxplain.utils.resource_utils import ResourceUtils
-from mdxplain.utils.data_utils import DataUtils
+from mdxplain.utils.memmap_utils import MemmapUtils
 
 from .feature_shape_helper import FeatureShapeHelper
 
@@ -157,7 +157,7 @@ class CalculatorStatHelper:
 
         # Process in chunks
         result_chunks = []
-        is_memmap_input = DataUtils.is_memmap_view(flat_array)
+        is_memmap_input = MemmapUtils.is_memmap_view(flat_array)
         if is_memmap_input:
             ResourceUtils.tune_memmap(flat_array, "sequential")
         for i in ProgressUtils.iterate(
@@ -254,7 +254,7 @@ class CalculatorStatHelper:
             Statistical values per frame
         """
         result_chunks = []
-        is_memmap_input = DataUtils.is_memmap_view(array)
+        is_memmap_input = MemmapUtils.is_memmap_view(array)
         if is_memmap_input:
             ResourceUtils.tune_memmap(array, "sequential")
         for i in ProgressUtils.iterate(
@@ -398,7 +398,7 @@ class CalculatorStatHelper:
             Statistical values per column
         """
         result_chunks = []
-        is_memmap_input = DataUtils.is_memmap_view(array)
+        is_memmap_input = MemmapUtils.is_memmap_view(array)
         if is_memmap_input:
             ResourceUtils.tune_memmap(array, "sequential")
         for i in ProgressUtils.iterate(
@@ -501,6 +501,117 @@ class CalculatorStatHelper:
         )
 
     @staticmethod
+    def compute_pooled_transitions(
+        segments: list,
+        threshold: float,
+        window_size: int,
+        chunk_size: int,
+        use_memmap: bool = False,
+        mode: str = "lagtime",
+    ) -> tuple:
+        """
+        Compute pooled transitions across multiple segments with boundary safety.
+
+        Parameters
+        ----------
+        segments : list
+            List of (n_frames, n_features) arrays
+        threshold : float
+            Transition threshold
+        window_size : int
+            Window or lag size
+        chunk_size : int
+            Chunk size for processing
+        use_memmap : bool, default=False
+            Whether to enable chunked memmap processing
+        mode : str, default='lagtime'
+            Computation mode ('lagtime' or 'window')
+
+        Returns
+        -------
+        tuple
+            (total_transitions, total_possible)
+        """
+        total_transitions = None
+        total_possible = 0
+        if not segments:
+            return np.array([]), 0
+
+        for segment in segments:
+            n_frames = segment.shape[0]
+            max_possible = (
+                n_frames - window_size
+                if mode == "lagtime"
+                else n_frames - window_size + 1
+            )
+            if max_possible <= 0:
+                continue
+            transitions = CalculatorStatHelper._compute_transitions_unified(
+                segment,
+                threshold,
+                window_size,
+                chunk_size,
+                use_memmap,
+                mode=mode,
+            ).astype(float)
+            total_possible += max_possible
+            if total_transitions is None:
+                total_transitions = transitions
+            else:
+                total_transitions += transitions
+
+        if total_transitions is None:
+            total_transitions = np.zeros(segments[0].shape[1], dtype=float)
+
+        return total_transitions, total_possible
+
+    @staticmethod
+    def compute_pooled_stability(
+        segments: list,
+        threshold: float,
+        window_size: int,
+        chunk_size: int,
+        use_memmap: bool = False,
+        mode: str = "lagtime",
+    ) -> np.ndarray:
+        """
+        Compute pooled stability across segments.
+
+        Parameters
+        ----------
+        segments : list
+            List of (n_frames, n_features) arrays
+        threshold : float
+            Transition threshold
+        window_size : int
+            Window or lag size
+        chunk_size : int
+            Chunk size for processing
+        use_memmap : bool, default=False
+            Whether to enable chunked memmap processing
+        mode : str, default='lagtime'
+            Computation mode ('lagtime' or 'window')
+
+        Returns
+        -------
+        numpy.ndarray
+            Pooled stability values per feature
+        """
+        transitions, total_possible = CalculatorStatHelper.compute_pooled_transitions(
+            segments,
+            threshold,
+            window_size,
+            chunk_size,
+            use_memmap,
+            mode=mode,
+        )
+        if transitions.size == 0:
+            return transitions
+        if total_possible == 0:
+            return np.ones_like(transitions, dtype=float)
+        return 1.0 - (transitions / total_possible)
+
+    @staticmethod
     def _compute_transitions_unified(
         array: np.ndarray, 
         threshold: float, 
@@ -588,8 +699,8 @@ class CalculatorStatHelper:
             Modifies result array in-place
         """
         flat_result = result.flatten()
-        is_memmap_input = DataUtils.is_memmap_view(array)
-        is_memmap_result = DataUtils.is_memmap_view(result)
+        is_memmap_input = MemmapUtils.is_memmap_view(array)
+        is_memmap_result = MemmapUtils.is_memmap_view(result)
         if is_memmap_input:
             ResourceUtils.tune_memmap(array, "sequential")
         if is_memmap_result:
@@ -610,8 +721,7 @@ class CalculatorStatHelper:
         if is_memmap_input:
             ResourceUtils.tune_memmap(array, "random")
         if is_memmap_result:
-            if hasattr(result, "flush"):
-                result.flush()
+            MemmapUtils.evict_from_os_cache(result)
             ResourceUtils.tune_memmap(result, "random")
 
     @staticmethod

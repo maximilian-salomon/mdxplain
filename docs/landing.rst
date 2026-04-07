@@ -36,7 +36,7 @@ Create a new conda environment with production dependencies, Jupyter, and nglvie
 
 .. code-block:: bash
 
-   make setup
+   make setup-conda
    conda activate mdxplain
 
 

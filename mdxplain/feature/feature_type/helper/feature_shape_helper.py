@@ -31,6 +31,7 @@ from typing import List, Optional, Tuple
 import mdtraj as md
 import numpy as np
 
+from mdxplain.utils.memmap_utils import MemmapUtils
 from mdxplain.utils.progress_utils import ProgressUtils
 from mdxplain.utils.resource_utils import ResourceUtils
 
@@ -163,8 +164,7 @@ class FeatureShapeHelper:
             )
         else:
             result[:] = square_array[:, i_indices, j_indices]
-            if FeatureShapeHelper.is_memmap(result):
-                result.flush()
+            MemmapUtils.evict_from_os_cache(result)
 
         return result
 
@@ -190,13 +190,12 @@ class FeatureShapeHelper:
             Output array for condensed format
         """
         if output_path is not None:
-            output = np.memmap(
-                output_path,
+            output = MemmapUtils.create_memmap(
+                path=output_path,
                 dtype=dtype,
                 mode="w+",
                 shape=(n_frames, n_contacts),
             )
-            ResourceUtils.tune_memmap(output, "random")
             return output
         else:
             return np.zeros((n_frames, n_contacts), dtype=dtype)
@@ -247,7 +246,7 @@ class FeatureShapeHelper:
             chunk = square_array[i:end_idx]
             result[i:end_idx] = chunk[:, i_indices, j_indices]
             if is_memmap_result:
-                result.flush()
+                MemmapUtils.evict_memory_range(result, i, end_idx)
         if is_memmap_input:
             ResourceUtils.tune_memmap(square_array, "random")
         if is_memmap_result:
@@ -389,13 +388,12 @@ class FeatureShapeHelper:
         n_frames = condensed_array.shape[0]
 
         if output_path is not None:
-            square_array = np.memmap(
-                output_path,
+            square_array = MemmapUtils.create_memmap(
+                path=output_path,
                 dtype=condensed_array.dtype,
                 mode="w+",
                 shape=(n_frames, n_residues, n_residues),
             )
-            ResourceUtils.tune_memmap(square_array, "random")
         else:
             square_array = np.zeros(
                 (n_frames, n_residues, n_residues), dtype=condensed_array.dtype
@@ -417,7 +415,7 @@ class FeatureShapeHelper:
             square_chunk = md.geometry.squareform(chunk, residue_pairs)
             square_array[i:end_idx] = square_chunk
             if is_memmap_output:
-                square_array.flush()
+                MemmapUtils.evict_memory_range(square_array, i, end_idx)
 
         if is_memmap_input:
             ResourceUtils.tune_memmap(condensed_array, "random")

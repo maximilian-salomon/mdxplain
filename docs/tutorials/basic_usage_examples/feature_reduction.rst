@@ -52,6 +52,10 @@ Approach 1: Inline Reduction (during selection)
         "stable_contacts", "resid 100-200",
         threshold_min=0.7  # Only contacts formed in >70% of frames
     )
+    # per_trajectory (default): reduce each trajectory independently
+    # cross_trajectory_intersection=True: must pass in ALL trajectories
+    # cross_trajectory_union=True: pass in ANY trajectory
+    # cross_trajectory_pooled=True: pool frames first, then reduce once
 
 Approach 2: Pre-Reduction + ``use_reduced=True``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -62,8 +66,7 @@ Approach 2: Pre-Reduction + ``use_reduced=True``
     pipeline.feature.reduce_data(
         feature_type="distances",
         metric="cv",  # Coefficient of variation
-        threshold_min=0.1,  # Only distances with CV > 0.1 (variable distances)
-        cross_trajectory=True  # Feature must pass in ALL trajectories
+        threshold_min=0.1  # Only distances with CV > 0.1 (variable distances)
     )
 
     # Step 2: Use pre-reduced features in selection

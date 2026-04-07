@@ -22,10 +22,13 @@
 
 import numpy as np
 import pytest
+import tempfile
+from pathlib import Path
 from scipy.linalg import eig
 from unittest.mock import patch, MagicMock
 
 from mdxplain.decomposition.decomposition_type.diffusion_maps.diffusion_maps_calculator import DiffusionMapsCalculator
+from mdxplain.utils.memmap_utils import MemmapUtils
 
 # Helper functions for tests inspired by test_todo.md
 def create_two_clusters_data(n_points_per_cluster=50, n_dims=3, separation=10):
@@ -63,7 +66,8 @@ def mock_hyperparameters():
         "n_landmarks": 100,
         "random_state": 42,
         "atom_selection": None,
-        "n_atoms": 1
+        "n_atoms": 1,
+        "alpha": 0.0,
     }
 
 # 1. Tests for Helper Functions
@@ -77,7 +81,7 @@ def test_normalize_to_transition_matrix(calculator):
     kernel_matrix = np.array([[2.0, 1.0, 0.0],
                               [1.0, 2.0, 1.0],
                               [0.0, 1.0, 2.0]])
-    transition_matrix = calculator._normalize_to_transition_matrix(kernel_matrix)
+    transition_matrix, _ = calculator._normalize_to_transition_matrix(kernel_matrix)
     row_sums = np.sum(transition_matrix, axis=1)
     np.testing.assert_allclose(row_sums, 1.0, rtol=1e-7)
     expected_matrix = np.array([[2/3, 1/3, 0],
@@ -112,6 +116,323 @@ def test_extract_diffusion_coordinates(calculator):
     expected_coords = eigenvecs[:, [2, 1]]
     np.testing.assert_array_equal(diff_coords, expected_coords)
 
+def test_apply_alpha_normalization_dense(calculator):
+    """
+    Test alpha normalization on a dense kernel matrix.
+    
+    Validates K_ij -> K_ij / (q_i^alpha q_j^alpha).
+    """
+    kernel = np.array([[1.0, 2.0], [2.0, 4.0]])
+    row_sums = kernel.sum(axis=1)
+    q_alpha = row_sums ** 1.0
+    expected = kernel / (q_alpha[:, np.newaxis] * q_alpha[np.newaxis, :])
+
+    calculator._apply_alpha_normalization(
+        kernel,
+        alpha=1.0,
+        q_row=None,
+        q_col=None,
+        compute_row_sums=False,
+        desc="Applying alpha normalization (dense)",
+    )
+    normalized = kernel
+    np.testing.assert_allclose(normalized, expected)
+
+def test_apply_alpha_normalization_alpha_zero_no_change(calculator):
+    """
+    Test alpha=0 path leaves kernel unchanged and returns None.
+    """
+    kernel = np.array([[1.0, 2.0], [2.0, 3.0]])
+    kernel_copy = kernel.copy()
+    result = calculator._apply_alpha_normalization(
+        kernel,
+        alpha=0.0,
+        q_row=None,
+        q_col=None,
+        compute_row_sums=False,
+        desc="Applying alpha normalization (dense)",
+    )
+    assert result is None
+    np.testing.assert_allclose(kernel, kernel_copy)
+
+def test_apply_alpha_normalization_alpha_zero_row_sums(calculator):
+    """
+    Test alpha=0 path returns row sums when requested.
+    """
+    kernel = np.array([[1.0, 2.0], [2.0, 3.0]])
+    result = calculator._apply_alpha_normalization(
+        kernel,
+        alpha=0.0,
+        q_row=None,
+        q_col=None,
+        compute_row_sums=True,
+        desc="Applying alpha normalization (dense)",
+    )
+    np.testing.assert_allclose(result, kernel.sum(axis=1))
+
+def test_apply_alpha_normalization_requires_q_col_for_rectangular(calculator):
+    """
+    Test rectangular kernel requires q_col when not provided.
+    """
+    kernel = np.ones((2, 3), dtype=np.float32)
+    with pytest.raises(ValueError, match="q_col must be provided"):
+        calculator._apply_alpha_normalization(
+            kernel,
+            alpha=1.0,
+            q_row=None,
+            q_col=None,
+            compute_row_sums=False,
+            desc="Applying alpha normalization (rectangular)",
+        )
+
+def test_apply_alpha_normalization_rectangular_with_q_col(calculator):
+    """
+    Test rectangular kernel normalization with explicit q_row/q_col.
+    """
+    kernel = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+    q_row = kernel.sum(axis=1)
+    q_col = np.array([2.0, 3.0, 4.0])
+    expected = kernel / (q_row[:, np.newaxis] * q_col[np.newaxis, :])
+
+    calculator._apply_alpha_normalization(
+        kernel,
+        alpha=1.0,
+        q_row=q_row,
+        q_col=q_col,
+        compute_row_sums=False,
+        desc="Applying alpha normalization (rectangular)",
+    )
+    np.testing.assert_allclose(kernel, expected)
+
+def test_apply_alpha_normalization_returns_row_sums(calculator):
+    """
+    Test row sums after alpha normalization are returned when requested.
+    """
+    kernel = np.array([[1.0, 2.0], [2.0, 4.0]])
+    q_row = kernel.sum(axis=1)
+    expected = kernel / (q_row[:, np.newaxis] * q_row[np.newaxis, :])
+    expected_row_sums = expected.sum(axis=1)
+
+    row_sums = calculator._apply_alpha_normalization(
+        kernel,
+        alpha=1.0,
+        q_row=q_row,
+        q_col=None,
+        compute_row_sums=True,
+        desc="Applying alpha normalization (dense)",
+    )
+    np.testing.assert_allclose(row_sums, expected_row_sums)
+
+def test_compute_q_alpha_clamps_zero(calculator):
+    """
+    Test q^alpha computation clamps zeros for numerical safety.
+    """
+    row_sums = np.array([0.0, 1.0, 2.0])
+    clamped, q_alpha = calculator._compute_q_alpha(row_sums, alpha=1.0)
+    assert np.all(clamped >= 1e-12)
+    np.testing.assert_allclose(q_alpha, clamped)
+    
+def test_epsilon_diagnostics_statistics(calculator):
+    """
+    Test epsilon diagnostics report median, quantiles, and bootstrap CI.
+    
+    Ensures diagnostics reflect the computed k-NN distances without
+    affecting the epsilon calculation.
+    """
+    data = np.zeros((8, 6), dtype=np.float32)
+    k_distances = np.array([1.0, 2.0, 3.0, 4.0, 5.0], dtype=np.float32)
+    expected_q05, expected_q95 = np.quantile(k_distances, [0.05, 0.95])
+
+    with patch.object(calculator, "_compute_knn_distances", return_value=k_distances):
+        epsilon, diagnostics = calculator._estimate_epsilon_knn(
+            data,
+            random_state=0,
+            k=2,
+            n_samples=5,
+            ref_size=5,
+            return_diagnostics=True,
+        )
+
+    median = float(np.median(k_distances))
+    assert np.isclose(epsilon, median ** 2)
+    assert np.isclose(diagnostics["median_distance"], median)
+    assert np.isclose(diagnostics["quantiles"]["q05"], expected_q05)
+    assert np.isclose(diagnostics["quantiles"]["q50"], median)
+    assert np.isclose(diagnostics["quantiles"]["q95"], expected_q95)
+    assert diagnostics["bootstrap_ci"]["n_bootstrap"] == 200
+    assert diagnostics["bootstrap_ci"]["q025"] <= median <= diagnostics["bootstrap_ci"]["q975"]
+    assert diagnostics["bootstrap_ci"]["q025"] >= float(k_distances.min())
+    assert diagnostics["bootstrap_ci"]["q975"] <= float(k_distances.max())
+
+def test_extract_hyperparameters_returns_epsilon_diagnostics(calculator):
+    """
+    Test epsilon diagnostics are returned separately from hyperparameters.
+    
+    Ensures diagnostics are not embedded inside hyperparameters.
+    """
+    data = np.zeros((10, 6), dtype=np.float32)
+    diagnostics = {
+        "median_distance": 1.0,
+        "quantiles": {"q05": 0.8, "q50": 1.0, "q95": 1.2},
+        "bootstrap_ci": {"q025": 0.9, "q975": 1.1, "n_bootstrap": 200},
+        "epsilon": 1.0,
+    }
+
+    with patch.object(calculator, "_estimate_epsilon_knn", return_value=(1.0, diagnostics)):
+        hyper, epsilon_diagnostics = calculator._extract_hyperparameters(
+            data,
+            {"n_components": 2}
+        )
+
+    assert np.isclose(hyper["epsilon"], 1.0)
+    assert epsilon_diagnostics == diagnostics
+    assert "epsilon_diagnostics" not in hyper
+    assert "epsilon_bootstrap_samples" not in hyper
+
+def test_resolve_epsilon_sampling_with_index_pool(calculator):
+    """
+    Test epsilon sampling uses the provided index pool and clamps k.
+    
+    Ensures reference/sample indices are drawn only from the pool and
+    that k is clamped to a valid range for the pool size.
+    """
+    index_pool = np.array([2, 4, 6, 8, 10])
+
+    k, n_samples, ref_size, sample_indices, ref_indices = calculator._resolve_epsilon_sampling(
+        n_points=len(index_pool),
+        n_frames_cap=20,
+        random_state=0,
+        k=10,
+        n_samples=3,
+        ref_size=4,
+        index_pool=index_pool,
+    )
+
+    assert k == len(index_pool) - 1
+    assert ref_size == len(index_pool)
+    assert n_samples == 3
+    assert set(ref_indices) == set(index_pool)
+    assert set(sample_indices).issubset(set(ref_indices))
+
+def test_estimate_epsilon_knn_with_index_pool(calculator):
+    """
+    Test epsilon estimation respects the index pool and uses k-NN distances.
+    
+    Verifies that sampling stays within the pool and epsilon is derived
+    from the median k-NN distance.
+    """
+    data = np.zeros((8, 6), dtype=np.float32)
+    index_pool = np.array([0, 2, 4, 6])
+    captured = {}
+
+    def _fake_compute_knn_distances(_, sample_indices, ref_indices, __, ___):
+        captured["sample_indices"] = sample_indices
+        captured["ref_indices"] = ref_indices
+        return np.array([1.0, 2.0, 3.0], dtype=np.float32)
+
+    with patch.object(calculator, "_compute_knn_distances", side_effect=_fake_compute_knn_distances):
+        epsilon = calculator._estimate_epsilon_knn(
+            data,
+            random_state=0,
+            k=2,
+            n_samples=3,
+            ref_size=4,
+            index_pool=index_pool,
+        )
+
+    assert np.isclose(epsilon, 4.0)
+    assert set(captured["ref_indices"]).issubset(set(index_pool))
+    assert set(captured["sample_indices"]).issubset(set(captured["ref_indices"]))
+
+def test_estimate_epsilon_from_landmarks_delegates(calculator):
+    """
+    Test landmark epsilon estimation delegates to the shared k-NN estimator.
+    
+    Ensures the landmark index pool is passed through without slicing data.
+    """
+    data = np.zeros((6, 3), dtype=np.float32)
+    landmark_idx = np.array([1, 3, 5])
+
+    with patch.object(calculator, "_estimate_epsilon_knn", return_value=0.25) as mock_estimate:
+        epsilon = calculator._estimate_epsilon_from_landmarks(
+            data,
+            landmark_idx,
+            k=2,
+            n_samples=2,
+            ref_size=3,
+            random_state=0,
+            bootstrap_samples=200,
+        )
+
+    assert np.isclose(epsilon, 0.25)
+    assert np.array_equal(mock_estimate.call_args.kwargs["index_pool"], landmark_idx)
+
+def test_compute_adds_epsilon_diagnostics_to_metadata(calculator):
+    """
+    Test compute attaches epsilon diagnostics to metadata.
+    
+    Ensures diagnostics are not stored in hyperparameters but appear
+    at the top-level metadata after compute.
+    """
+    data = np.zeros((4, 3), dtype=np.float32)
+    diagnostics = {
+        "median_distance": 1.0,
+        "quantiles": {"q05": 0.8, "q50": 1.0, "q95": 1.2},
+        "bootstrap_ci": {"q025": 0.9, "q975": 1.1, "n_bootstrap": 200},
+        "epsilon": 1.0,
+    }
+    mock_metadata = {
+        "method": "standard_diffusion_maps",
+        "epsilon": 1.0,
+        "eigenvalues": np.array([1.0]),
+        "hyperparameters": {},
+    }
+
+    with patch.object(calculator, "_estimate_epsilon_knn", return_value=(1.0, diagnostics)):
+        with patch.object(calculator, "_compute_standard_diffusion_maps", return_value=(np.zeros((4, 1)), mock_metadata)):
+            _, metadata = calculator.compute(data, n_components=1)
+
+    assert metadata["epsilon_diagnostics"] == diagnostics
+    assert "epsilon_diagnostics" not in metadata["hyperparameters"]
+
+def test_nystrom_metadata_includes_epsilon_diagnostics(calculator):
+    """
+    Test Nyström path attaches epsilon diagnostics to metadata.
+    
+    Ensures diagnostics propagate when epsilon is estimated in Nyström mode.
+    """
+    data = np.zeros((6, 3), dtype=np.float32)
+    diagnostics = {
+        "median_distance": 1.0,
+        "quantiles": {"q05": 0.8, "q50": 1.0, "q95": 1.2},
+        "bootstrap_ci": {"q025": 0.9, "q975": 1.1, "n_bootstrap": 200},
+        "epsilon": 1.0,
+    }
+    mock_metadata = {
+        "method": "nystrom_diffusion_maps",
+        "epsilon": 1.0,
+        "eigenvalues": np.array([1.0]),
+        "hyperparameters": {},
+    }
+
+    with patch.object(calculator, "_select_landmarks_kmeans", return_value=np.array([0, 1])):
+        with patch.object(calculator, "_estimate_epsilon_from_landmarks", return_value=(1.0, diagnostics)):
+            with patch.object(calculator, "_compute_landmarks_kernel", return_value=np.ones((2, 2), dtype=np.float32)):
+                with patch.object(calculator, "_nystrom_normalize_to_markov", return_value=(np.eye(2), np.ones(2))):
+                    with patch.object(calculator, "_solve_markov_eigenvalue_problem", return_value=(np.array([1.0]), np.eye(2))):
+                        with patch.object(calculator, "_compute_all_to_landmarks_kernel", return_value=np.zeros((6, 2), dtype=np.float32)):
+                            with patch.object(calculator, "_nystrom_extend_eigenvectors", return_value=np.zeros((6, 2), dtype=np.float32)):
+                                with patch.object(calculator, "_nystrom_extract_coordinates", return_value=(np.zeros((6, 1)), np.array([1.0]))):
+                                    with patch.object(calculator, "_prepare_metadata", return_value=mock_metadata):
+                                        _, metadata = calculator.compute(
+                                            data,
+                                            n_components=1,
+                                            use_nystrom=True,
+                                            n_landmarks=2,
+                                        )
+
+    assert metadata["epsilon_diagnostics"] == diagnostics
+    assert "epsilon_diagnostics" not in metadata["hyperparameters"]
 
 # 2. Tests for Mathematical Properties
 def test_kernel_matrix_symmetry(calculator, mock_hyperparameters):
@@ -139,7 +460,7 @@ def test_markov_matrix_row_stochastic(calculator, mock_hyperparameters):
 
     rmsd_matrix = calculator._compute_rmsd_distance_matrix(test_data, 1)
     kernel_matrix, _ = calculator._compute_kernel_matrix(rmsd_matrix, epsilon=0.1)
-    transition_matrix = calculator._normalize_to_transition_matrix(kernel_matrix)
+    transition_matrix, _ = calculator._normalize_to_transition_matrix(kernel_matrix)
     
     row_sums = np.sum(transition_matrix, axis=1)
     np.testing.assert_allclose(row_sums, 1.0, rtol=1e-6)
@@ -155,7 +476,7 @@ def test_eigenvalue_properties(calculator, mock_hyperparameters):
 
     rmsd_matrix = calculator._compute_rmsd_distance_matrix(test_data, 1)
     kernel_matrix, _ = calculator._compute_kernel_matrix(rmsd_matrix, epsilon=1.0)
-    transition_matrix = calculator._normalize_to_transition_matrix(kernel_matrix)
+    transition_matrix, _ = calculator._normalize_to_transition_matrix(kernel_matrix)
     
     eigenvals, _ = eig(transition_matrix)
     
@@ -170,8 +491,7 @@ def test_eigenvalue_properties(calculator, mock_hyperparameters):
     assert np.all(np.abs(eigenvals) <= 1.0 + 1e-9)
 
 # 3. Tests for Known Structures
-@patch('mdxplain.decomposition.decomposition_type.diffusion_maps.diffusion_maps_calculator.eig')
-def test_two_separate_clusters(mock_eig, calculator, mock_hyperparameters):
+def test_two_separate_clusters(calculator, mock_hyperparameters):
     """
     Test core diffusion maps functionality: two distinct clusters should be separated.
     
@@ -191,11 +511,15 @@ def test_two_separate_clusters(mock_eig, calculator, mock_hyperparameters):
     mock_eigenvecs = np.zeros((n_per_cluster * 2, 3))
     mock_eigenvecs[:, 0] = 1.0  # Trivial eigenvector
     mock_eigenvecs[:, 1] = ideal_eigenvec # Our perfect separator
-    mock_eig.return_value = (mock_eigenvals, mock_eigenvecs)
-
     mock_hyperparameters["epsilon"] = 5.0 
-    
-    coords, _ = calculator._compute_standard_diffusion_maps(test_data_flat, mock_hyperparameters)
+    with patch.object(
+        calculator,
+        "_solve_markov_eigenvalue_problem",
+        return_value=(mock_eigenvals, mock_eigenvecs),
+    ):
+        coords, _ = calculator._compute_standard_diffusion_maps(
+            test_data_flat, mock_hyperparameters
+        )
     
     # The first diffusion coordinate should be our ideal eigenvector
     first_coord = np.real(coords[:, 0])
@@ -204,8 +528,7 @@ def test_two_separate_clusters(mock_eig, calculator, mock_hyperparameters):
     correlation = np.corrcoef(first_coord, ideal_eigenvec)[0, 1]
     assert np.abs(correlation) > 0.999
 
-@patch('mdxplain.decomposition.decomposition_type.diffusion_maps.diffusion_maps_calculator.eig')
-def test_linear_data_structure(mock_eig, calculator, mock_hyperparameters):
+def test_linear_data_structure(calculator, mock_hyperparameters):
     """
     Test that linear data structure is captured in first diffusion coordinate.
     
@@ -225,11 +548,15 @@ def test_linear_data_structure(mock_eig, calculator, mock_hyperparameters):
     mock_eigenvecs = np.zeros((n_points, 3))
     mock_eigenvecs[:, 0] = 1.0 # Trivial eigenvector
     mock_eigenvecs[:, 1] = ideal_eigenvec # Our perfect linear vector
-    mock_eig.return_value = (mock_eigenvals, mock_eigenvecs)
-
     mock_hyperparameters["epsilon"] = 0.05
-    
-    coords, _ = calculator._compute_standard_diffusion_maps(test_data_flat, mock_hyperparameters)
+    with patch.object(
+        calculator,
+        "_solve_markov_eigenvalue_problem",
+        return_value=(mock_eigenvals, mock_eigenvecs),
+    ):
+        coords, _ = calculator._compute_standard_diffusion_maps(
+            test_data_flat, mock_hyperparameters
+        )
     
     first_coord = np.real(coords[:, 0])
     
@@ -276,6 +603,94 @@ def test_compute_calls_nystrom(mock_nystrom, calculator):
     mock_nystrom.return_value = (np.array([]), {})
     calculator.compute(test_data, n_components=2, epsilon=0.1, use_nystrom=True, n_landmarks=10)
     mock_nystrom.assert_called_once()
+
+@patch("mdxplain.decomposition.decomposition_type.diffusion_maps.diffusion_maps_calculator.CleanupUtils.remove_file")
+def test_compute_cleans_tracked_temp_memmaps_iterative(mock_remove_file):
+    """compute() should cleanup all tracked temp memmaps after iterative path."""
+    calculator = DiffusionMapsCalculator(use_memmap=True)
+    test_data = create_linear_data(n_points=30).reshape(30, -1)
+
+    def _fake_iterative(_, __):
+        calculator._temp_memmap_paths = ["iter_temp_a.dat", "iter_temp_b.dat"]
+        return np.zeros((30, 2), dtype=np.float32), {"method": "iterative_diffusion_maps"}
+
+    with patch.object(calculator, "_compute_iterative_diffusion_maps", side_effect=_fake_iterative):
+        calculator.compute(test_data, n_components=2, epsilon=0.1)
+
+    assert mock_remove_file.call_count == 2
+    assert calculator._temp_memmap_paths == []
+
+@patch("mdxplain.decomposition.decomposition_type.diffusion_maps.diffusion_maps_calculator.CleanupUtils.remove_file")
+def test_compute_cleans_tracked_temp_memmaps_nystrom(mock_remove_file):
+    """compute() should cleanup all tracked temp memmaps after Nyström path."""
+    calculator = DiffusionMapsCalculator(use_memmap=True)
+    test_data = create_linear_data(n_points=30).reshape(30, -1)
+
+    def _fake_nystrom(_, __):
+        calculator._temp_memmap_paths = ["nys_temp_a.dat", "nys_temp_b.dat"]
+        return np.zeros((30, 2), dtype=np.float32), {"method": "nystrom_diffusion_maps"}
+
+    with patch.object(calculator, "_compute_nystrom_diffusion_maps", side_effect=_fake_nystrom):
+        calculator.compute(
+            test_data,
+            n_components=2,
+            epsilon=0.1,
+            use_nystrom=True,
+            n_landmarks=10,
+        )
+
+    assert mock_remove_file.call_count == 2
+    assert calculator._temp_memmap_paths == []
+
+def test_iterative_compute_removes_temporary_memmap_files():
+    """Iterative diffusion maps should clean up temporary rmsd/kernel memmaps."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        calculator = DiffusionMapsCalculator(
+            use_memmap=True,
+            cache_path=tmpdir,
+            chunk_size=16,
+        )
+        test_data = create_linear_data(n_points=32).reshape(32, -1).astype(np.float32)
+
+        coords, metadata = calculator.compute(
+            test_data,
+            n_components=2,
+            epsilon=0.2,
+            use_nystrom=False,
+        )
+
+        assert metadata["method"] == "iterative_diffusion_maps"
+        dat_files = {path.name for path in Path(tmpdir).glob("*.dat")}
+        assert "diffusion_maps_iterative_rmsd_matrix.dat" not in dat_files
+        assert "diffusion_maps_iterative_kernel_matrix.dat" not in dat_files
+        MemmapUtils.close_memmap_view(coords)
+
+
+def test_nystrom_compute_removes_temporary_memmap_files():
+    """Nyström diffusion maps should clean up temporary extension memmaps."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        calculator = DiffusionMapsCalculator(
+            use_memmap=True,
+            cache_path=tmpdir,
+            chunk_size=16,
+        )
+        test_data = create_linear_data(n_points=32).reshape(32, -1).astype(np.float32)
+
+        coords, metadata = calculator.compute(
+            test_data,
+            n_components=2,
+            epsilon=0.2,
+            use_nystrom=True,
+            n_landmarks=8,
+            landmark_selection_mode="random",
+            random_state=42,
+        )
+
+        assert metadata["method"] == "nystrom_diffusion_maps"
+        dat_files = {path.name for path in Path(tmpdir).glob("*.dat")}
+        assert "diffusion_maps_nystrom_K_all.dat" not in dat_files
+        assert "diffusion_maps_nystrom_eigenvectors_full.dat" not in dat_files
+        MemmapUtils.close_memmap_view(coords)
 
 # 5. Test Nyström Method Steps
 @patch('mdxplain.decomposition.decomposition_type.interfaces.calculator_base.MiniBatchKMeans')
@@ -324,8 +739,11 @@ def test_nystrom_solve_eigenvalue_problem(calculator):
     
     Validates eigendecomposition of reduced landmark transition matrix.
     """
-    M_small = np.array([[0.9, 0.1], [0.2, 0.8]])
-    eigvals, eigvecs = calculator._nystrom_solve_eigenvalue_problem(M_small)
+    K_landmarks = np.array([[2.0, 1.0], [1.0, 3.0]])
+    M_small, inv_row_sums = calculator._nystrom_normalize_to_markov(K_landmarks)
+    eigvals, eigvecs = calculator._solve_markov_eigenvalue_problem(
+        M_small, inv_row_sums
+    )
     
     # Eigenvalues should be real and sorted descending
     assert np.all(np.isreal(eigvals))
@@ -438,5 +856,24 @@ def test_extract_hyperparameters(calculator):
         calculator._extract_hyperparameters(data, {"n_components": 25})
     
     # Test epsilon estimation works with valid components
-    params = calculator._extract_hyperparameters(data, {"n_components": 2})
+    params, _ = calculator._extract_hyperparameters(data, {"n_components": 2})
     assert "epsilon" in params and params["epsilon"] > 0
+
+def test_landmark_selection_validation(calculator):
+    """
+    Test landmark selection parameter validation for Nyström.
+    
+    Ensures only "kmeans" or "random" are accepted.
+    """
+    data = np.zeros((10, 3))
+    params, _ = calculator._extract_hyperparameters(
+        data,
+        {"n_components": 2, "use_nystrom": True, "landmark_selection_mode": "random", "n_landmarks": 3},
+    )
+    assert params["landmark_selection_mode"] == "random"
+
+    with pytest.raises(ValueError, match="Invalid landmark_selection_mode"):
+        calculator._extract_hyperparameters(
+            data,
+            {"n_components": 2, "use_nystrom": True, "landmark_selection_mode": "invalid", "n_landmarks": 3},
+        )

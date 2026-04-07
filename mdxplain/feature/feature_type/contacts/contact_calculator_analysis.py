@@ -25,7 +25,7 @@ Analysis methods for contact calculations with statistical computations
 and support for memory-mapped arrays and contact pattern analysis.
 """
 
-from typing import Callable, Optional
+from typing import Callable, List, Optional
 import numpy as np
 
 from ..helper.calculator_stat_helper import CalculatorStatHelper
@@ -272,3 +272,81 @@ class ContactCalculatorAnalysis:
         return CalculatorStatHelper.compute_differences(
             contacts1, contacts2, self.chunk_size, self.use_memmap, preprocessing_func
         )
+
+    def compute_pooled_metric_values(
+        self,
+        segments: List[np.ndarray],
+        metric: str,
+        transition_threshold: float = 2.0,
+        window_size: int = 10,
+        transition_mode: str = "window",
+        lag_time: int = 1,
+    ) -> np.ndarray:
+        """
+        Compute pooled metric values across segments.
+
+        Parameters
+        ----------
+        segments : list
+            List of contact arrays
+        metric : str
+            Metric name
+        transition_threshold : float, default=2.0
+            Threshold for detecting transitions
+        window_size : int, default=10
+            Window size for transition analysis
+        transition_mode : str, default='window'
+            Transition mode ('window' or 'lagtime')
+        lag_time : int, default=1
+            Lag time for transition analysis
+
+        Returns
+        -------
+        numpy.ndarray
+            Pooled metric values per contact pair
+        """
+        if not segments:
+            return np.array([])
+        if metric == "transitions":
+            window = lag_time if transition_mode == "lagtime" else window_size
+            transitions, _ = CalculatorStatHelper.compute_pooled_transitions(
+                segments,
+                transition_threshold,
+                window,
+                self.chunk_size,
+                self.use_memmap,
+                mode=transition_mode,
+            )
+            return transitions
+        if metric == "stability":
+            window = lag_time if transition_mode == "lagtime" else window_size
+            return CalculatorStatHelper.compute_pooled_stability(
+                segments,
+                transition_threshold,
+                window,
+                self.chunk_size,
+                self.use_memmap,
+                mode=transition_mode,
+            )
+        pooled = np.concatenate(segments, axis=0)
+        return self._metric_from_pooled(pooled, metric)
+
+    def _metric_from_pooled(self, pooled: np.ndarray, metric: str) -> np.ndarray:
+        """
+        Compute metric values on pooled data.
+
+        Parameters
+        ----------
+        pooled : np.ndarray
+            Pooled contact array
+        metric : str
+            Metric name
+
+        Returns
+        -------
+        numpy.ndarray
+            Metric values per contact pair
+        """
+        if metric == "frequency":
+            return self.compute_frequency(pooled)
+        raise ValueError(f"Unknown metric: {metric}. Supported: ['frequency', 'stability', 'transitions']")

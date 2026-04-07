@@ -27,14 +27,14 @@ with proper bug fixes for auto-detection, circular logic, and legend display.
 
 from __future__ import annotations
 
-from typing import Dict, List, Optional, TYPE_CHECKING
+from typing import Dict, List, Optional, Tuple, TYPE_CHECKING, Union
 import numpy as np
 import matplotlib.pyplot as plt
 
 if TYPE_CHECKING:
     from .....pipeline.entities.pipeline_data import PipelineData
 
-from ....helper.color_mapping_helper import ColorMappingHelper
+from ....helper.color_resolution_helper import ColorResolutionHelper
 from .smoothing_helper import SmoothingHelper
 
 
@@ -285,7 +285,8 @@ class TimeSeriesTagColoringHelper:
 
     @staticmethod
     def prepare_tag_legend_colors(
-        tag_map: Dict[int, List[str]]
+        tag_map: Dict[int, List[str]],
+        colors: Optional[Union[str, Dict[str, str]]] = None
     ) -> Dict[str, str]:
         """
         Prepare tag-to-color mapping for legend.
@@ -296,6 +297,12 @@ class TimeSeriesTagColoringHelper:
         ----------
         tag_map : Dict[int, List[str]]
             Tag mapping from build_tag_map()
+        colors : str or Dict[str, str], optional
+            Color specification:
+            - str: matplotlib colormap name
+            - dict: explicit tag -> color mapping
+            - None: automatic colors for the tags present in this plot
+              (deterministic by sorted tag names)
 
         Returns
         -------
@@ -317,14 +324,16 @@ class TimeSeriesTagColoringHelper:
         # Sort for consistent color assignment
         sorted_existing_tags = sorted(existing_tags)
 
-        # Assign colors only to existing tags
-        colors = ColorMappingHelper.get_cluster_colors(len(sorted_existing_tags))
-        return {tag: colors[i] for i, tag in enumerate(sorted_existing_tags)}
+        return ColorResolutionHelper.resolve_label_colors(
+            labels=sorted_existing_tags,
+            colors=colors
+        )
 
     @staticmethod
     def prepare_trajectory_legend_colors(
         pipeline_data: PipelineData,
-        tag_map: Dict[int, List[str]]
+        tag_map: Dict[int, List[str]],
+        colors: Optional[Union[str, Dict[str, str]]] = None
     ) -> Dict[str, str]:
         """
         Prepare trajectory-name-to-color mapping for legend.
@@ -337,6 +346,12 @@ class TimeSeriesTagColoringHelper:
             Pipeline data container
         tag_map : Dict[int, List[str]]
             Tag mapping (keys are trajectory indices)
+        colors : str or Dict[str, str], optional
+            Color specification:
+            - str: matplotlib colormap name
+            - dict: explicit trajectory_name -> color mapping
+            - None: automatic colors for plotted trajectories
+              (trajectory index order)
 
         Returns
         -------
@@ -351,13 +366,15 @@ class TimeSeriesTagColoringHelper:
         >>> print(colors)  # {"system_A_run1": "#color", "system_B_run1": "#color2"}
         """
         traj_indices = sorted(tag_map.keys())
-        colors_list = ColorMappingHelper.get_cluster_colors(len(traj_indices), include_noise=False)
+        traj_names = [
+            pipeline_data.trajectory_data.trajectory_names[idx]
+            for idx in traj_indices
+        ]
 
-        # Use REAL trajectory names
-        return {
-            pipeline_data.trajectory_data.trajectory_names[idx]: colors_list[i]
-            for i, idx in enumerate(traj_indices)
-        }
+        return ColorResolutionHelper.resolve_label_colors(
+            labels=traj_names,
+            colors=colors
+        )
 
     @staticmethod
     def plot_feature_with_tag_colors(
@@ -366,13 +383,18 @@ class TimeSeriesTagColoringHelper:
         feat_idx: int,
         tag_map: Dict[int, List[str]],
         tag_colors: Dict[str, str],
-        feature_selector_name: str,
+        matrix: np.ndarray,
+        frame_mapping: Dict[int, Tuple[int, int]],
         use_time: bool,
         smoothing: bool = True,
         smoothing_method: str = "savitzky",
         smoothing_window: int = 51,
         smoothing_polyorder: int = 3,
-        show_unsmoothed_background: bool = True
+        show_unsmoothed_background: bool = True,
+        thickness: float = 1.0,
+        global_frame_indices_by_traj: Optional[Dict[int, List[int]]] = None,
+        local_frame_indices_by_traj: Optional[Dict[int, List[int]]] = None,
+        x_values_by_traj: Optional[Dict[int, np.ndarray]] = None
     ) -> None:
         """
         Plot feature lines colored by tags.
@@ -389,8 +411,10 @@ class TimeSeriesTagColoringHelper:
             Tag mapping
         tag_colors : Dict[str, str]
             Tag color mapping
-        feature_selector_name : str
-            Feature selector name
+        matrix : np.ndarray
+            Preloaded selection matrix for this plot call
+        frame_mapping : Dict[int, Tuple[int, int]]
+            Preloaded frame mapping for this plot call
         use_time : bool
             Use time (True) or frames (False)
         smoothing : bool, default=True
@@ -403,6 +427,8 @@ class TimeSeriesTagColoringHelper:
             Polynomial order for Savitzky-Golay
         show_unsmoothed_background : bool, default=True
             Show unsmoothed data as transparent background when smoothing is enabled
+        thickness : float, default=1.0
+            Line width for continuous feature traces.
 
         Returns
         -------
@@ -411,17 +437,20 @@ class TimeSeriesTagColoringHelper:
         Examples
         --------
         >>> TimeSeriesTagColoringHelper.plot_feature_with_tag_colors(
-        ...     ax, pipeline_data, 0, tag_map, colors, "selector", True
+        ...     ax, pipeline_data, 0, tag_map, colors, matrix, frame_mapping, True
         ... )
         """
         for traj_idx, tags in tag_map.items():
             for tag in tags:
                 color = tag_colors.get(tag, "black")
                 TimeSeriesTagColoringHelper._plot_single_line(
-                    ax, pipeline_data, traj_idx, feat_idx,
-                    feature_selector_name, use_time, color,
+                    ax, pipeline_data, matrix, frame_mapping,
+                    traj_idx, feat_idx, use_time, color,
                     smoothing, smoothing_method, smoothing_window,
-                    smoothing_polyorder, show_unsmoothed_background
+                    smoothing_polyorder, show_unsmoothed_background, thickness,
+                    traj_frame_indices=None if global_frame_indices_by_traj is None else global_frame_indices_by_traj.get(traj_idx),
+                    traj_local_frames=None if local_frame_indices_by_traj is None else local_frame_indices_by_traj.get(traj_idx),
+                    traj_x_values=None if x_values_by_traj is None else x_values_by_traj.get(traj_idx)
                 )
 
     @staticmethod
@@ -431,13 +460,18 @@ class TimeSeriesTagColoringHelper:
         feat_idx: int,
         tag_map: Dict[int, List[str]],
         traj_colors: Dict[str, str],
-        feature_selector_name: str,
+        matrix: np.ndarray,
+        frame_mapping: Dict[int, Tuple[int, int]],
         use_time: bool,
         smoothing: bool = True,
         smoothing_method: str = "savitzky",
         smoothing_window: int = 51,
         smoothing_polyorder: int = 3,
-        show_unsmoothed_background: bool = True
+        show_unsmoothed_background: bool = True,
+        thickness: float = 1.0,
+        global_frame_indices_by_traj: Optional[Dict[int, List[int]]] = None,
+        local_frame_indices_by_traj: Optional[Dict[int, List[int]]] = None,
+        x_values_by_traj: Optional[Dict[int, np.ndarray]] = None
     ) -> None:
         """
         Plot feature lines colored by trajectory.
@@ -454,8 +488,10 @@ class TimeSeriesTagColoringHelper:
             Tag mapping (keys used for trajectory indices)
         traj_colors : Dict[str, str]
             Trajectory name -> color mapping
-        feature_selector_name : str
-            Feature selector name
+        matrix : np.ndarray
+            Preloaded selection matrix for this plot call
+        frame_mapping : Dict[int, Tuple[int, int]]
+            Preloaded frame mapping for this plot call
         use_time : bool
             Use time (True) or frames (False)
         smoothing : bool, default=True
@@ -468,6 +504,8 @@ class TimeSeriesTagColoringHelper:
             Polynomial order for Savitzky-Golay
         show_unsmoothed_background : bool, default=True
             Show unsmoothed data as transparent background when smoothing is enabled
+        thickness : float, default=1.0
+            Line width for continuous feature traces.
 
         Returns
         -------
@@ -476,33 +514,41 @@ class TimeSeriesTagColoringHelper:
         Examples
         --------
         >>> TimeSeriesTagColoringHelper.plot_feature_with_trajectory_colors(
-        ...     ax, pipeline_data, 0, tag_map, colors, "selector", True
+        ...     ax, pipeline_data, 0, tag_map, colors, matrix, frame_mapping, True
         ... )
         """
         for traj_idx in tag_map.keys():
             traj_name = pipeline_data.trajectory_data.trajectory_names[traj_idx]
             color = traj_colors.get(traj_name, "black")
             TimeSeriesTagColoringHelper._plot_single_line(
-                ax, pipeline_data, traj_idx, feat_idx,
-                feature_selector_name, use_time, color,
+                ax, pipeline_data, matrix, frame_mapping,
+                traj_idx, feat_idx, use_time, color,
                 smoothing, smoothing_method, smoothing_window,
-                smoothing_polyorder, show_unsmoothed_background
+                smoothing_polyorder, show_unsmoothed_background, thickness,
+                traj_frame_indices=None if global_frame_indices_by_traj is None else global_frame_indices_by_traj.get(traj_idx),
+                traj_local_frames=None if local_frame_indices_by_traj is None else local_frame_indices_by_traj.get(traj_idx),
+                traj_x_values=None if x_values_by_traj is None else x_values_by_traj.get(traj_idx)
             )
 
     @staticmethod
     def _plot_single_line(
         ax: plt.Axes,
         pipeline_data: PipelineData,
+        matrix: np.ndarray,
+        frame_mapping: Dict[int, Tuple[int, int]],
         traj_idx: int,
         feat_idx: int,
-        feature_selector_name: str,
         use_time: bool,
         color: str,
         smoothing: bool = True,
         smoothing_method: str = "savitzky",
         smoothing_window: int = 51,
         smoothing_polyorder: int = 3,
-        show_unsmoothed_background: bool = True
+        show_unsmoothed_background: bool = True,
+        thickness: float = 1.0,
+        traj_frame_indices: Optional[List[int]] = None,
+        traj_local_frames: Optional[List[int]] = None,
+        traj_x_values: Optional[np.ndarray] = None
     ) -> None:
         """
         Plot single trajectory line.
@@ -513,12 +559,14 @@ class TimeSeriesTagColoringHelper:
             Axes to plot on
         pipeline_data : PipelineData
             Pipeline data container
+        matrix : np.ndarray
+            Preloaded selection matrix for this plot call
+        frame_mapping : Dict[int, Tuple[int, int]]
+            Preloaded frame mapping for this plot call
         traj_idx : int
             Trajectory index
         feat_idx : int
             Feature index
-        feature_selector_name : str
-            Feature selector name
         use_time : bool
             Use time or frames
         color : str
@@ -533,6 +581,8 @@ class TimeSeriesTagColoringHelper:
             Polynomial order for Savitzky-Golay
         show_unsmoothed_background : bool, default=True
             Show unsmoothed data as transparent background when smoothing is enabled
+        thickness : float, default=1.0
+            Line width for continuous feature traces.
 
         Returns
         -------
@@ -541,23 +591,25 @@ class TimeSeriesTagColoringHelper:
         Examples
         --------
         >>> TimeSeriesTagColoringHelper._plot_single_line(
-        ...     ax, pipeline_data, 0, 5, "selector", True, "blue"
+        ...     ax, pipeline_data, matrix, frame_mapping, 0, 5, True, "blue"
         ... )
         """
-        trajectory = pipeline_data.trajectory_data.trajectories[traj_idx]
-        matrix, frame_mapping = pipeline_data.get_selected_data(
-            feature_selector_name, return_frame_mapping=True
-        )
-
-        traj_frame_indices = TimeSeriesTagColoringHelper._get_trajectory_frame_indices(
-            frame_mapping, traj_idx
-        )
+        if traj_frame_indices is None:
+            traj_frame_indices = TimeSeriesTagColoringHelper._get_trajectory_frame_indices(
+                frame_mapping, traj_idx
+            )
 
         y_values = matrix[traj_frame_indices, feat_idx]
 
-        if use_time:
-            local_frames = [frame_mapping[i][1] for i in traj_frame_indices]
-            x_values = trajectory.time[local_frames] / 1000
+        if traj_x_values is not None:
+            x_values = np.asarray(traj_x_values)
+            if x_values.size != len(y_values):
+                x_values = x_values[:len(y_values)]
+        elif use_time:
+            if traj_local_frames is None:
+                traj_local_frames = [frame_mapping[i][1] for i in traj_frame_indices]
+            trajectory = pipeline_data.trajectory_data.trajectories[traj_idx]
+            x_values = trajectory.time[traj_local_frames] / 1000
         else:
             x_values = np.arange(len(y_values))
 
@@ -566,24 +618,28 @@ class TimeSeriesTagColoringHelper:
 
         # Plot unsmoothed background if requested
         if effective_smoothing_method and show_unsmoothed_background:
-            ax.plot(x_values, y_values, color=color, linewidth=1.0, alpha=0.15)
+            ax.plot(x_values, y_values, color=color, linewidth=thickness, alpha=0.15)
 
         # Plot smoothed or original data
         if effective_smoothing_method:
             y_smoothed = SmoothingHelper.apply_smoothing(
                 y_values, effective_smoothing_method, smoothing_window, smoothing_polyorder
             )
-            ax.plot(x_values, y_smoothed, color=color, linewidth=1.0, alpha=0.8)
+            y_plot_values = y_smoothed
         else:
-            ax.plot(x_values, y_values, color=color, linewidth=1.0, alpha=0.8)
+            y_plot_values = y_values
 
-        if hasattr(matrix, '_mmap') and matrix._mmap is not None:
-            matrix._mmap.close()
-        del matrix
+        ax.plot(
+            x_values,
+            y_plot_values,
+            color=color,
+            linewidth=thickness,
+            alpha=0.8
+        )
 
     @staticmethod
     def _get_trajectory_frame_indices(
-        frame_mapping: Dict[int, tuple],
+        frame_mapping: Dict[int, Tuple[int, int]],
         traj_idx: int
     ) -> List[int]:
         """

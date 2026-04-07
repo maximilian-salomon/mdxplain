@@ -24,7 +24,9 @@ Zarr cache manager for memory-efficient trajectory storage.
 Handles conversion from trajectory files to optimized Zarr format using md.iterload().
 """
 
+import gc
 import os
+import hashlib
 import pickle
 import tempfile
 import time
@@ -35,7 +37,9 @@ from typing import Any, Dict, Optional, Tuple
 import mdtraj as md
 import numpy as np
 import zarr
+from mdxplain.utils.cleanup_utils import CleanupUtils
 from mdxplain.utils.progress_utils import ProgressUtils
+from mdxplain.utils.path_utils import PathUtils
 from zarr.codecs import BloscCodec
 
 # Default compression for all zarr operations  
@@ -70,9 +74,13 @@ class ZarrCacheHelper:
         """
         self.chunk_size = chunk_size
         self.compression = compression
-        self.cache_dir = cache_dir
+        self.cache_dir = PathUtils.prepare_directory_path(
+            cache_dir,
+            create=True,
+            purpose="cache directory",
+        )
         
-    def get_cache_path(self, trajectory_file: str, cache_dir: Optional[str] = None) -> str:
+    def get_cache_path(self, trajectory_file: str, cache_dir: Optional[str] = None, traj_name: Optional[str] = None) -> str:
         """
         Generate cache path for trajectory file.
         
@@ -82,6 +90,8 @@ class ZarrCacheHelper:
             Path to trajectory file
         cache_dir : str, optional
             Directory for cache files (default: ./cache)
+        traj_name : str, optional
+            Explicit name for the trajectory. If None, the file stem is used.
             
         Returns
         -------
@@ -91,22 +101,38 @@ class ZarrCacheHelper:
         Examples
         --------
         >>> cache_manager = ZarrCacheHelper()
-        >>> # Default cache directory
-        >>> path = cache_manager.get_cache_path('/data/traj.xtc')
-        >>> print(path)  # './cache/traj.dask.zarr'
-        >>> # Custom cache directory
-        >>> path = cache_manager.get_cache_path('/data/traj.xtc', '/tmp/cache')
-        >>> print(path)  # '/tmp/cache/traj.dask.zarr'
+        >>> # Using file stem as name (default)
+        >>> path = cache_manager.get_cache_path('/data/run1.xtc')
+        >>> # Output format: './cache/run1_<hash>.dask.zarr'
+        >>> # Using an explicit trajectory name
+        >>> path = cache_manager.get_cache_path('/data/run1.xtc', traj_name='A_Y4R_hpp_run1')
+        >>> # Output format: './cache/A_Y4R_hpp_run1_<hash>.dask.zarr'
         """
-        # Determine cache directory
+        trajectory_file = PathUtils.prepare_file_path(
+            trajectory_file,
+            create_parent=False,
+            purpose="trajectory file path",
+        )
         if cache_dir is None:
             cache_dir = self.cache_dir
+        else:
+            cache_dir = PathUtils.prepare_directory_path(
+                cache_dir,
+                create=True,
+                purpose="cache directory",
+            )
         
-        # Generate cache filename
-        traj_name = Path(trajectory_file).stem
-        cache_filename = f"{traj_name}.dask.zarr"
+        # Generate cache filename with hash of the absolute path to prevent collisions
+        traj_path_abs = os.path.abspath(trajectory_file)
+        path_hash = hashlib.md5(traj_path_abs.encode('utf-8')).hexdigest()[:8]
+        base_name = traj_name if traj_name else Path(trajectory_file).stem
+        cache_filename = f"{base_name}_{path_hash}.dask.zarr"
         
-        return os.path.join(cache_dir, cache_filename)
+        return PathUtils.prepare_file_path(
+            os.path.join(cache_dir, cache_filename),
+            create_parent=True,
+            purpose="zarr cache path",
+        )
         
     def cache_exists(self, cache_path: str) -> bool:
         """
@@ -427,8 +453,16 @@ class ZarrCacheHelper:
             'n_atoms': traj_info['n_atoms'],
             'n_residues': topology.n_residues,
             'chunk_size': self.chunk_size,
-            'trajectory_file': os.path.abspath(trajectory_file),
-            'topology_file': os.path.abspath(topology_file) if topology_file else None,
+            'trajectory_file': PathUtils.prepare_file_path(
+                trajectory_file,
+                create_parent=False,
+                purpose="trajectory file path",
+            ),
+            'topology_file': PathUtils.prepare_file_path(
+                topology_file,
+                create_parent=False,
+                purpose="topology file path",
+            ) if topology_file else None,
             'created_time': time.time(),
             'has_unitcell': traj_info['has_unitcell']
         }
@@ -527,11 +561,11 @@ class ZarrCacheHelper:
         
         # Always delete existing cache to fulfill user requirement for fresh initialization
         if os.path.exists(cache_path):
+            # Trigger finalizers for unreferenced trajectory objects so their
+            # zarr handles are released before removing the cache directory.
+            gc.collect()
             print(f"Deleting existing Zarr cache at: {cache_path}")
-            if os.path.isdir(cache_path):
-                shutil.rmtree(cache_path)
-            else:
-                os.remove(cache_path)
+            CleanupUtils.remove_path(cache_path, purpose="zarr cache path")
         
         metadata = self.create_cache(trajectory_file, topology_file, cache_path)
         

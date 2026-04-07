@@ -60,6 +60,7 @@ class ViolinPlotter(FeatureImportanceBasePlotter):
     ...     max_cols=4
     ... )
     """
+    _constant_jitter_cache: Dict[int, np.ndarray] = {}
 
     def plot(
         self,
@@ -571,11 +572,35 @@ class ViolinPlotter(FeatureImportanceBasePlotter):
         for name in selector_names:
             data = selector_data[name].copy()
             if np.var(data) == 0:
-                noise = np.random.normal(0, 0.01, len(data))
+                noise = ViolinPlotter._get_cached_constant_jitter(len(data))
                 data = data + noise
             data_arrays.append(data)
 
         return selector_names, data_arrays
+
+    @staticmethod
+    def _get_cached_constant_jitter(n_points: int) -> np.ndarray:
+        """
+        Return deterministic cached jitter for constant-data violins.
+
+        Parameters
+        ----------
+        n_points : int
+            Target jitter vector length.
+
+        Returns
+        -------
+        np.ndarray
+            Reproducible noise vector with shape `(n_points,)`.
+        """
+        cached = ViolinPlotter._constant_jitter_cache.get(n_points)
+        if cached is not None:
+            return cached
+
+        rng = np.random.default_rng(7 + int(n_points) * 17)
+        jitter = rng.normal(0.0, 0.01, int(n_points))
+        ViolinPlotter._constant_jitter_cache[n_points] = jitter
+        return jitter
 
     @staticmethod
     def _apply_violin_colors(
@@ -689,7 +714,8 @@ class ViolinPlotter(FeatureImportanceBasePlotter):
             Modifies ax in place
         """
         wrapped_title = TitleLegendHelper.wrap_title(
-            feat_name, max_chars_per_line=40
+            TitleLegendHelper.format_bold_superscript_title(feat_name),
+            max_chars_per_line=40
         )
         ax.set_title(wrapped_title, fontsize=subplot_title_fontsize or 14, pad=10, fontweight='bold')
 

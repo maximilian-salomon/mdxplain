@@ -155,7 +155,11 @@ class TestClusteringIntegration:
             selection_name="input_selection", eps=0.5, min_samples=5, use_decomposed=False
         )
 
-        mock_sklearn_dbscan.assert_called_once_with(eps=0.5, min_samples=5)
+        mock_sklearn_dbscan.assert_called_once()
+        dbscan_kwargs = mock_sklearn_dbscan.call_args.kwargs
+        assert dbscan_kwargs.get("eps") == 0.5
+        assert dbscan_kwargs.get("min_samples") == 5
+        assert dbscan_kwargs.get("n_jobs") == -1
         mock_instance.fit_predict.assert_called_once_with(ANY)
 
     @patch('mdxplain.clustering.cluster_type.dbscan.dbscan_calculator.SklearnDBSCAN')
@@ -213,9 +217,16 @@ class TestClusteringIntegration:
         calls = mock_random_choice.call_args_list
         expected_call_found = any(call.args == (100,) and call.kwargs.get('size') == 20 and call.kwargs.get('replace') == False for call in calls)
         assert expected_call_found, f"Expected call with (100, size=20, replace=False) not found. Actual calls: {calls}"
-        mock_sklearn_dbscan.assert_called_once_with(eps=0.5, min_samples=5)
+        mock_sklearn_dbscan.assert_called_once()
+        dbscan_kwargs = mock_sklearn_dbscan.call_args.kwargs
+        assert dbscan_kwargs.get("eps") == 0.5
+        assert dbscan_kwargs.get("min_samples") == 5
+        assert dbscan_kwargs.get("n_jobs") == -1
         mock_dbscan_instance.fit_predict.assert_called_once()
-        mock_knn.assert_called_once_with(n_neighbors=10)
+        mock_knn.assert_called_once()
+        knn_kwargs = mock_knn.call_args.kwargs
+        assert knn_kwargs.get("n_neighbors") == 10
+        assert knn_kwargs.get("n_jobs") == -1
         mock_knn_instance.fit.assert_called_once()
         mock_knn_instance.predict.assert_called()
 
@@ -309,9 +320,13 @@ class TestClusteringIntegration:
             selection_name="input_selection", min_cluster_size=5, min_samples=3, use_decomposed=False
         )
 
-        mock_hdbscan_lib.assert_called_once_with(
-            min_cluster_size=5, min_samples=3, cluster_selection_epsilon=0.0, cluster_selection_method='eom'
-        )
+        mock_hdbscan_lib.assert_called_once()
+        hdbscan_kwargs = mock_hdbscan_lib.call_args.kwargs
+        assert hdbscan_kwargs.get("min_cluster_size") == 5
+        assert hdbscan_kwargs.get("min_samples") == 3
+        assert hdbscan_kwargs.get("cluster_selection_epsilon") == 0.0
+        assert hdbscan_kwargs.get("cluster_selection_method") == "eom"
+        assert hdbscan_kwargs.get("core_dist_n_jobs") == -1
         mock_instance.fit_predict.assert_called_once_with(ANY)
 
     @patch('mdxplain.clustering.cluster_type.hdbscan.hdbscan_calculator.HDBSCANCalculator._calculate_sample_size')

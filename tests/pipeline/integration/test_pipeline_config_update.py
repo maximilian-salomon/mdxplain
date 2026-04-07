@@ -23,6 +23,7 @@
 import pytest
 import tempfile
 import os
+import re
 import numpy as np
 
 from mdxplain.pipeline.manager.pipeline_manager import PipelineManager
@@ -31,6 +32,19 @@ from tests.fixtures.mock_trajectory_factory import MockTrajectoryFactory
 
 class TestPipelineConfigUpdate:
     """Test pipeline configuration update functionality."""
+
+    @staticmethod
+    def _assert_scoped_cache_path(base_dir: str, scoped_path: str) -> None:
+        """
+        Assert scoped cache path layout: <base>/cache_<uuid>_<YYYYMMDD_HHMMSS>.
+        """
+        normalized_base = os.path.abspath(os.path.normpath(base_dir))
+        normalized_scoped = os.path.abspath(os.path.normpath(scoped_path))
+
+        assert normalized_scoped.startswith(normalized_base + os.sep)
+
+        rel = os.path.relpath(normalized_scoped, normalized_base)
+        assert re.fullmatch(r"cache_[0-9a-f]{32}_\d{8}_\d{6}", rel) is not None
 
     def test_get_initial_config(self):
         """
@@ -48,7 +62,7 @@ class TestPipelineConfigUpdate:
         config = pipeline.get_config()
 
         assert config["chunk_size"] == 1000
-        assert config["cache_dir"] == "./test_cache"
+        self._assert_scoped_cache_path("./test_cache", config["cache_dir"])
         assert config["use_memmap"] is True
 
     def test_update_chunk_size(self, capsys):
@@ -96,23 +110,25 @@ class TestPipelineConfigUpdate:
 
             # Check configuration was updated
             config = pipeline.get_config()
-            assert config["cache_dir"] == new_cache_dir
+            self._assert_scoped_cache_path(new_cache_dir, config["cache_dir"])
+            scoped_cache_dir = config["cache_dir"]
 
             # Check directory was created
             assert os.path.exists(new_cache_dir)
+            assert os.path.exists(scoped_cache_dir)
 
             # Check managers were updated
-            assert pipeline._data.cache_dir == new_cache_dir
-            assert pipeline._trajectory_manager.cache_dir == new_cache_dir
-            assert pipeline._feature_manager.cache_dir == new_cache_dir
-            assert pipeline._decomposition_manager.cache_dir == new_cache_dir
-            assert pipeline._cluster_manager.cache_dir == new_cache_dir
-            assert pipeline._feature_importance_manager.cache_dir == new_cache_dir
+            assert pipeline._data.cache_dir == scoped_cache_dir
+            assert pipeline._trajectory_manager.cache_dir == scoped_cache_dir
+            assert pipeline._feature_manager.cache_dir == scoped_cache_dir
+            assert pipeline._decomposition_manager.cache_dir == scoped_cache_dir
+            assert pipeline._cluster_manager.cache_dir == scoped_cache_dir
+            assert pipeline._feature_importance_manager.cache_dir == scoped_cache_dir
 
             # Check print output
             captured = capsys.readouterr()
             assert "Configuration updated successfully" in captured.out
-            assert f"cache_dir: {new_cache_dir}" in captured.out
+            assert f"cache_dir: {scoped_cache_dir}" in captured.out
 
     def test_update_use_memmap(self, capsys):
         """
@@ -168,17 +184,19 @@ class TestPipelineConfigUpdate:
             # Check all configurations were updated
             config = pipeline.get_config()
             assert config["chunk_size"] == 8000
-            assert config["cache_dir"] == new_cache_dir
+            self._assert_scoped_cache_path(new_cache_dir, config["cache_dir"])
+            scoped_cache_dir = config["cache_dir"]
             assert config["use_memmap"] is True
 
             # Check directory was created
             assert os.path.exists(new_cache_dir)
+            assert os.path.exists(scoped_cache_dir)
 
             # Check print output contains all updates
             captured = capsys.readouterr()
             assert "Configuration updated successfully" in captured.out
             assert "chunk_size: 8000" in captured.out
-            assert f"cache_dir: {new_cache_dir}" in captured.out
+            assert f"cache_dir: {scoped_cache_dir}" in captured.out
             assert "use_memmap: True" in captured.out
 
     def test_update_config_validation_errors(self):
@@ -201,7 +219,9 @@ class TestPipelineConfigUpdate:
             pipeline.update_config(chunk_size="invalid")
 
         # Test invalid cache_dir
-        with pytest.raises(ValueError, match="cache_dir must be a string"):
+        with pytest.raises(
+            ValueError, match="cache directory must be a valid path-like value"
+        ):
             pipeline.update_config(cache_dir=123)
 
         # Test invalid use_memmap
@@ -237,6 +257,7 @@ class TestPipelineConfigUpdate:
 
             # Start with old cache directory and enable memmap for file caching
             pipeline = PipelineManager(chunk_size=1000, cache_dir=old_cache_dir, use_memmap=True)
+            old_runtime_cache_dir = pipeline.get_config()["cache_dir"]
 
             # Setup trajectory data
             mock_traj = MockTrajectoryFactory.create_triangle_atoms(n_frames=5, seed=42)
@@ -250,18 +271,21 @@ class TestPipelineConfigUpdate:
 
             # Update to new cache directory (keeping memmap enabled)
             pipeline.update_config(cache_dir=new_cache_dir)
+            new_runtime_cache_dir = pipeline.get_config()["cache_dir"]
 
             # Perform operation that creates cache files
             pipeline.feature.add.distances(excluded_neighbors=0, force=True)
 
             # Verify both directories exist
-            assert os.path.exists(old_cache_dir), "Old cache directory should still exist"
-            assert os.path.exists(new_cache_dir), "New cache directory should exist"
+            assert os.path.exists(old_cache_dir), "Old cache base directory should still exist"
+            assert os.path.exists(new_cache_dir), "New cache base directory should exist"
+            assert os.path.exists(old_runtime_cache_dir), "Old runtime cache dir should still exist"
+            assert os.path.exists(new_runtime_cache_dir), "New runtime cache dir should exist"
 
             # Verify specific cache file exists in new directory only
             expected_cache_file = "distances_test_traj.dat"
-            old_cache_file_path = os.path.join(old_cache_dir, expected_cache_file)
-            new_cache_file_path = os.path.join(new_cache_dir, expected_cache_file)
+            old_cache_file_path = os.path.join(old_runtime_cache_dir, expected_cache_file)
+            new_cache_file_path = os.path.join(new_runtime_cache_dir, expected_cache_file)
 
             # Old cache directory should NOT contain the cache file
             assert not os.path.exists(old_cache_file_path), f"Cache file should NOT exist in old directory: {old_cache_file_path}"
@@ -275,8 +299,9 @@ class TestPipelineConfigUpdate:
 
             # Verify configuration was correctly updated
             config = pipeline.get_config()
-            assert config["cache_dir"] == new_cache_dir
+            self._assert_scoped_cache_path(new_cache_dir, config["cache_dir"])
             assert config["use_memmap"] is True
+            pipeline.close()
 
     def test_config_update_disables_memmap_no_cache_files(self):
         """
@@ -286,10 +311,11 @@ class TestPipelineConfigUpdate:
         no cache files are created during feature operations.
         """
         with tempfile.TemporaryDirectory() as temp_dir:
-            cache_dir = os.path.join(temp_dir, "cache")
+            base_cache_dir = os.path.join(temp_dir, "cache")
 
             # Start with memmap enabled
-            pipeline = PipelineManager(use_memmap=True, cache_dir=cache_dir)
+            pipeline = PipelineManager(use_memmap=True, cache_dir=base_cache_dir)
+            runtime_cache_dir = pipeline.get_config()["cache_dir"]
 
             # Setup trajectory data
             mock_traj = MockTrajectoryFactory.create_triangle_atoms(n_frames=5, seed=42)
@@ -308,18 +334,19 @@ class TestPipelineConfigUpdate:
             pipeline.feature.add.distances(excluded_neighbors=0, force=True)
 
             # Verify cache directory exists but is empty
-            assert os.path.exists(cache_dir), "Cache directory should exist"
+            assert os.path.exists(base_cache_dir), "Cache base directory should exist"
+            assert os.path.exists(runtime_cache_dir), "Runtime cache directory should exist"
 
             # Verify specific cache file does NOT exist
             expected_cache_file = "distances_test_traj.dat"
-            cache_file_path = os.path.join(cache_dir, expected_cache_file)
+            cache_file_path = os.path.join(runtime_cache_dir, expected_cache_file)
             assert not os.path.exists(cache_file_path), f"Cache file should NOT exist when memmap disabled: {cache_file_path}"
 
             # Verify no memmap cache files exist (other directories like structure_viz/ are OK)
-            cache_files = os.listdir(cache_dir)
+            cache_files = os.listdir(runtime_cache_dir)
             memmap_files = []
             for f in cache_files:
-                fpath = os.path.join(cache_dir, f)
+                fpath = os.path.join(runtime_cache_dir, f)
                 if os.path.isfile(fpath):
                     try:
                         arr = np.load(fpath, mmap_mode='r')
@@ -348,6 +375,7 @@ class TestPipelineConfigUpdate:
                 cache_dir=initial_cache_dir,
                 use_memmap=True
             )
+            initial_runtime_cache_dir = pipeline.get_config()["cache_dir"]
 
             # Update only chunk_size
             pipeline.update_config(chunk_size=4000)
@@ -355,7 +383,7 @@ class TestPipelineConfigUpdate:
             # Verify only chunk_size changed
             config = pipeline.get_config()
             assert config["chunk_size"] == 4000
-            assert config["cache_dir"] == initial_cache_dir
+            assert config["cache_dir"] == initial_runtime_cache_dir
             assert config["use_memmap"] is True
 
             # Update only use_memmap
@@ -364,5 +392,90 @@ class TestPipelineConfigUpdate:
             # Verify only use_memmap changed
             config = pipeline.get_config()
             assert config["chunk_size"] == 4000
-            assert config["cache_dir"] == initial_cache_dir
+            assert config["cache_dir"] == initial_runtime_cache_dir
             assert config["use_memmap"] is False
+
+    def test_update_cache_dir_preserves_scope_suffix(self):
+        """
+        update_config(cache_dir=...) should preserve pipeline scope suffix.
+        """
+        with tempfile.TemporaryDirectory() as temp_dir:
+            initial_base = os.path.join(temp_dir, "initial")
+            new_base = os.path.join(temp_dir, "new")
+            pipeline = PipelineManager(cache_dir=initial_base, use_memmap=True)
+            before = os.path.basename(pipeline.get_config()["cache_dir"])
+            assert re.fullmatch(r"cache_[0-9a-f]{32}_\d{8}_\d{6}", before)
+
+            pipeline.update_config(cache_dir=new_base)
+            after_path = pipeline.get_config()["cache_dir"]
+            after = os.path.basename(after_path)
+
+            assert after == before
+            assert os.path.dirname(after_path) == os.path.abspath(os.path.normpath(new_base))
+
+    def test_two_pipelines_same_base_have_different_scoped_cache_dirs(self):
+        """
+        Two pipelines with same base cache should get distinct scoped cache dirs.
+        """
+        with tempfile.TemporaryDirectory() as temp_dir:
+            base = os.path.join(temp_dir, "shared")
+            p1 = PipelineManager(cache_dir=base, use_memmap=True)
+            p2 = PipelineManager(cache_dir=base, use_memmap=True)
+            try:
+                c1 = p1.get_config()["cache_dir"]
+                c2 = p2.get_config()["cache_dir"]
+
+                assert c1 != c2
+                assert os.path.dirname(c1) == os.path.abspath(os.path.normpath(base))
+                assert os.path.dirname(c2) == os.path.abspath(os.path.normpath(base))
+            finally:
+                p1.close()
+                p2.close()
+
+    def test_update_cache_dir_multiple_switches_preserve_scope_and_write_target(self):
+        """
+        Multiple cache_dir switches should preserve scope suffix and write to latest cache.
+        """
+        with tempfile.TemporaryDirectory() as temp_dir:
+            base_1 = os.path.join(temp_dir, "cache_base_1")
+            base_2 = os.path.join(temp_dir, "cache_base_2")
+            base_3 = os.path.join(temp_dir, "cache_base_3")
+
+            pipeline = PipelineManager(chunk_size=256, cache_dir=base_1, use_memmap=True)
+            try:
+                scope_name = os.path.basename(pipeline.get_config()["cache_dir"])
+
+                mock_traj = MockTrajectoryFactory.create_triangle_atoms(n_frames=6, seed=7)
+                pipeline._data.trajectory_data.trajectories = [mock_traj]
+                pipeline._data.trajectory_data.n_frames = mock_traj.n_frames
+                pipeline._data.trajectory_data.n_atoms = mock_traj.n_atoms
+                pipeline._data.trajectory_data.trajectory_names = ["switch_traj"]
+                pipeline._data.trajectory_data.res_label_data = {
+                    0: [
+                        {"seqid": 0, "full_name": "RES_0"},
+                        {"seqid": 1, "full_name": "RES_1"},
+                        {"seqid": 2, "full_name": "RES_2"},
+                    ]
+                }
+
+                runtime_paths = []
+                for cache_base in (base_1, base_2, base_3):
+                    pipeline.update_config(cache_dir=cache_base)
+                    runtime_cache = pipeline.get_config()["cache_dir"]
+                    runtime_paths.append(runtime_cache)
+
+                    assert os.path.basename(runtime_cache) == scope_name
+                    assert os.path.dirname(runtime_cache) == os.path.abspath(
+                        os.path.normpath(cache_base)
+                    )
+
+                    pipeline.feature.add.distances(excluded_neighbors=0, force=True)
+                    expected_cache_file = os.path.join(
+                        runtime_cache, "distances_switch_traj.dat"
+                    )
+                    assert os.path.exists(expected_cache_file)
+
+                assert runtime_paths[0] != runtime_paths[1]
+                assert runtime_paths[1] != runtime_paths[2]
+            finally:
+                pipeline.close()

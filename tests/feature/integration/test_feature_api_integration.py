@@ -585,7 +585,7 @@ class TestFeatureAPIIntegration:
         Test SASA feature calculation with concrete expected values.
         
         Validates that SASA features with Shrake-Rupley algorithm
-        calculate correct solvent accessible surface area in nm².
+        calculate correct solvent accessible surface area in Å².
         """
         pipeline = self._setup_triangle_pipeline(n_frames=10)
         
@@ -599,7 +599,7 @@ class TestFeatureAPIIntegration:
         pipeline.feature.add.sasa(force=True)
         sasa = pipeline._data.feature_data['sasa'][0].data
         
-        expected = np.array([[0.15, 0.10, 0.05]] * 10)
+        expected = np.array([[15.0, 10.0, 5.0]] * 10)
         np.testing.assert_array_almost_equal(sasa, expected, decimal=3)
         
         # Verify properties
@@ -838,18 +838,18 @@ class TestFeatureAPIIntegration:
         # Add SASA first
         pipeline.feature.add.sasa(force=True)
         
-        # Reduce with mean and filtering: keep atoms with SASA >= 1.0
-        # Expected: only Atom 0 (mean=1.5) should remain
+        # Reduce with mean and filtering: keep atoms with SASA >= 100.0 Å²
+        # Expected: only Atom 0 (mean=150.0 Å²) should remain
         pipeline.feature.reduce.sasa.mean(
             traj_selection="all",
-            threshold_min=1.0  # Keep atoms with reasonable SASA
+            threshold_min=100.0
         )
         
         # Verify reduced data contains filtered original SASA data
         reduced = pipeline._data.feature_data['sasa'][0].reduced_data
         
-        # Expected: only Atom 0's SASA values (1.5) for all frames
-        expected_filtered = np.full((10, 1), 1.5)  # 10 frames × 1 filtered atom
+        # Expected: only Atom 0's SASA values (150.0) for all frames
+        expected_filtered = np.full((10, 1), 150.0)  # 10 frames × 1 filtered atom
         
         # Test concrete expected values
         assert reduced.shape == (10, 1), f"Expected (10, 1), got {reduced.shape}"

@@ -25,8 +25,9 @@ Provides shared utilities for consistent title wrapping, positioning,
 and legend creation across density and violin plots.
 """
 
+import re
 import textwrap
-from typing import Optional, Dict
+from typing import Optional, Dict, List, Tuple, Any
 from matplotlib.figure import Figure
 from matplotlib.patches import Patch
 from matplotlib.lines import Line2D
@@ -94,6 +95,29 @@ class TitleLegendHelper:
         """
         lines = textwrap.wrap(title, width=max_chars_per_line)
         return '\n'.join(lines)
+
+    @staticmethod
+    def format_bold_superscript_title(title: str) -> str:
+        """
+        Make mathtext superscripts bold for plot titles.
+
+        Parameters
+        ----------
+        title : str
+            Title text that may contain mathtext superscripts like
+            ``$^{A.H6.54}$``.
+
+        Returns
+        -------
+        str
+            Title text with superscript content wrapped in ``\\mathbf{...}``
+            when applicable.
+        """
+        return re.sub(
+            r"\$\^\{([^}]*)\}\$",
+            lambda match: f"$^{{\\mathbf{{{match.group(1)}}}}}$",
+            title,
+        )
 
     @staticmethod
     def estimate_title_height(
@@ -275,7 +299,8 @@ class TitleLegendHelper:
         legend_x: float = 0.98,
         legend_y: float = 0.94,
         fontsize: int = 14,
-        title_fontsize: int = 16
+        title_fontsize: int = 16,
+        additional_handles: Optional[List[Any]] = None,
     ) -> None:
         """
         Add figure-wide legend for DataSelectors and contact threshold.
@@ -307,6 +332,9 @@ class TitleLegendHelper:
             Font size for legend entries
         title_fontsize : int, default=16
             Font size for legend title
+        additional_handles : List, optional
+            Additional pre-built matplotlib legend handles appended to the
+            DataSelector legend (for example vertical marker labels).
 
         Returns
         -------
@@ -372,6 +400,9 @@ class TitleLegendHelper:
             )
             legend_handles.append(threshold_line)
 
+        if additional_handles:
+            legend_handles.extend(additional_handles)
+
         legend_title_text = legend_title if legend_title else "DataSelectors"
 
         fig.legend(
@@ -383,3 +414,34 @@ class TitleLegendHelper:
             title_fontproperties={'weight': 'bold', 'size': title_fontsize},
             framealpha=0.9,
         )
+
+    @staticmethod
+    def get_side_legend_anchor(
+        fig: Figure,
+        rightmost_ax_first_row,
+        gap_inches: float = 0.1,
+        y_offset: float = 0.0
+    ) -> Tuple[float, float]:
+        """
+        Compute side-legend anchor from the first row's rightmost subplot.
+
+        Parameters
+        ----------
+        fig : Figure
+            Figure hosting the subplots.
+        rightmost_ax_first_row : matplotlib.axes.Axes
+            Rightmost subplot in the first row.
+        gap_inches : float, default=0.1
+            Horizontal gap in inches between axes and legend.
+        y_offset : float, default=0.0
+            Additional offset in figure coordinates applied to y.
+
+        Returns
+        -------
+        Tuple[float, float]
+            `(legend_x, legend_y)` in figure coordinates.
+        """
+        pos = rightmost_ax_first_row.get_position()
+        legend_x = pos.x1 + (gap_inches / fig.get_figwidth())
+        legend_y = min(0.99, max(0.01, pos.y1 + y_offset))
+        return legend_x, legend_y

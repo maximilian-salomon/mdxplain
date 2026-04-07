@@ -26,7 +26,7 @@ decomposition-focused and clustering-focused plot methods, as well
 as direct plotting capabilities.
 """
 
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union, Dict
 from matplotlib.figure import Figure
 
 from ..services.decomposition_facade import DecompositionFacade
@@ -35,6 +35,7 @@ from ..services.feature_importance_facade import FeatureImportanceFacade
 from ..services.feature_facade import FeatureFacade
 from ..plot_type.landscape import LandscapePlotter
 from ..plot_type.membership import MembershipPlotter
+from ...utils.path_utils import PathUtils
 
 
 class PlotsManager:
@@ -106,7 +107,11 @@ class PlotsManager:
         """
         self.use_memmap = use_memmap
         self.chunk_size = chunk_size
-        self.cache_dir = cache_dir
+        self.cache_dir = PathUtils.prepare_directory_path(
+            cache_dir,
+            create=True,
+            purpose="cache directory",
+        )
 
     @property
     def decomposition(self) -> DecompositionFacade:
@@ -250,6 +255,9 @@ class PlotsManager:
         center_marker: str = "X",
         center_size: int = 200,
         scatter_size: int = 1,
+        background_color: Union[bool, str] = True,
+        class_colors: Union[bool, Dict, List] = True,
+        tag_densities: bool = False,
         title: Optional[str] = None,
         xaxis_label: Optional[str] = None,
         yaxis_label: Optional[str] = None,
@@ -440,6 +448,9 @@ class PlotsManager:
             center_marker=center_marker,
             center_size=center_size,
             scatter_size=scatter_size,
+            background_color=background_color,
+            class_colors=class_colors,
+            tag_densities=tag_densities,
             title=title,
             xaxis_label=xaxis_label,
             yaxis_label=yaxis_label,

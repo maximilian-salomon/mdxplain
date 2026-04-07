@@ -39,6 +39,7 @@ from ..helper.metadata_helper.tag_helper import TagHelper
 from ..helper.process_helper.trajectory_process_helper import TrajectoryProcessHelper
 from ..helper.process_helper.label_operation_helper import LabelOperationHelper
 from ..helper.validation_helper.trajectory_validation_helper import TrajectoryValidationHelper
+from ...utils.path_utils import PathUtils
 
 
 class TrajectoryManager:
@@ -107,10 +108,13 @@ class TrajectoryManager:
         self.default_stride = stride
         self.default_concat = concat
         self.default_selection = selection
-        self.cache_dir = cache_dir
+        self.cache_dir = PathUtils.prepare_directory_path(
+            cache_dir,
+            create=True,
+            purpose="cache directory",
+        )
         self.use_memmap = use_memmap
         self.chunk_size = chunk_size
-        os.makedirs(self.cache_dir, exist_ok=True)
 
         if stride <= 0:
             raise ValueError("Stride must be a positive integer.")
@@ -1484,7 +1488,12 @@ class TrajectoryManager:
 
             # Perform alignment
             result = self._call_traj_method(
-                trajectory, "superpose", reference=ref_frame, atom_indices=traj_atom_indices, inplace=inplace
+                trajectory,
+                "superpose",
+                reference=ref_frame,
+                atom_indices=traj_atom_indices,
+                ref_atom_indices=ref_atom_indices,
+                inplace=inplace,
             )
             
             # Update trajectory in pipeline data

@@ -49,7 +49,14 @@ Thumbs.db
 /data/3sn6/
 /data/9mqh.pdb
 /notebooks/
+/benchmark*/
 CLAUDE.md
 RULES.md
 tutorials/cache/
 /docs/_build
+.codex
+_assets/
+# Benchmarks
+
+cache/
+data/benchmarks/

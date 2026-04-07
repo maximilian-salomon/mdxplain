@@ -123,9 +123,9 @@ class SASAReduceService(ReduceServiceBase):
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
-            Minimum range threshold (nm²)
+            Minimum range threshold (Å²)
         threshold_max : float, optional
-            Maximum range threshold (nm²)
+            Maximum range threshold (Å²)
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
 
@@ -176,9 +176,9 @@ class SASAReduceService(ReduceServiceBase):
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
-            Minimum std threshold (nm²)
+            Minimum std threshold (Å²)
         threshold_max : float, optional
-            Maximum std threshold (nm²)
+            Maximum std threshold (Å²)
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
 
@@ -326,9 +326,9 @@ class SASAReduceService(ReduceServiceBase):
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
-            Minimum mean SASA in nm²
+            Minimum mean SASA in Å²
         threshold_max : float, optional
-            Maximum mean SASA in nm²
+            Maximum mean SASA in Å²
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
             
@@ -376,9 +376,9 @@ class SASAReduceService(ReduceServiceBase):
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
-            Minimum SASA minimum in nm²
+            Minimum SASA minimum in Å²
         threshold_max : float, optional
-            Maximum SASA minimum in nm²
+            Maximum SASA minimum in Å²
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
             
@@ -426,9 +426,9 @@ class SASAReduceService(ReduceServiceBase):
         traj_selection : str, int, list, default="all"
             Which trajectories to analyze for reduction
         threshold_min : float, optional
-            Minimum SASA maximum in nm²
+            Minimum SASA maximum in Å²
         threshold_max : float, optional
-            Maximum SASA maximum in nm²
+            Maximum SASA maximum in Å²
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
             
@@ -481,7 +481,7 @@ class SASAReduceService(ReduceServiceBase):
         threshold_min : float, optional
             Minimum burial fraction (0-1)
         threshold_max : float, optional
-            SASA cutoff for buried state (nm²)
+            SASA cutoff for buried state (Å²)
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
             
@@ -540,7 +540,7 @@ class SASAReduceService(ReduceServiceBase):
         threshold_min : float, optional
             Minimum exposure fraction (0-1)
         threshold_max : float, optional
-            SASA cutoff for exposed state (nm²)
+            SASA cutoff for exposed state (Å²)
         cross_trajectory : bool, default=False
             If True, find common features across all selected trajectories
             
@@ -584,7 +584,7 @@ class SASAReduceService(ReduceServiceBase):
         traj_selection: Union[str, int, List] = "all",
         threshold_min: Optional[float] = None,
         threshold_max: Optional[float] = None,
-        transition_threshold: float = 0.5,
+        transition_threshold: float = 50.0,
         window_size: int = 10,
         transition_mode: str = "window",
         lag_time: int = 1,
@@ -604,8 +604,8 @@ class SASAReduceService(ReduceServiceBase):
             Minimum number of transitions
         threshold_max : float, optional
             Maximum number of transitions
-        transition_threshold : float, default=0.5
-            SASA threshold for detecting transitions (nm²)
+        transition_threshold : float, default=50.0
+            SASA threshold for detecting transitions (Å²)
         window_size : int, default=10
             Window size for transition analysis
         transition_mode : str, default="window"
@@ -625,7 +625,7 @@ class SASAReduceService(ReduceServiceBase):
         >>> # Keep residues with many burial/exposure transitions
         >>> pipeline.feature.reduce.sasa.transitions(
         ...     threshold_min=6,
-        ...     transition_threshold=0.8
+        ...     transition_threshold=80.0
         ... )
 
         >>> # Keep stable surface accessibility
@@ -638,7 +638,7 @@ class SASAReduceService(ReduceServiceBase):
         >>> pipeline.feature.reduce.sasa.transitions(
         ...     threshold_min=3,
         ...     threshold_max=10,
-        ...     transition_threshold=0.5
+        ...     transition_threshold=50.0
         ... )
         """
         return self._manager.reduce_data(

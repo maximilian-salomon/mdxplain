@@ -33,7 +33,7 @@ import numpy as np
 
 from mdxplain.utils.progress_utils import ProgressUtils
 from mdxplain.utils.resource_utils import ResourceUtils
-from mdxplain.utils.data_utils import DataUtils
+from mdxplain.utils.memmap_utils import MemmapUtils
 
 from .feature_shape_helper import FeatureShapeHelper
 
@@ -256,14 +256,13 @@ class CalculatorComputeHelper:
             if output_path is None:
                 raise ValueError("output_path must be provided when use_memmap=True")
 
-            n_selected = np.sum(mask.flatten())
-            dynamic_data = np.memmap(
-                output_path,
+            n_selected = int(np.sum(mask.flatten()))
+            dynamic_data = MemmapUtils.create_memmap(
+                path=output_path,
                 dtype=data.dtype,
                 mode="w+",
                 shape=(data.shape[0], n_selected),
             )
-            ResourceUtils.tune_memmap(dynamic_data, "random")
             CalculatorComputeHelper._fill_memmap_data(
                 data, dynamic_data, mask, chunk_size
             )
@@ -334,9 +333,9 @@ class CalculatorComputeHelper:
         None
             Fills dynamic_data array in-place
         """
-        if DataUtils.is_memmap_view(data):
+        if MemmapUtils.is_memmap_view(data):
             ResourceUtils.tune_memmap(data, "sequential")
-        if DataUtils.is_memmap_view(dynamic_data):
+        if MemmapUtils.is_memmap_view(dynamic_data):
             ResourceUtils.tune_memmap(dynamic_data, "sequential")
         for i in ProgressUtils.iterate(
             range(0, data.shape[0], chunk_size),
@@ -348,11 +347,10 @@ class CalculatorComputeHelper:
             CalculatorComputeHelper._process_chunk(
                 chunk, dynamic_data, mask, i, end_idx, is_square_format
             )
-            if hasattr(dynamic_data, "flush"):
-                dynamic_data.flush()
-        if DataUtils.is_memmap_view(data):
+            MemmapUtils.evict_memory_range(dynamic_data, i, end_idx)
+        if MemmapUtils.is_memmap_view(data):
             ResourceUtils.tune_memmap(data, "random")
-        if DataUtils.is_memmap_view(dynamic_data):
+        if MemmapUtils.is_memmap_view(dynamic_data):
             ResourceUtils.tune_memmap(dynamic_data, "random")
 
     @staticmethod
@@ -378,8 +376,8 @@ class CalculatorComputeHelper:
         None
             Fills dynamic_data array in-place
         """
-        is_memmap_data = DataUtils.is_memmap_view(data)
-        is_memmap_output = DataUtils.is_memmap_view(dynamic_data)
+        is_memmap_data = MemmapUtils.is_memmap_view(data)
+        is_memmap_output = MemmapUtils.is_memmap_view(dynamic_data)
         if is_memmap_data:
             ResourceUtils.tune_memmap(data, "sequential")
         if is_memmap_output:
@@ -393,8 +391,7 @@ class CalculatorComputeHelper:
             ):
                 end_idx = min(i + chunk_size, data.shape[0])
                 dynamic_data[i:end_idx] = data[i:end_idx, indices[0], indices[1]]
-                if hasattr(dynamic_data, "flush"):
-                    dynamic_data.flush()
+                MemmapUtils.evict_memory_range(dynamic_data, i, end_idx)
         else:
             data_flat = data.reshape(data.shape[0], -1)
             for i in ProgressUtils.iterate(
@@ -404,8 +401,7 @@ class CalculatorComputeHelper:
             ):
                 end_idx = min(i + chunk_size, data.shape[0])
                 dynamic_data[i:end_idx] = data_flat[i:end_idx, mask.flatten()]
-                if hasattr(dynamic_data, "flush"):
-                    dynamic_data.flush()
+                MemmapUtils.evict_memory_range(dynamic_data, i, end_idx)
         if is_memmap_data:
             ResourceUtils.tune_memmap(data, "random")
         if is_memmap_output:
@@ -587,8 +583,11 @@ class CalculatorComputeHelper:
             Created output array
         """
         if use_memmap:
-            output = np.memmap(path, dtype=dtype, mode="w+", shape=output_shape)
-            ResourceUtils.tune_memmap(output, "random")
-            return output
+            return MemmapUtils.create_memmap(
+                path=path,
+                dtype=dtype,
+                mode="w+",
+                shape=output_shape,
+            )
         else:
             return np.zeros(output_shape, dtype=dtype)

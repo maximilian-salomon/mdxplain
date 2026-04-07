@@ -37,7 +37,9 @@ from sklearn.metrics.pairwise import rbf_kernel
 from sklearn.utils.parallel import Parallel, delayed
 
 from ..interfaces.calculator_base import CalculatorBase
-from ....utils.data_utils import DataUtils
+from ....utils.cleanup_utils import CleanupUtils
+from ....utils.memmap_utils import MemmapUtils
+from ....utils.path_utils import PathUtils
 from ....utils.resource_utils import ResourceUtils
 from ..helper.automatic_parameter_helper import AutomaticParameterHelper
 
@@ -120,6 +122,7 @@ class KernelPCACalculator(CalculatorBase):
         self.min_chunk_size = min_chunk_size
         self.max_blas_threads = max_blas_threads
         self.auto_limit_blas = auto_limit_blas
+        self._temp_memmap_paths = []
 
     def _limit_threadpools(self):
         """
@@ -186,7 +189,7 @@ class KernelPCACalculator(CalculatorBase):
                 Whether to use Nyström approximation (default: False)
             - n_landmarks : int, optional
                 Number of landmarks for Nyström approximation (default: 10000)
-            - landmark_selection : str, optional
+            - landmark_selection_mode : str, optional
                 Method for landmark selection in Nyström approximation (default: "kmeans")
                 - "kmeans": Use KMeans centroids as landmarks (better coverage)
                 - "random": Use random sampling from data
@@ -217,6 +220,7 @@ class KernelPCACalculator(CalculatorBase):
         """
         self._validate_input_data(data)
         hyperparameters = self._extract_hyperparameters(data, kwargs)
+        self._temp_memmap_paths = []
 
         with self._limit_threadpools():
             if hyperparameters["use_nystrom"]:
@@ -237,6 +241,7 @@ class KernelPCACalculator(CalculatorBase):
                 transformed_data, metadata, hyperparameters["n_components"], hyperparameters["offset"]
             )
 
+        self._cleanup_tracked_temp_memmaps()
         return transformed_data, metadata
 
     def _apply_auto_selection(
@@ -342,7 +347,7 @@ class KernelPCACalculator(CalculatorBase):
         gamma = kwargs.get("gamma", None)
         use_nystrom = kwargs.get("use_nystrom", False)
         n_landmarks = kwargs.get("n_landmarks", 10000)
-        landmark_selection = kwargs.get("landmark_selection", "kmeans")
+        landmark_selection_mode = kwargs.get("landmark_selection_mode", "kmeans")
         random_state = kwargs.get("random_state", None)
         offset = kwargs.get("offset", 0)
 
@@ -354,8 +359,10 @@ class KernelPCACalculator(CalculatorBase):
             data, use_nystrom, n_landmarks, n_components
         )
 
-        if use_nystrom and landmark_selection not in ["kmeans", "random"]:
-            raise ValueError(f"Invalid landmark_selection: '{landmark_selection}'. Must be 'kmeans' or 'random'.")
+        if use_nystrom and landmark_selection_mode not in ["kmeans", "random"]:
+            raise ValueError(
+                f"Invalid landmark_selection_mode: '{landmark_selection_mode}'. Must be 'kmeans' or 'random'."
+            )
 
         return {
             "n_components": n_components,
@@ -363,7 +370,7 @@ class KernelPCACalculator(CalculatorBase):
             "gamma": gamma,
             "use_nystrom": use_nystrom,
             "n_landmarks": n_landmarks,
-            "landmark_selection": landmark_selection,
+            "landmark_selection_mode": landmark_selection_mode,
             "random_state": random_state,
             "auto_select": auto_select,
             "offset": offset,
@@ -491,7 +498,7 @@ class KernelPCACalculator(CalculatorBase):
         tuple
             Tuple of (transformed_data, metadata)
         """
-        if DataUtils.is_memmap_view(data):
+        if MemmapUtils.is_memmap_view(data):
             ResourceUtils.tune_memmap(data, "sequential")
 
         kpca = KernelPCA(
@@ -504,7 +511,7 @@ class KernelPCACalculator(CalculatorBase):
         )
 
         transformed_data = kpca.fit_transform(data)
-        if DataUtils.is_memmap_view(data):
+        if MemmapUtils.is_memmap_view(data):
             ResourceUtils.tune_memmap(data, "random")
 
         metadata = self._prepare_metadata(hyperparameters, data.shape)
@@ -534,11 +541,12 @@ class KernelPCACalculator(CalculatorBase):
         """
         n_samples = data.shape[0]
 
-        if DataUtils.is_memmap_view(data):
+        if MemmapUtils.is_memmap_view(data):
             ResourceUtils.tune_memmap(data, "sequential")
 
         # Create kernel matrix as memmap if use_memmap=True
         kernel_matrix = self._create_kernel_memmap(n_samples)
+        self._track_temp_memmap(kernel_matrix)
         if self.use_memmap:
             ResourceUtils.tune_memmap(kernel_matrix, "sequential")
 
@@ -567,11 +575,11 @@ class KernelPCACalculator(CalculatorBase):
                 block = rbf_kernel(chunk_i, chunk_j, gamma=gamma)
                 kernel_matrix[row_start:row_end, col_start:col_end] = block
             if self.use_memmap:
-                kernel_matrix.flush()
+                MemmapUtils.evict_memory_range(kernel_matrix, row_start, row_end)
 
         if self.use_memmap:
             ResourceUtils.tune_memmap(kernel_matrix, "random")
-        if DataUtils.is_memmap_view(data):
+        if MemmapUtils.is_memmap_view(data):
             ResourceUtils.tune_memmap(data, "random")
 
         return kernel_matrix
@@ -593,7 +601,7 @@ class KernelPCACalculator(CalculatorBase):
         n_samples = kernel_matrix.shape[0]
         row_sums = np.zeros(n_samples, dtype=np.float64)
         col_sums = np.zeros(n_samples, dtype=np.float64)
-        is_memmap = DataUtils.is_memmap_view(kernel_matrix)
+        is_memmap = MemmapUtils.is_memmap_view(kernel_matrix)
         if is_memmap:
             ResourceUtils.tune_memmap(kernel_matrix, "sequential")
         
@@ -644,7 +652,7 @@ class KernelPCACalculator(CalculatorBase):
             Modifies kernel_matrix in-place
         """
         n_samples = kernel_matrix.shape[0]
-        is_memmap = DataUtils.is_memmap_view(kernel_matrix)
+        is_memmap = MemmapUtils.is_memmap_view(kernel_matrix)
         if is_memmap:
             ResourceUtils.tune_memmap(kernel_matrix, "sequential")
         
@@ -660,8 +668,7 @@ class KernelPCACalculator(CalculatorBase):
                                     row_means[i:i_end, np.newaxis] - 
                                     col_means[np.newaxis, :] + 
                                     grand_mean)
-            if hasattr(kernel_matrix, "flush"):
-                kernel_matrix.flush()
+            MemmapUtils.evict_memory_range(kernel_matrix, i, i_end)
         if is_memmap:
             ResourceUtils.tune_memmap(kernel_matrix, "random")
 
@@ -728,18 +735,17 @@ class KernelPCACalculator(CalculatorBase):
 
         # Store transformed_data as memmap when use_memmap=True
         if self.use_memmap:
-            memmap_path = DataUtils.get_cache_file_path(
+            memmap_path = PathUtils.get_cache_file_path(
                 f"{self._cache_prefix}_iterative.dat", self.cache_path
             )
-            transformed_memmap = np.memmap(
-                memmap_path,
+            transformed_memmap = MemmapUtils.create_memmap(
+                path=memmap_path,
                 dtype=transformed_data.dtype,
                 mode="w+",
                 shape=transformed_data.shape,
             )
-            ResourceUtils.tune_memmap(transformed_memmap, "random")
             transformed_memmap[:] = transformed_data
-            transformed_memmap.flush()
+            MemmapUtils.evict_from_os_cache(transformed_memmap)
             transformed_data = transformed_memmap
 
         metadata = self._prepare_metadata(hyperparameters, data.shape)
@@ -774,7 +780,7 @@ class KernelPCACalculator(CalculatorBase):
         """
         n_samples = kernel_matrix.shape[0]
         result = np.zeros(n_samples, dtype=v.dtype)
-        is_memmap = DataUtils.is_memmap_view(kernel_matrix)
+        is_memmap = MemmapUtils.is_memmap_view(kernel_matrix)
         if is_memmap:
             ResourceUtils.tune_memmap(kernel_matrix, "sequential")
         
@@ -809,7 +815,7 @@ class KernelPCACalculator(CalculatorBase):
             Resulting vector from the multiplication
         """
         n_samples = kernel_matrix.shape[0]
-        is_memmap = DataUtils.is_memmap_view(kernel_matrix)
+        is_memmap = MemmapUtils.is_memmap_view(kernel_matrix)
         
         def process_chunk(start_index):
             end_index = min(start_index + parallel_chunk_size, n_samples)
@@ -876,17 +882,60 @@ class KernelPCACalculator(CalculatorBase):
         numpy.memmap
             Memory-mapped kernel matrix
         """
-        memmap_path = DataUtils.get_cache_file_path(
+        memmap_path = PathUtils.get_cache_file_path(
             f"{self._cache_prefix}_kernel_matrix.dat", self.cache_path
         )
-
         # RBF kernel values are always float64
-        kernel_matrix = np.memmap(
-            memmap_path, dtype=float, mode="w+", shape=(n_samples, n_samples)
+        kernel_matrix = MemmapUtils.create_memmap(
+            path=memmap_path,
+            dtype=float,
+            mode="w+",
+            shape=(n_samples, n_samples),
         )
-        ResourceUtils.tune_memmap(kernel_matrix, "random")
 
         return kernel_matrix
+
+    def _track_temp_memmap(self, array: np.ndarray) -> None:
+        """
+        Track a temporary memmap-backed array for cleanup after compute().
+
+        Parameters
+        ----------
+        array : numpy.ndarray
+            Array that may be backed by a temporary memmap file.
+
+        Returns
+        -------
+        None
+        """
+        if not self.use_memmap:
+            return
+        if not MemmapUtils.is_memmap_view(array):
+            return
+        path = getattr(array, "filename", None)
+        if isinstance(path, str) and path and path not in self._temp_memmap_paths:
+            self._temp_memmap_paths.append(path)
+
+    def _cleanup_tracked_temp_memmaps(self) -> None:
+        """
+        Cleanup all tracked temporary memmap files from the current compute run.
+
+        Returns
+        -------
+        None
+        """
+        if not self.use_memmap:
+            self._temp_memmap_paths = []
+            return
+
+        for path in self._temp_memmap_paths:
+            CleanupUtils.remove_file(
+                path,
+                missing_ok=True,
+                ignore_errors=True,
+                purpose="temporary memmap path",
+            )
+        self._temp_memmap_paths = []
 
     def _compute_nystrom_kernel_pca(self, data: np.ndarray, hyperparameters: Dict[str, Any]) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
@@ -908,10 +957,10 @@ class KernelPCACalculator(CalculatorBase):
             Tuple of (transformed_data, metadata)
         """
         n_samples = data.shape[0]
-        is_memmap_data = DataUtils.is_memmap_view(data)
+        is_memmap_data = MemmapUtils.is_memmap_view(data)
         n_landmarks = hyperparameters["n_landmarks"]
         n_components = hyperparameters["n_components"]
-        landmark_selection = hyperparameters.get("landmark_selection", "kmeans")
+        landmark_selection_mode = hyperparameters.get("landmark_selection_mode", "kmeans")
 
         # Validate chunk size for IncrementalPCA
         # IPCA requires batch_size >= n_components
@@ -925,7 +974,7 @@ class KernelPCACalculator(CalculatorBase):
             if processing_chunk_size > n_samples:
                  raise ValueError(f"n_components ({n_components}) cannot be larger than n_samples ({n_samples})")
 
-        if landmark_selection == "kmeans":
+        if landmark_selection_mode == "kmeans":
             # Use optimized chunk-wise MiniBatchKMeans from base class
             # Returns indices of real data points closest to centroids
             landmark_idx = self._select_landmarks_kmeans(
@@ -947,7 +996,7 @@ class KernelPCACalculator(CalculatorBase):
             )
             nystroem.fit(landmarks)
 
-        elif landmark_selection == "random":
+        elif landmark_selection_mode == "random":
             rng = np.random.RandomState(hyperparameters["random_state"])
             landmark_idx = rng.choice(n_samples, n_landmarks, replace=False)
             landmark_idx = np.sort(landmark_idx)
@@ -962,7 +1011,7 @@ class KernelPCACalculator(CalculatorBase):
             )
             nystroem.fit(landmarks)
         else:
-            raise ValueError("The parameter landmark_selection only knows 'random' or 'kmeans'.")
+            raise ValueError("The parameter landmark_selection_mode only knows 'random' or 'kmeans'.")
         
         # Step 2: IncrementalPCA for features (this is correct - PCA on features!)
         ipca = IncrementalPCA(
@@ -1000,7 +1049,7 @@ class KernelPCACalculator(CalculatorBase):
 
         if is_memmap_data:
             ResourceUtils.tune_memmap(data, "sequential")
-        is_memmap_result = DataUtils.is_memmap_view(result)
+        is_memmap_result = MemmapUtils.is_memmap_view(result)
         if is_memmap_result:
             ResourceUtils.tune_memmap(result, "sequential")
         for start in ProgressUtils.iterate(
@@ -1013,8 +1062,7 @@ class KernelPCACalculator(CalculatorBase):
 
             kernel_features_chunk = nystroem.transform(data_chunk).astype(np.float32, copy=False)
             result[start:end] = ipca.transform(kernel_features_chunk)
-            if hasattr(result, "flush"):
-                result.flush()
+            MemmapUtils.evict_memory_range(result, start, end)
         if is_memmap_result:
             ResourceUtils.tune_memmap(result, "random")
 

@@ -25,13 +25,13 @@ Utility class for computing contact maps from distance arrays using distance cut
 Supports memory mapping for large datasets and provides statistical analysis capabilities.
 """
 
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 
 from mdxplain.utils.progress_utils import ProgressUtils
 from mdxplain.utils.resource_utils import ResourceUtils
-from mdxplain.utils.data_utils import DataUtils
+from mdxplain.utils.memmap_utils import MemmapUtils
 
 from ..helper.calculator_compute_helper import CalculatorComputeHelper
 from ..interfaces.calculator_base import CalculatorBase
@@ -133,8 +133,8 @@ class ContactCalculator(CalculatorBase):
         if self.chunk_size is None:
             self.chunk_size = distances.shape[0]
 
-        is_memmap_contacts = DataUtils.is_memmap_view(contacts)
-        is_memmap_distances = DataUtils.is_memmap_view(distances)
+        is_memmap_contacts = MemmapUtils.is_memmap_view(contacts)
+        is_memmap_distances = MemmapUtils.is_memmap_view(distances)
         if is_memmap_contacts:
             ResourceUtils.tune_memmap(contacts, "sequential")
         if is_memmap_distances:
@@ -146,8 +146,7 @@ class ContactCalculator(CalculatorBase):
         ):
             end_idx = min(i + self.chunk_size, distances.shape[0])
             contacts[i:end_idx] = distances[i:end_idx] <= cutoff
-            if hasattr(contacts, "flush"):
-                contacts.flush()
+            MemmapUtils.evict_memory_range(contacts, i, end_idx)
 
         if is_memmap_contacts:
             ResourceUtils.tune_memmap(contacts, "random")
@@ -243,6 +242,38 @@ class ContactCalculator(CalculatorBase):
             )
         raise ValueError(
             f"Unknown transition mode: {transition_mode}. Supported: 'window', 'lagtime'"
+        )
+
+    def compute_pooled_metric_values(
+        self,
+        segments: List[np.ndarray],
+        metric: str,
+        **params
+    ) -> np.ndarray:
+        """
+        Compute pooled metric values with boundary-safe transitions.
+
+        Parameters
+        ----------
+        segments : list
+            List of (n_frames, n_features) arrays to pool
+        metric : str
+            Metric name
+        params : dict
+            Additional metric parameters
+
+        Returns
+        -------
+        np.ndarray
+            Metric values per feature
+        """
+        return self.analysis.compute_pooled_metric_values(
+            segments,
+            metric,
+            transition_threshold=params.get("transition_threshold", 2.0),
+            window_size=params.get("window_size", 10),
+            transition_mode=params.get("transition_mode", "window"),
+            lag_time=params.get("lag_time", 1),
         )
 
     def compute_dynamic_values(

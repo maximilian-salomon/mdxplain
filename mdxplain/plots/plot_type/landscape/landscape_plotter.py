@@ -37,7 +37,7 @@ from .helper.landscape_tag_coloring_helper import LandscapeTagColoringHelper
 from ...helper.validation_helper import ValidationHelper
 from ...helper.clustering_data_helper import ClusteringDataHelper
 from ...helper.svg_export_helper import SvgExportHelper
-from ....utils.data_utils import DataUtils
+from ....utils.path_utils import PathUtils
 from ....decomposition.entities.decomposition_data import DecompositionData
 
 
@@ -106,6 +106,9 @@ class LandscapePlotter:
         center_marker: str = 'X',
         center_size: int = 200,
         scatter_size: int = 1,
+        background_color: Union[bool, str] = True,
+        class_colors: Union[bool, Dict, List] = True,
+        tag_densities: bool = False,
         title: Optional[str] = None,
         xaxis_label: Optional[str] = None,
         yaxis_label: Optional[str] = None,
@@ -188,6 +191,20 @@ class LandscapePlotter:
             points (cluster-colored, tag-colored, gray, and unselected).
             Typical values: 1 (tiny), 5-10 (small), 20-50 (medium), 100+ (large).
             Note: Cluster centers use `center_size` parameter separately.
+        background_color : Union[bool, str], default=True
+            Background colormap control:
+            - True: default background (current behavior)
+            - False: disable background
+            - str/Colormap: custom background colormap
+        class_colors : Union[bool, Dict, List], default=True
+            Class color control:
+            - True: default colors (current behavior)
+            - False: all classes gray
+            - Dict: explicit mapping (cluster_id/tag -> color)
+            - List: colors assigned in plotting order
+        tag_densities : bool, default=False
+            If True and tag_coloring is set, plot tag densities (KDE contours)
+            instead of tag scatter.
         title : Optional[str], default=None
             Custom title (overrides auto-generated)
         xaxis_label : Optional[str], default=None
@@ -283,6 +300,11 @@ class LandscapePlotter:
                 clustering_name, scatter_show_all, labels
             )
 
+        # Apply class color overrides if requested
+        cluster_colors, tag_colors = self._apply_class_colors(
+            class_colors, labels, cluster_colors, frame_tag_map, tag_colors
+        )
+
         # Setup figure layout
         dim_pairs = LayoutCalculatorHelper.create_dimension_pairs(dimensions)
         fig, axes, n_plots, n_rows, n_cols, fig_width, fig_height = self._setup_figure(
@@ -316,6 +338,8 @@ class LandscapePlotter:
                 center_marker,
                 center_size,
                 scatter_size,
+                background_color,
+                tag_densities,
                 xaxis_label,
                 yaxis_label,
                 xlim,
@@ -501,6 +525,98 @@ class LandscapePlotter:
             unselected_mask = labels == -1
             return np.where(unselected_mask)[0].tolist()
         return None
+
+    def _apply_class_colors(
+        self,
+        class_colors: Union[bool, Dict, List, None],
+        labels: Optional[np.ndarray],
+        cluster_colors: Optional[Dict[int, str]],
+        frame_tag_map: Optional[Dict[int, str]],
+        tag_colors: Optional[Dict[str, str]]
+    ) -> Tuple[Optional[Dict[int, str]], Optional[Dict[str, str]]]:
+        """
+        Apply class color overrides for clusters/tags.
+
+        Parameters
+        ----------
+        class_colors : Union[bool, Dict, List, None]
+            True = default, False = all gray, Dict = explicit mapping,
+            List = assign in plotting order.
+        labels : Optional[np.ndarray]
+            Cluster labels
+        cluster_colors : Optional[Dict[int, str]]
+            Default cluster colors
+        frame_tag_map : Optional[Dict[int, str]]
+            Tag mapping (if tag coloring used)
+        tag_colors : Optional[Dict[str, str]]
+            Default tag colors
+
+        Returns
+        -------
+        Tuple[Optional[Dict[int, str]], Optional[Dict[str, str]]]
+            Updated cluster_colors, tag_colors
+        """
+        if class_colors is None:
+            class_colors = False
+
+        if class_colors is True:
+            return cluster_colors, tag_colors
+
+        gray = "#808080"
+
+        if class_colors is False:
+            if cluster_colors is not None:
+                cluster_colors = {k: gray for k in cluster_colors.keys()}
+            if tag_colors is not None:
+                tag_colors = {k: gray for k in tag_colors.keys()}
+            return cluster_colors, tag_colors
+
+        if isinstance(class_colors, dict):
+            if cluster_colors is not None:
+                # Only copy and assign if there's actual intersection of keys
+                shared_keys = set(class_colors.keys()).intersection(cluster_colors.keys())
+                if shared_keys:
+                    cluster_colors = {**cluster_colors}
+                    for key in shared_keys:
+                        cluster_colors[key] = class_colors[key]
+                        
+            if tag_colors is not None:
+                shared_keys = set(class_colors.keys()).intersection(tag_colors.keys())
+                if shared_keys:
+                    tag_colors = {**tag_colors}
+                    for key in shared_keys:
+                        tag_colors[key] = class_colors[key]
+                        
+            return cluster_colors, tag_colors
+
+        if isinstance(class_colors, (list, tuple)):
+            colors_list = list(class_colors)
+            if colors_list:
+                if tag_colors is not None and frame_tag_map is not None:
+                    tag_order = self._ordered_unique(list(frame_tag_map.values()))
+                    tag_colors = {tag: colors_list[i % len(colors_list)] for i, tag in enumerate(tag_order)}
+                if cluster_colors is not None and labels is not None:
+                    cluster_colors = {**cluster_colors}
+                    cluster_order = self._ordered_unique([int(lbl) for lbl in labels if lbl >= 0])
+                    for i, cluster_id in enumerate(cluster_order):
+                        cluster_colors[cluster_id] = colors_list[i % len(colors_list)]
+            return cluster_colors, tag_colors
+
+        return cluster_colors, tag_colors
+
+    @staticmethod
+    def _ordered_unique(items: List) -> List:
+        """
+        Return unique items preserving order.
+        """
+        seen = set()
+        ordered = []
+        for item in items:
+            if item in seen:
+                continue
+            seen.add(item)
+            ordered.append(item)
+        return ordered
 
     def _determine_legend_type(
         self,
@@ -721,6 +837,8 @@ class LandscapePlotter:
         center_marker: str,
         center_size: int,
         scatter_size: int,
+        background_color: Union[bool, str],
+        tag_densities: bool,
         xaxis_label: Optional[str],
         yaxis_label: Optional[str],
         xlim: Optional[Tuple[float, float]],
@@ -795,13 +913,25 @@ class LandscapePlotter:
         """
         data_x = decomp_data[:, dim_x]
         data_y = decomp_data[:, dim_y]
+        data_bounds = (
+            float(np.min(data_x)),
+            float(np.max(data_x)),
+            float(np.min(data_y)),
+            float(np.max(data_y)),
+        )
 
-        xlim, ylim = self._calculate_plot_limits(data_x, data_y, xlim, ylim)
+        xlim, ylim = self._calculate_plot_limits(
+            data_x=data_x,
+            data_y=data_y,
+            xlim=xlim,
+            ylim=ylim,
+            data_bounds=data_bounds
+        )
         bins = self._calculate_bins(data_x, data_y, bins)
 
         self._plot_background(
             ax, data_x, data_y, bins, temperature, xlim, ylim,
-            energy_values, use_kde, mask_empty_bins,
+            energy_values, use_kde, mask_empty_bins, background_color,
             contour_label_fontsize, tick_fontsize
         )
 
@@ -809,7 +939,9 @@ class LandscapePlotter:
             ax, data_x, data_y, labels, cluster_colors, alpha,
             cluster_contour, cluster_contour_voronoi, bins, data_scatter,
             contour_label_fontsize, frame_tag_map, tag_colors, unselected_indices,
-            scatter_size
+            tag_densities,
+            scatter_size,
+            data_bounds
         )
 
         if centers is not None:
@@ -829,7 +961,8 @@ class LandscapePlotter:
         data_x: np.ndarray,
         data_y: np.ndarray,
         xlim: Optional[Tuple[float, float]],
-        ylim: Optional[Tuple[float, float]]
+        ylim: Optional[Tuple[float, float]],
+        data_bounds: Optional[Tuple[float, float, float, float]] = None
     ) -> Tuple[Tuple[float, float], Tuple[float, float]]:
         """
         Calculate plot limits with 5% padding if not provided.
@@ -852,12 +985,20 @@ class LandscapePlotter:
         ylim : Tuple[float, float]
             Y-axis limits
         """
+        if data_bounds is None:
+            x_min = float(np.min(data_x))
+            x_max = float(np.max(data_x))
+            y_min = float(np.min(data_y))
+            y_max = float(np.max(data_y))
+        else:
+            x_min, x_max, y_min, y_max = data_bounds
+
         if xlim is None:
-            x_range = data_x.max() - data_x.min()
-            xlim = (data_x.min() - 0.05 * x_range, data_x.max() + 0.05 * x_range)
+            x_range = x_max - x_min
+            xlim = (x_min - 0.05 * x_range, x_max + 0.05 * x_range)
         if ylim is None:
-            y_range = data_y.max() - data_y.min()
-            ylim = (data_y.min() - 0.05 * y_range, data_y.max() + 0.05 * y_range)
+            y_range = y_max - y_min
+            ylim = (y_min - 0.05 * y_range, y_max + 0.05 * y_range)
         return xlim, ylim
 
     def _calculate_bins(
@@ -901,6 +1042,7 @@ class LandscapePlotter:
         energy_values: bool,
         use_kde: bool,
         mask_empty_bins: bool,
+        background_color: Union[bool, str],
         contour_label_fontsize: Optional[int],
         tick_fontsize: Optional[int]
     ) -> None:
@@ -938,10 +1080,16 @@ class LandscapePlotter:
         -------
         None
         """
+        if background_color is False:
+            return
+
+        cmap = None if background_color is True else background_color
+
         if energy_values:
             LandscapeRenderingHelper.plot_energy_background(
                 ax, data_x, data_y, bins, temperature, xlim, ylim,
                 use_kde=use_kde, mask_empty_bins=mask_empty_bins,
+                cmap=cmap,
                 contour_label_fontsize=contour_label_fontsize,
                 tick_fontsize=tick_fontsize
             )
@@ -949,6 +1097,7 @@ class LandscapePlotter:
             LandscapeRenderingHelper.plot_density_background(
                 ax, data_x, data_y, bins, xlim, ylim,
                 use_kde=use_kde, mask_empty_bins=mask_empty_bins,
+                cmap=cmap,
                 contour_label_fontsize=contour_label_fontsize,
                 tick_fontsize=tick_fontsize
             )
@@ -969,7 +1118,9 @@ class LandscapePlotter:
         frame_tag_map: Optional[Dict[int, str]],
         tag_colors: Optional[Dict[str, str]],
         unselected_indices: Optional[List[int]],
-        scatter_size: int
+        tag_densities: bool,
+        scatter_size: int,
+        data_bounds: Optional[Tuple[float, float, float, float]] = None
     ) -> None:
         """
         Plot cluster overlay as contours or scatter.
@@ -1011,6 +1162,18 @@ class LandscapePlotter:
         -------
         None
         """
+        if frame_tag_map is not None and tag_densities:
+            LandscapeRenderingHelper._plot_unselected_if_needed(
+                ax, data_x, data_y, unselected_indices, alpha, scatter_size
+            )
+            LandscapeRenderingHelper.plot_tag_density_contours(
+                ax, data_x, data_y, frame_tag_map, tag_colors, bins,
+                contour_label_fontsize=contour_label_fontsize,
+                data_bounds=data_bounds
+            )
+            return
+
+        unique_labels = np.unique(labels) if labels is not None else None
         if labels is not None and cluster_contour:
             if cluster_contour_voronoi:
                 LandscapeRenderingHelper.plot_cluster_voronoi(
@@ -1019,13 +1182,16 @@ class LandscapePlotter:
             else:
                 LandscapeRenderingHelper.plot_cluster_density_contours(
                     ax, data_x, data_y, labels, cluster_colors, bins,
-                    contour_label_fontsize=contour_label_fontsize
+                    contour_label_fontsize=contour_label_fontsize,
+                    unique_labels=unique_labels,
+                    data_bounds=data_bounds
                 )
         else:
             LandscapeRenderingHelper.create_scatter(
                 ax, data_x, data_y, labels, cluster_colors, alpha, data_scatter,
                 frame_tag_map=frame_tag_map, tag_colors=tag_colors,
-                unselected_indices=unselected_indices, scatter_size=scatter_size
+                unselected_indices=unselected_indices, scatter_size=scatter_size,
+                unique_labels=unique_labels
             )
 
     def _load_clustering_data(
@@ -1265,6 +1431,12 @@ class LandscapePlotter:
             )
         if not filename.endswith(f".{file_format}"):
             filename = f"{filename}.{file_format}"
-        filepath = DataUtils.get_cache_file_path(filename, self.cache_dir)
-        fig.savefig(filepath, dpi=dpi, format=file_format, bbox_inches='tight')
+        filepath = PathUtils.get_cache_file_path(filename, self.cache_dir)
+        SvgExportHelper.save_figure_with_export_optimizations(
+            fig=fig,
+            filepath=filepath,
+            file_format=file_format,
+            dpi=dpi,
+            bbox_inches='tight',
+        )
         print(f"Figure saved to: {filepath}")

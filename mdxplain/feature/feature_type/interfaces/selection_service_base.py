@@ -119,7 +119,10 @@ class SelectionServiceBase(ABC):
         metric: str,
         threshold_min: Optional[float],
         threshold_max: Optional[float],
-        cross_trajectory: bool = True,
+        cross_trajectory: Optional[bool] = None,
+        cross_trajectory_intersection: Optional[bool] = None,
+        cross_trajectory_union: Optional[bool] = None,
+        cross_trajectory_pooled: Optional[bool] = None,
         extra_params: Optional[dict] = None
     ) -> None:
         """
@@ -140,8 +143,15 @@ class SelectionServiceBase(ABC):
             Minimum threshold value for the metric
         threshold_max : float, optional
             Maximum threshold value for the metric
-        cross_trajectory : bool, default=True
-            Whether to apply reduction across all trajectories
+        cross_trajectory : bool, optional
+            Deprecated legacy flag; use explicit cross_trajectory_intersection/union/pooled.
+        cross_trajectory_intersection : bool, optional
+            If True, require thresholds to be met in all trajectories (intersection)
+        cross_trajectory_union : bool, optional
+            If True, keep features that meet thresholds in any trajectory (union)
+        cross_trajectory_pooled : bool, optional
+            If True, pool trajectories first, then apply reduction once
+            Only one of the three flags can be True; default is per_trajectory
         extra_params : dict, optional
             Additional parameters specific to the reduction metric
 
@@ -171,6 +181,13 @@ class SelectionServiceBase(ABC):
             "threshold_max": threshold_max,
             "cross_trajectory": cross_trajectory
         }
+
+        if cross_trajectory_intersection is not None:
+            config["cross_trajectory_intersection"] = cross_trajectory_intersection
+        if cross_trajectory_union is not None:
+            config["cross_trajectory_union"] = cross_trajectory_union
+        if cross_trajectory_pooled is not None:
+            config["cross_trajectory_pooled"] = cross_trajectory_pooled
 
         if extra_params:
             config.update(extra_params)

@@ -39,6 +39,7 @@ from ..helper.feature_selector_parse_core_helper import FeatureSelectorParseCore
 from ..helper.common_denominator_helper import CommonDenominatorHelper
 from ..helper.post_selection_reduction_helper import PostSelectionReductionHelper
 from ...utils.data_utils import DataUtils
+from ...utils.path_utils import PathUtils
 from ...feature.services.feature_selector_add_service import FeatureSelectorAddService
 
 
@@ -75,7 +76,11 @@ class FeatureSelectorManager:
         """
         self.use_memmap = use_memmap
         self.chunk_size = chunk_size
-        self.cache_dir = cache_dir
+        self.cache_dir = PathUtils.prepare_directory_path(
+            cache_dir,
+            create=True,
+            purpose="cache directory",
+        )
 
     def create(self, pipeline_data: PipelineData, name: str) -> None:
         """
@@ -207,7 +212,7 @@ class FeatureSelectorManager:
         >>> manager = FeatureSelectorManager()
         >>> manager.add_selection(pipeline_data, "analysis", "distances", "res ALA")  # pipeline_data required
         >>> manager.add_selection(pipeline_data, "analysis", "distances", "all",
-        ...     reduction={"metric": "mean", "threshold_min": 7.0, "cross_trajectory": False})
+        ...     reduction={"metric": "mean", "threshold_min": 7.0})
 
         Parameters
         ----------
@@ -240,7 +245,11 @@ class FeatureSelectorManager:
             - metric : str - Reduction metric (e.g., "max", "min", "mean", "std")
             - threshold_min : float, optional - Minimum threshold
             - threshold_max : float, optional - Maximum threshold
-            - cross_trajectory : bool, default=True - Apply common denominator
+            - cross_trajectory : bool, optional - Deprecated legacy flag; use explicit mode flags
+            - cross_trajectory_intersection : bool, optional - Require thresholds in ALL trajectories
+            - cross_trajectory_union : bool, optional - Keep features that pass in ANY trajectory
+            - cross_trajectory_pooled : bool, optional - Pool trajectories then reduce once
+              (Only one of the three flags can be True; default is per_trajectory)
             - Additional metric-specific parameters (e.g., transition_threshold)
 
         Returns

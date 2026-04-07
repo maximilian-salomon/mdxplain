@@ -31,8 +31,8 @@ import numpy as np
 from sklearn.decomposition import PCA, IncrementalPCA
 
 from ..interfaces.calculator_base import CalculatorBase
-from ....utils.data_utils import DataUtils
-from ....utils.resource_utils import ResourceUtils
+from ....utils.memmap_utils import MemmapUtils
+from ....utils.path_utils import PathUtils
 from ..helper.automatic_parameter_helper import AutomaticParameterHelper
 
 
@@ -260,18 +260,17 @@ class PCACalculator(CalculatorBase):
 
         # Store transformed_data as memmap when use_memmap=True
         if self.use_memmap:
-            memmap_path = DataUtils.get_cache_file_path(
+            memmap_path = PathUtils.get_cache_file_path(
                 f"{self._cache_prefix}.dat", self.cache_path
             )
-            transformed_memmap = np.memmap(
-                memmap_path,
+            transformed_memmap = MemmapUtils.create_memmap(
+                path=memmap_path,
                 dtype=transformed_data.dtype,
                 mode="w+",
                 shape=transformed_data.shape,
             )
-            ResourceUtils.tune_memmap(transformed_memmap, "random")
             transformed_memmap[:] = transformed_data
-            transformed_memmap.flush()
+            MemmapUtils.evict_from_os_cache(transformed_memmap)
             transformed_data = transformed_memmap
 
         metadata = self._prepare_metadata(hyperparameters, data.shape)

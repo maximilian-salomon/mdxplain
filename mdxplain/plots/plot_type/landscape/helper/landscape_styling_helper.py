@@ -184,7 +184,7 @@ class LandscapeStylingHelper:
             labels.append(f'Cluster {cluster_id}')
 
         # Position legend with dynamic gap based on font size
-        base_gap_inch = 0.1
+        base_gap_inch = 0.5
         # Add extra gap for larger font sizes
         font_size = legend_fontsize or 10
         extra_gap = (font_size - 10) * 0.05  # 0.05 inch per font size point above 10
@@ -201,7 +201,7 @@ class LandscapeStylingHelper:
             loc='center left',
             bbox_to_anchor=(legend_x, 0.5),
             frameon=True,
-            fontsize=legend_fontsize or 10
+            prop={'size': legend_fontsize or 10}
         )
 
     @staticmethod
@@ -245,7 +245,7 @@ class LandscapeStylingHelper:
             handles.append(plt.Line2D([0], [0], color=color, lw=4))
             labels.append(tag)
 
-        base_gap_inch = 0.1
+        base_gap_inch = 0.5
         font_size = legend_fontsize or 10
         extra_gap = (font_size - 10) * 0.05
         legend_gap_inch = base_gap_inch + extra_gap
@@ -259,7 +259,7 @@ class LandscapeStylingHelper:
             loc='center left',
             bbox_to_anchor=(legend_x, 0.5),
             frameon=True,
-            fontsize=legend_fontsize or 10
+            prop={'size': legend_fontsize or 10}
         )
 
     @staticmethod

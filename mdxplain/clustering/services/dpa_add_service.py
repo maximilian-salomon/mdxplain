@@ -79,7 +79,7 @@ class DPAAddService:
         selection_name: str,
         Z: float = 1.0,
         metric: str = "euclidean",
-        affinity: str = "precomputed",
+        affinity: str = "nearest_neighbors",
         density_algo: str = "PAk",
         k_max: int = 1000,
         D_thr: float = 23.92812698,
@@ -115,7 +115,7 @@ class DPAAddService:
             Number of standard deviations for statistical confidence
         metric : str, default="euclidean"
             Distance metric ('euclidean', 'cosine', 'precomputed')
-        affinity : str, default="precomputed"
+        affinity : str, default="nearest_neighbors"
             How to construct affinity matrix ('precomputed', 'rbf', 'nearest_neighbors')
         density_algo : str, default="PAk"
             Density estimator algorithm ('PAk' or 'kNN')
@@ -212,7 +212,7 @@ class DPAAddService:
         selection_name: str,
         Z: float = 1.0,
         metric: str = "euclidean",
-        affinity: str = "precomputed",
+        affinity: str = "nearest_neighbors",
         density_algo: str = "PAk",
         k_max: int = 1000,
         D_thr: float = 23.92812698,
@@ -244,7 +244,7 @@ class DPAAddService:
             Z-score threshold
         metric : str, default="euclidean"
             Distance metric
-        affinity : str, default="precomputed"
+        affinity : str, default="nearest_neighbors"
             Affinity type
         density_algo : str, default="PAk"
             Density algorithm
@@ -304,7 +304,7 @@ class DPAAddService:
         selection_name: str,
         Z: float = 1.0,
         metric: str = "euclidean",
-        affinity: str = "precomputed",
+        affinity: str = "nearest_neighbors",
         density_algo: str = "PAk",
         k_max: int = 1000,
         D_thr: float = 23.92812698,
@@ -336,7 +336,7 @@ class DPAAddService:
             Z-score threshold
         metric : str, default="euclidean"
             Distance metric
-        affinity : str, default="precomputed"
+        affinity : str, default="nearest_neighbors"
             Affinity type
         density_algo : str, default="PAk"
             Density algorithm
@@ -396,7 +396,7 @@ class DPAAddService:
         selection_name: str,
         Z: float = 1.0,
         metric: str = "euclidean",
-        affinity: str = "precomputed",
+        affinity: str = "nearest_neighbors",
         density_algo: str = "PAk",
         k_max: int = 1000,
         D_thr: float = 23.92812698,
@@ -428,7 +428,7 @@ class DPAAddService:
             Z-score threshold
         metric : str, default="euclidean"
             Distance metric
-        affinity : str, default="precomputed"
+        affinity : str, default="nearest_neighbors"
             Affinity type
         density_algo : str, default="PAk"
             Density algorithm
@@ -488,7 +488,7 @@ class DPAAddService:
         selection_name: str,
         Z: float = 1.0,
         metric: str = "euclidean",
-        affinity: str = "precomputed",
+        affinity: str = "nearest_neighbors",
         density_algo: str = "PAk",
         k_max: int = 1000,
         D_thr: float = 23.92812698,
@@ -520,7 +520,7 @@ class DPAAddService:
             Z-score threshold
         metric : str, default="euclidean"
             Distance metric
-        affinity : str, default="precomputed"
+        affinity : str, default="nearest_neighbors"
             Affinity type
         density_algo : str, default="PAk"
             Density algorithm
@@ -580,7 +580,7 @@ class DPAAddService:
         selection_name: str,
         Z: float = 1.0,
         metric: str = "euclidean",
-        affinity: str = "precomputed",
+        affinity: str = "nearest_neighbors",
         density_algo: str = "PAk",
         k_max: int = 1000,
         D_thr: float = 23.92812698,
@@ -612,7 +612,7 @@ class DPAAddService:
             Z-score threshold
         metric : str, default="euclidean"
             Distance metric
-        affinity : str, default="precomputed"
+        affinity : str, default="nearest_neighbors"
             Affinity type
         density_algo : str, default="PAk"
             Density algorithm
@@ -672,7 +672,7 @@ class DPAAddService:
         selection_name: str,
         Z: float = 1.0,
         metric: str = "euclidean",
-        affinity: str = "precomputed",
+        affinity: str = "nearest_neighbors",
         density_algo: str = "PAk",
         k_max: int = 1000,
         D_thr: float = 23.92812698,
@@ -704,7 +704,7 @@ class DPAAddService:
             Z-score threshold
         metric : str, default="euclidean"
             Distance metric
-        affinity : str, default="precomputed"
+        affinity : str, default="nearest_neighbors"
             Affinity type
         density_algo : str, default="PAk"
             Density algorithm

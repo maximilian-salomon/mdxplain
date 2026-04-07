@@ -37,7 +37,7 @@ from ...helper.color_mapping_helper import NOISE_COLOR
 from ...helper.validation_helper import ValidationHelper
 from ...helper.clustering_data_helper import ClusteringDataHelper
 from ...helper.svg_export_helper import SvgExportHelper
-from ....utils.data_utils import DataUtils
+from ....utils.path_utils import PathUtils
 
 
 class MembershipPlotter:
@@ -533,8 +533,14 @@ class MembershipPlotter:
         if not filename.endswith(f".{file_format}"):
             filename = f"{filename}.{file_format}"
 
-        filepath = DataUtils.get_cache_file_path(filename, self.cache_dir)
-        fig.savefig(filepath, dpi=dpi, format=file_format, bbox_inches='tight')
+        filepath = PathUtils.get_cache_file_path(filename, self.cache_dir)
+        SvgExportHelper.save_figure_with_export_optimizations(
+            fig=fig,
+            filepath=filepath,
+            file_format=file_format,
+            dpi=dpi,
+            bbox_inches='tight',
+        )
         print(f"Figure saved to: {filepath}")
 
     def _generate_filename(

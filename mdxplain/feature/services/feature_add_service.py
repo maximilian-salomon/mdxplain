@@ -398,7 +398,7 @@ class FeatureAddService:
         
         Notes
         -----
-        SASA values are returned in nm². Higher values indicate more solvent exposure.
+        SASA values are returned in Å². Higher values indicate more solvent exposure.
         Mode 'residue' provides per-residue values, 'atom' provides per-atom values.
         Useful for identifying buried vs. exposed residues and conformational changes
         affecting protein-solvent interactions.

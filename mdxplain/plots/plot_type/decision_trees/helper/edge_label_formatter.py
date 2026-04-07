@@ -281,7 +281,9 @@ class EdgeLabelFormatter:
         """
         # Get feature type and name
         feature_type = FeatureMetadataUtils.get_feature_type(feature_metadata, feature_idx)
-        feature_name = FeatureMetadataUtils.get_feature_name(feature_metadata, feature_idx)
+        feature_name = FeatureMetadataUtils.get_feature_name(
+            feature_metadata, feature_idx, use_for_plotting=True
+        )
 
         # Get top-level metadata
         type_meta = FeatureMetadataUtils.get_top_level_metadata(feature_type, feature_metadata)

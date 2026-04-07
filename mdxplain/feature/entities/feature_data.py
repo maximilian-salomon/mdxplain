@@ -30,6 +30,7 @@ from __future__ import annotations
 from typing import Dict, Optional, Any, List, TYPE_CHECKING
 import numpy as np
 from ...utils.data_utils import DataUtils
+from ...utils.path_utils import PathUtils
 
 if TYPE_CHECKING:
     from ..feature_type.interfaces.feature_type_base import FeatureTypeBase
@@ -107,8 +108,8 @@ class FeatureData:
                 filename = f"{str(feature_type)}.dat"
                 reduced_filename = f"{str(feature_type)}_reduced.dat"
                 
-            self.cache_path = DataUtils.get_cache_file_path(filename, cache_path)
-            self.reduced_cache_path = DataUtils.get_cache_file_path(reduced_filename, cache_path)
+            self.cache_path = PathUtils.get_cache_file_path(filename, cache_path)
+            self.reduced_cache_path = PathUtils.get_cache_file_path(reduced_filename, cache_path)
         else:
             self.cache_path = None
             self.reduced_cache_path = None

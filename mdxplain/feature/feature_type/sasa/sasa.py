@@ -161,7 +161,7 @@ class SASA(FeatureTypeBase):
         tuple[numpy.ndarray, dict]
             Tuple containing (sasa_array, feature_metadata) where sasa_array
             has shape (n_frames, n_residues) or (n_frames, n_atoms) depending
-            on mode, with SASA values in nm²
+            on mode, with SASA values in Å²
 
         Examples
         --------

@@ -29,6 +29,7 @@ in trajectory data objects.
 from __future__ import annotations
 
 from typing import Optional, Dict, Tuple, TYPE_CHECKING
+import gc
 import numpy as np
 
 if TYPE_CHECKING:
@@ -38,7 +39,9 @@ from ..cluster_type.interfaces.cluster_type_base import ClusterTypeBase
 from ..entities.cluster_data import ClusterData
 from ..services.cluster_add_service import ClusterAddService
 from ...utils.data_utils import DataUtils
-import shutil
+from ...utils.cleanup_utils import CleanupUtils
+from ...utils.memmap_utils import MemmapUtils
+from ...utils.path_utils import PathUtils
 import os
 
 
@@ -91,8 +94,11 @@ class ClusterManager:
         >>> # Manager with custom cache directory
         >>> manager = ClusterManager(cache_dir="./cache/clustering")
         """
-        self.cache_dir = cache_dir
-        os.makedirs(self.cache_dir, exist_ok=True)
+        self.cache_dir = PathUtils.prepare_directory_path(
+            cache_dir,
+            create=True,
+            purpose="cache directory",
+        )
 
     def reset_clusters(self, pipeline_data: PipelineData) -> None:
         """
@@ -172,7 +178,17 @@ class ClusterManager:
                 print(
                     f"WARNING: Clustering '{cluster_name}' already exists. Forcing recomputation."
                 )
+                old_data = pipeline_data.cluster_data[cluster_name]
+                cache_path = old_data.cache_path
+                MemmapUtils.close_memmap_view(old_data.labels)
+                old_data.labels = None
                 del pipeline_data.cluster_data[cluster_name]
+                gc.collect()
+                if cache_path and os.path.exists(cache_path):
+                    CleanupUtils.remove_path(
+                        cache_path,
+                        purpose="clustering cache path",
+                    )
             else:
                 raise ValueError(f"Clustering '{cluster_name}' already exists.")
 
@@ -468,7 +484,7 @@ class ClusterManager:
         self._validate_cluster_type(cluster_type)
         cluster_name = self._determine_cluster_name(cluster_name, cluster_type)
 
-        cache_path = DataUtils.get_cache_file_path(cluster_name, self.cache_dir)
+        cache_path = PathUtils.get_cache_file_path(cluster_name, self.cache_dir)
 
         if override_cache:
             self._clear_cache_directory(cache_path)
@@ -531,7 +547,7 @@ class ClusterManager:
         None
             Removes all files in the cache directory
         """
-        shutil.rmtree(cache_path)
+        CleanupUtils.remove_tree(cache_path, purpose="cluster cache directory")
         print(f"Cleared cache directory: {cache_path}")
 
     def _prepare_data_for_clustering(
@@ -645,7 +661,7 @@ class ClusterManager:
         ClusterData
             Initialized ClusterData object with results and frame mapping
         """
-        cache_path = DataUtils.get_cache_file_path(selection_name, self.cache_dir)
+        cache_path = PathUtils.get_cache_file_path(selection_name, self.cache_dir)
         cluster_data = ClusterData(
             cluster_type=cluster_type.get_type_name(), cache_path=cache_path
         )

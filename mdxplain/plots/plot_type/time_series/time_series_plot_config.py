@@ -26,6 +26,7 @@ from typing import List, Dict, Tuple, Optional, Union, TYPE_CHECKING
 from dataclasses import dataclass, field
 
 if TYPE_CHECKING:
+    import numpy as np
     from ....pipeline.entities.pipeline_data import PipelineData
     from matplotlib.figure import Figure
     from matplotlib.gridspec import GridSpec
@@ -87,7 +88,7 @@ class TimeSeriesPlotConfig:
     dpi : int
         Resolution
     smoothing : bool
-        Enable or disable data smoothing
+        Enable or disable data smoothing for continuous features
     smoothing_method : str
         Smoothing method ("moving_average" or "savitzky")
     smoothing_window : int
@@ -96,6 +97,41 @@ class TimeSeriesPlotConfig:
         Polynomial order for Savitzky-Golay filter
     show_unsmoothed_background : bool
         Show unsmoothed data as transparent background when smoothing is enabled
+    discrete_plot_style : str
+        Rendering style for discrete features ("line", "step", "segments", or "scatter")
+    discrete_layout : str
+        Discrete rendering layout mode:
+        "auto", "overlay", "offset", or "occupancy".
+        In occupancy mode, curves represent state probabilities over time.
+    discrete_offset_span : float
+        Vertical offset span for discrete "offset" layout. Traces are distributed
+        in the interval [-span, +span] around each discrete state center.
+    discrete_auto_offset_threshold : int
+        Number of discrete traces at which "auto" layout switches from
+        "overlay" to "offset".
+    thickness : float
+        Global rendering thickness for time-series traces:
+        marker size factor for "scatter" and line width for all line-based styles
+        (including continuous-feature lines)
+    colors : Optional[Union[str, Dict[str, str]]]
+        Color configuration for trajectories/tags:
+        colormap name, explicit mapping, or None for automatic palette
+        assignment (tag colors when tag coloring is active, else trajectory colors)
+    vertical_markers : Optional[Dict[Union[int, str], Union[float, List[float]]]]
+        Optional marker specification for vertical guide lines.
+        Keys are trajectory selectors or tag names (depending on mode), values
+        are x-positions (single float or list of floats).
+    vertical_marker_labels : Optional[Union[str, Dict[Union[int, str], str]]]
+        Optional legend labels for vertical markers:
+        one shared label string or one label string per marker key.
+    vertical_marker_label_colors : Optional[Union[str, Dict[str, str]]]
+        Optional legend color override for marker labels:
+        one shared color string or per-label color mapping.
+    vertical_marker_mode : str
+        Marker key interpretation mode:
+        "auto", "trajectory", or "tag".
+        In "auto", tag mode is used when tag coloring is active, otherwise
+        trajectory mode.
     feature_data : Dict
         Prepared feature data
     feature_indices : Dict[int, str]
@@ -112,6 +148,10 @@ class TimeSeriesPlotConfig:
         Trajectory to tags mapping
     all_features : List[Tuple[str, str]]
         List of (feature_type, feature_name) tuples
+    selected_matrix : Optional[np.ndarray]
+        Preloaded selected matrix for this plot call (np.ndarray or np.memmap)
+    frame_mapping : Dict[int, Tuple[int, int]]
+        Preloaded frame mapping for this plot call
     layout : List
         Grid layout information
     n_rows : int
@@ -130,6 +170,20 @@ class TimeSeriesPlotConfig:
         Tag to color mapping
     traj_colors : Dict[str, str]
         Trajectory name to color mapping
+    discrete_state_colors : Dict[str, str]
+        State label to color mapping used for discrete occupancy legends
+    has_discrete_features : bool
+        Whether plotted features include at least one discrete feature
+    resolved_discrete_layout : str
+        Effective discrete layout after resolving "auto"
+    effective_subplot_height : float
+        Internally adjusted subplot height that includes discrete-layout spacing
+    resolved_vertical_markers : List[Tuple[float, str, Optional[str]]]
+        Pre-resolved marker lines as `(x_position, color, label)` tuples used
+        by all feature subplots.
+    resolved_vertical_marker_legend_entries : Dict[str, str]
+        Pre-resolved legend mapping for markers (`label -> color`) in
+        first-seen order.
     fig : Optional[Figure]
         Matplotlib figure (set after creation)
     gs : Optional[GridSpec]
@@ -200,6 +254,16 @@ class TimeSeriesPlotConfig:
     smoothing_window: int = 51
     smoothing_polyorder: int = 3
     show_unsmoothed_background: bool = True
+    discrete_plot_style: str = "step"
+    discrete_layout: str = "auto"
+    discrete_offset_span: float = 0.28
+    discrete_auto_offset_threshold: int = 15
+    thickness: float = 1.0
+    colors: Optional[Union[str, Dict[str, str]]] = None
+    vertical_markers: Optional[Dict[Union[int, str], Union[float, List[float]]]] = None
+    vertical_marker_labels: Optional[Union[str, Dict[Union[int, str], str]]] = None
+    vertical_marker_label_colors: Optional[Union[str, Dict[str, str]]] = None
+    vertical_marker_mode: str = "auto"
 
     # Font size parameters
     title_fontsize: int = None
@@ -219,6 +283,11 @@ class TimeSeriesPlotConfig:
     is_temporary: bool = False
     tag_map: Dict[int, List[str]] = field(default_factory=dict)
     all_features: List[Tuple[str, str]] = field(default_factory=list)
+    selected_matrix: Optional[np.ndarray] = None
+    frame_mapping: Dict[int, Tuple[int, int]] = field(default_factory=dict)
+    global_frame_indices_by_traj: Dict[int, List[int]] = field(default_factory=dict)
+    local_frame_indices_by_traj: Dict[int, List[int]] = field(default_factory=dict)
+    x_values_by_traj: Dict[int, np.ndarray] = field(default_factory=dict)
 
     # Layout data (set during plotting)
     layout: List = field(default_factory=list)
@@ -232,6 +301,12 @@ class TimeSeriesPlotConfig:
     use_tag_coloring: bool = False
     tag_colors: Dict[str, str] = field(default_factory=dict)
     traj_colors: Dict[str, str] = field(default_factory=dict)
+    discrete_state_colors: Dict[str, str] = field(default_factory=dict)
+    has_discrete_features: bool = False
+    resolved_discrete_layout: str = "overlay"
+    effective_subplot_height: float = 0.0
+    resolved_vertical_markers: List[Tuple[float, str, Optional[str]]] = field(default_factory=list)
+    resolved_vertical_marker_legend_entries: Dict[str, str] = field(default_factory=dict)
 
     # Figure data (set during plotting)
     fig: Optional[Figure] = None

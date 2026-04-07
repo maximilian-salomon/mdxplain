@@ -28,6 +28,7 @@ height-dependent Gaussian bells.
 
 from typing import Tuple, Union, Optional, Dict, Any
 import numpy as np
+from numpy.linalg import LinAlgError
 from scipy.stats import gaussian_kde
 
 from mdxplain.plots.helper.discrete_feature_helper import DiscreteFeatureHelper
@@ -141,27 +142,13 @@ class DensityCalculationHelper:
 
         # Check if feature is discrete
         if viz.get("is_discrete", False):
-            # Build axis_config from visualization metadata
-            tick_labels_dict = viz.get("tick_labels", {})
-            tick_labels = tick_labels_dict.get("short", [])
-
-            if tick_labels:
-                # Use tick labels to build positions
-                n_positions = len(tick_labels)
-                positions = list(range(n_positions))
-                value_to_position = {i: i for i in range(n_positions)}
-                xlim = (-0.3, n_positions - 1 + 0.3)
-            else:
-                # Fallback for binary without tick labels
-                positions = [0, 1]
-                value_to_position = {0: 0, 1: 1}
-                xlim = (-0.3, 1.3)
-
-            axis_config = {
-                "positions": positions,
-                "value_to_position": value_to_position,
-                "xlim": xlim
-            }
+            axis_config = DiscreteFeatureHelper.build_axis_config(
+                selector_data={"_density": data},
+                viz=viz,
+                long_labels=False,
+                x_padding=0.3,
+                fallback_from_data=False
+            )
 
             return DensityCalculationHelper._calculate_discrete_gaussians(
                 data, axis_config, base_sigma, max_sigma
@@ -244,8 +231,8 @@ class DensityCalculationHelper:
         xlim = axis_config["xlim"]
 
         # 2. Convert data to positions if needed
-        position_data = DiscreteFeatureHelper.prepare_discrete_data(
-            data, value_to_position
+        probabilities = DiscreteFeatureHelper.calculate_discrete_probabilities(
+            data, value_to_position, len(positions)
         )
 
         # 3. Create x-axis grid based on xlim
@@ -255,9 +242,8 @@ class DensityCalculationHelper:
         density = np.zeros_like(x_range)
 
         # 5. Create Gaussian bell for each position
-        for pos in positions:
-            # Calculate probability for this position
-            prob = np.sum(position_data == pos) / len(position_data)
+        for position_idx, pos in enumerate(positions):
+            prob = probabilities[position_idx]
 
             # Calculate width based on probability
             sigma = base_sigma + (max_sigma - base_sigma) * prob
@@ -323,16 +309,55 @@ class DensityCalculationHelper:
         - "silverman": Bandwidth = n^(-1/5) x min(σ, IQR/1.34)
         - float: Multiply default bandwidth by this factor
         """
-        # Create Gaussian KDE with specified bandwidth
-        kde = gaussian_kde(data, bw_method=kde_bandwidth)
+        data = np.asarray(data, dtype=float)
+        if data.size == 0:
+            return np.array([], dtype=float), np.array([], dtype=float)
+
+        data_min = float(np.min(data))
+        data_max = float(np.max(data))
+        data_range = data_max - data_min
+        if data.size <= 1 or np.isclose(data_range, 0.0):
+            return DensityCalculationHelper._calculate_constant_density(
+                center=data_min
+            )
+
+        # Create Gaussian KDE with specified bandwidth.
+        try:
+            kde = gaussian_kde(data, bw_method=kde_bandwidth)
+        except LinAlgError:
+            if np.isclose(data_range, 0.0):
+                return DensityCalculationHelper._calculate_constant_density(
+                    center=float(np.mean(data))
+                )
+            raise
 
         # Calculate auto-range with 20% padding for nice visualization
-        data_range = data.max() - data.min()
-        x_min = data.min() - 0.2 * data_range
-        x_max = data.max() + 0.2 * data_range
+        x_min = data_min - 0.2 * data_range
+        x_max = data_max + 0.2 * data_range
         x_range = np.linspace(x_min, x_max, 300)
 
         # Evaluate KDE at x_range points
         density = kde(x_range)
 
+        return x_range, density
+
+    @staticmethod
+    def _calculate_constant_density(center: float) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Build a narrow Gaussian-like fallback density for constant data.
+
+        Parameters
+        ----------
+        center : float
+            Constant feature value around which fallback density is centered.
+
+        Returns
+        -------
+        Tuple[np.ndarray, np.ndarray]
+            X-grid and normalized bell-shaped density values.
+        """
+        sigma = max(abs(center) * 1e-3, 1e-6)
+        x_range = np.linspace(center - 3.0 * sigma, center + 3.0 * sigma, 300)
+        z = (x_range - center) / sigma
+        density = np.exp(-0.5 * z * z) / (np.sqrt(2.0 * np.pi) * sigma)
         return x_range, density

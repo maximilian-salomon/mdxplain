@@ -26,11 +26,13 @@ memory management, and frame mapping instead of collecting and merging matrices.
 """
 from __future__ import annotations
 
+import hashlib
 import os
 import numpy as np
 from typing import Dict, Tuple, Optional, List, Any, TYPE_CHECKING
 
-from ...utils.data_utils import DataUtils
+from ...utils.memmap_utils import MemmapUtils
+from ...utils.path_utils import PathUtils
 from ...utils.resource_utils import ResourceUtils
 
 if TYPE_CHECKING:
@@ -46,9 +48,108 @@ class SelectionMatrixHelper:
     """
 
     @staticmethod
+    def _determine_matrix_dtype(
+        pipeline_data: PipelineData,
+        feature_selector_name: str,
+    ) -> np.dtype:
+        """
+        Determine minimal shared dtype required for all selected columns.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data object.
+        feature_selector_name : str
+            Feature selector name.
+
+        Returns
+        -------
+        np.dtype
+            Minimal common dtype across all selected data sources.
+        """
+        selector_data = pipeline_data.selected_feature_data[feature_selector_name]
+        all_results = selector_data.get_all_results()
+        dtypes: List[np.dtype] = []
+
+        for feature_type, selection_info in all_results.items():
+            feature_data_dict = pipeline_data.feature_data.get(feature_type, {})
+            trajectory_indices = selection_info.get("trajectory_indices", {})
+
+            for traj_idx, traj_selection in trajectory_indices.items():
+                feature_data = feature_data_dict.get(traj_idx)
+                if feature_data is None:
+                    continue
+
+                flags = traj_selection.get("use_reduced", [])
+                if not flags:
+                    continue
+
+                has_reduced = any(flags)
+                has_original = any(not flag for flag in flags)
+
+                if has_original and feature_data.data is not None:
+                    dtypes.append(
+                        SelectionMatrixHelper._resolve_effective_dtype(
+                            feature_data.data,
+                            feature_data.feature_metadata,
+                        )
+                    )
+
+                if has_reduced:
+                    if feature_data.reduced_data is not None:
+                        dtypes.append(
+                            SelectionMatrixHelper._resolve_effective_dtype(
+                                feature_data.reduced_data,
+                                feature_data.reduced_feature_metadata,
+                            )
+                        )
+                    elif feature_data.data is not None:
+                        dtypes.append(
+                            SelectionMatrixHelper._resolve_effective_dtype(
+                                feature_data.data,
+                                feature_data.feature_metadata,
+                            )
+                        )
+
+        if not dtypes:
+            return np.dtype(pipeline_data.dtype)
+
+        return np.result_type(*dtypes)
+
+    @staticmethod
+    def _resolve_effective_dtype(
+        source_data: np.ndarray,
+        metadata: Optional[Dict[str, Any]],
+    ) -> np.dtype:
+        """
+        Resolve effective dtype after optional categorical conversion.
+
+        Parameters
+        ----------
+        source_data : np.ndarray
+            Source array.
+        metadata : dict, optional
+            Feature metadata for matrix mapping.
+
+        Returns
+        -------
+        np.dtype
+            Effective dtype for matrix storage.
+        """
+        source_dtype = np.dtype(source_data.dtype)
+        if source_dtype.kind == "U":
+            matrix_mapping = (metadata or {}).get("matrix_mapping", {})
+            if matrix_mapping:
+                return np.dtype(np.int8)
+        return source_dtype
+
+    @staticmethod
     def build_selection_matrix(
-        pipeline_data: PipelineData, feature_selector_name: str, data_selector_name: Optional[str] = None
-    ) -> Tuple[np.ndarray, Dict[int, Tuple[int, int]]]:
+        pipeline_data: PipelineData,
+        feature_selector_name: str,
+        data_selector_name: Optional[str] = None,
+        build_frame_mapping: bool = False,
+    ) -> Tuple[np.ndarray, Optional[Dict[int, Tuple[int, int]]]]:
         """
         Build selection matrix with efficient memory usage and caching.
 
@@ -62,27 +163,42 @@ class SelectionMatrixHelper:
             Name of the feature selection
         data_selector_name : str, optional
             Name of data selector for frame filtering
+        build_frame_mapping : bool, default=False
+            Whether to build and return row-to-frame mapping.
 
         Returns
         -------
-        Tuple[np.ndarray, Dict[int, Tuple[int, int]]]
-            Complete matrix and frame mapping
+        Tuple[np.ndarray, Dict[int, Tuple[int, int]] or None]
+            Complete matrix and optional frame mapping.
         """
         cache_key = pipeline_data._get_matrix_cache_key(
             feature_selector_name, data_selector_name
+        )
+        matrix_dtype = SelectionMatrixHelper._determine_matrix_dtype(
+            pipeline_data, feature_selector_name
         )
 
         # Try loading from cache
         if pipeline_data.use_memmap and cache_key in pipeline_data._matrix_cache:
             result = SelectionMatrixHelper._load_from_cache(
-                pipeline_data, cache_key, feature_selector_name, data_selector_name
+                pipeline_data,
+                cache_key,
+                feature_selector_name,
+                data_selector_name,
+                matrix_dtype,
+                build_frame_mapping,
             )
             if result is not None:
                 return result
 
         # Cache miss - build new matrix
         return SelectionMatrixHelper._build_new_matrix(
-            pipeline_data, cache_key, feature_selector_name, data_selector_name
+            pipeline_data,
+            cache_key,
+            feature_selector_name,
+            data_selector_name,
+            matrix_dtype,
+            build_frame_mapping,
         )
     
     @staticmethod
@@ -140,8 +256,10 @@ class SelectionMatrixHelper:
         pipeline_data: PipelineData,
         cache_key: str,
         feature_selector_name: str,
-        data_selector_name: Optional[str]
-    ) -> Optional[Tuple[np.ndarray, Dict[int, Tuple[int, int]]]]:
+        data_selector_name: Optional[str],
+        matrix_dtype: np.dtype,
+        build_frame_mapping: bool,
+    ) -> Optional[Tuple[np.ndarray, Optional[Dict[int, Tuple[int, int]]]]]:
         """
         Load matrix and frame mapping from cache.
 
@@ -155,13 +273,18 @@ class SelectionMatrixHelper:
             Feature selector name
         data_selector_name : str, optional
             Data selector name
+        matrix_dtype : np.dtype
+            Matrix dtype expected for this selection.
+        build_frame_mapping : bool
+            Whether frame mapping is required for the caller.
 
         Returns
         -------
-        Optional[Tuple[np.ndarray, Dict[int, Tuple[int, int]]]]
-            Matrix and frame mapping, or None if cache invalid
+        Optional[Tuple[np.ndarray, Dict[int, Tuple[int, int]] or None]]
+            Matrix and optional frame mapping, or None if cache invalid.
         """
         memmap_path, frame_mapping = pipeline_data._matrix_cache[cache_key]
+        memmap_path = PathUtils.prepare_file_path(memmap_path)
 
         # Verify cached file exists
         if not os.path.exists(memmap_path):
@@ -174,7 +297,7 @@ class SelectionMatrixHelper:
 
         # Validate shape matches file size (prevent reading stale cache with wrong shape)
         file_size = os.path.getsize(memmap_path)
-        dtype_size = np.dtype(pipeline_data.dtype).itemsize
+        dtype_size = np.dtype(matrix_dtype).itemsize
         expected_size = n_rows * n_cols * dtype_size
 
         if file_size != expected_size:
@@ -183,11 +306,24 @@ class SelectionMatrixHelper:
             return None
 
         # Load cached memmap
-        matrix = np.memmap(
-            memmap_path, dtype=pipeline_data.dtype, mode='r+', shape=(n_rows, n_cols)
+        matrix = MemmapUtils.create_memmap(
+            path=memmap_path,
+            dtype=matrix_dtype,
+            mode="r+",
+            shape=(n_rows, n_cols),
+            close_existing=False,
         )
-        ResourceUtils.tune_memmap(matrix, "random")
 
+        if build_frame_mapping and frame_mapping is None:
+            frame_mapping = SelectionMatrixHelper._build_frame_mapping_only(
+                pipeline_data,
+                feature_selector_name,
+                data_selector_name,
+            )
+            pipeline_data._matrix_cache[cache_key] = (memmap_path, frame_mapping)
+
+        if not build_frame_mapping:
+            return matrix, None
         return matrix, frame_mapping
 
     @staticmethod
@@ -195,8 +331,10 @@ class SelectionMatrixHelper:
         pipeline_data: PipelineData,
         cache_key: str,
         feature_selector_name: str,
-        data_selector_name: Optional[str]
-    ) -> Tuple[np.ndarray, Dict[int, Tuple[int, int]]]:
+        data_selector_name: Optional[str],
+        matrix_dtype: np.dtype,
+        build_frame_mapping: bool,
+    ) -> Tuple[np.ndarray, Optional[Dict[int, Tuple[int, int]]]]:
         """
         Build new matrix and frame mapping, store in cache.
 
@@ -210,11 +348,15 @@ class SelectionMatrixHelper:
             Feature selector name
         data_selector_name : str, optional
             Data selector name
+        matrix_dtype : np.dtype
+            Matrix dtype used for allocation.
+        build_frame_mapping : bool
+            Whether to build frame mapping.
 
         Returns
         -------
-        Tuple[np.ndarray, Dict[int, Tuple[int, int]]]
-            Matrix and frame mapping
+        Tuple[np.ndarray, Dict[int, Tuple[int, int]] or None]
+            Matrix and optional frame mapping
         """
         # Calculate matrix shape
         n_rows, n_cols = SelectionMatrixHelper._calculate_matrix_shape(
@@ -224,12 +366,17 @@ class SelectionMatrixHelper:
         # Create matrix
         matrix, memmap_path = SelectionMatrixHelper._create_matrix(
             (n_rows, n_cols), pipeline_data.use_memmap,
-            pipeline_data.cache_dir, feature_selector_name, pipeline_data.dtype
+            pipeline_data.cache_dir, feature_selector_name, data_selector_name, cache_key,
+            matrix_dtype
         )
 
         # Fill matrix and create frame mapping
         frame_mapping = SelectionMatrixHelper._fill_matrix(
-            matrix, pipeline_data, feature_selector_name, data_selector_name
+            matrix,
+            pipeline_data,
+            feature_selector_name,
+            data_selector_name,
+            build_frame_mapping,
         )
 
         # Store in cache if memmap enabled
@@ -240,7 +387,13 @@ class SelectionMatrixHelper:
 
     @staticmethod
     def _create_matrix(
-        shape: Tuple[int, int], use_memmap: bool, cache_dir: str, name: str, dtype: type
+        shape: Tuple[int, int],
+        use_memmap: bool,
+        cache_dir: str,
+        feature_selector_name: str,
+        data_selector_name: Optional[str],
+        cache_key: str,
+        dtype: type
     ) -> Tuple[np.ndarray, Optional[str]]:
         """
         Create matrix with optimal memory management.
@@ -253,8 +406,12 @@ class SelectionMatrixHelper:
             Whether to use memory mapping
         cache_dir : str
             Cache directory for memmap files
-        name : str
-            Matrix name for memmap filename
+        feature_selector_name : str
+            Feature selector name
+        data_selector_name : str, optional
+            Data selector name
+        cache_key : str
+            Unique cache key for feature/data selector combination
         dtype : type
             Data type for matrix (float32 or float64)
 
@@ -264,29 +421,97 @@ class SelectionMatrixHelper:
             Matrix and memmap path (None if not using memmap)
         """
         if use_memmap:
-            # Generate memmap path
-            memmap_path = DataUtils.get_cache_file_path(
+            # Generate unique memmap path for each cache key to avoid collisions
+            cache_filename = SelectionMatrixHelper._build_memmap_cache_filename(
+                feature_selector_name, data_selector_name, cache_key
+            )
+            memmap_path = PathUtils.get_cache_file_path(
                 cache_path=cache_dir,
-                cache_name=f"selection_matrix_{name}.dat"
+                cache_name=cache_filename
             )
 
             # Create new memmap
-            matrix = np.memmap(
-                memmap_path, dtype=dtype, mode='w+', shape=shape
+            matrix = MemmapUtils.create_memmap(
+                path=memmap_path,
+                dtype=dtype,
+                mode="w+",
+                shape=shape,
             )
-            ResourceUtils.tune_memmap(matrix, "random")
 
             return matrix, memmap_path
 
         return np.zeros(shape, dtype=dtype), None
 
     @staticmethod
-    def _fill_matrix(
-        matrix: np.ndarray, pipeline_data: PipelineData, name: str,
-        data_selector_name: Optional[str]
-    ) -> Dict[int, Tuple[int, int]]:
+    def _build_memmap_cache_filename(
+        feature_selector_name: str, data_selector_name: Optional[str], cache_key: str
+    ) -> str:
         """
-        Fill matrix with data and create frame mapping.
+        Build a collision-safe memmap filename for a selector/cache-key pair.
+
+        Parameters
+        ----------
+        feature_selector_name : str
+            Feature selector name (for readability in filename)
+        data_selector_name : str, optional
+            Data selector name (for readability in filename)
+        cache_key : str
+            Unique cache key used by PipelineData
+
+        Returns
+        -------
+        str
+            Stable memmap filename
+        """
+        safe_feature = SelectionMatrixHelper._sanitize_filename_component(
+            feature_selector_name, "selector"
+        )
+        safe_data_selector = SelectionMatrixHelper._sanitize_filename_component(
+            data_selector_name if data_selector_name is not None else "all_frames",
+            "all_frames",
+        )
+        key_hash = hashlib.sha1(cache_key.encode("utf-8")).hexdigest()[:12]
+        return f"selection_matrix_{safe_feature}_{safe_data_selector}_{key_hash}.dat"
+
+    @staticmethod
+    def _sanitize_filename_component(
+        value: str, fallback: str, limit: int = 40
+    ) -> str:
+        """
+        Sanitize a filename component to a safe ASCII token.
+
+        Parameters
+        ----------
+        value : str
+            Raw component value to sanitize.
+        fallback : str
+            Replacement token used if sanitization yields an empty string.
+        limit : int, default=40
+            Maximum number of characters to keep.
+
+        Returns
+        -------
+        str
+            Sanitized component containing only ``[A-Za-z0-9_-]``.
+        """
+        safe = "".join(
+            ch if (ch.isascii() and (ch.isalnum() or ch in {"_", "-"})) else "_"
+            for ch in value
+        ).strip("_")
+        if not safe:
+            safe = fallback
+        return safe[:limit]
+
+    @staticmethod
+    def _fill_matrix(
+        matrix: np.ndarray,
+        pipeline_data: PipelineData,
+        name: str,
+        data_selector_name: Optional[str],
+        build_frame_mapping: bool,
+    ) -> Optional[Dict[int, Tuple[int, int]]]:
+        """
+        Fill matrix with selected feature data and optionally create frame mapping.
         
         Parameters
         ----------
@@ -298,50 +523,74 @@ class SelectionMatrixHelper:
             Selection name
         data_selector_name : str, optional
             Data selector name
+        build_frame_mapping : bool
+            Whether to build frame mapping.
             
         Returns
         -------
-        Dict[int, Tuple[int, int]]
-            Frame mapping {global_idx: (traj_idx, local_idx)}
+        Dict[int, Tuple[int, int]] or None
+            Optional frame mapping {global_idx: (traj_idx, local_idx)}.
         """
-        frame_mapping = {}
         current_row = 0
         is_memmap = isinstance(matrix, np.memmap)
         if is_memmap:
             ResourceUtils.tune_memmap(matrix, "sequential")
-        
+        mapping_traj_chunks: Optional[List[np.ndarray]] = [] if build_frame_mapping else None
+        mapping_frame_chunks: Optional[List[np.ndarray]] = [] if build_frame_mapping else None
+
         selector_data = pipeline_data.selected_feature_data[name]
         all_results = selector_data.get_all_results()
-        
-        # Get frame selection (all frames or filtered)
+
+        # Get frame selection (all frames or filtered) once.
         if data_selector_name is None:
-            frame_selection = None  # All frames
+            traj_frames = None
         else:
-            frame_selection = pipeline_data.data_selector_data[data_selector_name]
-        
+            traj_frames = pipeline_data.data_selector_data[
+                data_selector_name
+            ].get_trajectory_frames()
+
         # Extract relevant trajectories from feature selections
         relevant_trajectories = set()
         for feature_type, selection_info in all_results.items():
             if "trajectory_indices" in selection_info:
                 relevant_trajectories.update(selection_info["trajectory_indices"].keys())
-        
+
         # Fill matrix trajectory by trajectory (only selected trajectories)
         for traj_idx in sorted(relevant_trajectories):
             current_row = SelectionMatrixHelper._fill_trajectory_data(
-                matrix, pipeline_data, all_results, traj_idx, 
-                current_row, frame_selection, frame_mapping
+                matrix=matrix,
+                pipeline_data=pipeline_data,
+                all_results=all_results,
+                traj_idx=traj_idx,
+                start_row=current_row,
+                traj_frames=traj_frames,
+                mapping_traj_chunks=mapping_traj_chunks,
+                mapping_frame_chunks=mapping_frame_chunks,
+                build_frame_mapping=build_frame_mapping,
+                chunk_size=pipeline_data.chunk_size,
             )
-            if is_memmap:
-                matrix.flush()
-        
+
         if is_memmap:
             ResourceUtils.tune_memmap(matrix, "random")
-        return frame_mapping
-    
+        if not build_frame_mapping:
+            return None
+        return SelectionMatrixHelper._materialize_frame_mapping(
+            mapping_traj_chunks or [],
+            mapping_frame_chunks or [],
+        )
+
     @staticmethod
     def _fill_trajectory_data(
-        matrix: np.ndarray, pipeline_data: PipelineData, all_results: Dict[str, Any], traj_idx: int,
-        start_row: int, frame_selection: Optional[Any], frame_mapping: Dict[int, Tuple[int, int]]
+        matrix: np.ndarray,
+        pipeline_data: PipelineData,
+        all_results: Dict[str, Any],
+        traj_idx: int,
+        start_row: int,
+        traj_frames: Optional[Dict[int, List[int]]],
+        mapping_traj_chunks: Optional[List[np.ndarray]],
+        mapping_frame_chunks: Optional[List[np.ndarray]],
+        build_frame_mapping: bool,
+        chunk_size: int,
     ) -> int:
         """
         Fill matrix with data from one trajectory.
@@ -358,10 +607,16 @@ class SelectionMatrixHelper:
             Trajectory index to process
         start_row : int
             Starting row index for this trajectory
-        frame_selection : DataSelectorData or None
-            Frame selection (None = all frames)
-        frame_mapping : dict
-            Frame mapping to update
+        traj_frames : dict or None
+            Optional pre-fetched frame indices per trajectory.
+        mapping_traj_chunks : list[np.ndarray] or None
+            Accumulator for per-row trajectory indices.
+        mapping_frame_chunks : list[np.ndarray] or None
+            Accumulator for per-row local frame indices.
+        build_frame_mapping : bool
+            Whether frame mapping should be collected.
+        chunk_size : int
+            Row chunk size forwarded to feature block copy.
             
         Returns
         -------
@@ -369,37 +624,168 @@ class SelectionMatrixHelper:
             Next available row index
         """
         # Get frame indices for this trajectory
-        if frame_selection is None:
-            # All frames
+        if traj_frames is None:
             traj_data = pipeline_data.trajectory_data.trajectories[traj_idx]
-            frame_indices = list(range(len(traj_data)))
+            frame_indices = np.arange(traj_data.n_frames, dtype=np.int32)
+            direct_row_slice = True
         else:
-            # Filtered frames
-            traj_frames = frame_selection.get_trajectory_frames()
-            frame_indices = traj_frames.get(traj_idx, [])
-        
-        if not frame_indices:
+            frame_indices_list = traj_frames.get(traj_idx, [])
+            if not frame_indices_list:
+                return start_row
+            frame_indices = np.asarray(frame_indices_list, dtype=np.int32)
+            direct_row_slice = False
+
+        if frame_indices.size == 0:
             return start_row  # No frames for this trajectory
-        
-        # Fill matrix with data from each feature
-        current_col = 0
-        for feature_type, selection_info in all_results.items():
-            current_col = SelectionMatrixHelper._fill_feature_data(
-                matrix, pipeline_data, feature_type, selection_info, 
-                traj_idx, frame_indices, start_row, current_col
+
+        n_selected_rows = int(frame_indices.size)
+        n_cols = int(matrix.shape[1])
+
+        # Build one full row-chunk across all features in RAM, then write once.
+        for row_chunk_start in range(0, n_selected_rows, chunk_size):
+            row_chunk_end = min(row_chunk_start + chunk_size, n_selected_rows)
+            frame_chunk = frame_indices[row_chunk_start:row_chunk_end]
+            chunk_rows = int(frame_chunk.size)
+            chunk_buffer = np.zeros((chunk_rows, n_cols), dtype=matrix.dtype)
+
+            current_col = 0
+            for feature_type, selection_info in all_results.items():
+                current_col = SelectionMatrixHelper._fill_feature_data(
+                    matrix=chunk_buffer,
+                    pipeline_data=pipeline_data,
+                    feature_type=feature_type,
+                    selection_info=selection_info,
+                    traj_idx=traj_idx,
+                    frame_indices=frame_chunk,
+                    direct_row_slice=direct_row_slice,
+                    source_row_offset=row_chunk_start,
+                    start_row=0,
+                    start_col=current_col,
+                )
+
+            matrix[
+                start_row + row_chunk_start:start_row + row_chunk_end,
+                :,
+            ] = chunk_buffer
+            
+            MemmapUtils.evict_memory_range(
+                matrix,
+                start_row + row_chunk_start,
+                start_row + row_chunk_end,
             )
-        
-        # Update frame mapping
-        for i, frame_idx in enumerate(frame_indices):
-            frame_mapping[start_row + i] = (traj_idx, frame_idx)
-        
-        return start_row + len(frame_indices)
-    
+
+        if build_frame_mapping:
+            if mapping_traj_chunks is None or mapping_frame_chunks is None:
+                raise ValueError(
+                    "Mapping chunk accumulators are required when build_frame_mapping=True."
+                )
+            mapping_traj_chunks.append(np.full(n_selected_rows, traj_idx, dtype=np.int32))
+            mapping_frame_chunks.append(frame_indices)
+
+        return start_row + n_selected_rows
+
+    @staticmethod
+    def _materialize_frame_mapping(
+        mapping_traj_chunks: List[np.ndarray],
+        mapping_frame_chunks: List[np.ndarray],
+    ) -> Dict[int, Tuple[int, int]]:
+        """
+        Materialize compact mapping arrays into public mapping dictionary.
+
+        Parameters
+        ----------
+        mapping_traj_chunks : list[np.ndarray]
+            Trajectory index chunks.
+        mapping_frame_chunks : list[np.ndarray]
+            Local frame index chunks.
+
+        Returns
+        -------
+        Dict[int, Tuple[int, int]]
+            Mapping dictionary keyed by matrix row index.
+        """
+        if not mapping_traj_chunks:
+            return {}
+        traj_values = np.concatenate(mapping_traj_chunks, axis=0)
+        frame_values = np.concatenate(mapping_frame_chunks, axis=0)
+        return {
+            row_idx: (int(traj_values[row_idx]), int(frame_values[row_idx]))
+            for row_idx in range(int(traj_values.size))
+        }
+
+    @staticmethod
+    def _build_frame_mapping_only(
+        pipeline_data: PipelineData,
+        feature_selector_name: str,
+        data_selector_name: Optional[str],
+    ) -> Dict[int, Tuple[int, int]]:
+        """
+        Build frame mapping without rebuilding the selection matrix.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data object.
+        feature_selector_name : str
+            Feature selector name.
+        data_selector_name : str, optional
+            Data selector name.
+
+        Returns
+        -------
+        Dict[int, Tuple[int, int]]
+            Frame mapping for selected rows.
+        """
+        selector_data = pipeline_data.selected_feature_data[feature_selector_name]
+        all_results = selector_data.get_all_results()
+
+        if data_selector_name is None:
+            traj_frames = None
+        else:
+            traj_frames = pipeline_data.data_selector_data[
+                data_selector_name
+            ].get_trajectory_frames()
+
+        relevant_trajectories = set()
+        for selection_info in all_results.values():
+            if "trajectory_indices" in selection_info:
+                relevant_trajectories.update(selection_info["trajectory_indices"].keys())
+
+        mapping_traj_chunks: List[np.ndarray] = []
+        mapping_frame_chunks: List[np.ndarray] = []
+        for traj_idx in sorted(relevant_trajectories):
+            if traj_frames is None:
+                traj_data = pipeline_data.trajectory_data.trajectories[traj_idx]
+                frame_indices = np.arange(traj_data.n_frames, dtype=np.int32)
+            else:
+                selected_frames = traj_frames.get(traj_idx, [])
+                if not selected_frames:
+                    continue
+                frame_indices = np.asarray(selected_frames, dtype=np.int32)
+            if frame_indices.size == 0:
+                continue
+            mapping_traj_chunks.append(
+                np.full(int(frame_indices.size), traj_idx, dtype=np.int32)
+            )
+            mapping_frame_chunks.append(frame_indices)
+
+        return SelectionMatrixHelper._materialize_frame_mapping(
+            mapping_traj_chunks,
+            mapping_frame_chunks,
+        )
+
     @staticmethod
     def _fill_feature_data(
-        matrix: np.ndarray, pipeline_data: PipelineData, feature_type: str, 
-        selection_info: Dict[str, Any], traj_idx: int, frame_indices: List[int],
-        start_row: int, start_col: int
+        matrix: np.ndarray,
+        pipeline_data: PipelineData,
+        feature_type: str,
+        selection_info: Dict[str, Any],
+        traj_idx: int,
+        frame_indices: np.ndarray,
+        direct_row_slice: bool,
+        source_row_offset: int,
+        start_row: int,
+        start_col: int,
     ) -> int:
         """
         Fill matrix with data from one feature type.
@@ -416,8 +802,12 @@ class SelectionMatrixHelper:
             Selection info for this feature
         traj_idx : int
             Trajectory index
-        frame_indices : list
+        frame_indices : np.ndarray
             Frame indices to extract
+        direct_row_slice : bool
+            True when row chunks map directly to ``source_data[start:end]``.
+        source_row_offset : int
+            Row offset in source trajectory when ``direct_row_slice=True``.
         start_row : int
             Starting row in matrix
         start_col : int
@@ -446,30 +836,161 @@ class SelectionMatrixHelper:
         
         if not indices:
             return start_col
-        
-        # Fill matrix column by column
-        for i, (col_idx, use_reduced) in enumerate(zip(indices, use_reduced_flags)):
-            # Get source data and metadata
-            if use_reduced and feature_data.reduced_data is not None:
-                source_data = feature_data.reduced_data
-                metadata = feature_data.reduced_feature_metadata
+
+        original_src_cols: List[int] = []
+        original_dst_offsets: List[int] = []
+        reduced_src_cols: List[int] = []
+        reduced_dst_offsets: List[int] = []
+
+        for dst_offset, (src_col, use_reduced) in enumerate(
+            zip(indices, use_reduced_flags)
+        ):
+            if use_reduced:
+                reduced_src_cols.append(int(src_col))
+                reduced_dst_offsets.append(dst_offset)
             else:
-                source_data = feature_data.data
-                metadata = feature_data.feature_metadata
+                original_src_cols.append(int(src_col))
+                original_dst_offsets.append(dst_offset)
 
-            if source_data is not None:
-                # Get data for selected frames and column
-                data_slice = source_data[frame_indices, col_idx]
+        if original_src_cols and feature_data.data is not None:
+            SelectionMatrixHelper._copy_feature_block(
+                matrix=matrix,
+                source_data=feature_data.data,
+                metadata=feature_data.feature_metadata,
+                frame_indices=frame_indices,
+                direct_row_slice=direct_row_slice,
+                source_row_offset=source_row_offset,
+                start_row=start_row,
+                start_col=start_col,
+                src_cols=np.asarray(original_src_cols, dtype=np.int32),
+                dst_offsets=np.asarray(original_dst_offsets, dtype=np.int32),
+            )
 
-                # Convert char-encoded data to integer if needed
-                data_slice = SelectionMatrixHelper._convert_char_to_int(
-                    data_slice, metadata
-                )
-
-                # Copy data to matrix
-                matrix[start_row:start_row+len(frame_indices), start_col+i] = data_slice
+        if reduced_src_cols:
+            SelectionMatrixHelper._copy_feature_block(
+                matrix=matrix,
+                source_data=feature_data.reduced_data,
+                metadata=feature_data.reduced_feature_metadata,
+                frame_indices=frame_indices,
+                direct_row_slice=direct_row_slice,
+                source_row_offset=source_row_offset,
+                start_row=start_row,
+                start_col=start_col,
+                src_cols=np.asarray(reduced_src_cols, dtype=np.int32),
+                dst_offsets=np.asarray(reduced_dst_offsets, dtype=np.int32),
+            )
 
         return start_col + len(indices)
+
+    @staticmethod
+    def _copy_feature_block(
+        matrix: np.ndarray,
+        source_data: np.ndarray,
+        metadata: Optional[Dict[str, Any]],
+        frame_indices: np.ndarray,
+        direct_row_slice: bool,
+        source_row_offset: int,
+        start_row: int,
+        start_col: int,
+        src_cols: np.ndarray,
+        dst_offsets: np.ndarray,
+    ) -> None:
+        """
+        Copy one feature block into output matrix using row chunks.
+
+        Parameters
+        ----------
+        matrix : np.ndarray
+            Destination matrix.
+        source_data : np.ndarray
+            Source feature matrix.
+        metadata : dict, optional
+            Metadata for optional categorical conversion.
+        frame_indices : np.ndarray
+            Global row indices in source trajectory matrix.
+        direct_row_slice : bool
+            True when rows can be sliced by ``start:end`` directly.
+        source_row_offset : int
+            Row offset in source trajectory when ``direct_row_slice=True``.
+        start_row : int
+            Destination row offset.
+        start_col : int
+            Destination column offset.
+        src_cols : np.ndarray
+            Source columns to copy.
+        dst_offsets : np.ndarray
+            Destination offsets relative to ``start_col``.
+        """
+        runs = SelectionMatrixHelper._build_contiguous_runs(src_cols, dst_offsets)
+        is_memmap_source = MemmapUtils.is_memmap_view(source_data)
+        if is_memmap_source:
+            ResourceUtils.tune_memmap(source_data, "sequential")
+
+        n_rows = int(frame_indices.size)
+        out_row_slice = slice(start_row, start_row + n_rows)
+        if direct_row_slice:
+            row_block = source_data[source_row_offset:source_row_offset + n_rows]
+        else:
+            row_block = source_data[frame_indices]
+
+        for src_start, src_end, dst_start, dst_end in runs:
+            block = row_block[:, src_start:src_end]
+            block = SelectionMatrixHelper._convert_char_to_int(
+                block, metadata or {}
+            )
+            matrix[
+                out_row_slice,
+                slice(start_col + dst_start, start_col + dst_end),
+            ] = block
+
+        if is_memmap_source:
+            ResourceUtils.tune_memmap(source_data, "random")
+            ResourceUtils.tune_memmap(source_data, "dontneed")
+
+    @staticmethod
+    def _build_contiguous_runs(
+        src_cols: np.ndarray,
+        dst_offsets: np.ndarray,
+    ) -> List[Tuple[int, int, int, int]]:
+        """
+        Build contiguous source/destination copy runs.
+
+        Parameters
+        ----------
+        src_cols : np.ndarray
+            Source column indices.
+        dst_offsets : np.ndarray
+            Destination offsets relative to output column start.
+
+        Returns
+        -------
+        list[tuple[int, int, int, int]]
+            List of ``(src_start, src_end, dst_start, dst_end)`` ranges with
+            exclusive end indices.
+        """
+        if src_cols.size == 0:
+            return []
+
+        src = np.asarray(src_cols, dtype=np.int64)
+        dst = np.asarray(dst_offsets, dtype=np.int64)
+
+        if src.size == 1:
+            return [(int(src[0]), int(src[0]) + 1, int(dst[0]), int(dst[0]) + 1)]
+
+        contiguous = (np.diff(src) == 1) & (np.diff(dst) == 1)
+        breaks = np.flatnonzero(~contiguous) + 1
+        run_starts = np.concatenate((np.array([0], dtype=np.int64), breaks))
+        run_ends = np.concatenate((breaks, np.array([src.size], dtype=np.int64)))
+
+        return [
+            (
+                int(src[start_idx]),
+                int(src[end_idx - 1]) + 1,
+                int(dst[start_idx]),
+                int(dst[end_idx - 1]) + 1,
+            )
+            for start_idx, end_idx in zip(run_starts, run_ends)
+        ]
 
     @staticmethod
     def _convert_char_to_int(data_slice: np.ndarray, metadata: Dict[str, Any]) -> np.ndarray:

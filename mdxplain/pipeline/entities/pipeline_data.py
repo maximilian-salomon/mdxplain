@@ -97,6 +97,8 @@ class PipelineData:
         Dictionary of feature importance results by analysis name
     structure_visualization_data : Dict[str, StructureVisualizationData]
         Dictionary of structure visualization data by session name
+    custom_metadata : Dict[str, Any]
+        User-defined custom metadata attached to the pipeline state
 
     Examples
     --------
@@ -178,11 +180,12 @@ class PipelineData:
         self.comparison_data: Dict[str, ComparisonData] = {}
         self.feature_importance_data: Dict[str, FeatureImportanceData] = {}
         self.structure_visualization_data: Dict[str, StructureVisualizationData] = {}
+        self.custom_metadata: Dict[str, Any] = {}
 
         # Matrix caching for memmap (only used when use_memmap=True)
-        # Stores: {cache_key: (memmap_path, frame_mapping)}
+        # Stores: {cache_key: (memmap_path, optional_frame_mapping)}
         self._matrix_cache: Dict[
-            str, Tuple[str, Dict[int, Tuple[int, int]]]
+            str, Tuple[str, Optional[Dict[int, Tuple[int, int]]]]
         ] = {}
 
         # Dynamic memory management
@@ -217,6 +220,7 @@ class PipelineData:
         self.comparison_data.clear()
         self.feature_importance_data.clear()
         self.structure_visualization_data.clear()
+        self.custom_metadata.clear()
 
     def update_max_memory_from_trajectories(self, max_atoms: int) -> None:
         """
@@ -283,7 +287,67 @@ class PipelineData:
             "data_selectors_created": len(self.data_selector_data),
             "comparisons_created": len(self.comparison_data),
             "feature_importance_analyses": len(self.feature_importance_data),
+            "custom_metadata_entries": len(self.custom_metadata),
         }
+
+    def add_custom_metadata(
+        self,
+        name: str,
+        value: Any,
+        overwrite: bool = False
+    ) -> None:
+        """
+        Register custom metadata payload in the pipeline state.
+
+        Parameters
+        ----------
+        name : str
+            Metadata key.
+        value : Any
+            Metadata payload to store.
+        overwrite : bool, default=False
+            If False, existing keys raise ValueError.
+
+        Returns
+        -------
+        None
+            Stores metadata in-place.
+        """
+        if not isinstance(name, str) or not name.strip():
+            raise ValueError("Custom metadata name must be a non-empty string.")
+        if (not overwrite) and name in self.custom_metadata:
+            raise ValueError(
+                f"Custom metadata key '{name}' already exists. "
+                "Use overwrite=True to replace it."
+            )
+        self.custom_metadata[name] = value
+
+    def get_custom_metadata(self, name: str) -> Any:
+        """
+        Get a previously registered custom metadata payload.
+
+        Parameters
+        ----------
+        name : str
+            Metadata key.
+
+        Returns
+        -------
+        Any
+            Stored payload.
+
+        Raises
+        ------
+        ValueError
+            If the key does not exist.
+        """
+        if name not in self.custom_metadata:
+            available = sorted(self.custom_metadata.keys())
+            raise ValueError(
+                f"Custom metadata '{name}' not found. "
+                f"Available keys: {available}"
+            )
+        return self.custom_metadata[name]
 
     def has_trajectories(self) -> bool:
         """
@@ -612,9 +676,9 @@ class PipelineData:
         >>> pipeline_data.save('analysis_results/pipeline_data.pkl')
 
         >>> # Save with specific path structure
-        >>> import os
-        >>> save_dir = 'project_results/session_001'
-        >>> os.makedirs(save_dir, exist_ok=True)
+        >>> from pathlib import Path
+        >>> save_dir = Path('project_results/session_001')
+        >>> save_dir.mkdir(parents=True, exist_ok=True)
         >>> pipeline_data.save(f'{save_dir}/pipeline_analysis.pkl')
 
         Notes
@@ -771,8 +835,7 @@ class PipelineData:
         to create a matrix with the desired subset of data. Feature selection is
         required to define which columns to include.
 
-        Frame mapping is ALWAYS created internally to simplify filtering logic,
-        but only returned when requested.
+        Frame mapping is only created when explicitly requested.
 
         Parameters
         ----------
@@ -822,10 +885,17 @@ class PipelineData:
 
         # Build matrix directly with efficient memory usage
         matrix, frame_mapping = SelectionMatrixHelper.build_selection_matrix(
-            self, feature_selector, data_selector
+            self,
+            feature_selector,
+            data_selector,
+            build_frame_mapping=return_frame_mapping,
         )
 
         if return_frame_mapping:
+            if frame_mapping is None:
+                raise ValueError(
+                    "Internal error: frame mapping was requested but not built."
+                )
             return matrix, frame_mapping
         return matrix
 

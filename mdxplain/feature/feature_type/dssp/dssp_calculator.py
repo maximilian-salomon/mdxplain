@@ -25,14 +25,14 @@ Utility class for computing secondary structure assignments using DSSP algorithm
 with support for multiple encoding formats and memory mapping.
 """
 
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, List, Tuple
 
 import mdtraj as md
 import numpy as np
 
 from mdxplain.utils.progress_utils import ProgressUtils
 from mdxplain.utils.resource_utils import ResourceUtils
-from mdxplain.utils.data_utils import DataUtils
+from mdxplain.utils.memmap_utils import MemmapUtils
 
 from ..helper.calculator_compute_helper import CalculatorComputeHelper
 from ..interfaces.calculator_base import CalculatorBase
@@ -218,7 +218,7 @@ class DSSPCalculator(CalculatorBase):
         """
         if self.use_memmap:
             # Chunk-wise processing for memory efficiency
-            if DataUtils.is_memmap_view(dssp_array):
+            if MemmapUtils.is_memmap_view(dssp_array):
                 ResourceUtils.tune_memmap(dssp_array, "sequential")
             for i in ProgressUtils.iterate(
                 range(0, trajectory.n_frames, self.chunk_size),
@@ -238,8 +238,7 @@ class DSSPCalculator(CalculatorBase):
                 encoded_chunk = self._encode_dssp_assignments(chunk_dssp, encoding, classes, simplified)
 
                 dssp_array[i:end] = encoded_chunk
-                if hasattr(dssp_array, "flush"):
-                    dssp_array.flush()
+                MemmapUtils.evict_memory_range(dssp_array, i, end)
         else:
             # In-memory processing for smaller datasets
             dssp_assignments = md.compute_dssp(trajectory, simplified=simplified)
@@ -647,3 +646,35 @@ class DSSPCalculator(CalculatorBase):
             "transitions", "transition_frequency", "stability", "class_frequencies"
         ]
         raise ValueError(f"Unknown metric: {metric}. Supported: {supported_metrics}")
+
+    def compute_pooled_metric_values(
+        self,
+        segments: List[np.ndarray],
+        metric: str,
+        **params
+    ) -> np.ndarray:
+        """
+        Compute pooled metric values with boundary-safe transitions.
+
+        Parameters
+        ----------
+        segments : list
+            List of (n_frames, n_features) arrays to pool
+        metric : str
+            Metric name
+        params : dict
+            Additional metric parameters
+
+        Returns
+        -------
+        np.ndarray
+            Metric values per feature
+        """
+        return self.analysis.compute_pooled_metric_values(
+            segments,
+            metric,
+            transition_mode=params.get("transition_mode", "window"),
+            window_size=params.get("window_size", 10),
+            lag_time=params.get("lag_time", 1),
+            simplified=True,
+        )

@@ -25,18 +25,24 @@ Utility class for computing Solvent Accessible Surface Area using the
 Shrake-Rupley algorithm with support for memory mapping and chunked processing.
 """
 
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, List, Tuple
 
 import mdtraj as md
 import numpy as np
 
 from mdxplain.utils.progress_utils import ProgressUtils
 from mdxplain.utils.resource_utils import ResourceUtils
-from mdxplain.utils.data_utils import DataUtils
+from mdxplain.utils.memmap_utils import MemmapUtils
 
 from ..helper.calculator_compute_helper import CalculatorComputeHelper
 from ..interfaces.calculator_base import CalculatorBase
 from .sasa_calculator_analysis import SASACalculatorAnalysis
+
+
+NM2_TO_ANGSTROM2 = 100.0
+DEFAULT_TRANSITION_THRESHOLD_A2 = 50.0
+DEFAULT_BURIAL_THRESHOLD_A2 = 10.0
+DEFAULT_EXPOSURE_THRESHOLD_A2 = 100.0
 
 
 class SASACalculator(CalculatorBase):
@@ -112,7 +118,7 @@ class SASACalculator(CalculatorBase):
         tuple[numpy.ndarray, dict]
             Tuple containing (sasa_array, feature_metadata) where sasa_array
             has shape (n_frames, n_residues) or (n_frames, n_atoms) with
-            SASA values in nm²
+            SASA values in Å²
 
         Examples
         --------
@@ -185,11 +191,11 @@ class SASACalculator(CalculatorBase):
         Returns
         -------
         numpy.ndarray
-            Filled SASA array
+            Filled SASA array in Å²
         """
         if self.use_memmap:
             # Chunk-wise processing for memory efficiency
-            if DataUtils.is_memmap_view(sasa_array):
+            if MemmapUtils.is_memmap_view(sasa_array):
                 ResourceUtils.tune_memmap(sasa_array, "sequential")
             for i in ProgressUtils.iterate(
                 range(0, trajectory.n_frames, self.chunk_size),
@@ -206,9 +212,8 @@ class SASACalculator(CalculatorBase):
                     probe_radius=probe_radius
                 )
                 
-                sasa_array[i:end] = chunk_sasa
-                if hasattr(sasa_array, "flush"):
-                    sasa_array.flush()
+                sasa_array[i:end] = chunk_sasa * NM2_TO_ANGSTROM2
+                MemmapUtils.evict_memory_range(sasa_array, i, end)
         else:
             # In-memory processing for smaller datasets
             sasa_values = md.shrake_rupley(
@@ -216,7 +221,7 @@ class SASACalculator(CalculatorBase):
                 mode=mode,
                 probe_radius=probe_radius
             )
-            sasa_array[:] = sasa_values
+            sasa_array[:] = sasa_values * NM2_TO_ANGSTROM2
 
         if isinstance(sasa_array, np.memmap):
             ResourceUtils.tune_memmap(sasa_array, "random")
@@ -263,7 +268,7 @@ class SASACalculator(CalculatorBase):
                 "probe_radius_nm": probe_radius
             },
             "algorithm": "shrake_rupley",
-            "units": "nm²",
+            "units": "Å²",
             "n_features": len(features),
             "visualization": {
                 "is_discrete": False,
@@ -345,7 +350,7 @@ class SASACalculator(CalculatorBase):
         threshold_max: float = None,
         feature_metadata: list = None,
         output_path: str = None,
-        transition_threshold: float = 0.5,
+        transition_threshold: float = DEFAULT_TRANSITION_THRESHOLD_A2,
         window_size: int = 10,
         transition_mode: str = "window",
         lag_time: int = 1,
@@ -379,8 +384,8 @@ class SASACalculator(CalculatorBase):
             SASA metadata corresponding to data columns
         output_path : str, optional
             Path for memory-mapped output
-        transition_threshold : float, default=0.5
-            SASA threshold for detecting transitions (in nm²)
+        transition_threshold : float, default=50.0
+            SASA threshold for detecting transitions (in Å²)
         window_size : int, default=10
             Window size for transition analysis
         transition_mode : str, default='window'
@@ -402,13 +407,13 @@ class SASACalculator(CalculatorBase):
 
         >>> # Select buried residues (burial_fraction >= 0.8, needs threshold_max as burial cutoff)
         >>> result = calculator.compute_dynamic_values(
-        ...     sasa, metric='burial_fraction', threshold_min=0.8, threshold_max=0.5
+        ...     sasa, metric='burial_fraction', threshold_min=0.8, threshold_max=50.0
         ... )
 
         >>> # Select SASA with many transitions
         >>> result = calculator.compute_dynamic_values(
         ...     sasa, metric='transitions', threshold_min=5,
-        ...     transition_threshold=1.0, window_size=10
+        ...     transition_threshold=100.0, window_size=10
         ... )
         """
         # Compute metric values using helper method
@@ -498,10 +503,10 @@ class SASACalculator(CalculatorBase):
             min_vals = self.analysis.compute_min(sasa_data)
             return max_vals - min_vals
         if metric == "burial_fraction":
-            cutoff = threshold_min if threshold_min is not None else 0.1
+            cutoff = threshold_min if threshold_min is not None else DEFAULT_BURIAL_THRESHOLD_A2
             return self.analysis.compute_burial_fraction(sasa_data, cutoff)
         if metric == "exposure_fraction":
-            cutoff = threshold_max if threshold_max is not None else 1.0
+            cutoff = threshold_max if threshold_max is not None else DEFAULT_EXPOSURE_THRESHOLD_A2
             return self.analysis.compute_exposure_fraction(sasa_data, cutoff)
         if metric == "transitions":
             if transition_mode == "lagtime":
@@ -515,3 +520,37 @@ class SASACalculator(CalculatorBase):
             "mad", "mean", "burial_fraction", "exposure_fraction"
         ]
         raise ValueError(f"Unknown metric: {metric}. Supported: {supported_metrics}")
+
+    def compute_pooled_metric_values(
+        self,
+        segments: List[np.ndarray],
+        metric: str,
+        **params
+    ) -> np.ndarray:
+        """
+        Compute pooled metric values with boundary-safe transitions.
+
+        Parameters
+        ----------
+        segments : list
+            List of (n_frames, n_features) arrays to pool
+        metric : str
+            Metric name
+        params : dict
+            Additional metric parameters
+
+        Returns
+        -------
+        np.ndarray
+            Metric values per feature
+        """
+        return self.analysis.compute_pooled_metric_values(
+            segments,
+            metric,
+            transition_threshold=params.get("transition_threshold", DEFAULT_TRANSITION_THRESHOLD_A2),
+            window_size=params.get("window_size", 10),
+            transition_mode=params.get("transition_mode", "window"),
+            lag_time=params.get("lag_time", 1),
+            threshold_min=params.get("threshold_min"),
+            threshold_max=params.get("threshold_max"),
+        )

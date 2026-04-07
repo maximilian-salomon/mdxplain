@@ -32,6 +32,7 @@ import warnings
 from typing import List, Dict, Any, Optional, Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from ..entities.feature_importance_data import FeatureImportanceData
     from ...pipeline.entities.pipeline_data import PipelineData
 
 from ..analyzer_type.interfaces.analyzer_type_base import AnalyzerTypeBase
@@ -39,6 +40,8 @@ from ..helper.analysis_runner_helper import AnalysisRunnerHelper
 from ..helper.feature_importance_validation_helper import FeatureImportanceValidationHelper
 from ..helper.top_features_helper import TopFeaturesHelper
 from ...utils.data_utils import DataUtils
+from ...utils.feature_metadata_utils import FeatureMetadataUtils
+from ...utils.path_utils import PathUtils
 from ..services.feature_importance_add_service import FeatureImportanceAddService
 from ..helper.representative_finder_helper import RepresentativeFinderHelper
 
@@ -98,7 +101,11 @@ class FeatureImportanceManager:
         """
         self.use_memmap = use_memmap
         self.chunk_size = chunk_size
-        self.cache_dir = cache_dir
+        self.cache_dir = PathUtils.prepare_directory_path(
+            cache_dir,
+            create=True,
+            purpose="cache directory",
+        )
 
     def add_analysis(
         self,
@@ -365,7 +372,11 @@ class FeatureImportanceManager:
         """
         Print top N features for all comparisons in analysis.
 
-        Uses get_all_top_features() internally and formats output for console display.
+        Uses get_all_top_features() internally and formats output for console
+        display. If a trained Decision Tree model is available for a
+        comparison, the printed label is extended with a representative split
+        criterion for that feature. This keeps the output focused on the
+        actual tree rule instead of generic metadata labels.
 
         Warning
         -------
@@ -403,19 +414,187 @@ class FeatureImportanceManager:
         ...     "feature_importance", n=5
         ... )
         Top 5 features for cluster_0_vs_rest:
-          1. CA-CB: 0.456
-          2. CA-CG: 0.234
+          1. contacts: LEU13-ARG31: Non-Contact (0.456)
+          2. torsions: GLY42_phi: <= 55.20 degrees (0.234)
           ...
+
+        Notes
+        -----
+        - Uses representative weighted split thresholds from the stored
+          Decision Tree model when available
+        - For binary discrete features, prints the left branch label
+          (e.g. "Non-Contact")
+        - Falls back to ``feature_type: feature_name`` if no tree rule is
+          available for a feature
         """
+        FeatureImportanceValidationHelper.validate_analysis_exists(
+            pipeline_data, analysis_name
+        )
+        fi_data = pipeline_data.feature_importance_data[analysis_name]
         all_top_features = self.get_all_top_features(
             pipeline_data, analysis_name, n=n
         )
+        feature_metadata = None
+        if fi_data.feature_selector:
+            feature_metadata = pipeline_data.get_selected_metadata(
+                fi_data.feature_selector
+            )
 
         for comparison_name, top_features in all_top_features.items():
+            split_rules = self._get_split_rules_for_comparison(
+                fi_data, comparison_name, top_features
+            )
             print(f"\nTop {n} features for {comparison_name}:")
             for j, feature_info in enumerate(top_features, 1):
-                print(f"  {j}. {feature_info['feature_name']}: "
-                      f"{feature_info['importance_score']:.3f}")
+                feature_label = self._format_top_feature_label(
+                    feature_info,
+                    feature_metadata,
+                    split_rules.get(feature_info["feature_index"]),
+                )
+                print(
+                    f"  {j}. {feature_label} "
+                    f"({feature_info['importance_score']:.3f})"
+                )
+
+    def _get_split_rules_for_comparison(
+        self,
+        fi_data: FeatureImportanceData,
+        comparison_name: str,
+        top_features: List[Dict[str, Any]],
+    ) -> Dict[int, Dict[str, float]]:
+        """
+        Extract representative split rules for the requested top features.
+
+        Parameters
+        ----------
+        fi_data : FeatureImportanceData
+            Feature importance analysis containing stored comparison metadata
+            and trained models
+        comparison_name : str
+            Name of the sub-comparison to inspect
+        top_features : List[Dict[str, Any]]
+            Top-feature dictionaries returned by get_all_top_features()
+
+        Returns
+        -------
+        Dict[int, Dict[str, float]]
+            Mapping from feature index to representative split-rule metadata.
+            Each value contains at least ``threshold`` and ``weight``.
+
+        Notes
+        -----
+        Returns an empty dictionary when:
+
+        - no top features are provided
+        - the comparison has no stored model
+        - the model does not expose relevant tree splits for those features
+        """
+        if not top_features:
+            return {}
+
+        _, comparison_metadata = fi_data.get_comparison(comparison_name)
+        model = comparison_metadata.get("model")
+        if model is None:
+            return {}
+
+        feature_indices = [feature["feature_index"] for feature in top_features]
+        target_label = comparison_metadata.get("labels", (0, 1))[0]
+        return RepresentativeFinderHelper._extract_tree_rules(
+            model,
+            feature_indices,
+            target_label,
+        )
+
+    def _format_top_feature_label(
+        self,
+        feature_info: Dict[str, Any],
+        feature_metadata: Optional[List[Any]],
+        split_rule: Optional[Dict[str, float]],
+    ) -> str:
+        """
+        Format one top feature with its representative split criterion.
+
+        Parameters
+        ----------
+        feature_info : Dict[str, Any]
+            Top-feature dictionary containing at least ``feature_type`` and
+            ``feature_name``
+        feature_metadata : list or None
+            Selected feature metadata used to resolve visualization settings
+            such as discrete tick labels and units
+        split_rule : Dict[str, float] or None
+            Representative split rule for this feature. Expected to contain a
+            ``threshold`` entry. If None, only the base feature label is used.
+
+        Returns
+        -------
+        str
+            Formatted label such as ``contacts: LEU13-ARG31: Non-Contact`` or
+            ``torsions: GLY42_phi: <= 55.20 degrees``
+        """
+        base_label = (
+            f"{feature_info['feature_type']}: {feature_info['feature_name']}"
+        )
+        if split_rule is None:
+            return base_label
+
+        type_metadata = FeatureMetadataUtils.get_top_level_metadata(
+            feature_info["feature_type"], feature_metadata
+        )
+        criterion = self._format_split_criterion(
+            type_metadata,
+            split_rule["threshold"],
+        )
+        return f"{base_label}: {criterion}"
+
+    def _format_split_criterion(
+        self,
+        type_metadata: Dict[str, Any],
+        threshold: float,
+    ) -> str:
+        """
+        Convert a tree threshold into a readable split criterion label.
+
+        Parameters
+        ----------
+        type_metadata : Dict[str, Any]
+            Type-level feature metadata containing visualization settings and
+            optional units
+        threshold : float
+            Representative tree split threshold for the feature
+
+        Returns
+        -------
+        str
+            Human-readable split criterion. For binary discrete features this
+            is the left-branch class label. For continuous features this is a
+            threshold string such as ``<= 4.50`` or ``<= 55.20 degrees``.
+
+        Notes
+        -----
+        Binary discrete features in scikit-learn trees typically split at
+        ``0.5``. In that case the left branch corresponds to the first label
+        in the metadata tick-label list.
+        """
+        visualization = type_metadata.get("visualization", {})
+        tick_labels = visualization.get("tick_labels", {})
+        labels = tick_labels.get("long", tick_labels.get("short", []))
+        labels = [
+            str(label).replace("\n", " ").strip()
+            for label in labels
+            if str(label).strip()
+        ]
+
+        if (
+            visualization.get("is_discrete", False)
+            and len(labels) == 2
+            and abs(float(threshold) - 0.5) < 1e-8
+        ):
+            return labels[0]
+
+        unit = type_metadata.get("units", "")
+        unit_suffix = f" {unit}" if unit else ""
+        return f"<= {threshold:.2f}{unit_suffix}"
 
     def list_analyses(self, pipeline_data: PipelineData) -> List[str]:
         """

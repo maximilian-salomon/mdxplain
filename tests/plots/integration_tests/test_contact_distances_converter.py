@@ -293,7 +293,7 @@ class TestContactToDistanceConversionSelectorReduction:
             "contacts_reduced",
             "all",
             threshold_min=0.8,
-            cross_trajectory=True,
+            cross_trajectory_intersection=True,
             use_reduced=False,
         )
         self.pipeline.feature_selector.select("contacts_reduced")

@@ -26,6 +26,7 @@ pipeline metadata, usable across all modules (plots, feature_importance, etc.).
 """
 
 from typing import Optional, List, Any, Dict
+import re
 import numpy as np
 
 
@@ -52,7 +53,8 @@ class FeatureMetadataUtils:
     @staticmethod
     def get_feature_name(
         feature_metadata: Optional[List[Any]],
-        feature_idx: int
+        feature_idx: int,
+        use_for_plotting: bool = False,
     ) -> str:
         """
         Get human-readable name for a feature index.
@@ -67,6 +69,11 @@ class FeatureMetadataUtils:
             Feature metadata list from pipeline (e.g., from get_selected_metadata())
         feature_idx : int
             Index of the feature to get name for
+        use_for_plotting : bool, default=False
+            If True, apply Matplotlib-friendly formatting for residue
+            names with consensus labels. For patterns like ``R131x3.50``,
+            the ``x`` separator is replaced by superscript formatting,
+            resulting in ``R131$^{3.50}$``.
 
         Returns
         -------
@@ -108,13 +115,46 @@ class FeatureMetadataUtils:
             partner_names = []
             for element in features_data:
                 if isinstance(element, dict) and "full_name" in element:
-                    partner_names.append(element["full_name"])
+                    partner_names.append(
+                        FeatureMetadataUtils._format_full_name(
+                            element["full_name"],
+                            use_for_plotting=use_for_plotting,
+                        )
+                    )
 
             if partner_names:
                 # Join with "-" for multiple partners (contacts/distances) or return single name
                 return "-".join(partner_names)
 
         return f"feature_{feature_idx}"
+
+    @staticmethod
+    def _format_full_name(full_name: str, use_for_plotting: bool = False) -> str:
+        """
+        Format residue full name for display.
+
+        Parameters
+        ----------
+        full_name : str
+            Residue full name from metadata
+        use_for_plotting : bool, default=False
+            Whether to apply Matplotlib superscript formatting for the
+            consensus part
+
+        Returns
+        -------
+        str
+            Formatted residue name
+        """
+        if not use_for_plotting:
+            return full_name
+
+        match = re.fullmatch(r"([A-Za-z]+)(\d+)x(.+)", full_name)
+        if match is None:
+            return full_name
+
+        residue_prefix, seqid, consensus = match.groups()
+        return f"{residue_prefix}{seqid}$^{{{consensus}}}$"
 
     @staticmethod
     def get_feature_type(
@@ -238,7 +278,10 @@ class FeatureMetadataUtils:
         return residues
 
     @staticmethod
-    def create_feature_map(metadata_array: np.ndarray) -> dict:
+    def create_feature_map(
+        metadata_array: np.ndarray,
+        use_for_plotting: bool = False
+    ) -> dict:
         """
         Create feature index to name mapping from metadata array.
 
@@ -249,6 +292,9 @@ class FeatureMetadataUtils:
         ----------
         metadata_array : np.ndarray
             Feature metadata array from pipeline
+        use_for_plotting : bool, default=False
+            Whether to apply plot-specific formatting when building feature
+            names, such as consensus superscripts.
 
         Returns
         -------
@@ -269,7 +315,7 @@ class FeatureMetadataUtils:
         feature_map = {}
         for idx in range(len(metadata_array)):
             feature_name = FeatureMetadataUtils.get_feature_name(
-                metadata_array, idx
+                metadata_array, idx, use_for_plotting=use_for_plotting
             )
             feature_map[idx] = feature_name
         return feature_map

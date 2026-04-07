@@ -227,7 +227,7 @@ class TestPostSelectionReductionStandalone:
             reduction={
                 "metric": "mean",
                 "threshold_min": 7.0,
-                "cross_trajectory": True
+                "cross_trajectory_intersection": True
             }
         )
 
@@ -407,9 +407,9 @@ class TestPostSelectionReductionStandalone:
             2: feature_data_2
         }
 
-    def test_standalone_multi_trajectory_cross_trajectory_true(self):
+    def test_standalone_multi_trajectory_cross_trajectory_intersection(self):
         """
-        Test standalone multi-trajectory with cross_trajectory=True.
+        Test standalone multi-trajectory with cross_trajectory_intersection=True.
 
         Verifies common denominator across trajectories.
         With max > 8.5 threshold:
@@ -424,13 +424,13 @@ class TestPostSelectionReductionStandalone:
         self.manager.create(self.pipeline_data, "test")
         self.manager.add_selection(
             self.pipeline_data, "test", "distances", "all",
-            reduction={"metric": "max", "threshold_min": 8.5, "cross_trajectory": True}
+            reduction={"metric": "max", "threshold_min": 8.5, "cross_trajectory_intersection": True}
         )
 
         indices = self._get_selected_indices("test")
         expected_indices = [8, 9]  # Common features across all 3 trajectories
         self._assert_exact_indices(indices, expected_indices,
-            "Standalone cross-trajectory=True should keep only common features across all trajectories")
+            "Standalone cross_trajectory_intersection should keep only common features across all trajectories")
 
         # Validate selected data (all trajectories concatenated)
         selected_data = self.pipeline_data.get_selected_data("test")
@@ -449,49 +449,193 @@ class TestPostSelectionReductionStandalone:
         assert selected_features == expected_metadata, \
             f"Metadata mismatch: Expected metadata for indices {expected_indices}"
 
-    def test_standalone_multi_trajectory_cross_trajectory_false(self):
+    def test_standalone_multi_trajectory_cross_trajectory_union(self):
         """
-        Test standalone multi-trajectory with cross_trajectory=False.
+        Test standalone multi-trajectory with cross_trajectory_union=True.
+        """
+        self._add_multiple_trajectories_with_different_stats()
 
-        Validates exact indices per trajectory before ValueError.
+        self.manager.create(self.pipeline_data, "test")
+        self.manager.add_selection(
+            self.pipeline_data,
+            "test",
+            "distances",
+            "all",
+            reduction={"metric": "max", "threshold_min": 8.5, "cross_trajectory_union": True}
+        )
+
+        indices = self._get_selected_indices("test")
+        # Per-trajectory max values:
+        # traj0 max: [1.4, 2.4, 3.4, 4.4, 5.4, 6.4, 7.4, 8.4, 9.4, 10.4] -> keep [8, 9]
+        # traj1 max: [1.9, 2.9, 3.9, 4.9, 5.9, 6.9, 7.9, 8.9, 9.9, 10.9] -> keep [7, 8, 9]
+        # traj2 max: [0.9, 1.9, 2.9, 3.9, 4.9, 5.9, 8.9, 9.9, 10.9, 11.9] -> keep [6, 7, 8, 9]
+        # union => [6, 7, 8, 9]
+        expected_indices = [6, 7, 8, 9]
+        self._assert_exact_indices(indices, expected_indices,
+            "Standalone cross_trajectory_union should keep any feature that passes in any trajectory")
+
+        selected_data = self.pipeline_data.get_selected_data("test")
+        expected_data = np.vstack([
+            self.distances_traj0[:, expected_indices],
+            self.distances_traj1[:, expected_indices],
+            self.distances_traj2[:, expected_indices]
+        ])
+        np.testing.assert_array_almost_equal(selected_data, expected_data,
+            err_msg="Selected data should match expected union values")
+
+        selected_metadata = self.pipeline_data.get_selected_metadata("test")
+        expected_metadata = [self.metadata["features"][i] for i in expected_indices]
+        selected_features = [item["features"] for item in selected_metadata]
+        assert selected_features == expected_metadata, \
+            f"Metadata mismatch: Expected metadata for indices {expected_indices}"
+
+    def test_standalone_multi_trajectory_cross_trajectory_pooled_mean(self):
+        """
+        Test standalone multi-trajectory with cross_trajectory_pooled=True using mean metric.
+        """
+        self._add_multiple_trajectories_with_different_stats()
+
+        self.manager.create(self.pipeline_data, "test")
+        self.manager.add_selection(
+            self.pipeline_data,
+            "test",
+            "distances",
+            "all",
+            reduction={"metric": "mean", "threshold_min": 8.5, "cross_trajectory_pooled": True}
+        )
+
+        indices = self._get_selected_indices("test")
+        # Pooled mean across all frames/trajectories:
+        # per-trajectory means:
+        # traj0 means: [1.2, 2.2, 3.2, 4.2, 5.2, 6.2, 7.2, 8.2, 9.2, 10.2]
+        # traj1 means: [1.7, 2.7, 3.7, 4.7, 5.7, 6.7, 7.7, 8.7, 9.7, 10.7]
+        # traj2 means: [0.7, 1.7, 2.7, 3.7, 4.7, 5.7, 8.7, 9.7, 10.7, 11.7]
+        # pooled means: [1.2, 2.2, 3.2, 4.2, 5.2, 6.2, 7.87, 8.87, 9.87, 10.87]
+        # threshold_min=8.5 => keep indices [7, 8, 9]
+        expected_indices = [7, 8, 9]
+        self._assert_exact_indices(indices, expected_indices,
+            "Standalone cross_trajectory_pooled mean reduction should use pooled mean values")
+
+        selected_data = self.pipeline_data.get_selected_data("test")
+        expected_data = np.vstack([
+            self.distances_traj0[:, expected_indices],
+            self.distances_traj1[:, expected_indices],
+            self.distances_traj2[:, expected_indices]
+        ])
+        np.testing.assert_array_almost_equal(selected_data, expected_data,
+            err_msg="Selected data should match expected pooled mean values")
+
+        selected_metadata = self.pipeline_data.get_selected_metadata("test")
+        expected_metadata = [self.metadata["features"][i] for i in expected_indices]
+        selected_features = [item["features"] for item in selected_metadata]
+        assert selected_features == expected_metadata, \
+            f"Metadata mismatch: Expected metadata for indices {expected_indices}"
+
+    def test_standalone_multi_trajectory_cross_trajectory_intersection_mean(self):
+        """
+        Test standalone multi-trajectory with cross_trajectory_intersection=True using mean metric.
+        """
+        self._add_multiple_trajectories_with_different_stats()
+
+        self.manager.create(self.pipeline_data, "test")
+        self.manager.add_selection(
+            self.pipeline_data,
+            "test",
+            "distances",
+            "all",
+            reduction={"metric": "mean", "threshold_min": 8.5, "cross_trajectory_intersection": True}
+        )
+
+        indices = self._get_selected_indices("test")
+        # Per-trajectory means:
+        # traj0 means: [1.2, 2.2, 3.2, 4.2, 5.2, 6.2, 7.2, 8.2, 9.2, 10.2] -> keep [8, 9]
+        # traj1 means: [1.7, 2.7, 3.7, 4.7, 5.7, 6.7, 7.7, 8.7, 9.7, 10.7] -> keep [7, 8, 9]
+        # traj2 means: [0.7, 1.7, 2.7, 3.7, 4.7, 5.7, 8.7, 9.7, 10.7, 11.7] -> keep [6, 7, 8, 9]
+        # intersection => [8, 9]
+        expected_indices = [8, 9]
+        self._assert_exact_indices(indices, expected_indices,
+            "Standalone cross_trajectory_intersection mean reduction should keep only common features")
+
+        selected_data = self.pipeline_data.get_selected_data("test")
+        expected_data = np.vstack([
+            self.distances_traj0[:, expected_indices],
+            self.distances_traj1[:, expected_indices],
+            self.distances_traj2[:, expected_indices]
+        ])
+        np.testing.assert_array_almost_equal(selected_data, expected_data,
+            err_msg="Selected data should match expected intersection values")
+
+        selected_metadata = self.pipeline_data.get_selected_metadata("test")
+        expected_metadata = [self.metadata["features"][i] for i in expected_indices]
+        selected_features = [item["features"] for item in selected_metadata]
+        assert selected_features == expected_metadata, \
+            f"Metadata mismatch: Expected metadata for indices {expected_indices}"
+
+    def test_standalone_multi_trajectory_per_trajectory_default(self):
+        """
+        Test standalone multi-trajectory with per_trajectory (default).
+
+        Validates exact indices per trajectory.
         With max > 8.5 threshold:
 
         - Traj 0: keeps [8, 9] (max 9.4, 10.4) - 2 features
         - Traj 1: keeps [7, 8, 9] (max 8.9, 9.9, 10.9) - 3 features
         - Traj 2: keeps [6, 7, 8, 9] (max 8.9, 9.9, 10.9, 11.9) - 4 features
-        Expected: ValueError about inconsistent column counts
         """
         self._add_multiple_trajectories_with_different_stats()
 
         self.manager.create(self.pipeline_data, "test")
         self.manager.add_selection(
             self.pipeline_data, "test", "distances", "all",
-            reduction={"metric": "max", "threshold_min": 8.5, "cross_trajectory": False}
+            reduction={"metric": "max", "threshold_min": 8.5}
         )
 
-        # Execute select() and catch the expected ValueError
-        try:
-            self.manager.select(self.pipeline_data, "test", reference_traj=0)
-            assert False, "Should have raised ValueError for inconsistent column counts"
-        except ValueError as e:
-            # Verify the error is about inconsistent column counts
-            assert "inconsistent column counts" in str(e)
-
-        # The trajectory indices are still set in FeatureSelectorData despite the error
         selector_data = self.pipeline_data.selected_feature_data["test"]
-        all_results = selector_data.get_all_results()
-        distance_results = all_results["distances"]["trajectory_indices"]
+        selection_dict = selector_data.selections["distances"][-1]
+        trajectory_results = self.manager._process_single_selection(
+            self.pipeline_data, "distances", selection_dict
+        )
 
-        # Verify exact indices per trajectory that caused the inconsistency
-        assert 0 in distance_results, "Trajectory 0 should be in results"
-        assert 1 in distance_results, "Trajectory 1 should be in results"
-        assert 2 in distance_results, "Trajectory 2 should be in results"
-
-        traj_0_indices = distance_results[0]["indices"]
-        traj_1_indices = distance_results[1]["indices"]
-        traj_2_indices = distance_results[2]["indices"]
+        traj_0_indices = trajectory_results[0]["indices"]
+        traj_1_indices = trajectory_results[1]["indices"]
+        traj_2_indices = trajectory_results[2]["indices"]
 
         # Verify the exact indices that cause the inconsistency
+        assert traj_0_indices == [8, 9], f"Traj 0 should have [8,9], got {traj_0_indices}"
+        assert traj_1_indices == [7, 8, 9], f"Traj 1 should have [7,8,9], got {traj_1_indices}"
+        assert traj_2_indices == [6, 7, 8, 9], f"Traj 2 should have [6,7,8,9], got {traj_2_indices}"
+
+    def test_standalone_multi_trajectory_per_trajectory_explicit_false_flags(self):
+        """
+        Test standalone multi-trajectory with explicit False flags (per_trajectory default).
+        """
+        self._add_multiple_trajectories_with_different_stats()
+
+        self.manager.create(self.pipeline_data, "test")
+        self.manager.add_selection(
+            self.pipeline_data,
+            "test",
+            "distances",
+            "all",
+            reduction={
+                "metric": "max",
+                "threshold_min": 8.5,
+                "cross_trajectory_intersection": False,
+                "cross_trajectory_union": False,
+                "cross_trajectory_pooled": False,
+            },
+        )
+
+        selector_data = self.pipeline_data.selected_feature_data["test"]
+        selection_dict = selector_data.selections["distances"][-1]
+        trajectory_results = self.manager._process_single_selection(
+            self.pipeline_data, "distances", selection_dict
+        )
+
+        traj_0_indices = trajectory_results[0]["indices"]
+        traj_1_indices = trajectory_results[1]["indices"]
+        traj_2_indices = trajectory_results[2]["indices"]
+
         assert traj_0_indices == [8, 9], f"Traj 0 should have [8,9], got {traj_0_indices}"
         assert traj_1_indices == [7, 8, 9], f"Traj 1 should have [7,8,9], got {traj_1_indices}"
         assert traj_2_indices == [6, 7, 8, 9], f"Traj 2 should have [6,7,8,9], got {traj_2_indices}"
@@ -515,7 +659,7 @@ class TestPostSelectionReductionStandalone:
         self.manager.add_selection(
             self.pipeline_data, "test", "distances", "all",
             traj_selection=[0, 1],  # Only trajectories 0 and 1
-            reduction={"metric": "max", "threshold_min": 8.5, "cross_trajectory": True}
+            reduction={"metric": "max", "threshold_min": 8.5, "cross_trajectory_intersection": True}
         )
 
         indices = self._get_selected_indices("test")
@@ -548,11 +692,11 @@ class TestPostSelectionReductionStandalone:
 
         - Traj 0: indices [0, 1, 2, 3] (4 features - pairs involving residue 0)
 
-        Selection 2: "all" with min <= 4.5, cross_trajectory=False on traj_selection=[1]
+        Selection 2: "all" with min <= 4.5, per_trajectory (default) on traj_selection=[1]
 
         - Traj 1: indices [0, 1, 2, 3] (4 features)
 
-        Selection 3: "all" with max >= 8.9, cross_trajectory=False on traj_selection=[2]
+        Selection 3: "all" with max >= 8.9, per_trajectory (default) on traj_selection=[2]
         
         - Traj 2: indices [6, 7, 8, 9] (4 features)
 
@@ -570,13 +714,13 @@ class TestPostSelectionReductionStandalone:
         # Selection 2: Min reduction on trajectory 1
         self.manager.add_selection(
             self.pipeline_data, "test", "distances", "all", traj_selection=[1],
-            reduction={"metric": "min", "threshold_max": 4.5, "cross_trajectory": False}
+            reduction={"metric": "min", "threshold_max": 4.5}
         )
 
         # Selection 3: Max reduction on trajectory 2
         self.manager.add_selection(
             self.pipeline_data, "test", "distances", "all", traj_selection=[2],
-            reduction={"metric": "max", "threshold_min": 8.9, "cross_trajectory": False}
+            reduction={"metric": "max", "threshold_min": 8.9}
         )
 
         # Execute selection and verify trajectory-specific indices

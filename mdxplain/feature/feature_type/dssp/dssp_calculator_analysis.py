@@ -25,8 +25,11 @@ Analysis utilities for DSSP data including secondary structure dynamics,
 stability analysis, and transition frequency calculations.
 """
 
+from typing import List, Tuple
+
 import numpy as np
-from ....utils.data_utils import DataUtils
+from ....utils.memmap_utils import MemmapUtils
+from ....utils.path_utils import PathUtils
 from ....utils.resource_utils import ResourceUtils
 
 
@@ -140,22 +143,26 @@ class DSSPCalculatorAnalysis:
         
         if self.use_memmap:
             # Create memmap array for indices using DataUtils
-            cache_file = DataUtils.get_cache_file_path(f'dssp_indices_{id(dssp_data)}.npy', self.cache_path)
-            indices = np.memmap(cache_file, dtype=np.int8, mode='w+', 
-                               shape=(n_frames, n_residues))
+            cache_file = PathUtils.get_cache_file_path(f'dssp_indices_{id(dssp_data)}.npy', self.cache_path)
+            indices = MemmapUtils.create_memmap(
+                path=cache_file,
+                dtype=np.int8,
+                mode="w+",
+                shape=(n_frames, n_residues),
+            )
             
             # Chunk-wise processing
             ResourceUtils.tune_memmap(indices, "sequential")
-            if DataUtils.is_memmap_view(dssp_data):
+            if MemmapUtils.is_memmap_view(dssp_data):
                 ResourceUtils.tune_memmap(dssp_data, "sequential")
             for i in range(0, n_frames, self.chunk_size):
                 end = min(i + self.chunk_size, n_frames)
                 chunk_reshaped = dssp_data[i:end].reshape(-1, n_residues, n_classes)
                 indices[i:end] = np.argmax(chunk_reshaped, axis=2)
-                indices.flush()
+                MemmapUtils.evict_memory_range(indices, i, end)
             
             ResourceUtils.tune_memmap(indices, "random")
-            if DataUtils.is_memmap_view(dssp_data):
+            if MemmapUtils.is_memmap_view(dssp_data):
                 ResourceUtils.tune_memmap(dssp_data, "random")
             return indices
         else:
@@ -203,12 +210,12 @@ class DSSPCalculatorAnalysis:
         
         if self.use_memmap:
             transitions = np.zeros(n_residues, dtype=np.float32)
-            if DataUtils.is_memmap_view(data):
+            if MemmapUtils.is_memmap_view(data):
                 ResourceUtils.tune_memmap(data, "sequential")
             for i in range(0, n_frames - lag_time, self.chunk_size):
                 end = min(i + self.chunk_size, n_frames - lag_time)
                 transitions += (data[i:end] != data[i+lag_time:end+lag_time]).sum(axis=0).astype(np.float32)
-            if DataUtils.is_memmap_view(data):
+            if MemmapUtils.is_memmap_view(data):
                 ResourceUtils.tune_memmap(data, "random")
             return transitions
         else:
@@ -254,7 +261,7 @@ class DSSPCalculatorAnalysis:
         # For each sliding window, count if ANY transition occurs
         if self.use_memmap:
             # Chunk-wise processing for memmap
-            if DataUtils.is_memmap_view(data):
+            if MemmapUtils.is_memmap_view(data):
                 ResourceUtils.tune_memmap(data, "sequential")
             for start in range(0, n_frames - window_size + 1, self.chunk_size):
                 end = min(start + self.chunk_size, n_frames - window_size + 1)
@@ -265,7 +272,7 @@ class DSSPCalculatorAnalysis:
                     diffs = (window_data[1:] != window_data[:-1])
                     window_transitions = diffs.any(axis=0)
                     transitions += window_transitions.astype(np.float32)
-            if DataUtils.is_memmap_view(data):
+            if MemmapUtils.is_memmap_view(data):
                 ResourceUtils.tune_memmap(data, "random")
         else:
             # In-memory processing
@@ -327,14 +334,14 @@ class DSSPCalculatorAnalysis:
             frequencies = np.zeros((n_residues, n_classes), dtype=np.float32)
             
             if self.use_memmap:
-                if DataUtils.is_memmap_view(dssp_data):
+                if MemmapUtils.is_memmap_view(dssp_data):
                     ResourceUtils.tune_memmap(dssp_data, "sequential")
                 for i in range(0, n_frames, self.chunk_size):
                     end = min(i + self.chunk_size, n_frames)
                     chunk = dssp_data[i:end]
                     for class_idx, class_value in enumerate(class_values):
                         frequencies[:, class_idx] += (chunk == class_value).sum(axis=0).astype(np.float32)
-                if DataUtils.is_memmap_view(dssp_data):
+                if MemmapUtils.is_memmap_view(dssp_data):
                     ResourceUtils.tune_memmap(dssp_data, "random")
             else:
                 for class_idx, class_value in enumerate(class_values):
@@ -369,7 +376,7 @@ class DSSPCalculatorAnalysis:
         if self.use_memmap:
             # Chunk-wise processing with overlap handling
             prev_frame = None
-            if DataUtils.is_memmap_view(dssp_data):
+            if MemmapUtils.is_memmap_view(dssp_data):
                 ResourceUtils.tune_memmap(dssp_data, "sequential")
             
             for i in range(0, n_frames, self.chunk_size):
@@ -387,7 +394,7 @@ class DSSPCalculatorAnalysis:
                     transition_counts += boundary_transitions.astype(np.float32)
                 
                 prev_frame = chunk[-1]
-            if DataUtils.is_memmap_view(dssp_data):
+            if MemmapUtils.is_memmap_view(dssp_data):
                 ResourceUtils.tune_memmap(dssp_data, "random")
         else:
             # In-memory computation
@@ -398,6 +405,44 @@ class DSSPCalculatorAnalysis:
         transition_frequencies = transition_counts / max(1, n_frames - 1)
 
         return transition_frequencies
+
+    def compute_pooled_transition_frequency(self, segments: List[np.ndarray]) -> np.ndarray:
+        """
+        Compute pooled transition frequency across segments.
+
+        Parameters
+        ----------
+        segments : list
+            List of (n_frames, n_residues) DSSP arrays
+
+        Returns
+        -------
+        numpy.ndarray
+            Pooled transition frequency per residue
+        """
+        if not segments:
+            return np.array([])
+
+        weighted_sum = None
+        total_possible = 0
+        for segment in segments:
+            n_frames = segment.shape[0]
+            possible = n_frames - 1
+            if possible <= 0:
+                continue
+            frequency = self.compute_transition_frequency(segment)
+            weighted = frequency * possible
+            total_possible += possible
+            if weighted_sum is None:
+                weighted_sum = weighted
+            else:
+                weighted_sum += weighted
+
+        if weighted_sum is None:
+            return np.zeros(segments[0].shape[1], dtype=np.float32)
+        if total_possible == 0:
+            return np.zeros_like(weighted_sum, dtype=np.float32)
+        return weighted_sum / total_possible
 
     def compute_stability(self, dssp_data: np.ndarray) -> np.ndarray:
         """
@@ -421,6 +466,188 @@ class DSSPCalculatorAnalysis:
         """
         frequency = self.compute_transition_frequency(dssp_data)
         return 1.0 - frequency
+
+    def compute_pooled_stability(self, segments: List[np.ndarray]) -> np.ndarray:
+        """
+        Compute pooled stability across segments.
+
+        Parameters
+        ----------
+        segments : list
+            List of (n_frames, n_residues) DSSP arrays
+
+        Returns
+        -------
+        numpy.ndarray
+            Pooled stability per residue
+        """
+        if not segments:
+            return np.array([])
+
+        weighted_sum = None
+        total_possible = 0
+        for segment in segments:
+            n_frames = segment.shape[0]
+            possible = n_frames - 1
+            if possible <= 0:
+                continue
+            stability = self.compute_stability(segment)
+            weighted = stability * possible
+            total_possible += possible
+            if weighted_sum is None:
+                weighted_sum = weighted
+            else:
+                weighted_sum += weighted
+
+        if weighted_sum is None:
+            return np.ones(segments[0].shape[1], dtype=np.float32)
+        if total_possible == 0:
+            return np.ones_like(weighted_sum, dtype=np.float32)
+        return weighted_sum / total_possible
+
+    def compute_pooled_transitions(
+        self,
+        segments: List[np.ndarray],
+        transition_mode: str = "window",
+        window_size: int = 10,
+        lag_time: int = 1,
+    ) -> np.ndarray:
+        """
+        Compute pooled transition counts across segments.
+
+        Parameters
+        ----------
+        segments : list
+            List of (n_frames, n_residues) DSSP arrays
+        transition_mode : str, default='window'
+            Mode for transitions metric: 'window' or 'lagtime'
+        window_size : int, default=10
+            Window size for transitions metric
+        lag_time : int, default=1
+            Lag time for transitions metric
+
+        Returns
+        -------
+        numpy.ndarray
+            Pooled transition counts per residue
+        """
+        if not segments:
+            return np.array([])
+
+        total_transitions = None
+        for segment in segments:
+            if transition_mode == "lagtime":
+                transitions = self.compute_transitions_lagtime(segment, lag_time=lag_time)
+            else:
+                transitions = self.compute_transitions_window(segment, window_size=window_size)
+            if total_transitions is None:
+                total_transitions = transitions.astype(np.float32)
+            else:
+                total_transitions += transitions.astype(np.float32)
+
+        if total_transitions is None:
+            return np.zeros(segments[0].shape[1], dtype=np.float32)
+        return total_transitions
+
+    def compute_pooled_class_frequencies(
+        self,
+        segments: List[np.ndarray],
+        simplified: bool = True,
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Compute pooled class frequencies across segments.
+
+        Parameters
+        ----------
+        segments : list
+            List of DSSP arrays
+        simplified : bool, default=True
+            Whether to use simplified DSSP classes (ignored for one-hot)
+
+        Returns
+        -------
+        tuple[numpy.ndarray, numpy.ndarray]
+            (frequencies, class_values)
+        """
+        if not segments:
+            return np.array([]), np.array([])
+
+        total_frames = 0
+        total_freq = None
+        class_values = None
+
+        for segment in segments:
+            n_frames = segment.shape[0]
+            if n_frames <= 0:
+                continue
+            freqs, class_values = self.compute_class_frequencies(
+                segment, simplified=simplified
+            )
+            if total_freq is None:
+                total_freq = freqs * n_frames
+            else:
+                total_freq += freqs * n_frames
+            total_frames += n_frames
+
+        if total_freq is None:
+            freqs, class_values = self.compute_class_frequencies(
+                segments[0], simplified=simplified
+            )
+            return freqs, class_values
+
+        if total_frames == 0:
+            return total_freq, class_values
+        return total_freq / total_frames, class_values
+
+    def compute_pooled_metric_values(
+        self,
+        segments: List[np.ndarray],
+        metric: str,
+        transition_mode: str = "window",
+        window_size: int = 10,
+        lag_time: int = 1,
+        simplified: bool = True,
+    ) -> np.ndarray:
+        """
+        Compute pooled metric values across segments.
+
+        Parameters
+        ----------
+        segments : list
+            List of DSSP arrays
+        metric : str
+            Metric name
+        transition_mode : str, default='window'
+            Mode for transitions metric: 'window' or 'lagtime'
+        window_size : int, default=10
+            Window size for transitions metric
+        lag_time : int, default=1
+            Lag time for transitions metric
+        simplified : bool, default=True
+            Whether to use simplified DSSP classes (ignored for one-hot)
+
+        Returns
+        -------
+        numpy.ndarray
+            Pooled metric values per residue
+        """
+        if metric == "transition_frequency":
+            return self.compute_pooled_transition_frequency(segments)
+        if metric == "stability":
+            return self.compute_pooled_stability(segments)
+        if metric == "transitions":
+            return self.compute_pooled_transitions(
+                segments,
+                transition_mode=transition_mode,
+                window_size=window_size,
+                lag_time=lag_time,
+            )
+        if metric == "class_frequencies":
+            frequencies, _ = self.compute_pooled_class_frequencies(
+                segments, simplified=simplified
+            )
+            return np.max(frequencies, axis=1)
+        raise ValueError(f"Pooled reduction is not supported for metric '{metric}'.")
 
     def compute_differences(self, dssp_data: np.ndarray, frame_1: int = 0, frame_2: int = -1) -> np.ndarray:
         """

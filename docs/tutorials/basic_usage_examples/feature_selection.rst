@@ -127,6 +127,10 @@ Logical Operators
     pipeline.feature_selector.add.contacts.with_frequency_reduction(
         "my_selection", "resid 120-140", threshold_min=0.3
     )
+    # per_trajectory (default): reduce each trajectory independently
+    # cross_trajectory_intersection=True: must pass in ALL trajectories
+    # cross_trajectory_union=True: pass in ANY trajectory
+    # cross_trajectory_pooled=True: pool frames first, then reduce once
 
     # Step 4: Multi-trajectory mode
     # common_denominator=True: Only Alanins present in ALL trajectories

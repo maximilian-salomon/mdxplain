@@ -30,7 +30,8 @@ from typing import Dict, Tuple, Any, Optional
 import numpy as np
 from sklearn.cluster import MiniBatchKMeans
 
-from ....utils.data_utils import DataUtils
+from ....utils.memmap_utils import MemmapUtils
+from ....utils.path_utils import PathUtils
 from ....utils.progress_utils import ProgressUtils
 from ....utils.resource_utils import ResourceUtils
 
@@ -220,9 +221,13 @@ class CalculatorBase(ABC):
             else:
                 full_filename = filename
             
-            memmap_path = DataUtils.get_cache_file_path(full_filename, self.cache_path)
-            memmap_array = np.memmap(memmap_path, dtype=dtype, mode='w+', shape=shape)
-            ResourceUtils.tune_memmap(memmap_array, "random")
+            memmap_path = PathUtils.get_cache_file_path(full_filename, self.cache_path)
+            memmap_array = MemmapUtils.create_memmap(
+                path=memmap_path,
+                dtype=dtype,
+                mode="w+",
+                shape=shape,
+            )
             return memmap_array
         else:
             return np.zeros(shape, dtype=dtype)
@@ -246,7 +251,7 @@ class CalculatorBase(ABC):
             Array of landmark frame indices
         """
         n_frames = data.shape[0]
-        is_memmap_data = DataUtils.is_memmap_view(data)
+        is_memmap_data = MemmapUtils.is_memmap_view(data)
         
         # Initialize MiniBatchKMeans
         kmeans = MiniBatchKMeans(

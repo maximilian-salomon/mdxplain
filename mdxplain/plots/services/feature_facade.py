@@ -231,6 +231,12 @@ class FeatureFacade:
         tick_fontsize: Optional[int] = None,
         legend_fontsize: Optional[int] = None,
         legend_title_fontsize: Optional[int] = None,
+        fill: bool = True,
+        discrete_plot_mode: str = "density",
+        colors: Optional[Union[str, Dict[str, str]]] = None,
+        vertical_markers: Optional[Dict[Union[int, str], Union[float, List[float]]]] = None,
+        vertical_marker_labels: Optional[Union[str, Dict[Union[int, str], str]]] = None,
+        vertical_marker_label_colors: Optional[Union[str, Dict[str, str]]] = None,
     ) -> Figure:
         """
         Create density plots from manual feature selection.
@@ -262,6 +268,27 @@ class FeatureFacade:
             Transparency for filled density curves
         line_width : float, default=2.0
             Width of density curve contour lines
+        fill : bool, default=True
+            If True, draw filled density areas in addition to contour lines.
+            If False, draw contour lines only.
+        discrete_plot_mode : str, default="density"
+            Rendering mode for discrete features:
+            - "density": Gaussian-smoothed discrete distributions
+            - "bar": grouped probability bars
+        colors : str or Dict[str, str], optional
+            Color configuration for DataSelectors:
+            - str: matplotlib colormap name
+            - dict: explicit DataSelector -> color mapping
+            - None: automatic cluster-consistent DataSelector mapping
+              (cluster_* names keep their cluster color)
+        vertical_markers : Dict[int or str, float or List[float]], optional
+            Optional vertical guide markers keyed by DataSelector.
+        vertical_marker_labels : str or dict, optional
+            Optional labels for marker legend entries.
+            Use one shared label string or `dict[key] = label`.
+        vertical_marker_label_colors : str or dict, optional
+            Optional legend color override for marker labels:
+            one shared color or `dict[label] = color`.
         contact_threshold : float, optional
             Distance threshold for contact threshold line
         title : str, optional
@@ -346,6 +373,12 @@ class FeatureFacade:
             max_sigma=max_sigma,
             alpha=alpha,
             line_width=line_width,
+            fill=fill,
+            discrete_plot_mode=discrete_plot_mode,
+            colors=colors,
+            vertical_markers=vertical_markers,
+            vertical_marker_labels=vertical_marker_labels,
+            vertical_marker_label_colors=vertical_marker_label_colors,
             contact_threshold=contact_threshold,
             title=title,
             legend_title=legend_title,
@@ -397,6 +430,16 @@ class FeatureFacade:
         tick_fontsize: Optional[int] = None,
         legend_fontsize: Optional[int] = None,
         legend_title_fontsize: Optional[int] = None,
+        discrete_plot_style: str = "step",
+        discrete_layout: str = "auto",
+        discrete_offset_span: float = 0.28,
+        discrete_auto_offset_threshold: int = 15,
+        thickness: float = 1.0,
+        colors: Optional[Union[str, Dict[str, str]]] = None,
+        vertical_markers: Optional[Dict[Union[int, str], Union[float, List[float]]]] = None,
+        vertical_marker_labels: Optional[Union[str, Dict[Union[int, str], str]]] = None,
+        vertical_marker_label_colors: Optional[Union[str, Dict[str, str]]] = None,
+        vertical_marker_mode: str = "auto",
     ) -> Figure:
         """
         Create time series plots from manual feature selection.
@@ -448,7 +491,8 @@ class FeatureFacade:
         dpi : int, default=300
             Resolution for saved figure
         smoothing : bool, default=True
-            Enable or disable data smoothing
+            Enable or disable data smoothing for continuous features.
+            Discrete features are always plotted without smoothing.
         smoothing_method : str, default="savitzky"
             Smoothing method ("moving_average" or "savitzky")
         smoothing_window : int, default=51
@@ -457,6 +501,44 @@ class FeatureFacade:
             Polynomial order for Savitzky-Golay filter (ignored for moving_average)
         show_unsmoothed_background : bool, default=True
             Show unsmoothed data as transparent background line when smoothing is enabled
+        discrete_plot_style : str, default="step"
+            Rendering style for discrete features:
+            "line", "step", "segments", or "scatter".
+        discrete_layout : str, default="auto"
+            Discrete rendering layout mode:
+            "auto", "overlay", "offset", or "occupancy".
+            In "occupancy", discrete lines represent states as probabilities
+            over time instead of individual trajectories.
+        discrete_offset_span : float, default=0.28
+            Vertical half-span for discrete "offset" layout.
+        discrete_auto_offset_threshold : int, default=15
+            Number of discrete traces at which "auto" switches to "offset".
+        thickness : float, default=1.0
+            Global rendering thickness for all feature traces:
+            marker size factor for "scatter" and line width for line-based styles.
+        colors : str or Dict[str, str], optional
+            Color configuration for trajectories/tags:
+            - str: matplotlib colormap name
+            - dict: explicit mapping (trajectory_name -> color or tag -> color)
+            - None: automatic palette assignment.
+              Uses tag colors if tag coloring is active, otherwise trajectory colors.
+        vertical_markers : Dict[int or str, float or List[float]], optional
+            Optional vertical guide markers.
+            Keys are trajectory selectors or tag names (depending on
+            `vertical_marker_mode`), values are x-positions where colored
+            vertical lines are drawn.
+        vertical_marker_labels : str or dict, optional
+            Optional legend labels for marker lines.
+            Use one shared label string or `dict[key] = label`.
+        vertical_marker_label_colors : str or dict, optional
+            Optional legend color override for marker labels:
+            one shared color or `dict[label] = color`.
+        vertical_marker_mode : str, default="auto"
+            Marker key interpretation mode:
+            "auto", "trajectory", or "tag".
+            In "auto", tag mode is used when tag coloring is active.
+            In "trajectory" mode with tag coloring enabled, the first matching
+            tag color per trajectory is used.
         title_fontsize : int, optional
             Font size for the main title.
         subplot_title_fontsize : int, optional
@@ -538,6 +620,16 @@ class FeatureFacade:
             smoothing_window=smoothing_window,
             smoothing_polyorder=smoothing_polyorder,
             show_unsmoothed_background=show_unsmoothed_background,
+            discrete_plot_style=discrete_plot_style,
+            discrete_layout=discrete_layout,
+            discrete_offset_span=discrete_offset_span,
+            discrete_auto_offset_threshold=discrete_auto_offset_threshold,
+            thickness=thickness,
+            colors=colors,
+            vertical_markers=vertical_markers,
+            vertical_marker_labels=vertical_marker_labels,
+            vertical_marker_label_colors=vertical_marker_label_colors,
+            vertical_marker_mode=vertical_marker_mode,
             title_fontsize=title_fontsize,
             subplot_title_fontsize=subplot_title_fontsize,
             xlabel_fontsize=xlabel_fontsize,

@@ -72,3 +72,66 @@ def test_apply_process_limits_cpu_affinity_missing_is_safe():
 
     assert result["cpu_affinity"] is None
     assert any("cpu_affinity: not supported" in msg for msg in result["errors"])
+
+
+def test_tune_memmap_clamps_range_to_mapping_size(monkeypatch):
+    """Range madvise should clamp length to available mapping bytes."""
+
+    class DummyMmap:
+        def __init__(self):
+            self.calls = []
+
+        def madvise(self, *args):
+            self.calls.append(args)
+
+        def size(self):
+            return 100
+
+    class DummyArray:
+        def __init__(self, mm):
+            self._mmap = mm
+            self.base = None
+
+    mm = DummyMmap()
+    arr = DummyArray(mm)
+    monkeypatch.setattr(
+        "mdxplain.utils.resource_utils.mmap.MADV_DONTNEED",
+        999,
+        raising=False,
+    )
+
+    result = ResourceUtils.tune_memmap(arr, "dontneed", start_offset=90, length=50)
+
+    assert result["applied"] is True
+    assert result["errors"] == []
+    assert mm.calls == [(999, 90, 10)]
+
+
+def test_tune_memmap_rejects_unknown_size_with_zero_length(monkeypatch):
+    """When size is unknown, ranged madvise requires an explicit positive length."""
+
+    class DummyMmap:
+        def __init__(self):
+            self.calls = []
+
+        def madvise(self, *args):
+            self.calls.append(args)
+
+    class DummyArray:
+        def __init__(self, mm):
+            self._mmap = mm
+            self.base = None
+
+    mm = DummyMmap()
+    arr = DummyArray(mm)
+    monkeypatch.setattr(
+        "mdxplain.utils.resource_utils.mmap.MADV_DONTNEED",
+        999,
+        raising=False,
+    )
+
+    result = ResourceUtils.tune_memmap(arr, "dontneed", start_offset=1, length=0)
+
+    assert result["applied"] is False
+    assert any("length must be > 0 when mmap size is unavailable" in msg for msg in result["errors"])
+    assert mm.calls == []

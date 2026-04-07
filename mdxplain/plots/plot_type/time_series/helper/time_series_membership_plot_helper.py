@@ -27,7 +27,7 @@ and legend creation for cluster membership visualization.
 
 from __future__ import annotations
 
-from typing import List, Dict, Union, TYPE_CHECKING
+from typing import List, Dict, Optional, Tuple, Union, TYPE_CHECKING
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.figure import Figure
@@ -60,7 +60,8 @@ class TimeSeriesMembershipPlotHelper:
     def get_membership_indices(
         pipeline_data: PipelineData,
         membership_traj_selection: Union[str, int, List],
-        feature_selector_name: str
+        feature_selector_name: str,
+        frame_mapping: Optional[Dict[int, Tuple[int, int]]] = None
     ) -> List[int]:
         """
         Get trajectory indices for membership bars.
@@ -73,6 +74,8 @@ class TimeSeriesMembershipPlotHelper:
             Trajectory selection
         feature_selector_name : str
             Feature selector name
+        frame_mapping : Dict[int, Tuple[int, int]], optional
+            Preloaded frame mapping. If omitted, it is loaded from pipeline data.
 
         Returns
         -------
@@ -89,9 +92,10 @@ class TimeSeriesMembershipPlotHelper:
             membership_traj_selection
         )
 
-        _, frame_mapping = pipeline_data.get_selected_data(
-            feature_selector_name, return_frame_mapping=True
-        )
+        if frame_mapping is None:
+            _, frame_mapping = pipeline_data.get_selected_data(
+                feature_selector_name, return_frame_mapping=True
+            )
         traj_in_data = set(traj_idx for traj_idx, _ in frame_mapping.values())
 
         return [idx for idx in all_indices if idx in traj_in_data]
@@ -129,7 +133,8 @@ class TimeSeriesMembershipPlotHelper:
         """
         membership_indices = TimeSeriesMembershipPlotHelper.get_membership_indices(
             config.pipeline_data, config.membership_traj_selection,
-            config.feature_selector_name
+            config.feature_selector_name,
+            config.frame_mapping
         )
 
         # Skip membership plotting if no valid trajectories found in selector

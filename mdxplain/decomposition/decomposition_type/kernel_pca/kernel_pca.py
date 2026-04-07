@@ -70,7 +70,7 @@ class KernelPCA(DecompositionTypeBase):
         gamma: Union[float, str, None] = "scale",
         use_nystrom: bool = False,
         n_landmarks: int = 10000,
-        landmark_selection: str = "kmeans",
+        landmark_selection_mode: str = "kmeans",
         random_state: Optional[int] = None,
         use_parallel: bool = False,
         n_jobs: int = -1,
@@ -102,7 +102,7 @@ class KernelPCA(DecompositionTypeBase):
             Whether to use Nyström approximation for large datasets
         n_landmarks : int, default=10000
             Number of landmarks for Nyström approximation
-        landmark_selection : str, default="kmeans"
+        landmark_selection_mode : str, default="kmeans"
             Method for landmark selection in Nyström approximation:
             - "kmeans": Use KMeans centroids as landmarks (better coverage)
             - "random": Use random sampling from data
@@ -165,7 +165,7 @@ class KernelPCA(DecompositionTypeBase):
         self.gamma = gamma
         self.use_nystrom = use_nystrom
         self.n_landmarks = n_landmarks
-        self.landmark_selection = landmark_selection
+        self.landmark_selection_mode = landmark_selection_mode
         self.random_state = random_state
         self.use_parallel = use_parallel
         self.n_jobs = n_jobs
@@ -309,7 +309,7 @@ class KernelPCA(DecompositionTypeBase):
             gamma=self.gamma,
             use_nystrom=self.use_nystrom,
             n_landmarks=self.n_landmarks,
-            landmark_selection=self.landmark_selection,
+            landmark_selection_mode=self.landmark_selection_mode,
             random_state=self.random_state,
             offset=self.offset,
         )

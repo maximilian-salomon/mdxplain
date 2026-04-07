@@ -25,9 +25,16 @@ Analysis utilities for SASA data including surface area dynamics,
 burial analysis, and solvent exposure variability calculations.
 """
 
+from typing import List
+
 import numpy as np
 
 from ..helper.calculator_stat_helper import CalculatorStatHelper
+
+
+DEFAULT_TRANSITION_THRESHOLD_A2 = 50.0
+DEFAULT_BURIAL_THRESHOLD_A2 = 10.0
+DEFAULT_EXPOSURE_THRESHOLD_A2 = 100.0
 
 
 class SASACalculatorAnalysis:
@@ -42,7 +49,7 @@ class SASACalculatorAnalysis:
     --------
     >>> analysis = SASACalculatorAnalysis()
     >>> mean_sasa = analysis.compute_mean(sasa_data)
-    >>> burial_fraction = analysis.compute_burial_fraction(sasa_data, threshold=0.1)
+    >>> burial_fraction = analysis.compute_burial_fraction(sasa_data, threshold=10.0)
     """
 
     def __init__(self, use_memmap: bool = False, chunk_size: int = 2000) -> None:
@@ -484,7 +491,12 @@ class SASACalculatorAnalysis:
 
     # ===== TRANSITIONS METHODS =====
 
-    def compute_transitions_lagtime(self, sasa_data: np.ndarray, threshold: float = 0.5, lag_time: int = 1) -> np.ndarray:
+    def compute_transitions_lagtime(
+        self,
+        sasa_data: np.ndarray,
+        threshold: float = DEFAULT_TRANSITION_THRESHOLD_A2,
+        lag_time: int = 1
+    ) -> np.ndarray:
         """
         Compute transitions with lag time for each residue/atom.
 
@@ -492,8 +504,8 @@ class SASACalculatorAnalysis:
         ----------
         sasa_data : numpy.ndarray
             SASA array with shape (n_frames, n_residues/atoms)
-        threshold : float, default=0.5
-            Threshold for detecting transitions (in nm²)
+        threshold : float, default=50.0
+            Threshold for detecting transitions (in Å²)
         lag_time : int, default=1
             Number of frames to look ahead
 
@@ -504,7 +516,7 @@ class SASACalculatorAnalysis:
 
         Examples
         --------
-        >>> transitions = analysis.compute_transitions_lagtime(sasa_data, 0.5, 10)
+        >>> transitions = analysis.compute_transitions_lagtime(sasa_data, 50.0, 10)
         """
         return CalculatorStatHelper.compute_transitions_within_lagtime(
             sasa_data,
@@ -514,7 +526,12 @@ class SASACalculatorAnalysis:
             use_memmap=self.use_memmap
         )
 
-    def compute_transitions_window(self, sasa_data: np.ndarray, threshold: float = 0.5, window_size: int = 10) -> np.ndarray:
+    def compute_transitions_window(
+        self,
+        sasa_data: np.ndarray,
+        threshold: float = DEFAULT_TRANSITION_THRESHOLD_A2,
+        window_size: int = 10
+    ) -> np.ndarray:
         """
         Compute transitions within sliding window for each residue/atom.
 
@@ -522,8 +539,8 @@ class SASACalculatorAnalysis:
         ----------
         sasa_data : numpy.ndarray
             SASA array with shape (n_frames, n_residues/atoms)
-        threshold : float, default=0.5
-            Threshold for detecting transitions (in nm²)
+        threshold : float, default=50.0
+            Threshold for detecting transitions (in Å²)
         window_size : int, default=10
             Size of sliding window
 
@@ -534,7 +551,7 @@ class SASACalculatorAnalysis:
 
         Examples
         --------
-        >>> transitions = analysis.compute_transitions_window(sasa_data, 0.5, 10)
+        >>> transitions = analysis.compute_transitions_window(sasa_data, 50.0, 10)
         """
         return CalculatorStatHelper.compute_transitions_within_window(
             sasa_data,
@@ -544,7 +561,13 @@ class SASACalculatorAnalysis:
             use_memmap=self.use_memmap
         )
 
-    def compute_stability(self, sasa_data: np.ndarray, threshold: float = 0.5, window_size: int = 10, mode: str = "lagtime") -> np.ndarray:
+    def compute_stability(
+        self,
+        sasa_data: np.ndarray,
+        threshold: float = DEFAULT_TRANSITION_THRESHOLD_A2,
+        window_size: int = 10,
+        mode: str = "lagtime"
+    ) -> np.ndarray:
         """
         Compute stability (inverse of transition rate) for each residue/atom.
 
@@ -552,8 +575,8 @@ class SASACalculatorAnalysis:
         ----------
         sasa_data : numpy.ndarray
             SASA array with shape (n_frames, n_residues/atoms)
-        threshold : float, default=0.5
-            Threshold for stability detection (in nm²)
+        threshold : float, default=50.0
+            Threshold for stability detection (in Å²)
         window_size : int, default=10
             Window size for calculation
         mode : str, default='lagtime'
@@ -566,7 +589,7 @@ class SASACalculatorAnalysis:
 
         Examples
         --------
-        >>> stability = analysis.compute_stability(sasa_data, 0.5, 10, 'window')
+        >>> stability = analysis.compute_stability(sasa_data, 50.0, 10, 'window')
         """
         return CalculatorStatHelper.compute_stability(
             sasa_data,
@@ -579,7 +602,11 @@ class SASACalculatorAnalysis:
 
     # ===== SASA-SPECIFIC METHODS =====
 
-    def compute_burial_fraction(self, sasa_data: np.ndarray, threshold: float = 0.1) -> np.ndarray:
+    def compute_burial_fraction(
+        self,
+        sasa_data: np.ndarray,
+        threshold: float = DEFAULT_BURIAL_THRESHOLD_A2
+    ) -> np.ndarray:
         """
         Compute fraction of time each residue/atom is buried below threshold.
 
@@ -587,8 +614,8 @@ class SASACalculatorAnalysis:
         ----------
         sasa_data : numpy.ndarray
             SASA array with shape (n_frames, n_residues/atoms)
-        threshold : float, default=0.1
-            SASA threshold in nm² below which residue/atom is considered buried
+        threshold : float, default=10.0
+            SASA threshold in Å² below which residue/atom is considered buried
 
         Returns
         -------
@@ -602,7 +629,7 @@ class SASACalculatorAnalysis:
 
         Examples
         --------
-        >>> burial = analysis.compute_burial_fraction(sasa_data, 0.1)
+        >>> burial = analysis.compute_burial_fraction(sasa_data, 10.0)
         """
         if self.use_memmap:
             # Chunk-wise processing for memory efficiency
@@ -653,7 +680,11 @@ class SASACalculatorAnalysis:
         std_vals = self.compute_std(sasa_data)
         return std_vals / (mean_vals + 1e-10)
 
-    def compute_exposure_fraction(self, sasa_data: np.ndarray, threshold: float = 1.0) -> np.ndarray:
+    def compute_exposure_fraction(
+        self,
+        sasa_data: np.ndarray,
+        threshold: float = DEFAULT_EXPOSURE_THRESHOLD_A2
+    ) -> np.ndarray:
         """
         Compute fraction of time each residue/atom is exposed above threshold.
 
@@ -661,8 +692,8 @@ class SASACalculatorAnalysis:
         ----------
         sasa_data : numpy.ndarray
             SASA array with shape (n_frames, n_residues/atoms)
-        threshold : float, default=1.0
-            SASA threshold in nm² above which residue/atom is considered exposed
+        threshold : float, default=100.0
+            SASA threshold in Å² above which residue/atom is considered exposed
 
         Returns
         -------
@@ -676,7 +707,7 @@ class SASACalculatorAnalysis:
 
         Examples
         --------
-        >>> exposure = analysis.compute_exposure_fraction(sasa_data, 1.0)
+        >>> exposure = analysis.compute_exposure_fraction(sasa_data, 100.0)
         """
         if self.use_memmap:
             # Chunk-wise processing for memory efficiency
@@ -699,3 +730,116 @@ class SASACalculatorAnalysis:
             exposure_fractions = exposed_frames / sasa_data.shape[0]
 
         return exposure_fractions
+
+    def compute_pooled_metric_values(
+        self,
+        segments: List[np.ndarray],
+        metric: str,
+        transition_threshold: float = DEFAULT_TRANSITION_THRESHOLD_A2,
+        window_size: int = 10,
+        transition_mode: str = "window",
+        lag_time: int = 1,
+        threshold_min: float = None,
+        threshold_max: float = None,
+    ) -> np.ndarray:
+        """
+        Compute pooled metric values across segments.
+
+        Parameters
+        ----------
+        segments : list
+            List of SASA arrays
+        metric : str
+            Metric name
+        transition_threshold : float, default=50.0
+            Threshold for detecting transitions
+        window_size : int, default=10
+            Window size for transition analysis
+        transition_mode : str, default='window'
+            Transition mode ('window' or 'lagtime')
+        lag_time : int, default=1
+            Lag time for transition analysis
+        threshold_min : float, optional
+            Minimum threshold (used for burial_fraction)
+        threshold_max : float, optional
+            Maximum threshold (used for exposure_fraction)
+
+        Returns
+        -------
+        numpy.ndarray
+            Pooled metric values per SASA feature
+        """
+        if not segments:
+            return np.array([])
+        if metric == "transitions":
+            window = lag_time if transition_mode == "lagtime" else window_size
+            transitions, _ = CalculatorStatHelper.compute_pooled_transitions(
+                segments,
+                transition_threshold,
+                window,
+                self.chunk_size,
+                self.use_memmap,
+                mode=transition_mode,
+            )
+            return transitions
+        if metric == "stability":
+            window = lag_time if transition_mode == "lagtime" else window_size
+            return CalculatorStatHelper.compute_pooled_stability(
+                segments,
+                transition_threshold,
+                window,
+                self.chunk_size,
+                self.use_memmap,
+                mode=transition_mode,
+            )
+        pooled = np.concatenate(segments, axis=0)
+        return self._metric_from_pooled(pooled, metric, threshold_min, threshold_max)
+
+    def _metric_from_pooled(
+        self,
+        pooled: np.ndarray,
+        metric: str,
+        threshold_min: float = None,
+        threshold_max: float = None,
+    ) -> np.ndarray:
+        """
+        Compute metric values on pooled data.
+
+        Parameters
+        ----------
+        pooled : np.ndarray
+            Pooled SASA array
+        metric : str
+            Metric name
+        threshold_min : float, optional
+            Minimum threshold (used for burial_fraction)
+        threshold_max : float, optional
+            Maximum threshold (used for exposure_fraction)
+
+        Returns
+        -------
+        numpy.ndarray
+            Metric values per SASA feature
+        """
+        metrics = {
+            "std": self.compute_std,
+            "variance": self.compute_variance,
+            "min": self.compute_min,
+            "max": self.compute_max,
+            "mad": self.compute_mad,
+            "mean": self.compute_mean,
+            "cv": self.compute_cv,
+            "range": self.compute_range,
+            "dynamic_range": self.compute_range,
+        }
+        if metric in metrics:
+            return metrics[metric](pooled)
+        if metric == "burial_fraction":
+            cutoff = threshold_min if threshold_min is not None else DEFAULT_BURIAL_THRESHOLD_A2
+            return self.compute_burial_fraction(pooled, cutoff)
+        if metric == "exposure_fraction":
+            cutoff = threshold_max if threshold_max is not None else DEFAULT_EXPOSURE_THRESHOLD_A2
+            return self.compute_exposure_fraction(pooled, cutoff)
+        raise ValueError(
+            f"Unknown metric: {metric}. Supported: {list(metrics.keys()) + ['transitions', 'stability', 'burial_fraction', 'exposure_fraction']}"
+        )

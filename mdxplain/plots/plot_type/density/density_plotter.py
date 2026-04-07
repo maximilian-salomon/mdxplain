@@ -25,7 +25,7 @@ Creates density plots showing probability distributions as overlaid curves
 for the most important features identified in feature importance analysis.
 """
 
-from typing import Optional, Dict, List, Tuple
+from typing import Optional, Dict, List, Tuple, Union
 from matplotlib.figure import Figure
 from matplotlib.gridspec import GridSpec
 import numpy as np
@@ -33,8 +33,11 @@ import numpy as np
 from ...helper.validation_helper import ValidationHelper
 from ...helper.title_legend_helper import TitleLegendHelper
 from ...helper.svg_export_helper import SvgExportHelper
+from ...helper.color_resolution_helper import ColorResolutionHelper
+from ...helper.vertical_marker_helper import VerticalMarkerHelper
 from .helper.density_data_preparer import DensityDataPreparer
 from .helper.density_calculation_helper import DensityCalculationHelper
+from .helper.density_discrete_bar_helper import DensityDiscreteBarHelper
 from ..feature_importance_base.feature_importance_base_plotter import FeatureImportanceBasePlotter
 
 
@@ -78,7 +81,7 @@ class DensityPlotter(FeatureImportanceBasePlotter):
         contact_transformation: bool = True,
         max_cols: int = 4,
         long_labels: bool = False,
-        kde_bandwidth: str = "scott",
+        kde_bandwidth: Union[str, float] = "scott",
         base_sigma: float = 0.05,
         max_sigma: float = 0.12,
         alpha: float = 0.3,
@@ -98,6 +101,12 @@ class DensityPlotter(FeatureImportanceBasePlotter):
         tick_fontsize: Optional[int] = None,
         legend_fontsize: Optional[int] = None,
         legend_title_fontsize: Optional[int] = None,
+        fill: bool = True,
+        discrete_plot_mode: str = "density",
+        colors: Optional[Union[str, Dict[str, str]]] = None,
+        vertical_markers: Optional[Dict[Union[int, str], Union[float, List[float]]]] = None,
+        vertical_marker_labels: Optional[Union[str, Dict[Union[int, str], str]]] = None,
+        vertical_marker_label_colors: Optional[Union[str, Dict[str, str]]] = None,
     ) -> Figure:
         """
         Create density plots from feature importance or manual selection.
@@ -143,6 +152,31 @@ class DensityPlotter(FeatureImportanceBasePlotter):
             Transparency of filled density curves (0=transparent, 1=opaque)
         line_width : float, default=2.0
             Width of density curve contour lines
+        fill : bool, default=True
+            If True, draw filled density areas in addition to contour lines.
+            If False, draw contour lines only.
+        discrete_plot_mode : str, default="density"
+            Rendering mode for discrete features. Must be "density" or "bar".
+            "bar" draws grouped probability bars per DataSelector.
+        colors : str or Dict[str, str], optional
+            Color configuration for DataSelectors:
+            - str: matplotlib colormap name
+            - dict: explicit DataSelector -> color mapping
+            - None: automatic cluster-consistent DataSelector colors
+              (cluster_* selectors keep their cluster colors)
+        vertical_markers : Dict[int or str, float or List[float]], optional
+            Optional vertical guide markers.
+            Keys are DataSelector names (or selector-compatible identifiers),
+            values are one or more x-positions where dashed marker lines are
+            drawn in matching DataSelector colors.
+        vertical_marker_labels : str or dict, optional
+            Optional legend labels for vertical markers:
+            - str: one shared label for all marker lines
+            - dict[key] = str: one label per marker key
+        vertical_marker_label_colors : str or dict, optional
+            Optional legend color override for marker labels:
+            - str: one shared legend color for all marker labels
+            - dict[label] = color: per-label legend colors
         contact_threshold : float, optional
             Distance threshold in Angstrom for drawing contact threshold line
             on distance features. If provided, draws a red dashed vertical line
@@ -231,11 +265,43 @@ class DensityPlotter(FeatureImportanceBasePlotter):
         mode_type, mode_name = self._validate_and_determine_mode(
             feature_importance_name, feature_selector, data_selectors
         )
+        self._validate_discrete_plot_mode(discrete_plot_mode)
+        VerticalMarkerHelper.validate_markers(
+            marker_positions=vertical_markers,
+            key_context="DataSelector names"
+        )
+        VerticalMarkerHelper.validate_labels(
+            marker_positions=vertical_markers,
+            marker_labels=vertical_marker_labels
+        )
+        VerticalMarkerHelper.validate_label_colors(
+            marker_labels=vertical_marker_labels,
+            label_colors=vertical_marker_label_colors
+        )
 
         # 2. Prepare density data
-        density_data, metadata_map, data_selector_colors, contact_cutoff = self._prepare_density_data(
+        density_data, metadata_map, default_selector_colors, contact_cutoff = self._prepare_density_data(
             mode_type, mode_name, n_top, feature_selector, data_selectors,
             contact_transformation
+        )
+        resolved_selector_colors = ColorResolutionHelper.resolve_label_colors(
+            labels=list(default_selector_colors.keys()),
+            colors=colors,
+            default_colors=default_selector_colors
+        )
+        marker_legend_entries: Dict[str, str] = {}
+        resolved_vertical_markers = self._resolve_vertical_markers(
+            vertical_markers=vertical_markers,
+            vertical_marker_labels=vertical_marker_labels,
+            vertical_marker_label_colors=vertical_marker_label_colors,
+            data_selector_colors=resolved_selector_colors,
+            legend_entries=marker_legend_entries
+        )
+        marker_legend_handles = VerticalMarkerHelper.build_legend_handles(
+            resolved_markers=resolved_vertical_markers,
+            legend_entries=marker_legend_entries,
+            line_width=max(1.0, line_width * 0.75),
+            alpha=0.85
         )
 
         # 3. Flatten to feature list
@@ -246,9 +312,14 @@ class DensityPlotter(FeatureImportanceBasePlotter):
             all_features, max_cols
         )
 
-        # 5. Configure spacing (density needs custom hspace)
-        wspace = 0.4
-        hspace = 0.7 if long_labels else 0.45
+        # 5. Configure spacing and ensure enough vertical room for long labels.
+        wspace, hspace = self._configure_density_spacing(
+            fig=fig,
+            all_features=all_features,
+            metadata_map=metadata_map,
+            n_rows=n_rows,
+            long_labels=long_labels
+        )
 
         # 6. Create GridSpec with title
         gs, wrapped_title, top = self._create_gridspec_with_title(
@@ -259,16 +330,18 @@ class DensityPlotter(FeatureImportanceBasePlotter):
         # 7. Plot all features
         rightmost_ax_first_row, active_threshold = self._plot_all_features(
             fig, gs, all_features, layout, density_data, metadata_map,
-            data_selector_colors, long_labels, kde_bandwidth, base_sigma, max_sigma,
-            alpha, line_width, contact_threshold, contact_cutoff,
+            resolved_selector_colors, long_labels, kde_bandwidth, base_sigma, max_sigma,
+            alpha, line_width, fill, discrete_plot_mode, contact_threshold, contact_cutoff,
+            resolved_vertical_markers,
             subplot_title_fontsize, xlabel_fontsize, ylabel_fontsize, tick_fontsize
         )
 
         # 8. Add title and legend
         self._add_title_and_legend_positioned(
             fig, wrapped_title, top, rightmost_ax_first_row,
-            data_selector_colors, legend_title, legend_labels, active_threshold,
-            title_fontsize, legend_fontsize, legend_title_fontsize
+            resolved_selector_colors, legend_title, legend_labels, active_threshold,
+            title_fontsize, legend_fontsize, legend_title_fontsize,
+            additional_legend_handles=marker_legend_handles
         )
 
         # 9. Save if requested
@@ -282,6 +355,80 @@ class DensityPlotter(FeatureImportanceBasePlotter):
             )
 
         return fig
+
+    @staticmethod
+    def _configure_density_spacing(
+        fig: Figure,
+        all_features: List[Tuple[str, str]],
+        metadata_map: Dict[str, Dict[str, Dict[str, any]]],
+        n_rows: int,
+        long_labels: bool
+    ) -> Tuple[float, float]:
+        """
+        Configure subplot spacing for density plots.
+
+        Applies a larger vertical gap when long discrete tick labels are
+        requested, and expands figure height to prevent row overlap.
+
+        Parameters
+        ----------
+        fig : Figure
+            Figure object whose size may be adjusted.
+        all_features : List[Tuple[str, str]]
+            Flattened list of plotted features as (feature_type, feature_name).
+        metadata_map : Dict[str, Dict[str, Dict[str, any]]]
+            Metadata map used to detect discrete features.
+        n_rows : int
+            Number of subplot rows in the grid.
+        long_labels : bool
+            Whether long discrete tick labels are enabled.
+
+        Returns
+        -------
+        Tuple[float, float]
+            Tuple of `(wspace, hspace)` for GridSpec creation.
+        """
+        wspace = 0.4
+        has_discrete = ValidationHelper.has_discrete_features(
+            all_features, metadata_map
+        )
+
+        if long_labels and has_discrete:
+            DensityPlotter._expand_figure_height_for_long_labels(fig, n_rows)
+            return wspace, 0.95
+
+        if long_labels:
+            return wspace, 0.60
+
+        return wspace, 0.42
+
+    @staticmethod
+    def _expand_figure_height_for_long_labels(fig: Figure, n_rows: int) -> None:
+        """
+        Increase figure height for long discrete tick labels.
+
+        Long, rotated X-tick labels on discrete density subplots can collide
+        with the next row. This method adds extra vertical space per row to
+        keep subplot rows visually separated.
+
+        Parameters
+        ----------
+        fig : Figure
+            Figure to resize.
+        n_rows : int
+            Number of subplot rows.
+
+        Returns
+        -------
+        None
+            Modifies `fig` in place.
+        """
+        if n_rows <= 0:
+            return
+
+        fig_width, fig_height = fig.get_size_inches()
+        extra_height = 1.0 * n_rows
+        fig.set_size_inches(fig_width, fig_height + extra_height, forward=True)
 
     def _prepare_density_data(
         self,
@@ -351,13 +498,16 @@ class DensityPlotter(FeatureImportanceBasePlotter):
         metadata_map: Dict[str, Dict[str, Dict[str, any]]],
         data_selector_colors: Dict[str, str],
         long_labels: bool,
-        kde_bandwidth: str,
+        kde_bandwidth: Union[str, float],
         base_sigma: float,
         max_sigma: float,
         alpha: float,
         line_width: float,
+        fill: bool,
+        discrete_plot_mode: str,
         contact_threshold: Optional[float],
         contact_cutoff: Optional[float],
+        resolved_vertical_markers: List[Tuple[float, str, Optional[str]]],
         subplot_title_fontsize: Optional[int],
         xlabel_fontsize: Optional[int],
         ylabel_fontsize: Optional[int],
@@ -394,6 +544,10 @@ class DensityPlotter(FeatureImportanceBasePlotter):
             Fill transparency
         line_width : float
             Contour line width
+        fill : bool
+            Whether to draw filled density areas
+        discrete_plot_mode : str
+            Discrete rendering mode ("density" or "bar")
         contact_threshold : float, optional
             Distance threshold for contact threshold line
         contact_cutoff : float, optional
@@ -443,11 +597,12 @@ class DensityPlotter(FeatureImportanceBasePlotter):
                 density_data[feat_type][feat_name],
                 feat_metadata, data_selector_colors,
                 kde_bandwidth, base_sigma, max_sigma,
-                alpha, line_width, resolved_threshold
+                alpha, line_width, fill, discrete_plot_mode,
+                long_labels, resolved_threshold, resolved_vertical_markers
             )
 
             self._style_subplot(
-                ax, feat_name, feat_metadata, long_labels,
+                ax, feat_name, feat_metadata, long_labels, discrete_plot_mode,
                 subplot_title_fontsize, xlabel_fontsize, ylabel_fontsize, tick_fontsize
             )
 
@@ -459,12 +614,16 @@ class DensityPlotter(FeatureImportanceBasePlotter):
         selector_data: Dict[str, np.ndarray],
         feat_metadata: Dict[str, any],
         data_selector_colors: Dict[str, str],
-        kde_bandwidth: str,
+        kde_bandwidth: Union[str, float],
         base_sigma: float,
         max_sigma: float,
         alpha: float,
         line_width: float,
-        resolved_threshold: Optional[float]
+        fill: bool,
+        discrete_plot_mode: str,
+        long_labels: bool,
+        resolved_threshold: Optional[float],
+        resolved_vertical_markers: List[Tuple[float, str, Optional[str]]]
     ):
         """
         Plot overlaid density curves for one feature.
@@ -489,6 +648,12 @@ class DensityPlotter(FeatureImportanceBasePlotter):
             Fill transparency
         line_width : float
             Contour line width
+        fill : bool
+            Whether to draw filled density areas
+        discrete_plot_mode : str
+            Discrete rendering mode ("density" or "bar")
+        long_labels : bool
+            Whether long discrete tick labels should be used
         resolved_threshold : float, optional
             Resolved threshold value to draw (already calculated)
 
@@ -499,30 +664,42 @@ class DensityPlotter(FeatureImportanceBasePlotter):
         """
         # Extract metadata components from type_metadata structure
         type_metadata = feat_metadata.get("type_metadata", {})
+        viz = type_metadata.get("visualization", {})
+        is_discrete = viz.get("is_discrete", False)
 
-        for selector_name, data in selector_data.items():
-            color = data_selector_colors[selector_name]
-
-            # Calculate density (feature-type-aware with metadata)
-            x_range, density = DensityCalculationHelper.calculate_density(
-                data, type_metadata,
-                kde_bandwidth, base_sigma, max_sigma
+        if is_discrete and discrete_plot_mode == "bar":
+            DensityDiscreteBarHelper.plot_grouped_probability_bars(
+                ax=ax,
+                selector_data=selector_data,
+                data_selector_colors=data_selector_colors,
+                viz=viz,
+                long_labels=long_labels
             )
+        else:
+            for selector_name, data in selector_data.items():
+                color = data_selector_colors[selector_name]
 
-            # Plot filled curve
-            ax.fill_between(
-                x_range, density,
-                alpha=alpha,
-                color=color,
-                label=selector_name
-            )
+                # Calculate density (feature-type-aware with metadata)
+                x_range, density = DensityCalculationHelper.calculate_density(
+                    data, type_metadata,
+                    kde_bandwidth, base_sigma, max_sigma
+                )
 
-            # Plot contour line
-            ax.plot(
-                x_range, density,
-                color=color,
-                linewidth=line_width
-            )
+                # Plot filled curve
+                if fill:
+                    ax.fill_between(
+                        x_range, density,
+                        alpha=alpha,
+                        color=color,
+                        label=selector_name
+                    )
+
+                # Plot contour line
+                ax.plot(
+                    x_range, density,
+                    color=color,
+                    linewidth=line_width
+                )
 
         # Draw contact threshold line for distances (X-axis = distances)
         if resolved_threshold is not None:
@@ -535,12 +712,104 @@ class DensityPlotter(FeatureImportanceBasePlotter):
                 zorder=5
             )
 
+        # Draw optional user-provided vertical markers.
+        for x_pos, color, _ in resolved_vertical_markers:
+            ax.axvline(
+                x=x_pos,
+                color=color,
+                linestyle="--",
+                linewidth=max(1.0, line_width * 0.75),
+                alpha=0.85,
+                zorder=6
+            )
+
+    @staticmethod
+    def _resolve_vertical_markers(
+        vertical_markers: Optional[Dict[Union[int, str], Union[float, List[float]]]],
+        vertical_marker_labels: Optional[Union[str, Dict[Union[int, str], str]]],
+        vertical_marker_label_colors: Optional[Union[str, Dict[str, str]]],
+        data_selector_colors: Dict[str, str],
+        legend_entries: Optional[Dict[str, str]] = None
+    ) -> List[Tuple[float, str, Optional[str]]]:
+        """
+        Resolve density marker dictionaries to `(x, color, label)` tuples.
+
+        Parameters
+        ----------
+        vertical_markers : dict, optional
+            Marker position dictionary keyed by DataSelector.
+        vertical_marker_labels : str or dict, optional
+            Marker label definition for legend entries.
+        vertical_marker_label_colors : str or dict, optional
+            Shared or per-label legend color override.
+        data_selector_colors : Dict[str, str]
+            Effective DataSelector color mapping.
+        legend_entries : Dict[str, str], optional
+            Optional output mapping populated as label -> color.
+
+        Returns
+        -------
+        List[Tuple[float, str, Optional[str]]]
+            Resolved marker tuples for plotting and legend construction.
+        """
+        if not vertical_markers:
+            return []
+
+        available = sorted(data_selector_colors.keys())
+
+        def color_resolver(key: Union[int, str]) -> List[str]:
+            selector_name = str(key)
+            color = data_selector_colors.get(selector_name)
+            if color is None:
+                raise ValueError(
+                    f"Unknown DataSelector in vertical_markers: {key!r}. "
+                    f"Available selectors: {available}"
+                )
+            return [color]
+
+        return VerticalMarkerHelper.resolve_markers(
+            marker_positions=vertical_markers,
+            marker_labels=vertical_marker_labels,
+            color_resolver=color_resolver,
+            legend_entries=legend_entries,
+            label_colors=vertical_marker_label_colors
+        )
+
+    @staticmethod
+    def _validate_discrete_plot_mode(discrete_plot_mode: str) -> None:
+        """
+        Validate discrete-feature rendering mode for density plots.
+
+        Parameters
+        ----------
+        discrete_plot_mode : str
+            Rendering mode requested for discrete features.
+            Supported values are `"density"` and `"bar"`.
+
+        Returns
+        -------
+        None
+            Validation helper; returns only when the value is valid.
+
+        Raises
+        ------
+        ValueError
+            If `discrete_plot_mode` is not one of the supported values.
+        """
+        allowed_modes = {"density", "bar"}
+        if discrete_plot_mode not in allowed_modes:
+            raise ValueError(
+                f"Invalid discrete_plot_mode: {discrete_plot_mode}. "
+                f"Expected one of {sorted(allowed_modes)}."
+            )
+
     def _style_subplot(
         self,
         ax,
         feat_name: str,
         feat_metadata: Dict[str, any],
         long_labels: bool,
+        discrete_plot_mode: str,
         subplot_title_fontsize: Optional[int],
         xlabel_fontsize: Optional[int],
         ylabel_fontsize: Optional[int],
@@ -559,6 +828,8 @@ class DensityPlotter(FeatureImportanceBasePlotter):
             Feature metadata with type_metadata structure
         long_labels : bool
             Use long descriptive labels for discrete features
+        discrete_plot_mode : str
+            Discrete rendering mode ("density" or "bar")
         subplot_title_fontsize : int, optional
             Font size for subplot title
         xlabel_fontsize : int, optional
@@ -574,7 +845,10 @@ class DensityPlotter(FeatureImportanceBasePlotter):
             Modifies ax in place
         """
         # Title with line wrapping for long names
-        wrapped_title = TitleLegendHelper.wrap_title(feat_name, max_chars_per_line=40)
+        wrapped_title = TitleLegendHelper.wrap_title(
+            TitleLegendHelper.format_bold_superscript_title(feat_name),
+            max_chars_per_line=40
+        )
         ax.set_title(wrapped_title, fontsize=subplot_title_fontsize or 14, pad=10, fontweight='bold')
 
         # Get visualization metadata from feature
@@ -596,7 +870,10 @@ class DensityPlotter(FeatureImportanceBasePlotter):
                 # Compute positions and limits from tick_labels length
                 n_ticks = len(tick_labels)
                 positions = list(range(n_ticks))
-                xlim = (-0.3, n_ticks - 1 + 0.3)
+                if discrete_plot_mode == "bar":
+                    xlim = (-0.5, n_ticks - 1 + 0.5)
+                else:
+                    xlim = (-0.3, n_ticks - 1 + 0.3)
 
                 ax.set_xticks(positions)
                 # Rotate labels vertically for long_labels to prevent overlap
@@ -607,7 +884,7 @@ class DensityPlotter(FeatureImportanceBasePlotter):
                 ax.set_xlim(xlim)
 
         # Y-axis label
-        ax.set_ylabel("Probability Density", fontsize=ylabel_fontsize or 13)
+        ax.set_ylabel("Probability", fontsize=ylabel_fontsize or 13)
 
         # Grid
         ax.grid(True, alpha=0.3, axis='both')

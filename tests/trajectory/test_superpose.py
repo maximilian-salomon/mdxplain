@@ -170,6 +170,10 @@ def create_dask_test_trajectory(
     temp_dir = tempfile.mkdtemp(dir=str(base_dir) if base_dir is not None else None)
     temp_trajectory_file = os.path.join(temp_dir, f"test_trajectory_c{chunk_size}.xtc")
     temp_topology_file = os.path.join(temp_dir, f"test_topology_c{chunk_size}.pdb")
+    temp_zarr_cache_path = os.path.join(
+        temp_dir,
+        f"test_trajectory_c{chunk_size}.dask.zarr",
+    )
 
     # Save trajectory and topology
     regular_traj.save_xtc(temp_trajectory_file)
@@ -179,6 +183,7 @@ def create_dask_test_trajectory(
     dask_traj = DaskMDTrajectory(
         trajectory_file=temp_trajectory_file,
         topology_file=temp_topology_file,
+        zarr_cache_path=temp_zarr_cache_path,
         chunk_size=chunk_size
     )
 
@@ -190,6 +195,7 @@ def create_dask_test_trajectory(
 
 def cleanup_dask_trajectory(dask_traj):
     """Clean up temporary files created for DaskMDTrajectory."""
+    dask_traj.cleanup()
     temp_dir = getattr(dask_traj, '_test_temp_dir', None)
     if temp_dir and os.path.isdir(temp_dir):
         shutil.rmtree(temp_dir, ignore_errors=True)

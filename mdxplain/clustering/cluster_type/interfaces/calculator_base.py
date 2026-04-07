@@ -35,7 +35,8 @@ from mdxplain.utils.progress_utils import ProgressUtils
 from sklearn.metrics import silhouette_score
 from sklearn.neighbors import KNeighborsClassifier
 
-from ....utils.data_utils import DataUtils
+from ....utils.memmap_utils import MemmapUtils
+from ....utils.path_utils import PathUtils
 from ....utils.resource_utils import ResourceUtils
 from ...helper.center_calculation_helper import CenterCalculationHelper
 
@@ -532,9 +533,13 @@ class CalculatorBase(ABC):
         """
         if self.use_memmap:
             filename = f"{algorithm}_{method}_labels.dat"
-            path = DataUtils.get_cache_file_path(filename, self.cache_path)
-            labels = np.memmap(path, dtype=np.int32, mode='w+', shape=(n_samples,))
-            ResourceUtils.tune_memmap(labels, "random")
+            path = PathUtils.get_cache_file_path(filename, self.cache_path)
+            labels = MemmapUtils.create_memmap(
+                path=path,
+                dtype=np.int32,
+                mode="w+",
+                shape=(n_samples,),
+            )
             return labels
         else:
             return np.empty(n_samples, dtype=np.int32)
@@ -559,11 +564,15 @@ class CalculatorBase(ABC):
         """
         if self.use_memmap and not isinstance(labels, np.memmap):
             filename = f"{algorithm}_{method}_labels.dat"
-            path = DataUtils.get_cache_file_path(filename, self.cache_path)
-            memmap_labels = np.memmap(path, dtype=np.int32, mode='w+', shape=labels.shape)
-            ResourceUtils.tune_memmap(memmap_labels, "random")
+            path = PathUtils.get_cache_file_path(filename, self.cache_path)
+            memmap_labels = MemmapUtils.create_memmap(
+                path=path,
+                dtype=np.int32,
+                mode="w+",
+                shape=labels.shape,
+            )
             memmap_labels[:] = labels
-            memmap_labels.flush()
+            MemmapUtils.evict_from_os_cache(memmap_labels)
             return memmap_labels
         return labels
 
@@ -609,8 +618,7 @@ class CalculatorBase(ABC):
         full_labels = self._prepare_labels_storage(n_samples, algorithm, "knn_sampling")
         full_labels[:] = noise_label
         full_labels[sample_indices] = sample_labels
-        if hasattr(full_labels, "flush"):
-            full_labels.flush()
+        MemmapUtils.evict_from_os_cache(full_labels)
         
         # Use k-NN for non-sampled points (only for non-noise clusters)
         non_noise_mask = sample_labels != noise_label
@@ -633,7 +641,7 @@ class CalculatorBase(ABC):
                 
                 # Process remaining points in chunks (direct memmap/array writing)
                 is_memmap_labels = isinstance(full_labels, np.memmap)
-                is_memmap_data = DataUtils.is_memmap_view(data)
+                is_memmap_data = MemmapUtils.is_memmap_view(data)
                 if is_memmap_labels:
                     ResourceUtils.tune_memmap(full_labels, "sequential")
                 if is_memmap_data:
@@ -649,8 +657,7 @@ class CalculatorBase(ABC):
                     # k-NN prediction for chunk and write directly
                     chunk_labels = knn_classifier.predict(data[chunk_indices])
                     full_labels[chunk_indices] = chunk_labels
-                    if hasattr(full_labels, "flush"):
-                        full_labels.flush()
+                    MemmapUtils.evict_memory_range(full_labels, chunk_indices[0], chunk_indices[-1] + 1)
                 if is_memmap_labels:
                     ResourceUtils.tune_memmap(full_labels, "random")
                 if is_memmap_data:

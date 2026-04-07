@@ -31,6 +31,7 @@ from __future__ import annotations
 from typing import List, Union, Any, TYPE_CHECKING
 
 from ...utils.data_utils import DataUtils
+from .feature_binding_helper import FeatureBindingHelper
 
 if TYPE_CHECKING:
     from ...pipeline.entities.pipeline_data import PipelineData
@@ -66,6 +67,9 @@ class FeatureResetHelper:
         All feature data has been cleared. Features must be recalculated.
         """
         feature_list = list(pipeline_data.feature_data.keys())
+        for feature_traj_dict in pipeline_data.feature_data.values():
+            for feature_data in feature_traj_dict.values():
+                FeatureBindingHelper.release_bound_methods(feature_data)
         pipeline_data.feature_data.clear()
         print(f"Reset {len(feature_list)} feature(s): {', '.join(feature_list)}")
         print("All feature data has been cleared. Features must be recalculated.")
@@ -111,6 +115,8 @@ class FeatureResetHelper:
         for ft in feature_types:
             key = DataUtils.get_type_key(ft)
             if key in pipeline_data.feature_data:
+                for feature_data in pipeline_data.feature_data[key].values():
+                    FeatureBindingHelper.release_bound_methods(feature_data)
                 del pipeline_data.feature_data[key]
                 reset_keys.append(key)
             else:
