@@ -139,7 +139,7 @@ class PerformanceConfig:
 
         Parameters
         ----------
-        **kwargs
+        kwargs
             Field names and values to update.
 
         Returns

@@ -79,7 +79,7 @@ class SubComparisonCreationHelper:
         
         Creates all possible pairwise combinations between data selectors.
         Each pair becomes a binary comparison with labels (0, 1).
-        For N selectors, creates N*(N-1)/2 sub-comparisons.
+        For N selectors, creates N\*(N-1)/2 sub-comparisons.
         
         Parameters
         ----------

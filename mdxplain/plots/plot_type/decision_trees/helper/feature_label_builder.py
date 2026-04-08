@@ -34,6 +34,7 @@ class FeatureLabelBuilder:
     Stateless helper for building feature labels.
 
     Centralizes logic for:
+    
     - Feature prefix handling (show/hide based on metadata)
     - Rule suffix application (discrete labels, thresholds)
     - Metadata extraction for visualization settings

@@ -89,11 +89,13 @@ class KernelPCA(DecompositionTypeBase):
         ----------
         n_components : int, str, or None, default="auto"
             Number of components to keep. Options:
+
             - int: Specific number of components
             - "auto": Automatic selection via elbow detection (5% of features) [DEFAULT]
             - None: Uses min(n_samples, n_features)
         gamma : float, str, or None, default="scale"
             RBF kernel coefficient. Options:
+            
             - float: Specific gamma value
             - "scale": 1.0 / (n_features * variance) [DEFAULT]
             - "auto": 1.0 / n_features
@@ -104,6 +106,7 @@ class KernelPCA(DecompositionTypeBase):
             Number of landmarks for Nyström approximation
         landmark_selection_mode : str, default="kmeans"
             Method for landmark selection in Nyström approximation:
+
             - "kmeans": Use KMeans centroids as landmarks (better coverage)
             - "random": Use random sampling from data
         random_state : int, optional
@@ -127,7 +130,7 @@ class KernelPCA(DecompositionTypeBase):
             - float: Percentage adjustment (e.g., -0.5 selects 50% fewer)
 
         Returns
-        ------------------
+        -------
         hyperparameters : dict
             Dictionary containing all Kernel PCA parameters used
         original_shape : tuple

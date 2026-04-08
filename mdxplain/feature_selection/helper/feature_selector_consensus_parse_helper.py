@@ -28,7 +28,7 @@ class FeatureSelectorConsensusParseHelper:
     """
     Helper class for parsing consensus nomenclature patterns.
 
-    Provides static methods to parse consensus patterns like "7x50", "7x*", "7x-8x",
+    Provides static methods to parse consensus patterns like "7x50", "7x\*", "7x-8x",
     and "\*40-\*50" to identify matching residue indices based on trajectory metadata.
     """
 
@@ -117,7 +117,7 @@ class FeatureSelectorConsensusParseHelper:
             Consensus pattern to parse:
 
             - Single: "7x50" → Find first entry containing substring
-            - Wildcard: "7x*" → Find all containing "7x"
+            - Wildcard: "7x\*" → Find all containing "7x"
             - Range: "7x-8x" → From first "7x" to last "8x" (consensus != None)
             - Range All: "all 7x-8x" → Same but include None entries
             - Multi-Pattern: "\*40-\*50" → All blocks like 1x40-1x50, 2x40-2x50, etc.
@@ -299,7 +299,7 @@ class FeatureSelectorConsensusParseHelper:
         metadata : dict
             Feature metadata with features information
         pattern : str
-            Single pattern (e.g., "7x50", "7x*")
+            Single pattern (e.g., "7x50", "7x\*")
 
         Returns
         -------
@@ -336,7 +336,7 @@ class FeatureSelectorConsensusParseHelper:
         metadata : dict
             Trajectory metadata with residue information
         pattern : str
-            Range pattern (e.g., "7x-8x", "*40-*50")
+            Range pattern (e.g., "7x-8x", "\*40-\*50")
         include_none : bool
             Whether to include None consensus entries
 
@@ -368,7 +368,7 @@ class FeatureSelectorConsensusParseHelper:
         metadata: dict, start_pattern: str, end_pattern: str, include_none: bool, is_wildcard: bool = True
     ) -> Tuple[List[int], Set[int]]:
         """
-        Parse wildcard range like "*40-*50" with multiple blocks.
+        Parse wildcard range like "\*40-\*50" with multiple blocks.
 
         Finds blocks like 1x40-1x50, 2x40-2x50, etc.
         Handles edge cases where start or end is missing.
@@ -378,9 +378,9 @@ class FeatureSelectorConsensusParseHelper:
         metadata : dict
             Feature metadata with features information
         start_pattern : str
-            Start pattern with wildcard (e.g., "*40")
+            Start pattern with wildcard (e.g., "\*40")
         end_pattern : str
-            End pattern with wildcard (e.g., "*50")
+            End pattern with wildcard (e.g., "\*50")
         include_none : bool
             Whether to include None consensus entries
         is_wildcard : bool, default=True

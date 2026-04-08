@@ -182,6 +182,7 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             "line", "step", "segments", or "scatter".
         discrete_layout : str, default="auto"
             Discrete rendering layout mode:
+            
             - "auto": use "offset" when many traces are plotted, else "overlay"
             - "overlay": draw all discrete traces directly on top of each other
             - "offset": apply small vertical offsets per trace for readability
@@ -200,6 +201,7 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             styles ("line", "step", "segments") and for continuous features.
         colors : str or Dict[str, str], optional
             Color configuration for trajectories/tags:
+
             - str: matplotlib colormap name
             - dict: explicit mapping (trajectory_name -> color or tag -> color)
             - None: automatic palette assignment.
@@ -211,14 +213,17 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
             x-axis positions where dashed vertical lines are drawn.
         vertical_marker_labels : str or dict, optional
             Optional legend labels for vertical markers:
+
             - str: one shared label for all markers
             - dict[key] = str: one label per marker key
         vertical_marker_label_colors : str or dict, optional
             Optional legend color override for marker labels:
+
             - str: one shared legend color for all marker labels
             - dict[label] = color: per-label legend colors
         vertical_marker_mode : str, default="auto"
             Marker key interpretation mode:
+
             - "auto": use "tag" when tag coloring is active, else "trajectory"
             - "trajectory": keys are trajectory selectors (same syntax as
               `traj_selection`). If tag coloring is active, the first matching
@@ -529,6 +534,7 @@ class TimeSeriesPlotter(FeatureImportanceBasePlotter):
         -------
         None
             Updates config in place:
+
             - has_discrete_features
             - resolved_discrete_layout
             - effective_subplot_height

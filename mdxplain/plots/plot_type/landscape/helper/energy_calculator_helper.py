@@ -157,7 +157,7 @@ class EnergyCalculatorHelper:
         where:
         
         - F: Free energy
-        - k: Boltzmann constant (0.001987204 kcal/(mol*K))
+        - k: Boltzmann constant (0.001987204 kcal/(mol\*K))
         - T: Temperature in Kelvin
         - P: KDE-estimated probability density
         - P_max: Maximum density across grid
