@@ -6,16 +6,18 @@ Checks
 - **E-SECTION**    — NumPy-style section underline length mismatch.
 - **E-INDENT**     — List after paragraph without blank line.
 - **E-STRONG**     — Unescaped ``**`` or ``*`` treated as RST markup.
+- **E-REF**        — ``word_`` interpreted as RST hyperlink reference.
 - **E-ROLE**       — Malformed Sphinx cross-reference role.
 - **E-EMPTY-DOC**  — Public object has empty docstring.
 - **W-NO-DOC**     — Public function / class / method has no docstring.
 
 Usage::
 
-    python check_docstring_errors.py                 # Full report
-    python check_docstring_errors.py --summary       # Counts only
-    python check_docstring_errors.py --errors-only   # Errors only
-    python check_docstring_errors.py --fail-on-error # Exit 1 on errors
+    python check_docstring_errors.py                   # Full report (public only)
+    python check_docstring_errors.py --summary         # Counts only
+    python check_docstring_errors.py --errors-only     # Errors only
+    python check_docstring_errors.py --include-private # Include private (_name) objects
+    python check_docstring_errors.py --fail-on-error   # Exit 1 on errors
 """
 
 from __future__ import annotations
@@ -52,6 +54,7 @@ SPHINX_ROLES = _BASE_ROLES | {f"py:{r}" for r in _BASE_ROLES}
 
 RE_ROLE = re.compile(r":(\w[\w.]*):(`[^`]*`?)")
 RE_UNDERLINE = re.compile(r"^(\s*)([-=~]{3,})\s*$")
+RE_RST_REF = re.compile(r"(\w+)_(?=[^\w_*{<]|$)")
 
 # Inline emphasis / strong: (finder, closer, marker, label)
 _MARKUP_PATTERNS = [
@@ -59,6 +62,16 @@ _MARKUP_PATTERNS = [
      re.compile(r"\*\*"),
      "**", "strong"),
     (re.compile(r"(?<!\\)(?<!\*)\*(?!\*)(\w+)"),
+     re.compile(r"(?<!\\)(?<!\*)\*(?!\*)"),
+     "*", "emphasis"),
+]
+
+# Trailing emphasis / strong: word**, word*  (finder, opener, marker, label)
+_TRAILING_MARKUP_PATTERNS = [
+    (re.compile(r"(\w+)\*\*(?!\*)"),
+     re.compile(r"(?<!\\)\*\*"),
+     "**", "strong"),
+    (re.compile(r"(\w+)\*(?!\*)"),
      re.compile(r"(?<!\\)(?<!\*)\*(?!\*)"),
      "*", "emphasis"),
 ]
@@ -77,6 +90,7 @@ class Finding:
     code: str
     message: str
     object_name: str = ""
+    is_public: bool = True
 
     @property
     def is_error(self) -> bool:
@@ -110,6 +124,7 @@ class DocstringInfo:
         return Finding(
             file="", line=self.doc_lineno + line_offset,
             code=code, message=message, object_name=self.object_name,
+            is_public=self.is_public,
         )
 
 
@@ -164,11 +179,10 @@ def _extract_docstrings(
     """Walk the AST and collect docstrings with metadata."""
     results: list[DocstringInfo] = []
 
-    def _visit(node: ast.AST, stack: list[str]) -> None:
+    def _visit(node: ast.AST, stack: list[str], in_function: bool = False) -> None:
         is_module = isinstance(node, ast.Module)
-        is_def = isinstance(
-            node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef),
-        )
+        is_func = isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+        is_def = is_func or isinstance(node, ast.ClassDef)
         if not (is_module or is_def):
             return
 
@@ -185,7 +199,7 @@ def _extract_docstrings(
                 doc_lineno=_content_start_line(source_lines, doc_node.lineno),
                 is_public=public,
             ))
-        elif is_def and public and not name.startswith("__"):
+        elif is_def and public and not name.startswith("__") and not in_function:
             results.append(DocstringInfo(
                 object_name=qname, docstring="",
                 lineno=node.lineno,  # type: ignore[union-attr]
@@ -194,8 +208,9 @@ def _extract_docstrings(
             ))
 
         child_stack = stack + [name] if isinstance(node, ast.ClassDef) else stack
+        child_in_function = in_function or is_func
         for child in ast.iter_child_nodes(node):
-            _visit(child, child_stack)
+            _visit(child, child_stack, child_in_function)
 
     _visit(tree, [])
     return results
@@ -270,6 +285,9 @@ def _check_inline_markup(info: DocstringInfo) -> list[Finding]:
         # Remove backtick-quoted spans to avoid false positives
         clean = re.sub(r"``[^`]*``", " ", line)
         clean = re.sub(r"`[^`]*`", " ", clean)
+        # Remove leading RST list markers (* , - , + ) so they don't
+        # interfere with emphasis / strong detection
+        clean = re.sub(r"^(\s*)[-*+]\s+", lambda m: " " * len(m.group()), clean)
 
         for finder, closer, marker, label in _MARKUP_PATTERNS:
             for m in finder.finditer(clean):
@@ -280,6 +298,44 @@ def _check_inline_markup(info: DocstringInfo) -> list[Finding]:
                 findings.append(info.finding(i, "E-STRONG",
                     f"Unescaped inline {label} markup '{marker}{word}' "
                     f"— escape as '{esc}' or wrap in backticks."))
+
+        for finder, opener, marker, label in _TRAILING_MARKUP_PATTERNS:
+            for m in finder.finditer(clean):
+                if opener.search(clean[:m.start()]):
+                    continue  # properly opened on same line
+                word = m.group(1)
+                # RST does not start/end emphasis after _ (word character)
+                if word.endswith("_"):
+                    continue
+                esc = word + marker.replace("*", "\\*")
+                findings.append(info.finding(i, "E-STRONG",
+                    f"Unescaped inline {label} markup '{word}{marker}' "
+                    f"— escape as '{esc}' or wrap in backticks."))
+    return findings
+
+
+def _check_rst_reference(info: DocstringInfo) -> list[Finding]:
+    """E-REF: word_ patterns that RST interprets as hyperlink references."""
+    findings: list[Finding] = []
+    for i, line in enumerate(info.lines):
+        stripped = line.strip()
+        if stripped.startswith((">>>", "...")):
+            continue
+        # Remove backtick-quoted spans to avoid false positives
+        clean = re.sub(r"``[^`]*``", " ", line)
+        clean = re.sub(r"`[^`]*`", " ", clean)
+        # Remove Sphinx roles :role:`target` (already consumed above)
+        clean = re.sub(r":\w[\w.]*:`[^`]*`", " ", clean)
+
+        for m in RE_RST_REF.finditer(clean):
+            word = m.group(1)
+            # Skip dunder names (__word__) — RST won't treat these as refs
+            if word.startswith("__") or word.startswith("_"):
+                continue
+            findings.append(info.finding(i, "E-REF",
+                f"'{word}_' is interpreted as RST hyperlink reference "
+                f"(Sphinx error: 'Unknown target name') "
+                f"— wrap in backticks or escape as '{word}\\_'."))
     return findings
 
 
@@ -318,6 +374,7 @@ ALL_CHECKS = [
     _check_sections,
     _check_roles,
     _check_inline_markup,
+    _check_rst_reference,
     _check_unexpected_indent,
 ]
 
@@ -376,6 +433,10 @@ def _short_message(f: Finding) -> str:
         m = re.search(r"markup '([^']+)'", f.message)
         token = m.group(1) if m else "?"
         return f"Unescaped {token}  ({obj})"
+    if f.code == "E-REF":
+        m = re.search(r"'([^']+_)'", f.message)
+        token = m.group(1) if m else "?"
+        return f"RST reference '{token}'  ({obj})"
     if f.code == "E-ROLE":
         return f"{f.message}  ({obj})"
     if f.code == "W-NO-DOC":
@@ -435,10 +496,15 @@ def main() -> None:
                         help="Exit with code 1 if any errors are found.")
     parser.add_argument("--errors-only", action="store_true",
                         help="Show only errors (E-*), suppress warnings.")
+    parser.add_argument("--include-private", action="store_true",
+                        help="Include findings in private (_name) objects "
+                             "(hidden by default).")
     args = parser.parse_args()
 
     root = find_project_root()
     findings = lint_package(root)
+    if not args.include_private:
+        findings = [f for f in findings if f.is_public]
     if args.errors_only:
         findings = [f for f in findings if f.is_error]
     _print_report(findings, summary_only=args.summary)
