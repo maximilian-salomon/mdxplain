@@ -1129,7 +1129,7 @@ class DaskMDTrajectory:
         inplace : bool
             If True, performs atomic overwrite of the current trajectory.
             If False, creates a new trajectory file.
-        **kwargs : 
+        kwargs : 
             Additional keyword arguments passed to `operation_func`.
             
         Returns

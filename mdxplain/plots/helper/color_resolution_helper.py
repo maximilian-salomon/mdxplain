@@ -64,6 +64,7 @@ class ColorResolutionHelper:
             Labels to colorize in deterministic order.
         colors : str or Dict[str, str], optional
             User-provided color configuration:
+            
             - None: use defaults
             - str: matplotlib colormap name
             - dict: explicit mapping merged onto defaults

@@ -160,6 +160,7 @@ class DensityPlotter(FeatureImportanceBasePlotter):
             "bar" draws grouped probability bars per DataSelector.
         colors : str or Dict[str, str], optional
             Color configuration for DataSelectors:
+
             - str: matplotlib colormap name
             - dict: explicit DataSelector -> color mapping
             - None: automatic cluster-consistent DataSelector colors
@@ -171,10 +172,12 @@ class DensityPlotter(FeatureImportanceBasePlotter):
             drawn in matching DataSelector colors.
         vertical_marker_labels : str or dict, optional
             Optional legend labels for vertical markers:
+
             - str: one shared label for all marker lines
             - dict[key] = str: one label per marker key
         vertical_marker_label_colors : str or dict, optional
             Optional legend color override for marker labels:
+            
             - str: one shared legend color for all marker labels
             - dict[label] = color: per-label legend colors
         contact_threshold : float, optional

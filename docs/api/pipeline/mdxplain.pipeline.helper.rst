@@ -6,6 +6,7 @@ Pipeline Helper
 .. toctree::
    :maxdepth: 1
 
+   mdxplain.pipeline.helper.cache_remap_helper
    mdxplain.pipeline.helper.centroid_helper
    mdxplain.pipeline.helper.comparison_data_helper
    mdxplain.pipeline.helper.selection_matrix_helper

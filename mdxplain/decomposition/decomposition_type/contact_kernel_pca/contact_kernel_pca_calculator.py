@@ -145,11 +145,13 @@ class ContactKernelPCACalculator(KernelPCACalculator):
 
             - n_components : int, str, or None, default="auto"
                 Number of components. Options:
+
                 - int: Specific number of components
                 - "auto": Automatic selection via elbow detection (5% of features)
                 - None: Uses min(n_samples, n_features)
             - gamma : float, str, or None, default="scale"
                 RBF kernel coefficient. Options:
+
                 - float: Specific gamma value
                 - "scale": 1.0 / (n_features * variance)
                 - "auto": 1.0 / n_features
@@ -159,6 +161,7 @@ class ContactKernelPCACalculator(KernelPCACalculator):
                 Number of landmarks for Nyström approximation (default: 10000)
             - landmark_selection : str, optional
                 Method for landmark selection in Nyström approximation (default: "kmeans")
+                
                 - "kmeans": Use KMeans centroids as landmarks (better coverage)
                 - "random": Use random sampling from data
             - random_state : int, optional

@@ -27,6 +27,7 @@ ComparisonManager to identify which features are most important for
 distinguishing between different data groups.
 
 Main Components:
+
 - FeatureImportanceData: Entity storing feature importance results
 - FeatureImportanceManager: Manager for running importance analyses
 - analyzer_types: Various ML algorithms for importance analysis

@@ -26,6 +26,7 @@ counterpart to FeatureSelector. While FeatureSelector chooses columns (features)
 DataSelector chooses rows (frames) based on tags, clusters, or combinations.
 
 Main Components:
+
 - DataSelectorData: Entity storing frame indices and selection criteria
 - DataSelectorManager: Manager for creating and managing row selections
 """

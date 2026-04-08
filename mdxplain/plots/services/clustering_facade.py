@@ -175,6 +175,7 @@ class ClusteringFacade:
             When set, overrides cluster-based coloring from clustering_name
         scatter_show_all : bool, default=False
             Show unselected points in gray (applies to both cluster and tag mode):
+            
             - **Cluster mode:** When show_clusters=[0,1], other clusters/noise shown in gray
             - **Tag mode:** When tag_coloring=["biased"], frames without this tag shown in gray
             - False (default): Only show selected points, hide others (current behavior)

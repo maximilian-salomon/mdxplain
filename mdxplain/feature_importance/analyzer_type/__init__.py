@@ -25,6 +25,7 @@ This module provides various ML algorithm implementations for feature
 importance analysis, following the same pattern as decomposition_types.
 
 Available Analyzers:
+
 - DecisionTree: Decision tree classifier for feature importance
 """
 

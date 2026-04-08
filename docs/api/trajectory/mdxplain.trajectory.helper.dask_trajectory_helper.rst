@@ -6,6 +6,7 @@ Dask Trajectory Helper
 .. toctree::
    :maxdepth: 1
 
+   mdxplain.trajectory.helper.dask_trajectory_helper.dask_trajectory_archive_helper
    mdxplain.trajectory.helper.dask_trajectory_helper.dask_trajectory_build_helper
    mdxplain.trajectory.helper.dask_trajectory_helper.dask_trajectory_join_stack_helper
    mdxplain.trajectory.helper.dask_trajectory_helper.dask_trajectory_store_helper

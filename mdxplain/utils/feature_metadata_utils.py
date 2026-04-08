@@ -344,6 +344,7 @@ class FeatureMetadataUtils:
         -------
         Dict[str, Any]
             Type-level metadata dictionary. Returns empty dict if:
+            
             - feature_metadata is None
             - No entry with matching type found
             - Matching entry has no type_metadata

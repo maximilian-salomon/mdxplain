@@ -9,11 +9,14 @@ Plot Helper
    mdxplain.plots.helper.base_feature_importance_plot_data_preparer
    mdxplain.plots.helper.clustering_data_helper
    mdxplain.plots.helper.color_mapping_helper
+   mdxplain.plots.helper.color_resolution_helper
    mdxplain.plots.helper.comparison_data_extractor
    mdxplain.plots.helper.contact_to_distances_converter
    mdxplain.plots.helper.discrete_feature_helper
    mdxplain.plots.helper.feature_metadata_helper
    mdxplain.plots.helper.grid_layout_helper
    mdxplain.plots.helper.svg_export_helper
+   mdxplain.plots.helper.tag_helper
    mdxplain.plots.helper.title_legend_helper
+   mdxplain.plots.helper.vertical_marker_helper
    mdxplain.plots.helper.validation_helper

@@ -13,4 +13,5 @@ Feature Selection Helper
    mdxplain.feature_selection.helper.feature_selector_resid_parse_helper
    mdxplain.feature_selection.helper.feature_selector_resname_parse_helper
    mdxplain.feature_selection.helper.feature_selector_seqid_parse_helper
+   mdxplain.feature_selection.helper.reduction_index_mapper
    mdxplain.feature_selection.helper.post_selection_reduction_helper

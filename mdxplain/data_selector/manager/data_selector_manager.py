@@ -870,6 +870,7 @@ class DataSelectorManager:
             If None, includes all non-noise clusters.
         noise_id : int or None, default=-1
             Cluster ID that represents noise/outliers to filter out.
+            
             - If int: Filters out this specific cluster ID (e.g., -1 for sklearn)
             - If None: No filtering, creates selectors for ALL cluster IDs
         min_cluster_size : int or None, optional

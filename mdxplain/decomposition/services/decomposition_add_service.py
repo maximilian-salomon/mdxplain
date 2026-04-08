@@ -85,6 +85,7 @@ class DecompositionAddService:
             Name of feature selection to decompose
         n_components : int, str, or None, default="auto"
             Number of principal components. Options:
+
             - int: Specific number of components
             - "auto": Automatic selection via elbow detection (5% of features) [DEFAULT]
             - None: Uses min(n_samples, n_features)
@@ -178,11 +179,13 @@ class DecompositionAddService:
             Name of feature selection to decompose
         n_components : int, str, or None, default="auto"
             Number of components. Options:
+
             - int: Specific number of components
             - "auto": Automatic selection via elbow detection (5% of features) [DEFAULT]
             - None: Uses min(n_samples, n_features)
         gamma : float, str, or None, default="scale"
             RBF kernel coefficient. Options:
+
             - float: Specific gamma value
             - "scale": 1.0 / (n_features * variance) [DEFAULT]
             - "auto": 1.0 / n_features
@@ -193,6 +196,7 @@ class DecompositionAddService:
             Number of landmarks for Nyström approximation
         landmark_selection_mode : str, default="kmeans"
             Method for landmark selection in Nyström approximation:
+
             - "kmeans": Use KMeans centroids as landmarks (better coverage)
             - "random": Use random sampling from data
         random_state : int, optional
@@ -309,11 +313,13 @@ class DecompositionAddService:
             Name of contact feature selection to decompose
         n_components : int, str, or None, default="auto"
             Number of components. Options:
+            
             - int: Specific number of components
             - "auto": Automatic selection via elbow detection (5% of features) [DEFAULT]
             - None: Uses min(n_samples, n_features)
         gamma : float or str, default="scale"
             Kernel coefficient for Hamming/RBF kernel. Options:
+
             - float: Specific gamma value
             - "scale": 1.0 / (n_features * variance) [DEFAULT]
             - "auto": 1.0 / n_features
@@ -323,6 +329,7 @@ class DecompositionAddService:
             Number of landmarks for Nyström approximation
         landmark_selection : str, default="kmeans"
             Method for landmark selection in Nyström approximation:
+
             - "kmeans": Use KMeans centroids as landmarks (better coverage)
             - "random": Use random sampling from data
         random_state : int, optional

@@ -299,6 +299,7 @@ class TimeSeriesTagColoringHelper:
             Tag mapping from build_tag_map()
         colors : str or Dict[str, str], optional
             Color specification:
+
             - str: matplotlib colormap name
             - dict: explicit tag -> color mapping
             - None: automatic colors for the tags present in this plot
@@ -348,6 +349,7 @@ class TimeSeriesTagColoringHelper:
             Tag mapping (keys are trajectory indices)
         colors : str or Dict[str, str], optional
             Color specification:
+            
             - str: matplotlib colormap name
             - dict: explicit trajectory_name -> color mapping
             - None: automatic colors for plotted trajectories
