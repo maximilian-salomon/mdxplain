@@ -829,7 +829,7 @@ class DiffusionMapsCalculator(CalculatorBase):
         Returns
         -------
         scipy.sparse.linalg.LinearOperator
-            LinearOperator that computes S*v without materializing S
+            LinearOperator that computes S\*v without materializing S
         """
         n_frames = kernel_matrix.shape[0]
         is_memmap_kernel = MemmapUtils.is_memmap_view(kernel_matrix)

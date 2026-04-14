@@ -1135,7 +1135,7 @@ class TrajectoryManager:
             Trajectory object to operate on
         method_name : str
             Name of method to call
-        **kwargs :
+        kwargs :
             Arguments for the method, including 'inplace'
 
         Returns

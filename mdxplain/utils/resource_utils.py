@@ -441,6 +441,7 @@ class ResourceUtils:
         -------
         tuple
             Tuple ``(use_range, start, normalized_length, error)`` where:
+            
             - ``use_range`` indicates whether ranged ``madvise`` should be used.
             - ``start`` is the validated byte offset.
             - ``normalized_length`` is the validated/clamped byte length.

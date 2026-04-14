@@ -72,6 +72,7 @@ class PCA(DecompositionTypeBase):
         ----------
         n_components : int, str, or None, default="auto"
             Number of components to keep. Options:
+            
             - int: Specific number of components
             - "auto": Automatic selection via elbow detection (5% of features) [DEFAULT]
             - None: Uses min(n_samples, n_features)

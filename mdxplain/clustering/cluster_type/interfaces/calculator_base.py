@@ -366,7 +366,7 @@ class CalculatorBase(ABC):
         """
         Calculate cluster centers using built-in or helper method.
 
-        Checks if clustering algorithm has built-in centers (cluster_centers_).
+        Checks if clustering algorithm has built-in centers (_cluster_centers).
         Otherwise calculates centers using CenterCalculationHelper with automatic
         memory-safe chunk-wise processing for large datasets.
 

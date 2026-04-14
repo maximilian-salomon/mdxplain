@@ -128,6 +128,7 @@ class DiscreteFeatureHelper:
         -------
         Dict[str, Any]
             Axis configuration with keys:
+            
             - positions: np.ndarray
             - value_to_position: Dict[Any, int]
             - tick_labels: List[str]

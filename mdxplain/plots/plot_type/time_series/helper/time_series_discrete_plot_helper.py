@@ -68,7 +68,7 @@ class TimeSeriesDiscretePlotHelper:
             Visualization configuration.
 
         Returns
-        ------
+        -------
         Dict[str, Any]
             Axis configuration dictionary.
         """

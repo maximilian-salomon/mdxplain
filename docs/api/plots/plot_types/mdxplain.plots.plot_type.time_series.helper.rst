@@ -9,6 +9,7 @@ Time Series Helper
    mdxplain.plots.plot_type.time_series.helper.membership_bar_renderer
    mdxplain.plots.plot_type.time_series.helper.smoothing_helper
    mdxplain.plots.plot_type.time_series.helper.time_series_data_preparer
+   mdxplain.plots.plot_type.time_series.helper.time_series_discrete_plot_helper
    mdxplain.plots.plot_type.time_series.helper.time_series_feature_plot_helper
    mdxplain.plots.plot_type.time_series.helper.time_series_grid_layout_helper
    mdxplain.plots.plot_type.time_series.helper.time_series_membership_plot_helper

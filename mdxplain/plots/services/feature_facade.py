@@ -273,10 +273,12 @@ class FeatureFacade:
             If False, draw contour lines only.
         discrete_plot_mode : str, default="density"
             Rendering mode for discrete features:
+
             - "density": Gaussian-smoothed discrete distributions
             - "bar": grouped probability bars
         colors : str or Dict[str, str], optional
             Color configuration for DataSelectors:
+
             - str: matplotlib colormap name
             - dict: explicit DataSelector -> color mapping
             - None: automatic cluster-consistent DataSelector mapping
@@ -518,6 +520,7 @@ class FeatureFacade:
             marker size factor for "scatter" and line width for line-based styles.
         colors : str or Dict[str, str], optional
             Color configuration for trajectories/tags:
+            
             - str: matplotlib colormap name
             - dict: explicit mapping (trajectory_name -> color or tag -> color)
             - None: automatic palette assignment.

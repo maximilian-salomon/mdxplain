@@ -6,5 +6,6 @@ Pipeline Manager
 .. toctree::
    :maxdepth: 1
 
+   mdxplain.pipeline.manager.performance_config
    mdxplain.pipeline.manager.pipeline_manager  
    mdxplain.pipeline.manager.auto_inject_proxy

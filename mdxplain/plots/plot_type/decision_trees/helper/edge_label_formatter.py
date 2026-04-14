@@ -36,6 +36,7 @@ class EdgeLabelFormatter:
     Stateless helper for formatting edge and path labels.
 
     Centralizes logic for:
+    
     - Edge labels (visual connections between nodes)
     - Path labels (decision path at top of nodes)
     - Symbol formatting (✓/✗ for show_edge_symbols mode)

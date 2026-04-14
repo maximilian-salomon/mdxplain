@@ -191,6 +191,7 @@ class KernelPCACalculator(CalculatorBase):
                 Number of landmarks for Nyström approximation (default: 10000)
             - landmark_selection_mode : str, optional
                 Method for landmark selection in Nyström approximation (default: "kmeans")
+                
                 - "kmeans": Use KMeans centroids as landmarks (better coverage)
                 - "random": Use random sampling from data
             - random_state : int, optional

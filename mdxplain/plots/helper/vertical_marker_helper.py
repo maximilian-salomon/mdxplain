@@ -135,6 +135,7 @@ class VerticalMarkerHelper:
             Marker legend labels.
         label_colors : str or dict or None
             Legend color override:
+            
             - str: one shared color for all marker legend labels
             - dict[label] = color: per-label legend colors
 
