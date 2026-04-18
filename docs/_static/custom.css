@@ -200,12 +200,13 @@ table.benchmark-table td:nth-child(3) {
         padding: 1em 1.25em;
     }
 
-    /* Benchmark tables: allow horizontal scroll on narrow screens instead of crushing columns */
-    table.benchmark-table {
-        display: block;
-        max-width: 100%;
-        overflow-x: auto;
+    /* RTD wraps tables in .wy-table-responsive via theme.js; use that for mobile scrolling */
+    .wy-table-responsive {
         -webkit-overflow-scrolling: touch;
+    }
+
+    /* Benchmark tables: don't shrink below a readable minimum; scroll instead */
+    .wy-table-responsive > table.benchmark-table {
         min-width: 860px;
     }
 }
