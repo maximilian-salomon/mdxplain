@@ -145,7 +145,8 @@ table.benchmark-table th,
 table.benchmark-table td {
     padding: 6px 8px;
     white-space: normal;
-    overflow-wrap: anywhere;
+    overflow-wrap: normal;
+    word-break: normal;
 }
 
 /* Keep numeric columns stable */
@@ -197,5 +198,14 @@ table.benchmark-table td:nth-child(3) {
     .wy-nav-content {
         max-width: none;
         padding: 1em 1.25em;
+    }
+
+    /* Benchmark tables: allow horizontal scroll on narrow screens instead of crushing columns */
+    table.benchmark-table {
+        display: block;
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        min-width: 860px;
     }
 }
