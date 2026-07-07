@@ -32,6 +32,9 @@ from matplotlib.figure import Figure
 from ..plot_type.violin.violin_plotter import ViolinPlotter
 from ..plot_type.density.density_plotter import DensityPlotter
 from ..plot_type.time_series.time_series_plotter import TimeSeriesPlotter
+from ..plot_type.importance_bar.importance_bar_plotter import (
+    ImportanceBarPlotter,
+)
 
 
 class FeatureImportanceFacade:
@@ -213,6 +216,97 @@ class FeatureImportanceFacade:
             tick_fontsize=tick_fontsize,
             legend_fontsize=legend_fontsize,
             legend_title_fontsize=legend_title_fontsize
+        )
+
+    def importance_bars(
+        self,
+        feature_importance_name: str,
+        n_top: int = 10,
+        max_cols: int = 2,
+        color: str = "#4C72B0",
+        title: Optional[str] = None,
+        save_fig: bool = False,
+        filename: Optional[str] = None,
+        file_format: str = "png",
+        dpi: int = 300,
+        title_fontsize: Optional[int] = None,
+        label_fontsize: Optional[int] = None,
+        tick_fontsize: Optional[int] = None,
+    ) -> Figure:
+        """
+        Create a bar plot of feature importance scores.
+
+        Draws the top ``n_top`` feature importance scores as horizontal bars,
+        one subplot per sub-comparison. Works for any analyzer: when the
+        analysis stores a per-tree importance standard deviation (Random Forest
+        with GINI importance), it is drawn as error bars; for analyzers without
+        it (Decision Tree, SHAP) the bars are drawn without error bars.
+
+        Parameters
+        ----------
+        feature_importance_name : str
+            Name of the feature importance analysis
+        n_top : int, default=10
+            Number of top features to show per sub-comparison
+        max_cols : int, default=2
+            Maximum number of subplot columns
+        color : str, default="#4C72B0"
+            Bar color
+        title : str, optional
+            Custom figure title. Auto-generated if None.
+        save_fig : bool, default=False
+            Save figure to file
+        filename : str, optional
+            Custom filename. Auto-generated if None.
+        file_format : str, default="png"
+            File format for saving (png, pdf, svg, etc.)
+        dpi : int, default=300
+            Resolution for the saved figure in dots per inch
+        title_fontsize : int, optional
+            Font size for the figure title
+        label_fontsize : int, optional
+            Font size for axis and subplot-title labels
+        tick_fontsize : int, optional
+            Font size for the feature tick labels
+
+        Returns
+        -------
+        matplotlib.figure.Figure
+            Figure object containing the bar plots
+
+        Raises
+        ------
+        ValueError
+            If the feature importance analysis is not found
+
+        Examples
+        --------
+        >>> # Random Forest GINI importance (with error bars)
+        >>> fig = facade.importance_bars("forest_gini", n_top=10)
+
+        >>> # Decision Tree importance (plain bars)
+        >>> fig = facade.importance_bars("tree_analysis", n_top=8)
+
+        Notes
+        -----
+        Error bars represent the standard deviation of the impurity-based
+        importance across the trees of a Random Forest. Analyzers that do not
+        provide this (Decision Tree, SHAP) are plotted without error bars.
+        """
+        plotter = ImportanceBarPlotter(self.pipeline_data, self.cache_dir)
+        return plotter.plot(
+            feature_importance_name=feature_importance_name,
+            n_top=n_top,
+            max_cols=max_cols,
+            color=color,
+            title=title,
+            save_fig=save_fig,
+            filename=filename,
+            file_format=file_format,
+            dpi=dpi,
+            title_fontsize=title_fontsize,
+            label_fontsize=label_fontsize,
+            tick_fontsize=tick_fontsize,
         )
 
     def densities(
@@ -908,6 +1002,8 @@ class FeatureImportanceFacade:
         - Node sizes automatically adjusted to prevent overlap
         - Only available for decision_tree analyzer type
         """
+        # TODO: Move this import to module top-level (no lazy imports).
+        # Kept inline for now to avoid an unrelated change in this method.
         from ..plot_type.decision_trees.decision_tree_plotter import DecisionTreePlotter
 
         plotter = DecisionTreePlotter(self.pipeline_data, self.cache_dir)
