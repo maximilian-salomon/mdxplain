@@ -316,15 +316,16 @@ class RepresentativeFinderHelper:
         target_label: int,
     ) -> Dict[int, Dict[str, float]]:
         """
-        Extract one representative split rule per feature from Decision Tree.
+        Extract one representative split rule per feature from a model.
 
-        For each feature, selects the single most informative split for
-        separating the target class from the alternative class.
+        Supports single Decision Trees (via ``model.tree_``) and tree
+        ensembles such as Random Forest (via ``model.estimators_``). For an
+        ensemble the per-tree rules are aggregated into one rule per feature.
 
         Parameters
         ----------
-        model : sklearn DecisionTreeClassifier
-            Trained Decision Tree model
+        model : sklearn tree or ensemble classifier
+            Trained DecisionTreeClassifier or RandomForestClassifier
         feature_indices : List[int]
             Indices of features to extract rules for
         target_label : int
@@ -336,21 +337,173 @@ class RepresentativeFinderHelper:
             Mapping from feature_idx to dict with threshold, direction,
             and weight
         """
-        tree = model.tree_
-        rules = {}
         target_class_index = RepresentativeFinderHelper._get_target_class_index(
             model, target_label
         )
+        if hasattr(model, "estimators_"):
+            return RepresentativeFinderHelper._extract_ensemble_tree_rules(
+                model, feature_indices, target_class_index
+            )
+        return RepresentativeFinderHelper._collect_single_tree_rules(
+            model.tree_, feature_indices, target_class_index
+        )
 
+    @staticmethod
+    def _collect_single_tree_rules(
+        tree,
+        feature_indices: List[int],
+        target_class_index: int,
+    ) -> Dict[int, Dict[str, float]]:
+        """
+        Collect the best split rule per feature from a single tree.
+
+        Parameters
+        ----------
+        tree : sklearn tree object
+            Tree structure from a fitted DecisionTreeClassifier
+        feature_indices : List[int]
+            Indices of features to extract rules for
+        target_class_index : int
+            Target class index in tree.value
+
+        Returns
+        -------
+        Dict[int, Dict[str, float]]
+            Mapping from feature_idx to its best split rule
+        """
+        rules = {}
         for feat_idx in feature_indices:
             split_rule = RepresentativeFinderHelper._find_best_feature_split(
                 tree, feat_idx, target_class_index
             )
-
             if split_rule is not None:
                 rules[feat_idx] = split_rule
-
         return rules
+
+    @staticmethod
+    def _extract_ensemble_tree_rules(
+        model,
+        feature_indices: List[int],
+        target_class_index: int,
+    ) -> Dict[int, Dict[str, float]]:
+        """
+        Aggregate per-feature split rules across all trees of an ensemble.
+
+        Parameters
+        ----------
+        model : sklearn ensemble classifier
+            Trained classifier exposing ``estimators_``
+        feature_indices : List[int]
+            Indices of features to extract rules for
+        target_class_index : int
+            Target class index in tree.value
+
+        Returns
+        -------
+        Dict[int, Dict[str, float]]
+            Mapping from feature_idx to the aggregated split rule
+        """
+        rules_per_feature: Dict[int, List[Dict[str, float]]] = {
+            feat_idx: [] for feat_idx in feature_indices
+        }
+        for estimator in model.estimators_:
+            tree_rules = RepresentativeFinderHelper._collect_single_tree_rules(
+                estimator.tree_, feature_indices, target_class_index
+            )
+            for feat_idx, rule in tree_rules.items():
+                rules_per_feature[feat_idx].append(rule)
+        return RepresentativeFinderHelper._aggregate_all_feature_rules(
+            rules_per_feature
+        )
+
+    @staticmethod
+    def _aggregate_all_feature_rules(
+        rules_per_feature: Dict[int, List[Dict[str, float]]],
+    ) -> Dict[int, Dict[str, float]]:
+        """
+        Aggregate the collected per-tree rules for every feature.
+
+        Parameters
+        ----------
+        rules_per_feature : Dict[int, List[Dict[str, float]]]
+            Mapping from feature_idx to the list of per-tree split rules
+
+        Returns
+        -------
+        Dict[int, Dict[str, float]]
+            Mapping from feature_idx to the single aggregated rule
+        """
+        aggregated = {}
+        for feat_idx, rules in rules_per_feature.items():
+            combined = RepresentativeFinderHelper._aggregate_feature_rules(rules)
+            if combined is not None:
+                aggregated[feat_idx] = combined
+        return aggregated
+
+    @staticmethod
+    def _aggregate_feature_rules(
+        rules: List[Dict[str, float]],
+    ) -> Dict[str, float] | None:
+        """
+        Combine several per-tree rules for one feature into a single rule.
+
+        The threshold is the weight-weighted mean of the per-tree thresholds,
+        the weight is the mean per-tree weight, and the direction is the
+        weight-based majority direction.
+
+        Parameters
+        ----------
+        rules : List[Dict[str, float]]
+            Per-tree split rules for one feature
+
+        Returns
+        -------
+        Dict[str, float] or None
+            Aggregated split rule, or None if no usable rule exists
+        """
+        if not rules:
+            return None
+        weights = np.array([rule["weight"] for rule in rules], dtype=float)
+        thresholds = np.array(
+            [rule["threshold"] for rule in rules], dtype=float
+        )
+        total_weight = float(weights.sum())
+        if total_weight <= 0:
+            return None
+        return {
+            "threshold": float(np.average(thresholds, weights=weights)),
+            "weight": total_weight / len(rules),
+            "direction": RepresentativeFinderHelper._majority_direction(
+                rules, weights
+            ),
+        }
+
+    @staticmethod
+    def _majority_direction(
+        rules: List[Dict[str, float]], weights: np.ndarray
+    ) -> str:
+        """
+        Determine the weight-based majority split direction.
+
+        Parameters
+        ----------
+        rules : List[Dict[str, float]]
+            Per-tree split rules for one feature
+        weights : np.ndarray
+            Per-tree weights aligned with rules
+
+        Returns
+        -------
+        str
+            "le" if the weighted "le" votes dominate, otherwise "gt"
+        """
+        le_weight = sum(
+            weight
+            for rule, weight in zip(rules, weights)
+            if rule["direction"] == "le"
+        )
+        gt_weight = float(weights.sum()) - le_weight
+        return "le" if le_weight >= gt_weight else "gt"
 
     @staticmethod
     def _get_target_class_index(model, target_label: int) -> int:

@@ -8,4 +8,5 @@ Feature Importance Analyzer Types
    :titlesonly:
 
    mdxplain.feature_importance.analyzer_type.decision_tree
+   mdxplain.feature_importance.analyzer_type.random_forest
    mdxplain.feature_importance.analyzer_type.interfaces

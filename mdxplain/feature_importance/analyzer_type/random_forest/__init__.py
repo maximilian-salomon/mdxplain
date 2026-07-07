@@ -18,19 +18,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""
-Analyzer types for feature importance analysis.
+"""Random Forest analyzer for feature importance analysis."""
 
-This module provides various ML algorithm implementations for feature
-importance analysis, following the same pattern as decomposition_types.
+from .random_forest import RandomForest
 
-Available Analyzers:
-
-- DecisionTree: Decision tree classifier for feature importance
-- RandomForest: Random forest classifier for feature importance (GINI or SHAP)
-"""
-
-from .decision_tree.decision_tree import DecisionTree
-from .random_forest.random_forest import RandomForest
-
-__all__ = ["DecisionTree", "RandomForest"]
+__all__ = ["RandomForest"]

@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from ..manager.feature_importance_manager import FeatureImportanceManager
     from ...pipeline.entities.pipeline_data import PipelineData
 
-from ..analyzer_type import DecisionTree
+from ..analyzer_type import DecisionTree, RandomForest
 
 
 class FeatureImportanceAddService:
@@ -178,6 +178,154 @@ class FeatureImportanceAddService:
             class_weight=class_weight,
             ccp_alpha=ccp_alpha,
             max_samples=max_samples,
+        )
+        return self._manager.add_analysis(
+            self._pipeline_data,
+            comparison_name,
+            analyzer_type,
+            analysis_name,
+            force=force,
+        )
+
+    def random_forest(
+        self,
+        comparison_name: str,
+        analysis_name: str,
+        n_estimators: int = 3000,
+        importance_method: str = "shap",
+        criterion: str = "gini",
+        max_depth: Optional[int] = 6,
+        min_samples_split: int = 2,
+        min_samples_leaf: int = 1,
+        min_weight_fraction_leaf: float = 0.0,
+        max_features: Optional[str] = "sqrt",
+        bootstrap: bool = True,
+        oob_score: bool = False,
+        random_state: Optional[int] = None,
+        max_leaf_nodes: Optional[int] = None,
+        min_impurity_decrease: float = 0.0,
+        class_weight: Optional[str] = "balanced",
+        ccp_alpha: float = 0.0,
+        max_samples: Optional[int] = None,
+        shap_sample_size: Optional[int] = None,
+        n_jobs: Optional[int] = -1,
+        max_blas_threads: Optional[int] = 1,
+        auto_limit_blas: bool = True,
+        force: bool = False,
+    ) -> None:
+        """
+        Add Random Forest feature importance analysis.
+
+        A Random Forest classifier computes feature importance scores across an
+        ensemble of trees. Importance is derived either from impurity reduction
+        (``importance_method="gini"``) or from SHAP values
+        (``importance_method="shap"``). This provides feature rankings for
+        understanding which molecular features distinguish between states.
+
+        Parameters
+        ----------
+        comparison_name : str
+            Name of the comparison to analyze
+        analysis_name : str
+            Name to store the analysis results
+        n_estimators : int, default=3000
+            Number of trees in the forest
+        importance_method : str, default="shap"
+            Feature importance method, "shap" or "gini" (impurity reduction)
+        criterion : str, default="gini"
+            Function to measure the quality of a split ("gini" or "entropy")
+        max_depth : int, optional, default=6
+            Maximum depth of each tree. None means unlimited depth. The shallow
+            default keeps SHAP affordable and spreads importance across
+            correlated features instead of concentrating it on one.
+        min_samples_split : int, default=2
+            Minimum samples required to split an internal node
+        min_samples_leaf : int, default=1
+            Minimum samples required to be at a leaf node
+        min_weight_fraction_leaf : float, default=0.0
+            Minimum weighted fraction of the sum total of weights at a leaf
+        max_features : str, optional, default="sqrt"
+            Number of features to consider when looking for the best split
+        bootstrap : bool, default=True
+            Whether bootstrap samples are used when building trees
+        oob_score : bool, default=False
+            Whether to use out-of-bag samples to estimate generalization score
+        random_state : int, optional
+            Random state for reproducible results
+        max_leaf_nodes : int, optional
+            Maximum number of leaf nodes. None means unlimited nodes.
+        min_impurity_decrease : float, default=0.0
+            Minimum impurity decrease required to make a split
+        class_weight : str, optional, default="balanced"
+            Weights associated with classes ("balanced", "balanced_subsample"
+            or None)
+        ccp_alpha : float, default=0.0
+            Complexity parameter for minimal cost-complexity pruning
+        max_samples : int, optional
+            Maximum number of samples used for training. If None, it is
+            calculated from max_memory_gb. This is a memory-based row cap
+            applied before training; it is not sklearn's bootstrap max_samples.
+        shap_sample_size : int, optional
+            Maximum number of rows SHAP is evaluated on. If None, SHAP uses all
+            training rows (already capped by max_samples / max_memory_gb).
+        n_jobs : int, optional, default=-1
+            Number of parallel jobs for training the forest
+        max_blas_threads : int, optional, default=1
+            Preferred BLAS/OpenMP thread limit during training
+        auto_limit_blas : bool, default=True
+            Apply BLAS=1 when n_jobs != 1 to avoid thread oversubscription
+        force : bool, default=False
+            Whether to overwrite an existing analysis with the same name
+
+        Returns
+        -------
+        None
+            Adds Random Forest feature importance results to pipeline data
+
+        Examples
+        --------
+        >>> # Basic random forest analysis (GINI importance)
+        >>> pipeline.feature_importance.add.random_forest(
+        ...     "folded_vs_unfolded",
+        ...     "forest_gini"
+        ... )
+
+        >>> # Random forest with SHAP importance and more trees
+        >>> pipeline.feature_importance.add.random_forest(
+        ...     "state_comparison",
+        ...     "forest_shap",
+        ...     n_estimators=300,
+        ...     importance_method="shap",
+        ...     random_state=42
+        ... )
+
+        Notes
+        -----
+        Uses sklearn.ensemble.RandomForestClassifier internally. GINI
+        importance is the mean impurity decrease across the trees; SHAP
+        importance is the mean absolute SHAP value per feature.
+        """
+        analyzer_type = RandomForest(
+            n_estimators=n_estimators,
+            importance_method=importance_method,
+            criterion=criterion,
+            max_depth=max_depth,
+            min_samples_split=min_samples_split,
+            min_samples_leaf=min_samples_leaf,
+            min_weight_fraction_leaf=min_weight_fraction_leaf,
+            max_features=max_features,
+            bootstrap=bootstrap,
+            oob_score=oob_score,
+            random_state=random_state,
+            max_leaf_nodes=max_leaf_nodes,
+            min_impurity_decrease=min_impurity_decrease,
+            class_weight=class_weight,
+            ccp_alpha=ccp_alpha,
+            max_samples=max_samples,
+            shap_sample_size=shap_sample_size,
+            n_jobs=n_jobs,
+            max_blas_threads=max_blas_threads,
+            auto_limit_blas=auto_limit_blas,
         )
         return self._manager.add_analysis(
             self._pipeline_data,

@@ -44,6 +44,7 @@ from ...utils.feature_metadata_utils import FeatureMetadataUtils
 from ...utils.path_utils import PathUtils
 from ..services.feature_importance_add_service import FeatureImportanceAddService
 from ..helper.representative_finder_helper import RepresentativeFinderHelper
+from ..helper.importance_filter_helper import ImportanceFilterHelper
 
 
 class FeatureImportanceManager:
@@ -360,8 +361,184 @@ class FeatureImportanceManager:
             result[comp_name] = TopFeaturesHelper.get_top_features_with_names(
                 pipeline_data, fi_data, comp_name, n
             )
-        
+
         return result
+
+    def filter_importance(
+        self,
+        pipeline_data: PipelineData,
+        source_name: str,
+        filtered_name: str,
+        min_sequence_separation: int = 20,
+        merge_radius: int = 5,
+        force: bool = False,
+    ) -> None:
+        """
+        Create a redundancy-filtered copy of a feature importance analysis.
+
+        Collapses near-identical neighbour features into one representative per
+        coupling: long-range pair features are kept, then a strength-ordered
+        greedy pass merges near neighbours (chain-aware) into the strongest and
+        counts them. The original analysis is not modified; a filtered clone is
+        stored under ``filtered_name`` with merged features set to zero.
+
+        Warning
+        -------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data object
+        source_name : str
+            Name of the feature importance analysis to filter
+        filtered_name : str
+            Name to store the filtered clone under
+        min_sequence_separation : int, default=20
+            Minimum within-chain sequence separation to keep a pair feature
+            (discards trivial short-range within-chain couplings)
+        merge_radius : int, default=5
+            Maximum within-chain sequence distance for two features to be
+            treated as the same event
+        force : bool, default=False
+            Whether to overwrite an existing analysis with the same name
+
+        Returns
+        -------
+        None
+            Stores the filtered clone in pipeline data
+
+        Examples
+        --------
+        >>> pipeline.feature_importance.filter_importance(
+        ...     "feature_importance", "feature_importance_filtered"
+        ... )
+        """
+        FeatureImportanceValidationHelper.validate_analysis_exists(
+            pipeline_data, source_name
+        )
+        FeatureImportanceValidationHelper.validate_analysis_name(
+            pipeline_data, filtered_name, force
+        )
+        source = pipeline_data.feature_importance_data[source_name]
+        feature_metadata = self._source_feature_metadata(
+            pipeline_data, source
+        )
+        chain_of = self._chain_segment_map(pipeline_data)
+        filtered = self._build_filtered_data(
+            source,
+            filtered_name,
+            feature_metadata,
+            chain_of,
+            min_sequence_separation,
+            merge_radius,
+        )
+        pipeline_data.feature_importance_data[filtered_name] = filtered
+
+    @staticmethod
+    def _source_feature_metadata(
+        pipeline_data: PipelineData, source: "FeatureImportanceData"
+    ) -> Optional[List[Any]]:
+        """
+        Get the feature metadata backing a source analysis.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data object
+        source : FeatureImportanceData
+            Source analysis to filter
+
+        Returns
+        -------
+        List[Any] or None
+            Feature metadata for the source's selector, or None if it has none
+        """
+        if not source.feature_selector:
+            return None
+        return pipeline_data.get_selected_metadata(source.feature_selector)
+
+    @staticmethod
+    def _chain_segment_map(pipeline_data: PipelineData) -> Dict[int, int]:
+        """
+        Build a residue-index to chain-segment map from the residue labels.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data object
+
+        Returns
+        -------
+        Dict[int, int]
+            Mapping from residue index to chain-segment id (empty if no labels)
+        """
+        res_label_data = pipeline_data.trajectory_data.res_label_data
+        if not res_label_data:
+            return {}
+        # res_label_data stores a per-residue label list for each trajectory.
+        residue_labels = list(next(iter(res_label_data.values())))
+        return ImportanceFilterHelper.build_chain_map(residue_labels)
+
+    @staticmethod
+    def _build_filtered_data(
+        source: "FeatureImportanceData",
+        filtered_name: str,
+        feature_metadata: Optional[List[Any]],
+        chain_of: Dict[int, int],
+        min_sequence_separation: int,
+        merge_radius: int,
+    ) -> "FeatureImportanceData":
+        """
+        Build a filtered clone of a source analysis.
+
+        Copies the importance arrays and metadata per sub-comparison, sharing
+        the trained model reference, and applies the redundancy filter.
+
+        Parameters
+        ----------
+        source : FeatureImportanceData
+            Source analysis to clone and filter
+        filtered_name : str
+            Name for the filtered clone
+        feature_metadata : List[Any] or None
+            Feature metadata for residue mapping
+        chain_of : Dict[int, int]
+            Residue index to chain-segment map
+        min_sequence_separation : int
+            Minimum within-chain sequence separation for pair features
+        merge_radius : int
+            Maximum within-chain sequence distance to merge
+
+        Returns
+        -------
+        FeatureImportanceData
+            The filtered clone
+        """
+        filtered = type(source)(filtered_name)
+        filtered.analyzer_type = source.analyzer_type
+        filtered.comparison_name = source.comparison_name
+        filtered.feature_selector = source.feature_selector
+        filter_params = {
+            "min_sequence_separation": min_sequence_separation,
+            "merge_radius": merge_radius,
+        }
+        for importances, metadata in source.get_all_comparisons():
+            new_importances, merged_counts = (
+                ImportanceFilterHelper.filter_comparison(
+                    importances,
+                    feature_metadata,
+                    chain_of,
+                    min_sequence_separation,
+                    merge_radius,
+                )
+            )
+            new_metadata = dict(metadata)
+            new_metadata["merged_counts"] = merged_counts
+            new_metadata["filter_params"] = filter_params
+            filtered.add_comparison_result(new_importances, new_metadata)
+        return filtered
 
     def print_top_n_features(
         self,
@@ -444,6 +621,7 @@ class FeatureImportanceManager:
             split_rules = self._get_split_rules_for_comparison(
                 fi_data, comparison_name, top_features
             )
+            merged_counts = self._get_merged_counts(fi_data, comparison_name)
             print(f"\nTop {n} features for {comparison_name}:")
             for j, feature_info in enumerate(top_features, 1):
                 feature_label = self._format_top_feature_label(
@@ -451,10 +629,62 @@ class FeatureImportanceManager:
                     feature_metadata,
                     split_rules.get(feature_info["feature_index"]),
                 )
+                feature_label = self._append_merged_count(
+                    feature_label, feature_info["feature_index"], merged_counts
+                )
                 print(
                     f"  {j}. {feature_label} "
                     f"({feature_info['importance_score']:.3f})"
                 )
+
+    @staticmethod
+    def _get_merged_counts(
+        fi_data: FeatureImportanceData, comparison_name: str
+    ) -> Dict[int, int]:
+        """
+        Get the merged-neighbour counts for a sub-comparison.
+
+        Parameters
+        ----------
+        fi_data : FeatureImportanceData
+            Feature importance analysis (possibly filter-produced)
+        comparison_name : str
+            Sub-comparison name
+
+        Returns
+        -------
+        Dict[int, int]
+            Mapping from representative feature index to merged count (empty
+            when the analysis was not produced by filter_importance)
+        """
+        _, metadata = fi_data.get_comparison(comparison_name)
+        return metadata.get("merged_counts", {})
+
+    @staticmethod
+    def _append_merged_count(
+        label: str, feature_index: int, merged_counts: Dict[int, int]
+    ) -> str:
+        """
+        Append the merged-neighbour count to a feature label when present.
+
+        Parameters
+        ----------
+        label : str
+            The formatted feature label
+        feature_index : int
+            Index of the feature being labelled
+        merged_counts : Dict[int, int]
+            Mapping from representative feature index to merged count
+
+        Returns
+        -------
+        str
+            The label, with " (+N)" appended when a count exists
+        """
+        count = merged_counts.get(feature_index)
+        if count:
+            return f"{label} (+{count})"
+        return label
 
     def _get_split_rules_for_comparison(
         self,
@@ -494,7 +724,7 @@ class FeatureImportanceManager:
 
         _, comparison_metadata = fi_data.get_comparison(comparison_name)
         model = comparison_metadata.get("model")
-        if model is None:
+        if model is None or not self._is_tree_based_model(model):
             return {}
 
         feature_indices = [feature["feature_index"] for feature in top_features]
@@ -504,6 +734,32 @@ class FeatureImportanceManager:
             feature_indices,
             target_label,
         )
+
+    @staticmethod
+    def _is_tree_based_model(model: Any) -> bool:
+        """
+        Check whether a model exposes tree-based split rules.
+
+        A single Decision Tree exposes ``tree_`` and a tree ensemble such as
+        Random Forest exposes ``estimators_``. Models with neither cannot
+        provide split-rule labels.
+
+        Parameters
+        ----------
+        model : Any
+            Trained model stored in the comparison metadata
+
+        Returns
+        -------
+        bool
+            True if the model exposes tree-based split rules
+
+        Examples
+        --------
+        >>> FeatureImportanceManager._is_tree_based_model(decision_tree_model)
+        True
+        """
+        return hasattr(model, "tree_") or hasattr(model, "estimators_")
 
     def _format_top_feature_label(
         self,
@@ -853,8 +1109,11 @@ class FeatureImportanceManager:
         Raises
         ------
         ValueError
-            If analysis not found or not Decision Tree based
+            If analysis not found or not tree-based (decision_tree or
+            random_forest)
         """
+        supported_analyzers = ("decision_tree", "random_forest")
+
         if analysis_name not in pipeline_data.feature_importance_data:
             raise ValueError(
                 f"Analysis '{analysis_name}' not found. "
@@ -863,10 +1122,11 @@ class FeatureImportanceManager:
 
         fi_data = pipeline_data.feature_importance_data[analysis_name]
 
-        if fi_data.analyzer_type != "decision_tree":
+        if fi_data.analyzer_type not in supported_analyzers:
             raise ValueError(
                 f"get_representative_frames() currently only supports "
-                f"'decision_tree' analyzer, got '{fi_data.analyzer_type}'"
+                f"{supported_analyzers} analyzers, got "
+                f"'{fi_data.analyzer_type}'"
             )
 
         comp_data = pipeline_data.comparison_data[fi_data.comparison_name]
