@@ -36,6 +36,7 @@ sys.path.insert(0, os.path.abspath('../mdxplain'))
 # Sphinx extensions
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.mathjax',
     'myst_nb',              # Exension for embedding Jupyter notebooks
 ]
 
@@ -74,3 +75,10 @@ html_static_path = ['_static']
 html_css_files = [
     'custom.css',
 ]
+
+# Number figures/tables and allow numeric references via :numref:
+numfig = True
+numfig_format = {
+    'figure': 'Figure %s',
+    'table': 'Table %s',
+}

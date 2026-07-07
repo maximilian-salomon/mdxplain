@@ -11,4 +11,5 @@
    main_sites/ai_usage
    api/api
    main_sites/mdxplain_orchestration
+   main_sites/benchmarks
    GitHub Repository <https://github.com/maximilian-salomon/mdxplain>

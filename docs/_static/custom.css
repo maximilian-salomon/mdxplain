@@ -90,3 +90,123 @@ footer[role="contentinfo"] .rst-footer-buttons,
     margin-inline-end: 0px;
     unicode-bidi: isolate;
 }
+
+/* Benchmarks page: make figure captions behave like table captions (caption-side: top) */
+.rst-content figure.benchmark-figure {
+    display: table;
+    width: 100%;
+}
+
+/* Match the RTD table caption look exactly (font + padding + centering) */
+.rst-content figure.benchmark-figure figcaption,
+.rst-content table.benchmark-table caption {
+    color: #000;
+    font: italic 85%/1 arial, sans-serif;
+    padding: 1em 0;
+    text-align: justify;
+    text-align-last: left;
+    text-justify: inter-word;
+}
+
+.rst-content figure.benchmark-figure figcaption {
+    display: table-caption;
+    caption-side: top;
+}
+
+.rst-content figure.benchmark-figure figcaption p {
+    margin: 0;
+    font: inherit;
+    text-align: inherit;
+}
+
+/* Ensure both parts of the caption inherit the same style */
+.rst-content figure.benchmark-figure figcaption .caption-number,
+.rst-content figure.benchmark-figure figcaption .caption-text,
+.rst-content table.benchmark-table caption .caption-number,
+.rst-content table.benchmark-table caption .caption-text {
+    font-style: inherit;
+    font-weight: inherit;
+}
+
+/* Keep "Figure 1"/"Table 1" together at the start (PDF-like) */
+.rst-content figure.benchmark-figure figcaption .caption-number,
+.rst-content table.benchmark-table caption .caption-number {
+    white-space: nowrap;
+}
+
+/* Benchmarks page: wide tables without ugly scroll or crushed columns */
+table.benchmark-table {
+    table-layout: auto;
+    width: 100%;
+    font-size: 90%;
+}
+
+table.benchmark-table th,
+table.benchmark-table td {
+    padding: 6px 8px;
+    white-space: normal;
+    overflow-wrap: normal;
+    word-break: normal;
+}
+
+/* Keep numeric columns stable */
+table.benchmark-table th:nth-child(4),
+table.benchmark-table th:nth-child(5),
+table.benchmark-table th:nth-child(6),
+table.benchmark-table th:nth-child(7),
+table.benchmark-table th:nth-child(8),
+table.benchmark-table td:nth-child(4),
+table.benchmark-table td:nth-child(5),
+table.benchmark-table td:nth-child(6),
+table.benchmark-table td:nth-child(7),
+table.benchmark-table td:nth-child(8) {
+    white-space: nowrap;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Keep the 'Approximation' column readable */
+table.benchmark-table td:nth-child(2) {
+    white-space: normal;
+    text-align: left;
+}
+
+/* Give Memmap a bit more breathing room; keep Approximation from hogging space */
+table.benchmark-table th:nth-child(2),
+table.benchmark-table td:nth-child(2) {
+    width: 16%;
+}
+
+table.benchmark-table th:nth-child(3),
+table.benchmark-table td:nth-child(3) {
+    width: 12%;
+    text-align: center;
+}
+
+/* Global: justify all documentation body text ("Blocksatz") */
+.wy-nav-content .rst-content {
+    text-align: justify;
+    hyphens: auto;
+}
+
+/* Layout: make content width responsive (RTD defaults to max-width: 800px) */
+.wy-nav-content {
+    max-width: clamp(900px, 92vw, 1600px);
+}
+
+@media screen and (max-width: 768px) {
+    .wy-nav-content {
+        max-width: none;
+        padding: 1em 1.25em;
+    }
+
+    /* RTD wraps tables in .wy-table-responsive via theme.js; use that for mobile scrolling */
+    .wy-table-responsive {
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Benchmark tables: don't shrink below a readable minimum; scroll instead */
+    .wy-table-responsive > table.benchmark-table {
+        min-width: 860px;
+    }
+}
