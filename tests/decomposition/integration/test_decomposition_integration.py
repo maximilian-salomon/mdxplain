@@ -451,6 +451,76 @@ class TestDecompositionIntegration:
         assert "decomposition_name" in kpca_data.metadata
         assert "cache_path" in kpca_data.metadata
 
+    def test_reduce_components_pipeline_integration(self):
+        """
+        Test reduce_components end-to-end through the pipeline API.
+
+        Validates that a PCA decomposition run through the full pipeline can be
+        truncated via reduce_components (with auto-injected pipeline data), that
+        the reduced clone holds the leading components exactly, and that the
+        original decomposition stays untouched.
+        """
+        # Setup pipeline
+        pipeline = PipelineManager()
+        mock_traj = MockTrajectoryFactory.create_linear_coordinates(
+            n_frames=20, n_atoms=4, seed=42
+        )
+        pipeline._data.trajectory_data.trajectories = [mock_traj]
+        pipeline._data.trajectory_data.n_frames = mock_traj.n_frames
+        pipeline._data.trajectory_data.n_atoms = mock_traj.n_atoms
+        pipeline._data.trajectory_data.trajectory_names = ["test_traj"]
+        pipeline._data.trajectory_data.res_label_data = {0: [
+            {"seqid": i, "full_name": f"RES_{i}"} for i in range(4)
+        ]}
+
+        # Full pipeline: coordinates -> selector -> PCA with 4 components
+        pipeline.feature.add.coordinates(atom_selection="all", force=True)
+        pipeline.feature_selector.create("reduce_input")
+        pipeline.feature_selector.add_selection(
+            "reduce_input", "coordinates", "all", use_reduced=False
+        )
+        pipeline.feature_selector.select("reduce_input")
+        pipeline.decomposition.add.pca(
+            selection_name="reduce_input", n_components=4, random_state=42
+        )
+
+        source_name = list(pipeline._data.decomposition_data.keys())[-1]
+        source = pipeline._data.decomposition_data[source_name]
+        source_data = source.data
+        source_metadata = source.metadata
+        assert source_data is not None
+        assert source_metadata is not None
+        original_data = source_data.copy()
+        original_ratio = list(source_metadata["explained_variance_ratio"])
+
+        # Reduce to the leading 2 components via the pipeline (auto-injected)
+        pipeline.decomposition.reduce_components(
+            source_name=source_name,
+            new_name="reduce_input_2",
+            n_components=2,
+        )
+        reduced = pipeline._data.decomposition_data["reduce_input_2"]
+        reduced_data = reduced.data
+        reduced_metadata = reduced.metadata
+        assert reduced_data is not None
+        assert reduced_metadata is not None
+
+        # Reduced clone holds the leading two components exactly
+        assert np.array_equal(reduced_data, source_data[:, :2])
+        assert reduced_metadata["n_components"] == 2
+        assert reduced_metadata["auto_selected"] is False
+        assert reduced_metadata["reduced_from"] == source_name
+        assert np.array_equal(
+            reduced_metadata["explained_variance_ratio"],
+            np.asarray(original_ratio)[:2],
+        )
+
+        # Original decomposition stays untouched
+        assert np.array_equal(source_data, original_data)
+        assert np.array_equal(
+            source_metadata["explained_variance_ratio"], original_ratio
+        )
+
     # === METHOD PATH TESTS ===
         
     @patch('mdxplain.decomposition.decomposition_type.pca.pca_calculator.PCA')

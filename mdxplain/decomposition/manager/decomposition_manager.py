@@ -27,13 +27,16 @@ Used to add, reset, and manage decomposition data in trajectory data objects.
 
 from __future__ import annotations
 
-from typing import Optional, Any, Tuple, TYPE_CHECKING
+from typing import Optional, Any, Dict, Tuple, TYPE_CHECKING
 import gc
 import os
 import numpy as np
 
 from ..entities.decomposition_data import DecompositionData
 from ..decomposition_type.interfaces.decomposition_type_base import DecompositionTypeBase
+from ..helper.decomposition_validation_helper import (
+    DecompositionValidationHelper,
+)
 from ..services.decomposition_add_service import DecompositionAddService
 from ...utils.data_utils import DataUtils
 from ...utils.cleanup_utils import CleanupUtils
@@ -108,8 +111,7 @@ class DecompositionManager:
             purpose="cache directory",
         )
 
-        if chunk_size <= 0 and not isinstance(chunk_size, int):
-            raise ValueError("Chunk size must be a positive integer.")
+        DecompositionValidationHelper.validate_chunk_size(chunk_size)
 
     def add_decomposition(
         self,
@@ -203,7 +205,9 @@ class DecompositionManager:
         self._check_decomposition_existence(pipeline_data, decomposition_name, force)
 
         # Validate feature type requirements
-        self._validate_feature_type_compatibility(pipeline_data, selection_name, decomposition_type)
+        DecompositionValidationHelper.validate_feature_type_compatibility(
+            pipeline_data, selection_name, decomposition_type
+        )
         
         # Get data with frame mapping
         data_matrix, frame_mapping = pipeline_data.get_selected_data(
@@ -236,6 +240,10 @@ class DecompositionManager:
         """
         Check if decomposition already exists and handle accordingly.
 
+        Delegates the name-availability check to the validation helper. When
+        the name is taken and force is set, the existing decomposition and its
+        cache are released so it can be recomputed.
+
         Parameters
         ----------
         pipeline_data : PipelineData
@@ -255,31 +263,30 @@ class DecompositionManager:
         ValueError
             If decomposition exists and force is False
         """
-        if selection_name in pipeline_data.decomposition_data:
-            if force:
-                print(
-                    f"WARNING: Decomposition for selection '{selection_name}' already exists. Forcing recomputation."
-                )
-                old_data = pipeline_data.decomposition_data[selection_name]
-                cache_path = old_data.cache_path
-                old_array = old_data.data
-                old_data.data = None
-                del pipeline_data.decomposition_data[selection_name]
-                gc.collect()
-                MemmapUtils.close_memmap_view(old_array)
-                old_array = None
-                gc.collect()
-                if cache_path and os.path.exists(cache_path):
-                    CleanupUtils.remove_path(
-                        cache_path,
-                        purpose="decomposition cache path",
-                    )
-            else:
-                raise ValueError(
-                    f"Decomposition for selection '{selection_name}' already exists."
-                )
+        DecompositionValidationHelper.validate_target_available(
+            pipeline_data, selection_name, force
+        )
+        if selection_name not in pipeline_data.decomposition_data:
+            return
+        print(
+            f"WARNING: Decomposition for selection '{selection_name}' already exists. Forcing recomputation."
+        )
+        old_data = pipeline_data.decomposition_data[selection_name]
+        cache_path = old_data.cache_path
+        old_array = old_data.data
+        old_data.data = None
+        del pipeline_data.decomposition_data[selection_name]
+        gc.collect()
+        MemmapUtils.close_memmap_view(old_array)
+        old_array = None
+        gc.collect()
+        if cache_path and os.path.exists(cache_path):
+            CleanupUtils.remove_path(
+                cache_path,
+                purpose="decomposition cache path",
+            )
 
-    def _get_selection_cache_path(self, selection_name: str) -> str:
+    def _get_selection_cache_path(self, selection_name: str) -> Optional[str]:
         """
         Get selection-specific cache path for decomposition data.
 
@@ -322,15 +329,13 @@ class DecompositionManager:
         None
             Performs decomposition computation
         """
-        if not hasattr(decomposition_type, "init_calculator"):
-            raise ValueError(
-                f"Invalid decomposition type '{decomposition_type}'. "
-                "Please provide a decomposition type instance."
-            )
+        DecompositionValidationHelper.validate_decomposition_type(
+            decomposition_type
+        )
 
         decomposition_type.init_calculator(
             use_memmap=self.use_memmap,
-            cache_path=decomposition_data.cache_path,
+            cache_path=decomposition_data.cache_path or "./cache",
             chunk_size=self.chunk_size,
         )
 
@@ -374,10 +379,148 @@ class DecompositionManager:
         """
         pipeline_data.decomposition_data[decomposition_name] = decomposition_data
 
+        assert decomposition_data.data is not None
         print(
             f"Decomposition '{decomposition_key}' with name '{decomposition_name}' for selection '{selection_name}' computed successfully. "
             f"Data reduced from {original_shape} to {decomposition_data.data.shape}."
         )
+
+    def reduce_components(
+        self,
+        pipeline_data: PipelineData,
+        source_name: str,
+        new_name: str,
+        n_components: int,
+        force: bool = False,
+    ) -> None:
+        """
+        Keep only the first n_components of an existing decomposition.
+
+        PCA and Kernel PCA components are ordered by descending variance, so the
+        leading ``n_components`` are exactly the ones a fresh run with that count
+        would produce. This truncation is a cheap slice of the stored transformed
+        data -- it does NOT recompute the (expensive) eigendecomposition. The
+        original decomposition is left untouched; a reduced clone is stored under
+        ``new_name`` and can be used downstream (clustering, plots) like any
+        other decomposition.
+
+        Warning
+        -------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data object
+        source_name : str
+            Name of the decomposition to reduce
+        new_name : str
+            Name to store the reduced clone under
+        n_components : int
+            Number of leading components to keep
+        force : bool, default=False
+            Whether to overwrite an existing decomposition with the same name
+
+        Returns
+        -------
+        None
+            Stores the reduced decomposition in pipeline data
+
+        Examples
+        --------
+        >>> # An auto-selected decomposition yielded 30 components; keep 5
+        >>> pipeline.decomposition.reduce_components(
+        ...     "ContactKernelPCA", "ContactKernelPCA_5", n_components=5
+        ... )
+        >>> pipeline.clustering.add.dpa("ContactKernelPCA_5", Z=2.5)
+        """
+        DecompositionValidationHelper.validate_source_exists(
+            pipeline_data, source_name
+        )
+        DecompositionValidationHelper.validate_target_available(
+            pipeline_data, new_name, force
+        )
+        source = pipeline_data.decomposition_data[source_name]
+        DecompositionValidationHelper.validate_component_count(
+            source, n_components
+        )
+        reduced = self._build_reduced_decomposition(
+            source, n_components, source_name
+        )
+        pipeline_data.decomposition_data[new_name] = reduced
+        print(
+            f"Reduced '{source_name}' to {n_components} components, "
+            f"stored as '{new_name}'."
+        )
+
+    @staticmethod
+    def _build_reduced_decomposition(
+        source: DecompositionData, n_components: int, source_name: str
+    ) -> DecompositionData:
+        """
+        Build a truncated clone of a decomposition.
+
+        Copies the leading ``n_components`` columns of the transformed data into
+        a small owned array and adjusts the metadata; the frame mapping is
+        shared with the source.
+
+        Parameters
+        ----------
+        source : DecompositionData
+            Source decomposition to reduce
+        n_components : int
+            Number of leading components to keep
+        source_name : str
+            Name of the source, recorded in the metadata
+
+        Returns
+        -------
+        DecompositionData
+            The reduced clone
+        """
+        assert source.data is not None
+        reduced = DecompositionData(source.decomposition_type)
+        reduced.data = np.array(source.data[:, :n_components])
+        reduced.metadata = DecompositionManager._reduced_metadata(
+            source.metadata, n_components, source_name
+        )
+        reduced.frame_mapping = source.frame_mapping
+        return reduced
+
+    @staticmethod
+    def _reduced_metadata(
+        metadata: Optional[Dict[str, Any]],
+        n_components: int,
+        source_name: str,
+    ) -> Dict[str, Any]:
+        """
+        Build the metadata for a reduced decomposition.
+
+        Parameters
+        ----------
+        metadata : dict or None
+            Source metadata
+        n_components : int
+            Number of leading components kept
+        source_name : str
+            Name of the source decomposition
+
+        Returns
+        -------
+        Dict[str, Any]
+            Metadata with the component count, variance arrays truncated to
+            n_components, and the source recorded under ``reduced_from``
+        """
+        reduced: Dict[str, Any] = dict(metadata) if metadata else {}
+        reduced["n_components"] = n_components
+        reduced["reduced_from"] = source_name
+        reduced["auto_selected"] = False
+        for key in ("explained_variance_ratio", "explained_variance"):
+            values = reduced.get(key)
+            if values is not None:
+                reduced[key] = np.asarray(values)[:n_components]
+        return reduced
 
     def reset_decompositions(self, pipeline_data: PipelineData) -> None:
         """
@@ -555,59 +698,6 @@ class DecompositionManager:
             print(f"\n--- {name} ---")
             data.print_info()
 
-    def _validate_feature_type_compatibility(self, pipeline_data: PipelineData, 
-                                           selection_name: str, 
-                                           decomposition_type: DecompositionTypeBase) -> None:
-        """
-        Validate that decomposition type is compatible with feature selection.
-
-        Some decomposition methods require specific feature types (e.g., 
-        DiffusionMaps requires 'coordinates'). This method checks compatibility.
-
-        Parameters
-        ----------
-        pipeline_data : PipelineData
-            Pipeline data container
-        selection_name : str
-            Name of the feature selection
-        decomposition_type : DecompositionTypeBase
-            Decomposition type to validate
-
-        Returns
-        -------
-        None
-            Validation passes silently
-
-        Raises
-        ------
-        ValueError
-            If decomposition type is incompatible with feature selection
-        """
-        required_type = decomposition_type.get_required_feature_type()
-        if required_type is None:
-            # No specific requirement, all feature types allowed
-            return
-            
-        # Get feature metadata from the selection
-        if selection_name not in pipeline_data.selected_feature_data:
-            raise ValueError(f"Feature selection '{selection_name}' not found")
-            
-        selection_data = pipeline_data.selected_feature_data[selection_name]
-        
-        # Check if all features in selection match required type
-        incompatible_features = []
-        for feature_type, _ in selection_data.selections.items():
-            if feature_type != required_type:
-                incompatible_features.append(f"{feature_type}")
-        
-        if incompatible_features:
-            decomposition_name = decomposition_type.__class__.__name__
-            incompatible_list = ", ".join(incompatible_features)
-            raise ValueError(
-                f"{decomposition_name} requires features of type '{required_type}' only. "
-                f"Selection '{selection_name}' contains incompatible features: {incompatible_list}"
-            )
-    
     @property
     def add(self) -> DecompositionAddService:
         """

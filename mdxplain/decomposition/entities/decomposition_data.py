@@ -25,7 +25,7 @@ Container for decomposition results (PCA, KernelPCA) with associated metadata
 and hyperparameters. Stores decomposed data with transformation information.
 """
 
-from typing import Dict
+from typing import Dict, Optional
 from ...utils.data_utils import DataUtils
 
 
@@ -42,7 +42,7 @@ class DecompositionData:
         Type of decomposition used (e.g., "pca", "kernel_pca")
     use_memmap : bool
         Whether memory mapping is used for large datasets
-    cache_path : str
+    cache_path : str or None
         Path for memory-mapped cache files
     data : np.ndarray or None
         Decomposed data array
@@ -53,7 +53,7 @@ class DecompositionData:
         for tracking frame origins across multiple trajectories
     """
 
-    def __init__(self, decomposition_type: str, use_memmap: bool = False, cache_path: str = "./cache") -> None:
+    def __init__(self, decomposition_type: str, use_memmap: bool = False, cache_path: Optional[str] = "./cache") -> None:
         """
         Initialize decomposition data container.
 

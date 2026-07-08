@@ -45,17 +45,23 @@ class DecompositionAddService:
     >>> pipeline.decomposition.add.diffusion_maps("distance_features", n_components=15)
     """
     
-    def __init__(self, manager: DecompositionManager, pipeline_data: PipelineData) -> None:
+    def __init__(
+        self,
+        manager: DecompositionManager,
+        pipeline_data: Optional[PipelineData] = None,
+    ) -> None:
         """
         Initialize factory with manager and pipeline data.
-        
+
         Parameters
         ----------
         manager : DecompositionManager
             Decomposition manager instance
-        pipeline_data : PipelineData
-            Pipeline data container (injected by AutoInjectProxy)
-            
+        pipeline_data : PipelineData or None, default=None
+            Pipeline data container. None only for the placeholder instance
+            the manager ``add`` property creates; the AutoInjectProxy replaces
+            it with the real container before any add method runs.
+
         Returns
         -------
         None
@@ -138,6 +144,7 @@ class DecompositionAddService:
         Components are ordered by explained variance ratio.
         """
         decomposition_type = PCA(n_components=n_components, random_state=random_state, offset=offset)
+        assert self._pipeline_data is not None
         return self._manager.add_decomposition(
             self._pipeline_data,
             selection_name,
@@ -273,6 +280,7 @@ class DecompositionAddService:
             auto_limit_blas=auto_limit_blas,
             offset=offset,
         )
+        assert self._pipeline_data is not None
         return self._manager.add_decomposition(
             self._pipeline_data,
             selection_name,
@@ -405,6 +413,7 @@ class DecompositionAddService:
             auto_limit_blas=auto_limit_blas,
             offset=offset,
         )
+        assert self._pipeline_data is not None
         return self._manager.add_decomposition(
             self._pipeline_data,
             selection_name,
@@ -517,6 +526,7 @@ class DecompositionAddService:
             epsilon_n_samples=epsilon_n_samples,
             epsilon_ref_size=epsilon_ref_size,
         )
+        assert self._pipeline_data is not None
         return self._manager.add_decomposition(
             self._pipeline_data,
             selection_name,
