@@ -27,13 +27,14 @@ array support and statistical filtering capabilities.
 """
 
 import warnings
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
 from mdxplain.utils.progress_utils import ProgressUtils
 from mdxplain.utils.resource_utils import ResourceUtils
 from mdxplain.utils.memmap_utils import MemmapUtils
+from mdxplain.utils.memmap_reuse_helper import MemmapReuseHelper
 
 from .feature_shape_helper import FeatureShapeHelper
 
@@ -562,7 +563,7 @@ class CalculatorComputeHelper:
         return (input_shape[0], n_residues, n_residues), n_residues
 
     @staticmethod
-    def create_output_array(use_memmap: bool, path: str, output_shape: Tuple[int, ...], dtype: np.dtype) -> np.ndarray:
+    def create_output_array(use_memmap: bool, path: str, output_shape: Tuple[int, ...], dtype: Union[np.dtype, str, type]) -> np.ndarray:
         """
         Create output array (regular or memory-mapped).
 
@@ -591,3 +592,106 @@ class CalculatorComputeHelper:
             )
         else:
             return np.zeros(output_shape, dtype=dtype)
+
+    @staticmethod
+    def reuse_or_create_output_array(
+        use_memmap: bool,
+        reuse_memmap_cache: bool,
+        path: str,
+        output_shape: Tuple[int, ...],
+        dtype: Union[np.dtype, str, type],
+        cache_params: Dict[str, Any],
+    ) -> Tuple[np.ndarray, bool]:
+        """
+        Reuse a cached memmap result when valid, else create a fresh array.
+
+        Parameters
+        ----------
+        use_memmap : bool
+            Whether memory mapping is in use
+        reuse_memmap_cache : bool
+            Whether reuse of a matching cached memmap is enabled
+        path : str or None
+            File path for the memory-mapped array
+        output_shape : tuple
+            Shape of the output array
+        dtype : np.dtype
+            Data type of the array
+        cache_params : dict
+            Parameters that define the result, matched against the sidecar
+
+        Returns
+        -------
+        Tuple[numpy.ndarray, bool]
+            The output array and whether it was reused from cache (True) or
+            freshly created and still needs to be filled (False)
+        """
+        if use_memmap and reuse_memmap_cache:
+            reused = MemmapReuseHelper.try_reuse(path, dtype, cache_params)
+            if reused is not None:
+                print(f"Reusing cached feature result: {path}")
+                return reused, True
+            print(f"No matching cache for {path}; recomputing.")
+        array = CalculatorComputeHelper.create_output_array(
+            use_memmap, path, output_shape, dtype
+        )
+        return array, False
+
+    @staticmethod
+    def hash_input(
+        array: np.ndarray, chunk_size: Optional[int] = None
+    ) -> str:
+        """
+        Return a content hash of a feature input for reuse keying.
+
+        Added to the cache parameters so a cached feature result is only
+        reused when produced from the same input, not merely the same shape.
+
+        Parameters
+        ----------
+        array : numpy.ndarray
+            Input array whose content identifies the result.
+        chunk_size : int, optional
+            Configured chunk size (rows read per step). A safe default is
+            used when None.
+
+        Returns
+        -------
+        str
+            Hex digest identifying the input content.
+        """
+        return MemmapReuseHelper.hash_array(array, chunk_size or 2000)
+
+    @staticmethod
+    def write_output_cache_sidecar(
+        use_memmap: bool,
+        path: str,
+        output_shape: Tuple[int, ...],
+        dtype: Union[np.dtype, str, type],
+        cache_params: Dict[str, Any],
+    ) -> None:
+        """
+        Write the reuse sidecar after a memmap output has been fully filled.
+
+        Parameters
+        ----------
+        use_memmap : bool
+            Whether memory mapping is in use
+        path : str or None
+            File path of the fully written memory-mapped array
+        output_shape : tuple
+            Shape of the written array
+        dtype : np.dtype
+            Data type of the written array
+        cache_params : dict
+            Parameters that define the result, recorded in the sidecar
+
+        Returns
+        -------
+        None
+            Writes the sidecar when memory mapping is in use
+        """
+        if use_memmap:
+            MemmapReuseHelper.write_sidecar(
+                path, output_shape, dtype, cache_params
+            )

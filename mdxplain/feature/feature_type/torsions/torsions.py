@@ -124,7 +124,13 @@ class Torsions(FeatureTypeBase):
         self.calculate_chi = calculate_chi
         self.use_pbc = use_pbc
 
-    def init_calculator(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000) -> None:
+    def init_calculator(
+        self,
+        use_memmap: bool = False,
+        cache_path: str = "./cache",
+        chunk_size: int = 2000,
+        reuse_memmap_cache: bool = False,
+    ) -> None:
         """
         Initialize the torsions calculator with specified configuration.
 
@@ -136,6 +142,9 @@ class Torsions(FeatureTypeBase):
             Directory path for storing cache files when using memory mapping
         chunk_size : int, optional
             Number of frames to process per chunk for memory-efficient processing
+        reuse_memmap_cache : bool, optional
+            Reopen a matching cached memmap result instead of recomputing.
+            Only has an effect together with use_memmap=True. Default is False.
 
         Returns
         -------
@@ -156,7 +165,8 @@ class Torsions(FeatureTypeBase):
             use_memmap=use_memmap,
             cache_path=cache_path,
             chunk_size=chunk_size,
-            use_pbc=self.use_pbc
+            use_pbc=self.use_pbc,
+            reuse_memmap_cache=reuse_memmap_cache,
         )
 
     def compute(self, input_data: md.Trajectory, feature_metadata: Dict[str, Any]) -> Tuple[np.ndarray, Dict[str, Any]]:

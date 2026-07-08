@@ -77,6 +77,7 @@ class KernelPCACalculator(CalculatorBase):
         min_chunk_size: int = 1000,
         max_blas_threads: Union[int, None] = 1,
         auto_limit_blas: bool = True,
+        reuse_memmap_cache: bool = False,
     ) -> None:
         """
         Initialize KernelPCA calculator.
@@ -101,7 +102,10 @@ class KernelPCACalculator(CalculatorBase):
         auto_limit_blas : bool, default=True
             Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
             otherwise use max_blas_threads (fallback 2 when None)
-            
+        reuse_memmap_cache : bool, default=False
+            Reopen a matching cached memmap result instead of recomputing.
+            Only has an effect together with use_memmap=True.
+
         Returns
         -------
         None
@@ -115,7 +119,12 @@ class KernelPCACalculator(CalculatorBase):
         >>> # Incremental KernelPCA for large datasets
         >>> calc = KernelPCACalculator(use_memmap=True, chunk_size=1000)
         """
-        super().__init__(use_memmap, cache_path, chunk_size)
+        super().__init__(
+            use_memmap,
+            cache_path,
+            chunk_size,
+            reuse_memmap_cache=reuse_memmap_cache,
+        )
         self._cache_prefix = "kernel_pca"
         self.use_parallel = use_parallel
         self.n_jobs = n_jobs
@@ -689,6 +698,21 @@ class KernelPCACalculator(CalculatorBase):
         tuple
             Tuple of (transformed_data, metadata)
         """
+        cache_params = {
+            "method": "iterative_kernel_pca",
+            "n_components": hyperparameters["n_components"],
+            "gamma": float(hyperparameters["gamma"]),
+            "n_samples": int(data.shape[0]),
+            "n_features": int(data.shape[1]),
+            "input_hash": self._input_hash(data),
+        }
+        memmap_path = PathUtils.get_cache_file_path(
+            f"{self._cache_prefix}_iterative.dat", self.cache_path
+        )
+        reused = self._reuse_memmap_result(memmap_path, cache_params)
+        if reused is not None:
+            return reused[0], reused[1]
+
         kernel_matrix = self._compute_chunk_wise_rbf_kernel(
             data, hyperparameters["gamma"]
         )
@@ -731,23 +755,23 @@ class KernelPCACalculator(CalculatorBase):
         lambdas = lambdas[positive_idx]
         eigenvecs = eigenvecs[:, positive_idx]
 
-        # Transform: scale eigenvectors by sqrt(eigenvalues) (sklearn KernelPCA style)
-        transformed_data = eigenvecs * np.sqrt(lambdas)
-
-        # Store transformed_data as memmap when use_memmap=True
-        if self.use_memmap:
-            memmap_path = PathUtils.get_cache_file_path(
-                f"{self._cache_prefix}_iterative.dat", self.cache_path
-            )
-            transformed_memmap = MemmapUtils.create_memmap(
-                path=memmap_path,
-                dtype=transformed_data.dtype,
-                mode="w+",
-                shape=transformed_data.shape,
-            )
-            transformed_memmap[:] = transformed_data
-            MemmapUtils.evict_from_os_cache(transformed_memmap)
-            transformed_data = transformed_memmap
+        # Transform: scale eigenvectors by sqrt(eigenvalues) (sklearn KernelPCA
+        # style), written chunk-wise into the memmap so the full scaled matrix
+        # is never materialized in RAM. This path only runs under
+        # use_memmap=True (standard kernel PCA handles the in-memory case).
+        sqrt_lambdas = np.sqrt(lambdas)
+        transformed_data = MemmapUtils.create_memmap(
+            path=memmap_path,
+            dtype=eigenvecs.dtype,
+            mode="w+",
+            shape=eigenvecs.shape,
+        )
+        MemmapUtils.fill_memmap_chunkwise(
+            transformed_data,
+            eigenvecs.shape[0],
+            self.chunk_size,
+            lambda start, end: eigenvecs[start:end] * sqrt_lambdas,
+        )
 
         metadata = self._prepare_metadata(hyperparameters, data.shape)
         metadata.update(
@@ -759,6 +783,11 @@ class KernelPCACalculator(CalculatorBase):
             }
         )
 
+        self._write_memmap_result_sidecar(
+            memmap_path, transformed_data, cache_params, metadata
+        )
+
+        metadata["reused"] = False
         return transformed_data, metadata
 
     def _chunked_matvec(self, v: np.ndarray, kernel_matrix: np.memmap, chunk_size: int) -> np.ndarray:
@@ -963,6 +992,24 @@ class KernelPCACalculator(CalculatorBase):
         n_components = hyperparameters["n_components"]
         landmark_selection_mode = hyperparameters.get("landmark_selection_mode", "kmeans")
 
+        cache_params = {
+            "method": "nystrom_kernel_pca",
+            "n_components": n_components,
+            "gamma": float(hyperparameters["gamma"]),
+            "n_landmarks": n_landmarks,
+            "landmark_selection_mode": landmark_selection_mode,
+            "random_state": hyperparameters.get("random_state"),
+            "n_samples": int(n_samples),
+            "n_features": int(data.shape[1]),
+            "input_hash": self._input_hash(data),
+        }
+        memmap_path = self._memmap_result_path(
+            f"{self._cache_prefix}_nystrom.dat"
+        )
+        reused = self._reuse_memmap_result(memmap_path, cache_params)
+        if reused is not None:
+            return reused[0], reused[1]
+
         # Validate chunk size for IncrementalPCA
         # IPCA requires batch_size >= n_components
         processing_chunk_size = self.chunk_size
@@ -1077,6 +1124,11 @@ class KernelPCACalculator(CalculatorBase):
             }
         )
 
+        self._write_memmap_result_sidecar(
+            memmap_path, result, cache_params, metadata
+        )
+
         if is_memmap_data:
             ResourceUtils.tune_memmap(data, "random")
+        metadata["reused"] = False
         return result, metadata

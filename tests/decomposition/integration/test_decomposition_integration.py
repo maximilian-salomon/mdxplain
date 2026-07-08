@@ -594,7 +594,14 @@ class TestDecompositionIntegration:
         """
         # Configure mock to return realistic data
         mock_ipca_instance = MagicMock()
-        mock_ipca_instance.fit_transform.return_value = np.random.rand(10, 2)
+        # Incremental memmap path fits, then transforms chunk-wise; the mock
+        # returns the first two columns so the result shape is deterministic.
+        mock_ipca_instance.transform.side_effect = (
+            lambda chunk: np.asarray(chunk)[:, :2]
+        )
+        mock_ipca_instance.n_components = 2
+        mock_ipca_instance.n_components_ = 2
+        mock_ipca_instance.components_ = np.zeros((2, 9))
         mock_ipca_instance.explained_variance_ratio_ = np.array([0.7, 0.3])
         mock_ipca_instance.explained_variance_ = np.array([4.2, 1.8])
         mock_sklearn_ipca.return_value = mock_ipca_instance
@@ -637,12 +644,13 @@ class TestDecompositionIntegration:
             whiten=True,
             copy=False
         )
-        mock_ipca_instance.fit_transform.assert_called_once()
-        
-        # Verify results were computed correctly 
+        assert mock_ipca_instance.partial_fit.called
+        assert mock_ipca_instance.transform.called
+
+        # Verify results were computed correctly
         decomp_data = list(pipeline._data.decomposition_data.values())[-1]
         assert decomp_data.decomposition_type == "pca"
-        assert np.array_equal(decomp_data.data, mock_ipca_instance.fit_transform.return_value)
+        assert np.asarray(decomp_data.data).shape == (10, 2)
         
         # Verify metadata indicates standard method
         assert decomp_data.metadata["method"] == "incremental_pca"

@@ -29,6 +29,7 @@ from typing import Dict, Tuple, Any
 
 import numpy as np
 from sklearn.decomposition import PCA, IncrementalPCA
+from sklearn.utils import gen_batches
 
 from ..interfaces.calculator_base import CalculatorBase
 from ....utils.memmap_utils import MemmapUtils
@@ -57,7 +58,13 @@ class PCACalculator(CalculatorBase):
     >>> transformed, metadata = calc.compute(large_data, n_components=50)
     """
 
-    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000) -> None:
+    def __init__(
+        self,
+        use_memmap: bool = False,
+        cache_path: str = "./cache",
+        chunk_size: int = 2000,
+        reuse_memmap_cache: bool = False,
+    ) -> None:
         """
         Initialize PCA calculator.
 
@@ -69,6 +76,9 @@ class PCACalculator(CalculatorBase):
             Path for memory-mapped cache files (not used for PCA)
         chunk_size : int, optional
             Size of chunks for incremental PCA processing
+        reuse_memmap_cache : bool, default=False
+            Reopen a matching cached memmap result instead of recomputing.
+            Only has an effect together with use_memmap=True.
 
         Returns
         -------
@@ -83,7 +93,9 @@ class PCACalculator(CalculatorBase):
         >>> # Incremental PCA for large datasets
         >>> calc = PCACalculator(use_memmap=True, chunk_size=1000)
         """
-        super().__init__(use_memmap, cache_path, chunk_size)
+        super().__init__(
+            use_memmap, cache_path, chunk_size, reuse_memmap_cache
+        )
         self._cache_prefix = "pca"
 
     def compute(self, data: np.ndarray, **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
@@ -249,6 +261,20 @@ class PCACalculator(CalculatorBase):
         tuple
             Tuple of (transformed_data, metadata)
         """
+        cache_params = {
+            "method": "incremental_pca",
+            "n_components": hyperparameters["n_components"],
+            "n_samples": int(data.shape[0]),
+            "n_features": int(data.shape[1]),
+            "input_hash": self._input_hash(data),
+        }
+        memmap_path = PathUtils.get_cache_file_path(
+            f"{self._cache_prefix}.dat", self.cache_path
+        )
+        reused = self._reuse_memmap_result(memmap_path, cache_params)
+        if reused is not None:
+            return reused[0], reused[1]
+
         ipca = IncrementalPCA(
             n_components=hyperparameters["n_components"],
             batch_size=self.chunk_size,
@@ -256,22 +282,12 @@ class PCACalculator(CalculatorBase):
             copy=False,
         )
 
-        transformed_data = ipca.fit_transform(data)
-
-        # Store transformed_data as memmap when use_memmap=True
-        if self.use_memmap:
-            memmap_path = PathUtils.get_cache_file_path(
-                f"{self._cache_prefix}.dat", self.cache_path
-            )
-            transformed_memmap = MemmapUtils.create_memmap(
-                path=memmap_path,
-                dtype=transformed_data.dtype,
-                mode="w+",
-                shape=transformed_data.shape,
-            )
-            transformed_memmap[:] = transformed_data
-            MemmapUtils.evict_from_os_cache(transformed_memmap)
-            transformed_data = transformed_memmap
+        # Fit, then transform chunk-wise into the memmap so the full
+        # transformed matrix is never materialized in RAM. This path only runs
+        # under use_memmap=True (standard PCA handles the in-memory case).
+        transformed_data = self._fit_transform_to_memmap(
+            ipca, data, memmap_path
+        )
 
         metadata = self._prepare_metadata(hyperparameters, data.shape)
         metadata.update(
@@ -283,4 +299,57 @@ class PCACalculator(CalculatorBase):
             }
         )
 
+        self._write_memmap_result_sidecar(
+            memmap_path, transformed_data, cache_params, metadata
+        )
+
+        metadata["reused"] = False
         return transformed_data, metadata
+
+    def _fit_transform_to_memmap(
+        self,
+        ipca: IncrementalPCA,
+        data: np.ndarray,
+        memmap_path: str,
+    ) -> np.ndarray:
+        """
+        Fit incremental PCA, then transform chunk-wise into a result memmap.
+
+        Fitting runs on copied batches so the caller's input is never modified
+        in place (IncrementalPCA centers its input during fit). The transformed
+        matrix is written block by block so it is never held in RAM in full;
+        the memmap shape and dtype come from the fitted estimator
+        (``n_components_`` and ``components_.dtype``).
+
+        Parameters
+        ----------
+        ipca : sklearn.decomposition.IncrementalPCA
+            Unfitted incremental PCA estimator.
+        data : numpy.ndarray
+            Input matrix to fit and transform.
+        memmap_path : str
+            Target path of the persistent transformed-data memmap.
+
+        Returns
+        -------
+        numpy.ndarray
+            The memmap-backed transformed data.
+        """
+        n_samples = int(data.shape[0])
+        for batch in gen_batches(
+            n_samples, self.chunk_size, min_batch_size=ipca.n_components
+        ):
+            ipca.partial_fit(np.array(data[batch]))
+        transformed_memmap = MemmapUtils.create_memmap(
+            path=memmap_path,
+            dtype=ipca.components_.dtype,
+            mode="w+",
+            shape=(n_samples, ipca.n_components_),
+        )
+        MemmapUtils.fill_memmap_chunkwise(
+            transformed_memmap,
+            n_samples,
+            self.chunk_size,
+            lambda start, end: ipca.transform(data[start:end]),
+        )
+        return transformed_memmap

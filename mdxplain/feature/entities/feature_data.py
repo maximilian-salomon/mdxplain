@@ -71,7 +71,13 @@ class FeatureData:
     """
 
     def __init__(
-        self, feature_type: FeatureTypeBase, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000, trajectory_name: Optional[str] = None
+        self, 
+        feature_type: FeatureTypeBase, 
+        use_memmap: bool = False, 
+        cache_path: str = "./cache", 
+        chunk_size: int = 2000, 
+        trajectory_name: Optional[str] = None, 
+        reuse_memmap_cache: bool = False
     ) -> None:
         """
         Initialize feature data container.
@@ -89,6 +95,9 @@ class FeatureData:
             memory but may be slower. If None, uses automatic chunking.
         trajectory_name : str, optional
             Trajectory name for unique cache filenames
+        reuse_memmap_cache : bool, default=False
+            Whether to reuse a matching cached memmap result instead of
+            recomputing it (only effective when use_memmap is True)
 
         Returns
         -------
@@ -125,6 +134,7 @@ class FeatureData:
             use_memmap=self.use_memmap,
             cache_path=self.cache_path,
             chunk_size=self.chunk_size,
+            reuse_memmap_cache=reuse_memmap_cache,
         )
 
         self.analsis = None

@@ -120,6 +120,43 @@ def test_collect_cache_files_memmap_off_excludes_dat_and_zarr(tmp_path):
     assert "cache/model.pdb" in archived
 
 
+def test_collect_cache_files_memmap_on_includes_reuse_sidecars(tmp_path):
+    """Reuse sidecars ship with their .dat so a loaded archive can reuse."""
+    cache = tmp_path / "cache"
+    cache.mkdir()
+    (cache / "a.dat").write_text("data", encoding="utf-8")
+    (cache / "a.dat.reuse.json").write_text("{}", encoding="utf-8")
+    (cache / "a.dat.reuse.pkl").write_text("pkl", encoding="utf-8")
+
+    items = ArchiveUtils.collect_cache_files(
+        str(cache),
+        exclude_visualizations=True,
+        include_structure_files=True,
+        use_memmap=True,
+    )
+    archived = {arc.replace("\\", "/") for _, arc in items}
+    assert "cache/a.dat.reuse.json" in archived
+    assert "cache/a.dat.reuse.pkl" in archived
+
+
+def test_collect_cache_files_memmap_off_excludes_reuse_sidecars(tmp_path):
+    """Without memmap there is no .dat, so its reuse sidecars are dropped."""
+    cache = tmp_path / "cache"
+    cache.mkdir()
+    (cache / "a.dat.reuse.json").write_text("{}", encoding="utf-8")
+    (cache / "a.dat.reuse.pkl").write_text("pkl", encoding="utf-8")
+
+    items = ArchiveUtils.collect_cache_files(
+        str(cache),
+        exclude_visualizations=True,
+        include_structure_files=True,
+        use_memmap=False,
+    )
+    archived = {arc.replace("\\", "/") for _, arc in items}
+    assert "cache/a.dat.reuse.json" not in archived
+    assert "cache/a.dat.reuse.pkl" not in archived
+
+
 def test_collect_cache_files_missing_cache_returns_empty(tmp_path):
     """Missing cache directories should produce empty file list."""
     missing = tmp_path / "does_not_exist"

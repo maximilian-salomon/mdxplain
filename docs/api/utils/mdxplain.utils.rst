@@ -13,6 +13,7 @@ Utilities
    mdxplain.utils.data_utils
    mdxplain.utils.feature_metadata_utils
    mdxplain.utils.helper
+   mdxplain.utils.memmap_reuse_helper
    mdxplain.utils.memmap_utils
    mdxplain.utils.output_utils
    mdxplain.utils.path_utils

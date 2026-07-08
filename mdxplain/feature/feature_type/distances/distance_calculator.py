@@ -63,7 +63,14 @@ class DistanceCalculator(CalculatorBase):
     >>> distances, pairs = calculator.compute(trajectory)
     """
 
-    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000, use_pbc: bool = True) -> None:
+    def __init__(
+        self,
+        use_memmap: bool = False,
+        cache_path: str = "./cache",
+        chunk_size: int = 2000,
+        use_pbc: bool = True,
+        reuse_memmap_cache: bool = False,
+    ) -> None:
         """
         Initialize distance calculator with configuration parameters.
 
@@ -78,6 +85,9 @@ class DistanceCalculator(CalculatorBase):
         use_pbc : bool, default=True
             If True and the trajectory contains unitcell information,
             distances are computed under the minimum image convention
+        reuse_memmap_cache : bool, default=False
+            Reopen a matching cached memmap result instead of recomputing.
+            Only has an effect together with use_memmap=True.
 
         Returns
         -------
@@ -94,7 +104,7 @@ class DistanceCalculator(CalculatorBase):
         >>> # Without periodic boundary conditions
         >>> calculator = DistanceCalculator(use_pbc=False)
         """
-        super().__init__(use_memmap, cache_path, chunk_size)
+        super().__init__(use_memmap, cache_path, chunk_size, reuse_memmap_cache)
         self.distances_path = cache_path
         self.use_pbc = use_pbc
 
@@ -142,32 +152,45 @@ class DistanceCalculator(CalculatorBase):
         >>> distances, metadata = calculator.compute(trajectory, ref=ref_traj)
         """
         # Extract parameters from kwargs
-        trajectory = input_data 
-        excluded_neighbors = kwargs.get("excluded_neighbors", 1)  # Default excluded_neighbors=1 excludes diagonal  
+        trajectory = input_data
+        excluded_neighbors = kwargs.get("excluded_neighbors", 1)  # Default excluded_neighbors=1 excludes diagonal
         res_metadata = kwargs.get("res_metadata", None)
+        cache_params = {
+            "excluded_neighbors": int(excluded_neighbors),
+            "input_hash": CalculatorComputeHelper.hash_input(
+                trajectory.xyz, self.chunk_size
+            ),
+        }
 
-        # Setup computation parameters and arrays
-        total_frames, distances = self._setup_computation(trajectory, excluded_neighbors, res_metadata)
-
-        # Process single trajectory
-        distances, res_list = self._process_trajectory(
-            trajectory, distances
+        # Setup computation parameters and array (reused when a valid cache exists)
+        total_frames, distances, reused = self._setup_computation(
+            trajectory, excluded_neighbors, res_metadata, cache_params
         )
 
-        # Consistency check: res_list should match self.pairs
-        self._validate_pair_consistency(res_list)
+        if not reused:
+            # Process single trajectory, then finalize (convert units)
+            distances, res_list = self._process_trajectory(
+                trajectory, distances
+            )
+            self._validate_pair_consistency(res_list)
+            distances = self._finalize_output(distances, total_frames)
+            CalculatorComputeHelper.write_output_cache_sidecar(
+                self.use_memmap,
+                self.distances_path,
+                distances.shape,
+                "float32",
+                cache_params,
+            )
 
         # Generate feature metadata using labels if available
         feature_metadata = self._generate_feature_metadata(res_metadata, excluded_neighbors)
 
-        # Finalize output (convert units, cleanup)
-        distances = self._finalize_output(distances, total_frames)
-
+        feature_metadata["reused"] = reused
         return distances, feature_metadata
 
-    def _setup_computation(self, trajectory: md.Trajectory, excluded_neighbors: int, res_metadata: Dict[str, Any]) -> Tuple[np.ndarray, List[Tuple[int, int]], int]:
+    def _setup_computation(self, trajectory: md.Trajectory, excluded_neighbors: int, res_metadata: Dict[str, Any], cache_params: Dict[str, Any]) -> Tuple[int, np.ndarray, bool]:
         """
-        Set up computation parameters and create output arrays.
+        Set up computation parameters and the output array.
 
         Parameters
         ----------
@@ -177,11 +200,14 @@ class DistanceCalculator(CalculatorBase):
             Sequential seqid distance for neighbor exclusion
         res_metadata : dict
             Residue metadata containing seqid information
+        cache_params : dict
+            Parameters that define the result, matched against the sidecar
 
         Returns
         -------
         tuple
-            (total_frames, distances_array)
+            (total_frames, distances_array, reused) where reused is True when
+            a matching cached memmap was reopened instead of created
         """
         total_frames = trajectory.n_frames
 
@@ -195,15 +221,17 @@ class DistanceCalculator(CalculatorBase):
         # Calculate condensed output shape (natural md.compute_contacts format)
         self.n_pairs = len(self.pairs)
 
-        # Create output array in condensed format
-        distances = CalculatorComputeHelper.create_output_array(
+        # Reuse a matching cached distance array, else create it in condensed format
+        distances, reused = CalculatorComputeHelper.reuse_or_create_output_array(
             self.use_memmap,
+            self.reuse_memmap_cache,
             self.distances_path,
             (total_frames, self.n_pairs),
-            dtype="float32",
+            "float32",
+            cache_params,
         )
 
-        return total_frames, distances
+        return total_frames, distances, reused
 
     def _finalize_output(self, distances: np.ndarray, total_frames: int) -> np.ndarray:
         """

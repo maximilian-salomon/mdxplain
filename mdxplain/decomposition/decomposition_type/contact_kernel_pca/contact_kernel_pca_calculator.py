@@ -77,6 +77,7 @@ class ContactKernelPCACalculator(KernelPCACalculator):
         min_chunk_size: int = 1000,
         max_blas_threads: Union[int, None] = 1,
         auto_limit_blas: bool = True,
+        reuse_memmap_cache: bool = False,
     ) -> None:
         """
         Initialize ContactKernelPCA calculator.
@@ -101,7 +102,10 @@ class ContactKernelPCACalculator(KernelPCACalculator):
         auto_limit_blas : bool, default=True
             Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
             otherwise use max_blas_threads (fallback 2 when None)
-            
+        reuse_memmap_cache : bool, default=False
+            Reopen a matching cached memmap result instead of recomputing.
+            Only has an effect together with use_memmap=True.
+
         Returns
         -------
         None
@@ -124,6 +128,7 @@ class ContactKernelPCACalculator(KernelPCACalculator):
             min_chunk_size,
             max_blas_threads,
             auto_limit_blas,
+            reuse_memmap_cache=reuse_memmap_cache,
         )
         self._cache_prefix = "contact_kernel_pca"
 

@@ -59,7 +59,13 @@ class CoordinatesCalculator(CalculatorBase):
     >>> coords, metadata = calculator.compute(trajectory, selection='backbone')
     """
 
-    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000) -> None:
+    def __init__(
+        self,
+        use_memmap: bool = False,
+        cache_path: str = "./cache",
+        chunk_size: int = 2000,
+        reuse_memmap_cache: bool = False,
+    ) -> None:
         """
         Initialize coordinates calculator with configuration parameters.
 
@@ -71,6 +77,9 @@ class CoordinatesCalculator(CalculatorBase):
             Directory path for storing cache files (includes trajectory name)
         chunk_size : int, optional
             Number of frames to process per chunk
+        reuse_memmap_cache : bool, default=False
+            Reopen a matching cached memmap result instead of recomputing.
+            Only has an effect together with use_memmap=True.
 
         Returns
         -------
@@ -84,7 +93,7 @@ class CoordinatesCalculator(CalculatorBase):
         >>> # With memory mapping
         >>> calculator = CoordinatesCalculator(use_memmap=True, cache_path='./cache/')
         """
-        super().__init__(use_memmap, cache_path, chunk_size)
+        super().__init__(use_memmap, cache_path, chunk_size, reuse_memmap_cache)
         self.coordinates_path = cache_path
 
         self.analysis = CoordinatesCalculatorAnalysis(
@@ -132,16 +141,32 @@ class CoordinatesCalculator(CalculatorBase):
         # Perform atom selection
         indices = self._perform_atom_selection(trajectory, selection)
 
-        # Setup output array
+        # Setup output array (reused when a valid cache exists)
         n_features = len(indices) * 3  # XYZ per atom
-        coordinates = self._setup_output_array(trajectory, n_features)
+        cache_params = {
+            "selection": selection,
+            "input_hash": CalculatorComputeHelper.hash_input(
+                trajectory.xyz, self.chunk_size
+            ),
+        }
+        coordinates, reused = self._setup_output_array(
+            trajectory, n_features, cache_params
+        )
 
-        # Extract coordinates
-        coordinates = self._extract_coordinates(trajectory, indices, coordinates)
+        if not reused:
+            coordinates = self._extract_coordinates(trajectory, indices, coordinates)
+            CalculatorComputeHelper.write_output_cache_sidecar(
+                self.use_memmap,
+                self.coordinates_path,
+                (trajectory.n_frames, n_features),
+                "float32",
+                cache_params,
+            )
 
         # Generate feature metadata
         feature_metadata = self._generate_feature_metadata(indices, trajectory.topology, selection)
 
+        feature_metadata["reused"] = reused
         return coordinates, feature_metadata
 
     def _perform_atom_selection(self, trajectory: md.Trajectory, selection: str) -> np.ndarray:
@@ -197,31 +222,6 @@ class CoordinatesCalculator(CalculatorBase):
 
         print(f"Selected {len(indices)} atoms using selection '{selection}'")
         return indices
-
-    def _setup_output_array(self, trajectory: md.Trajectory, n_features: int) -> np.ndarray:
-        """
-        Create output array for coordinates storage.
-
-        Parameters
-        ----------
-        trajectory : mdtraj.Trajectory
-            Trajectory object for size information
-        n_features : int
-            Number of coordinate features (n_atoms * 3)
-
-        Returns
-        -------
-        numpy.ndarray or numpy.memmap
-            Output array for coordinates storage
-        """
-        coordinates = CalculatorComputeHelper.create_output_array(
-            self.use_memmap,
-            self.coordinates_path,
-            (trajectory.n_frames, n_features),
-            dtype="float32"
-        )
-
-        return coordinates
 
     def _extract_coordinates(self, trajectory: md.Trajectory, indices: np.ndarray, coordinates: np.ndarray) -> np.ndarray:
         """

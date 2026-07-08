@@ -67,7 +67,13 @@ class DSSPCalculator(CalculatorBase):
     SIMPLIFIED_CLASSES = ['H', 'E', 'C', 'NA']
     """Simplified DSSP classification (4 classes including NA)"""
 
-    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000) -> None:
+    def __init__(
+        self,
+        use_memmap: bool = False,
+        cache_path: str = "./cache",
+        chunk_size: int = 2000,
+        reuse_memmap_cache: bool = False,
+    ) -> None:
         """
         Initialize DSSP calculator with configuration parameters.
 
@@ -79,6 +85,9 @@ class DSSPCalculator(CalculatorBase):
             Directory path for storing cache files (includes trajectory name)
         chunk_size : int, optional
             Number of frames to process per chunk
+        reuse_memmap_cache : bool, default=False
+            Reopen a matching cached memmap result instead of recomputing.
+            Only has an effect together with use_memmap=True.
 
         Returns
         -------
@@ -92,7 +101,7 @@ class DSSPCalculator(CalculatorBase):
         >>> # With memory mapping
         >>> calculator = DSSPCalculator(use_memmap=True, cache_path='./cache/')
         """
-        super().__init__(use_memmap, cache_path, chunk_size)
+        super().__init__(use_memmap, cache_path, chunk_size, reuse_memmap_cache)
         self.dssp_path = cache_path
 
         self.analysis = DSSPCalculatorAnalysis(
@@ -140,20 +149,34 @@ class DSSPCalculator(CalculatorBase):
         classes = self.SIMPLIFIED_CLASSES if simplified else self.FULL_CLASSES
         n_classes = len(classes)
 
-        # Setup output array based on encoding
-        dssp_array = self._setup_output_array(trajectory, n_residues, n_classes, encoding)
+        # Setup output array based on encoding (reused when a valid cache exists)
+        cache_params = {
+            "simplified": bool(simplified),
+            "encoding": encoding,
+            "input_hash": CalculatorComputeHelper.hash_input(
+                trajectory.xyz, self.chunk_size
+            ),
+        }
+        dssp_array, reused = self._setup_dssp_output_array(
+            trajectory, n_residues, n_classes, encoding, cache_params
+        )
 
         # Compute DSSP assignments
-        dssp_array = self._compute_dssp_assignments(trajectory, dssp_array, simplified, encoding, classes)
+        if not reused:
+            dssp_array = self._compute_dssp_assignments(trajectory, dssp_array, simplified, encoding, classes)
+            CalculatorComputeHelper.write_output_cache_sidecar(
+                self.use_memmap, self.dssp_path, dssp_array.shape, dssp_array.dtype, cache_params
+            )
 
         # Generate feature metadata
         feature_metadata = self._generate_feature_metadata(trajectory, simplified, encoding, classes, res_metadata)
 
+        feature_metadata["reused"] = reused
         return dssp_array, feature_metadata
 
-    def _setup_output_array(self, trajectory: md.Trajectory, n_residues: int, n_classes: int, encoding: str) -> np.ndarray:
+    def _setup_dssp_output_array(self, trajectory: md.Trajectory, n_residues: int, n_classes: int, encoding: str, cache_params: Dict[str, Any]) -> Tuple[np.ndarray, bool]:
         """
-        Create output array for DSSP storage based on encoding type.
+        Reuse or create the output array for DSSP storage by encoding type.
 
         Parameters
         ----------
@@ -165,11 +188,13 @@ class DSSPCalculator(CalculatorBase):
             Number of DSSP classes
         encoding : str
             Encoding type ('onehot', 'integer', 'char')
+        cache_params : dict
+            Parameters that define the result, matched against the sidecar
 
         Returns
         -------
-        numpy.ndarray or numpy.memmap
-            Output array for DSSP storage
+        Tuple[numpy.ndarray, bool]
+            The output array and whether it was reused from a matching cache
         """
         if encoding == 'onehot':
             # One-hot encoding: (n_frames, n_residues * n_classes)
@@ -184,14 +209,16 @@ class DSSPCalculator(CalculatorBase):
             shape = (trajectory.n_frames, n_residues)
             dtype = "U1"
 
-        dssp_array = CalculatorComputeHelper.create_output_array(
+        dssp_array, reused = CalculatorComputeHelper.reuse_or_create_output_array(
             self.use_memmap,
+            self.reuse_memmap_cache,
             self.dssp_path,
             shape,
-            dtype=dtype
+            dtype,
+            cache_params,
         )
 
-        return dssp_array
+        return dssp_array, reused
 
     def _compute_dssp_assignments(self, trajectory: md.Trajectory, dssp_array: np.ndarray, 
                                  simplified: bool, encoding: str, classes: list) -> np.ndarray:

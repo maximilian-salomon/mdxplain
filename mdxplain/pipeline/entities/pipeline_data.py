@@ -122,6 +122,7 @@ class PipelineData:
         chunk_size: int = 2000,
         dtype: type = np.float32,
         max_memory_gb: float = 6.0,
+        reuse_memmap_cache: bool = False,
     ):
         """
         Initialize the central pipeline data container.
@@ -145,6 +146,8 @@ class PipelineData:
             Maximum memory in GB for dataset processing.
             Used for memory-aware sampling in algorithms like DecisionTree.
             Datasets exceeding this limit will be automatically sampled.
+        reuse_memmap_cache : bool, default=False
+            Whether to reuse existing memmap cache files.
 
         Returns
         -------
@@ -161,6 +164,7 @@ class PipelineData:
 
         # Memory management configuration
         self.use_memmap = use_memmap
+        self.reuse_memmap_cache = reuse_memmap_cache
         self.cache_dir = cache_dir
         self.chunk_size = chunk_size
         self.dtype = dtype

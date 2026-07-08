@@ -60,6 +60,7 @@ class DPACalculator(CalculatorBase):
         use_memmap: bool = False,
         max_blas_threads: Optional[int] = 1,
         auto_limit_blas: bool = True,
+        reuse_memmap_cache: bool = False,
     ) -> None:
         """
         Initialize DPA calculator.
@@ -81,7 +82,10 @@ class DPACalculator(CalculatorBase):
         auto_limit_blas : bool, default=True
             Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
             otherwise use max_blas_threads (fallback 2 when None)
-        
+        reuse_memmap_cache : bool, default=False
+            Reopen a matching cached labels memmap instead of recomputing.
+            Only has an effect together with use_memmap=True.
+
         Returns
         -------
         None
@@ -93,6 +97,7 @@ class DPACalculator(CalculatorBase):
             use_memmap,
             max_blas_threads,
             auto_limit_blas,
+            reuse_memmap_cache,
         )
 
     def compute(self, data: np.ndarray, center_method: str = "centroid", **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
@@ -151,6 +156,22 @@ class DPACalculator(CalculatorBase):
 
         self._validate_memory_and_dimensionality(data, parameters)
 
+        cache_params = {
+            "algorithm": "dpa",
+            "method": parameters.get("method"),
+            "Z": parameters.get("Z"),
+            "affinity": parameters.get("affinity"),
+            "nn_distances": parameters.get("nn_distances"),
+            "k_max": parameters.get("k_max"),
+            "center_method": center_method,
+            "n_samples": int(data.shape[0]),
+            "n_features": int(data.shape[1]),
+            "input_hash": self._input_hash(data),
+        }
+        reused = self._reuse_labels("dpa", parameters["method"], cache_params)
+        if reused is not None:
+            return reused[0], reused[1]
+
         with self._limit_threadpools(parameters.get("n_jobs")):
             cluster_labels, dpa_model, computation_time = self._perform_clustering(
                 data, parameters
@@ -159,6 +180,11 @@ class DPACalculator(CalculatorBase):
             data, cluster_labels, dpa_model, parameters, computation_time, center_method
         )
 
+        self._write_labels_sidecar(
+            "dpa", parameters["method"], cluster_labels, cache_params, metadata
+        )
+
+        metadata["reused"] = False
         return cluster_labels, metadata
 
 

@@ -55,7 +55,7 @@ class TestClusteringIntegration:
             Configured pipeline with two-state mock trajectory, coordinates feature,
             and completed feature selection ready for clustering operations.
         """
-        pipeline = PipelineManager()
+        pipeline = PipelineManager(use_memmap=False)
         mock_traj = MockTrajectoryFactory.create_two_state(n_frames=n_frames, n_atoms=n_atoms, seed=42)
         
         pipeline._data.trajectory_data.trajectories = [mock_traj]

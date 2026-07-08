@@ -255,7 +255,11 @@ class DiffusionMaps(DecompositionTypeBase):
         return "coordinates"
 
     def init_calculator(
-        self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000
+        self,
+        use_memmap: bool = False,
+        cache_path: str = "./cache",
+        chunk_size: int = 2000,
+        reuse_memmap_cache: bool = False,
     ) -> None:
         """
         Initialize the Diffusion Maps calculator with specified configuration.
@@ -271,6 +275,9 @@ class DiffusionMaps(DecompositionTypeBase):
             Path for cache files when using memory mapping
         chunk_size : int, optional
             Number of samples to process per chunk for iterative computation
+        reuse_memmap_cache : bool, optional
+            Reopen a matching cached memmap result instead of recomputing.
+            Only has an effect together with use_memmap=True. Default is False.
 
         Returns
         -------
@@ -293,7 +300,10 @@ class DiffusionMaps(DecompositionTypeBase):
         ... )
         """
         self.calculator = DiffusionMapsCalculator(
-            use_memmap=use_memmap, cache_path=cache_path, chunk_size=chunk_size
+            use_memmap=use_memmap,
+            cache_path=cache_path,
+            chunk_size=chunk_size,
+            reuse_memmap_cache=reuse_memmap_cache,
         )
 
     def compute(self, data, **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:

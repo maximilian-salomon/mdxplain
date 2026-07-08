@@ -104,7 +104,14 @@ class ClusterTypeBase(ABC, metaclass=ClusterTypeMeta):
         pass
 
     @abstractmethod
-    def init_calculator(self, cache_path: str = "./cache") -> None:
+    def init_calculator(
+        self,
+        cache_path: str = "./cache",
+        max_memory_gb: float = 2.0,
+        chunk_size: int = 1000,
+        use_memmap: bool = False,
+        reuse_memmap_cache: bool = False,
+    ) -> None:
         """
         Initialize the calculator instance for this cluster type.
 
@@ -112,6 +119,15 @@ class ClusterTypeBase(ABC, metaclass=ClusterTypeMeta):
         ----------
         cache_path : str, optional
             Directory path for cache files
+        max_memory_gb : float, optional
+            Maximum memory threshold in GB. Default is 2.0.
+        chunk_size : int, optional
+            Chunk size for processing large datasets. Default is 1000.
+        use_memmap : bool, optional
+            Whether to use memory mapping for large datasets. Default is False.
+        reuse_memmap_cache : bool, optional
+            Reopen a matching cached labels memmap instead of recomputing.
+            Only has an effect together with use_memmap=True. Default is False.
 
         Returns
         -------

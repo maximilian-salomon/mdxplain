@@ -41,6 +41,7 @@ from ..services.decomposition_add_service import DecompositionAddService
 from ...utils.data_utils import DataUtils
 from ...utils.cleanup_utils import CleanupUtils
 from ...utils.memmap_utils import MemmapUtils
+from ...utils.memmap_reuse_helper import MemmapReuseHelper
 from ...utils.path_utils import PathUtils
 
 if TYPE_CHECKING:
@@ -73,7 +74,7 @@ class DecompositionManager:
     ... )
     """
 
-    def __init__(self, use_memmap: bool = False, chunk_size: int = 2000, cache_dir: str = "./cache") -> None:
+    def __init__(self, use_memmap: bool = False, chunk_size: int = 2000, cache_dir: str = "./cache", reuse_memmap_cache: bool = False) -> None:
         """
         Initialize decomposition manager.
 
@@ -85,6 +86,9 @@ class DecompositionManager:
             Processing chunk size for incremental computation
         cache_dir : str, optional
             Cache directory path for decomposition data
+        reuse_memmap_cache : bool, default=False
+            Whether to reuse a matching cached decomposition result instead of
+            recomputing it (only effective when use_memmap is True)
 
         Returns
         -------
@@ -105,6 +109,7 @@ class DecompositionManager:
         """
         self.use_memmap = use_memmap
         self.chunk_size = chunk_size
+        self.reuse_memmap_cache = reuse_memmap_cache
         self.cache_dir = PathUtils.prepare_directory_path(
             cache_dir,
             create=True,
@@ -337,6 +342,7 @@ class DecompositionManager:
             use_memmap=self.use_memmap,
             cache_path=decomposition_data.cache_path or "./cache",
             chunk_size=self.chunk_size,
+            reuse_memmap_cache=self.reuse_memmap_cache,
         )
 
         transformed_data, metadata = decomposition_type.compute(data_matrix)
@@ -446,7 +452,7 @@ class DecompositionManager:
             source, n_components
         )
         reduced = self._build_reduced_decomposition(
-            source, n_components, source_name
+            source, n_components, source_name, new_name
         )
         pipeline_data.decomposition_data[new_name] = reduced
         print(
@@ -454,16 +460,20 @@ class DecompositionManager:
             f"stored as '{new_name}'."
         )
 
-    @staticmethod
     def _build_reduced_decomposition(
-        source: DecompositionData, n_components: int, source_name: str
+        self,
+        source: DecompositionData,
+        n_components: int,
+        source_name: str,
+        new_name: str,
     ) -> DecompositionData:
         """
         Build a truncated clone of a decomposition.
 
-        Copies the leading ``n_components`` columns of the transformed data into
-        a small owned array and adjusts the metadata; the frame mapping is
-        shared with the source.
+        Keeps the leading ``n_components`` columns of the transformed data and
+        adjusts the metadata; the frame mapping is shared with the source. Under
+        use_memmap the reduced columns are written chunk-wise into an owned
+        memmap so the full reduced matrix is never held in RAM at once.
 
         Parameters
         ----------
@@ -473,6 +483,8 @@ class DecompositionManager:
             Number of leading components to keep
         source_name : str
             Name of the source, recorded in the metadata
+        new_name : str
+            Name of the reduced clone, used for its memmap filename
 
         Returns
         -------
@@ -481,11 +493,59 @@ class DecompositionManager:
         """
         assert source.data is not None
         reduced = DecompositionData(source.decomposition_type)
-        reduced.data = np.array(source.data[:, :n_components])
+        reduced.data = self._reduce_transformed_data(
+            source.data, n_components, new_name
+        )
         reduced.metadata = DecompositionManager._reduced_metadata(
             source.metadata, n_components, source_name
         )
         reduced.frame_mapping = source.frame_mapping
+        return reduced
+
+    def _reduce_transformed_data(
+        self, source_data: np.ndarray, n_components: int, new_name: str
+    ) -> np.ndarray:
+        """
+        Return the leading ``n_components`` columns of a transformed matrix.
+
+        Without memory mapping the columns are copied into an in-memory array.
+        Under use_memmap the columns are written chunk-wise into an owned
+        memmap, so a large reduced matrix never has to be held in RAM at once.
+
+        Parameters
+        ----------
+        source_data : numpy.ndarray
+            Source transformed data (regular or memory-mapped).
+        n_components : int
+            Number of leading columns to keep.
+        new_name : str
+            Name of the reduced clone, used for its memmap filename.
+
+        Returns
+        -------
+        numpy.ndarray
+            The reduced data, memmap-backed under use_memmap.
+        """
+        if not self.use_memmap:
+            return np.array(source_data[:, :n_components])
+        n_frames = int(source_data.shape[0])
+        path = PathUtils.get_cache_file_path(
+            f"{new_name}_reduced.dat", self.cache_dir
+        )
+        reduced = MemmapUtils.create_memmap(
+            path=path,
+            dtype=source_data.dtype,
+            mode="w+",
+            shape=(n_frames, n_components),
+        )
+        MemmapUtils.fill_memmap_chunkwise(
+            reduced,
+            n_frames,
+            self.chunk_size,
+            lambda start, end: np.asarray(
+                source_data[start:end, :n_components]
+            ),
+        )
         return reduced
 
     @staticmethod
@@ -521,6 +581,79 @@ class DecompositionManager:
             if values is not None:
                 reduced[key] = np.asarray(values)[:n_components]
         return reduced
+
+    def remove_decomposition(
+        self, pipeline_data: PipelineData, name: str
+    ) -> None:
+        """
+        Remove a single decomposition and delete its cache files.
+
+        Removes the named decomposition from the pipeline and deletes its
+        transformed-data memmap together with any reuse sidecar and payload,
+        closing the memmap handle first. Other decompositions -- including
+        reduced clones derived from this one -- are left untouched, since each
+        owns a separate memmap file.
+
+        Warning
+        -------
+        When using PipelineManager, do NOT provide the pipeline_data parameter.
+        The PipelineManager automatically injects this parameter.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data container with decomposition data.
+        name : str
+            Name of the decomposition to remove.
+
+        Returns
+        -------
+        None
+            Removes the decomposition and deletes its cache files.
+
+        Examples
+        --------
+        >>> manager = DecompositionManager()
+        >>> manager.remove_decomposition(pipeline_data, "pca_selection")
+        """
+        DecompositionValidationHelper.validate_source_exists(
+            pipeline_data, name
+        )
+        decomposition = pipeline_data.decomposition_data.pop(name)
+        self._delete_decomposition_files(decomposition)
+        print(f"Removed decomposition '{name}'.")
+
+    @staticmethod
+    def _delete_decomposition_files(
+        decomposition: DecompositionData,
+    ) -> None:
+        """
+        Close and delete the on-disk memmap files of a decomposition.
+
+        Does nothing for an in-memory decomposition (no memmap backing).
+
+        Parameters
+        ----------
+        decomposition : DecompositionData
+            Decomposition whose transformed-data memmap and any reuse sidecar
+            and payload files should be removed.
+
+        Returns
+        -------
+        None
+            Closes the memmap handle and removes its files when present.
+        """
+        data = decomposition.data
+        if not isinstance(data, np.memmap):
+            return
+        path = data.filename
+        MemmapUtils.close_memmap_view(data)
+        decomposition.data = None
+        gc.collect()
+        if path:
+            MemmapReuseHelper.remove_sidecar(path)
+            if os.path.exists(path):
+                os.remove(path)
 
     def reset_decompositions(self, pipeline_data: PipelineData) -> None:
         """
@@ -565,6 +698,8 @@ class DecompositionManager:
             return
 
         decomposition_list = list(pipeline_data.decomposition_data.keys())
+        for decomposition in pipeline_data.decomposition_data.values():
+            self._delete_decomposition_files(decomposition)
         pipeline_data.decomposition_data.clear()
 
         print(

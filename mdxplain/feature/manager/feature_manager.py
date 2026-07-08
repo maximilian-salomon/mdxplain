@@ -49,6 +49,7 @@ from ..services.feature_analysis_service import FeatureAnalysisService
 from ...utils.data_utils import DataUtils
 from ...utils.cleanup_utils import CleanupUtils
 from ...utils.memmap_utils import MemmapUtils
+from ...utils.memmap_reuse_helper import MemmapReuseHelper
 from ...utils.path_utils import PathUtils
 
 
@@ -71,7 +72,7 @@ class FeatureManager:
     >>> feature_manager.load(pipeline_data, 'features.npy')
     """
 
-    def __init__(self, use_memmap: bool = False, chunk_size: int = 2000, cache_dir: str = "./cache") -> None:
+    def __init__(self, use_memmap: bool = False, chunk_size: int = 2000, cache_dir: str = "./cache", reuse_memmap_cache: bool = False) -> None:
         """
         Initialize feature manager.
 
@@ -83,6 +84,9 @@ class FeatureManager:
             Processing chunk size
         cache_dir : str, default="./cache"
             Cache path for feature data
+        reuse_memmap_cache : bool, default=False
+            Whether to reuse a matching cached memmap feature instead of
+            recomputing it (only effective when use_memmap is True)
 
         Returns
         -------
@@ -91,6 +95,7 @@ class FeatureManager:
         """
         self.use_memmap = use_memmap
         self.chunk_size = chunk_size
+        self.reuse_memmap_cache = reuse_memmap_cache
         self.cache_dir = PathUtils.prepare_directory_path(
             cache_dir,
             create=True,
@@ -350,12 +355,16 @@ class FeatureManager:
                     cache_path,
                     purpose="feature cache file",
                 )
+            if cache_path:
+                MemmapReuseHelper.remove_sidecar(cache_path)
 
             if reduced_cache_path and os.path.exists(reduced_cache_path):
                 CleanupUtils.remove_file(
                     reduced_cache_path,
                     purpose="reduced feature cache file",
                 )
+            if reduced_cache_path:
+                MemmapReuseHelper.remove_sidecar(reduced_cache_path)
 
     def reset_reduction(self, pipeline_data: PipelineData, feature_type: FeatureTypeBase) -> None:
         """
@@ -609,6 +618,7 @@ class FeatureManager:
                 cache_path=self.cache_dir,
                 chunk_size=self.chunk_size,
                 trajectory_name=trajectory_name,
+                reuse_memmap_cache=self.reuse_memmap_cache,
             )
 
             # Compute feature for single trajectory

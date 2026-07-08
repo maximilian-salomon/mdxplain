@@ -35,6 +35,7 @@ from typing import List, Optional, Tuple, Union
 
 import zstandard as zstd
 
+from .memmap_reuse_helper import MemmapReuseHelper
 from .path_utils import PathUtils
 from .progress_utils import ProgressUtils
 
@@ -215,6 +216,9 @@ class ArchiveUtils:
         """
         suffix = file_path.suffix.lower()
 
+        if MemmapReuseHelper.is_reuse_artifact(str(file_path)):
+            return use_memmap
+
         if ArchiveUtils.is_essential_file(suffix, use_memmap):
             return True
 
@@ -392,6 +396,7 @@ class ArchiveUtils:
         - Files are filtered by extension
         - Zarr directories only included if use_memmap=True
         - .dat files only included if use_memmap=True
+        - Reuse sidecars (.reuse.json/.reuse.pkl) included if use_memmap=True
         - Zarr directories are added as directories, not individual files
         """
         cache_path = Path(cache_dir)

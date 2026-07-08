@@ -131,6 +131,7 @@ class PipelineManager:
         selection: Optional[str] = None,
         # Feature/Decomposition parameters
         use_memmap: bool = True,
+        reuse_memmap_cache: bool = False,
         chunk_size: int = 2000,
         dtype: type = np.float32,
         # Cache directory for all managers
@@ -168,6 +169,12 @@ class PipelineManager:
             When stability settings are enabled, the pipeline lowers I/O
             priority during large sequential scans to keep the system
             responsive.
+        reuse_memmap_cache : bool, default=False
+            Whether to reuse a matching persistent memmap result from the cache
+            instead of recomputing it. A result is reused only when its sidecar
+            records the same parameters, dtype, and on-disk size, so partial or
+            differently-parameterized caches are never reused. Only effective
+            when use_memmap is True.
 
         chunk_size : int, default=2000
             Processing chunk size for feature and decomposition computation.
@@ -230,6 +237,7 @@ class PipelineManager:
             chunk_size=chunk_size,
             dtype=dtype,
             max_memory_gb=max_memory_gb,
+            reuse_memmap_cache=reuse_memmap_cache,
         )
         self._init_managers(
             stride=stride,
@@ -237,6 +245,7 @@ class PipelineManager:
             selection=selection,
             cache_dir=cache_dir,
             use_memmap=use_memmap,
+            reuse_memmap_cache=reuse_memmap_cache,
             chunk_size=chunk_size,
         )
         self._apply_show_progress(show_progress)
@@ -414,6 +423,7 @@ class PipelineManager:
         chunk_size: int,
         dtype: type,
         max_memory_gb: float,
+        reuse_memmap_cache: bool = False,
     ) -> None:
         """
         Initialize the central PipelineData container.
@@ -442,6 +452,7 @@ class PipelineManager:
             chunk_size=chunk_size,
             dtype=dtype,
             max_memory_gb=max_memory_gb,
+            reuse_memmap_cache=reuse_memmap_cache,
         )
 
     def _init_managers(
@@ -452,6 +463,7 @@ class PipelineManager:
         cache_dir: str,
         use_memmap: bool,
         chunk_size: int,
+        reuse_memmap_cache: bool = False,
     ) -> None:
         """
         Initialize manager instances with the shared pipeline configuration.
@@ -470,6 +482,9 @@ class PipelineManager:
             Whether managers should create memmaps for large matrices.
         chunk_size : int
             Shared chunk size for chunked processing.
+        reuse_memmap_cache : bool, default=False
+            Whether managers should reuse matching persistent memmap results
+            from the cache instead of recomputing them.
 
         Returns
         -------
@@ -485,11 +500,17 @@ class PipelineManager:
             chunk_size=chunk_size,
         )
         self._feature_manager = FeatureManager(
-            use_memmap=use_memmap, chunk_size=chunk_size, cache_dir=cache_dir
+            use_memmap=use_memmap,
+            chunk_size=chunk_size,
+            cache_dir=cache_dir,
+            reuse_memmap_cache=reuse_memmap_cache,
         )
         self._cluster_manager = ClusterManager(cache_dir=cache_dir)
         self._decomposition_manager = DecompositionManager(
-            use_memmap=use_memmap, chunk_size=chunk_size, cache_dir=cache_dir
+            use_memmap=use_memmap,
+            chunk_size=chunk_size,
+            cache_dir=cache_dir,
+            reuse_memmap_cache=reuse_memmap_cache,
         )
         self._feature_selector_manager = FeatureSelectorManager(
             use_memmap=use_memmap, chunk_size=chunk_size, cache_dir=cache_dir

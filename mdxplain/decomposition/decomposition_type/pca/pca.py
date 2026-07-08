@@ -145,7 +145,13 @@ class PCA(DecompositionTypeBase):
         """
         return "pca"
 
-    def init_calculator(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000) -> None:
+    def init_calculator(
+        self,
+        use_memmap: bool = False,
+        cache_path: str = "./cache",
+        chunk_size: int = 2000,
+        reuse_memmap_cache: bool = False,
+    ) -> None:
         """
         Initialize the PCA calculator with specified configuration.
 
@@ -160,6 +166,9 @@ class PCA(DecompositionTypeBase):
             Path for cache files (not used for PCA but kept for interface consistency)
         chunk_size : int, optional
             Number of samples to process per chunk for incremental computation
+        reuse_memmap_cache : bool, optional
+            Reopen a matching cached memmap result instead of recomputing.
+            Only has an effect together with use_memmap=True. Default is False.
 
         Returns
         -------
@@ -179,7 +188,10 @@ class PCA(DecompositionTypeBase):
         >>> pca.init_calculator(chunk_size=500)
         """
         self.calculator = PCACalculator(
-            use_memmap=use_memmap, cache_path=cache_path, chunk_size=chunk_size
+            use_memmap=use_memmap,
+            cache_path=cache_path,
+            chunk_size=chunk_size,
+            reuse_memmap_cache=reuse_memmap_cache,
         )
 
     def compute(self, data: np.ndarray) -> Tuple[np.ndarray, Dict[str, Any]]:

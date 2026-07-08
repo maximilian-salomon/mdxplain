@@ -105,7 +105,13 @@ class DecompositionTypeBase(ABC, metaclass=DecompositionTypeMeta):
         pass
 
     @abstractmethod
-    def init_calculator(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000) -> None:
+    def init_calculator(
+        self,
+        use_memmap: bool = False,
+        cache_path: str = "./cache",
+        chunk_size: int = 2000,
+        reuse_memmap_cache: bool = False,
+    ) -> None:
         """
         Initialize the calculator instance for this decomposition type.
 
@@ -117,6 +123,9 @@ class DecompositionTypeBase(ABC, metaclass=DecompositionTypeMeta):
             Directory path for cache files
         chunk_size : int, optional
             Number of samples to process per chunk for incremental computation
+        reuse_memmap_cache : bool, optional
+            Reopen a matching cached memmap result instead of recomputing.
+            Only has an effect together with use_memmap=True. Default is False.
 
         Returns
         -------

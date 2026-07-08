@@ -26,7 +26,6 @@ computation and iterative memory-mapped computation for large datasets.
 Uses MDTraj trajectories and RMSD-based distance computation.
 """
 
-import os
 import warnings
 from typing import Any, Dict, Optional, Tuple, Union
 
@@ -35,7 +34,6 @@ from mdxplain.utils.progress_utils import ProgressUtils
 from mdxplain.utils.resource_utils import ResourceUtils
 from mdxplain.utils.cleanup_utils import CleanupUtils
 from mdxplain.utils.memmap_utils import MemmapUtils
-from mdxplain.utils.path_utils import PathUtils
 from scipy.sparse.linalg import LinearOperator, eigsh, ArpackNoConvergence
 
 from ..interfaces.calculator_base import CalculatorBase
@@ -101,7 +99,13 @@ class DiffusionMapsCalculator(CalculatorBase):
     >>> coords, metadata = calc.compute(large_traj, n_components=20, epsilon=1.0)
     """
 
-    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000) -> None:
+    def __init__(
+        self,
+        use_memmap: bool = False,
+        cache_path: str = "./cache",
+        chunk_size: int = 2000,
+        reuse_memmap_cache: bool = False,
+    ) -> None:
         """
         Initialize Diffusion Maps calculator.
 
@@ -113,6 +117,9 @@ class DiffusionMapsCalculator(CalculatorBase):
             Path for memory-mapped cache files  
         chunk_size : int, optional
             Size of chunks for iterative computation (number of frames per chunk)
+        reuse_memmap_cache : bool, default=False
+            Reopen a matching cached memmap result instead of recomputing.
+            Only has an effect together with use_memmap=True.
 
         Returns
         -------
@@ -127,7 +134,9 @@ class DiffusionMapsCalculator(CalculatorBase):
         >>> # Iterative Diffusion Maps (large trajectories)
         >>> calc = DiffusionMapsCalculator(use_memmap=True, chunk_size=1000)
         """
-        super().__init__(use_memmap, cache_path, chunk_size)
+        super().__init__(
+            use_memmap, cache_path, chunk_size, reuse_memmap_cache
+        )
         self._cache_prefix = "diffusion_maps"
         self._temp_memmap_paths = []
 
@@ -191,21 +200,156 @@ class DiffusionMapsCalculator(CalculatorBase):
             If input is not numpy array or parameters are invalid
         """
         self._validate_input_data(data)
-        hyperparameters, epsilon_diagnostics = self._extract_hyperparameters(data, kwargs)
+        hyperparameters, epsilon_diagnostics = self._extract_hyperparameters(
+            data, kwargs
+        )
+        method = self._resolve_method(hyperparameters)
+        cache_params = self._build_cache_params(method, hyperparameters, data)
+        memmap_path = self._memmap_result_path(f"{method}.dat")
+        reused = self._reuse_memmap_result(memmap_path, cache_params)
+        if reused is not None:
+            return reused[0], reused[1]
+
         self._temp_memmap_paths = []
-
-        if hyperparameters["use_nystrom"]:
-            coords, metadata = self._compute_nystrom_diffusion_maps(data, hyperparameters)
-        elif self.use_memmap:
-            coords, metadata = self._compute_iterative_diffusion_maps(data, hyperparameters)
-        else:
-            coords, metadata = self._compute_standard_diffusion_maps(data, hyperparameters)
-
+        coords, metadata = self._dispatch_method(method, data, hyperparameters)
         if epsilon_diagnostics is not None:
             metadata["epsilon_diagnostics"] = epsilon_diagnostics
 
+        # Persist chunk-wise before cleanup: for the Nystrom path coords is a
+        # view into a temporary memmap, so it must be read before that memmap
+        # is removed.
+        coords = self._store_result_memmap(memmap_path, coords)
         self._cleanup_tracked_temp_memmaps()
+        self._write_memmap_result_sidecar(
+            memmap_path, coords, cache_params, metadata
+        )
+        metadata["reused"] = False
         return coords, metadata
+
+    def _resolve_method(self, hyperparameters: Dict[str, Any]) -> str:
+        """
+        Select the diffusion maps computation path for the given settings.
+
+        Parameters
+        ----------
+        hyperparameters : dict
+            Resolved diffusion maps hyperparameters.
+
+        Returns
+        -------
+        str
+            One of "nystrom", "iterative", or "standard".
+        """
+        if hyperparameters["use_nystrom"]:
+            return "nystrom"
+        if self.use_memmap:
+            return "iterative"
+        return "standard"
+
+    def _dispatch_method(
+        self,
+        method: str,
+        data: np.ndarray,
+        hyperparameters: Dict[str, Any],
+    ) -> Tuple[np.ndarray, Dict[str, Any]]:
+        """
+        Run the diffusion maps computation for the selected method.
+
+        Parameters
+        ----------
+        method : str
+            Computation path returned by _resolve_method.
+        data : numpy.ndarray
+            Input coordinate matrix (n_frames, 3 * n_atoms).
+        hyperparameters : dict
+            Resolved diffusion maps hyperparameters.
+
+        Returns
+        -------
+        Tuple[numpy.ndarray, dict]
+            The diffusion coordinates and their metadata.
+        """
+        if method == "nystrom":
+            return self._compute_nystrom_diffusion_maps(data, hyperparameters)
+        if method == "iterative":
+            return self._compute_iterative_diffusion_maps(data, hyperparameters)
+        return self._compute_standard_diffusion_maps(data, hyperparameters)
+
+    def _build_cache_params(
+        self,
+        method: str,
+        hyperparameters: Dict[str, Any],
+        data: np.ndarray,
+    ) -> Dict[str, Any]:
+        """
+        Build the parameters that define a diffusion maps result for reuse.
+
+        Parameters
+        ----------
+        method : str
+            Computation path returned by _resolve_method.
+        hyperparameters : dict
+            Resolved diffusion maps hyperparameters.
+        data : numpy.ndarray
+            Input coordinate matrix (n_frames, 3 * n_atoms).
+
+        Returns
+        -------
+        dict
+            JSON-serializable parameters recorded in the reuse sidecar.
+        """
+        epsilon = hyperparameters["epsilon"]
+        params = {
+            "method": method,
+            "n_components": int(hyperparameters["n_components"]),
+            "epsilon": None if epsilon is None else float(epsilon),
+            "alpha": float(hyperparameters["alpha"]),
+            "n_samples": int(data.shape[0]),
+            "n_features": int(data.shape[1]),
+            "input_hash": self._input_hash(data),
+        }
+        if method == "nystrom":
+            params["n_landmarks"] = int(hyperparameters["n_landmarks"])
+            params["landmark_selection_mode"] = hyperparameters[
+                "landmark_selection_mode"
+            ]
+            params["random_state"] = hyperparameters["random_state"]
+        return params
+
+    def _store_result_memmap(
+        self, memmap_path: str, coords: np.ndarray
+    ) -> np.ndarray:
+        """
+        Persist the diffusion coordinates as a memmap when memory mapping.
+
+        Parameters
+        ----------
+        memmap_path : str
+            Target path of the persistent result memmap.
+        coords : numpy.ndarray
+            Computed diffusion coordinates (n_frames, n_components).
+
+        Returns
+        -------
+        numpy.ndarray
+            The memmap-backed coordinates when memory mapping is in use,
+            otherwise the input array unchanged.
+        """
+        if not self.use_memmap:
+            return coords
+        result_memmap = MemmapUtils.create_memmap(
+            path=memmap_path,
+            dtype=coords.dtype,
+            mode="w+",
+            shape=coords.shape,
+        )
+        MemmapUtils.fill_memmap_chunkwise(
+            result_memmap,
+            coords.shape[0],
+            self.chunk_size,
+            lambda start, end: np.asarray(coords[start:end]),
+        )
+        return result_memmap
 
     def _validate_input_data(self, data) -> None:
         """
@@ -629,8 +773,6 @@ class DiffusionMapsCalculator(CalculatorBase):
         diff_coords, diff_eigenvals = self._nystrom_extract_coordinates(
             eigenvectors_full, eigvals_small, hyperparameters["n_components"]
         )
-        if MemmapUtils.is_memmap_view(diff_coords):
-            diff_coords = np.array(diff_coords, copy=True)
 
         metadata = self._prepare_metadata(hyperparameters, (n_frames, n_features))
         metadata.update({

@@ -58,7 +58,13 @@ class ContactCalculator(CalculatorBase):
     >>> contacts = calculator.compute(distance_data, cutoff=3.5)
     """
 
-    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000) -> None:
+    def __init__(
+        self,
+        use_memmap: bool = False,
+        cache_path: str = "./cache",
+        chunk_size: int = 2000,
+        reuse_memmap_cache: bool = False,
+    ) -> None:
         """
         Initialize contact calculator with configuration parameters.
 
@@ -70,6 +76,9 @@ class ContactCalculator(CalculatorBase):
             Directory path for storing cache files
         chunk_size : int, optional
             Number of frames to process per chunk
+        reuse_memmap_cache : bool, default=False
+            Reopen a matching cached memmap result instead of recomputing.
+            Only has an effect together with use_memmap=True.
 
         Returns
         -------
@@ -83,7 +92,7 @@ class ContactCalculator(CalculatorBase):
         >>> # With memory mapping
         >>> calculator = ContactCalculator(use_memmap=True, cache_path='./cache/')
         """
-        super().__init__(use_memmap, cache_path, chunk_size)
+        super().__init__(use_memmap, cache_path, chunk_size, reuse_memmap_cache)
         self.contacts_path = cache_path
         self.chunk_size = chunk_size
         self.use_memmap = use_memmap
@@ -94,7 +103,9 @@ class ContactCalculator(CalculatorBase):
 
     # ===== MAIN COMPUTATION METHOD =====
 
-    def compute(self, input_data: np.ndarray, **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
+    def compute(
+        self, input_data: np.ndarray, **kwargs
+    ) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
         Compute binary contact maps from distance arrays using distance cutoff.
 
@@ -109,36 +120,73 @@ class ContactCalculator(CalculatorBase):
 
         Returns
         -------
-        numpy.ndarray
-            Binary contact array where True/1 indicates contact (distance <= cutoff)
+        Tuple[numpy.ndarray, dict]
+            The binary contact array (True/1 where distance <= cutoff) and a
+            metadata dict recording whether it was reused from a matching cache
 
         Examples
         --------
         >>> # Basic contact calculation
-        >>> contacts = calculator.compute(distance_data, cutoff=4.0)
+        >>> contacts, metadata = calculator.compute(distance_data, cutoff=4.0)
 
         >>> # With custom cutoff
-        >>> contacts = calculator.compute(distance_data, cutoff=3.5)
+        >>> contacts, metadata = calculator.compute(distance_data, cutoff=3.5)
         """
         # Extract parameters from kwargs
         distances = input_data
         cutoff = kwargs.get("cutoff", 4.5)
+        cache_params = {
+            "cutoff": float(cutoff),
+            "input_hash": CalculatorComputeHelper.hash_input(
+                distances, self.chunk_size
+            ),
+        }
 
-        # Create output array with same shape as input (condensed format)
-        contacts = CalculatorComputeHelper.create_output_array(
-            self.use_memmap, self.contacts_path, distances.shape, dtype=bool
+        # Reuse a matching cached contact map, else create and fill it.
+        contacts, reused = CalculatorComputeHelper.reuse_or_create_output_array(
+            self.use_memmap,
+            self.reuse_memmap_cache,
+            self.contacts_path,
+            distances.shape,
+            bool,
+            cache_params,
         )
+        if not reused:
+            self._fill_contacts(contacts, distances, cutoff)
+            CalculatorComputeHelper.write_output_cache_sidecar(
+                self.use_memmap,
+                self.contacts_path,
+                distances.shape,
+                bool,
+                cache_params,
+            )
 
-        # Process in chunks
+        return contacts, {"reused": reused}
+
+    def _fill_contacts(
+        self, contacts: np.ndarray, distances: np.ndarray, cutoff: float
+    ) -> None:
+        """
+        Fill the contact array chunk-wise from distances and a cutoff.
+
+        Parameters
+        ----------
+        contacts : numpy.ndarray
+            Output boolean contact array to fill in place
+        distances : numpy.ndarray
+            Distance array in condensed format (NxP) in Angstrom
+        cutoff : float
+            Distance cutoff below which a pair counts as in contact
+
+        Returns
+        -------
+        None
+            Fills the contacts array in place
+        """
         if self.chunk_size is None:
             self.chunk_size = distances.shape[0]
 
-        is_memmap_contacts = MemmapUtils.is_memmap_view(contacts)
-        is_memmap_distances = MemmapUtils.is_memmap_view(distances)
-        if is_memmap_contacts:
-            ResourceUtils.tune_memmap(contacts, "sequential")
-        if is_memmap_distances:
-            ResourceUtils.tune_memmap(distances, "sequential")
+        self._tune_pair(contacts, distances, "sequential")
         for i in ProgressUtils.iterate(
             range(0, distances.shape[0], self.chunk_size),
             desc="Computing contacts",
@@ -148,12 +196,33 @@ class ContactCalculator(CalculatorBase):
             contacts[i:end_idx] = distances[i:end_idx] <= cutoff
             MemmapUtils.evict_memory_range(contacts, i, end_idx)
 
-        if is_memmap_contacts:
-            ResourceUtils.tune_memmap(contacts, "random")
-        if is_memmap_distances:
-            ResourceUtils.tune_memmap(distances, "random")
+        self._tune_pair(contacts, distances, "random")
 
-        return contacts
+    @staticmethod
+    def _tune_pair(
+        contacts: np.ndarray, distances: np.ndarray, pattern: str
+    ) -> None:
+        """
+        Apply a memmap access pattern to the contact and distance arrays.
+
+        Parameters
+        ----------
+        contacts : numpy.ndarray
+            Contact array (tuned only when it is a memmap view)
+        distances : numpy.ndarray
+            Distance array (tuned only when it is a memmap view)
+        pattern : str
+            Access pattern hint (for example ``"sequential"`` or ``"random"``)
+
+        Returns
+        -------
+        None
+            Applies the access pattern in place where applicable
+        """
+        if MemmapUtils.is_memmap_view(contacts):
+            ResourceUtils.tune_memmap(contacts, pattern)
+        if MemmapUtils.is_memmap_view(distances):
+            ResourceUtils.tune_memmap(distances, pattern)
 
     def _compute_metric_values(
         self,

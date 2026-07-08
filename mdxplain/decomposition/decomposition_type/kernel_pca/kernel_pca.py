@@ -205,7 +205,13 @@ class KernelPCA(DecompositionTypeBase):
         """
         return "kernel_pca"
 
-    def init_calculator(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000) -> None:
+    def init_calculator(
+        self,
+        use_memmap: bool = False,
+        cache_path: str = "./cache",
+        chunk_size: int = 2000,
+        reuse_memmap_cache: bool = False,
+    ) -> None:
         """
         Initialize the KernelPCA calculator with specified configuration.
 
@@ -220,6 +226,9 @@ class KernelPCA(DecompositionTypeBase):
             Path for cache files when using memory mapping
         chunk_size : int, optional
             Number of samples to process per chunk for incremental computation
+        reuse_memmap_cache : bool, optional
+            Reopen a matching cached memmap result instead of recomputing.
+            Only has an effect together with use_memmap=True. Default is False.
 
         Returns
         -------
@@ -242,14 +251,15 @@ class KernelPCA(DecompositionTypeBase):
         ... )
         """
         self.calculator = KernelPCACalculator(
-            use_memmap=use_memmap, 
-            cache_path=cache_path, 
+            use_memmap=use_memmap,
+            cache_path=cache_path,
             chunk_size=chunk_size,
             use_parallel=self.use_parallel,
             n_jobs=self.n_jobs,
             min_chunk_size=self.min_chunk_size,
             max_blas_threads=self.max_blas_threads,
             auto_limit_blas=self.auto_limit_blas,
+            reuse_memmap_cache=reuse_memmap_cache,
         )
 
     def compute(self, data: np.ndarray) -> Tuple[np.ndarray, Dict[str, Any]]:

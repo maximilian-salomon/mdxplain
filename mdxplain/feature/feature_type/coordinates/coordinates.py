@@ -98,7 +98,13 @@ class Coordinates(FeatureTypeBase):
         super().__init__()
         self.selection = selection
 
-    def init_calculator(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000) -> None:
+    def init_calculator(
+        self,
+        use_memmap: bool = False,
+        cache_path: str = "./cache",
+        chunk_size: int = 2000,
+        reuse_memmap_cache: bool = False,
+    ) -> None:
         """
         Initialize the coordinates calculator with specified configuration.
 
@@ -110,6 +116,9 @@ class Coordinates(FeatureTypeBase):
             Directory path for storing cache files when using memory mapping
         chunk_size : int, optional
             Number of frames to process per chunk for memory-efficient processing
+        reuse_memmap_cache : bool, optional
+            Reopen a matching cached memmap result instead of recomputing.
+            Only has an effect together with use_memmap=True. Default is False.
 
         Returns
         -------
@@ -127,9 +136,10 @@ class Coordinates(FeatureTypeBase):
         >>> coords.init_calculator(chunk_size=1000)
         """
         self.calculator = CoordinatesCalculator(
-            use_memmap=use_memmap, 
-            cache_path=cache_path, 
-            chunk_size=chunk_size
+            use_memmap=use_memmap,
+            cache_path=cache_path,
+            chunk_size=chunk_size,
+            reuse_memmap_cache=reuse_memmap_cache,
         )
 
     def compute(self, input_data: md.Trajectory, feature_metadata: Dict[str, Any]) -> Tuple[np.ndarray, Dict[str, Any]]:

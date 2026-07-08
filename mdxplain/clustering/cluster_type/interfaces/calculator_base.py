@@ -36,6 +36,7 @@ from sklearn.metrics import silhouette_score
 from sklearn.neighbors import KNeighborsClassifier
 
 from ....utils.memmap_utils import MemmapUtils
+from ....utils.memmap_reuse_helper import MemmapReuseHelper
 from ....utils.path_utils import PathUtils
 from ....utils.resource_utils import ResourceUtils
 from ...helper.center_calculation_helper import CenterCalculationHelper
@@ -68,6 +69,7 @@ class CalculatorBase(ABC):
         use_memmap: bool = False,
         max_blas_threads: Optional[int] = 1,
         auto_limit_blas: bool = True,
+        reuse_memmap_cache: bool = False,
     ) -> None:
         """
         Initialize the clustering calculator.
@@ -88,7 +90,10 @@ class CalculatorBase(ABC):
         auto_limit_blas : bool, default=True
             Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
             otherwise use max_blas_threads (fallback 2 when None)
-            
+        reuse_memmap_cache : bool, default=False
+            Reopen a matching cached labels memmap instead of recomputing.
+            Only has an effect together with use_memmap=True.
+
         Returns
         -------
         None
@@ -108,6 +113,7 @@ class CalculatorBase(ABC):
         self.max_memory_bytes = max_memory_gb * (1024**3)
         self.chunk_size = chunk_size
         self.use_memmap = use_memmap
+        self.reuse_memmap_cache = reuse_memmap_cache
         self.max_blas_threads = max_blas_threads
         self.auto_limit_blas = auto_limit_blas
 
@@ -575,6 +581,119 @@ class CalculatorBase(ABC):
             MemmapUtils.evict_from_os_cache(memmap_labels)
             return memmap_labels
         return labels
+
+    def _labels_memmap_path(self, algorithm: str, method: str) -> str:
+        """
+        Build the labels memmap path for an algorithm and method.
+
+        Parameters
+        ----------
+        algorithm : str
+            Algorithm name (e.g., 'dbscan', 'hdbscan', 'dpa').
+        method : str
+            Method name (e.g., 'standard', 'precomputed').
+
+        Returns
+        -------
+        str
+            Full path of the labels memmap under the cache directory.
+        """
+        filename = f"{algorithm}_{method}_labels.dat"
+        return PathUtils.get_cache_file_path(filename, self.cache_path)
+
+    def _input_hash(self, data: np.ndarray) -> str:
+        """
+        Return a content hash of the clustering input for reuse keying.
+
+        Added to the cache parameters so cached labels are only reused when
+        produced from the same input data, not merely the same shape.
+
+        Parameters
+        ----------
+        data : numpy.ndarray
+            Input matrix passed to the clustering algorithm.
+
+        Returns
+        -------
+        str
+            Hex digest identifying the input content.
+        """
+        return MemmapReuseHelper.hash_array(data, self.chunk_size)
+
+    def _reuse_labels(
+        self,
+        algorithm: str,
+        method: str,
+        cache_params: Dict[str, Any],
+    ) -> Optional[Tuple[np.ndarray, Dict[str, Any]]]:
+        """
+        Return cached (labels, metadata) when reuse is enabled and valid.
+
+        Parameters
+        ----------
+        algorithm : str
+            Algorithm name used in the labels filename.
+        method : str
+            Method name used in the labels filename.
+        cache_params : dict
+            Parameters that define the result, matched against the sidecar.
+
+        Returns
+        -------
+        Tuple[numpy.ndarray, dict] or None
+            The reused labels and metadata, or None when reuse is disabled or
+            no matching cache is available.
+        """
+        if not (self.use_memmap and self.reuse_memmap_cache):
+            return None
+        path = self._labels_memmap_path(algorithm, method)
+        result = MemmapReuseHelper.try_reuse_with_payload(path, cache_params)
+        if result is None:
+            print(f"No matching cache for {path}; recomputing.")
+            return None
+        labels, metadata = result
+        metadata["reused"] = True
+        print(f"Reusing cached cluster labels: {path}")
+        return labels, metadata
+
+    def _write_labels_sidecar(
+        self,
+        algorithm: str,
+        method: str,
+        labels: np.ndarray,
+        cache_params: Dict[str, Any],
+        metadata: Dict[str, Any],
+    ) -> None:
+        """
+        Write the reuse sidecar and metadata payload for cluster labels.
+
+        Parameters
+        ----------
+        algorithm : str
+            Algorithm name used in the labels filename.
+        method : str
+            Method name used in the labels filename.
+        labels : numpy.ndarray
+            The finalized cluster-label array.
+        cache_params : dict
+            Parameters that define the result, recorded in the sidecar.
+        metadata : dict
+            Clustering metadata restored on reuse.
+
+        Returns
+        -------
+        None
+            Writes the sidecar when memory mapping is in use.
+        """
+        if self.use_memmap:
+            path = self._labels_memmap_path(algorithm, method)
+            MemmapReuseHelper.write_sidecar(
+                path,
+                labels.shape,
+                str(labels.dtype),
+                cache_params,
+                payload=metadata,
+            )
 
     def _perform_knn_sampling(
         self, 

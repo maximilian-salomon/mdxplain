@@ -31,6 +31,7 @@ import numpy as np
 from sklearn.cluster import MiniBatchKMeans
 
 from ....utils.memmap_utils import MemmapUtils
+from ....utils.memmap_reuse_helper import MemmapReuseHelper
 from ....utils.path_utils import PathUtils
 from ....utils.progress_utils import ProgressUtils
 from ....utils.resource_utils import ResourceUtils
@@ -54,7 +55,7 @@ class CalculatorBase(ABC):
     ...         return transformed_data, metadata
     """
 
-    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000) -> None:
+    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000, reuse_memmap_cache: bool = False) -> None:
         """
         Initialize the decomposition calculator.
 
@@ -66,6 +67,9 @@ class CalculatorBase(ABC):
             Path for memory-mapped cache files
         chunk_size : int, optional
             Size of chunks for incremental processing
+        reuse_memmap_cache : bool, default=False
+            Whether to reuse a matching cached result instead of recomputing
+            it (only effective when use_memmap is True)
 
         Returns
         -------
@@ -87,6 +91,7 @@ class CalculatorBase(ABC):
         self.use_memmap = use_memmap
         self.cache_path = cache_path
         self.chunk_size = chunk_size
+        self.reuse_memmap_cache = reuse_memmap_cache
 
     @abstractmethod
     def compute(self, data: np.ndarray, **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
@@ -211,17 +216,10 @@ class CalculatorBase(ABC):
         >>> # Create temporary array
         >>> temp = self._create_array_or_memmap((1000, 50))
         """
-        if self.use_memmap:            
+        if self.use_memmap:
             if filename is None:
                 filename = "temp.dat"
-            
-            # Combine with cache_prefix if available
-            if hasattr(self, '_cache_prefix'):
-                full_filename = f"{self._cache_prefix}_{filename}"
-            else:
-                full_filename = filename
-            
-            memmap_path = PathUtils.get_cache_file_path(full_filename, self.cache_path)
+            memmap_path = self._memmap_result_path(filename)
             memmap_array = MemmapUtils.create_memmap(
                 path=memmap_path,
                 dtype=dtype,
@@ -231,6 +229,115 @@ class CalculatorBase(ABC):
             return memmap_array
         else:
             return np.zeros(shape, dtype=dtype)
+
+    def _memmap_result_path(self, filename: str) -> str:
+        """
+        Build the full cache path for a memmap filename.
+
+        Combines the cache directory with the cache prefix (when present) and
+        the filename, matching how persistent result memmaps are named.
+
+        Parameters
+        ----------
+        filename : str
+            Base filename for the memmap.
+
+        Returns
+        -------
+        str
+            Full path of the memmap file under the cache directory.
+        """
+        if hasattr(self, "_cache_prefix"):
+            full_filename = f"{self._cache_prefix}_{filename}"
+        else:
+            full_filename = filename
+        return PathUtils.get_cache_file_path(full_filename, self.cache_path)
+
+    def _input_hash(self, data: np.ndarray) -> str:
+        """
+        Return a content hash of the decomposition input for reuse keying.
+
+        Added to the cache parameters so a cached result is only reused when
+        it was produced from the same input, not merely the same shape.
+
+        Parameters
+        ----------
+        data : numpy.ndarray
+            Input matrix passed to the decomposition.
+
+        Returns
+        -------
+        str
+            Hex digest identifying the input content.
+        """
+        return MemmapReuseHelper.hash_array(data, self.chunk_size)
+
+    def _reuse_memmap_result(
+        self, memmap_path: str, cache_params: Dict[str, Any]
+    ) -> Optional[Tuple[np.ndarray, Dict[str, Any]]]:
+        """
+        Return a cached (transformed_data, metadata) when reuse is valid.
+
+        Parameters
+        ----------
+        memmap_path : str
+            Path of the transformed-data memmap.
+        cache_params : dict
+            Parameters that define the result, matched against the sidecar.
+
+        Returns
+        -------
+        Tuple[numpy.ndarray, dict] or None
+            The reused result, or None when reuse is disabled or no matching
+            cache is available.
+        """
+        if not (self.use_memmap and self.reuse_memmap_cache):
+            return None
+        result = MemmapReuseHelper.try_reuse_with_payload(
+            memmap_path, cache_params
+        )
+        if result is None:
+            print(f"No matching cache for {memmap_path}; recomputing.")
+            return None
+        data, metadata = result
+        metadata["reused"] = True
+        print(f"Reusing cached decomposition result: {memmap_path}")
+        return data, metadata
+
+    def _write_memmap_result_sidecar(
+        self,
+        memmap_path: str,
+        result: np.ndarray,
+        cache_params: Dict[str, Any],
+        metadata: Dict[str, Any],
+    ) -> None:
+        """
+        Write the reuse sidecar and metadata payload for a persistent result.
+
+        Parameters
+        ----------
+        memmap_path : str
+            Path of the fully written transformed-data memmap.
+        result : numpy.ndarray
+            The written transformed-data array.
+        cache_params : dict
+            Parameters that define the result, recorded in the sidecar.
+        metadata : dict
+            Result metadata restored on reuse.
+
+        Returns
+        -------
+        None
+            Writes the sidecar when memory mapping is in use.
+        """
+        if self.use_memmap:
+            MemmapReuseHelper.write_sidecar(
+                memmap_path,
+                result.shape,
+                str(result.dtype),
+                cache_params,
+                payload=metadata,
+            )
 
     def _select_landmarks_kmeans(self, data: np.ndarray, n_landmarks: int, random_state: Optional[int]) -> np.ndarray:
         """

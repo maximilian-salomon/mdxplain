@@ -22,7 +22,7 @@
 Centralized helpers for memmap path handling and lifecycle operations.
 """
 
-from typing import Any, Optional, Tuple, Union
+from typing import Any, Callable, Optional, Tuple, Union
 import gc
 import mmap
 import os
@@ -222,6 +222,44 @@ class MemmapUtils:
                     ResourceUtils.tune_memmap(base, "dontneed", start_offset, length)
                 break
             base = base.base
+
+    @staticmethod
+    def fill_memmap_chunkwise(
+        memmap: np.ndarray,
+        n_rows: int,
+        chunk_rows: Optional[int],
+        chunk_fn: Callable[[int, int], np.ndarray],
+    ) -> None:
+        """
+        Fill a memmap row-block by row-block, evicting each block from cache.
+
+        Each block is produced on demand by ``chunk_fn`` and written straight to
+        the memmap, so the full result never has to be held in RAM at once and
+        the OS page cache stays bounded during the write.
+
+        Parameters
+        ----------
+        memmap : numpy.ndarray
+            Writeable destination array, typically a memory-mapped array.
+        n_rows : int
+            Number of leading-axis rows to fill.
+        chunk_rows : int or None
+            Rows produced and written per block; a safe default is used when
+            None or non-positive.
+        chunk_fn : callable
+            Function ``(start, end) -> ndarray`` returning the rows in
+            ``[start, end)`` to write.
+
+        Returns
+        -------
+        None
+            Writes each block into the memmap and evicts it from the OS cache.
+        """
+        step = chunk_rows if chunk_rows and chunk_rows > 0 else 2000
+        for start in range(0, n_rows, step):
+            end = min(start + step, n_rows)
+            memmap[start:end] = chunk_fn(start, end)
+            MemmapUtils.evict_memory_range(memmap, start, end)
 
     @staticmethod
     def close_memmap_view(array: Any) -> None:

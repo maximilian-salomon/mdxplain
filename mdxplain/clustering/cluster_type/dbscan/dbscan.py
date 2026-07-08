@@ -147,10 +147,11 @@ class DBSCAN(ClusterTypeBase):
 
     def init_calculator(
         self, 
-        cache_path: str = "./cache", 
+        cache_path: str = "./cache",
         max_memory_gb: float = 2.0,
         chunk_size: int = 1000,
         use_memmap: bool = False,
+        reuse_memmap_cache: bool = False,
     ) -> None:
         """
         Initialize the DBSCAN calculator.
@@ -165,18 +166,22 @@ class DBSCAN(ClusterTypeBase):
             Chunk size for processing large datasets. Default is 1000.
         use_memmap : bool, optional
             Whether to use memory mapping for large datasets. Default is False.
+        reuse_memmap_cache : bool, optional
+            Reopen a matching cached labels memmap instead of recomputing.
+            Only has an effect together with use_memmap=True. Default is False.
 
         Returns
         -------
         None
         """
         self.calculator = DBSCANCalculator(
-            cache_path=cache_path, 
+            cache_path=cache_path,
             max_memory_gb=max_memory_gb,
             chunk_size=chunk_size,
             use_memmap=use_memmap,
             max_blas_threads=self.max_blas_threads,
             auto_limit_blas=self.auto_limit_blas,
+            reuse_memmap_cache=reuse_memmap_cache,
         )
 
     def compute(self, data: np.ndarray, center_method: str = "centroid") -> Tuple[np.ndarray, Dict[str, Any]]:

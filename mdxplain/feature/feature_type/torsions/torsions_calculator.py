@@ -65,7 +65,14 @@ class TorsionsCalculator(CalculatorBase):
     >>> torsions, metadata = calculator.compute(trajectory, calculate_chi=True)
     """
 
-    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000, use_pbc: bool = True) -> None:
+    def __init__(
+        self,
+        use_memmap: bool = False,
+        cache_path: str = "./cache",
+        chunk_size: int = 2000,
+        use_pbc: bool = True,
+        reuse_memmap_cache: bool = False,
+    ) -> None:
         """
         Initialize torsions calculator with configuration parameters.
 
@@ -80,6 +87,9 @@ class TorsionsCalculator(CalculatorBase):
         use_pbc : bool, default=True
             If True and the trajectory contains unitcell information,
             angles are computed under the minimum image convention
+        reuse_memmap_cache : bool, default=False
+            Reopen a matching cached memmap result instead of recomputing.
+            Only has an effect together with use_memmap=True.
 
         Returns
         -------
@@ -96,7 +106,7 @@ class TorsionsCalculator(CalculatorBase):
         >>> # Without periodic boundary conditions
         >>> calculator = TorsionsCalculator(use_pbc=False)
         """
-        super().__init__(use_memmap, cache_path, chunk_size)
+        super().__init__(use_memmap, cache_path, chunk_size, reuse_memmap_cache)
         self.torsions_path = cache_path
         self.use_pbc = use_pbc
 
@@ -153,43 +163,34 @@ class TorsionsCalculator(CalculatorBase):
         )
         n_features = test_angles.shape[1]
 
-        # Setup output array with correct size
-        torsions_array = self._setup_output_array(trajectory, n_features)
+        # Setup output array with correct size (reused when a valid cache exists)
+        cache_params = {
+            "calculate_phi": bool(calculate_phi),
+            "calculate_psi": bool(calculate_psi),
+            "calculate_omega": bool(calculate_omega),
+            "calculate_chi": bool(calculate_chi),
+            "input_hash": CalculatorComputeHelper.hash_input(
+                trajectory.xyz, self.chunk_size
+            ),
+        }
+        torsions_array, reused = self._setup_output_array(
+            trajectory, n_features, cache_params
+        )
 
         # Compute torsion angles
-        torsions_array = self._compute_torsion_angles(
-            trajectory, torsions_array, calculate_phi, calculate_psi, calculate_omega, calculate_chi
-        )
+        if not reused:
+            torsions_array = self._compute_torsion_angles(
+                trajectory, torsions_array, calculate_phi, calculate_psi, calculate_omega, calculate_chi
+            )
+            CalculatorComputeHelper.write_output_cache_sidecar(
+                self.use_memmap, self.torsions_path, torsions_array.shape, "float32", cache_params
+            )
 
         # Generate feature metadata using angle_info from first computation
         feature_metadata = self._generate_feature_metadata(trajectory, angle_info, res_metadata)
 
+        feature_metadata["reused"] = reused
         return torsions_array, feature_metadata
-
-    def _setup_output_array(self, trajectory: md.Trajectory, n_features: int) -> np.ndarray:
-        """
-        Create output array for torsions storage.
-
-        Parameters
-        ----------
-        trajectory : mdtraj.Trajectory
-            Trajectory object for size information
-        n_features : int
-            Number of computed angle features
-
-        Returns
-        -------
-        numpy.ndarray or numpy.memmap
-            Output array for torsions storage
-        """
-        torsions_array = CalculatorComputeHelper.create_output_array(
-            self.use_memmap,
-            self.torsions_path,
-            (trajectory.n_frames, n_features),
-            dtype="float32"
-        )
-
-        return torsions_array
 
     def _compute_torsion_angles(self, trajectory: md.Trajectory, torsions_array: np.ndarray,
                                calculate_phi: bool, calculate_psi: bool, 

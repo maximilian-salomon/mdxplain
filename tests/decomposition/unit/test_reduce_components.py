@@ -20,6 +20,8 @@
 
 """Integration tests for DecompositionManager.reduce_components."""
 
+import os
+
 import numpy as np
 import pytest
 
@@ -153,3 +155,69 @@ def test_reduce_component_count_out_of_range_raises(
     """A component count outside the valid range raises ValueError."""
     with pytest.raises(ValueError, match="between 1"):
         manager.reduce_components(pipeline, "src", "x", n_components)
+
+
+def _memmap_source(cache_dir, n_frames=200, n_comp=30):
+    """Build a decomposition whose transformed data lives in a memmap file."""
+    path = os.path.join(cache_dir, "source.dat")
+    data = np.memmap(
+        path, dtype=np.float32, mode="w+", shape=(n_frames, n_comp)
+    )
+    rng = np.random.RandomState(0)
+    data[:] = rng.rand(n_frames, n_comp).astype(np.float32)
+    data.flush()
+    src = DecompositionData("kernel_pca")
+    src.data = data
+    src.metadata = {
+        "n_components": n_comp,
+        "auto_selected": True,
+        "explained_variance_ratio": list(np.linspace(1.0, 0.1, n_comp)),
+        "explained_variance": list(np.linspace(10.0, 1.0, n_comp)),
+        "hyperparameters": {"kernel": "rbf"},
+    }
+    src.frame_mapping = {i: (0, i) for i in range(n_frames)}
+    return src, path, data
+
+
+def test_reduce_under_memmap_creates_owned_memmap(tmp_path):
+    """Under use_memmap the reduced clone is its own on-disk memmap."""
+    cache = str(tmp_path)
+    src, _, src_data = _memmap_source(cache)
+    pipe = PipelineData()
+    pipe.decomposition_data["src"] = src
+    manager = DecompositionManager(
+        use_memmap=True, chunk_size=64, cache_dir=cache
+    )
+
+    manager.reduce_components(pipe, "src", "src_5", 5)
+    reduced = pipe.decomposition_data["src_5"]
+
+    assert isinstance(reduced.data, np.memmap)
+    assert not np.shares_memory(reduced.data, src_data)
+    assert np.array_equal(
+        np.asarray(reduced.data), np.asarray(src_data)[:, :5]
+    )
+
+
+def test_reduce_memmap_clone_survives_source_removal(tmp_path):
+    """The reduced memmap holds after remove_decomposition on the source."""
+    cache = str(tmp_path)
+    src, src_path, _ = _memmap_source(cache)
+    expected = np.array(src.data[:, :5])
+    pipe = PipelineData()
+    pipe.decomposition_data["src"] = src
+    manager = DecompositionManager(
+        use_memmap=True, chunk_size=64, cache_dir=cache
+    )
+
+    manager.reduce_components(pipe, "src", "src_5", 5)
+    reduced = pipe.decomposition_data["src_5"]
+
+    # Remove the source via the real API: drops it and deletes its memmap file.
+    manager.remove_decomposition(pipe, "src")
+    assert "src" not in pipe.decomposition_data
+    assert not os.path.exists(src_path)
+
+    # The reduced clone must still expose its full, correct data.
+    assert np.asarray(reduced.data).shape == (200, 5)
+    assert np.array_equal(np.asarray(reduced.data), expected)

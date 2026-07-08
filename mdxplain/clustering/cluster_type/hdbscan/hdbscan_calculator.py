@@ -62,6 +62,7 @@ class HDBSCANCalculator(CalculatorBase):
         use_memmap: bool = False,
         max_blas_threads: Optional[int] = 1,
         auto_limit_blas: bool = True,
+        reuse_memmap_cache: bool = False,
     ) -> None:
         """
         Initialize HDBSCAN calculator.
@@ -83,7 +84,10 @@ class HDBSCANCalculator(CalculatorBase):
         auto_limit_blas : bool, default=True
             Apply a safe thread policy: use BLAS=1 when n_jobs != 1,
             otherwise use max_blas_threads (fallback 2 when None)
-            
+        reuse_memmap_cache : bool, default=False
+            Reopen a matching cached labels memmap instead of recomputing.
+            Only has an effect together with use_memmap=True.
+
         Returns
         -------
         None
@@ -95,6 +99,7 @@ class HDBSCANCalculator(CalculatorBase):
             use_memmap,
             max_blas_threads,
             auto_limit_blas,
+            reuse_memmap_cache,
         )
 
     def compute(self, data: np.ndarray, center_method: str = "centroid", **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
@@ -144,6 +149,22 @@ class HDBSCANCalculator(CalculatorBase):
 
         self._validate_memory_and_dimensionality(data, parameters)
 
+        cache_params = {
+            "algorithm": "hdbscan",
+            "method": parameters.get("method"),
+            "min_cluster_size": parameters.get("min_cluster_size"),
+            "min_samples": parameters.get("min_samples"),
+            "cluster_selection_epsilon": parameters.get("cluster_selection_epsilon"),
+            "cluster_selection_method": parameters.get("cluster_selection_method"),
+            "center_method": center_method,
+            "n_samples": int(data.shape[0]),
+            "n_features": int(data.shape[1]),
+            "input_hash": self._input_hash(data),
+        }
+        reused = self._reuse_labels("hdbscan", parameters["method"], cache_params)
+        if reused is not None:
+            return reused[0], reused[1]
+
         with self._limit_threadpools(parameters.get("n_jobs")):
             cluster_labels, hdbscan_model, computation_time = self._perform_clustering(
                 data, parameters
@@ -152,6 +173,11 @@ class HDBSCANCalculator(CalculatorBase):
             data, cluster_labels, hdbscan_model, parameters, computation_time, center_method
         )
 
+        self._write_labels_sidecar(
+            "hdbscan", parameters["method"], cluster_labels, cache_params, metadata
+        )
+
+        metadata["reused"] = False
         return cluster_labels, metadata
 
 

@@ -66,7 +66,13 @@ class SASACalculator(CalculatorBase):
     >>> sasa, metadata = calculator.compute(trajectory, mode='atom')
     """
 
-    def __init__(self, use_memmap: bool = False, cache_path: str = "./cache", chunk_size: int = 2000) -> None:
+    def __init__(
+        self,
+        use_memmap: bool = False,
+        cache_path: str = "./cache",
+        chunk_size: int = 2000,
+        reuse_memmap_cache: bool = False,
+    ) -> None:
         """
         Initialize SASA calculator with configuration parameters.
 
@@ -78,6 +84,9 @@ class SASACalculator(CalculatorBase):
             Directory path for storing cache files (includes trajectory name)
         chunk_size : int, optional
             Number of frames to process per chunk
+        reuse_memmap_cache : bool, default=False
+            Reopen a matching cached memmap result instead of recomputing.
+            Only has an effect together with use_memmap=True.
 
         Returns
         -------
@@ -91,7 +100,7 @@ class SASACalculator(CalculatorBase):
         >>> # With memory mapping
         >>> calculator = SASACalculator(use_memmap=True, cache_path='./cache/')
         """
-        super().__init__(use_memmap, cache_path, chunk_size)
+        super().__init__(use_memmap, cache_path, chunk_size, reuse_memmap_cache)
         self.sasa_path = cache_path
 
         self.analysis = SASACalculatorAnalysis(
@@ -137,41 +146,30 @@ class SASACalculator(CalculatorBase):
         # Determine output dimensions
         n_features = trajectory.n_residues if mode == 'residue' else trajectory.n_atoms
 
-        # Setup output array
-        sasa_array = self._setup_output_array(trajectory, n_features)
+        # Setup output array (reused when a valid cache exists)
+        cache_params = {
+            "mode": mode,
+            "probe_radius": float(probe_radius),
+            "input_hash": CalculatorComputeHelper.hash_input(
+                trajectory.xyz, self.chunk_size
+            ),
+        }
+        sasa_array, reused = self._setup_output_array(
+            trajectory, n_features, cache_params
+        )
 
         # Compute SASA
-        sasa_array = self._compute_sasa(trajectory, sasa_array, mode, probe_radius)
+        if not reused:
+            sasa_array = self._compute_sasa(trajectory, sasa_array, mode, probe_radius)
+            CalculatorComputeHelper.write_output_cache_sidecar(
+                self.use_memmap, self.sasa_path, sasa_array.shape, "float32", cache_params
+            )
 
         # Generate feature metadata
         feature_metadata = self._generate_feature_metadata(trajectory, mode, probe_radius, res_metadata)
 
+        feature_metadata["reused"] = reused
         return sasa_array, feature_metadata
-
-    def _setup_output_array(self, trajectory: md.Trajectory, n_features: int) -> np.ndarray:
-        """
-        Create output array for SASA storage.
-
-        Parameters
-        ----------
-        trajectory : mdtraj.Trajectory
-            Trajectory object for size information
-        n_features : int
-            Number of SASA features (residues or atoms)
-
-        Returns
-        -------
-        numpy.ndarray or numpy.memmap
-            Output array for SASA storage
-        """
-        sasa_array = CalculatorComputeHelper.create_output_array(
-            self.use_memmap,
-            self.sasa_path,
-            (trajectory.n_frames, n_features),
-            dtype="float32"
-        )
-
-        return sasa_array
 
     def _compute_sasa(self, trajectory: md.Trajectory, sasa_array: np.ndarray, mode: str, probe_radius: float) -> np.ndarray:
         """

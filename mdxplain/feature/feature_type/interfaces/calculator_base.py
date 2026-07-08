@@ -29,6 +29,7 @@ contacts, and other molecular dynamics features.
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional, Tuple, Union, List
 
+import mdtraj as md
 import numpy as np
 
 from ..helper.calculator_compute_helper import CalculatorComputeHelper
@@ -59,8 +60,9 @@ class CalculatorBase(ABC):
     def __init__(
         self,
         use_memmap: bool = False,
-        cache_path: Optional[str] = "./cache",
+        cache_path: str = "./cache",
         chunk_size: Optional[int] = None,
+        reuse_memmap_cache: bool = False,
     ):
         """
         Initialize calculator with common configuration parameters.
@@ -73,6 +75,9 @@ class CalculatorBase(ABC):
             Directory path for storing cache files when using memory mapping
         chunk_size : int, optional
             Number of frames to process in each chunk (None for automatic sizing)
+        reuse_memmap_cache : bool, default=False
+            Whether to reuse a matching cached memmap result instead of
+            recomputing it (only effective when use_memmap is True)
 
         Returns
         -------
@@ -81,9 +86,46 @@ class CalculatorBase(ABC):
         self.use_memmap = use_memmap
         self.cache_path = cache_path
         self.chunk_size = chunk_size
+        self.reuse_memmap_cache = reuse_memmap_cache
 
         # Analysis object will be set by subclasses
         self.analysis = None
+
+    def _setup_output_array(
+        self,
+        trajectory: md.Trajectory,
+        n_features: int,
+        cache_params: Dict[str, Any],
+    ) -> Tuple[np.ndarray, bool]:
+        """
+        Reuse or create the standard per-frame float output array.
+
+        Threads the calculator's memmap configuration and cache path into the
+        shared reuse helper, so subclasses only supply the feature count and
+        the parameters that define the result.
+
+        Parameters
+        ----------
+        trajectory : mdtraj.Trajectory
+            Trajectory object for size information
+        n_features : int
+            Number of feature columns per frame
+        cache_params : dict
+            Parameters that define the result, matched against the sidecar
+
+        Returns
+        -------
+        Tuple[numpy.ndarray, bool]
+            The output array and whether it was reused from a matching cache
+        """
+        return CalculatorComputeHelper.reuse_or_create_output_array(
+            self.use_memmap,
+            self.reuse_memmap_cache,
+            self.cache_path,
+            (trajectory.n_frames, n_features),
+            "float32",
+            cache_params,
+        )
 
     def compute_pooled_metric_values(
         self,
