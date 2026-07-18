@@ -82,6 +82,7 @@ class StructureVisualizationManager:
     def __init__(
         self,
         use_memmap: bool = False,
+        chunk_size: int = 2000,
         cache_dir: str = "./cache"
     ):
         """
@@ -94,6 +95,8 @@ class StructureVisualizationManager:
         ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for large datasets
+        chunk_size : int, default=2000
+            Chunk size for processing large arrays
         cache_dir : str, default="./cache"
             Base cache directory. Manager creates subdirectory
             "structure_viz" as dedicated output directory.
@@ -109,6 +112,7 @@ class StructureVisualizationManager:
         automatically during initialization.
         """
         self.use_memmap = use_memmap
+        self.chunk_size = chunk_size
         self.cache_dir = PathUtils.prepare_directory_path(
             cache_dir,
             create=True,

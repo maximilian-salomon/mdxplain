@@ -526,7 +526,7 @@ class PipelineManager:
             use_memmap=use_memmap, cache_dir=cache_dir
         )
         self._structure_visualization_manager = StructureVisualizationManager(
-            use_memmap=use_memmap, cache_dir=cache_dir
+            use_memmap=use_memmap, chunk_size=chunk_size, cache_dir=cache_dir
         )
 
     def report_resource_limits(self) -> None:
