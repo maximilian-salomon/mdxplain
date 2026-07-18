@@ -33,6 +33,7 @@ import mdtraj as md
 import numpy as np
 
 from ..helper.calculator_compute_helper import CalculatorComputeHelper
+from ..helper.calculator_stat_helper import CalculatorStatHelper
 
 
 class CalculatorBase(ABC):
@@ -74,7 +75,8 @@ class CalculatorBase(ABC):
         cache_path : str, optional
             Directory path for storing cache files when using memory mapping
         chunk_size : int, optional
-            Number of frames to process in each chunk (None for automatic sizing)
+            Number of frames to process in each chunk. None processes all frames
+            in a single block (no chunking).
         reuse_memmap_cache : bool, default=False
             Whether to reuse a matching cached memmap result instead of
             recomputing it (only effective when use_memmap is True)
@@ -136,8 +138,14 @@ class CalculatorBase(ABC):
         """
         Compute metric values for pooled segments.
 
-        Default implementation stacks frames across segments and delegates
-        to the calculator's metric computation pipeline.
+        Default implementation for calculators that do not override this. The
+        segments are pooled one feature block at a time, so the full
+        (total_frames, n_features) array is never materialised. Every metric here
+        reduces each feature independently, which is what makes splitting the
+        feature axis exact.
+
+        Subclasses that can stream a metric over frames should override this and
+        use CalculatorStatHelper.compute_pooled_reduction_per_feature instead.
 
         Parameters
         ----------
@@ -153,18 +161,19 @@ class CalculatorBase(ABC):
         np.ndarray
             Metric values per feature
         """
-        if not segments:
-            return np.array([])
-        pooled = np.concatenate(segments, axis=0)
-        metric_values = self._compute_metric_values(
-            pooled,
-            metric,
-            params.get("transition_threshold", 1.0),
-            params.get("window_size", 1),
-            params.get("transition_mode", "lagtime"),
-            params.get("lag_time", 1),
+        return CalculatorStatHelper.compute_pooled_func_per_feature(
+            segments,
+            lambda pooled_block: self._compute_metric_values(
+                pooled_block,
+                metric,
+                params.get("transition_threshold", 1.0),
+                params.get("window_size", 1),
+                params.get("transition_mode", "lagtime"),
+                params.get("lag_time", 1),
+            ),
+            self.chunk_size,
+            self.use_memmap,
         )
-        return metric_values
 
     def compute_pooled_selection_mask(
         self,

@@ -62,7 +62,7 @@ class DecisionTreeCalculator(CalculatorBase):
             Whether to use memory mapping for large datasets
         cache_path : str, default="./cache"
             Path for cache files (reserved for future use)
-        chunk_size : int, default=10000
+        chunk_size : int, default=2000
             Chunk size for processing large datasets (reserved for future use)
         max_memory_gb : float, default=6.0
             Maximum memory in GB for dataset processing.

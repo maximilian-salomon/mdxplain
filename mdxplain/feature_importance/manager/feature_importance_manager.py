@@ -90,7 +90,7 @@ class FeatureImportanceManager:
         ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for large datasets
-        chunk_size : int, default=10000
+        chunk_size : int, default=2000
             Processing chunk size for incremental computation
         cache_dir : str, default="./cache"
             Cache directory path

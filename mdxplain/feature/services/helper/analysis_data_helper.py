@@ -157,5 +157,214 @@ class AnalysisDataHelper:
             data_selector_manager.remove_selector(pipeline_data, temp_data_selector)
         if not feature_selector:
             feature_selector_manager.remove_selector(pipeline_data, temp_feature_selector)
-        
+
         return data
+
+    @staticmethod
+    def get_residue_pairs(
+        pipeline_data: PipelineData,
+        feature_type: str,
+        feature_selector: Optional[str] = None,
+    ) -> tuple:
+        """
+        Return the residue pair of each column plus the residue count.
+
+        The pairs are read from the reference trajectory of the selection that
+        builds the pooled matrix, so per-residue reductions use the real partners
+        of each residue — the ones neighbor exclusion actually kept — instead of
+        assuming a full residue-residue triangle. The order matches the columns
+        ``get_selected_data`` returns for the same ``feature_selector``.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data container
+        feature_type : str
+            Feature type name (e.g. "distances", "contacts")
+        feature_selector : str, optional
+            Name of the feature selector whose columns to describe. None means the
+            full set of the feature type, matching the temporary selector
+            ``get_selected_data`` builds for the same request.
+
+        Returns
+        -------
+        tuple
+            (pairs, n_residues) in column order. Both are None when the pairs
+            cannot be read, letting the reduction fall back to a full triangle.
+
+        Examples
+        --------
+        >>> pairs, n_residues = AnalysisDataHelper.get_residue_pairs(
+        ...     pipeline_data, "distances"
+        ... )
+        """
+        reference_traj = AnalysisDataHelper._reference_trajectory(
+            pipeline_data, feature_type, feature_selector
+        )
+        if feature_selector is not None:
+            pairs = AnalysisDataHelper._selected_column_pairs(
+                pipeline_data, feature_selector
+            )
+        else:
+            pairs = AnalysisDataHelper._reference_stored_pairs(
+                pipeline_data, feature_type, reference_traj
+            )
+        if pairs is None:
+            return None, None
+        return pairs, AnalysisDataHelper._residue_count(
+            pipeline_data, reference_traj, pairs
+        )
+
+    @staticmethod
+    def _reference_trajectory(
+        pipeline_data: PipelineData,
+        feature_type: str,
+        feature_selector: Optional[str],
+    ) -> Optional[int]:
+        """
+        Return the trajectory whose column layout defines the pooled matrix.
+
+        A named selector stores the reference trajectory chosen when it was
+        selected. An unfiltered request matches the temporary selector
+        ``get_selected_data`` builds, whose reference defaults to the
+        lowest-indexed trajectory that carries the feature.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data container
+        feature_type : str
+            Feature type name
+        feature_selector : str, optional
+            Name of the feature selector, or None for the unfiltered request
+
+        Returns
+        -------
+        int, optional
+            Reference trajectory index, or None if a named selector has none
+
+        Examples
+        --------
+        >>> reference = AnalysisDataHelper._reference_trajectory(
+        ...     pipeline_data, "distances", None
+        ... )
+        """
+        if feature_selector is not None:
+            selector_data = pipeline_data.selected_feature_data[feature_selector]
+            return selector_data.get_reference_trajectory()
+        return min(pipeline_data.feature_data[feature_type])
+
+    @staticmethod
+    def _reference_stored_pairs(
+        pipeline_data: PipelineData,
+        feature_type: str,
+        reference_traj: Optional[int],
+    ) -> Optional[list]:
+        """
+        Return the positional residue pairs stored for the reference trajectory.
+
+        The reference trajectory defines the column layout of an unfiltered
+        selection, so its stored pairs describe every column in order. Returns
+        None for metadata written before pairs were stored explicitly, leaving
+        the full-triangle fallback to the reduction itself.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data container
+        feature_type : str
+            Feature type name
+        reference_traj : int, optional
+            Reference trajectory index
+
+        Returns
+        -------
+        list, optional
+            Residue index pairs in column order, or None if not stored
+
+        Examples
+        --------
+        >>> pairs = AnalysisDataHelper._reference_stored_pairs(
+        ...     pipeline_data, "distances", 0
+        ... )
+        """
+        if reference_traj is None:
+            return None
+        metadata = pipeline_data.feature_data[feature_type][
+            reference_traj
+        ].feature_metadata
+        if metadata and metadata.get("pairs"):
+            return [tuple(pair) for pair in metadata["pairs"]]
+        return None
+
+    @staticmethod
+    def _selected_column_pairs(
+        pipeline_data: PipelineData, feature_selector: str
+    ) -> list:
+        """
+        Return the residue pair of each column of a feature selection.
+
+        A selection subsets and reorders columns, so the pairs come from the
+        selection's per-column metadata, read from each column's two partners.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data container
+        feature_selector : str
+            Name of the feature selector
+
+        Returns
+        -------
+        list
+            Residue index pairs in selected-column order
+        """
+        column_meta = pipeline_data.get_selected_metadata(feature_selector)
+        return [
+            (
+                entry["features"][0]["residue"]["index"],
+                entry["features"][1]["residue"]["index"],
+            )
+            for entry in column_meta
+        ]
+
+    @staticmethod
+    def _residue_count(
+        pipeline_data: PipelineData,
+        reference_traj: Optional[int],
+        pairs: list,
+    ) -> int:
+        """
+        Return the residue count that indexes the per-residue output array.
+
+        The pairs carry positional residue indices, so the highest one plus one
+        is the smallest length that indexes every residue without an out-of-range
+        access. The reference trajectory's residue labels extend that length to
+        the full residue count, so residues without a retained partner still get
+        a slot; the pair bound stays the floor in case a label is missing.
+
+        Parameters
+        ----------
+        pipeline_data : PipelineData
+            Pipeline data container
+        reference_traj : int, optional
+            Reference trajectory index whose residue labels set the full length
+        pairs : list
+            Residue index pairs; the highest index sets the minimum length
+
+        Returns
+        -------
+        int
+            Number of residues, at least one past the highest pair index
+
+        Examples
+        --------
+        >>> n_residues = AnalysisDataHelper._residue_count(
+        ...     pipeline_data, 0, [(0, 1), (0, 2)]
+        ... )
+        """
+        pair_bound = max((max(pair) for pair in pairs), default=-1) + 1
+        res_label_data = pipeline_data.trajectory_data.res_label_data
+        if res_label_data and reference_traj in res_label_data:
+            return max(len(res_label_data[reference_traj]), pair_bound)
+        return pair_bound

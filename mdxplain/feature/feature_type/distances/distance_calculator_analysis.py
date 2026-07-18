@@ -26,7 +26,7 @@ including variability analysis, transition detection, and comparative studies
 with support for memory-mapped arrays.
 """
 
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Tuple
 import numpy as np
 
 from ..helper.calculator_stat_helper import CalculatorStatHelper
@@ -53,6 +53,18 @@ class DistanceCalculatorAnalysis:
         "compute_per_residue_range",
     }
 
+    #: Metrics whose pooled value can be accumulated over frame blocks, and the
+    #: reduction that backs each. Anything absent here (mad) needs a whole column
+    #: at once and is pooled one feature block at a time instead.
+    POOLED_STREAMING_METRICS = {
+        "mean": "mean",
+        "std": "std",
+        "variance": "var",
+        "min": "min",
+        "max": "max",
+        "range": "ptp",
+    }
+
     def __init__(self, use_memmap: bool = False, chunk_size: int = 2000) -> None:
         """
         Initialize distance analysis with chunking configuration.
@@ -61,7 +73,7 @@ class DistanceCalculatorAnalysis:
         ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for large datasets
-        chunk_size : int, default=10000
+        chunk_size : int, default=2000
             Number of frames to process per chunk for memory-mapped arrays
 
         Examples
@@ -318,8 +330,27 @@ class DistanceCalculatorAnalysis:
         >>> cv_values = analysis.compute_cv(distance_data)
         >>> highly_variable = cv_values > 0.5  # Pairs with high variability
         """
-        mean_vals = self.compute_mean(distances)
-        std_vals = self.compute_std(distances)
+        return self._cv_from(self.compute_mean(distances), self.compute_std(distances))
+
+    def _cv_from(self, mean_vals: np.ndarray, std_vals: np.ndarray) -> np.ndarray:
+        """
+        Combine a mean and a standard deviation into a coefficient of variation.
+
+        Kept separate so the pooled path derives CV from pooled inputs through
+        the same expression. Distances are non-negative, so the mean is used as-is.
+
+        Parameters
+        ----------
+        mean_vals : numpy.ndarray
+            Mean per distance pair
+        std_vals : numpy.ndarray
+            Standard deviation per distance pair
+
+        Returns
+        -------
+        numpy.ndarray
+            CV values per distance pair
+        """
         return std_vals / (mean_vals + 1e-10)
 
     # === FRAME-BASED STATISTICS ===
@@ -449,160 +480,217 @@ class DistanceCalculatorAnalysis:
             distances, self.chunk_size, self.use_memmap, np.sum
         )
 
-    # === PER-COLUMN ANALYSIS (auto-converts 2D to 3D) ===
-    def compute_per_residue_mean(self, distances: np.ndarray) -> np.ndarray:
+    # === PER-RESIDUE ANALYSIS (reduces over each residue's real partners) ===
+    def _per_residue_metric(
+        self,
+        distances: np.ndarray,
+        metric: str,
+        pairs: Optional[List[Tuple[int, int]]] = None,
+        n_residues: Optional[int] = None,
+    ) -> np.ndarray:
         """
-        Compute mean distance for each residue. Auto-converts condensed to squareform.
+        Reduce condensed distances to one value per residue over its partners.
+
+        The residue pair of each condensed column comes from ``pairs``; the
+        service passes the real pairs from the feature metadata. When they are
+        absent the columns are assumed to be a full upper triangle, which is the
+        only inference possible from the column count alone.
 
         Parameters
         ----------
         distances : np.ndarray or np.memmap
-            Distance array in condensed format (n_frames, n_pairs) -
-            automatically converted to squareform
+            Distance array in condensed format (n_frames, n_pairs)
+        metric : str
+            Per-residue metric name
+        pairs : list of tuple, optional
+            Residue index pair for each condensed column, in column order
+        n_residues : int, optional
+            Number of residues; inferred with pairs when omitted
+
+        Returns
+        -------
+        np.ndarray
+            Metric value per residue with shape (n_residues,)
+        """
+        return CalculatorStatHelper.compute_per_residue_reduction(
+            distances, pairs, n_residues, metric, self.chunk_size, self.use_memmap
+        )
+
+    def compute_per_residue_mean(
+        self, distances: np.ndarray, pairs=None, n_residues=None
+    ) -> np.ndarray:
+        """
+        Compute the mean distance from each residue to its partners.
+
+        Parameters
+        ----------
+        distances : np.ndarray or np.memmap
+            Distance array in condensed format (n_frames, n_pairs)
+        pairs : list of tuple, optional
+            Residue index pair for each condensed column
+        n_residues : int, optional
+            Number of residues
 
         Returns
         -------
         np.ndarray
             Mean distance for each residue with shape (n_residues,)
         """
-        return CalculatorStatHelper.compute_func_per_column(
-            distances, np.mean, self.chunk_size, self.use_memmap
-        )
+        return self._per_residue_metric(distances, "mean", pairs, n_residues)
 
-    def compute_per_residue_std(self, distances: np.ndarray) -> np.ndarray:
+    def compute_per_residue_std(
+        self, distances: np.ndarray, pairs=None, n_residues=None
+    ) -> np.ndarray:
         """
-        Compute standard deviation of distances per residue.
-
-        Auto-converts condensed to squareform.
+        Compute the standard deviation of each residue's partner distances.
 
         Parameters
         ----------
         distances : np.ndarray or np.memmap
-            Distance array in condensed format (n_frames, n_pairs) -
-            automatically converted to squareform
+            Distance array in condensed format (n_frames, n_pairs)
+        pairs : list of tuple, optional
+            Residue index pair for each condensed column
+        n_residues : int, optional
+            Number of residues
 
         Returns
         -------
         np.ndarray
             Standard deviation for each residue with shape (n_residues,)
         """
-        return CalculatorStatHelper.compute_func_per_column(
-            distances, np.std, self.chunk_size, self.use_memmap
-        )
+        return self._per_residue_metric(distances, "std", pairs, n_residues)
 
-    def compute_per_residue_min(self, distances: np.ndarray) -> np.ndarray:
+    def compute_per_residue_min(
+        self, distances: np.ndarray, pairs=None, n_residues=None
+    ) -> np.ndarray:
         """
-        Compute minimum distances per residue. Auto-converts condensed to squareform.
+        Compute each residue's closest partner distance.
 
         Parameters
         ----------
         distances : np.ndarray or np.memmap
-            Distance array in condensed format (n_frames, n_pairs) -
-            automatically converted to squareform
+            Distance array in condensed format (n_frames, n_pairs)
+        pairs : list of tuple, optional
+            Residue index pair for each condensed column
+        n_residues : int, optional
+            Number of residues
 
         Returns
         -------
         np.ndarray
             Minimum distance for each residue with shape (n_residues,)
         """
-        return CalculatorStatHelper.compute_func_per_column(
-            distances, np.min, self.chunk_size, self.use_memmap
-        )
+        return self._per_residue_metric(distances, "min", pairs, n_residues)
 
-    def compute_per_residue_max(self, distances: np.ndarray) -> np.ndarray:
+    def compute_per_residue_max(
+        self, distances: np.ndarray, pairs=None, n_residues=None
+    ) -> np.ndarray:
         """
-        Compute maximum distances per residue. Auto-converts condensed to squareform.
+        Compute each residue's farthest partner distance.
 
         Parameters
         ----------
         distances : np.ndarray or np.memmap
-            Distance array in condensed format (n_frames, n_pairs) -
-            automatically converted to squareform
+            Distance array in condensed format (n_frames, n_pairs)
+        pairs : list of tuple, optional
+            Residue index pair for each condensed column
+        n_residues : int, optional
+            Number of residues
 
         Returns
         -------
         np.ndarray
             Maximum distance for each residue with shape (n_residues,)
         """
-        return CalculatorStatHelper.compute_func_per_column(
-            distances, np.max, self.chunk_size, self.use_memmap
-        )
+        return self._per_residue_metric(distances, "max", pairs, n_residues)
 
-    def compute_per_residue_median(self, distances: np.ndarray) -> np.ndarray:
+    def compute_per_residue_median(
+        self, distances: np.ndarray, pairs=None, n_residues=None
+    ) -> np.ndarray:
         """
-        Compute median distances per residue. Auto-converts condensed to squareform.
+        Compute the median of each residue's partner distances.
 
         Parameters
         ----------
         distances : np.ndarray or np.memmap
-            Distance array in condensed format (n_frames, n_pairs) -
-            automatically converted to squareform
+            Distance array in condensed format (n_frames, n_pairs)
+        pairs : list of tuple, optional
+            Residue index pair for each condensed column
+        n_residues : int, optional
+            Number of residues
 
         Returns
         -------
         np.ndarray
             Median distance for each residue with shape (n_residues,)
         """
-        return CalculatorStatHelper.compute_func_per_column(
-            distances, np.median, self.chunk_size, self.use_memmap
-        )
+        return self._per_residue_metric(distances, "median", pairs, n_residues)
 
-    def compute_per_residue_sum(self, distances: np.ndarray) -> np.ndarray:
+    def compute_per_residue_sum(
+        self, distances: np.ndarray, pairs=None, n_residues=None
+    ) -> np.ndarray:
         """
-        Compute sum of distances per residue. Auto-converts condensed to squareform.
+        Compute the summed distance from each residue to its partners.
 
         Parameters
         ----------
         distances : np.ndarray or np.memmap
-            Distance array in condensed format (n_frames, n_pairs) -
-            automatically converted to squareform
+            Distance array in condensed format (n_frames, n_pairs)
+        pairs : list of tuple, optional
+            Residue index pair for each condensed column
+        n_residues : int, optional
+            Number of residues
 
         Returns
         -------
         np.ndarray
             Sum of distances for each residue with shape (n_residues,)
         """
-        return CalculatorStatHelper.compute_func_per_column(
-            distances, np.sum, self.chunk_size, self.use_memmap
-        )
+        return self._per_residue_metric(distances, "sum", pairs, n_residues)
 
-    def compute_per_residue_variance(self, distances: np.ndarray) -> np.ndarray:
+    def compute_per_residue_variance(
+        self, distances: np.ndarray, pairs=None, n_residues=None
+    ) -> np.ndarray:
         """
-        Compute variance of distances per residue. Auto-converts condensed to squareform.
+        Compute the variance of each residue's partner distances.
 
         Parameters
         ----------
         distances : np.ndarray or np.memmap
-            Distance array in condensed format (n_frames, n_pairs) -
-            automatically converted to squareform
+            Distance array in condensed format (n_frames, n_pairs)
+        pairs : list of tuple, optional
+            Residue index pair for each condensed column
+        n_residues : int, optional
+            Number of residues
 
         Returns
         -------
         np.ndarray
             Variance for each residue with shape (n_residues,)
         """
-        return CalculatorStatHelper.compute_func_per_column(
-            distances, np.var, self.chunk_size, self.use_memmap
-        )
+        return self._per_residue_metric(distances, "variance", pairs, n_residues)
 
-    def compute_per_residue_range(self, distances: np.ndarray) -> np.ndarray:
+    def compute_per_residue_range(
+        self, distances: np.ndarray, pairs=None, n_residues=None
+    ) -> np.ndarray:
         """
-        Compute range of distances per residue. Auto-converts condensed to squareform.
+        Compute the range of each residue's partner distances.
 
         Parameters
         ----------
         distances : np.ndarray or np.memmap
-            Distance array in condensed format (n_frames, n_pairs) -
-            automatically converted to squareform
+            Distance array in condensed format (n_frames, n_pairs)
+        pairs : list of tuple, optional
+            Residue index pair for each condensed column
+        n_residues : int, optional
+            Number of residues
 
         Returns
         -------
         np.ndarray
             Range (max - min) for each residue with shape (n_residues,)
         """
-        return CalculatorStatHelper.compute_func_per_column(
-            distances, np.ptp, self.chunk_size, self.use_memmap
-        )
+        return self._per_residue_metric(distances, "range", pairs, n_residues)
 
     # === TRANSITION ANALYSIS ===
     def compute_transitions_lagtime(self, distances: np.ndarray, threshold: float = 2.0, lag_time: int = 10) -> np.ndarray:
@@ -753,8 +841,43 @@ class DistanceCalculatorAnalysis:
                 self.use_memmap,
                 mode=transition_mode,
             )
-        pooled = np.concatenate(segments, axis=0)
-        return self._metric_from_pooled(pooled, metric)
+        return self._pooled_metric_values(segments, metric)
+
+    def _pooled_metric_values(self, segments: List[np.ndarray], metric: str) -> np.ndarray:
+        """
+        Compute a pooled metric without materialising the pooled array.
+
+        Streamable metrics accumulate over the frames of every segment. Anything
+        that needs a whole column at once (mad) pools one feature block at a time.
+
+        Parameters
+        ----------
+        segments : list
+            List of distance arrays to pool along the frame axis
+        metric : str
+            Metric name
+
+        Returns
+        -------
+        numpy.ndarray
+            Pooled metric values per distance pair
+        """
+        if metric == "cv":
+            return self._cv_from(
+                self._pooled_metric_values(segments, "mean"),
+                self._pooled_metric_values(segments, "std"),
+            )
+        reduction = self.POOLED_STREAMING_METRICS.get(metric)
+        if reduction is not None:
+            return CalculatorStatHelper.compute_pooled_reduction_per_feature(
+                segments, reduction, self.chunk_size, self.use_memmap
+            )
+        return CalculatorStatHelper.compute_pooled_func_per_feature(
+            segments,
+            lambda block: self._metric_from_pooled(block, metric),
+            self.chunk_size,
+            self.use_memmap,
+        )
 
     def _metric_from_pooled(self, pooled: np.ndarray, metric: str) -> np.ndarray:
         """

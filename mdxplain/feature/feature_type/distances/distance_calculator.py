@@ -545,6 +545,10 @@ class DistanceCalculator(CalculatorBase):
         return {
             "is_pair": True,
             "features": features,
+            # Positional residue pairs, one per condensed column in column order.
+            # Per-residue analysis reads these directly so it reduces over each
+            # residue's real partners instead of assuming a full triangle.
+            "pairs": [list(pair) for pair in self.pairs],
             "computation_params": {
                 "excluded_neighbors": excluded_neighbors,
                 "scheme": "closest-heavy"

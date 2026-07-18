@@ -29,6 +29,7 @@ from contextlib import nullcontext
 from typing import Any, Dict, Tuple, Union
 
 import numpy as np
+from joblib import effective_n_jobs
 from mdxplain.utils.progress_utils import ProgressUtils
 from scipy.sparse.linalg import LinearOperator, eigs
 from sklearn.decomposition import IncrementalPCA, KernelPCA
@@ -174,6 +175,23 @@ class KernelPCACalculator(CalculatorBase):
         if self.n_jobs is None:
             return False
         return self.n_jobs != 1
+
+    def _resolve_parallel_chunk_size(self) -> int:
+        """
+        Split the chunk budget across the workers that will actually run.
+
+        n_jobs follows the joblib convention, where -1 means "every core" rather
+        than a worker count. Dividing chunk_size by the raw sentinel yields a
+        negative step, so it has to be resolved to an effective worker count
+        first.
+
+        Returns
+        -------
+        int
+            Frames per parallel chunk, never below min_chunk_size or 1
+        """
+        workers = max(1, effective_n_jobs(self.n_jobs))
+        return max(1, self.min_chunk_size, self.chunk_size // workers)
 
     def compute(self, data: np.ndarray, **kwargs) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
@@ -561,7 +579,7 @@ class KernelPCACalculator(CalculatorBase):
             ResourceUtils.tune_memmap(kernel_matrix, "sequential")
 
         # Use half of the chunk size, cause we need to use two chunks of size chunk_size
-        used_chunk_size = int(np.floor(self.chunk_size / 2))
+        used_chunk_size = max(1, int(np.floor(self.chunk_size / 2)))
 
         # Compute kernel matrix chunk-wise
         for row_start in ProgressUtils.iterate(
@@ -724,7 +742,7 @@ class KernelPCACalculator(CalculatorBase):
         self._center_kernel_inplace(kernel_matrix, row_means, col_means, grand_mean)
         
         if self.use_parallel:
-            parallel_chunk_size = max(self.min_chunk_size, self.chunk_size // self.n_jobs)
+            parallel_chunk_size = self._resolve_parallel_chunk_size()
             matvec_func = lambda v: self._parallel_chunked_matvec(v, kernel_matrix, parallel_chunk_size)
         else:
             matvec_func = lambda v: self._chunked_matvec(v, kernel_matrix, self.chunk_size)

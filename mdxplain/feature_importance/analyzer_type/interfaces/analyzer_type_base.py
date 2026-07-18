@@ -148,7 +148,7 @@ class AnalyzerTypeBase(ABC, metaclass=AnalyzerTypeMeta):
             Whether to use memory mapping for large datasets
         cache_path : str, default="./cache"
             Path for cache files
-        chunk_size : int, default=10000
+        chunk_size : int, default=2000
             Number of samples to process per chunk
 
         Returns

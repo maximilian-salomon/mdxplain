@@ -89,9 +89,12 @@ class ReferenceStructureHelper:
 
         Notes
         -----
-        When processing large trajectories with limited memory, enable use_memmap=True
-        and adjust frame_chunk_size to control memory usage. The atom_chunk_size parameter
-        controls the trade-off between memory usage and computational efficiency.
+        All frames of each atom batch are collected and concatenated before the
+        reduction, so peak memory scales with ``atom_chunk_size`` times the total
+        frame count; lower ``atom_chunk_size`` to reduce it. Under
+        ``use_memmap=True`` ``frame_chunk_size`` only sets how many frames are
+        read per step and does not change the peak, since the batch is
+        concatenated in full.
         """
         trajectories = list(trajectories)
 
@@ -158,9 +161,10 @@ class ReferenceStructureHelper:
 
         Notes
         -----
-        Median calculation requires collecting all frames for each atom batch,
-        which may use more memory than mean calculation. For very large trajectories,
-        reduce atom_chunk_size or enable use_memmap with smaller frame_chunk_size.
+        The median collects all frames of each atom batch before reducing, the
+        same as the mean here, so both have the same peak memory. Lower
+        ``atom_chunk_size`` to reduce it; ``frame_chunk_size`` only sets the read
+        granularity under ``use_memmap`` and does not change the peak.
         """
         trajectories = list(trajectories)
 

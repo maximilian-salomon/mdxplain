@@ -118,7 +118,8 @@ class Distances(FeatureTypeBase):
         cache_path : str, optional
             Directory path for storing cache files when using memory mapping
         chunk_size : int, optional
-            Number of frames to process per chunk (None for automatic sizing)
+            Number of frames to process per chunk. None processes all frames
+            in a single block (no chunking).
         reuse_memmap_cache : bool, optional
             Reopen a matching cached memmap result instead of recomputing.
             Only has an effect together with use_memmap=True. Default is False.

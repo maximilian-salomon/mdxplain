@@ -273,9 +273,9 @@ class PipelineManager:
         None
             Raises ValueError for invalid inputs.
         """
-        if stride <= 0 and not isinstance(stride, int):
+        if not isinstance(stride, int) or stride <= 0:
             raise ValueError("Stride must be a positive integer.")
-        if chunk_size <= 0 and not isinstance(chunk_size, int):
+        if not isinstance(chunk_size, int) or chunk_size <= 0:
             raise ValueError("Chunk size must be a positive integer.")
 
     def _init_performance_config(
@@ -523,10 +523,10 @@ class PipelineManager:
         )
         self._analysis_manager = AnalysisManager()
         self._plots_manager = PlotsManager(
-            use_memmap=use_memmap, chunk_size=chunk_size, cache_dir=cache_dir
+            use_memmap=use_memmap, cache_dir=cache_dir
         )
         self._structure_visualization_manager = StructureVisualizationManager(
-            use_memmap=use_memmap, chunk_size=chunk_size, cache_dir=cache_dir
+            use_memmap=use_memmap, cache_dir=cache_dir
         )
 
     def report_resource_limits(self) -> None:
@@ -1568,9 +1568,9 @@ class PipelineManager:
 
     def update_config(
         self,
-        chunk_size: int = None,
-        cache_dir: str = None,
-        use_memmap: bool = None,
+        chunk_size: Optional[int] = None,
+        cache_dir: Optional[str] = None,
+        use_memmap: Optional[bool] = None,
     ):
         """
         Update pipeline configuration parameters at runtime.
@@ -1672,8 +1672,6 @@ class PipelineManager:
             self._feature_importance_manager.use_memmap = use_memmap
 
         # Update PlotsManager
-        if chunk_size is not None:
-            self._plots_manager.chunk_size = chunk_size
         if cache_dir is not None:
             self._plots_manager.cache_dir = cache_dir
         if use_memmap is not None:

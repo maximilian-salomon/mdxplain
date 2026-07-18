@@ -152,7 +152,42 @@ class ContactsAnalysisService(AnalysisServiceBase):
         return self._calculator.contacts_per_frame_percentage(data)
     
     # === PER-RESIDUE ANALYSIS ===
-    
+
+    def _per_residue(
+        self,
+        calculator_method: Callable,
+        feature_selector: Optional[str],
+        traj_selection: Optional[Union[str, int, List]],
+    ) -> np.ndarray:
+        """
+        Reduce the selected contacts to one value per residue.
+
+        Fetches the selected data and the matching residue pairs, so each residue
+        is reduced over its real partners rather than an assumed full triangle.
+
+        Parameters
+        ----------
+        calculator_method : callable
+            The calculator's compute_per_residue_* method to apply
+        feature_selector : str, optional
+            Name of feature selector for column selection
+        traj_selection : str, int, list, optional
+            Trajectory selection criteria for row selection
+
+        Returns
+        -------
+        np.ndarray
+            Metric value per residue
+        """
+        data = AnalysisDataHelper.get_selected_data(
+            self._pipeline_data, self._feature_type,
+            feature_selector, traj_selection
+        )
+        pairs, n_residues = AnalysisDataHelper.get_residue_pairs(
+            self._pipeline_data, self._feature_type, feature_selector
+        )
+        return calculator_method(data, pairs, n_residues)
+
     def per_residue_mean(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
         """
         Compute mean contact frequency per residue.
@@ -174,11 +209,9 @@ class ContactsAnalysisService(AnalysisServiceBase):
         >>> # Find most connected residues
         >>> pipeline.analysis.features.contacts.per_residue_mean()
         """
-        data = AnalysisDataHelper.get_selected_data(
-            self._pipeline_data, self._feature_type,
-            feature_selector, traj_selection
+        return self._per_residue(
+            self._calculator.compute_per_residue_mean, feature_selector, traj_selection
         )
-        return self._calculator.compute_per_residue_mean(data)
     
     def per_residue_std(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
         """
@@ -201,11 +234,9 @@ class ContactsAnalysisService(AnalysisServiceBase):
         >>> # Find residues with variable contact patterns
         >>> pipeline.analysis.features.contacts.per_residue_std()
         """
-        data = AnalysisDataHelper.get_selected_data(
-            self._pipeline_data, self._feature_type,
-            feature_selector, traj_selection
+        return self._per_residue(
+            self._calculator.compute_per_residue_std, feature_selector, traj_selection
         )
-        return self._calculator.compute_per_residue_std(data)
     
     def per_residue_sum(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
         """
@@ -228,11 +259,9 @@ class ContactsAnalysisService(AnalysisServiceBase):
         >>> # Find most connected residues (total contacts)
         >>> pipeline.analysis.features.contacts.per_residue_sum()
         """
-        data = AnalysisDataHelper.get_selected_data(
-            self._pipeline_data, self._feature_type,
-            feature_selector, traj_selection
+        return self._per_residue(
+            self._calculator.compute_per_residue_sum, feature_selector, traj_selection
         )
-        return self._calculator.compute_per_residue_sum(data)
     
     # === ADVANCED ANALYSIS ===
     

@@ -31,6 +31,8 @@ import numpy as np
 
 from ..helper.calculator_stat_helper import CalculatorStatHelper
 
+COORDINATES_PER_ATOM = 3
+
 
 class CoordinatesCalculatorAnalysis:
     """
@@ -40,6 +42,18 @@ class CoordinatesCalculatorAnalysis:
     structural variability, mobility analysis, and geometric statistics
     with memory-mapped array support.
     """
+
+    #: Metrics whose pooled value can be accumulated over frame blocks, and the
+    #: reduction that backs each. rmsf and cv are derived from these; mad needs a
+    #: whole column at once and is pooled one feature block at a time instead.
+    POOLED_STREAMING_METRICS = {
+        "mean": "mean",
+        "std": "std",
+        "variance": "var",
+        "min": "min",
+        "max": "max",
+        "range": "ptp",
+    }
 
     def __init__(self, use_memmap: bool = False, chunk_size: int = 2000) -> None:
         """
@@ -318,8 +332,30 @@ class CoordinatesCalculatorAnalysis:
         numpy.ndarray
             CV values per coordinate with shape (n_coordinates,)
         """
-        mean_vals = self.compute_mean(coordinates)
-        std_vals = self.compute_std(coordinates)
+        return self._cv_from(
+            self.compute_mean(coordinates), self.compute_std(coordinates)
+        )
+
+    def _cv_from(self, mean_vals: np.ndarray, std_vals: np.ndarray) -> np.ndarray:
+        """
+        Combine a mean and a standard deviation into a coefficient of variation.
+
+        Kept separate so the pooled path derives CV from pooled inputs through
+        the same expression. Coordinates are signed, so the mean is taken as an
+        absolute value before dividing.
+
+        Parameters
+        ----------
+        mean_vals : numpy.ndarray
+            Mean per coordinate
+        std_vals : numpy.ndarray
+            Standard deviation per coordinate
+
+        Returns
+        -------
+        numpy.ndarray
+            CV values per coordinate
+        """
         return std_vals / (np.abs(mean_vals) + 1e-10)
 
     def compute_rmsf(self, coordinates: np.ndarray) -> np.ndarray:
@@ -335,22 +371,25 @@ class CoordinatesCalculatorAnalysis:
         -------
         numpy.ndarray
             RMSF values expanded to coordinate format with shape (n_coordinates,)
+
+        Notes
+        -----
+        The mean of the squared deviation of an atom is the sum of the variances
+        of its x, y and z columns, so RMSF is the square root of that sum. Taking
+        that route lets the variance stream over frame blocks; forming the
+        (n_frames, n_atoms, 3) deviations directly would materialise a full copy
+        of the trajectory.
         """
-        # Reshape to (n_frames, n_atoms, 3) for proper per-atom calculation
-        n_coords = coordinates.shape[1]
-        n_atoms = n_coords // 3
-        coords_3d = coordinates.reshape(coordinates.shape[0], n_atoms, 3)
-        
-        # Compute mean position per atom
-        mean_positions = np.mean(coords_3d, axis=0)  # (n_atoms, 3)
-        
-        # Compute RMSF per atom
-        deviations = coords_3d - mean_positions  # (n_frames, n_atoms, 3)
-        rmsf_per_atom = np.sqrt(np.mean(np.sum(deviations**2, axis=2), axis=0))  # (n_atoms,)
-        
-        # Expand back to coordinate format (same RMSF for x,y,z of same atom)
-        rmsf_expanded = np.repeat(rmsf_per_atom, 3)
-        return rmsf_expanded
+        variance_per_coordinate = CalculatorStatHelper.compute_reduction_per_feature(
+            coordinates, "var",
+            chunk_size=self.chunk_size,
+            use_memmap=self.use_memmap,
+        )
+        per_atom = np.sqrt(
+            variance_per_coordinate.reshape(-1, COORDINATES_PER_ATOM).sum(axis=1)
+        )
+        # Same RMSF for x, y and z of the same atom
+        return np.repeat(per_atom, COORDINATES_PER_ATOM)
 
     # === TRANSITION ANALYSIS ===
     def compute_transitions_lagtime(self, coordinates: np.ndarray, threshold: float = 1.0, lag_time: int = 10) -> np.ndarray:
@@ -497,8 +536,53 @@ class CoordinatesCalculatorAnalysis:
                 self.use_memmap,
                 mode=transition_mode,
             )
-        pooled = np.concatenate(segments, axis=0)
-        return self._metric_from_pooled(pooled, metric)
+        return self._pooled_metric_values(segments, metric)
+
+    def _pooled_metric_values(self, segments: List[np.ndarray], metric: str) -> np.ndarray:
+        """
+        Compute a pooled metric without materialising the pooled array.
+
+        Streamable metrics accumulate over the frames of every segment. rmsf is
+        the square root of the summed x/y/z variances, so it rides on the same
+        variance accumulator. Anything that needs a whole column at once (mad)
+        pools one feature block at a time.
+
+        Parameters
+        ----------
+        segments : list
+            List of coordinate arrays to pool along the frame axis
+        metric : str
+            Metric name
+
+        Returns
+        -------
+        numpy.ndarray
+            Pooled metric values per coordinate
+        """
+        if metric == "cv":
+            return self._cv_from(
+                self._pooled_metric_values(segments, "mean"),
+                self._pooled_metric_values(segments, "std"),
+            )
+        if metric == "rmsf":
+            variance = CalculatorStatHelper.compute_pooled_reduction_per_feature(
+                segments, "var", self.chunk_size, self.use_memmap
+            )
+            per_atom = np.sqrt(
+                variance.reshape(-1, COORDINATES_PER_ATOM).sum(axis=1)
+            )
+            return np.repeat(per_atom, COORDINATES_PER_ATOM)
+        reduction = self.POOLED_STREAMING_METRICS.get(metric)
+        if reduction is not None:
+            return CalculatorStatHelper.compute_pooled_reduction_per_feature(
+                segments, reduction, self.chunk_size, self.use_memmap
+            )
+        return CalculatorStatHelper.compute_pooled_func_per_feature(
+            segments,
+            lambda block: self._metric_from_pooled(block, metric),
+            self.chunk_size,
+            self.use_memmap,
+        )
 
     def _metric_from_pooled(self, pooled: np.ndarray, metric: str) -> np.ndarray:
         """

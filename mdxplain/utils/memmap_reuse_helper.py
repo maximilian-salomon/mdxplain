@@ -95,7 +95,7 @@ class MemmapReuseHelper:
         return path.endswith((_SIDECAR_SUFFIX, _PAYLOAD_SUFFIX))
 
     @staticmethod
-    def hash_array(array: np.ndarray, chunk_rows: int = 2000) -> str:
+    def hash_array(array: np.ndarray, chunk_rows: Optional[int] = 2000) -> str:
         """
         Compute a content hash of an array without materializing it fully.
 
@@ -108,20 +108,23 @@ class MemmapReuseHelper:
         ----------
         array : numpy.ndarray
             Array whose content is hashed (regular or memory-mapped).
-        chunk_rows : int, default=2000
-            Number of leading-axis rows read per chunk.
+        chunk_rows : int, optional
+            Number of leading-axis rows read per chunk. A falsy or negative value
+            falls back to the default, since callers pass a configured chunk_size
+            straight through and it may legitimately be unset.
 
         Returns
         -------
         str
             Hex digest identifying the array content.
         """
+        step = chunk_rows if chunk_rows and chunk_rows > 0 else 2000
         hasher = hashlib.blake2b()
         hasher.update(str(array.shape).encode("utf-8"))
         hasher.update(str(array.dtype).encode("utf-8"))
         total = int(array.shape[0]) if array.ndim else 0
-        for start in range(0, total, chunk_rows):
-            chunk = np.ascontiguousarray(array[start : start + chunk_rows])
+        for start in range(0, total, step):
+            chunk = np.ascontiguousarray(array[start : start + step])
             hasher.update(chunk.tobytes())
         return hasher.hexdigest()
 

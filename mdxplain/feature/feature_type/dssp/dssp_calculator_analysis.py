@@ -312,43 +312,177 @@ class DSSPCalculatorAnalysis:
         For standard: counts occurrences of each class.
         """
         encoding_type, n_residues, n_classes = self._detect_encoding(dssp_data)
-        
         if encoding_type == 'onehot':
-            # For one-hot, reshape and average
-            n_frames = dssp_data.shape[0]
-            reshaped = dssp_data.reshape(n_frames, n_residues, n_classes)
-            frequencies = reshaped.mean(axis=0)  # Average over frames
-            
-            # Get class names based on detected classes
-            if n_classes == 4:
-                class_values = np.array(self.simplified_classes)
-            else:
-                class_values = np.array(self.full_classes)
-            
-            return frequencies, class_values
-        
-        else:  # standard encoding
-            n_frames = dssp_data.shape[0]
-            class_values = np.array(self.simplified_classes if simplified else self.full_classes)
-            n_classes = len(class_values)
-            frequencies = np.zeros((n_residues, n_classes), dtype=np.float32)
-            
-            if self.use_memmap:
-                if MemmapUtils.is_memmap_view(dssp_data):
-                    ResourceUtils.tune_memmap(dssp_data, "sequential")
-                for i in range(0, n_frames, self.chunk_size):
-                    end = min(i + self.chunk_size, n_frames)
-                    chunk = dssp_data[i:end]
-                    for class_idx, class_value in enumerate(class_values):
-                        frequencies[:, class_idx] += (chunk == class_value).sum(axis=0).astype(np.float32)
-                if MemmapUtils.is_memmap_view(dssp_data):
-                    ResourceUtils.tune_memmap(dssp_data, "random")
-            else:
-                for class_idx, class_value in enumerate(class_values):
-                    frequencies[:, class_idx] = (dssp_data == class_value).sum(axis=0).astype(np.float32)
-            
-            frequencies /= n_frames
-            return frequencies, class_values
+            return self._onehot_class_frequencies(dssp_data, n_residues, n_classes)
+        return self._standard_class_frequencies(dssp_data, n_residues, simplified)
+
+    def _frame_blocks(self, data: np.ndarray):
+        """
+        Yield (start, end) frame ranges, tuning memmap readahead around them.
+
+        The tuning hint prefetches pages for the sequential frame sweep and is
+        restored afterwards, so the same block loop serves both in-memory and
+        memory-mapped arrays. A single block covers the whole array when the
+        chunk size is at least the frame count.
+
+        Parameters
+        ----------
+        data : numpy.ndarray
+            Array whose first axis is frames
+
+        Yields
+        ------
+        tuple
+            (start, end) frame index bounds of the next block
+
+        Examples
+        --------
+        >>> for start, end in analysis._frame_blocks(dssp_data):
+        ...     block = dssp_data[start:end]
+        """
+        tuned = self.use_memmap and MemmapUtils.is_memmap_view(data)
+        if tuned:
+            ResourceUtils.tune_memmap(data, "sequential")
+        try:
+            for start in range(0, data.shape[0], self.chunk_size):
+                yield start, min(start + self.chunk_size, data.shape[0])
+        finally:
+            if tuned:
+                ResourceUtils.tune_memmap(data, "random")
+
+    def _onehot_class_frequencies(
+        self, dssp_data: np.ndarray, n_residues: int, n_classes: int
+    ) -> tuple:
+        """
+        Average one-hot indicator columns over frames, one frame block at a time.
+
+        Each column is already a 0/1 indicator, so its mean over frames is the
+        class frequency. Frames are summed block-wise in float64 and divided at
+        the end, so peak memory is one block by the encoded width regardless of
+        frame count.
+
+        Parameters
+        ----------
+        dssp_data : numpy.ndarray
+            One-hot DSSP array with shape (n_frames, n_residues * n_classes)
+        n_residues : int
+            Number of residues
+        n_classes : int
+            Number of one-hot classes per residue
+
+        Returns
+        -------
+        tuple[numpy.ndarray, numpy.ndarray]
+            (frequencies, class_values); frequencies has shape
+            (n_residues, n_classes)
+
+        Examples
+        --------
+        >>> freqs, classes = analysis._onehot_class_frequencies(data, 20, 4)
+        """
+        totals = np.zeros(dssp_data.shape[1], dtype=np.float64)
+        for start, end in self._frame_blocks(dssp_data):
+            totals += dssp_data[start:end].sum(axis=0)
+        frequencies = (totals / dssp_data.shape[0]).reshape(n_residues, n_classes)
+        classes = self.simplified_classes if n_classes == 4 else self.full_classes
+        return frequencies.astype(np.float32), np.array(classes)
+
+    def _standard_class_frequencies(
+        self, dssp_data: np.ndarray, n_residues: int, simplified: bool
+    ) -> tuple:
+        """
+        Count each class over frames for char or integer encodings.
+
+        The frequency of a class at a residue is the fraction of frames whose
+        value equals that class. Counts accumulate block-wise so peak memory is
+        one frame block by the residue count.
+
+        Parameters
+        ----------
+        dssp_data : numpy.ndarray
+            DSSP array with shape (n_frames, n_residues)
+        n_residues : int
+            Number of residues
+        simplified : bool
+            Whether to use the four simplified classes or the full class set
+
+        Returns
+        -------
+        tuple[numpy.ndarray, numpy.ndarray]
+            (frequencies, class_values); frequencies has shape
+            (n_residues, n_classes)
+
+        Examples
+        --------
+        >>> freqs, classes = analysis._standard_class_frequencies(data, 20, True)
+        """
+        class_values = np.array(
+            self.simplified_classes if simplified else self.full_classes
+        )
+        frequencies = np.zeros((n_residues, len(class_values)), dtype=np.float32)
+        self._accumulate_class_counts(dssp_data, frequencies, class_values)
+        frequencies /= dssp_data.shape[0]
+        return frequencies, class_values
+
+    def _accumulate_class_counts(
+        self,
+        dssp_data: np.ndarray,
+        frequencies: np.ndarray,
+        class_values: np.ndarray,
+    ) -> None:
+        """
+        Add per-class frame counts into frequencies, one frame block at a time.
+
+        Parameters
+        ----------
+        dssp_data : numpy.ndarray
+            DSSP array with shape (n_frames, n_residues)
+        frequencies : numpy.ndarray
+            Running counts with shape (n_residues, n_classes), updated in place
+        class_values : numpy.ndarray
+            The class values to count
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        >>> analysis._accumulate_class_counts(data, frequencies, class_values)
+        """
+        for start, end in self._frame_blocks(dssp_data):
+            self._count_block(dssp_data[start:end], frequencies, class_values)
+
+    @staticmethod
+    def _count_block(
+        block: np.ndarray,
+        frequencies: np.ndarray,
+        class_values: np.ndarray,
+    ) -> None:
+        """
+        Add the per-class frame counts of one block into frequencies.
+
+        Parameters
+        ----------
+        block : numpy.ndarray
+            Frame block with shape (block_frames, n_residues)
+        frequencies : numpy.ndarray
+            Running counts with shape (n_residues, n_classes), updated in place
+        class_values : numpy.ndarray
+            The class values to count
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        >>> DSSPCalculatorAnalysis._count_block(block, frequencies, class_values)
+        """
+        for class_idx, class_value in enumerate(class_values):
+            frequencies[:, class_idx] += (
+                (block == class_value).sum(axis=0).astype(np.float32)
+            )
 
     def compute_transition_frequency(self, dssp_data: np.ndarray) -> np.ndarray:
         """

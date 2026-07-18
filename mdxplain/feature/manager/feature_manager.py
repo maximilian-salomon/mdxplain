@@ -102,7 +102,7 @@ class FeatureManager:
             purpose="cache directory",
         )
 
-        if chunk_size <= 0 and not isinstance(chunk_size, int):
+        if not isinstance(chunk_size, int) or chunk_size <= 0:
             raise ValueError("Chunk size must be a positive integer.")
 
     def reset_features(self, pipeline_data: PipelineData, feature_type: Optional[Union[str, Any]] = None, strict: bool = True) -> None:

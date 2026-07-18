@@ -86,7 +86,6 @@ class PlotsManager:
     def __init__(
         self,
         use_memmap: bool = True,
-        chunk_size: int = 2000,
         cache_dir: str = "./cache",
     ) -> None:
         """
@@ -96,8 +95,6 @@ class PlotsManager:
         ----------
         use_memmap : bool, default=True
             Whether to use memory mapping for large datasets
-        chunk_size : int, default=2000
-            Chunk size for memory-efficient processing
         cache_dir : str, default="./cache"
             Directory for cache files
 
@@ -106,7 +103,6 @@ class PlotsManager:
         None
         """
         self.use_memmap = use_memmap
-        self.chunk_size = chunk_size
         self.cache_dir = PathUtils.prepare_directory_path(
             cache_dir,
             create=True,

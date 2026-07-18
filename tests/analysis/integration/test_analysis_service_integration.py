@@ -166,20 +166,18 @@ class TestAnalysisServiceIntegration:
         expected_pct = expected_abs.astype(float) / 1.0  # Normalize by total pairs
         np.testing.assert_array_almost_equal(per_frame_pct, expected_pct, decimal=10)
         
-        # Test per-residue statistics using analysis service API
+        # Test per-residue statistics using analysis service API.
+        # The one pair is (0, 2), so residues 0 and 2 each reduce over that single
+        # column (frequency 0.5) and residue 1, with no retained partner, is 0.
+        # The self-distance diagonal is not counted, so residue 0 is 0.5, not 0.25.
         residue_mean = pipeline.analysis.features.contacts.per_residue_mean()
         residue_std = pipeline.analysis.features.contacts.per_residue_std()
-        
-        # Per-residue analysis distributes contacts among participating residues
-        # With 1 contact pair (0,2) and frequency 0.5, each residue gets 0.5/2 = 0.25
-        per_residue_frequency = 0.5 / 2  # Total frequency divided by number of participating residues
-        expected_residue_mean = np.array([per_residue_frequency, per_residue_frequency])  # Residues 0 and 2
-        
-        # For binary pattern with per-residue frequency p=0.25:
-        # std = sqrt(p*(1-p)) = sqrt(0.25*0.75)
-        per_residue_std = np.sqrt(per_residue_frequency * (1 - per_residue_frequency))
-        expected_residue_std = np.array([per_residue_std, per_residue_std])
-        
+
+        expected_residue_mean = np.array([0.5, 0.0, 0.5])  # residues 0, 1, 2
+
+        # Binary column with p=0.5: std = sqrt(p*(1-p)) = 0.5; residue 1 has none.
+        expected_residue_std = np.array([0.5, 0.0, 0.5])
+
         # Test with actual computed values
         np.testing.assert_array_almost_equal(residue_mean, expected_residue_mean, decimal=4)
         np.testing.assert_array_almost_equal(residue_std, expected_residue_std, decimal=4)

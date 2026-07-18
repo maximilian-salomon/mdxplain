@@ -1181,7 +1181,7 @@ class DaskMDTrajectory:
             Copies coordinate, time, and unitcell data chunk-wise
         """
         # Calculate optimal chunk size for memory efficiency
-        chunk_size = min(self.chunk_size, self.n_frames)
+        chunk_size = max(1, min(self.chunk_size, self.n_frames))
         n_chunks = (self.n_frames + chunk_size - 1) // chunk_size
         
         print(f"Copying {self.n_frames} frames in {n_chunks} chunks (offset: {frame_offset})")

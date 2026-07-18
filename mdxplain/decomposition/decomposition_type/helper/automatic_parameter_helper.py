@@ -48,7 +48,7 @@ class AutomaticParameterHelper:
 
     >>> # Variance for large datasets
     >>> large_data = np.memmap('data.dat', dtype='float64', shape=(10000, 500))
-    >>> var = helper.compute_variance_chunked(large_data, chunk_size=1000)
+    >>> var = helper.compute_total_variance(large_data, chunk_size=1000)
     """
 
     @staticmethod
@@ -188,8 +188,13 @@ class AutomaticParameterHelper:
         """
         n_features = data.shape[1]
 
+        # Both branches compute the same quantity: the variance of all elements,
+        # i.e. np.var(data). use_memmap only chooses the memory strategy, never
+        # the formula, so gamma does not depend on it. The old chunked branch
+        # returned the mean of per-feature variances, a different number that
+        # silently changed the kernel when use_memmap was toggled.
         if use_memmap:
-            variance = AutomaticParameterHelper.compute_variance_chunked(
+            variance = AutomaticParameterHelper.compute_total_variance(
                 data, chunk_size
             )
         else:
@@ -222,11 +227,17 @@ class AutomaticParameterHelper:
         return 1.0 / n_features
 
     @staticmethod
-    def compute_variance_chunked(
+    def compute_total_variance(
         data: np.ndarray, chunk_size: int = 1000
     ) -> float:
         """
-        Compute mean variance using chunk-wise processing.
+        Compute the variance of all elements, matching ``np.var(data)``.
+
+        Streams the array in row-chunks so a memory-mapped input never has to be
+        held in RAM, and never forms the full ``(x - mean) ** 2`` temporary that
+        ``np.var`` would allocate. Two passes (global mean, then squared
+        deviations) keep it numerically stable, unlike a one-pass
+        ``E[x^2] - E[x]^2`` which cancels when the mean dwarfs the spread.
 
         Parameters
         ----------
@@ -238,26 +249,26 @@ class AutomaticParameterHelper:
         Returns
         -------
         float
-            Mean variance across all features
+            Population variance over every element of the matrix
 
         Examples
         --------
         >>> helper = AutomaticParameterHelper()
         >>> data = np.random.rand(10000, 100)
-        >>> var = helper.compute_variance_chunked(data, chunk_size=1000)
+        >>> var = helper.compute_total_variance(data, chunk_size=1000)
         """
         n_samples, n_features = data.shape
-        mean = np.zeros(n_features, dtype=np.float64)
+        total = n_samples * n_features
 
+        running_sum = 0.0
         for i in range(0, n_samples, chunk_size):
-            chunk = data[i : i + chunk_size]
-            mean += chunk.sum(axis=0)
-        mean /= n_samples
+            chunk = np.asarray(data[i : i + chunk_size], dtype=np.float64)
+            running_sum += float(chunk.sum())
+        mean = running_sum / total
 
-        variance = np.zeros(n_features, dtype=np.float64)
+        sum_squares = 0.0
         for i in range(0, n_samples, chunk_size):
-            chunk = data[i : i + chunk_size]
-            variance += ((chunk - mean) ** 2).sum(axis=0)
-        variance /= n_samples
+            chunk = np.asarray(data[i : i + chunk_size], dtype=np.float64)
+            sum_squares += float(((chunk - mean) ** 2).sum())
 
-        return float(variance.mean())
+        return sum_squares / total

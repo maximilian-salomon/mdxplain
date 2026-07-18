@@ -675,35 +675,96 @@ class RepresentativeFinderHelper:
         Dict[int, float]
             Mapping from feature index to positive scale
         """
-        if selected_data is None:
-            if feature_data_getter is None:
-                raise ValueError("Either selected_data or feature_data_getter must be provided")
-            selected_data = feature_data_getter()
-
+        selected_data = RepresentativeFinderHelper._resolve_selected_data(
+            selected_data, feature_data_getter
+        )
+        # Both branches produce the same per-feature standard deviation; chunk_size
+        # only decides whether the reduction is streamed, never the result.
         if chunk_size is None or selected_data.shape[0] <= chunk_size:
-            scales = {}
-            for feat_idx in feature_indices:
-                scale = float(np.std(selected_data[:, feat_idx]))
-                scales[feat_idx] = scale if scale > 1e-12 else 1.0
-            return scales
+            stds = np.std(selected_data[:, feature_indices], axis=0)
+        else:
+            stds = np.sqrt(
+                RepresentativeFinderHelper._streamed_feature_variances(
+                    selected_data, feature_indices, chunk_size
+                )
+            )
+        return {
+            feat_idx: float(std) if std > 1e-6 else 1.0
+            for feat_idx, std in zip(feature_indices, stds)
+        }
 
-        sums = np.zeros(len(feature_indices), dtype=float)
-        sumsq = np.zeros(len(feature_indices), dtype=float)
+    @staticmethod
+    def _resolve_selected_data(selected_data, feature_data_getter):
+        """
+        Return the feature matrix, fetching it lazily if only a getter is given.
+
+        Parameters
+        ----------
+        selected_data : np.ndarray or None
+            Feature matrix, or None to fetch it from the getter
+        feature_data_getter : callable or None
+            Lazy getter returning the feature matrix
+
+        Returns
+        -------
+        np.ndarray
+            The resolved feature matrix
+
+        Raises
+        ------
+        ValueError
+            If neither a matrix nor a getter is provided
+        """
+        if selected_data is not None:
+            return selected_data
+        if feature_data_getter is None:
+            raise ValueError(
+                "Either selected_data or feature_data_getter must be provided"
+            )
+        return feature_data_getter()
+
+    @staticmethod
+    def _streamed_feature_variances(
+        selected_data: np.ndarray, feature_indices: List[int], chunk_size: int
+    ) -> np.ndarray:
+        """
+        Compute per-feature variance in two streamed passes.
+
+        Matches ``np.std(..., axis=0) ** 2`` for the selected features. The
+        one-pass ``E[x^2] - E[x]^2`` it replaces cancels catastrophically when the
+        mean dwarfs the spread — exactly molecular distances (mean 5, std 0.01) —
+        and its clamped-to-zero result silently fell back to a scale of 1.0.
+
+        Parameters
+        ----------
+        selected_data : np.ndarray
+            Feature matrix or memmap-backed array
+        feature_indices : List[int]
+            Indices of the features to reduce
+        chunk_size : int
+            Number of frames per chunk
+
+        Returns
+        -------
+        np.ndarray
+            Population variance per selected feature
+        """
         n_frames = selected_data.shape[0]
 
+        sums = np.zeros(len(feature_indices), dtype=float)
         for start_idx in range(0, n_frames, chunk_size):
             end_idx = min(start_idx + chunk_size, n_frames)
             chunk = selected_data[start_idx:end_idx][:, feature_indices]
             sums += np.sum(chunk, axis=0)
-            sumsq += np.sum(np.square(chunk), axis=0)
-
         means = sums / n_frames
-        variances = np.maximum((sumsq / n_frames) - np.square(means), 0.0)
 
-        return {
-            feat_idx: float(np.sqrt(var)) if var > 1e-12 else 1.0
-            for feat_idx, var in zip(feature_indices, variances)
-        }
+        sum_squares = np.zeros(len(feature_indices), dtype=float)
+        for start_idx in range(0, n_frames, chunk_size):
+            end_idx = min(start_idx + chunk_size, n_frames)
+            chunk = selected_data[start_idx:end_idx][:, feature_indices]
+            sum_squares += np.sum(np.square(chunk - means), axis=0)
+
+        return sum_squares / n_frames
 
     @staticmethod
     def _score_frames_tree_based(

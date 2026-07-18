@@ -25,7 +25,7 @@ Analysis methods for contact calculations with statistical computations
 and support for memory-mapped arrays and contact pattern analysis.
 """
 
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Tuple
 import numpy as np
 
 from ..helper.calculator_stat_helper import CalculatorStatHelper
@@ -55,7 +55,7 @@ class ContactCalculatorAnalysis:
         ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for large datasets
-        chunk_size : int, default=10000
+        chunk_size : int, default=2000
             Number of frames to process per chunk for memory-mapped arrays
 
         Examples
@@ -125,63 +125,106 @@ class ContactCalculatorAnalysis:
             contacts, self.chunk_size, self.use_memmap, np.mean
         )
 
-    # === PER-COLUMN ANALYSIS (auto-converts 2D to 3D) ===
-    def compute_per_residue_mean(self, contacts: np.ndarray) -> np.ndarray:
+    # === PER-RESIDUE ANALYSIS (reduces over each residue's real partners) ===
+    def _per_residue_metric(
+        self,
+        contacts: np.ndarray,
+        metric: str,
+        pairs: Optional[List[Tuple[int, int]]] = None,
+        n_residues: Optional[int] = None,
+    ) -> np.ndarray:
         """
-        Compute mean contact frequency per residue. Auto-converts condensed to squareform.
+        Reduce condensed contacts to one value per residue over its partners.
+
+        The residue pair of each condensed column comes from ``pairs`` (the
+        service passes the real pairs from the feature metadata); absent them the
+        columns are assumed to be a full upper triangle.
 
         Parameters
         ----------
         contacts : numpy.ndarray
-            Contact array in condensed format (n_frames, n_pairs) -
-            automatically converted to squareform
+            Contact array in condensed format (n_frames, n_pairs)
+        metric : str
+            Per-residue metric name
+        pairs : list of tuple, optional
+            Residue index pair for each condensed column, in column order
+        n_residues : int, optional
+            Number of residues; inferred with pairs when omitted
+
+        Returns
+        -------
+        numpy.ndarray
+            Metric value per residue with shape (n_residues,)
+        """
+        return CalculatorStatHelper.compute_per_residue_reduction(
+            contacts, pairs, n_residues, metric, self.chunk_size, self.use_memmap
+        )
+
+    def compute_per_residue_mean(
+        self, contacts: np.ndarray, pairs=None, n_residues=None
+    ) -> np.ndarray:
+        """
+        Compute the mean contact frequency of each residue with its partners.
+
+        Parameters
+        ----------
+        contacts : numpy.ndarray
+            Contact array in condensed format (n_frames, n_pairs)
+        pairs : list of tuple, optional
+            Residue index pair for each condensed column
+        n_residues : int, optional
+            Number of residues
 
         Returns
         -------
         numpy.ndarray
             Mean contact frequency per residue
         """
-        return CalculatorStatHelper.compute_func_per_column(
-            contacts, np.mean, self.chunk_size, self.use_memmap
-        )
+        return self._per_residue_metric(contacts, "mean", pairs, n_residues)
 
-    def compute_per_residue_std(self, contacts: np.ndarray) -> np.ndarray:
+    def compute_per_residue_std(
+        self, contacts: np.ndarray, pairs=None, n_residues=None
+    ) -> np.ndarray:
         """
-        Compute standard deviation of contacts per residue. Auto-converts condensed to squareform.
+        Compute the standard deviation of each residue's partner contacts.
 
         Parameters
         ----------
         contacts : numpy.ndarray
-            Contact array in condensed format (n_frames, n_pairs) -
-            automatically converted to squareform
+            Contact array in condensed format (n_frames, n_pairs)
+        pairs : list of tuple, optional
+            Residue index pair for each condensed column
+        n_residues : int, optional
+            Number of residues
 
         Returns
         -------
         numpy.ndarray
             Standard deviation of contacts per residue
         """
-        return CalculatorStatHelper.compute_func_per_column(
-            contacts, np.std, self.chunk_size, self.use_memmap
-        )
+        return self._per_residue_metric(contacts, "std", pairs, n_residues)
 
-    def compute_per_residue_sum(self, contacts: np.ndarray) -> np.ndarray:
+    def compute_per_residue_sum(
+        self, contacts: np.ndarray, pairs=None, n_residues=None
+    ) -> np.ndarray:
         """
-        Compute total contact count per residue. Auto-converts condensed to squareform.
+        Compute the total contact count of each residue with its partners.
 
         Parameters
         ----------
         contacts : numpy.ndarray
-            Contact array in condensed format (n_frames, n_pairs) -
-            automatically converted to squareform
+            Contact array in condensed format (n_frames, n_pairs)
+        pairs : list of tuple, optional
+            Residue index pair for each condensed column
+        n_residues : int, optional
+            Number of residues
 
         Returns
         -------
         numpy.ndarray
             Total contact count per residue
         """
-        return CalculatorStatHelper.compute_func_per_column(
-            contacts, np.sum, self.chunk_size, self.use_memmap
-        )
+        return self._per_residue_metric(contacts, "sum", pairs, n_residues)
 
     # === TRANSITION ANALYSIS ===
     def compute_transitions_lagtime(self, contacts: np.ndarray, threshold: int = 1, lag_time: int = 1) -> np.ndarray:
@@ -328,8 +371,17 @@ class ContactCalculatorAnalysis:
                 self.use_memmap,
                 mode=transition_mode,
             )
-        pooled = np.concatenate(segments, axis=0)
-        return self._metric_from_pooled(pooled, metric)
+        if metric == "frequency":
+            # Contact frequency is the mean of a 0/1 column, so it streams.
+            return CalculatorStatHelper.compute_pooled_reduction_per_feature(
+                segments, "mean", self.chunk_size, self.use_memmap
+            )
+        return CalculatorStatHelper.compute_pooled_func_per_feature(
+            segments,
+            lambda block: self._metric_from_pooled(block, metric),
+            self.chunk_size,
+            self.use_memmap,
+        )
 
     def _metric_from_pooled(self, pooled: np.ndarray, metric: str) -> np.ndarray:
         """

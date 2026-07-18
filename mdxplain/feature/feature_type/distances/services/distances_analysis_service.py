@@ -599,7 +599,42 @@ class DistancesAnalysisService(AnalysisServiceBase):
         return self._calculator.distances_per_frame_sum(data)
     
     # === PER-RESIDUE ANALYSIS METHODS ===
-    
+
+    def _per_residue(
+        self,
+        calculator_method: Callable,
+        feature_selector: Optional[str],
+        traj_selection: Optional[Union[str, int, List]],
+    ) -> np.ndarray:
+        """
+        Reduce the selected distances to one value per residue.
+
+        Fetches the selected data and the matching residue pairs, so each residue
+        is reduced over its real partners rather than an assumed full triangle.
+
+        Parameters
+        ----------
+        calculator_method : callable
+            The calculator's compute_per_residue_* method to apply
+        feature_selector : str, optional
+            Name of feature selector for column selection
+        traj_selection : str, int, list, optional
+            Trajectory selection criteria for row selection
+
+        Returns
+        -------
+        np.ndarray
+            Metric value per residue
+        """
+        data = AnalysisDataHelper.get_selected_data(
+            self._pipeline_data, self._feature_type,
+            feature_selector, traj_selection
+        )
+        pairs, n_residues = AnalysisDataHelper.get_residue_pairs(
+            self._pipeline_data, self._feature_type, feature_selector
+        )
+        return calculator_method(data, pairs, n_residues)
+
     def per_residue_mean(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
         """
         Compute mean distance per residue (auto-converts condensed to squareform).
@@ -621,11 +656,9 @@ class DistancesAnalysisService(AnalysisServiceBase):
         >>> # Find most connected residues
         >>> pipeline.analysis.features.distances.per_residue_mean()
         """
-        data = AnalysisDataHelper.get_selected_data(
-            self._pipeline_data, self._feature_type,
-            feature_selector, traj_selection
+        return self._per_residue(
+            self._calculator.compute_per_residue_mean, feature_selector, traj_selection
         )
-        return self._calculator.compute_per_residue_mean(data)
     
     def per_residue_std(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
         """
@@ -648,11 +681,9 @@ class DistancesAnalysisService(AnalysisServiceBase):
         >>> # Find most variable residues
         >>> pipeline.analysis.features.distances.per_residue_std()
         """
-        data = AnalysisDataHelper.get_selected_data(
-            self._pipeline_data, self._feature_type,
-            feature_selector, traj_selection
+        return self._per_residue(
+            self._calculator.compute_per_residue_std, feature_selector, traj_selection
         )
-        return self._calculator.compute_per_residue_std(data)
     
     def per_residue_min(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
         """
@@ -675,11 +706,9 @@ class DistancesAnalysisService(AnalysisServiceBase):
         >>> # Find closest approach distances per residue
         >>> pipeline.analysis.features.distances.per_residue_min()
         """
-        data = AnalysisDataHelper.get_selected_data(
-            self._pipeline_data, self._feature_type,
-            feature_selector, traj_selection
+        return self._per_residue(
+            self._calculator.compute_per_residue_min, feature_selector, traj_selection
         )
-        return self._calculator.compute_per_residue_min(data)
     
     def per_residue_max(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
         """
@@ -702,11 +731,9 @@ class DistancesAnalysisService(AnalysisServiceBase):
         >>> # Find maximum separation distances per residue
         >>> pipeline.analysis.features.distances.per_residue_max()
         """
-        data = AnalysisDataHelper.get_selected_data(
-            self._pipeline_data, self._feature_type,
-            feature_selector, traj_selection
+        return self._per_residue(
+            self._calculator.compute_per_residue_max, feature_selector, traj_selection
         )
-        return self._calculator.compute_per_residue_max(data)
     
     def per_residue_median(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
         """
@@ -729,11 +756,9 @@ class DistancesAnalysisService(AnalysisServiceBase):
         >>> # Robust average distance per residue
         >>> pipeline.analysis.features.distances.per_residue_median()
         """
-        data = AnalysisDataHelper.get_selected_data(
-            self._pipeline_data, self._feature_type,
-            feature_selector, traj_selection
+        return self._per_residue(
+            self._calculator.compute_per_residue_median, feature_selector, traj_selection
         )
-        return self._calculator.compute_per_residue_median(data)
     
     def per_residue_sum(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
         """
@@ -756,11 +781,9 @@ class DistancesAnalysisService(AnalysisServiceBase):
         >>> # Total distance involvement per residue
         >>> pipeline.analysis.features.distances.per_residue_sum()
         """
-        data = AnalysisDataHelper.get_selected_data(
-            self._pipeline_data, self._feature_type,
-            feature_selector, traj_selection
+        return self._per_residue(
+            self._calculator.compute_per_residue_sum, feature_selector, traj_selection
         )
-        return self._calculator.compute_per_residue_sum(data)
     
     def per_residue_variance(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
         """
@@ -783,11 +806,9 @@ class DistancesAnalysisService(AnalysisServiceBase):
         >>> # Distance variance per residue
         >>> pipeline.analysis.features.distances.per_residue_variance()
         """
-        data = AnalysisDataHelper.get_selected_data(
-            self._pipeline_data, self._feature_type,
-            feature_selector, traj_selection
+        return self._per_residue(
+            self._calculator.compute_per_residue_variance, feature_selector, traj_selection
         )
-        return self._calculator.compute_per_residue_variance(data)
     
     def per_residue_range(self, feature_selector: Optional[str] = None, traj_selection: Optional[Union[str, int, List]] = None) -> np.ndarray:
         """
@@ -810,11 +831,9 @@ class DistancesAnalysisService(AnalysisServiceBase):
         >>> # Distance range per residue
         >>> pipeline.analysis.features.distances.per_residue_range()
         """
-        data = AnalysisDataHelper.get_selected_data(
-            self._pipeline_data, self._feature_type,
-            feature_selector, traj_selection
+        return self._per_residue(
+            self._calculator.compute_per_residue_range, feature_selector, traj_selection
         )
-        return self._calculator.compute_per_residue_range(data)
     
     # === TRANSITIONS & STABILITY ===
     

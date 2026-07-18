@@ -111,3 +111,12 @@ cutoff using vdw radii. Soft Contact with linear and sigmoid cut
   Provide Multiple Notebooks – offer various notebooks illustrating different workflows.
   Missing: A page showing where all data is stored (labels, tags, computed arrays, etc.).
 
+Important => The feature selection common denominator should also work ONLY on consensus or seqid instead of full. We should add several modes.
+
+The plots need to be optimized; also, they aren't chunking properly. That could be dangerous.
+
+We need to run the code-style linter through the entire software and fix the IDE issues. There's a lot of cleanup to be done.
+
+Defaults need to be consistent
+
+We have a problem with selection logic, especially with consensus. We need to plan this in detail => How really work with complete different systems. This is in line with the common denominator stuff.

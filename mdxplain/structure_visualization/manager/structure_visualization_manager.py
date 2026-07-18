@@ -35,6 +35,12 @@ if TYPE_CHECKING:
 
 from ..helper.residue_importance_calculator import ResidueImportanceCalculator
 from ..helper.pdb_beta_factor_helper import PdbBetaFactorHelper
+from ..services.structure_viz_feature_importance_service import (
+    StructureVizFeatureImportanceService,
+)
+from ..services.structure_viz_feature_service import (
+    StructureVizFeatureService,
+)
 from ...utils.top_features_utils import TopFeaturesUtils
 from ...utils.path_utils import PathUtils
 
@@ -76,7 +82,6 @@ class StructureVisualizationManager:
     def __init__(
         self,
         use_memmap: bool = False,
-        chunk_size: int = 2000,
         cache_dir: str = "./cache"
     ):
         """
@@ -89,8 +94,6 @@ class StructureVisualizationManager:
         ----------
         use_memmap : bool, default=False
             Whether to use memory mapping for large datasets
-        chunk_size : int, default=2000
-            Chunk size for processing large arrays
         cache_dir : str, default="./cache"
             Base cache directory. Manager creates subdirectory
             "structure_viz" as dedicated output directory.
@@ -106,7 +109,6 @@ class StructureVisualizationManager:
         automatically during initialization.
         """
         self.use_memmap = use_memmap
-        self.chunk_size = chunk_size
         self.cache_dir = PathUtils.prepare_directory_path(
             cache_dir,
             create=True,
@@ -139,9 +141,6 @@ class StructureVisualizationManager:
         ...     "my_viz", "dt_analysis", n_top=10
         ... )
         """
-        from ..services.structure_viz_feature_importance_service import (
-            StructureVizFeatureImportanceService,
-        )
         return StructureVizFeatureImportanceService(self, None)
 
     @property
@@ -167,9 +166,6 @@ class StructureVisualizationManager:
         ...     selector_features="distances"
         ... )
         """
-        from ..services.structure_viz_feature_service import (
-            StructureVizFeatureService,
-        )
         return StructureVizFeatureService(self, None)
 
     def _calculate_beta_factors(

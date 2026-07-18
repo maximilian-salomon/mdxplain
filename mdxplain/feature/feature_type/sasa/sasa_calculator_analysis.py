@@ -52,6 +52,20 @@ class SASACalculatorAnalysis:
     >>> burial_fraction = analysis.compute_burial_fraction(sasa_data, threshold=10.0)
     """
 
+    #: Metrics whose pooled value can be accumulated over frame blocks, and the
+    #: reduction that backs each. cv and the burial/exposure fractions are derived
+    #: from these; mad needs a whole column at once and is pooled one feature
+    #: block at a time instead.
+    POOLED_STREAMING_METRICS = {
+        "mean": "mean",
+        "std": "std",
+        "variance": "var",
+        "min": "min",
+        "max": "max",
+        "range": "ptp",
+        "dynamic_range": "ptp",
+    }
+
     def __init__(self, use_memmap: bool = False, chunk_size: int = 2000) -> None:
         """
         Initialize SASA analysis with configuration parameters.
@@ -676,8 +690,27 @@ class SASACalculatorAnalysis:
         --------
         >>> cv_sasa = analysis.compute_cv(sasa_data)
         """
-        mean_vals = self.compute_mean(sasa_data)
-        std_vals = self.compute_std(sasa_data)
+        return self._cv_from(self.compute_mean(sasa_data), self.compute_std(sasa_data))
+
+    def _cv_from(self, mean_vals: np.ndarray, std_vals: np.ndarray) -> np.ndarray:
+        """
+        Combine a mean and a standard deviation into a coefficient of variation.
+
+        Kept separate so the pooled path derives CV from pooled inputs through
+        the same expression. SASA is non-negative, so the mean is used as-is.
+
+        Parameters
+        ----------
+        mean_vals : numpy.ndarray
+            Mean per residue/atom
+        std_vals : numpy.ndarray
+            Standard deviation per residue/atom
+
+        Returns
+        -------
+        numpy.ndarray
+            CV values per residue/atom
+        """
         return std_vals / (mean_vals + 1e-10)
 
     def compute_exposure_fraction(
@@ -792,8 +825,106 @@ class SASACalculatorAnalysis:
                 self.use_memmap,
                 mode=transition_mode,
             )
-        pooled = np.concatenate(segments, axis=0)
-        return self._metric_from_pooled(pooled, metric, threshold_min, threshold_max)
+        return self._pooled_metric_values(segments, metric, threshold_min, threshold_max)
+
+    def _pooled_metric_values(
+        self,
+        segments: List[np.ndarray],
+        metric: str,
+        threshold_min: float = None,
+        threshold_max: float = None,
+    ) -> np.ndarray:
+        """
+        Compute a pooled metric without materialising the pooled array.
+
+        Streamable metrics accumulate over the frames of every segment. The
+        burial and exposure fractions are the mean of a thresholded 0/1 column,
+        so they stream too. Anything that needs a whole column at once (mad)
+        pools one feature block at a time.
+
+        Parameters
+        ----------
+        segments : list
+            List of SASA arrays to pool along the frame axis
+        metric : str
+            Metric name
+        threshold_min : float, optional
+            Minimum threshold (used for burial_fraction)
+        threshold_max : float, optional
+            Maximum threshold (used for exposure_fraction)
+
+        Returns
+        -------
+        numpy.ndarray
+            Pooled metric values per SASA feature
+        """
+        if metric == "cv":
+            return self._cv_from(
+                self._pooled_metric_values(segments, "mean"),
+                self._pooled_metric_values(segments, "std"),
+            )
+        if metric in ("burial_fraction", "exposure_fraction"):
+            return self._pooled_occupancy_fraction(
+                segments, metric, threshold_min, threshold_max
+            )
+        reduction = self.POOLED_STREAMING_METRICS.get(metric)
+        if reduction is not None:
+            return CalculatorStatHelper.compute_pooled_reduction_per_feature(
+                segments, reduction, self.chunk_size, self.use_memmap
+            )
+        return CalculatorStatHelper.compute_pooled_func_per_feature(
+            segments,
+            lambda block: self._metric_from_pooled(
+                block, metric, threshold_min, threshold_max
+            ),
+            self.chunk_size,
+            self.use_memmap,
+        )
+
+    def _pooled_occupancy_fraction(
+        self,
+        segments: List[np.ndarray],
+        metric: str,
+        threshold_min: float,
+        threshold_max: float,
+    ) -> np.ndarray:
+        """
+        Compute the pooled fraction of frames spent below or above a cutoff.
+
+        Thresholding turns each column into 0/1, and the fraction is that
+        column's mean, so it accumulates over frame blocks like any other mean.
+
+        Parameters
+        ----------
+        segments : list
+            List of SASA arrays to pool along the frame axis
+        metric : str
+            Either 'burial_fraction' or 'exposure_fraction'
+        threshold_min : float, optional
+            Cutoff for burial_fraction
+        threshold_max : float, optional
+            Cutoff for exposure_fraction
+
+        Returns
+        -------
+        numpy.ndarray
+            Fraction per SASA feature between 0 and 1
+        """
+        if metric == "burial_fraction":
+            cutoff = (
+                threshold_min if threshold_min is not None
+                else DEFAULT_BURIAL_THRESHOLD_A2
+            )
+            transform = lambda block: (block < cutoff).astype(np.float64)
+        else:
+            cutoff = (
+                threshold_max if threshold_max is not None
+                else DEFAULT_EXPOSURE_THRESHOLD_A2
+            )
+            transform = lambda block: (block > cutoff).astype(np.float64)
+        return CalculatorStatHelper.compute_pooled_reduction_per_feature(
+            segments, "mean", self.chunk_size, self.use_memmap, transform=transform
+        )
 
     def _metric_from_pooled(
         self,

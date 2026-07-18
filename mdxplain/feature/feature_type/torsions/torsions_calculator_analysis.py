@@ -25,7 +25,7 @@ Analysis utilities for torsion angle data including conformational dynamics,
 angular distributions, and circular statistics with complete per-feature and per-frame metrics.
 """
 
-from typing import List
+from typing import List, Optional, Tuple
 
 import numpy as np
 
@@ -75,6 +75,40 @@ class TorsionsCalculatorAnalysis:
 
     # ===== PER-FEATURE METHODS (per angle) =====
 
+    def _circular_means(self, torsion_data: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Compute the mean sine and mean cosine of each torsion angle.
+
+        Both circular mean and circular variance are derived from this pair, so
+        it is computed in one place. The trigonometry runs inside each chunk:
+        transforming the whole array up front would allocate a full copy of the
+        data before any chunking could take effect, which for a large trajectory
+        is the entire dataset.
+
+        Parameters
+        ----------
+        torsion_data : numpy.ndarray
+            Torsion angles array with shape (n_frames, n_angles) in degrees
+
+        Returns
+        -------
+        Tuple[numpy.ndarray, numpy.ndarray]
+            Mean sine and mean cosine for each torsion angle
+        """
+        sin_mean = CalculatorStatHelper.compute_reduction_per_feature(
+            torsion_data, "mean",
+            chunk_size=self.chunk_size,
+            use_memmap=self.use_memmap,
+            transform=lambda block: np.sin(np.radians(block)),
+        )
+        cos_mean = CalculatorStatHelper.compute_reduction_per_feature(
+            torsion_data, "mean",
+            chunk_size=self.chunk_size,
+            use_memmap=self.use_memmap,
+            transform=lambda block: np.cos(np.radians(block)),
+        )
+        return sin_mean, cos_mean
+
     def compute_mean(self, torsion_data: np.ndarray) -> np.ndarray:
         """
         Compute circular mean for each torsion angle.
@@ -93,16 +127,7 @@ class TorsionsCalculatorAnalysis:
         --------
         >>> mean_angles = analysis.compute_mean(torsion_data)
         """
-        sin_mean = CalculatorStatHelper.compute_func_per_feature(
-            np.sin(np.radians(torsion_data)), np.mean,
-            chunk_size=self.chunk_size,
-            use_memmap=self.use_memmap
-        )
-        cos_mean = CalculatorStatHelper.compute_func_per_feature(
-            np.cos(np.radians(torsion_data)), np.mean,
-            chunk_size=self.chunk_size,
-            use_memmap=self.use_memmap
-        )
+        sin_mean, cos_mean = self._circular_means(torsion_data)
         return np.degrees(np.arctan2(sin_mean, cos_mean))
 
     def compute_std(self, torsion_data: np.ndarray) -> np.ndarray:
@@ -123,7 +148,52 @@ class TorsionsCalculatorAnalysis:
         --------
         >>> std_angles = analysis.compute_std(torsion_data)
         """
-        circular_var = self.compute_variance(torsion_data)
+        return self._circular_std_from(self.compute_variance(torsion_data))
+
+    @staticmethod
+    def _circular_variance_from(
+        sin_mean: np.ndarray, cos_mean: np.ndarray
+    ) -> np.ndarray:
+        """
+        Derive the circular variance from a mean sine and cosine.
+
+        The mean resultant length is the magnitude of an average of unit vectors
+        and therefore cannot exceed 1. Rounding can push it a few ulp past 1,
+        which would make the variance negative and turn the square root in
+        _circular_std_from into NaN — a constant angle is exactly the case that
+        lands on that boundary. Clipping restores the mathematical range instead
+        of masking it.
+
+        Parameters
+        ----------
+        sin_mean : numpy.ndarray
+            Mean sine per torsion angle
+        cos_mean : numpy.ndarray
+            Mean cosine per torsion angle
+
+        Returns
+        -------
+        numpy.ndarray
+            Circular variance per torsion angle, between 0 and 1
+        """
+        mean_resultant_length = np.sqrt(sin_mean**2 + cos_mean**2)
+        return np.clip(1.0 - mean_resultant_length, 0.0, 1.0)
+
+    @staticmethod
+    def _circular_std_from(circular_var: np.ndarray) -> np.ndarray:
+        """
+        Derive the circular standard deviation from the circular variance.
+
+        Parameters
+        ----------
+        circular_var : numpy.ndarray
+            Circular variance per torsion angle, between 0 and 1
+
+        Returns
+        -------
+        numpy.ndarray
+            Circular standard deviation per torsion angle in degrees
+        """
         return np.degrees(np.sqrt(-2 * np.log(1 - circular_var)))
 
     def compute_variance(self, torsion_data: np.ndarray) -> np.ndarray:
@@ -144,19 +214,7 @@ class TorsionsCalculatorAnalysis:
         --------
         >>> var_angles = analysis.compute_variance(torsion_data)
         """
-        sin_mean = CalculatorStatHelper.compute_func_per_feature(
-            np.sin(np.radians(torsion_data)), np.mean,
-            chunk_size=self.chunk_size,
-            use_memmap=self.use_memmap
-        )
-        cos_mean = CalculatorStatHelper.compute_func_per_feature(
-            np.cos(np.radians(torsion_data)), np.mean,
-            chunk_size=self.chunk_size,
-            use_memmap=self.use_memmap
-        )
-        
-        mean_resultant_length = np.sqrt(sin_mean**2 + cos_mean**2)
-        return 1.0 - mean_resultant_length
+        return self._circular_variance_from(*self._circular_means(torsion_data))
 
     def compute_min(self, torsion_data: np.ndarray) -> np.ndarray:
         """
@@ -176,8 +234,8 @@ class TorsionsCalculatorAnalysis:
         --------
         >>> min_angles = analysis.compute_min(torsion_data)
         """
-        return CalculatorStatHelper.compute_func_per_feature(
-            torsion_data, np.min,
+        return CalculatorStatHelper.compute_reduction_per_feature(
+            torsion_data, "min",
             chunk_size=self.chunk_size,
             use_memmap=self.use_memmap
         )
@@ -200,8 +258,8 @@ class TorsionsCalculatorAnalysis:
         --------
         >>> max_angles = analysis.compute_max(torsion_data)
         """
-        return CalculatorStatHelper.compute_func_per_feature(
-            torsion_data, np.max,
+        return CalculatorStatHelper.compute_reduction_per_feature(
+            torsion_data, "max",
             chunk_size=self.chunk_size,
             use_memmap=self.use_memmap
         )
@@ -225,8 +283,9 @@ class TorsionsCalculatorAnalysis:
         >>> mad_angles = analysis.compute_mad(torsion_data)
         """
         def mad_func(data, axis=0):
-            return np.median(np.abs(data - np.median(data)), axis=axis)
-        
+            median = np.median(data, axis=axis, keepdims=True)
+            return np.median(np.abs(data - median), axis=axis)
+
         return CalculatorStatHelper.compute_func_per_feature(
             torsion_data, mad_func,
             chunk_size=self.chunk_size,
@@ -256,25 +315,11 @@ class TorsionsCalculatorAnalysis:
         Uses circular statistics to handle periodicity (-180° to 180°).
         Range is computed as the minimum angular distance that contains all data points.
         """
-        def circular_range(angles, axis=0):
-            max_angles = np.max(angles, axis=axis)
-            min_angles = np.min(angles, axis=axis)
-            
-            # Simple range calculation
-            simple_range = max_angles - min_angles
-            
-            # For torsion angles (-180° to 180°), if range > 180°, 
-            # the actual circular range is smaller going the other way
-            corrected_range = np.where(simple_range > 180.0, 
-                                     360.0 - simple_range, 
-                                     simple_range)
-            return corrected_range
-        
-        return CalculatorStatHelper.compute_func_per_feature(
-            torsion_data, circular_range,
-            chunk_size=self.chunk_size,
-            use_memmap=self.use_memmap
-        )
+        simple_range = self.compute_max(torsion_data) - self.compute_min(torsion_data)
+
+        # For torsion angles (-180° to 180°), if range > 180°,
+        # the actual circular range is smaller going the other way
+        return np.where(simple_range > 180.0, 360.0 - simple_range, simple_range)
 
     # ===== PER-FRAME METHODS (per time step) =====
 
@@ -561,13 +606,11 @@ class TorsionsCalculatorAnalysis:
         >>> diff_means = analysis.compute_differences_mean(torsion_1, torsion_2)
         """
         def circular_mean_preprocessing(data, **kwargs):
-            sin_mean = CalculatorStatHelper.compute_func_per_feature(
-                np.sin(np.radians(data)), np.mean, **kwargs
-            )
-            cos_mean = CalculatorStatHelper.compute_func_per_feature(
-                np.cos(np.radians(data)), np.mean, **kwargs
-            )
-            return np.degrees(np.arctan2(sin_mean, cos_mean))
+            """Reduce a dataset to its circular mean per angle."""
+            # kwargs carry only chunk_size, which already equals self.chunk_size;
+            # going through compute_mean also keeps use_memmap, which
+            # compute_differences does not forward to a custom preprocessor.
+            return self.compute_mean(data)
         
         return CalculatorStatHelper.compute_differences(
             torsion_data_1, torsion_data_2,
@@ -726,9 +769,31 @@ class TorsionsCalculatorAnalysis:
         --------
         >>> cv_angles = analysis.compute_cv(torsion_data)
         """
-        circular_mean = self.compute_mean(torsion_data)
-        circular_std = self.compute_std(torsion_data)
-        return circular_std / (np.abs(circular_mean) + 1e-10)
+        return self._cv_from(
+            self.compute_mean(torsion_data), self.compute_std(torsion_data)
+        )
+
+    def _cv_from(self, mean_vals: np.ndarray, std_vals: np.ndarray) -> np.ndarray:
+        """
+        Combine a circular mean and circular deviation into a coefficient of variation.
+
+        Kept separate so the pooled path derives CV from pooled inputs through
+        the same expression. A circular mean is signed, so it is taken as an
+        absolute value before dividing.
+
+        Parameters
+        ----------
+        mean_vals : numpy.ndarray
+            Circular mean per torsion angle in degrees
+        std_vals : numpy.ndarray
+            Circular standard deviation per torsion angle in degrees
+
+        Returns
+        -------
+        numpy.ndarray
+            CV values per torsion angle
+        """
+        return std_vals / (np.abs(mean_vals) + 1e-10)
 
     def compute_pooled_metric_values(
         self,
@@ -764,29 +829,220 @@ class TorsionsCalculatorAnalysis:
         """
         if not segments:
             return np.array([])
+        if metric in ("transitions", "stability"):
+            window = lag_time if transition_mode == "lagtime" else window_size
+            return self._pooled_transitions_or_stability(
+                segments, metric, transition_threshold, window, transition_mode
+            )
+        return self._pooled_metric_values(segments, metric)
+
+    def _pooled_transitions_or_stability(
+        self,
+        segments: List[np.ndarray],
+        metric: str,
+        threshold: float,
+        window: int,
+        mode: str,
+    ) -> np.ndarray:
+        """
+        Return pooled transition counts or the stability derived from them.
+
+        Parameters
+        ----------
+        segments : list
+            List of torsion arrays to pool along the frame axis
+        metric : str
+            Either 'transitions' or 'stability'
+        threshold : float
+            Transition threshold in degrees
+        window : int
+            Lag time (lagtime mode) or window size (window mode)
+        mode : str
+            Either 'lagtime' or 'window'
+
+        Returns
+        -------
+        numpy.ndarray
+            Transition counts, or stability per angle between 0 and 1
+        """
+        transitions, total_possible = self._pooled_transition_counts(
+            segments, threshold, window, mode
+        )
         if metric == "transitions":
-            window = lag_time if transition_mode == "lagtime" else window_size
-            transitions, _ = CalculatorStatHelper.compute_pooled_transitions(
-                segments,
-                transition_threshold,
-                window,
-                self.chunk_size,
-                self.use_memmap,
-                mode=transition_mode,
-            )
             return transitions
-        if metric == "stability":
-            window = lag_time if transition_mode == "lagtime" else window_size
-            return CalculatorStatHelper.compute_pooled_stability(
-                segments,
-                transition_threshold,
-                window,
-                self.chunk_size,
-                self.use_memmap,
-                mode=transition_mode,
+        if total_possible == 0:
+            return np.ones_like(transitions, dtype=float)
+        return 1.0 - (transitions / total_possible)
+
+    def _pooled_transition_counts(
+        self, segments: List[np.ndarray], threshold: float, window: int, mode: str
+    ) -> Tuple[np.ndarray, int]:
+        """
+        Sum angular transition counts across segments, boundary-safe.
+
+        Each segment is counted on its own so a jump between one segment's last
+        frame and the next segment's first frame is never mistaken for a
+        transition. The per-segment count uses the periodicity-aware angular
+        methods, so a step across the +/-180 degrees wrap counts as the small
+        move it is, matching the non-pooled path.
+
+        Parameters
+        ----------
+        segments : list
+            List of torsion arrays to pool along the frame axis
+        threshold : float
+            Transition threshold in degrees
+        window : int
+            Lag time (lagtime mode) or window size (window mode)
+        mode : str
+            Either 'lagtime' or 'window'
+
+        Returns
+        -------
+        Tuple[numpy.ndarray, int]
+            Total transition counts per angle and the total possible transitions
+        """
+        total = None
+        total_possible = 0
+        for segment in segments:
+            counts, max_possible = self._segment_transition_counts(
+                segment, threshold, window, mode
             )
-        pooled = np.concatenate(segments, axis=0)
-        return self._metric_from_pooled(pooled, metric)
+            if counts is None:
+                continue
+            total_possible += max_possible
+            total = counts if total is None else total + counts
+        if total is None:
+            total = np.zeros(segments[0].shape[1], dtype=float)
+        return total, total_possible
+
+    def _segment_transition_counts(
+        self, segment: np.ndarray, threshold: float, window: int, mode: str
+    ) -> Tuple[Optional[np.ndarray], int]:
+        """
+        Count angular transitions for a single segment.
+
+        Parameters
+        ----------
+        segment : numpy.ndarray
+            One torsion array with shape (n_frames, n_angles)
+        threshold : float
+            Transition threshold in degrees
+        window : int
+            Lag time (lagtime mode) or window size (window mode)
+        mode : str
+            Either 'lagtime' or 'window'
+
+        Returns
+        -------
+        Tuple[Optional[numpy.ndarray], int]
+            Counts per angle and the possible transitions, or (None, 0) if the
+            segment is too short to contain a transition
+        """
+        n_frames = segment.shape[0]
+        max_possible = (
+            n_frames - window if mode == "lagtime" else n_frames - window + 1
+        )
+        if max_possible <= 0:
+            return None, 0
+        if mode == "lagtime":
+            return self.compute_transitions_lagtime(segment, threshold, window), max_possible
+        return self.compute_transitions_window(segment, threshold, window), max_possible
+
+    def _pooled_circular_means(
+        self, segments: List[np.ndarray]
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Compute the pooled mean sine and mean cosine of each torsion angle.
+
+        Parameters
+        ----------
+        segments : list
+            List of torsion arrays to pool along the frame axis
+
+        Returns
+        -------
+        Tuple[numpy.ndarray, numpy.ndarray]
+            Pooled mean sine and mean cosine for each torsion angle
+        """
+        sin_mean = CalculatorStatHelper.compute_pooled_reduction_per_feature(
+            segments, "mean", self.chunk_size, self.use_memmap,
+            transform=lambda block: np.sin(np.radians(block)),
+        )
+        cos_mean = CalculatorStatHelper.compute_pooled_reduction_per_feature(
+            segments, "mean", self.chunk_size, self.use_memmap,
+            transform=lambda block: np.cos(np.radians(block)),
+        )
+        return sin_mean, cos_mean
+
+    def _pooled_metric_values(self, segments: List[np.ndarray], metric: str) -> np.ndarray:
+        """
+        Compute a pooled metric without materialising the pooled array.
+
+        The circular statistics ride on pooled mean sine and cosine, which
+        accumulate over frame blocks. min and max stream directly, range is
+        derived from them, and mad needs a whole column at once so it pools one
+        feature block at a time.
+
+        Parameters
+        ----------
+        segments : list
+            List of torsion arrays to pool along the frame axis
+        metric : str
+            Metric name
+
+        Returns
+        -------
+        numpy.ndarray
+            Pooled metric values per torsion angle
+        """
+        if metric in ("mean", "variance", "std", "cv"):
+            return self._pooled_circular_metric(segments, metric)
+        if metric in ("min", "max"):
+            return CalculatorStatHelper.compute_pooled_reduction_per_feature(
+                segments, metric, self.chunk_size, self.use_memmap
+            )
+        if metric == "range":
+            simple_range = self._pooled_metric_values(
+                segments, "max"
+            ) - self._pooled_metric_values(segments, "min")
+            return np.where(simple_range > 180.0, 360.0 - simple_range, simple_range)
+        return CalculatorStatHelper.compute_pooled_func_per_feature(
+            segments,
+            lambda block: self._metric_from_pooled(block, metric),
+            self.chunk_size,
+            self.use_memmap,
+        )
+
+    def _pooled_circular_metric(
+        self, segments: List[np.ndarray], metric: str
+    ) -> np.ndarray:
+        """
+        Derive a pooled circular statistic from the pooled sine and cosine means.
+
+        Parameters
+        ----------
+        segments : list
+            List of torsion arrays to pool along the frame axis
+        metric : str
+            One of 'mean', 'variance', 'std', 'cv'
+
+        Returns
+        -------
+        numpy.ndarray
+            Pooled circular statistic per torsion angle
+        """
+        sin_mean, cos_mean = self._pooled_circular_means(segments)
+        circular_mean = np.degrees(np.arctan2(sin_mean, cos_mean))
+        if metric == "mean":
+            return circular_mean
+        circular_var = self._circular_variance_from(sin_mean, cos_mean)
+        if metric == "variance":
+            return circular_var
+        circular_std = self._circular_std_from(circular_var)
+        if metric == "std":
+            return circular_std
+        return self._cv_from(circular_mean, circular_std)
 
     def _metric_from_pooled(self, pooled: np.ndarray, metric: str) -> np.ndarray:
         """
