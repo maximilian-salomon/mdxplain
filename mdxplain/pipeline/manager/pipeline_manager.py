@@ -44,6 +44,7 @@ import uuid
 
 from ..entities.pipeline_data import PipelineData
 from ..helper.cache_remap_helper import CacheRemapHelper
+from ..helper.log_helper import LogHelper
 from .auto_inject_proxy import AutoInjectProxy
 from .performance_config import PerformanceConfig
 from ...utils.archive_utils import ArchiveUtils
@@ -238,6 +239,17 @@ class PipelineManager:
             dtype=dtype,
             max_memory_gb=max_memory_gb,
             reuse_memmap_cache=reuse_memmap_cache,
+        )
+        self._log_init_call(
+            stride=stride,
+            concat=concat,
+            selection=selection,
+            use_memmap=use_memmap,
+            reuse_memmap_cache=reuse_memmap_cache,
+            chunk_size=chunk_size,
+            dtype=dtype,
+            cache_dir=cache_dir,
+            max_memory_gb=max_memory_gb,
         )
         self._init_managers(
             stride=stride,
@@ -453,6 +465,85 @@ class PipelineManager:
             dtype=dtype,
             max_memory_gb=max_memory_gb,
             reuse_memmap_cache=reuse_memmap_cache,
+        )
+
+    def _log_init_call(
+        self,
+        stride: int,
+        concat: bool,
+        selection: Optional[str],
+        use_memmap: bool,
+        reuse_memmap_cache: bool,
+        chunk_size: int,
+        dtype: type,
+        cache_dir: str,
+        max_memory_gb: float,
+    ) -> None:
+        """
+        Log the initialization call with all parameters.
+
+        This method records the constructor parameters into the pipeline log
+        for reproducibility and auditing. It is called after the PipelineData
+        container is initialized.
+
+        Parameters
+        ----------
+        stride : int
+            Trajectory stride used by the TrajectoryManager.
+        concat : bool
+            Concatenation flag for trajectory loading.
+        selection : str, optional
+            MDTraj selection string for trajectory loading.
+        use_memmap : bool
+            Whether managers should create memmaps for large matrices.
+        reuse_memmap_cache : bool
+            Whether managers should reuse matching persistent memmap results
+            from the cache instead of recomputing them.
+        chunk_size : int
+            Chunk size used by downstream managers and helpers.
+        dtype : type
+            Data type for feature matrices.
+        cache_dir : str
+            Cache directory for memmaps and intermediate artifacts.
+        max_memory_gb : float
+            Maximum memory budget for memory-aware sampling.
+
+        Returns
+        -------
+        None
+            Logs the initialization call into the pipeline data.
+
+        Notes
+        -----
+        1. Unlike other manager methods, ``PipelineManager.__init__`` is
+           never called through ``AutoInjectProxy``, since the proxy itself
+           is constructed with a ``PipelineData`` instance that does not yet
+           exist during ``__init__``. Automatic call interception (and thus
+           automatic logging via ``LogHelper.log_call``) is therefore
+           unavailable here.
+
+        2. This method explicitly calls ``LogHelper.log_pipeline_init``
+           instead, which registers the special ``"pipeline_init"``
+           operation type via ``LogRegistry.register_operation`` rather than
+           resolving it from ``log_registry.json`` through a normal
+           class/module import. This also avoids a circular import that
+           would otherwise occur if ``PipelineManager`` were imported
+           directly from within the registry.
+        """
+        LogHelper.log_pipeline_init(
+            self._data,
+            PipelineManager,
+            {
+                "stride": stride,
+                "concat": concat,
+                "selection": selection,
+                "use_memmap": use_memmap,
+                "reuse_memmap_cache": reuse_memmap_cache,
+                "chunk_size": chunk_size,
+                "dtype": dtype,
+                "cache_dir": cache_dir,
+                "max_memory_gb": max_memory_gb,
+            },
         )
 
     def _init_managers(

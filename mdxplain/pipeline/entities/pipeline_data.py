@@ -186,6 +186,19 @@ class PipelineData:
         self.structure_visualization_data: Dict[str, StructureVisualizationData] = {}
         self.custom_metadata: Dict[str, Any] = {}
 
+        # Operations log (see mdxplain.pipeline.helper.log_helper.LogHelper).
+        # Populated automatically by AutoInjectProxy for logged operations -
+        # not meant to be written to directly. Single dict grouping the
+        # operations entries themselves plus the bookkeeping state needed
+        # to build them (per-type id counters, tag -> latest-id state,
+        # monotonic global sequence counter).
+        self.log: Dict[str, Any] = {
+            "operations": {},
+            "counters": {},
+            "tag_state": {},
+            "global_seq": 0,
+        }
+
         # Matrix caching for memmap (only used when use_memmap=True)
         # Stores: {cache_key: (memmap_path, optional_frame_mapping)}
         self._matrix_cache: Dict[
@@ -225,6 +238,10 @@ class PipelineData:
         self.feature_importance_data.clear()
         self.structure_visualization_data.clear()
         self.custom_metadata.clear()
+        self.log["operations"].clear()
+        self.log["counters"].clear()
+        self.log["tag_state"].clear()
+        self.log["global_seq"] = 0
 
     def update_max_memory_from_trajectories(self, max_atoms: int) -> None:
         """

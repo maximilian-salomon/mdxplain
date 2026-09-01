@@ -33,6 +33,9 @@ from functools import wraps
 from typing import Any, Union, Tuple, Dict, TYPE_CHECKING
 from inspect import Parameter
 
+from ..helper.log_helper import LogHelper
+from .logging_service_proxy import LoggingServiceProxy
+
 if TYPE_CHECKING:
     from ..entities.pipeline_data import PipelineData
 
@@ -176,6 +179,9 @@ class AutoInjectProxy:
                 pipeline_data_index = i
                 break
 
+        method_name = getattr(method, "__name__", None)
+        owner = type(self._manager)
+
         def injected_method(*args, **kwargs):
             # Validate: User should never pass pipeline_data manually in Pipeline mode
             self._validate_no_manual_pipeline_data(args, kwargs)
@@ -186,7 +192,9 @@ class AutoInjectProxy:
             )
 
             # Call method as bound method - self is already included
-            return method(*args, **kwargs)
+            result = method(*args, **kwargs)
+            LogHelper.log_call(self._pipeline_data, owner, method_name, sig, args, kwargs)
+            return result
 
         # Copy all metadata from original method to preserve function introspection
         injected_method.__name__ = getattr(method, '__name__', 'injected_method')
@@ -410,15 +418,19 @@ class AutoInjectProxy:
                 params = set(sig.parameters.keys()) - {'self'}
                 
                 if 'manager' in params and 'pipeline_data' in params:
-                    return service.__class__(self._manager, self._pipeline_data)
+                    injected_service = service.__class__(self._manager, self._pipeline_data)
                 elif 'pipeline_data' in params:
-                    return service.__class__(self._pipeline_data)
+                    injected_service = service.__class__(self._pipeline_data)
                 elif 'manager' in params:
-                    return service.__class__(self._manager)
+                    injected_service = service.__class__(self._manager)
                 else:
-                    return service
+                    injected_service = service
             except Exception:
-                return service
+                injected_service = service
+
+            # Wrap the (re-)instantiated service so its methods and any
+            # nested sub-service properties log via LogHelper when called.
+            return LoggingServiceProxy(injected_service, self._pipeline_data)
         
         # Default behavior for regular attributes and methods
         attr = getattr(self._manager, name)
