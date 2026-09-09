@@ -103,6 +103,14 @@ class TestStructureServicesIntegration:
         mock_data.chunk_size = 500   # NON-default (Default: 2000)
         mock_data.use_memmap = True  # NON-default (Default: False)
 
+        # Real dict (not Mock) so LogHelper's logging proxy can write into it
+        mock_data.log = {
+            "operations": {},
+            "counters": {},
+            "tag_state": {},
+            "global_seq": 0,
+        }
+
         # Attach to pipeline
         pipeline._data = mock_data
 
