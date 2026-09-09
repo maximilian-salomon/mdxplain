@@ -102,7 +102,7 @@ Issues = "https://github.com/BioFreak95/mdxplain/issues"
 include = ["mdxplain*"]
 
 [tool.setuptools.package-data]
-"*" = ["*.md", "*.txt", "*.yml", "*.yaml"]
+"*" = ["*.md", "*.txt", "*.yml", "*.yaml", "*.json"]
 
 # Tool configurations
 [tool.black]
