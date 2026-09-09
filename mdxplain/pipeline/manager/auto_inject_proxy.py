@@ -33,7 +33,7 @@ from functools import wraps
 from typing import Any, Union, Tuple, Dict, TYPE_CHECKING
 from inspect import Parameter
 
-from ..helper.log_helper import LogHelper
+from ..helper.log_helper.log_helper import LogHelper
 from .logging_service_proxy import LoggingServiceProxy
 
 if TYPE_CHECKING:

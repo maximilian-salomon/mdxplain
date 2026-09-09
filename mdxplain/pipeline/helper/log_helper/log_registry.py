@@ -1,6 +1,9 @@
 # mdxplain - A Python toolkit for molecular dynamics trajectory analysis
 #
-# Author: Maximilian Salomon
+# Author: Maeve Branwen Butler
+# Created with assistance from GitHub Copilot (Claude Sonnet 5.0).
+#
+# Copyright (C) 2026 Maximilian Salomon and Maeve Branwen Butler
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -16,92 +19,39 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Manual registry describing which manager/service methods are logged as
-pipeline operations, and which of their parameters are captured.
+Manual registry defining which manager/service methods are logged as pipeline
+operations and which parameters are captured.
 
-This is a first implementation slice: only the operations exercised by
-``spec/tests/test.ipynb`` (cell 2) are registered. Registry entries are
-looked up by ``AutoInjectProxy``/``LogHelper`` via the (owner class, method
-name) dispatch key - see ``mdxplain/pipeline/helper/log_helper.py``.
+The registry data is stored in ``log_registry.json`` and resolved into the
+runtime format used by the pipeline logging code. Entries are looked up by
+``(owner_class, method_name)`` via ``AutoInjectProxy``/``LogHelper``.
 
-The registry *data* lives in ``log_registry.json`` (same directory) - this
-module only loads that file and resolves it into the runtime shape used by
-the rest of the pipeline logging code. Keeping the data in JSON means it can
-be validated/extended by the ``dev_scripts/check_log_registry.py`` script
-without touching Python code.
+The JSON may use arbitrary nesting for readability. A leaf entry is identified
+by its ``class`` and ``module`` fields. The JSON key only needs to be unique
+within its parent and has no dispatch meaning.
 
-JSON shape (arbitrary nesting depth, grouped by pipeline domain and, within
-it, however closely the folder/class structure needs to be mirrored for
-readability):
+For callable nested services reached through ``.add.<name>``, ``method_name``
+is the access name (e.g. ``"contacts"``), not ``__call__``. The class's
+``__call__`` method is used internally when a real callable is needed.
 
-.. code-block:: json
+Each entry may define:
 
-    {
-      "<domain>": {
-        "<any nesting of grouping keys>": {
-          "<json_key>": {
-            "operation_type": "...",
-            "method_name": "...",
-            "class": "ClassName",
-            "module": "module.path",
-            "emits_tags": [],
-            "affected_by_tags": [],
-            "technical_params": [...],
-            "gui_param_info": {}
-          }
-        }
-      }
-    }
+- ``operation_type``: Pipeline operation type.
+- ``technical_params``: Parameters captured in the log.
+- ``gui_param_info``: GUI metadata.
+- ``emits_tags``: Resource types written by the operation.
+- ``affected_by_tags``: Resource types read by the operation.
+- ``resets_tags``: Resource types fully invalidated by the operation.
 
-``<domain>`` is a readable grouping key (e.g. "trajectory", "feature") and
-does NOT necessarily match a single owner class - some domains (e.g.
-"feature_selector") mix a Manager class (``create``/``select``) with a
-Service class reached through a nested ``.add`` property
-(``contacts`` -> ``ContactsSelectionService``). ``class``/``module`` are
-therefore always given explicitly per method entry.
+Tags refer to resource types, not individual operations. The concrete resource
+instance is resolved from the call parameters via ``RESOURCE_INSTANCE_PARAMS``.
+Tags may contain a ``{param_name}`` placeholder for dynamic resource types.
 
-Below a domain, any number of intermediate grouping keys is allowed (e.g.
-to mirror ``analysis.structure.rmsf.per_atom_service``) - they carry no
-dispatch meaning and exist purely for human readability. A dict node is a
-leaf entry once it has both ``module`` and ``class`` keys; every other dict
-node is recursed into (see ``_iter_leaf_entries``).
+``resets_tags`` invalidates all matching resources rather than recording a
+single write. See ``LogHelper._apply_resets``.
 
-``<json_key>`` only needs to be unique *within* its parent object (plain
-dict key requirement) - it carries no dispatch meaning. By convention it
-equals ``method_name``, and is only qualified as ``"ClassName.method_name"``
-when two different classes in the same domain happen to share a method
-name (common with generic stat method names like "mean"/"std"/"max" across
-several ``*AnalysisService``/``*ReduceService`` classes).
-
-``method_name`` is the exact method name captured at runtime by
-``AutoInjectProxy``/``LoggingServiceProxy`` - for callable services reached
-through a ``.add.<name>(...)`` property (e.g. ``ContactsSelectionService``),
-this is the *property name* (e.g. ``"contacts"``), NOT the literal
-``__call__`` dunder - see ``LoggingServiceProxy.__call__``, which now logs
-under the access name it was obtained through instead of the hardcoded
-``"__call__"``. Since such a name does not exist as a literal attribute on
-the owner class, ``_resolve_dispatch`` falls back to the class's
-``__call__`` method whenever it needs a real callable (e.g. for signature
-introspection) - see ``_resolve_dispatch``. Together with ``class``, this
-is what forms the dispatch identity (``(owner_class, method_name)``) used
-by ``get_operation_type`` - it must be unique per (module, class) pair, but
-MAY repeat across different classes (even within the same domain), which is
-exactly why it is decoupled from the JSON key above.
-
-After loading, each registry entry (flattened, keyed by ``operation_type``)
-is a dict with the following fields (see plan.md, Abschnitt 4, for the full
-design):
-
-- ``dispatch``: (owner class, method name) - reverse of operation_type lookup.
-- ``emits_tags``: List[str] - structural tags this operation sets.
-- ``affected_by_tags``: List[str] - structural tags this operation depends on.
-- ``technical_params``: List[str] - parameter names captured in the log entry.
-- ``gui_param_info``: Dict[str, dict] - GUI metadata for parameters (empty
-  for this first slice - not yet populated).
-
-NOTE: emits_tags/affected_by_tags are left mostly empty in this first slice.
-Only the trajectory-slicing-style dependency chain is not yet exercised by
-cell 2, so structural tag dependencies are deferred to a follow-up pass.
+Only operations covered by ``spec/tests/test.ipynb`` are currently registered;
+the remaining entries will be added in a follow-up pass.
 """
 
 from __future__ import annotations
@@ -111,8 +61,6 @@ import json
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, Iterator, Tuple, Type
-
-_REGISTRY_JSON_PATH = Path(__file__).parent / "log_registry.json"
 
 
 class LogRegistry:
@@ -124,9 +72,23 @@ class LogRegistry:
     variables. Use the public staticmethods below to interact with it.
     """
 
+    _REGISTRY_JSON_PATH = Path(__file__).parent / "log_registry.json"
+
     @staticmethod
     def _iter_leaf_entries(node: Dict[str, Any]) -> Iterator[Dict[str, Any]]:
-        """Recursively yield every leaf entry (dict with "module" and "class") in ``node``."""
+        """
+        Recursively yield every leaf entry (dict with "module" and "class") in ``node``.
+
+        Parameters
+        ----------
+        node : Dict[str, Any]
+            The current node in the registry tree to inspect.
+
+        Yields
+        ------
+        Dict[str, Any]
+            Each leaf entry containing "module" and "class".
+        """
         if "module" in node and "class" in node:
             yield node
             return
@@ -191,6 +153,20 @@ class LogRegistry:
 
     @staticmethod
     @lru_cache(maxsize=1)
+    def _load_raw_registry() -> Dict[str, Any]:
+        """
+        Load and cache the raw registry JSON file (read once, on first use).
+
+        Returns
+        -------
+        Dict[str, Any]
+            The raw parsed JSON, keyed by domain (plus "_resource_instance_params").
+        """
+        with open(LogRegistry._REGISTRY_JSON_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    @staticmethod
+    @lru_cache(maxsize=1)
     def _build_registry() -> Dict[str, Dict[str, Any]]:
         """
         Build and cache the base operation registry (built once, on first use).
@@ -201,20 +177,23 @@ class LogRegistry:
             The single shared registry dict, keyed by operation_type. The same
             dict instance is returned on every call (cached), so
             ``LogRegistry.register_operation`` can mutate it in-place to add
-            further entries (e.g. "pipeline_init", registered by
-            ``LogHelper.log_pipeline_init``).
+            further entries.
         """
-        with open(_REGISTRY_JSON_PATH, "r", encoding="utf-8") as f:
-            raw_domains = json.load(f)
+        raw_domains = LogRegistry._load_raw_registry()
 
         registry: Dict[str, Dict[str, Any]] = {}
-        for domain_node in raw_domains.values():
+        for domain_key, domain_node in raw_domains.items():
+            if domain_key.startswith("_"):
+                continue
             for raw_entry in LogRegistry._iter_leaf_entries(domain_node):
                 method_name = raw_entry["method_name"]
-                operation_type = f"{raw_entry['class']}.{method_name}"
+                operation_type = raw_entry.get(
+                    "operation_type", f"{raw_entry['class']}.{method_name}"
+                )
                 registry[operation_type] = {
-                    "emits_tags": raw_entry["emits_tags"],
-                    "affected_by_tags": raw_entry["affected_by_tags"],
+                    "emits_tags": raw_entry.get("emits_tags", []),
+                    "affected_by_tags": raw_entry.get("affected_by_tags", []),
+                    "resets_tags": raw_entry.get("resets_tags", []),
                     "technical_params": raw_entry["technical_params"],
                     "dispatch": LogRegistry._resolve_dispatch(
                         operation_type,
@@ -235,7 +214,7 @@ class LogRegistry:
         owner : Type
             The class that owns the method (Manager or Service class).
         method_name : str
-            The name of the called method (use "__call__" for callable services).
+            The name of the called method.
 
         Returns
         -------
@@ -247,6 +226,24 @@ class LogRegistry:
             if entry["dispatch"] == dispatch:
                 return operation_type
         return None
+
+    @staticmethod
+    def get_instance_params(resource_type: str) -> Tuple[str, ...]:
+        """
+        Look up the candidate instance-name parameters of a resource type.
+
+        Parameters
+        ----------
+        resource_type : str
+            A resource-type tag as used in ``emits_tags``/``affected_by_tags``.
+
+        Returns
+        -------
+        Tuple[str, ...]
+            Ordered candidate parameter names, empty for singleton resources.
+        """
+        raw_domains = LogRegistry._load_raw_registry()
+        return tuple(raw_domains.get("_resource_instance_params", {}).get(resource_type, ()))
 
     @staticmethod
     def get_registry_entry(operation_type: str) -> Dict[str, Any]:

@@ -1,6 +1,9 @@
 # mdxplain - A Python toolkit for molecular dynamics trajectory analysis
 #
-# Author: Maximilian Salomon
+# Author: Maeve Branwen Butler
+# Created with assistance from GitHub Copilot (Claude Sonnet 5.0).
+#
+# Copyright (C) 2026 Maximilian Salomon and Maeve Branwen Butler
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -30,7 +33,7 @@ import inspect
 from functools import wraps
 from typing import Any, TYPE_CHECKING
 
-from ..helper.log_helper import LogHelper
+from ..helper.log_helper.log_helper import LogHelper
 
 if TYPE_CHECKING:
     from ..entities.pipeline_data import PipelineData
@@ -112,11 +115,9 @@ class LoggingServiceProxy:
         if isinstance(attr, self._PRIMITIVE_TYPES):
             return attr
 
-        # Non-method, non-primitive attribute (e.g. a nested sub-service
-        # returned by a property): wrap recursively so its own methods /
-        # __call__ also get logged. Passing `name` as access_name lets the
-        # nested proxy log a readable name (e.g. "contacts") instead of
-        # "__call__" if that nested service is itself called directly.
+        # Recursively wrap nested services to log their methods.
+        # __call__ methods will be logged with a readable name (e.g., "contacts")
+        # instead of "__call__".
         return LoggingServiceProxy(attr, self._pipeline_data, access_name=name)
 
     def __call__(self, *args, **kwargs) -> Any:

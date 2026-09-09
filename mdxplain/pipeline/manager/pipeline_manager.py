@@ -44,7 +44,7 @@ import uuid
 
 from ..entities.pipeline_data import PipelineData
 from ..helper.cache_remap_helper import CacheRemapHelper
-from ..helper.log_helper import LogHelper
+from ..helper.log_helper.log_helper import LogHelper
 from .auto_inject_proxy import AutoInjectProxy
 from .performance_config import PerformanceConfig
 from ...utils.archive_utils import ArchiveUtils
@@ -940,6 +940,7 @@ class PipelineManager:
         """
         return self._data.get_data_summary()
 
+    @LogHelper.logged
     def add_custom_metadata(
         self,
         name: str,
@@ -1002,6 +1003,7 @@ class PipelineManager:
         """
         return self._data.get_custom_metadata(name)
 
+    @LogHelper.logged
     def clear_all(self) -> None:
         """
         Clear all pipeline data.
@@ -1657,6 +1659,7 @@ class PipelineManager:
             f"{summary['custom_metadata_entries']} custom metadata entries"
         )
 
+    @LogHelper.logged
     def update_config(
         self,
         chunk_size: Optional[int] = None,

@@ -186,12 +186,7 @@ class PipelineData:
         self.structure_visualization_data: Dict[str, StructureVisualizationData] = {}
         self.custom_metadata: Dict[str, Any] = {}
 
-        # Operations log (see mdxplain.pipeline.helper.log_helper.LogHelper).
-        # Populated automatically by AutoInjectProxy for logged operations -
-        # not meant to be written to directly. Single dict grouping the
-        # operations entries themselves plus the bookkeeping state needed
-        # to build them (per-type id counters, tag -> latest-id state,
-        # monotonic global sequence counter).
+        # Operations log
         self.log: Dict[str, Any] = {
             "operations": {},
             "counters": {},
