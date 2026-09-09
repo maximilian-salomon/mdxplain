@@ -33,6 +33,7 @@ from . import decomposition
 from . import clustering
 from . import pipeline
 from .pipeline import PipelineManager
+from .spec import SpecManager
 from .trajectory import DaskMDTrajectory
 
 __all__ = [
@@ -43,5 +44,6 @@ __all__ = [
     "decomposition",
     "clustering",
     "pipeline",
-    "DaskMDTrajectory"
+    "DaskMDTrajectory",
+    "SpecManager"
 ]

@@ -1,0 +1,533 @@
+{
+  "pipeline": {
+    "modifiers": [
+      {
+        "type": "pipeline_init",
+        "config": {
+          "stride": 1,
+          "concat": false,
+          "selection": null,
+          "use_memmap": true,
+          "reuse_memmap_cache": false,
+          "chunk_size": 1000,
+          "dtype": "<class 'numpy.float32'>",
+          "cache_dir": "/home/maeve/Dokumente/Work/mdxplain/Repository/mdxplain/mdxplain/spec/tests/cache/cache_f8768258b3c642cca78e8dbb0e4a9538_20260908_125739",
+          "max_memory_gb": 6.0
+        }
+      }
+    ]
+  },
+  "trajectory": {
+    "load_trajectories": {
+      "modifiers": [
+        {
+          "type": "TrajectoryManager.load_trajectories",
+          "config": {
+            "data_input": "../../../data/2RJY/",
+            "concat": null,
+            "stride": 1,
+            "selection": null,
+            "force": false
+          }
+        }
+      ]
+    },
+    "add_labels": {
+      "modifiers": [
+        {
+          "type": "TrajectoryManager.add_labels",
+          "config": {
+            "traj_selection": "all",
+            "fragment_definition": null,
+            "fragment_type": null,
+            "fragment_molecule_name": null,
+            "consensus": false,
+            "aa_short": false,
+            "try_web_lookup": true,
+            "force": false,
+            "nomenclature_kwargs": {}
+          }
+        }
+      ]
+    }
+  },
+  "feature": {
+    "distances": {
+      "modifiers": [
+        {
+          "type": "FeatureAddService.distances",
+          "config": {
+            "excluded_neighbors": 1,
+            "use_pbc": true,
+            "traj_selection": "all",
+            "force": false,
+            "force_original": true
+          }
+        }
+      ]
+    },
+    "torsions": {
+      "modifiers": [
+        {
+          "type": "FeatureAddService.torsions",
+          "config": {
+            "calculate_phi": true,
+            "calculate_psi": true,
+            "calculate_omega": true,
+            "calculate_chi": true,
+            "use_pbc": true,
+            "traj_selection": "all",
+            "force": false,
+            "force_original": true
+          }
+        }
+      ]
+    },
+    "contacts": {
+      "modifiers": [
+        {
+          "type": "FeatureAddService.contacts",
+          "config": {
+            "cutoff": 4.5,
+            "traj_selection": "all",
+            "force": false,
+            "force_original": true
+          }
+        }
+      ]
+    }
+  },
+  "feature_selection": {
+    "contacts_only": {
+      "modifiers": [
+        {
+          "type": "FeatureSelectorManager.create",
+          "config": {
+            "name": "contacts_only"
+          }
+        },
+        {
+          "type": "ContactsSelectionService.contacts",
+          "config": {
+            "selector_name": "contacts_only",
+            "selection": "all",
+            "use_reduced": false,
+            "common_denominator": true,
+            "traj_selection": "all",
+            "require_all_partners": false
+          }
+        },
+        {
+          "type": "FeatureSelectorManager.select",
+          "config": {
+            "name": "contacts_only",
+            "reference_traj": null
+          }
+        }
+      ]
+    },
+    "contacts_with_frequency_reduction": {
+      "modifiers": [
+        {
+          "type": "FeatureSelectorManager.create",
+          "config": {
+            "name": "contacts_with_frequency_reduction"
+          }
+        },
+        {
+          "type": "ContactsSelectionService.with_frequency_reduction",
+          "config": {
+            "selector_name": "contacts_with_frequency_reduction",
+            "selection": "all",
+            "threshold_min": 0.5,
+            "threshold_max": null,
+            "cross_trajectory": null,
+            "use_reduced": false,
+            "common_denominator": true,
+            "traj_selection": "all",
+            "require_all_partners": false,
+            "cross_trajectory_intersection": null,
+            "cross_trajectory_union": null,
+            "cross_trajectory_pooled": null
+          }
+        }
+      ]
+    }
+  },
+  "decomposition": {
+    "ContactKernelPCA": {
+      "modifiers": [
+        {
+          "type": "DecompositionAddService.contact_kernel_pca",
+          "config": {
+            "selection_name": "contacts_only",
+            "n_components": 4,
+            "gamma": "scale",
+            "use_nystrom": false,
+            "n_landmarks": 2000,
+            "landmark_selection": "kmeans",
+            "random_state": null,
+            "use_parallel": false,
+            "n_jobs": -1,
+            "min_chunk_size": 1000,
+            "max_blas_threads": 1,
+            "auto_limit_blas": true,
+            "offset": 0,
+            "decomposition_name": "ContactKernelPCA",
+            "data_selector_name": null,
+            "force": false
+          }
+        }
+      ]
+    }
+  },
+  "clustering": {
+    "DPA_ContactKPC": {
+      "modifiers": [
+        {
+          "type": "DPAAddService.dpa",
+          "config": {
+            "selection_name": "ContactKernelPCA",
+            "Z": 2.5,
+            "metric": "euclidean",
+            "affinity": "nearest_neighbors",
+            "density_algo": "PAk",
+            "k_max": 1000,
+            "D_thr": 23.92812698,
+            "dim_algo": "twoNN",
+            "blockAn": true,
+            "block_ratio": 20,
+            "frac": 1.0,
+            "halos": false,
+            "method": "standard",
+            "sample_fraction": 0.1,
+            "knn_neighbors": 5,
+            "n_jobs": -1,
+            "max_blas_threads": 1,
+            "auto_limit_blas": true,
+            "use_decomposed": true,
+            "cluster_name": "DPA_ContactKPC",
+            "data_selector_name": null,
+            "force": false,
+            "override_cache": false
+          }
+        }
+      ]
+    }
+  },
+  "data_selector": {
+    "cluster": {
+      "modifiers": [
+        {
+          "type": "DataSelectorManager.create_from_clusters",
+          "config": {
+            "group_name": "cluster",
+            "clustering_name": "DPA_ContactKPC",
+            "cluster_ids": null,
+            "noise_id": -1,
+            "min_cluster_size": 2,
+            "force": false
+          }
+        }
+      ]
+    }
+  },
+  "comparison": {
+    "cluster_comparison": {
+      "modifiers": [
+        {
+          "type": "ComparisonManager.create_comparison",
+          "config": {
+            "name": "cluster_comparison",
+            "mode": "one_vs_rest",
+            "feature_selector": "contacts_only",
+            "data_selectors": null,
+            "data_selector_groups": "cluster"
+          }
+        }
+      ]
+    },
+    "cluster_comparison2": {
+      "modifiers": [
+        {
+          "type": "ComparisonManager.create_comparison",
+          "config": {
+            "name": "cluster_comparison2",
+            "mode": "one_vs_rest",
+            "feature_selector": "contacts_with_frequency_reduction",
+            "data_selectors": null,
+            "data_selector_groups": "cluster"
+          }
+        }
+      ]
+    }
+  },
+  "feature_importance": {
+    "feature_importance": {
+      "modifiers": [
+        {
+          "type": "FeatureImportanceAddService.decision_tree",
+          "config": {
+            "comparison_name": "cluster_comparison",
+            "analysis_name": "feature_importance",
+            "criterion": "gini",
+            "splitter": "best",
+            "max_depth": 3,
+            "min_samples_split": 2,
+            "min_samples_leaf": 1,
+            "min_weight_fraction_leaf": 0.0,
+            "max_features": null,
+            "random_state": null,
+            "max_leaf_nodes": null,
+            "min_impurity_decrease": 0.0,
+            "class_weight": null,
+            "ccp_alpha": 0.0,
+            "max_samples": null,
+            "force": false
+          }
+        }
+      ]
+    }
+  },
+  "structure_visualization": {
+    "structure_viz": {
+      "modifiers": [
+        {
+          "type": "StructureVizFeatureImportanceService.create_pdb_with_beta_factors",
+          "config": {
+            "structure_viz_name": "structure_viz",
+            "feature_importance_name": "feature_importance",
+            "n_top": 10,
+            "representative_mode": "best",
+            "output_dir": null
+          }
+        }
+      ]
+    }
+  },
+  "plots": {
+    "membership": {
+      "modifiers": [
+        {
+          "type": "ClusteringFacade.membership",
+          "config": {
+            "clustering_name": "DPA_ContactKPC",
+            "traj_selection": "all",
+            "height_per_trajectory": 0.3,
+            "show_frame_numbers": true,
+            "show_legend": true,
+            "title": null,
+            "save_fig": false,
+            "filename": null,
+            "file_format": "png",
+            "dpi": 300,
+            "title_fontsize": null,
+            "xlabel_fontsize": null,
+            "ylabel_fontsize": null,
+            "tick_fontsize": null,
+            "legend_fontsize": null
+          }
+        }
+      ]
+    },
+    "landscape": {
+      "modifiers": [
+        {
+          "type": "PlotsManager.landscape",
+          "config": {
+            "decomposition_name": "ContactKernelPCA",
+            "dimensions": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "clustering_name": "DPA_ContactKPC",
+            "show_centers": true,
+            "energy_values": true,
+            "use_kde": false,
+            "mask_empty_bins": true,
+            "bins": "auto",
+            "temperature": 310.15,
+            "alpha": 0.6,
+            "cluster_contour": true,
+            "cluster_contour_voronoi": false,
+            "data_scatter": true,
+            "show_clusters": "all",
+            "tag_coloring": null,
+            "scatter_show_all": false,
+            "center_marker": "X",
+            "center_size": 200,
+            "scatter_size": 1,
+            "background_color": true,
+            "class_colors": true,
+            "tag_densities": false,
+            "title": null,
+            "xaxis_label": null,
+            "yaxis_label": null,
+            "xlim": null,
+            "ylim": null,
+            "subplot_size": 6.0,
+            "save_fig": false,
+            "filename": null,
+            "file_format": "png",
+            "dpi": 300,
+            "title_fontsize": null,
+            "xlabel_fontsize": null,
+            "ylabel_fontsize": null,
+            "tick_fontsize": null,
+            "legend_fontsize": null,
+            "contour_label_fontsize": null
+          }
+        }
+      ]
+    },
+    "decision_trees": {
+      "modifiers": [
+        {
+          "type": "FeatureImportanceFacade.decision_trees",
+          "config": {
+            "feature_importance_name": "feature_importance",
+            "max_depth_display": null,
+            "max_cols": 2,
+            "subplot_width": 10.0,
+            "subplot_height": 8.0,
+            "title": null,
+            "save_fig": false,
+            "filename": null,
+            "file_format": "png",
+            "dpi": 300,
+            "render": true,
+            "separate_trees": "auto",
+            "width_scale_factor": 1.0,
+            "height_scale_factor": 1.0,
+            "short_labels": null,
+            "short_naming": null,
+            "short_layout": false,
+            "short_edge_labels": null,
+            "wrap_length": 40,
+            "hide_node_frames": null,
+            "show_edge_symbols": null,
+            "hide_feature_type_prefix": null,
+            "hide_path": null,
+            "edge_symbol_fontsize": null
+          }
+        }
+      ]
+    },
+    "decision_trees_1": {
+      "modifiers": [
+        {
+          "type": "FeatureImportanceFacade.decision_trees",
+          "config": {
+            "feature_importance_name": "feature_importance",
+            "max_depth_display": null,
+            "max_cols": 2,
+            "subplot_width": 10.0,
+            "subplot_height": 8.0,
+            "title": null,
+            "save_fig": false,
+            "filename": null,
+            "file_format": "png",
+            "dpi": 300,
+            "render": true,
+            "separate_trees": "auto",
+            "width_scale_factor": 1.0,
+            "height_scale_factor": 1.0,
+            "short_labels": null,
+            "short_naming": null,
+            "short_layout": false,
+            "short_edge_labels": null,
+            "wrap_length": 40,
+            "hide_node_frames": null,
+            "show_edge_symbols": null,
+            "hide_feature_type_prefix": null,
+            "hide_path": null,
+            "edge_symbol_fontsize": null
+          }
+        }
+      ]
+    },
+    "time_series": {
+      "modifiers": [
+        {
+          "type": "FeatureImportanceFacade.time_series",
+          "config": {
+            "feature_importance_name": "feature_importance",
+            "n_top": 5,
+            "traj_selection": "all",
+            "use_time": true,
+            "tags_for_coloring": null,
+            "allow_multi_tag_plotting": false,
+            "clustering_name": "DPA_ContactKPC",
+            "membership_per_feature": true,
+            "membership_traj_selection": "all",
+            "contact_transformation": true,
+            "max_cols": 2,
+            "long_labels": false,
+            "subplot_height": 2.5,
+            "membership_bar_height": null,
+            "show_legend": true,
+            "contact_threshold": 4.5,
+            "title": null,
+            "save_fig": false,
+            "filename": null,
+            "file_format": "png",
+            "dpi": 300,
+            "smoothing": true,
+            "smoothing_method": "savitzky",
+            "smoothing_window": 51,
+            "smoothing_polyorder": 3,
+            "show_unsmoothed_background": true,
+            "title_fontsize": null,
+            "subplot_title_fontsize": null,
+            "xlabel_fontsize": null,
+            "ylabel_fontsize": null,
+            "tick_fontsize": null,
+            "legend_fontsize": null,
+            "legend_title_fontsize": null,
+            "discrete_plot_style": "step",
+            "discrete_layout": "auto",
+            "discrete_offset_span": 0.28,
+            "discrete_auto_offset_threshold": 15,
+            "thickness": 1.0,
+            "colors": null,
+            "vertical_markers": null,
+            "vertical_marker_labels": null,
+            "vertical_marker_label_colors": null,
+            "vertical_marker_mode": "auto"
+          }
+        }
+      ]
+    },
+    "violins": {
+      "modifiers": [
+        {
+          "type": "FeatureImportanceFacade.violins",
+          "config": {
+            "feature_importance_name": "feature_importance",
+            "n_top": 10,
+            "contact_transformation": true,
+            "max_cols": 4,
+            "long_labels": false,
+            "contact_threshold": 4.5,
+            "title": null,
+            "legend_title": null,
+            "legend_labels": null,
+            "save_fig": false,
+            "filename": null,
+            "file_format": "png",
+            "dpi": 300,
+            "title_fontsize": null,
+            "subplot_title_fontsize": null,
+            "ylabel_fontsize": null,
+            "tick_fontsize": null,
+            "legend_fontsize": null,
+            "legend_title_fontsize": null
+          }
+        }
+      ]
+    }
+  },
+  "analysis": {}
+}
