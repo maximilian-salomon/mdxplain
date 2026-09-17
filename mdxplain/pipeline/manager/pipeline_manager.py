@@ -44,7 +44,7 @@ import uuid
 
 from ..entities.pipeline_data import PipelineData
 from ..helper.cache_remap_helper import CacheRemapHelper
-from ..helper.log_helper.log_helper import LogHelper
+from ..helper.log_helper import LogHelper
 from .auto_inject_proxy import AutoInjectProxy
 from .performance_config import PerformanceConfig
 from ...utils.archive_utils import ArchiveUtils
@@ -525,7 +525,7 @@ class PipelineManager:
         2. This method explicitly calls ``LogHelper.log_pipeline_init``
            instead, which registers the special ``"pipeline_init"``
            operation type via ``LogRegistry.register_operation`` rather than
-           resolving it from ``log_registry.json`` through a normal
+           resolving it from ``registry.json`` through a normal
            class/module import. This also avoids a circular import that
            would otherwise occur if ``PipelineManager`` were imported
            directly from within the registry.

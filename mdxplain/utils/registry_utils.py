@@ -22,19 +22,18 @@
 Manual registry defining which manager/service methods are logged as pipeline
 operations and which parameters are captured.
 
-The registry data is stored in ``log_registry.json`` and resolved into the
+The registry data is stored in ``registry.json`` and resolved into the
 runtime format used by the pipeline logging code. Entries are looked up by
 ``(owner_class, method_name)`` via ``AutoInjectProxy``/``LogHelper``.
 
-The JSON may use arbitrary nesting for readability. A leaf entry is identified
-by its ``class`` and ``module`` fields. The JSON key only needs to be unique
-within its parent and has no dispatch meaning.
+A leaf entry is identified by its ``class`` and ``module`` fields. The JSON
+key only needs to be unique within its parent and has no dispatch meaning.
 
 For callable nested services reached through ``.add.<name>``, ``method_name``
 is the access name (e.g. ``"contacts"``), not ``__call__``. The class's
 ``__call__`` method is used internally when a real callable is needed.
 
-Each entry may define:
+Each registryentry defines:
 
 - ``operation_type``: Pipeline operation type.
 - ``technical_params``: Parameters captured in the log.
@@ -46,33 +45,29 @@ Each entry may define:
 Tags refer to resource types, not individual operations. The concrete resource
 instance is resolved from the call parameters via ``RESOURCE_INSTANCE_PARAMS``.
 Tags may contain a ``{param_name}`` placeholder for dynamic resource types.
-
-``resets_tags`` invalidates all matching resources rather than recording a
-single write. See ``LogHelper._apply_resets``.
-
-Only operations covered by ``spec/tests/test.ipynb`` are currently registered;
-the remaining entries will be added in a follow-up pass.
 """
 
 from __future__ import annotations
 
-import importlib
 import json
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, Iterator, Tuple, Type
 
 
-class LogRegistry:
+class RegistryUtils:
     """
     Namespace for the manual operation registry (build/lookup/register).
 
     All state lives inside the ``_build_registry`` cache (an
     ``lru_cache``-wrapped staticmethod), never as bare module-level
-    variables. Use the public staticmethods below to interact with it.
+    variables.
     """
 
-    _REGISTRY_JSON_PATH = Path(__file__).parent / "log_registry.json"
+    _REGISTRY_JSON_PATH = (
+        Path(__file__).parent
+        / "registry.json"
+    )
 
     @staticmethod
     def _iter_leaf_entries(node: Dict[str, Any]) -> Iterator[Dict[str, Any]]:
@@ -94,62 +89,7 @@ class LogRegistry:
             return
         for value in node.values():
             if isinstance(value, dict):
-                yield from LogRegistry._iter_leaf_entries(value)
-
-    @staticmethod
-    def _resolve_dispatch(
-        operation_type: str,
-        module_path: str,
-        class_name: str,
-        method_name: str,
-    ) -> Tuple[Type, str]:
-        """
-        Resolve a ``module``/``class``/``method_name`` registry entry to a
-        real ``(owner_class, method_name)`` dispatch tuple.
-
-        Parameters
-        ----------
-        operation_type : str
-            Name of the operation being resolved, only used for error context.
-        module_path : str
-            Dotted module path, e.g.
-            ``"mdxplain.trajectory.manager.trajectory_manager"``.
-        class_name : str
-            Name of the class within ``module_path``, e.g. ``"TrajectoryManager"``.
-        method_name : str
-            Method name as captured at runtime (may be an access-name alias
-            for ``__call__`` on callable services - not necessarily a literal
-            attribute of the resolved class, see module docstring).
-
-        Returns
-        -------
-        Tuple[Type, str]
-            The resolved ``(owner_class, method_name)`` tuple. ``method_name``
-            is returned unchanged (not resolved to ``__call__``) since it must
-            match exactly what is captured at runtime for dispatch lookup.
-
-        Raises
-        ------
-        ValueError
-            If the module cannot be imported or has no such class.
-        """
-        try:
-            module = importlib.import_module(module_path)
-        except ImportError as exc:
-            raise ValueError(
-                f"log_registry.json: cannot import module '{module_path}' "
-                f"for dispatch of '{operation_type}'"
-            ) from exc
-
-        try:
-            owner = getattr(module, class_name)
-        except AttributeError as exc:
-            raise ValueError(
-                f"log_registry.json: module '{module_path}' has no class "
-                f"'{class_name}' (dispatch of '{operation_type}')"
-            ) from exc
-
-        return owner, method_name
+                yield from RegistryUtils._iter_leaf_entries(value)
 
     @staticmethod
     @lru_cache(maxsize=1)
@@ -162,7 +102,7 @@ class LogRegistry:
         Dict[str, Any]
             The raw parsed JSON, keyed by domain (plus "_resource_instance_params").
         """
-        with open(LogRegistry._REGISTRY_JSON_PATH, "r", encoding="utf-8") as f:
+        with open(RegistryUtils._REGISTRY_JSON_PATH, "r", encoding="utf-8") as f:
             return json.load(f)
 
     @staticmethod
@@ -179,28 +119,28 @@ class LogRegistry:
             ``LogRegistry.register_operation`` can mutate it in-place to add
             further entries.
         """
-        raw_domains = LogRegistry._load_raw_registry()
+        raw_domains = RegistryUtils._load_raw_registry()
 
         registry: Dict[str, Dict[str, Any]] = {}
         for domain_key, domain_node in raw_domains.items():
             if domain_key.startswith("_"):
                 continue
-            for raw_entry in LogRegistry._iter_leaf_entries(domain_node):
+            for raw_entry in RegistryUtils._iter_leaf_entries(domain_node):
                 method_name = raw_entry["method_name"]
                 operation_type = raw_entry.get(
                     "operation_type", f"{raw_entry['class']}.{method_name}"
                 )
                 registry[operation_type] = {
+                    "domain": domain_key,
                     "emits_tags": raw_entry.get("emits_tags", []),
                     "affected_by_tags": raw_entry.get("affected_by_tags", []),
                     "resets_tags": raw_entry.get("resets_tags", []),
                     "technical_params": raw_entry["technical_params"],
-                    "dispatch": LogRegistry._resolve_dispatch(
-                        operation_type,
-                        raw_entry["module"],
-                        raw_entry["class"],
-                        method_name,
-                    ),
+                    "dispatch": {
+                        "module": raw_entry["module"],
+                        "class": raw_entry["class"],
+                        "method_name": method_name,
+                    },
                 }
         return registry
 
@@ -221,9 +161,12 @@ class LogRegistry:
         str or None
             The registered operation_type, or None if this method is not logged.
         """
-        dispatch = (owner, method_name)
-        for operation_type, entry in LogRegistry._build_registry().items():
-            if entry["dispatch"] == dispatch:
+        for operation_type, entry in RegistryUtils._build_registry().items():
+            if (
+                entry["dispatch"]["module"] == owner.__module__
+                and entry["dispatch"]["class"] == owner.__name__
+                and entry["dispatch"]["method_name"] == method_name
+            ):
                 return operation_type
         return None
 
@@ -242,7 +185,7 @@ class LogRegistry:
         Tuple[str, ...]
             Ordered candidate parameter names, empty for singleton resources.
         """
-        raw_domains = LogRegistry._load_raw_registry()
+        raw_domains = RegistryUtils._load_raw_registry()
         return tuple(raw_domains.get("_resource_instance_params", {}).get(resource_type, ()))
 
     @staticmethod
@@ -260,10 +203,70 @@ class LogRegistry:
         Dict[str, Any]
             The registry entry for ``operation_type``.
         """
-        return LogRegistry._build_registry()[operation_type]
+        return RegistryUtils._build_registry()[operation_type]
 
     @staticmethod
-    def register_operation(operation_type: str, entry: Dict[str, Any]) -> None:
+    def get_domain(operation_type: str) -> str:
+        """
+        Look up the top-level domain of a registered operation_type.
+
+        Parameters
+        ----------
+        operation_type : str
+            Registered operation type name (``"ClassName.method_name"``).
+
+        Returns
+        -------
+        str
+            The domain (top-level key in ``log_registry.json``) this
+            operation belongs to, e.g. ``"clustering"``.
+
+        Raises
+        ------
+        KeyError
+            If ``operation_type`` is not registered.
+        """
+        return RegistryUtils.get_registry_entry(operation_type)["domain"]
+
+    @staticmethod
+    def _validate_entry_dict(entry: Dict[str, Any]) -> None:
+        """
+        Validate the structure of a registry entry.
+
+        Parameters
+        ----------
+        entry : Dict[str, Any]
+            The registry entry to validate.
+
+        Returns
+        -------
+        None
+            Raises an exception if the entry is invalid.
+        
+        Raises
+        ------
+        Warning
+            If the registry entry does not contain a 'domain' key.
+        ValueError
+            If the registry entry does not contain required keys like 'technical_params' or 'dispatch'.
+        """
+        if "domain" not in entry:
+            raise Warning("Registry entries without domain 'domain' key will be placed outside any specific domain.")
+        if "technical_params" not in entry:
+            raise ValueError("Registry entry must contain a 'technical_params' key.")
+        if "dispatch" not in entry:
+            raise ValueError("Registry entry must contain a 'dispatch' key.")
+        if not isinstance(entry["dispatch"], dict):
+            raise ValueError("Registry entry 'dispatch' must be a dictionary.")
+        required_keys = {"module", "class", "method_name"}
+        if not required_keys.issubset(entry["dispatch"].keys()):
+            raise ValueError(f"Registry entry 'dispatch' must contain the keys: {required_keys}.")
+
+    @staticmethod
+    def register_operation(
+        operation_type: str,
+        entry: Dict[str, Any],
+    ) -> None:
         """
         Register an operation type from a module that cannot be imported here.
 
@@ -283,5 +286,11 @@ class LogRegistry:
         -------
         None
             Updates the shared registry in-place.
+        
+        Raises
+        ------
+        ValueError
+            If the registry entry is invalid.
         """
-        LogRegistry._build_registry()[operation_type] = entry
+        RegistryUtils._validate_entry_dict(entry)
+        RegistryUtils._build_registry()[operation_type] = entry

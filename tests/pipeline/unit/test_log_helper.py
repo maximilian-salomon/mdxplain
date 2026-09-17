@@ -26,7 +26,7 @@ import pytest
 from mdxplain.pipeline.entities.pipeline_data import PipelineData
 from mdxplain.spec.helper.log_graph_helper import LogGraphHelper
 from mdxplain.pipeline.helper.log_helper.log_helper import LogHelper
-from mdxplain.pipeline.helper.log_helper.log_registry import LogRegistry
+from mdxplain.utils.registry_utils import RegistryUtils
 
 
 class _Owner:
@@ -36,7 +36,7 @@ class _Owner:
 def _register(operation_type, emits, affected_by, technical_params, resets=None):
     """Register a synthetic operation and return its dispatch method name."""
     method_name = operation_type
-    LogRegistry.register_operation(
+    RegistryUtils.register_operation(
         operation_type,
         {
             "dispatch": (_Owner, method_name),

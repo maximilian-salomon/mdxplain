@@ -33,7 +33,7 @@ import inspect
 from functools import wraps
 from typing import Any, TYPE_CHECKING
 
-from ..helper.log_helper.log_helper import LogHelper
+from ..helper.log_helper import LogHelper
 
 if TYPE_CHECKING:
     from ..entities.pipeline_data import PipelineData
