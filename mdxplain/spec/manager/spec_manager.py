@@ -31,6 +31,7 @@ from ..services.spec_instances_service import SpecInstancesService
 from ..services.spec_study_service import SpecStudyService
 
 from ..helper.graph_helper import GraphHelper
+from ..helper.pipeline_builder_helper import PipelineBuilderHelper
 from ..helper.spec_builder_helper import SpecBuilderHelper
 from ..helper.spec_io_helper import SpecIOHelper
 from ..helper.spec_validator_helper import SpecValidatorHelper
@@ -172,6 +173,25 @@ class SpecManager:
         None
         """
         SpecIOHelper.write(self.data, path)
+
+    def new_pipeline(self) -> Any:
+        """
+        Build a new, fully configured `PipelineManager` by replaying this spec.
+
+        Linearizes every modifier across all modules into a valid
+        dependency order and replays each one as a real manager/service
+        call (see ``PipelineBuilderHelper.build``). Return values are
+        collected under each modifier's ``mod_name`` in
+        ``self.data.replay_results`` (overwritten on every call - the
+        intended usage is a single build/run per process, e.g. a CLI job
+        on an HPC cluster).
+
+        Returns
+        -------
+        Any
+            The newly built `PipelineManager` instance.
+        """
+        return PipelineBuilderHelper.build(self.data)
 
     def read_json(self, path: Union[str, Path]) -> None:
         """

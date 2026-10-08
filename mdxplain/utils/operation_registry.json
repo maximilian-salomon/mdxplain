@@ -47,6 +47,7 @@
                         "method_name": "to_reference",
                         "class": "RMSDMadService",
                         "module": "mdxplain.analysis.structure.services.rmsd_mad_service",
+                        "access_path": "analysis.structure.rmsd.mad.to_reference",
                         "affected_by_tags": ["trajectory"],
                         "technical_params": {
                             "reference_traj": {"required": false, "default": 0},
@@ -60,6 +61,7 @@
                         "method_name": "frame_to_frame",
                         "class": "RMSDMadService",
                         "module": "mdxplain.analysis.structure.services.rmsd_mad_service",
+                        "access_path": "analysis.structure.rmsd.mad.frame_to_frame",
                         "affected_by_tags": ["trajectory"],
                         "technical_params": {
                             "lag": {"required": false, "default": 1},
@@ -72,6 +74,7 @@
                         "method_name": "window_frame_to_start",
                         "class": "RMSDMadService",
                         "module": "mdxplain.analysis.structure.services.rmsd_mad_service",
+                        "access_path": "analysis.structure.rmsd.mad.window_frame_to_start",
                         "affected_by_tags": ["trajectory"],
                         "technical_params": {
                             "window_size": {"required": true},
@@ -85,6 +88,7 @@
                         "method_name": "window_frame_to_frame",
                         "class": "RMSDMadService",
                         "module": "mdxplain.analysis.structure.services.rmsd_mad_service",
+                        "access_path": "analysis.structure.rmsd.mad.window_frame_to_frame",
                         "affected_by_tags": ["trajectory"],
                         "technical_params": {
                             "window_size": {"required": true},
@@ -101,6 +105,7 @@
                         "method_name": "to_reference",
                         "class": "RMSDMeanService",
                         "module": "mdxplain.analysis.structure.services.rmsd_mean_service",
+                        "access_path": "analysis.structure.rmsd.mean.to_reference",
                         "affected_by_tags": ["trajectory"],
                         "technical_params": {
                             "reference_traj": {"required": false, "default": 0},
@@ -114,6 +119,7 @@
                         "method_name": "frame_to_frame",
                         "class": "RMSDMeanService",
                         "module": "mdxplain.analysis.structure.services.rmsd_mean_service",
+                        "access_path": "analysis.structure.rmsd.mean.frame_to_frame",
                         "affected_by_tags": ["trajectory"],
                         "technical_params": {
                             "lag": {"required": false, "default": 1},
@@ -126,6 +132,7 @@
                         "method_name": "window_frame_to_start",
                         "class": "RMSDMeanService",
                         "module": "mdxplain.analysis.structure.services.rmsd_mean_service",
+                        "access_path": "analysis.structure.rmsd.mean.window_frame_to_start",
                         "affected_by_tags": ["trajectory"],
                         "technical_params": {
                             "window_size": {"required": true},
@@ -139,6 +146,7 @@
                         "method_name": "window_frame_to_frame",
                         "class": "RMSDMeanService",
                         "module": "mdxplain.analysis.structure.services.rmsd_mean_service",
+                        "access_path": "analysis.structure.rmsd.mean.window_frame_to_frame",
                         "affected_by_tags": ["trajectory"],
                         "technical_params": {
                             "window_size": {"required": true},
@@ -155,6 +163,7 @@
                         "method_name": "to_reference",
                         "class": "RMSDMedianService",
                         "module": "mdxplain.analysis.structure.services.rmsd_median_service",
+                        "access_path": "analysis.structure.rmsd.median.to_reference",
                         "affected_by_tags": ["trajectory"],
                         "technical_params": {
                             "reference_traj": {"required": false, "default": 0},
@@ -168,6 +177,7 @@
                         "method_name": "frame_to_frame",
                         "class": "RMSDMedianService",
                         "module": "mdxplain.analysis.structure.services.rmsd_median_service",
+                        "access_path": "analysis.structure.rmsd.median.frame_to_frame",
                         "affected_by_tags": ["trajectory"],
                         "technical_params": {
                             "lag": {"required": false, "default": 1},
@@ -180,6 +190,7 @@
                         "method_name": "window_frame_to_start",
                         "class": "RMSDMedianService",
                         "module": "mdxplain.analysis.structure.services.rmsd_median_service",
+                        "access_path": "analysis.structure.rmsd.median.window_frame_to_start",
                         "affected_by_tags": ["trajectory"],
                         "technical_params": {
                             "window_size": {"required": true},
@@ -193,6 +204,7 @@
                         "method_name": "window_frame_to_frame",
                         "class": "RMSDMedianService",
                         "module": "mdxplain.analysis.structure.services.rmsd_median_service",
+                        "access_path": "analysis.structure.rmsd.median.window_frame_to_frame",
                         "affected_by_tags": ["trajectory"],
                         "technical_params": {
                             "window_size": {"required": true},
@@ -211,6 +223,7 @@
                         "method_name": "per_atom",
                         "class": "RMSFPerAtomService",
                         "module": "mdxplain.analysis.structure.services.rmsf_per_atom_service",
+                        "access_path": "analysis.structure.rmsf.per_atom",
                         "affected_by_tags": ["trajectory"],
                         "technical_params": {
                             "traj_selection": {"required": false, "default": "all"},
@@ -224,6 +237,7 @@
                         "method_name": "to_mean_reference",
                         "class": "RMSFPerAtomService",
                         "module": "mdxplain.analysis.structure.services.rmsf_per_atom_service",
+                        "access_path": "analysis.structure.rmsf.per_atom.to_mean_reference",
                         "affected_by_tags": ["trajectory"],
                         "technical_params": {
                             "traj_selection": {"required": false, "default": "all"},
@@ -236,6 +250,7 @@
                         "method_name": "to_median_reference",
                         "class": "RMSFPerAtomService",
                         "module": "mdxplain.analysis.structure.services.rmsf_per_atom_service",
+                        "access_path": "analysis.structure.rmsf.per_atom.to_median_reference",
                         "affected_by_tags": ["trajectory"],
                         "technical_params": {
                             "traj_selection": {"required": false, "default": "all"},
@@ -248,8 +263,9 @@
                 "per_residue_service": {
                     "to_mean_reference": {
                         "method_name": "to_mean_reference",
-                        "class": "RMSFPerResidueService",
-                        "module": "mdxplain.analysis.structure.services.rmsf_per_residue_service",
+                        "class": "RMSFPerResidueAggregationSelectionFacade",
+                        "module": "mdxplain.analysis.structure.services.rmsf_per_residue_aggregation_selection_facade",
+                        "access_path": "analysis.structure.rmsf.per_residue.to_mean_reference",
                         "affected_by_tags": ["trajectory"],
                         "technical_params": {
                             "traj_selection": {"required": false, "default": "all"},
@@ -257,20 +273,128 @@
                             "cross_trajectory": {"required": false, "default": false},
                             "reference_traj_selection": {"required": false, "default": null}
                         },
-                        "gui_param_info": {}
+                        "gui_param_info": {},
+                        "notes": ["Shortcut on RMSFPerResidueAggregationSelectionFacade, delegates to with_mean_aggregation.to_mean_reference internally."]
                     },
-                    "to_median_reference": {
-                        "method_name": "to_median_reference",
-                        "class": "RMSFPerResidueService",
-                        "module": "mdxplain.analysis.structure.services.rmsf_per_residue_service",
-                        "affected_by_tags": ["trajectory"],
-                        "technical_params": {
-                            "atom_selection": {"required": false, "default": "all"},
-                            "cross_trajectory": {"required": false, "default": false},
-                            "reference_traj_selection": {"required": false, "default": null},
-                            "traj_selection": {"required": false, "default": "all"}
+                    "with_mean_aggregation": {
+                        "to_mean_reference": {
+                            "method_name": "to_mean_reference",
+                            "class": "RMSFPerResidueMeanAggFacade",
+                            "module": "mdxplain.analysis.structure.services.rmsf_per_residue_mean_agg_facade",
+                            "access_path": "analysis.structure.rmsf.per_residue.with_mean_aggregation.to_mean_reference",
+                            "affected_by_tags": ["trajectory"],
+                            "technical_params": {
+                                "traj_selection": {"required": false, "default": "all"},
+                                "atom_selection": {"required": false, "default": "all"},
+                                "cross_trajectory": {"required": false, "default": false},
+                                "reference_traj_selection": {"required": false, "default": null}
+                            },
+                            "gui_param_info": {}
                         },
-                        "gui_param_info": {}
+                        "to_median_reference": {
+                            "method_name": "to_median_reference",
+                            "class": "RMSFPerResidueMeanAggFacade",
+                            "module": "mdxplain.analysis.structure.services.rmsf_per_residue_mean_agg_facade",
+                            "access_path": "analysis.structure.rmsf.per_residue.with_mean_aggregation.to_median_reference",
+                            "affected_by_tags": ["trajectory"],
+                            "technical_params": {
+                                "atom_selection": {"required": false, "default": "all"},
+                                "cross_trajectory": {"required": false, "default": false},
+                                "reference_traj_selection": {"required": false, "default": null},
+                                "traj_selection": {"required": false, "default": "all"}
+                            },
+                            "gui_param_info": {}
+                        }
+                    },
+                    "with_median_aggregation": {
+                        "to_mean_reference": {
+                            "method_name": "to_mean_reference",
+                            "class": "RMSFPerResidueMedianAggFacade",
+                            "module": "mdxplain.analysis.structure.services.rmsf_per_residue_median_agg_facade",
+                            "access_path": "analysis.structure.rmsf.per_residue.with_median_aggregation.to_mean_reference",
+                            "affected_by_tags": ["trajectory"],
+                            "technical_params": {
+                                "traj_selection": {"required": false, "default": "all"},
+                                "atom_selection": {"required": false, "default": "all"},
+                                "cross_trajectory": {"required": false, "default": false},
+                                "reference_traj_selection": {"required": false, "default": null}
+                            },
+                            "gui_param_info": {}
+                        },
+                        "to_median_reference": {
+                            "method_name": "to_median_reference",
+                            "class": "RMSFPerResidueMedianAggFacade",
+                            "module": "mdxplain.analysis.structure.services.rmsf_per_residue_median_agg_facade",
+                            "access_path": "analysis.structure.rmsf.per_residue.with_median_aggregation.to_median_reference",
+                            "affected_by_tags": ["trajectory"],
+                            "technical_params": {
+                                "atom_selection": {"required": false, "default": "all"},
+                                "cross_trajectory": {"required": false, "default": false},
+                                "reference_traj_selection": {"required": false, "default": null},
+                                "traj_selection": {"required": false, "default": "all"}
+                            },
+                            "gui_param_info": {}
+                        }
+                    },
+                    "with_rms_aggregation": {
+                        "to_mean_reference": {
+                            "method_name": "to_mean_reference",
+                            "class": "RMSFPerResidueRmsAggFacade",
+                            "module": "mdxplain.analysis.structure.services.rmsf_per_residue_rms_agg_facade",
+                            "access_path": "analysis.structure.rmsf.per_residue.with_rms_aggregation.to_mean_reference",
+                            "affected_by_tags": ["trajectory"],
+                            "technical_params": {
+                                "traj_selection": {"required": false, "default": "all"},
+                                "atom_selection": {"required": false, "default": "all"},
+                                "cross_trajectory": {"required": false, "default": false},
+                                "reference_traj_selection": {"required": false, "default": null}
+                            },
+                            "gui_param_info": {}
+                        },
+                        "to_median_reference": {
+                            "method_name": "to_median_reference",
+                            "class": "RMSFPerResidueRmsAggFacade",
+                            "module": "mdxplain.analysis.structure.services.rmsf_per_residue_rms_agg_facade",
+                            "access_path": "analysis.structure.rmsf.per_residue.with_rms_aggregation.to_median_reference",
+                            "affected_by_tags": ["trajectory"],
+                            "technical_params": {
+                                "atom_selection": {"required": false, "default": "all"},
+                                "cross_trajectory": {"required": false, "default": false},
+                                "reference_traj_selection": {"required": false, "default": null},
+                                "traj_selection": {"required": false, "default": "all"}
+                            },
+                            "gui_param_info": {}
+                        }
+                    },
+                    "with_rms_median_aggregation": {
+                        "to_mean_reference": {
+                            "method_name": "to_mean_reference",
+                            "class": "RMSFPerResidueRmsMedianAggFacade",
+                            "module": "mdxplain.analysis.structure.services.rmsf_per_residue_rms_median_agg_facade",
+                            "access_path": "analysis.structure.rmsf.per_residue.with_rms_median_aggregation.to_mean_reference",
+                            "affected_by_tags": ["trajectory"],
+                            "technical_params": {
+                                "traj_selection": {"required": false, "default": "all"},
+                                "atom_selection": {"required": false, "default": "all"},
+                                "cross_trajectory": {"required": false, "default": false},
+                                "reference_traj_selection": {"required": false, "default": null}
+                            },
+                            "gui_param_info": {}
+                        },
+                        "to_median_reference": {
+                            "method_name": "to_median_reference",
+                            "class": "RMSFPerResidueRmsMedianAggFacade",
+                            "module": "mdxplain.analysis.structure.services.rmsf_per_residue_rms_median_agg_facade",
+                            "access_path": "analysis.structure.rmsf.per_residue.with_rms_median_aggregation.to_median_reference",
+                            "affected_by_tags": ["trajectory"],
+                            "technical_params": {
+                                "atom_selection": {"required": false, "default": "all"},
+                                "cross_trajectory": {"required": false, "default": false},
+                                "reference_traj_selection": {"required": false, "default": null},
+                                "traj_selection": {"required": false, "default": "all"}
+                            },
+                            "gui_param_info": {}
+                        }
                     }
                 }
             }
@@ -281,6 +405,7 @@
                     "method_name": "mean",
                     "class": "DistancesAnalysisService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_analysis_service",
+                    "access_path": "analysis.features.distances.mean",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -292,6 +417,7 @@
                     "method_name": "std",
                     "class": "DistancesAnalysisService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_analysis_service",
+                    "access_path": "analysis.features.distances.std",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -303,6 +429,7 @@
                     "method_name": "min",
                     "class": "DistancesAnalysisService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_analysis_service",
+                    "access_path": "analysis.features.distances.min",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -314,6 +441,7 @@
                     "method_name": "max",
                     "class": "DistancesAnalysisService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_analysis_service",
+                    "access_path": "analysis.features.distances.max",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -325,6 +453,7 @@
                     "method_name": "median",
                     "class": "DistancesAnalysisService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_analysis_service",
+                    "access_path": "analysis.features.distances.median",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -336,6 +465,7 @@
                     "method_name": "variance",
                     "class": "DistancesAnalysisService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_analysis_service",
+                    "access_path": "analysis.features.distances.variance",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -347,6 +477,7 @@
                     "method_name": "range",
                     "class": "DistancesAnalysisService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_analysis_service",
+                    "access_path": "analysis.features.distances.range",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -358,6 +489,7 @@
                     "method_name": "q25",
                     "class": "DistancesAnalysisService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_analysis_service",
+                    "access_path": "analysis.features.distances.q25",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -369,6 +501,7 @@
                     "method_name": "q75",
                     "class": "DistancesAnalysisService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_analysis_service",
+                    "access_path": "analysis.features.distances.q75",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -380,6 +513,7 @@
                     "method_name": "iqr",
                     "class": "DistancesAnalysisService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_analysis_service",
+                    "access_path": "analysis.features.distances.iqr",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -391,6 +525,7 @@
                     "method_name": "mad",
                     "class": "DistancesAnalysisService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_analysis_service",
+                    "access_path": "analysis.features.distances.mad",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -402,6 +537,7 @@
                     "method_name": "cv",
                     "class": "DistancesAnalysisService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_analysis_service",
+                    "access_path": "analysis.features.distances.cv",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -413,6 +549,7 @@
                     "method_name": "distances_per_frame_mean",
                     "class": "DistancesAnalysisService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_analysis_service",
+                    "access_path": "analysis.features.distances.distances_per_frame_mean",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -424,6 +561,7 @@
                     "method_name": "distances_per_frame_std",
                     "class": "DistancesAnalysisService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_analysis_service",
+                    "access_path": "analysis.features.distances.distances_per_frame_std",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -435,6 +573,7 @@
                     "method_name": "distances_per_frame_min",
                     "class": "DistancesAnalysisService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_analysis_service",
+                    "access_path": "analysis.features.distances.distances_per_frame_min",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -446,6 +585,7 @@
                     "method_name": "distances_per_frame_max",
                     "class": "DistancesAnalysisService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_analysis_service",
+                    "access_path": "analysis.features.distances.distances_per_frame_max",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -457,6 +597,7 @@
                     "method_name": "distances_per_frame_median",
                     "class": "DistancesAnalysisService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_analysis_service",
+                    "access_path": "analysis.features.distances.distances_per_frame_median",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -468,6 +609,7 @@
                     "method_name": "distances_per_frame_range",
                     "class": "DistancesAnalysisService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_analysis_service",
+                    "access_path": "analysis.features.distances.distances_per_frame_range",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -479,6 +621,7 @@
                     "method_name": "distances_per_frame_sum",
                     "class": "DistancesAnalysisService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_analysis_service",
+                    "access_path": "analysis.features.distances.distances_per_frame_sum",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -490,6 +633,7 @@
                     "method_name": "per_residue_mean",
                     "class": "DistancesAnalysisService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_analysis_service",
+                    "access_path": "analysis.features.distances.per_residue_mean",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -501,6 +645,7 @@
                     "method_name": "per_residue_std",
                     "class": "DistancesAnalysisService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_analysis_service",
+                    "access_path": "analysis.features.distances.per_residue_std",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -512,6 +657,7 @@
                     "method_name": "per_residue_min",
                     "class": "DistancesAnalysisService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_analysis_service",
+                    "access_path": "analysis.features.distances.per_residue_min",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -523,6 +669,7 @@
                     "method_name": "per_residue_max",
                     "class": "DistancesAnalysisService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_analysis_service",
+                    "access_path": "analysis.features.distances.per_residue_max",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -534,6 +681,7 @@
                     "method_name": "per_residue_median",
                     "class": "DistancesAnalysisService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_analysis_service",
+                    "access_path": "analysis.features.distances.per_residue_median",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -545,6 +693,7 @@
                     "method_name": "per_residue_sum",
                     "class": "DistancesAnalysisService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_analysis_service",
+                    "access_path": "analysis.features.distances.per_residue_sum",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -556,6 +705,7 @@
                     "method_name": "per_residue_variance",
                     "class": "DistancesAnalysisService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_analysis_service",
+                    "access_path": "analysis.features.distances.per_residue_variance",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -567,6 +717,7 @@
                     "method_name": "per_residue_range",
                     "class": "DistancesAnalysisService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_analysis_service",
+                    "access_path": "analysis.features.distances.per_residue_range",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -578,6 +729,7 @@
                     "method_name": "transitions_lagtime",
                     "class": "DistancesAnalysisService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_analysis_service",
+                    "access_path": "analysis.features.distances.transitions_lagtime",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "threshold": {"required": false, "default": 2.0},
@@ -591,6 +743,7 @@
                     "method_name": "transitions_window",
                     "class": "DistancesAnalysisService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_analysis_service",
+                    "access_path": "analysis.features.distances.transitions_window",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "threshold": {"required": false, "default": 2.0},
@@ -604,6 +757,7 @@
                     "method_name": "stability",
                     "class": "DistancesAnalysisService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_analysis_service",
+                    "access_path": "analysis.features.distances.stability",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "threshold": {"required": false, "default": 2.0},
@@ -618,6 +772,7 @@
                     "method_name": "differences",
                     "class": "DistancesAnalysisService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_analysis_service",
+                    "access_path": "analysis.features.distances.differences",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector2": {"required": false, "default": null},
@@ -634,6 +789,7 @@
                     "method_name": "frequency",
                     "class": "ContactsAnalysisService",
                     "module": "mdxplain.feature.feature_type.contacts.services.contacts_analysis_service",
+                    "access_path": "analysis.features.contacts.frequency",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -645,6 +801,7 @@
                     "method_name": "contacts_per_frame_abs",
                     "class": "ContactsAnalysisService",
                     "module": "mdxplain.feature.feature_type.contacts.services.contacts_analysis_service",
+                    "access_path": "analysis.features.contacts.contacts_per_frame_abs",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -656,6 +813,7 @@
                     "method_name": "contacts_per_frame_percentage",
                     "class": "ContactsAnalysisService",
                     "module": "mdxplain.feature.feature_type.contacts.services.contacts_analysis_service",
+                    "access_path": "analysis.features.contacts.contacts_per_frame_percentage",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -667,6 +825,7 @@
                     "method_name": "per_residue_mean",
                     "class": "ContactsAnalysisService",
                     "module": "mdxplain.feature.feature_type.contacts.services.contacts_analysis_service",
+                    "access_path": "analysis.features.contacts.per_residue_mean",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -678,6 +837,7 @@
                     "method_name": "per_residue_std",
                     "class": "ContactsAnalysisService",
                     "module": "mdxplain.feature.feature_type.contacts.services.contacts_analysis_service",
+                    "access_path": "analysis.features.contacts.per_residue_std",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -689,6 +849,7 @@
                     "method_name": "per_residue_sum",
                     "class": "ContactsAnalysisService",
                     "module": "mdxplain.feature.feature_type.contacts.services.contacts_analysis_service",
+                    "access_path": "analysis.features.contacts.per_residue_sum",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -700,6 +861,7 @@
                     "method_name": "transitions_lagtime",
                     "class": "ContactsAnalysisService",
                     "module": "mdxplain.feature.feature_type.contacts.services.contacts_analysis_service",
+                    "access_path": "analysis.features.contacts.transitions_lagtime",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "threshold": {"required": false, "default": 1},
@@ -713,6 +875,7 @@
                     "method_name": "transitions_window",
                     "class": "ContactsAnalysisService",
                     "module": "mdxplain.feature.feature_type.contacts.services.contacts_analysis_service",
+                    "access_path": "analysis.features.contacts.transitions_window",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "threshold": {"required": false, "default": 1},
@@ -726,6 +889,7 @@
                     "method_name": "stability",
                     "class": "ContactsAnalysisService",
                     "module": "mdxplain.feature.feature_type.contacts.services.contacts_analysis_service",
+                    "access_path": "analysis.features.contacts.stability",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "threshold": {"required": false, "default": 1},
@@ -739,6 +903,7 @@
                     "method_name": "differences",
                     "class": "ContactsAnalysisService",
                     "module": "mdxplain.feature.feature_type.contacts.services.contacts_analysis_service",
+                    "access_path": "analysis.features.contacts.differences",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector2": {"required": false, "default": null},
@@ -755,6 +920,7 @@
                     "method_name": "mean",
                     "class": "TorsionsAnalysisService",
                     "module": "mdxplain.feature.feature_type.torsions.services.torsions_analysis_service",
+                    "access_path": "analysis.features.torsions.mean",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -766,6 +932,7 @@
                     "method_name": "std",
                     "class": "TorsionsAnalysisService",
                     "module": "mdxplain.feature.feature_type.torsions.services.torsions_analysis_service",
+                    "access_path": "analysis.features.torsions.std",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -777,6 +944,7 @@
                     "method_name": "variance",
                     "class": "TorsionsAnalysisService",
                     "module": "mdxplain.feature.feature_type.torsions.services.torsions_analysis_service",
+                    "access_path": "analysis.features.torsions.variance",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -788,6 +956,7 @@
                     "method_name": "min",
                     "class": "TorsionsAnalysisService",
                     "module": "mdxplain.feature.feature_type.torsions.services.torsions_analysis_service",
+                    "access_path": "analysis.features.torsions.min",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -799,6 +968,7 @@
                     "method_name": "max",
                     "class": "TorsionsAnalysisService",
                     "module": "mdxplain.feature.feature_type.torsions.services.torsions_analysis_service",
+                    "access_path": "analysis.features.torsions.max",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -810,6 +980,7 @@
                     "method_name": "mad",
                     "class": "TorsionsAnalysisService",
                     "module": "mdxplain.feature.feature_type.torsions.services.torsions_analysis_service",
+                    "access_path": "analysis.features.torsions.mad",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -821,6 +992,7 @@
                     "method_name": "range",
                     "class": "TorsionsAnalysisService",
                     "module": "mdxplain.feature.feature_type.torsions.services.torsions_analysis_service",
+                    "access_path": "analysis.features.torsions.range",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -832,6 +1004,7 @@
                     "method_name": "cv",
                     "class": "TorsionsAnalysisService",
                     "module": "mdxplain.feature.feature_type.torsions.services.torsions_analysis_service",
+                    "access_path": "analysis.features.torsions.cv",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -843,6 +1016,7 @@
                     "method_name": "mean_per_frame",
                     "class": "TorsionsAnalysisService",
                     "module": "mdxplain.feature.feature_type.torsions.services.torsions_analysis_service",
+                    "access_path": "analysis.features.torsions.mean_per_frame",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -854,6 +1028,7 @@
                     "method_name": "std_per_frame",
                     "class": "TorsionsAnalysisService",
                     "module": "mdxplain.feature.feature_type.torsions.services.torsions_analysis_service",
+                    "access_path": "analysis.features.torsions.std_per_frame",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -865,6 +1040,7 @@
                     "method_name": "variance_per_frame",
                     "class": "TorsionsAnalysisService",
                     "module": "mdxplain.feature.feature_type.torsions.services.torsions_analysis_service",
+                    "access_path": "analysis.features.torsions.variance_per_frame",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -876,6 +1052,7 @@
                     "method_name": "min_per_frame",
                     "class": "TorsionsAnalysisService",
                     "module": "mdxplain.feature.feature_type.torsions.services.torsions_analysis_service",
+                    "access_path": "analysis.features.torsions.min_per_frame",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -887,6 +1064,7 @@
                     "method_name": "max_per_frame",
                     "class": "TorsionsAnalysisService",
                     "module": "mdxplain.feature.feature_type.torsions.services.torsions_analysis_service",
+                    "access_path": "analysis.features.torsions.max_per_frame",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -898,6 +1076,7 @@
                     "method_name": "mad_per_frame",
                     "class": "TorsionsAnalysisService",
                     "module": "mdxplain.feature.feature_type.torsions.services.torsions_analysis_service",
+                    "access_path": "analysis.features.torsions.mad_per_frame",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -909,6 +1088,7 @@
                     "method_name": "range_per_frame",
                     "class": "TorsionsAnalysisService",
                     "module": "mdxplain.feature.feature_type.torsions.services.torsions_analysis_service",
+                    "access_path": "analysis.features.torsions.range_per_frame",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -920,6 +1100,7 @@
                     "method_name": "transitions_lagtime",
                     "class": "TorsionsAnalysisService",
                     "module": "mdxplain.feature.feature_type.torsions.services.torsions_analysis_service",
+                    "access_path": "analysis.features.torsions.transitions_lagtime",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "threshold": {"required": false, "default": 30.0},
@@ -933,6 +1114,7 @@
                     "method_name": "transitions_window",
                     "class": "TorsionsAnalysisService",
                     "module": "mdxplain.feature.feature_type.torsions.services.torsions_analysis_service",
+                    "access_path": "analysis.features.torsions.transitions_window",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "threshold": {"required": false, "default": 30.0},
@@ -946,6 +1128,7 @@
                     "method_name": "stability",
                     "class": "TorsionsAnalysisService",
                     "module": "mdxplain.feature.feature_type.torsions.services.torsions_analysis_service",
+                    "access_path": "analysis.features.torsions.stability",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "threshold": {"required": false, "default": 30.0},
@@ -960,6 +1143,7 @@
                     "method_name": "differences",
                     "class": "TorsionsAnalysisService",
                     "module": "mdxplain.feature.feature_type.torsions.services.torsions_analysis_service",
+                    "access_path": "analysis.features.torsions.differences",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "frame_1": {"required": false, "default": 0},
@@ -973,6 +1157,7 @@
                     "method_name": "differences_mean",
                     "class": "TorsionsAnalysisService",
                     "module": "mdxplain.feature.feature_type.torsions.services.torsions_analysis_service",
+                    "access_path": "analysis.features.torsions.differences_mean",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector2": {"required": false, "default": null},
@@ -988,6 +1173,7 @@
                     "method_name": "compute_transitions_lagtime",
                     "class": "DSSPAnalysisService",
                     "module": "mdxplain.feature.feature_type.dssp.services.dssp_analysis_service",
+                    "access_path": "analysis.features.dssp.compute_transitions_lagtime",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "lag_time": {"required": false, "default": 10},
@@ -1000,6 +1186,7 @@
                     "method_name": "compute_transitions_window",
                     "class": "DSSPAnalysisService",
                     "module": "mdxplain.feature.feature_type.dssp.services.dssp_analysis_service",
+                    "access_path": "analysis.features.dssp.compute_transitions_window",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "window_size": {"required": false, "default": 10},
@@ -1012,6 +1199,7 @@
                     "method_name": "compute_class_frequencies",
                     "class": "DSSPAnalysisService",
                     "module": "mdxplain.feature.feature_type.dssp.services.dssp_analysis_service",
+                    "access_path": "analysis.features.dssp.compute_class_frequencies",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "simplified": {"required": false, "default": true},
@@ -1024,6 +1212,7 @@
                     "method_name": "compute_transition_frequency",
                     "class": "DSSPAnalysisService",
                     "module": "mdxplain.feature.feature_type.dssp.services.dssp_analysis_service",
+                    "access_path": "analysis.features.dssp.compute_transition_frequency",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -1035,6 +1224,7 @@
                     "method_name": "compute_stability",
                     "class": "DSSPAnalysisService",
                     "module": "mdxplain.feature.feature_type.dssp.services.dssp_analysis_service",
+                    "access_path": "analysis.features.dssp.compute_stability",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -1046,6 +1236,7 @@
                     "method_name": "compute_differences",
                     "class": "DSSPAnalysisService",
                     "module": "mdxplain.feature.feature_type.dssp.services.dssp_analysis_service",
+                    "access_path": "analysis.features.dssp.compute_differences",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "frame_1": {"required": false, "default": 0},
@@ -1059,6 +1250,7 @@
                     "method_name": "compute_dominant_class",
                     "class": "DSSPAnalysisService",
                     "module": "mdxplain.feature.feature_type.dssp.services.dssp_analysis_service",
+                    "access_path": "analysis.features.dssp.compute_dominant_class",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -1072,6 +1264,7 @@
                     "method_name": "mean",
                     "class": "SASAAnalysisService",
                     "module": "mdxplain.feature.feature_type.sasa.services.sasa_analysis_service",
+                    "access_path": "analysis.features.sasa.mean",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -1083,6 +1276,7 @@
                     "method_name": "std",
                     "class": "SASAAnalysisService",
                     "module": "mdxplain.feature.feature_type.sasa.services.sasa_analysis_service",
+                    "access_path": "analysis.features.sasa.std",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -1094,6 +1288,7 @@
                     "method_name": "variance",
                     "class": "SASAAnalysisService",
                     "module": "mdxplain.feature.feature_type.sasa.services.sasa_analysis_service",
+                    "access_path": "analysis.features.sasa.variance",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -1105,6 +1300,7 @@
                     "method_name": "min",
                     "class": "SASAAnalysisService",
                     "module": "mdxplain.feature.feature_type.sasa.services.sasa_analysis_service",
+                    "access_path": "analysis.features.sasa.min",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -1116,6 +1312,7 @@
                     "method_name": "max",
                     "class": "SASAAnalysisService",
                     "module": "mdxplain.feature.feature_type.sasa.services.sasa_analysis_service",
+                    "access_path": "analysis.features.sasa.max",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -1127,6 +1324,7 @@
                     "method_name": "mad",
                     "class": "SASAAnalysisService",
                     "module": "mdxplain.feature.feature_type.sasa.services.sasa_analysis_service",
+                    "access_path": "analysis.features.sasa.mad",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -1138,6 +1336,7 @@
                     "method_name": "range",
                     "class": "SASAAnalysisService",
                     "module": "mdxplain.feature.feature_type.sasa.services.sasa_analysis_service",
+                    "access_path": "analysis.features.sasa.range",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -1149,6 +1348,7 @@
                     "method_name": "cv",
                     "class": "SASAAnalysisService",
                     "module": "mdxplain.feature.feature_type.sasa.services.sasa_analysis_service",
+                    "access_path": "analysis.features.sasa.cv",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -1160,6 +1360,7 @@
                     "method_name": "burial_fraction",
                     "class": "SASAAnalysisService",
                     "module": "mdxplain.feature.feature_type.sasa.services.sasa_analysis_service",
+                    "access_path": "analysis.features.sasa.burial_fraction",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "threshold": {"required": false, "default": 10.0},
@@ -1172,6 +1373,7 @@
                     "method_name": "exposure_fraction",
                     "class": "SASAAnalysisService",
                     "module": "mdxplain.feature.feature_type.sasa.services.sasa_analysis_service",
+                    "access_path": "analysis.features.sasa.exposure_fraction",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "threshold": {"required": false, "default": 100.0},
@@ -1184,6 +1386,7 @@
                     "method_name": "mean_per_frame",
                     "class": "SASAAnalysisService",
                     "module": "mdxplain.feature.feature_type.sasa.services.sasa_analysis_service",
+                    "access_path": "analysis.features.sasa.mean_per_frame",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -1195,6 +1398,7 @@
                     "method_name": "std_per_frame",
                     "class": "SASAAnalysisService",
                     "module": "mdxplain.feature.feature_type.sasa.services.sasa_analysis_service",
+                    "access_path": "analysis.features.sasa.std_per_frame",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -1206,6 +1410,7 @@
                     "method_name": "variance_per_frame",
                     "class": "SASAAnalysisService",
                     "module": "mdxplain.feature.feature_type.sasa.services.sasa_analysis_service",
+                    "access_path": "analysis.features.sasa.variance_per_frame",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -1217,6 +1422,7 @@
                     "method_name": "min_per_frame",
                     "class": "SASAAnalysisService",
                     "module": "mdxplain.feature.feature_type.sasa.services.sasa_analysis_service",
+                    "access_path": "analysis.features.sasa.min_per_frame",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -1228,6 +1434,7 @@
                     "method_name": "max_per_frame",
                     "class": "SASAAnalysisService",
                     "module": "mdxplain.feature.feature_type.sasa.services.sasa_analysis_service",
+                    "access_path": "analysis.features.sasa.max_per_frame",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -1239,6 +1446,7 @@
                     "method_name": "mad_per_frame",
                     "class": "SASAAnalysisService",
                     "module": "mdxplain.feature.feature_type.sasa.services.sasa_analysis_service",
+                    "access_path": "analysis.features.sasa.mad_per_frame",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -1250,6 +1458,7 @@
                     "method_name": "range_per_frame",
                     "class": "SASAAnalysisService",
                     "module": "mdxplain.feature.feature_type.sasa.services.sasa_analysis_service",
+                    "access_path": "analysis.features.sasa.range_per_frame",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -1261,6 +1470,7 @@
                     "method_name": "transitions_lagtime",
                     "class": "SASAAnalysisService",
                     "module": "mdxplain.feature.feature_type.sasa.services.sasa_analysis_service",
+                    "access_path": "analysis.features.sasa.transitions_lagtime",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "threshold": {"required": false, "default": 50.0},
@@ -1274,6 +1484,7 @@
                     "method_name": "transitions_window",
                     "class": "SASAAnalysisService",
                     "module": "mdxplain.feature.feature_type.sasa.services.sasa_analysis_service",
+                    "access_path": "analysis.features.sasa.transitions_window",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "threshold": {"required": false, "default": 50.0},
@@ -1287,6 +1498,7 @@
                     "method_name": "stability",
                     "class": "SASAAnalysisService",
                     "module": "mdxplain.feature.feature_type.sasa.services.sasa_analysis_service",
+                    "access_path": "analysis.features.sasa.stability",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "threshold": {"required": false, "default": 50.0},
@@ -1301,6 +1513,7 @@
                     "method_name": "differences",
                     "class": "SASAAnalysisService",
                     "module": "mdxplain.feature.feature_type.sasa.services.sasa_analysis_service",
+                    "access_path": "analysis.features.sasa.differences",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "frame_1": {"required": false, "default": 0},
@@ -1314,6 +1527,7 @@
                     "method_name": "differences_mean",
                     "class": "SASAAnalysisService",
                     "module": "mdxplain.feature.feature_type.sasa.services.sasa_analysis_service",
+                    "access_path": "analysis.features.sasa.differences_mean",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector2": {"required": false, "default": null},
@@ -1329,6 +1543,7 @@
                     "method_name": "mean",
                     "class": "CoordinatesAnalysisService",
                     "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_analysis_service",
+                    "access_path": "analysis.features.coordinates.mean",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -1340,6 +1555,7 @@
                     "method_name": "std",
                     "class": "CoordinatesAnalysisService",
                     "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_analysis_service",
+                    "access_path": "analysis.features.coordinates.std",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -1351,6 +1567,7 @@
                     "method_name": "min",
                     "class": "CoordinatesAnalysisService",
                     "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_analysis_service",
+                    "access_path": "analysis.features.coordinates.min",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -1362,6 +1579,7 @@
                     "method_name": "max",
                     "class": "CoordinatesAnalysisService",
                     "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_analysis_service",
+                    "access_path": "analysis.features.coordinates.max",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -1373,6 +1591,7 @@
                     "method_name": "median",
                     "class": "CoordinatesAnalysisService",
                     "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_analysis_service",
+                    "access_path": "analysis.features.coordinates.median",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -1384,6 +1603,7 @@
                     "method_name": "variance",
                     "class": "CoordinatesAnalysisService",
                     "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_analysis_service",
+                    "access_path": "analysis.features.coordinates.variance",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -1395,6 +1615,7 @@
                     "method_name": "range",
                     "class": "CoordinatesAnalysisService",
                     "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_analysis_service",
+                    "access_path": "analysis.features.coordinates.range",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -1406,6 +1627,7 @@
                     "method_name": "mad",
                     "class": "CoordinatesAnalysisService",
                     "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_analysis_service",
+                    "access_path": "analysis.features.coordinates.mad",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -1417,6 +1639,7 @@
                     "method_name": "cv",
                     "class": "CoordinatesAnalysisService",
                     "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_analysis_service",
+                    "access_path": "analysis.features.coordinates.cv",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -1428,6 +1651,7 @@
                     "method_name": "coordinates_per_frame_mean",
                     "class": "CoordinatesAnalysisService",
                     "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_analysis_service",
+                    "access_path": "analysis.features.coordinates.coordinates_per_frame_mean",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -1439,6 +1663,7 @@
                     "method_name": "coordinates_per_frame_std",
                     "class": "CoordinatesAnalysisService",
                     "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_analysis_service",
+                    "access_path": "analysis.features.coordinates.coordinates_per_frame_std",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -1450,6 +1675,7 @@
                     "method_name": "coordinates_per_frame_min",
                     "class": "CoordinatesAnalysisService",
                     "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_analysis_service",
+                    "access_path": "analysis.features.coordinates.coordinates_per_frame_min",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -1461,6 +1687,7 @@
                     "method_name": "coordinates_per_frame_max",
                     "class": "CoordinatesAnalysisService",
                     "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_analysis_service",
+                    "access_path": "analysis.features.coordinates.coordinates_per_frame_max",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -1472,6 +1699,7 @@
                     "method_name": "coordinates_per_frame_range",
                     "class": "CoordinatesAnalysisService",
                     "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_analysis_service",
+                    "access_path": "analysis.features.coordinates.coordinates_per_frame_range",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -1483,6 +1711,7 @@
                     "method_name": "rmsf",
                     "class": "CoordinatesAnalysisService",
                     "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_analysis_service",
+                    "access_path": "analysis.features.coordinates.rmsf",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector": {"required": false, "default": null},
@@ -1494,6 +1723,7 @@
                     "method_name": "transitions_lagtime",
                     "class": "CoordinatesAnalysisService",
                     "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_analysis_service",
+                    "access_path": "analysis.features.coordinates.transitions_lagtime",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "threshold": {"required": false, "default": 1.0},
@@ -1507,6 +1737,7 @@
                     "method_name": "transitions_window",
                     "class": "CoordinatesAnalysisService",
                     "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_analysis_service",
+                    "access_path": "analysis.features.coordinates.transitions_window",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "threshold": {"required": false, "default": 1.0},
@@ -1520,6 +1751,7 @@
                     "method_name": "stability",
                     "class": "CoordinatesAnalysisService",
                     "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_analysis_service",
+                    "access_path": "analysis.features.coordinates.stability",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "threshold": {"required": false, "default": 1.0},
@@ -1533,6 +1765,7 @@
                     "method_name": "differences",
                     "class": "CoordinatesAnalysisService",
                     "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_analysis_service",
+                    "access_path": "analysis.features.coordinates.differences",
                     "affected_by_tags": ["feature_selection"],
                     "technical_params": {
                         "feature_selector2": {"required": false, "default": null},
@@ -1552,6 +1785,7 @@
                 "method_name": "reset_clusters",
                 "class": "ClusterManager",
                 "module": "mdxplain.clustering.manager.cluster_manager",
+                "access_path": "clustering.reset_clusters",
                 "resets_tags": ["clustering"],
                 "technical_params": {},
                 "gui_param_info": {}
@@ -1560,6 +1794,7 @@
                 "method_name": "add_clustering",
                 "class": "ClusterManager",
                 "module": "mdxplain.clustering.manager.cluster_manager",
+                "access_path": "clustering.add_clustering",
                 "emits_tags": ["clustering"],
                 "affected_by_tags": ["feature_selection", "decomposition", "data_selector"],
                 "technical_params": {
@@ -1580,6 +1815,7 @@
                 "method_name": "dbscan",
                 "class": "DBSCANAddService",
                 "module": "mdxplain.clustering.services.dbscan_add_service",
+                "access_path": "clustering.add.dbscan",
                 "emits_tags": ["clustering"],
                 "affected_by_tags": ["feature_selection", "decomposition", "data_selector"],
                 "technical_params": {
@@ -1605,6 +1841,7 @@
                 "method_name": "with_centroid_centers",
                 "class": "DBSCANAddService",
                 "module": "mdxplain.clustering.services.dbscan_add_service",
+                "access_path": "clustering.add.dbscan.with_centroid_centers",
                 "emits_tags": ["clustering"],
                 "affected_by_tags": ["feature_selection", "decomposition", "data_selector"],
                 "technical_params": {
@@ -1629,6 +1866,7 @@
                 "method_name": "with_mean_centers",
                 "class": "DBSCANAddService",
                 "module": "mdxplain.clustering.services.dbscan_add_service",
+                "access_path": "clustering.add.dbscan.with_mean_centers",
                 "emits_tags": ["clustering"],
                 "affected_by_tags": ["feature_selection", "decomposition", "data_selector"],
                 "technical_params": {
@@ -1653,6 +1891,7 @@
                 "method_name": "with_median_centers",
                 "class": "DBSCANAddService",
                 "module": "mdxplain.clustering.services.dbscan_add_service",
+                "access_path": "clustering.add.dbscan.with_median_centers",
                 "emits_tags": ["clustering"],
                 "affected_by_tags": ["feature_selection", "decomposition", "data_selector"],
                 "technical_params": {
@@ -1677,6 +1916,7 @@
                 "method_name": "with_density_peak_centers",
                 "class": "DBSCANAddService",
                 "module": "mdxplain.clustering.services.dbscan_add_service",
+                "access_path": "clustering.add.dbscan.with_density_peak_centers",
                 "emits_tags": ["clustering"],
                 "affected_by_tags": ["feature_selection", "decomposition", "data_selector"],
                 "technical_params": {
@@ -1701,6 +1941,7 @@
                 "method_name": "with_median_centroid_centers",
                 "class": "DBSCANAddService",
                 "module": "mdxplain.clustering.services.dbscan_add_service",
+                "access_path": "clustering.add.dbscan.with_median_centroid_centers",
                 "emits_tags": ["clustering"],
                 "affected_by_tags": ["feature_selection", "decomposition", "data_selector"],
                 "technical_params": {
@@ -1725,6 +1966,7 @@
                 "method_name": "with_rmsd_centroid_centers",
                 "class": "DBSCANAddService",
                 "module": "mdxplain.clustering.services.dbscan_add_service",
+                "access_path": "clustering.add.dbscan.with_rmsd_centroid_centers",
                 "emits_tags": ["clustering"],
                 "affected_by_tags": ["feature_selection", "decomposition", "data_selector"],
                 "technical_params": {
@@ -1751,6 +1993,7 @@
                 "method_name": "dpa",
                 "class": "DPAAddService",
                 "module": "mdxplain.clustering.services.dpa_add_service",
+                "access_path": "clustering.add.dpa",
                 "emits_tags": ["clustering"],
                 "affected_by_tags": ["feature_selection", "decomposition", "data_selector"],
                 "technical_params": {
@@ -1785,6 +2028,7 @@
                 "method_name": "with_centroid_centers",
                 "class": "DPAAddService",
                 "module": "mdxplain.clustering.services.dpa_add_service",
+                "access_path": "clustering.add.dpa.with_centroid_centers",
                 "emits_tags": ["clustering"],
                 "affected_by_tags": ["feature_selection", "decomposition", "data_selector"],
                 "technical_params": {
@@ -1818,6 +2062,7 @@
                 "method_name": "with_mean_centers",
                 "class": "DPAAddService",
                 "module": "mdxplain.clustering.services.dpa_add_service",
+                "access_path": "clustering.add.dpa.with_mean_centers",
                 "emits_tags": ["clustering"],
                 "affected_by_tags": ["feature_selection", "decomposition", "data_selector"],
                 "technical_params": {
@@ -1851,6 +2096,7 @@
                 "method_name": "with_median_centers",
                 "class": "DPAAddService",
                 "module": "mdxplain.clustering.services.dpa_add_service",
+                "access_path": "clustering.add.dpa.with_median_centers",
                 "emits_tags": ["clustering"],
                 "affected_by_tags": ["feature_selection", "decomposition", "data_selector"],
                 "technical_params": {
@@ -1884,6 +2130,7 @@
                 "method_name": "with_density_peak_centers",
                 "class": "DPAAddService",
                 "module": "mdxplain.clustering.services.dpa_add_service",
+                "access_path": "clustering.add.dpa.with_density_peak_centers",
                 "emits_tags": ["clustering"],
                 "affected_by_tags": ["feature_selection", "decomposition", "data_selector"],
                 "technical_params": {
@@ -1917,6 +2164,7 @@
                 "method_name": "with_median_centroid_centers",
                 "class": "DPAAddService",
                 "module": "mdxplain.clustering.services.dpa_add_service",
+                "access_path": "clustering.add.dpa.with_median_centroid_centers",
                 "emits_tags": ["clustering"],
                 "affected_by_tags": ["feature_selection", "decomposition", "data_selector"],
                 "technical_params": {
@@ -1950,6 +2198,7 @@
                 "method_name": "with_rmsd_centroid_centers",
                 "class": "DPAAddService",
                 "module": "mdxplain.clustering.services.dpa_add_service",
+                "access_path": "clustering.add.dpa.with_rmsd_centroid_centers",
                 "emits_tags": ["clustering"],
                 "affected_by_tags": ["feature_selection", "decomposition", "data_selector"],
                 "technical_params": {
@@ -1985,6 +2234,7 @@
                 "method_name": "hdbscan",
                 "class": "HDBSCANAddService",
                 "module": "mdxplain.clustering.services.hdbscan_add_service",
+                "access_path": "clustering.add.hdbscan",
                 "emits_tags": ["clustering"],
                 "affected_by_tags": ["feature_selection", "decomposition", "data_selector"],
                 "technical_params": {
@@ -2012,6 +2262,7 @@
                 "method_name": "with_centroid_centers",
                 "class": "HDBSCANAddService",
                 "module": "mdxplain.clustering.services.hdbscan_add_service",
+                "access_path": "clustering.add.hdbscan.with_centroid_centers",
                 "emits_tags": ["clustering"],
                 "affected_by_tags": ["feature_selection", "decomposition", "data_selector"],
                 "technical_params": {
@@ -2038,6 +2289,7 @@
                 "method_name": "with_mean_centers",
                 "class": "HDBSCANAddService",
                 "module": "mdxplain.clustering.services.hdbscan_add_service",
+                "access_path": "clustering.add.hdbscan.with_mean_centers",
                 "emits_tags": ["clustering"],
                 "affected_by_tags": ["feature_selection", "decomposition", "data_selector"],
                 "technical_params": {
@@ -2064,6 +2316,7 @@
                 "method_name": "with_median_centers",
                 "class": "HDBSCANAddService",
                 "module": "mdxplain.clustering.services.hdbscan_add_service",
+                "access_path": "clustering.add.hdbscan.with_median_centers",
                 "emits_tags": ["clustering"],
                 "affected_by_tags": ["feature_selection", "decomposition", "data_selector"],
                 "technical_params": {
@@ -2090,6 +2343,7 @@
                 "method_name": "with_density_peak_centers",
                 "class": "HDBSCANAddService",
                 "module": "mdxplain.clustering.services.hdbscan_add_service",
+                "access_path": "clustering.add.hdbscan.with_density_peak_centers",
                 "emits_tags": ["clustering"],
                 "affected_by_tags": ["feature_selection", "decomposition", "data_selector"],
                 "technical_params": {
@@ -2116,6 +2370,7 @@
                 "method_name": "with_median_centroid_centers",
                 "class": "HDBSCANAddService",
                 "module": "mdxplain.clustering.services.hdbscan_add_service",
+                "access_path": "clustering.add.hdbscan.with_median_centroid_centers",
                 "emits_tags": ["clustering"],
                 "affected_by_tags": ["feature_selection", "decomposition", "data_selector"],
                 "technical_params": {
@@ -2142,6 +2397,7 @@
                 "method_name": "with_rmsd_centroid_centers",
                 "class": "HDBSCANAddService",
                 "module": "mdxplain.clustering.services.hdbscan_add_service",
+                "access_path": "clustering.add.hdbscan.with_rmsd_centroid_centers",
                 "emits_tags": ["clustering"],
                 "affected_by_tags": ["feature_selection", "decomposition", "data_selector"],
                 "technical_params": {
@@ -2172,6 +2428,7 @@
                 "method_name": "create_comparison",
                 "class": "ComparisonManager",
                 "module": "mdxplain.comparison.manager.comparison_manager",
+                "access_path": "comparison.create_comparison",
                 "emits_tags": ["comparison"],
                 "affected_by_tags": ["feature_selection", "data_selector"],
                 "technical_params": {
@@ -2187,6 +2444,7 @@
                 "method_name": "remove_comparison",
                 "class": "ComparisonManager",
                 "module": "mdxplain.comparison.manager.comparison_manager",
+                "access_path": "comparison.remove_comparison",
                 "affected_by_tags": ["comparison"],
                 "technical_params": {
                     "name": {"required": true}
@@ -2201,6 +2459,7 @@
                 "method_name": "create",
                 "class": "DataSelectorManager",
                 "module": "mdxplain.data_selector.manager.data_selector_manager",
+                "access_path": "data_selector.create",
                 "emits_tags": ["data_selector"],
                 "affected_by_tags": [],
                 "technical_params": {
@@ -2212,6 +2471,7 @@
                 "method_name": "select_by_tags",
                 "class": "DataSelectorManager",
                 "module": "mdxplain.data_selector.manager.data_selector_manager",
+                "access_path": "data_selector.select_by_tags",
                 "emits_tags": ["data_selector"],
                 "affected_by_tags": ["trajectory"],
                 "technical_params": {
@@ -2227,6 +2487,7 @@
                 "method_name": "select_by_cluster",
                 "class": "DataSelectorManager",
                 "module": "mdxplain.data_selector.manager.data_selector_manager",
+                "access_path": "data_selector.select_by_cluster",
                 "emits_tags": ["data_selector"],
                 "affected_by_tags": ["data_selector", "clustering"],
                 "technical_params": {
@@ -2242,6 +2503,7 @@
                 "method_name": "select_by_indices",
                 "class": "DataSelectorManager",
                 "module": "mdxplain.data_selector.manager.data_selector_manager",
+                "access_path": "data_selector.select_by_indices",
                 "emits_tags": ["data_selector"],
                 "affected_by_tags": ["trajectory"],
                 "technical_params": {
@@ -2255,6 +2517,7 @@
                 "method_name": "clear_selector",
                 "class": "DataSelectorManager",
                 "module": "mdxplain.data_selector.manager.data_selector_manager",
+                "access_path": "data_selector.clear_selector",
                 "affected_by_tags": ["data_selector"],
                 "technical_params": {
                     "name": {"required": true}
@@ -2265,6 +2528,7 @@
                 "method_name": "remove_selector",
                 "class": "DataSelectorManager",
                 "module": "mdxplain.data_selector.manager.data_selector_manager",
+                "access_path": "data_selector.remove_selector",
                 "affected_by_tags": ["data_selector"],
                 "technical_params": {
                     "name": {"required": true}
@@ -2275,6 +2539,7 @@
                 "method_name": "create_from_clusters",
                 "class": "DataSelectorManager",
                 "module": "mdxplain.data_selector.manager.data_selector_manager",
+                "access_path": "data_selector.create_from_clusters",
                 "emits_tags": ["data_selector"],
                 "affected_by_tags": ["clustering"],
                 "technical_params": {
@@ -2291,6 +2556,7 @@
                 "method_name": "create_from_tags",
                 "class": "DataSelectorManager",
                 "module": "mdxplain.data_selector.manager.data_selector_manager",
+                "access_path": "data_selector.create_from_tags",
                 "emits_tags": ["data_selector"],
                 "affected_by_tags": ["trajectory"],
                 "technical_params": {
@@ -2304,6 +2570,7 @@
                 "method_name": "delete_group",
                 "class": "DataSelectorManager",
                 "module": "mdxplain.data_selector.manager.data_selector_manager",
+                "access_path": "data_selector.delete_group",
                 "affected_by_tags": ["data_selector"],
                 "technical_params": {
                     "group_name": {"required": true},
@@ -2319,6 +2586,7 @@
                 "method_name": "reduce_components",
                 "class": "DecompositionManager",
                 "module": "mdxplain.decomposition.manager.decomposition_manager",
+                "access_path": "decomposition.reduce_components",
                 "technical_params": {
                     "source_name": {"required": true},
                     "new_name": {"required": true},
@@ -2331,6 +2599,7 @@
                 "method_name": "remove_decomposition",
                 "class": "DecompositionManager",
                 "module": "mdxplain.decomposition.manager.decomposition_manager",
+                "access_path": "decomposition.remove_decomposition",
                 "affected_by_tags": ["decomposition"],
                 "technical_params": {
                     "name": {"required": true}
@@ -2341,6 +2610,7 @@
                 "method_name": "reset_decompositions",
                 "class": "DecompositionManager",
                 "module": "mdxplain.decomposition.manager.decomposition_manager",
+                "access_path": "decomposition.reset_decompositions",
                 "resets_tags": ["decomposition"],
                 "technical_params": {},
                 "gui_param_info": {}
@@ -2351,6 +2621,7 @@
                 "method_name": "pca",
                 "class": "DecompositionAddService",
                 "module": "mdxplain.decomposition.services.decomposition_add_service",
+                "access_path": "decomposition.add.pca",
                 "emits_tags": ["decomposition"],
                 "affected_by_tags": ["feature_selection", "data_selector"],
                 "technical_params": {
@@ -2368,6 +2639,7 @@
                 "method_name": "kernel_pca",
                 "class": "DecompositionAddService",
                 "module": "mdxplain.decomposition.services.decomposition_add_service",
+                "access_path": "decomposition.add.kernel_pca",
                 "emits_tags": ["decomposition"],
                 "affected_by_tags": ["feature_selection", "data_selector"],
                 "technical_params": {
@@ -2394,6 +2666,7 @@
                 "method_name": "contact_kernel_pca",
                 "class": "DecompositionAddService",
                 "module": "mdxplain.decomposition.services.decomposition_add_service",
+                "access_path": "decomposition.add.contact_kernel_pca",
                 "emits_tags": ["decomposition"],
                 "affected_by_tags": ["feature_selection", "data_selector"],
                 "technical_params": {
@@ -2420,6 +2693,7 @@
                 "method_name": "diffusion_maps",
                 "class": "DecompositionAddService",
                 "module": "mdxplain.decomposition.services.decomposition_add_service",
+                "access_path": "decomposition.add.diffusion_maps",
                 "emits_tags": ["decomposition"],
                 "affected_by_tags": ["feature_selection", "data_selector"],
                 "technical_params": {
@@ -2448,6 +2722,7 @@
                 "method_name": "reset_features",
                 "class": "FeatureManager",
                 "module": "mdxplain.feature.manager.feature_manager",
+                "access_path": "feature.reset_features",
                 "resets_tags": ["feature.{feature_type}"],
                 "technical_params": {
                     "feature_type": {"required": false, "default": null},
@@ -2459,6 +2734,7 @@
                 "method_name": "reset_reduction",
                 "class": "FeatureManager",
                 "module": "mdxplain.feature.manager.feature_manager",
+                "access_path": "feature.reset_reduction",
                 "emits_tags": ["feature.{feature_type}"],
                 "affected_by_tags": ["feature.{feature_type}"],
                 "technical_params": {
@@ -2470,6 +2746,7 @@
                 "method_name": "reduce_data",
                 "class": "FeatureManager",
                 "module": "mdxplain.feature.manager.feature_manager",
+                "access_path": "feature.reduce_data",
                 "emits_tags": ["feature.{feature_type}"],
                 "affected_by_tags": ["feature.{feature_type}"],
                 "technical_params": {
@@ -2492,6 +2769,7 @@
                 "method_name": "distances",
                 "class": "FeatureAddService",
                 "module": "mdxplain.feature.services.feature_add_service",
+                "access_path": "feature.add.distances",
                 "emits_tags": ["feature.distances"],
                 "affected_by_tags": ["trajectory"],
                 "technical_params": {
@@ -2508,6 +2786,7 @@
                     "method_name": "cv",
                     "class": "DistancesReduceService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_reduce_service",
+                    "access_path": "feature.reduce.distances.cv",
                     "affected_by_tags": ["feature.distances"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -2521,6 +2800,7 @@
                     "method_name": "std",
                     "class": "DistancesReduceService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_reduce_service",
+                    "access_path": "feature.reduce.distances.std",
                     "affected_by_tags": ["feature.distances"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -2534,6 +2814,7 @@
                     "method_name": "variance",
                     "class": "DistancesReduceService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_reduce_service",
+                    "access_path": "feature.reduce.distances.variance",
                     "affected_by_tags": ["feature.distances"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -2547,6 +2828,7 @@
                     "method_name": "range",
                     "class": "DistancesReduceService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_reduce_service",
+                    "access_path": "feature.reduce.distances.range",
                     "affected_by_tags": ["feature.distances"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -2560,6 +2842,7 @@
                     "method_name": "transitions",
                     "class": "DistancesReduceService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_reduce_service",
+                    "access_path": "feature.reduce.distances.transitions",
                     "affected_by_tags": ["feature.distances"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -2577,6 +2860,7 @@
                     "method_name": "min",
                     "class": "DistancesReduceService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_reduce_service",
+                    "access_path": "feature.reduce.distances.min",
                     "affected_by_tags": ["feature.distances"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -2590,6 +2874,7 @@
                     "method_name": "mad",
                     "class": "DistancesReduceService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_reduce_service",
+                    "access_path": "feature.reduce.distances.mad",
                     "affected_by_tags": ["feature.distances"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -2603,6 +2888,7 @@
                     "method_name": "mean",
                     "class": "DistancesReduceService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_reduce_service",
+                    "access_path": "feature.reduce.distances.mean",
                     "affected_by_tags": ["feature.distances"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -2616,6 +2902,7 @@
                     "method_name": "max",
                     "class": "DistancesReduceService",
                     "module": "mdxplain.feature.feature_type.distances.services.distances_reduce_service",
+                    "access_path": "feature.reduce.distances.max",
                     "affected_by_tags": ["feature.distances"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -2632,6 +2919,7 @@
                 "method_name": "contacts",
                 "class": "FeatureAddService",
                 "module": "mdxplain.feature.services.feature_add_service",
+                "access_path": "feature.add.contacts",
                 "emits_tags": ["feature.contacts"],
                 "affected_by_tags": ["trajectory", "feature.distances"],
                 "technical_params": {
@@ -2647,6 +2935,7 @@
                     "method_name": "frequency",
                     "class": "ContactsReduceService",
                     "module": "mdxplain.feature.feature_type.contacts.services.contacts_reduce_service",
+                    "access_path": "feature.reduce.contacts.frequency",
                     "affected_by_tags": ["feature.contacts"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -2660,6 +2949,7 @@
                     "method_name": "stability",
                     "class": "ContactsReduceService",
                     "module": "mdxplain.feature.feature_type.contacts.services.contacts_reduce_service",
+                    "access_path": "feature.reduce.contacts.stability",
                     "affected_by_tags": ["feature.contacts"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -2673,6 +2963,7 @@
                     "method_name": "transitions",
                     "class": "ContactsReduceService",
                     "module": "mdxplain.feature.feature_type.contacts.services.contacts_reduce_service",
+                    "access_path": "feature.reduce.contacts.transitions",
                     "affected_by_tags": ["feature.contacts"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -2689,6 +2980,7 @@
                 "method_name": "torsions",
                 "class": "FeatureAddService",
                 "module": "mdxplain.feature.services.feature_add_service",
+                "access_path": "feature.add.torsions",
                 "emits_tags": ["feature.torsions"],
                 "affected_by_tags": ["trajectory"],
                 "technical_params": {
@@ -2708,6 +3000,7 @@
                     "method_name": "transitions",
                     "class": "TorsionsReduceService",
                     "module": "mdxplain.feature.feature_type.torsions.services.torsions_reduce_service",
+                    "access_path": "feature.reduce.torsions.transitions",
                     "affected_by_tags": ["feature.torsions"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -2723,6 +3016,7 @@
                     "method_name": "std",
                     "class": "TorsionsReduceService",
                     "module": "mdxplain.feature.feature_type.torsions.services.torsions_reduce_service",
+                    "access_path": "feature.reduce.torsions.std",
                     "affected_by_tags": ["feature.torsions"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -2736,6 +3030,7 @@
                     "method_name": "mad",
                     "class": "TorsionsReduceService",
                     "module": "mdxplain.feature.feature_type.torsions.services.torsions_reduce_service",
+                    "access_path": "feature.reduce.torsions.mad",
                     "affected_by_tags": ["feature.torsions"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -2749,6 +3044,7 @@
                     "method_name": "mean",
                     "class": "TorsionsReduceService",
                     "module": "mdxplain.feature.feature_type.torsions.services.torsions_reduce_service",
+                    "access_path": "feature.reduce.torsions.mean",
                     "affected_by_tags": ["feature.torsions"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -2762,6 +3058,7 @@
                     "method_name": "range",
                     "class": "TorsionsReduceService",
                     "module": "mdxplain.feature.feature_type.torsions.services.torsions_reduce_service",
+                    "access_path": "feature.reduce.torsions.range",
                     "affected_by_tags": ["feature.torsions"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -2775,6 +3072,7 @@
                     "method_name": "min",
                     "class": "TorsionsReduceService",
                     "module": "mdxplain.feature.feature_type.torsions.services.torsions_reduce_service",
+                    "access_path": "feature.reduce.torsions.min",
                     "affected_by_tags": ["feature.torsions"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -2788,6 +3086,7 @@
                     "method_name": "max",
                     "class": "TorsionsReduceService",
                     "module": "mdxplain.feature.feature_type.torsions.services.torsions_reduce_service",
+                    "access_path": "feature.reduce.torsions.max",
                     "affected_by_tags": ["feature.torsions"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -2801,6 +3100,7 @@
                     "method_name": "cv",
                     "class": "TorsionsReduceService",
                     "module": "mdxplain.feature.feature_type.torsions.services.torsions_reduce_service",
+                    "access_path": "feature.reduce.torsions.cv",
                     "affected_by_tags": ["feature.torsions"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -2814,6 +3114,7 @@
                     "method_name": "variance",
                     "class": "TorsionsReduceService",
                     "module": "mdxplain.feature.feature_type.torsions.services.torsions_reduce_service",
+                    "access_path": "feature.reduce.torsions.variance",
                     "affected_by_tags": ["feature.torsions"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -2830,6 +3131,7 @@
                 "method_name": "dssp",
                 "class": "FeatureAddService",
                 "module": "mdxplain.feature.services.feature_add_service",
+                "access_path": "feature.add.dssp",
                 "emits_tags": ["feature.dssp"],
                 "affected_by_tags": ["trajectory"],
                 "technical_params": {
@@ -2846,6 +3148,7 @@
                     "method_name": "transitions",
                     "class": "DSSPReduceService",
                     "module": "mdxplain.feature.feature_type.dssp.services.dssp_reduce_service",
+                    "access_path": "feature.reduce.dssp.transitions",
                     "affected_by_tags": ["feature.dssp"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -2860,6 +3163,7 @@
                     "method_name": "transition_frequency",
                     "class": "DSSPReduceService",
                     "module": "mdxplain.feature.feature_type.dssp.services.dssp_reduce_service",
+                    "access_path": "feature.reduce.dssp.transition_frequency",
                     "affected_by_tags": ["feature.dssp"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -2873,6 +3177,7 @@
                     "method_name": "stability",
                     "class": "DSSPReduceService",
                     "module": "mdxplain.feature.feature_type.dssp.services.dssp_reduce_service",
+                    "access_path": "feature.reduce.dssp.stability",
                     "affected_by_tags": ["feature.dssp"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -2886,6 +3191,7 @@
                     "method_name": "class_frequencies",
                     "class": "DSSPReduceService",
                     "module": "mdxplain.feature.feature_type.dssp.services.dssp_reduce_service",
+                    "access_path": "feature.reduce.dssp.class_frequencies",
                     "affected_by_tags": ["feature.dssp"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -2902,6 +3208,7 @@
                 "method_name": "sasa",
                 "class": "FeatureAddService",
                 "module": "mdxplain.feature.services.feature_add_service",
+                "access_path": "feature.add.sasa",
                 "emits_tags": ["feature.sasa"],
                 "affected_by_tags": ["trajectory"],
                 "technical_params": {
@@ -2918,6 +3225,7 @@
                     "method_name": "cv",
                     "class": "SASAReduceService",
                     "module": "mdxplain.feature.feature_type.sasa.services.sasa_reduce_service",
+                    "access_path": "feature.reduce.sasa.cv",
                     "affected_by_tags": ["feature.sasa"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -2931,6 +3239,7 @@
                     "method_name": "range",
                     "class": "SASAReduceService",
                     "module": "mdxplain.feature.feature_type.sasa.services.sasa_reduce_service",
+                    "access_path": "feature.reduce.sasa.range",
                     "affected_by_tags": ["feature.sasa"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -2944,6 +3253,7 @@
                     "method_name": "std",
                     "class": "SASAReduceService",
                     "module": "mdxplain.feature.feature_type.sasa.services.sasa_reduce_service",
+                    "access_path": "feature.reduce.sasa.std",
                     "affected_by_tags": ["feature.sasa"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -2957,6 +3267,7 @@
                     "method_name": "variance",
                     "class": "SASAReduceService",
                     "module": "mdxplain.feature.feature_type.sasa.services.sasa_reduce_service",
+                    "access_path": "feature.reduce.sasa.variance",
                     "affected_by_tags": ["feature.sasa"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -2970,6 +3281,7 @@
                     "method_name": "mad",
                     "class": "SASAReduceService",
                     "module": "mdxplain.feature.feature_type.sasa.services.sasa_reduce_service",
+                    "access_path": "feature.reduce.sasa.mad",
                     "affected_by_tags": ["feature.sasa"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -2983,6 +3295,7 @@
                     "method_name": "mean",
                     "class": "SASAReduceService",
                     "module": "mdxplain.feature.feature_type.sasa.services.sasa_reduce_service",
+                    "access_path": "feature.reduce.sasa.mean",
                     "affected_by_tags": ["feature.sasa"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -2996,6 +3309,7 @@
                     "method_name": "min",
                     "class": "SASAReduceService",
                     "module": "mdxplain.feature.feature_type.sasa.services.sasa_reduce_service",
+                    "access_path": "feature.reduce.sasa.min",
                     "affected_by_tags": ["feature.sasa"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -3009,6 +3323,7 @@
                     "method_name": "max",
                     "class": "SASAReduceService",
                     "module": "mdxplain.feature.feature_type.sasa.services.sasa_reduce_service",
+                    "access_path": "feature.reduce.sasa.max",
                     "affected_by_tags": ["feature.sasa"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -3022,6 +3337,7 @@
                     "method_name": "burial_fraction",
                     "class": "SASAReduceService",
                     "module": "mdxplain.feature.feature_type.sasa.services.sasa_reduce_service",
+                    "access_path": "feature.reduce.sasa.burial_fraction",
                     "affected_by_tags": ["feature.sasa"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -3035,6 +3351,7 @@
                     "method_name": "exposure_fraction",
                     "class": "SASAReduceService",
                     "module": "mdxplain.feature.feature_type.sasa.services.sasa_reduce_service",
+                    "access_path": "feature.reduce.sasa.exposure_fraction",
                     "affected_by_tags": ["feature.sasa"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -3048,6 +3365,7 @@
                     "method_name": "transitions",
                     "class": "SASAReduceService",
                     "module": "mdxplain.feature.feature_type.sasa.services.sasa_reduce_service",
+                    "access_path": "feature.reduce.sasa.transitions",
                     "affected_by_tags": ["feature.sasa"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -3068,6 +3386,7 @@
                 "method_name": "coordinates",
                 "class": "FeatureAddService",
                 "module": "mdxplain.feature.services.feature_add_service",
+                "access_path": "feature.add.coordinates",
                 "emits_tags": ["feature.coordinates"],
                 "affected_by_tags": ["trajectory"],
                 "technical_params": {
@@ -3083,6 +3402,7 @@
                     "method_name": "std",
                     "class": "CoordinatesReduceService",
                     "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_reduce_service",
+                    "access_path": "feature.reduce.coordinates.std",
                     "affected_by_tags": ["feature.coordinates"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -3096,6 +3416,7 @@
                     "method_name": "rmsf",
                     "class": "CoordinatesReduceService",
                     "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_reduce_service",
+                    "access_path": "feature.reduce.coordinates.rmsf",
                     "affected_by_tags": ["feature.coordinates"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -3109,6 +3430,7 @@
                     "method_name": "cv",
                     "class": "CoordinatesReduceService",
                     "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_reduce_service",
+                    "access_path": "feature.reduce.coordinates.cv",
                     "affected_by_tags": ["feature.coordinates"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -3122,6 +3444,7 @@
                     "method_name": "variance",
                     "class": "CoordinatesReduceService",
                     "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_reduce_service",
+                    "access_path": "feature.reduce.coordinates.variance",
                     "affected_by_tags": ["feature.coordinates"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -3135,6 +3458,7 @@
                     "method_name": "range",
                     "class": "CoordinatesReduceService",
                     "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_reduce_service",
+                    "access_path": "feature.reduce.coordinates.range",
                     "affected_by_tags": ["feature.coordinates"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -3148,6 +3472,7 @@
                     "method_name": "mad",
                     "class": "CoordinatesReduceService",
                     "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_reduce_service",
+                    "access_path": "feature.reduce.coordinates.mad",
                     "affected_by_tags": ["feature.coordinates"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -3161,6 +3486,7 @@
                     "method_name": "mean",
                     "class": "CoordinatesReduceService",
                     "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_reduce_service",
+                    "access_path": "feature.reduce.coordinates.mean",
                     "affected_by_tags": ["feature.coordinates"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -3174,6 +3500,7 @@
                     "method_name": "min",
                     "class": "CoordinatesReduceService",
                     "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_reduce_service",
+                    "access_path": "feature.reduce.coordinates.min",
                     "affected_by_tags": ["feature.coordinates"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -3187,6 +3514,7 @@
                     "method_name": "max",
                     "class": "CoordinatesReduceService",
                     "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_reduce_service",
+                    "access_path": "feature.reduce.coordinates.max",
                     "affected_by_tags": ["feature.coordinates"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -3200,6 +3528,7 @@
                     "method_name": "transitions",
                     "class": "CoordinatesReduceService",
                     "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_reduce_service",
+                    "access_path": "feature.reduce.coordinates.transitions",
                     "affected_by_tags": ["feature.coordinates"],
                     "technical_params": {
                         "traj_selection": {"required": false, "default": "all"},
@@ -3221,6 +3550,7 @@
             "method_name": "filter_importance",
             "class": "FeatureImportanceManager",
             "module": "mdxplain.feature_importance.manager.feature_importance_manager",
+            "access_path": "feature_importance.filter_importance",
             "technical_params": {
                 "source_name": {"required": true},
                 "filtered_name": {"required": true},
@@ -3234,6 +3564,7 @@
             "method_name": "remove_analysis",
             "class": "FeatureImportanceManager",
             "module": "mdxplain.feature_importance.manager.feature_importance_manager",
+            "access_path": "feature_importance.remove_analysis",
             "affected_by_tags": ["feature_importance"],
             "technical_params": {
                 "analysis_name": {"required": true}
@@ -3244,6 +3575,7 @@
             "method_name": "decision_tree",
             "class": "FeatureImportanceAddService",
             "module": "mdxplain.feature_importance.services.feature_importance_add_service",
+            "access_path": "feature_importance.add.decision_tree",
             "emits_tags": ["feature_importance"],
             "affected_by_tags": ["comparison"],
             "technical_params": {
@@ -3270,6 +3602,7 @@
             "method_name": "random_forest",
             "class": "FeatureImportanceAddService",
             "module": "mdxplain.feature_importance.services.feature_importance_add_service",
+            "access_path": "feature_importance.add.random_forest",
             "emits_tags": ["feature_importance"],
             "affected_by_tags": ["comparison"],
             "technical_params": {
@@ -3306,6 +3639,7 @@
                 "method_name": "create",
                 "class": "FeatureSelectorManager",
                 "module": "mdxplain.feature_selection.manager.feature_selector_manager",
+                "access_path": "feature_selector.create",
                 "emits_tags": ["feature_selection"],
                 "technical_params": {
                     "name": {"required": true}
@@ -3316,6 +3650,7 @@
                 "method_name": "select",
                 "class": "FeatureSelectorManager",
                 "module": "mdxplain.feature_selection.manager.feature_selector_manager",
+                "access_path": "feature_selector.select",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection"],
                 "technical_params": {
@@ -3328,6 +3663,7 @@
                 "method_name": "remove_selector",
                 "class": "FeatureSelectorManager",
                 "module": "mdxplain.feature_selection.manager.feature_selector_manager",
+                "access_path": "feature_selector.remove_selector",
                 "affected_by_tags": ["feature_selection"],
                 "technical_params": {
                     "name": {"required": true}
@@ -3340,6 +3676,7 @@
                 "method_name": "distances",
                 "class": "DistancesSelectionService",
                 "module": "mdxplain.feature.feature_type.distances.services.distances_selection_service",
+                "access_path": "feature_selector.add.distances",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.distances"],
                 "technical_params": {
@@ -3357,6 +3694,7 @@
                 "method_name": "with_cv_reduction",
                 "class": "DistancesSelectionService",
                 "module": "mdxplain.feature.feature_type.distances.services.distances_selection_service",
+                "access_path": "feature_selector.add.distances.with_cv_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.distances"],
                 "technical_params": {
@@ -3379,6 +3717,7 @@
                 "method_name": "with_std_reduction",
                 "class": "DistancesSelectionService",
                 "module": "mdxplain.feature.feature_type.distances.services.distances_selection_service",
+                "access_path": "feature_selector.add.distances.with_std_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.distances"],
                 "technical_params": {
@@ -3401,6 +3740,7 @@
                 "method_name": "with_variance_reduction",
                 "class": "DistancesSelectionService",
                 "module": "mdxplain.feature.feature_type.distances.services.distances_selection_service",
+                "access_path": "feature_selector.add.distances.with_variance_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.distances"],
                 "technical_params": {
@@ -3423,6 +3763,7 @@
                 "method_name": "with_range_reduction",
                 "class": "DistancesSelectionService",
                 "module": "mdxplain.feature.feature_type.distances.services.distances_selection_service",
+                "access_path": "feature_selector.add.distances.with_range_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.distances"],
                 "technical_params": {
@@ -3445,6 +3786,7 @@
                 "method_name": "with_transitions_reduction",
                 "class": "DistancesSelectionService",
                 "module": "mdxplain.feature.feature_type.distances.services.distances_selection_service",
+                "access_path": "feature_selector.add.distances.with_transitions_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.distances"],
                 "technical_params": {
@@ -3471,6 +3813,7 @@
                 "method_name": "with_min_reduction",
                 "class": "DistancesSelectionService",
                 "module": "mdxplain.feature.feature_type.distances.services.distances_selection_service",
+                "access_path": "feature_selector.add.distances.with_min_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.distances"],
                 "technical_params": {
@@ -3493,6 +3836,7 @@
                 "method_name": "with_mad_reduction",
                 "class": "DistancesSelectionService",
                 "module": "mdxplain.feature.feature_type.distances.services.distances_selection_service",
+                "access_path": "feature_selector.add.distances.with_mad_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.distances"],
                 "technical_params": {
@@ -3515,6 +3859,7 @@
                 "method_name": "with_mean_reduction",
                 "class": "DistancesSelectionService",
                 "module": "mdxplain.feature.feature_type.distances.services.distances_selection_service",
+                "access_path": "feature_selector.add.distances.with_mean_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.distances"],
                 "technical_params": {
@@ -3537,6 +3882,7 @@
                 "method_name": "with_max_reduction",
                 "class": "DistancesSelectionService",
                 "module": "mdxplain.feature.feature_type.distances.services.distances_selection_service",
+                "access_path": "feature_selector.add.distances.with_max_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.distances"],
                 "technical_params": {
@@ -3561,6 +3907,7 @@
                 "method_name": "contacts",
                 "class": "ContactsSelectionService",
                 "module": "mdxplain.feature.feature_type.contacts.services.contacts_selection_service",
+                "access_path": "feature_selector.add.contacts",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.contacts"],
                 "technical_params": {
@@ -3578,6 +3925,7 @@
                 "method_name": "with_frequency_reduction",
                 "class": "ContactsSelectionService",
                 "module": "mdxplain.feature.feature_type.contacts.services.contacts_selection_service",
+                "access_path": "feature_selector.add.contacts.with_frequency_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.contacts"],
                 "technical_params": {
@@ -3600,6 +3948,7 @@
                 "method_name": "with_stability_reduction",
                 "class": "ContactsSelectionService",
                 "module": "mdxplain.feature.feature_type.contacts.services.contacts_selection_service",
+                "access_path": "feature_selector.add.contacts.with_stability_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.contacts"],
                 "technical_params": {
@@ -3622,6 +3971,7 @@
                 "method_name": "with_transitions_reduction",
                 "class": "ContactsSelectionService",
                 "module": "mdxplain.feature.feature_type.contacts.services.contacts_selection_service",
+                "access_path": "feature_selector.add.contacts.with_transitions_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.contacts"],
                 "technical_params": {
@@ -3650,6 +4000,7 @@
                 "method_name": "torsions",
                 "class": "TorsionsSelectionService",
                 "module": "mdxplain.feature.feature_type.torsions.services.torsions_selection_service",
+                "access_path": "feature_selector.add.torsions",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.torsions"],
                 "technical_params": {
@@ -3664,9 +4015,10 @@
                 "notes": ["The TorsionsSelectionService.torsions_selection_service method."]
             },
             "with_transitions_reduction": {
-                "method_name": "with_transitions",
+                "method_name": "with_transitions_reduction",
                 "class": "TorsionsSelectionService",
                 "module": "mdxplain.feature.feature_type.torsions.services.torsions_selection_service",
+                "access_path": "feature_selector.add.torsions.with_transitions_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.torsions"],
                 "technical_params": {
@@ -3693,6 +4045,7 @@
                 "method_name": "with_std_reduction",
                 "class": "TorsionsSelectionService",
                 "module": "mdxplain.feature.feature_type.torsions.services.torsions_selection_service",
+                "access_path": "feature_selector.add.torsions.with_std_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.torsions"],
                 "technical_params": {
@@ -3715,6 +4068,7 @@
                 "method_name": "with_mad_reduction",
                 "class": "TorsionsSelectionService",
                 "module": "mdxplain.feature.feature_type.torsions.services.torsions_selection_service",
+                "access_path": "feature_selector.add.torsions.with_mad_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.torsions"],
                 "technical_params": {
@@ -3737,6 +4091,7 @@
                 "method_name": "with_mean_reduction",
                 "class": "TorsionsSelectionService",
                 "module": "mdxplain.feature.feature_type.torsions.services.torsions_selection_service",
+                "access_path": "feature_selector.add.torsions.with_mean_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.torsions"],
                 "technical_params": {
@@ -3759,6 +4114,7 @@
                 "method_name": "with_range_reduction",
                 "class": "TorsionsSelectionService",
                 "module": "mdxplain.feature.feature_type.torsions.services.torsions_selection_service",
+                "access_path": "feature_selector.add.torsions.with_range_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.torsions"],
                 "technical_params": {
@@ -3781,6 +4137,7 @@
                 "method_name": "with_min_reduction",
                 "class": "TorsionsSelectionService",
                 "module": "mdxplain.feature.feature_type.torsions.services.torsions_selection_service",
+                "access_path": "feature_selector.add.torsions.with_min_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.torsions"],
                 "technical_params": {
@@ -3803,6 +4160,7 @@
                 "method_name": "with_max_reduction",
                 "class": "TorsionsSelectionService",
                 "module": "mdxplain.feature.feature_type.torsions.services.torsions_selection_service",
+                "access_path": "feature_selector.add.torsions.with_max_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.torsions"],
                 "technical_params": {
@@ -3825,6 +4183,7 @@
                 "method_name": "with_cv_reduction",
                 "class": "TorsionsSelectionService",
                 "module": "mdxplain.feature.feature_type.torsions.services.torsions_selection_service",
+                "access_path": "feature_selector.add.torsions.with_cv_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.torsions"],
                 "technical_params": {
@@ -3847,6 +4206,7 @@
                 "method_name": "with_variance_reduction",
                 "class": "TorsionsSelectionService",
                 "module": "mdxplain.feature.feature_type.torsions.services.torsions_selection_service",
+                "access_path": "feature_selector.add.torsions.with_variance_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.torsions"],
                 "technical_params": {
@@ -3871,6 +4231,7 @@
                 "method_name": "dssp",
                 "class": "DSSPSelectionService",
                 "module": "mdxplain.feature.feature_type.dssp.services.dssp_selection_service",
+                "access_path": "feature_selector.add.dssp",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.dssp"],
                 "technical_params": {
@@ -3888,6 +4249,7 @@
                 "method_name": "with_transitions_reduction",
                 "class": "DSSPSelectionService",
                 "module": "mdxplain.feature.feature_type.dssp.services.dssp_selection_service",
+                "access_path": "feature_selector.add.dssp.with_transitions_reduction",
                 "affected_by_tags": ["feature_selection", "feature.dssp"],
                 "technical_params": {
                     "selector_name": {"required": true},
@@ -3909,6 +4271,7 @@
                 "method_name": "with_transition_frequency_reduction",
                 "class": "DSSPSelectionService",
                 "module": "mdxplain.feature.feature_type.dssp.services.dssp_selection_service",
+                "access_path": "feature_selector.add.dssp.with_transition_frequency_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.dssp"],
                 "technical_params": {
@@ -3931,6 +4294,7 @@
                 "method_name": "with_stability_reduction",
                 "class": "DSSPSelectionService",
                 "module": "mdxplain.feature.feature_type.dssp.services.dssp_selection_service",
+                "access_path": "feature_selector.add.dssp.with_stability_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.dssp"],
                 "technical_params": {
@@ -3953,6 +4317,7 @@
                 "method_name": "with_class_frequencies_reduction",
                 "class": "DSSPSelectionService",
                 "module": "mdxplain.feature.feature_type.dssp.services.dssp_selection_service",
+                "access_path": "feature_selector.add.dssp.with_class_frequencies_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.dssp"],
                 "technical_params": {
@@ -3978,6 +4343,7 @@
                 "method_name": "sasa",
                 "class": "SasaSelectionService",
                 "module": "mdxplain.feature.feature_type.sasa.services.sasa_selection_service",
+                "access_path": "feature_selector.add.sasa",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.sasa"],
                 "technical_params": {
@@ -3995,6 +4361,7 @@
                 "method_name": "with_cv_reduction",
                 "class": "SasaSelectionService",
                 "module": "mdxplain.feature.feature_type.sasa.services.sasa_selection_service",
+                "access_path": "feature_selector.add.sasa.with_cv_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.sasa"],
                 "technical_params": {
@@ -4017,6 +4384,7 @@
                 "method_name": "with_range_reduction",
                 "class": "SasaSelectionService",
                 "module": "mdxplain.feature.feature_type.sasa.services.sasa_selection_service",
+                "access_path": "feature_selector.add.sasa.with_range_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.sasa"],
                 "technical_params": {
@@ -4039,6 +4407,7 @@
                 "method_name": "with_std_reduction",
                 "class": "SasaSelectionService",
                 "module": "mdxplain.feature.feature_type.sasa.services.sasa_selection_service",
+                "access_path": "feature_selector.add.sasa.with_std_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.sasa"],
                 "technical_params": {
@@ -4061,6 +4430,7 @@
                 "method_name": "with_variance_reduction",
                 "class": "SasaSelectionService",
                 "module": "mdxplain.feature.feature_type.sasa.services.sasa_selection_service",
+                "access_path": "feature_selector.add.sasa.with_variance_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.sasa"],
                 "technical_params": {
@@ -4083,6 +4453,7 @@
                 "method_name": "with_mad_reduction",
                 "class": "SasaSelectionService",
                 "module": "mdxplain.feature.feature_type.sasa.services.sasa_selection_service",
+                "access_path": "feature_selector.add.sasa.with_mad_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.sasa"],
                 "technical_params": {
@@ -4105,6 +4476,7 @@
                 "method_name": "with_mean_reduction",
                 "class": "SasaSelectionService",
                 "module": "mdxplain.feature.feature_type.sasa.services.sasa_selection_service",
+                "access_path": "feature_selector.add.sasa.with_mean_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.sasa"],
                 "technical_params": {
@@ -4127,6 +4499,7 @@
                 "method_name": "with_min_reduction",
                 "class": "SasaSelectionService",
                 "module": "mdxplain.feature.feature_type.sasa.services.sasa_selection_service",
+                "access_path": "feature_selector.add.sasa.with_min_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.sasa"],
                 "technical_params": {
@@ -4149,6 +4522,7 @@
                 "method_name": "with_max_reduction",
                 "class": "SasaSelectionService",
                 "module": "mdxplain.feature.feature_type.sasa.services.sasa_selection_service",
+                "access_path": "feature_selector.add.sasa.with_max_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.sasa"],
                 "technical_params": {
@@ -4171,6 +4545,7 @@
                 "method_name": "with_burial_fraction_reduction",
                 "class": "SasaSelectionService",
                 "module": "mdxplain.feature.feature_type.sasa.services.sasa_selection_service",
+                "access_path": "feature_selector.add.sasa.with_burial_fraction_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.sasa"],
                 "technical_params": {
@@ -4192,6 +4567,7 @@
                 "method_name": "with_exposure_fraction_reduction",
                 "class": "SasaSelectionService",
                 "module": "mdxplain.feature.feature_type.sasa.services.sasa_selection_service",
+                "access_path": "feature_selector.add.sasa.with_exposure_fraction_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.sasa"],
                 "technical_params": {
@@ -4213,6 +4589,7 @@
                 "method_name": "with_transitions_reduction",
                 "class": "SasaSelectionService",
                 "module": "mdxplain.feature.feature_type.sasa.services.sasa_selection_service",
+                "access_path": "feature_selector.add.sasa.with_transitions_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.sasa"],
                 "technical_params": {
@@ -4241,6 +4618,7 @@
                 "method_name": "coordinates",
                 "class": "CoordinatesSelectionService",
                 "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_selection_service",
+                "access_path": "feature_selector.add.coordinates",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.coordinates"],
                 "technical_params": {
@@ -4258,6 +4636,7 @@
                 "method_name": "with_rmsf_reduction",
                 "class": "CoordinatesSelectionService",
                 "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_selection_service",
+                "access_path": "feature_selector.add.coordinates.with_rmsf_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.coordinates"],
                 "technical_params": {
@@ -4280,6 +4659,7 @@
                 "method_name": "with_std_reduction",
                 "class": "CoordinatesSelectionService",
                 "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_selection_service",
+                "access_path": "feature_selector.add.coordinates.with_std_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.coordinates"],
                 "technical_params": {
@@ -4302,6 +4682,7 @@
                 "method_name": "with_cv_reduction",
                 "class": "CoordinatesSelectionService",
                 "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_selection_service",
+                "access_path": "feature_selector.add.coordinates.with_cv_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.coordinates"],
                 "technical_params": {
@@ -4324,6 +4705,7 @@
                 "method_name": "with_variance_reduction",
                 "class": "CoordinatesSelectionService",
                 "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_selection_service",
+                "access_path": "feature_selector.add.coordinates.with_variance_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.coordinates"],
                 "technical_params": {
@@ -4346,6 +4728,7 @@
                 "method_name": "with_range_reduction",
                 "class": "CoordinatesSelectionService",
                 "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_selection_service",
+                "access_path": "feature_selector.add.coordinates.with_range_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.coordinates"],
                 "technical_params": {
@@ -4368,6 +4751,7 @@
                 "method_name": "with_mad_reduction",
                 "class": "CoordinatesSelectionService",
                 "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_selection_service",
+                "access_path": "feature_selector.add.coordinates.with_mad_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.coordinates"],
                 "technical_params": {
@@ -4390,6 +4774,7 @@
                 "method_name": "with_mean_reduction",
                 "class": "CoordinatesSelectionService",
                 "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_selection_service",
+                "access_path": "feature_selector.add.coordinates.with_mean_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.coordinates"],
                 "technical_params": {
@@ -4412,6 +4797,7 @@
                 "method_name": "with_min_reduction",
                 "class": "CoordinatesSelectionService",
                 "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_selection_service",
+                "access_path": "feature_selector.add.coordinates.with_min_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.coordinates"],
                 "technical_params": {
@@ -4434,6 +4820,7 @@
                 "method_name": "with_max_reduction",
                 "class": "CoordinatesSelectionService",
                 "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_selection_service",
+                "access_path": "feature_selector.add.coordinates.with_max_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.coordinates"],
                 "technical_params": {
@@ -4456,6 +4843,7 @@
                 "method_name": "with_transitions_reduction",
                 "class": "CoordinatesSelectionService",
                 "module": "mdxplain.feature.feature_type.coordinates.services.coordinates_selection_service",
+                "access_path": "feature_selector.add.coordinates.with_transitions_reduction",
                 "emits_tags": ["feature_selection"],
                 "affected_by_tags": ["feature_selection", "feature.coordinates"],
                 "technical_params": {
@@ -4504,6 +4892,7 @@
             "method_name": "add_custom_metadata",
             "class": "PipelineManager",
             "module": "mdxplain.pipeline.manager.pipeline_manager",
+            "access_path": "add_custom_metadata",
             "technical_params": {
                 "name": {"required": true},
                 "value": {"required": true},
@@ -4517,6 +4906,7 @@
             "method_name": "clear_all",
             "class": "PipelineManager",
             "module": "mdxplain.pipeline.manager.pipeline_manager",
+            "access_path": "clear_all",
             "technical_params": {},
             "gui_param_info": {}
         },
@@ -4524,6 +4914,7 @@
             "method_name": "update_config",
             "class": "PipelineManager",
             "module": "mdxplain.pipeline.manager.pipeline_manager",
+            "access_path": "update_config",
             "emits_tags": ["pipeline_config"],
             "technical_params": {
                 "chunk_size": {"required": false, "default": null},
@@ -4539,6 +4930,7 @@
                 "method_name": "landscape",
                 "class": "PlotsManager",
                 "module": "mdxplain.plots.manager.plots_manager",
+                "access_path": "plots.landscape",
                 "affected_by_tags": ["decomposition", "clustering"],
                 "technical_params": {
                     "decomposition_name": {"required": true},
@@ -4586,6 +4978,7 @@
                 "method_name": "membership",
                 "class": "PlotsManager",
                 "module": "mdxplain.plots.manager.plots_manager",
+                "access_path": "plots.membership",
                 "affected_by_tags": ["clustering"],
                 "technical_params": {
                     "clustering_name": {"required": true},
@@ -4612,6 +5005,7 @@
                 "method_name": "landscape",
                 "class": "ClusteringFacade",
                 "module": "mdxplain.plots.services.clustering_facade",
+                "access_path": "plots.clustering.landscape",
                 "affected_by_tags": ["clustering", "decomposition"],
                 "technical_params": {
                     "clustering_name": {"required": true},
@@ -4659,6 +5053,7 @@
                 "method_name": "membership",
                 "class": "ClusteringFacade",
                 "module": "mdxplain.plots.services.clustering_facade",
+                "access_path": "plots.clustering.membership",
                 "affected_by_tags": ["clustering"],
                 "technical_params": {
                     "clustering_name": {"required": true},
@@ -4685,6 +5080,7 @@
                 "method_name": "landscape",
                 "class": "DecompositionFacade",
                 "module": "mdxplain.plots.services.decomposition_facade",
+                "access_path": "plots.decomposition.landscape",
                 "affected_by_tags": ["decomposition", "clustering"],
                 "technical_params": {
                     "decomposition_name": {"required": true},
@@ -4734,6 +5130,7 @@
                 "method_name": "violins",
                 "class": "FeatureFacade",
                 "module": "mdxplain.plots.services.feature_facade",
+                "access_path": "plots.feature.violins",
                 "affected_by_tags": ["feature_selection", "data_selector"],
                 "technical_params": {
                     "feature_selector": {"required": true},
@@ -4762,6 +5159,7 @@
                 "method_name": "densities",
                 "class": "FeatureFacade",
                 "module": "mdxplain.plots.services.feature_facade",
+                "access_path": "plots.feature.densities",
                 "affected_by_tags": ["feature_selection", "data_selector"],
                 "technical_params": {
                     "feature_selector": {"required": true},
@@ -4802,6 +5200,7 @@
                 "method_name": "time_series",
                 "class": "FeatureFacade",
                 "module": "mdxplain.plots.services.feature_facade",
+                "access_path": "plots.feature.time_series",
                 "affected_by_tags": ["feature_selection", "clustering"],
                 "technical_params": {
                     "feature_selector": {"required": true},
@@ -4855,6 +5254,7 @@
                 "method_name": "violins",
                 "class": "FeatureImportanceFacade",
                 "module": "mdxplain.plots.services.feature_importance_facade",
+                "access_path": "plots.feature_importance.violins",
                 "affected_by_tags": ["feature_importance"],
                 "technical_params": {
                     "feature_importance_name": {"required": true},
@@ -4883,6 +5283,7 @@
                 "method_name": "densities",
                 "class": "FeatureImportanceFacade",
                 "module": "mdxplain.plots.services.feature_importance_facade",
+                "access_path": "plots.feature_importance.densities",
                 "affected_by_tags": ["feature_importance"],
                 "technical_params": {
                     "feature_importance_name": {"required": true},
@@ -4923,6 +5324,7 @@
                 "method_name": "time_series",
                 "class": "FeatureImportanceFacade",
                 "module": "mdxplain.plots.services.feature_importance_facade",
+                "access_path": "plots.feature_importance.time_series",
                 "affected_by_tags": ["feature_importance", "clustering"],
                 "technical_params": {
                     "feature_importance_name": {"required": true},
@@ -4975,6 +5377,7 @@
                 "method_name": "decision_trees",
                 "class": "FeatureImportanceFacade",
                 "module": "mdxplain.plots.services.feature_importance_facade",
+                "access_path": "plots.feature_importance.decision_trees",
                 "affected_by_tags": ["feature_importance"],
                 "technical_params": {
                     "feature_importance_name": {"required": true},
@@ -5008,6 +5411,7 @@
                 "method_name": "importance_bars",
                 "class": "FeatureImportanceFacade",
                 "module": "mdxplain.plots.services.feature_importance_facade",
+                "access_path": "plots.feature_importance.importance_bars",
                 "affected_by_tags": ["feature_importance"],
                 "technical_params": {
                     "feature_importance_name": {"required": true},
@@ -5033,6 +5437,7 @@
                 "method_name": "create_representative_pdbs",
                 "class": "StructureVizFeatureService",
                 "module": "mdxplain.structure_visualization.services.structure_viz_feature_service",
+                "access_path": "structure_visualization.feature.create_representative_pdbs",
                 "emits_tags": ["structure_visualization"],
                 "affected_by_tags": ["data_selector", "feature_selection"],
                 "technical_params": {
@@ -5048,6 +5453,7 @@
                 "method_name": "visualize_nglview_jupyter",
                 "class": "StructureVizFeatureService",
                 "module": "mdxplain.structure_visualization.services.structure_viz_feature_service",
+                "access_path": "structure_visualization.feature.visualize_nglview_jupyter",
                 "affected_by_tags": ["structure_visualization"],
                 "technical_params": {
                     "structure_viz_name": {"required": true},
@@ -5059,6 +5465,7 @@
                 "method_name": "create_pymol_script",
                 "class": "StructureVizFeatureService",
                 "module": "mdxplain.structure_visualization.services.structure_viz_feature_service",
+                "access_path": "structure_visualization.feature.create_pymol_script",
                 "affected_by_tags": ["structure_visualization"],
                 "technical_params": {
                     "structure_viz_name": {"required": true},
@@ -5071,6 +5478,7 @@
                 "method_name": "visualize_pymol",
                 "class": "StructureVizFeatureService",
                 "module": "mdxplain.structure_visualization.services.structure_viz_feature_service",
+                "access_path": "structure_visualization.feature.visualize_pymol",
                 "affected_by_tags": ["structure_visualization"],
                 "technical_params": {
                     "structure_viz_name": {"required": true},
@@ -5084,6 +5492,7 @@
                 "method_name": "create_pdb_with_beta_factors",
                 "class": "StructureVizFeatureImportanceService",
                 "module": "mdxplain.structure_visualization.services.structure_viz_feature_importance_service",
+                "access_path": "structure_visualization.feature_importance.create_pdb_with_beta_factors",
                 "emits_tags": ["structure_visualization"],
                 "affected_by_tags": ["feature_importance"],
                 "technical_params": {
@@ -5099,6 +5508,7 @@
                 "method_name": "visualize_nglview_jupyter",
                 "class": "StructureVizFeatureImportanceService",
                 "module": "mdxplain.structure_visualization.services.structure_viz_feature_importance_service",
+                "access_path": "structure_visualization.feature_importance.visualize_nglview_jupyter",
                 "affected_by_tags": ["structure_visualization"],
                 "technical_params": {
                     "structure_viz_name": {"required": true},
@@ -5112,6 +5522,7 @@
                 "method_name": "create_pymol_script",
                 "class": "StructureVizFeatureImportanceService",
                 "module": "mdxplain.structure_visualization.services.structure_viz_feature_importance_service",
+                "access_path": "structure_visualization.feature_importance.create_pymol_script",
                 "affected_by_tags": ["structure_visualization"],
                 "technical_params": {
                     "structure_viz_name": {"required": true},
@@ -5126,6 +5537,7 @@
                 "method_name": "visualize_pymol",
                 "class": "StructureVizFeatureImportanceService",
                 "module": "mdxplain.structure_visualization.services.structure_viz_feature_importance_service",
+                "access_path": "structure_visualization.feature_importance.visualize_pymol",
                 "affected_by_tags": ["structure_visualization"],
                 "technical_params": {
                     "structure_viz_name": {"required": true},
@@ -5142,6 +5554,7 @@
             "method_name": "load_trajectories",
             "class": "TrajectoryManager",
             "module": "mdxplain.trajectory.manager.trajectory_manager",
+            "access_path": "trajectory.load_trajectories",
             "emits_tags": ["trajectory"],
             "technical_params": {
                 "data_input": {"required": true},
@@ -5156,6 +5569,7 @@
             "method_name": "add_trajectory",
             "class": "TrajectoryManager",
             "module": "mdxplain.trajectory.manager.trajectory_manager",
+            "access_path": "trajectory.add_trajectory",
             "emits_tags": ["trajectory"],
             "affected_by_tags": ["trajectory"],
             "technical_params": {
@@ -5170,6 +5584,7 @@
             "method_name": "remove_trajectory",
             "class": "TrajectoryManager",
             "module": "mdxplain.trajectory.manager.trajectory_manager",
+            "access_path": "trajectory.remove_trajectory",
             "emits_tags": ["trajectory"],
             "affected_by_tags": ["trajectory"],
             "technical_params": {
@@ -5182,6 +5597,7 @@
             "method_name": "slice_traj",
             "class": "TrajectoryManager",
             "module": "mdxplain.trajectory.manager.trajectory_manager",
+            "access_path": "trajectory.slice_traj",
             "emits_tags": ["trajectory"],
             "affected_by_tags": ["trajectory", "data_selector"],
             "technical_params": {
@@ -5199,6 +5615,7 @@
             "method_name": "select_atoms",
             "class": "TrajectoryManager",
             "module": "mdxplain.trajectory.manager.trajectory_manager",
+            "access_path": "trajectory.select_atoms",
             "emits_tags": ["trajectory"],
             "affected_by_tags": ["trajectory"],
             "technical_params": {
@@ -5213,6 +5630,7 @@
             "method_name": "add_labels",
             "class": "TrajectoryManager",
             "module": "mdxplain.trajectory.manager.trajectory_manager",
+            "access_path": "trajectory.add_labels",
             "emits_tags": ["trajectory"],
             "affected_by_tags": ["trajectory"],
             "technical_params": {
@@ -5224,7 +5642,7 @@
                 "aa_short": {"required": false, "default": false},
                 "try_web_lookup": {"required": false, "default": true},
                 "force": {"required": false, "default": false},
-                "nomenclature_kwargs": {"required": true}
+                "nomenclature_kwargs": {"required": true, "kind": "VAR_KEYWORD"}
             },
             "gui_param_info": {}
         },
@@ -5232,6 +5650,7 @@
             "method_name": "add_tags",
             "class": "TrajectoryManager",
             "module": "mdxplain.trajectory.manager.trajectory_manager",
+            "access_path": "trajectory.add_tags",
             "emits_tags": ["trajectory"],
             "affected_by_tags": ["trajectory"],
             "technical_params": {
@@ -5244,6 +5663,7 @@
             "method_name": "set_tags",
             "class": "TrajectoryManager",
             "module": "mdxplain.trajectory.manager.trajectory_manager",
+            "access_path": "trajectory.set_tags",
             "emits_tags": ["trajectory"],
             "affected_by_tags": ["trajectory"],
             "technical_params": {
@@ -5256,6 +5676,7 @@
             "method_name": "rename_trajectories",
             "class": "TrajectoryManager",
             "module": "mdxplain.trajectory.manager.trajectory_manager",
+            "access_path": "trajectory.rename_trajectories",
             "emits_tags": ["trajectory"],
             "affected_by_tags": ["trajectory"],
             "technical_params": {
@@ -5267,6 +5688,7 @@
             "method_name": "reset_trajectory_data",
             "class": "TrajectoryManager",
             "module": "mdxplain.trajectory.manager.trajectory_manager",
+            "access_path": "trajectory.reset_trajectory_data",
             "emits_tags": ["trajectory"],
             "affected_by_tags": ["trajectory"],
             "technical_params": {},
@@ -5276,6 +5698,7 @@
             "method_name": "select_trajs",
             "class": "TrajectoryManager",
             "module": "mdxplain.trajectory.manager.trajectory_manager",
+            "access_path": "trajectory.select_trajs",
             "emits_tags": ["trajectory"],
             "affected_by_tags": ["trajectory", "data_selector"],
             "technical_params": {
@@ -5287,6 +5710,7 @@
             "method_name": "superpose",
             "class": "TrajectoryManager",
             "module": "mdxplain.trajectory.manager.trajectory_manager",
+            "access_path": "trajectory.superpose",
             "emits_tags": ["trajectory"],
             "affected_by_tags": ["trajectory"],
             "technical_params": {
@@ -5302,6 +5726,7 @@
             "method_name": "center_coordinates",
             "class": "TrajectoryManager",
             "module": "mdxplain.trajectory.manager.trajectory_manager",
+            "access_path": "trajectory.center_coordinates",
             "emits_tags": ["trajectory"],
             "affected_by_tags": ["trajectory"],
             "technical_params": {
@@ -5316,6 +5741,7 @@
             "method_name": "smooth",
             "class": "TrajectoryManager",
             "module": "mdxplain.trajectory.manager.trajectory_manager",
+            "access_path": "trajectory.smooth",
             "emits_tags": ["trajectory"],
             "affected_by_tags": ["trajectory"],
             "technical_params": {
@@ -5332,6 +5758,7 @@
             "method_name": "image_molecules",
             "class": "TrajectoryManager",
             "module": "mdxplain.trajectory.manager.trajectory_manager",
+            "access_path": "trajectory.image_molecules",
             "emits_tags": ["trajectory"],
             "affected_by_tags": ["trajectory"],
             "technical_params": {
@@ -5348,6 +5775,7 @@
             "method_name": "remove_solvent",
             "class": "TrajectoryManager",
             "module": "mdxplain.trajectory.manager.trajectory_manager",
+            "access_path": "trajectory.remove_solvent",
             "emits_tags": ["trajectory"],
             "affected_by_tags": ["trajectory"],
             "technical_params": {
@@ -5362,6 +5790,7 @@
             "method_name": "join",
             "class": "TrajectoryManager",
             "module": "mdxplain.trajectory.manager.trajectory_manager",
+            "access_path": "trajectory.join",
             "emits_tags": ["trajectory"],
             "affected_by_tags": ["trajectory"],
             "technical_params": {
@@ -5378,6 +5807,7 @@
             "method_name": "stack",
             "class": "TrajectoryManager",
             "module": "mdxplain.trajectory.manager.trajectory_manager",
+            "access_path": "trajectory.stack",
             "emits_tags": ["trajectory"],
             "affected_by_tags": ["trajectory"],
             "technical_params": {

@@ -24,10 +24,12 @@ from .spec_io_helper import SpecIOHelper
 from .spec_builder_helper import SpecBuilderHelper
 from .spec_validator_helper import SpecValidatorHelper
 from .graph_helper import GraphHelper
+from .pipeline_builder_helper import PipelineBuilderHelper
 
 __all__ = [
     "SpecIOHelper",
     "SpecBuilderHelper",
     "SpecValidatorHelper",
     "GraphHelper",
+    "PipelineBuilderHelper",
 ]

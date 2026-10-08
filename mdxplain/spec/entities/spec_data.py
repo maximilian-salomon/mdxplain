@@ -130,6 +130,14 @@ class SpecData:
                 ``SpecBuilderHelper.resync`` call (see
                 ``LogGraphHelper.build_graph``); None until the first
                 resync.
+            replay_results : dict
+                Runtime-only, never written to spec.json: return values of
+                the most recent ``SpecManager.new_pipeline()`` replay (see
+                ``PipelineBuilderHelper``), keyed by the modifier's
+                ``mod_name``. Overwritten on every replay (holds only the
+                latest build, no history) - the intended usage is a single
+                build/run per process (e.g. a CLI job on an HPC cluster),
+                not repeated builds from the same spec.
 
         Returns
         -------
@@ -144,6 +152,7 @@ class SpecData:
             "counters": {},
         }
         self.graph = None
+        self.replay_results: Dict[str, Any] = {}
 
     def add_instance(
         self, instance_name: str, domain: str, instance: dict

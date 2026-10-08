@@ -136,6 +136,7 @@ class OperationRegistryUtils:
                     "affected_by_tags": raw_entry.get("affected_by_tags", []),
                     "resets_tags": raw_entry.get("resets_tags", []),
                     "technical_params": raw_entry["technical_params"],
+                    "access_path": raw_entry.get("access_path"),
                     "dispatch": {
                         "module": raw_entry["module"],
                         "class": raw_entry["class"],
