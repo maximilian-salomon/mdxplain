@@ -34,7 +34,7 @@ import inspect
 from functools import wraps
 from typing import Any, Callable, Dict, Tuple, Type, TYPE_CHECKING
 
-from ...utils.registry_utils import RegistryUtils
+from ...utils.operation_registry_utils import OperationRegistryUtils
 from ...utils.deps_utils import DepsUtils
 
 if TYPE_CHECKING:
@@ -80,7 +80,7 @@ class LogHelper:
             Writes the log entry into ``pipeline_data.log`` in-place (if
             registered).
         """
-        if RegistryUtils.get_operation_type(owner, method_name) is None:
+        if OperationRegistryUtils.get_operation_type(owner, method_name) is None:
             return
         try:
             bound = sig.bind(*args, **kwargs)
@@ -97,8 +97,7 @@ class LogHelper:
         """
         Decorator for ``PipelineManager`` methods that never pass through
         ``AutoInjectProxy`` (it wraps the submanagers, not ``PipelineManager``
-        itself - see ``__init__``/``log_pipeline_init`` for the same
-        reasoning), so they need to call ``LogHelper.log_call`` themselves.
+        itself), so they need to call ``LogHelper.log_call`` themselves.
 
         Parameters
         ----------
@@ -123,48 +122,6 @@ class LogHelper:
             return result
 
         return wrapper
-
-    @staticmethod
-    def log_pipeline_init(
-        pipeline_data: "PipelineData", owner: Type, params: Dict[str, Any]
-    ) -> None:
-        """
-        Log the initial ``PipelineManager`` construction as an operation.
-
-        Register pipeline_init with ``LogRegistry`` using the actual constructor
-        parameters. The JSON entry is only used by ``SpecRegistryHelper``; this
-        is the authoritative registration for the actual pipeline run.
-
-        Parameters
-        ----------
-        pipeline_data : PipelineData
-            Pipeline data container to log into.
-        owner : Type
-            The ``PipelineManager`` class.
-        params : Dict[str, Any]
-            Fully resolved constructor parameters (``self`` excluded).
-
-        Returns
-        -------
-        None
-            Writes the log entry into ``pipeline_data.log`` in-place.
-        """
-        RegistryUtils.register_operation(
-            "pipeline_init",
-            {
-                "domain": "pipeline",
-                "emits_tags": ["pipeline_config"],
-                "affected_by_tags": [],
-                "resets_tags": [],
-                "technical_params": list(params.keys()),
-                "dispatch": {
-                    "module": owner.__module__,
-                    "class": owner.__name__,
-                    "method_name": "pipeline_init",
-                },
-            },
-        )
-        LogHelper.log_operation(pipeline_data, owner, "pipeline_init", params)
 
     @staticmethod
     def log_operation(
@@ -195,7 +152,7 @@ class LogHelper:
             in-place. Silently does nothing if (owner, method_name) is not
             registered.
         """
-        operation_type = RegistryUtils.get_operation_type(owner, method_name)
+        operation_type = OperationRegistryUtils.get_operation_type(owner, method_name)
         if operation_type is None:
             return
 
@@ -204,23 +161,16 @@ class LogHelper:
         )
         global_seq = LogHelper._next_global_seq(pipeline_data)
 
-        registry_entry = RegistryUtils.get_registry_entry(operation_type)
+        registry_entry = OperationRegistryUtils.get_registry_entry(operation_type)
         config = {
             param_name: bound_params[param_name]
             for param_name in registry_entry["technical_params"]
             if param_name in bound_params
         }
 
-        depends_on = DepsUtils.resolve_dependencies(
-            pipeline_data.log["tag_state"], registry_entry, bound_params,
-            RegistryUtils.get_instance_params,
-        )
-        pipeline_data.log["tag_state"] = DepsUtils.update_tag_state(
+        depends_on, pipeline_data.log["tag_state"] = DepsUtils.resolve_and_update(
             pipeline_data.log["tag_state"], registry_entry, bound_params, entry_id,
-            RegistryUtils.get_instance_params
-        )
-        pipeline_data.log["tag_state"] = DepsUtils.apply_resets(
-            pipeline_data.log["tag_state"], registry_entry, bound_params
+            OperationRegistryUtils.get_instance_params,
         )
 
         pipeline_data.log["operations"][entry_id] = {

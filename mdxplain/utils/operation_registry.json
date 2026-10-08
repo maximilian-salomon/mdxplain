@@ -4483,7 +4483,7 @@
     "pipeline": {
         "pipeline_init": {
             "operation_type": "pipeline_init",
-            "method_name": "__init__",
+            "method_name": "pipeline_init",
             "class": "PipelineManager",
             "module": "mdxplain.pipeline.manager.pipeline_manager",
             "emits_tags": ["pipeline_config"],
@@ -4498,8 +4498,7 @@
                 "cache_dir": {"required": false, "default": "./cache"},
                 "max_memory_gb": {"required": false, "default": 6.0}
             },
-            "gui_param_info": {},
-            "notes": ["Registered dynamically at runtime by LogHelper.log_pipeline_init; mirrored here so SpecRegistryHelper can resolve it too."]
+            "gui_param_info": {}
         },
         "add_custom_metadata": {
             "method_name": "add_custom_metadata",

@@ -24,9 +24,9 @@ import networkx as nx
 import pytest
 
 from mdxplain.pipeline.entities.pipeline_data import PipelineData
-from mdxplain.spec.helper.log_graph_helper import LogGraphHelper
+from mdxplain.spec.helper.graph_helper import GraphHelper
 from mdxplain.pipeline.helper.log_helper.log_helper import LogHelper
-from mdxplain.utils.registry_utils import RegistryUtils
+from mdxplain.utils.operation_registry_utils import OperationRegistryUtils
 
 
 class _Owner:
@@ -36,7 +36,7 @@ class _Owner:
 def _register(operation_type, emits, affected_by, technical_params, resets=None):
     """Register a synthetic operation and return its dispatch method name."""
     method_name = operation_type
-    RegistryUtils.register_operation(
+    OperationRegistryUtils.register_operation(
         operation_type,
         {
             "dispatch": (_Owner, method_name),
@@ -320,8 +320,8 @@ class TestGraphReduction:
             "graph_load_1"
         )
 
-        raw = LogGraphHelper.build_graph(pipeline_data.log)
-        reduced = LogGraphHelper.build_graph(pipeline_data.log, reduce=True)
+        raw = GraphHelper.build_graph(pipeline_data.log["operations"])
+        reduced = GraphHelper.build_graph(pipeline_data.log["operations"], reduce=True)
 
         assert raw.number_of_edges() == 3
         assert reduced.number_of_edges() == 2

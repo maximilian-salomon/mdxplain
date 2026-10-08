@@ -515,24 +515,15 @@ class PipelineManager:
 
         Notes
         -----
-        1. Unlike other manager methods, ``PipelineManager.__init__`` is
-           never called through ``AutoInjectProxy``, since the proxy itself
-           is constructed with a ``PipelineData`` instance that does not yet
-           exist during ``__init__``. Automatic call interception (and thus
-           automatic logging via ``LogHelper.log_call``) is therefore
-           unavailable here.
-
-        2. This method explicitly calls ``LogHelper.log_pipeline_init``
-           instead, which registers the special ``"pipeline_init"``
-           operation type via ``LogRegistry.register_operation`` rather than
-           resolving it from ``registry.json`` through a normal
-           class/module import. This also avoids a circular import that
-           would otherwise occur if ``PipelineManager`` were imported
-           directly from within the registry.
+        ``PipelineManager.__init__`` is never called through ``AutoInjectProxy``
+        (the proxy needs a ``PipelineData`` instance that does not yet exist
+        during ``__init__``), so this method logs the call explicitly instead
+        of relying on automatic interception via ``LogHelper.log_call``.
         """
-        LogHelper.log_pipeline_init(
+        LogHelper.log_operation(
             self._data,
             PipelineManager,
+            "pipeline_init",
             {
                 "stride": stride,
                 "concat": concat,

@@ -52,10 +52,10 @@ from __future__ import annotations
 import json
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, Iterator, Tuple, Type
+from typing import Any, Dict, Iterator, Tuple, Type, List
 
 
-class RegistryUtils:
+class OperationRegistryUtils:
     """
     Namespace for the manual operation registry (build/lookup/register).
 
@@ -66,7 +66,7 @@ class RegistryUtils:
 
     _REGISTRY_JSON_PATH = (
         Path(__file__).parent
-        / "registry.json"
+        / "operation_registry.json"
     )
 
     @staticmethod
@@ -89,7 +89,7 @@ class RegistryUtils:
             return
         for value in node.values():
             if isinstance(value, dict):
-                yield from RegistryUtils._iter_leaf_entries(value)
+                yield from OperationRegistryUtils._iter_leaf_entries(value)
 
     @staticmethod
     @lru_cache(maxsize=1)
@@ -102,7 +102,7 @@ class RegistryUtils:
         Dict[str, Any]
             The raw parsed JSON, keyed by domain (plus "_resource_instance_params").
         """
-        with open(RegistryUtils._REGISTRY_JSON_PATH, "r", encoding="utf-8") as f:
+        with open(OperationRegistryUtils._REGISTRY_JSON_PATH, "r", encoding="utf-8") as f:
             return json.load(f)
 
     @staticmethod
@@ -119,13 +119,13 @@ class RegistryUtils:
             ``LogRegistry.register_operation`` can mutate it in-place to add
             further entries.
         """
-        raw_domains = RegistryUtils._load_raw_registry()
+        raw_domains = OperationRegistryUtils._load_raw_registry()
 
         registry: Dict[str, Dict[str, Any]] = {}
         for domain_key, domain_node in raw_domains.items():
             if domain_key.startswith("_"):
                 continue
-            for raw_entry in RegistryUtils._iter_leaf_entries(domain_node):
+            for raw_entry in OperationRegistryUtils._iter_leaf_entries(domain_node):
                 method_name = raw_entry["method_name"]
                 operation_type = raw_entry.get(
                     "operation_type", f"{raw_entry['class']}.{method_name}"
@@ -161,7 +161,7 @@ class RegistryUtils:
         str or None
             The registered operation_type, or None if this method is not logged.
         """
-        for operation_type, entry in RegistryUtils._build_registry().items():
+        for operation_type, entry in OperationRegistryUtils._build_registry().items():
             if (
                 entry["dispatch"]["module"] == owner.__module__
                 and entry["dispatch"]["class"] == owner.__name__
@@ -185,7 +185,7 @@ class RegistryUtils:
         Tuple[str, ...]
             Ordered candidate parameter names, empty for singleton resources.
         """
-        raw_domains = RegistryUtils._load_raw_registry()
+        raw_domains = OperationRegistryUtils._load_raw_registry()
         return tuple(raw_domains.get("_resource_instance_params", {}).get(resource_type, ()))
 
     @staticmethod
@@ -203,7 +203,7 @@ class RegistryUtils:
         Dict[str, Any]
             The registry entry for ``operation_type``.
         """
-        return RegistryUtils._build_registry()[operation_type]
+        return OperationRegistryUtils._build_registry()[operation_type]
 
     @staticmethod
     def get_domain(operation_type: str) -> str:
@@ -226,7 +226,19 @@ class RegistryUtils:
         KeyError
             If ``operation_type`` is not registered.
         """
-        return RegistryUtils.get_registry_entry(operation_type)["domain"]
+        return OperationRegistryUtils.get_registry_entry(operation_type)["domain"]
+
+    @staticmethod
+    def get_all_domains() -> List[str]:
+        """
+        Retrieve all top-level domains from the registry.
+
+        Returns
+        -------
+        List[str]
+            A list of all top-level domains.
+        """
+        return list(key["domain"] for key in OperationRegistryUtils._build_registry())
 
     @staticmethod
     def _validate_entry_dict(entry: Dict[str, Any]) -> None:
@@ -292,5 +304,5 @@ class RegistryUtils:
         ValueError
             If the registry entry is invalid.
         """
-        RegistryUtils._validate_entry_dict(entry)
-        RegistryUtils._build_registry()[operation_type] = entry
+        OperationRegistryUtils._validate_entry_dict(entry)
+        OperationRegistryUtils._build_registry()[operation_type] = entry

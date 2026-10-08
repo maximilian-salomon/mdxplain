@@ -298,3 +298,51 @@ class DepsUtils:
             for concrete_tag in concrete_tags:
                 tag_state.pop(concrete_tag, None)
         return tag_state
+
+    @staticmethod
+    def resolve_and_update(
+        tag_state: Dict[str, Any],
+        registry_entry: Dict[str, Any],
+        bound_params: Dict[str, Any],
+        entry_id: str,
+        get_instance_params: Callable[[str], List[str]],
+    ) -> Tuple[list, Dict[str, Any]]:
+        """
+        Run the full per-operation tag-state cycle: resolve dependencies,
+        then register this entry as writer and apply its resets.
+
+        Bundles ``resolve_dependencies`` + ``update_tag_state`` + ``apply_resets``,
+        the sequence every caller (online ``LogHelper``, offline
+        ``SpecModifierService``) needs to run for each logged/added operation.
+        Takes/returns the raw ``tag_state`` dict only, so callers remain free
+        to store it in whatever container they use (e.g. ``pipeline_data.log``
+        vs. ``spec_data.comfort_mode``).
+
+        Parameters
+        ----------
+        tag_state : Dict[str, Any]
+            Current tag state mapping concrete tags to instance ids.
+        registry_entry : Dict[str, Any]
+            Registry entry of the operation being processed.
+        bound_params : Dict[str, Any]
+            Fully resolved parameters of the call.
+        entry_id : str
+            The id to register as writer for this entry's emitted tags.
+        get_instance_params : Callable[[str], List[str]]
+            Function to retrieve candidate parameter names for the resource
+            instance.
+
+        Returns
+        -------
+        Tuple[list, Dict[str, Any]]
+            ``(depends_on, tag_state)`` - the resolved dependency ids and the
+            updated tag state.
+        """
+        depends_on = DepsUtils.resolve_dependencies(
+            tag_state, registry_entry, bound_params, get_instance_params
+        )
+        tag_state = DepsUtils.update_tag_state(
+            tag_state, registry_entry, bound_params, entry_id, get_instance_params
+        )
+        tag_state = DepsUtils.apply_resets(tag_state, registry_entry, bound_params)
+        return depends_on, tag_state
