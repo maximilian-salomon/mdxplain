@@ -26,7 +26,7 @@ the old VOR-field-snapshot spec.json. See plan.md / repo memory
 spec_module_design.md for the full design rationale.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 
 class SpecData:
@@ -43,9 +43,10 @@ class SpecData:
 
     Attributes
     ----------
-    pipeline : dict
-        Singleton `{"modifiers": [...]}` (`pipeline_init`/`update_config`/
-        `clear_all`/`add_custom_metadata` calls, in order)
+    pipeline : Dict[str, dict]
+        Pipeline instances keyed by name (`pipeline_init`/`update_config`/
+        `clear_all`/`add_custom_metadata` calls per instance, in order) -
+        a normal instance dict like every other module, not a singleton
     trajectory : Dict[str, dict]
         Trajectory instances keyed by name (branching allowed via modifiers
         referencing another instance as source)
@@ -71,9 +72,12 @@ class SpecData:
     analysis : Dict[str, dict]
         Analysis instances keyed by name (RMSD/RMSF/... services, default
         names for the same reason as `plots`)
-    studies : Dict[str, Dict[str, List[str]]]
-        Optional named reference bundles, grouped per module:
-        `{study_name: {module_name: [instance_name, ...]}}`
+    studies : Dict[str, Dict[str, Dict[str, Union[str, List[str]]]]]
+        Optional named reference bundles:
+        `{study_name: {domain: {instance_name: "all" | [mod_name, ...]}}}`.
+        ``"all"`` is resolved dynamically at use time (not a snapshot), so
+        it tracks modifiers added to the instance after the study was
+        defined.
     """
 
     MODULES = (
@@ -455,3 +459,233 @@ class SpecData:
             modifiers.extend(inst.get("modifiers", []))
 
         return modifiers
+
+    def add_new_study(self, study_name: str, exist_ok: bool = False) -> None:
+        """
+        Create a new, empty named study.
+
+        Parameters
+        ----------
+        study_name : str
+            Name of the study to create.
+        exist_ok : bool, default=False
+            If False, raise when a study of this name already exists.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError
+            If ``study_name`` already exists and ``exist_ok`` is False.
+        """
+        if study_name in self.studies and not exist_ok:
+            raise ValueError(f"Study '{study_name}' already exists.")
+        self.studies.setdefault(study_name, {})
+
+    def remove_study(self, study_name: str) -> None:
+        """
+        Remove an entire named study.
+
+        Parameters
+        ----------
+        study_name : str
+            Name of the study to remove.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError
+            If ``study_name`` does not exist.
+        """
+        if study_name not in self.studies:
+            raise ValueError(f"Study '{study_name}' not found.")
+        del self.studies[study_name]
+
+    def add_to_study(
+        self,
+        study_name: str,
+        domain: str,
+        instance_name: str,
+        mod_names: Union[str, List[str]] = "all",
+    ) -> None:
+        """
+        Add or overwrite one instance reference within a study.
+
+        Creates the study and/or the domain group within it if they do not
+        exist yet (upsert).
+
+        Parameters
+        ----------
+        study_name : str
+            Name of the study to add to.
+        domain : str
+            Domain/module name the referenced instance belongs to.
+        instance_name : str
+            Name of the referenced instance.
+        mod_names : str or List[str], default="all"
+            Either the literal ``"all"`` (every modifier of the instance,
+            resolved dynamically at use time) or an explicit list of
+            ``mod_name``s to reference.
+
+        Returns
+        -------
+        None
+        """
+        study = self.studies.setdefault(study_name, {})
+        study.setdefault(domain, {})[instance_name] = mod_names
+
+    def update_study(
+        self,
+        study_name: str,
+        domain: str,
+        instance_name: str,
+        mod_names: Union[str, List[str]],
+    ) -> None:
+        """
+        Update an existing instance reference within a study.
+
+        Unlike ``add_to_study``, this requires the study/domain/instance
+        reference to already exist (no upsert).
+
+        Parameters
+        ----------
+        study_name : str
+            Name of the study to update.
+        domain : str
+            Domain/module name the referenced instance belongs to.
+        instance_name : str
+            Name of the referenced instance.
+        mod_names : str or List[str]
+            New value, either the literal ``"all"`` or an explicit list of
+            ``mod_name``s.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError
+            If the study, domain group, or instance reference does not
+            exist yet.
+        """
+        if study_name not in self.studies:
+            raise ValueError(f"Study '{study_name}' not found.")
+        domain_group = self.studies[study_name].get(domain)
+        if domain_group is None or instance_name not in domain_group:
+            raise ValueError(
+                f"Reference '{domain}.{instance_name}' not found in study "
+                f"'{study_name}'."
+            )
+        domain_group[instance_name] = mod_names
+
+    def remove_from_study(
+        self,
+        study_name: str,
+        domain: str,
+        instance_name: Optional[str] = None,
+    ) -> None:
+        """
+        Remove one instance reference, or a whole domain group, from a study.
+
+        The study itself is left in place even if this empties it entirely
+        (use ``remove_study`` to delete the study itself).
+
+        Parameters
+        ----------
+        study_name : str
+            Name of the study to remove from.
+        domain : str
+            Domain/module name to remove from, or to remove an instance
+            reference within.
+        instance_name : str, optional
+            If given, only this instance reference is removed (the domain
+            group is dropped as well if it becomes empty). If None, the
+            whole domain group is removed.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError
+            If the study, domain group, or (if given) instance reference
+            does not exist.
+        """
+        if study_name not in self.studies:
+            raise ValueError(f"Study '{study_name}' not found.")
+        domain_group = self.studies[study_name].get(domain)
+        if domain_group is None:
+            raise ValueError(
+                f"Domain '{domain}' not found in study '{study_name}'."
+            )
+        if instance_name is None:
+            del self.studies[study_name][domain]
+            return
+        if instance_name not in domain_group:
+            raise ValueError(
+                f"Reference '{domain}.{instance_name}' not found in study "
+                f"'{study_name}'."
+            )
+        del domain_group[instance_name]
+        if not domain_group:
+            del self.studies[study_name][domain]
+
+    def get_study(
+        self,
+        study_name: str,
+        domain: Optional[str] = None,
+        instance_name: Optional[str] = None,
+    ) -> Any:
+        """
+        Read a study, a domain group within it, or a single reference value.
+
+        Parameters
+        ----------
+        study_name : str
+            Name of the study to read from.
+        domain : str, optional
+            If given, scope the read to this domain group.
+        instance_name : str, optional
+            If given (requires ``domain``), scope the read to this single
+            instance's ``mod_names`` value.
+
+        Returns
+        -------
+        Any
+            The whole study dict, the domain group dict, or the single
+            ``mod_names`` value, depending on how far ``domain``/
+            ``instance_name`` are given.
+
+        Raises
+        ------
+        ValueError
+            If ``study_name``/``domain``/``instance_name`` does not exist,
+            or if ``instance_name`` is given without ``domain``.
+        """
+        if study_name not in self.studies:
+            raise ValueError(f"Study '{study_name}' not found.")
+        study = self.studies[study_name]
+        if domain is None:
+            if instance_name is not None:
+                raise ValueError("instance_name requires domain to be set.")
+            return study
+        if domain not in study:
+            raise ValueError(
+                f"Domain '{domain}' not found in study '{study_name}'."
+            )
+        domain_group = study[domain]
+        if instance_name is None:
+            return domain_group
+        if instance_name not in domain_group:
+            raise ValueError(
+                f"Reference '{domain}.{instance_name}' not found in study "
+                f"'{study_name}'."
+            )
+        return domain_group[instance_name]

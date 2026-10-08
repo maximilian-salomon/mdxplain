@@ -471,15 +471,18 @@ class SpecManager:
     @property
     def studies(self) -> SpecStudyService:
         """Study-level facade over this manager's spec data."""
-        return SpecStudyService(self.data)
+        return SpecStudyService(self, self.data)
 
     def validate(self) -> None:
         """
         Validate every modifier's required params and cross-references.
 
         Delegates to ``SpecValidatorHelper.check_required_params``/
-        ``check_cross_references`` for every modifier in every module, plus
-        the required-param check for the ``pipeline`` singleton.
+        ``check_cross_references`` for every modifier in every module
+        (``pipeline`` is a normal instance dict like any other module, not
+        a singleton - it is covered by the same loop), plus
+        ``check_study_references`` for ``studies`` (skipped by the main
+        loop, since it holds name references rather than modifiers).
 
         Returns
         -------
@@ -488,24 +491,25 @@ class SpecManager:
         Raises
         ------
         ValueError
-            If any modifier is missing a required param or references a
-            not-(yet)-existing instance in another module.
+            If any modifier is missing a required param, references a
+            not-(yet)-existing instance in another module, or a study
+            references a non-existing domain/instance/modifier.
         """
         for module_name in self.data.MODULES:
+            if module_name == "studies":
+                continue
             for instance in getattr(self.data, module_name).values():
                 for modifier in instance["modifiers"]:
-                    entry = OperationRegistryUtils.get_entry(modifier["type"])
+                    entry = OperationRegistryUtils.get_registry_entry(
+                        modifier["type"]
+                    )
                     SpecValidatorHelper.check_required_params(
                         modifier["type"], entry, modifier["config"]
                     )
                     SpecValidatorHelper.check_cross_references(
                         self.data, entry, module_name, modifier["config"]
                     )
-        for modifier in self.data.pipeline["modifiers"]:
-            entry = OperationRegistryUtils.get_entry(modifier["type"])
-            SpecValidatorHelper.check_required_params(
-                modifier["type"], entry, modifier["config"]
-            )
+        SpecValidatorHelper.check_study_references(self.data)
 
     def print_info(self):
         """Print a human-readable summary of every module/instance/modifier."""

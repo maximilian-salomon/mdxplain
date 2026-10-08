@@ -169,6 +169,71 @@ class SpecValidatorHelper:
                     )
 
     @staticmethod
+    def check_study_references(spec_data: Any) -> None:
+        """
+        Raise if any ``studies`` entry references a non-existing domain,
+        instance, or modifier.
+
+        Validates every `{study_name: {domain: {instance_name: mod_names}}}`
+        entry in ``spec_data.studies``: ``domain`` must be a real module
+        (any of `SpecData.MODULES` except ``"studies"`` itself -
+        ``"pipeline"`` is a normal instance dict like every other module, so
+        it is a valid reference target too), ``instance_name`` must exist
+        in that domain, and ``mod_names`` must be either the literal
+        ``"all"`` or a list of ``mod_name``s that all exist among that
+        instance's modifiers.
+
+        Parameters
+        ----------
+        spec_data : SpecData
+            The spec data container whose ``studies`` to validate.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError
+            If a study references a non-existing domain, instance, or
+            modifier.
+        """
+        valid_domains = set(spec_data.MODULES) - {"studies"}
+        for study_name, domain_groups in spec_data.studies.items():
+            for domain, instances in domain_groups.items():
+                if domain not in valid_domains:
+                    raise ValueError(
+                        f"Study '{study_name}' references unknown domain "
+                        f"'{domain}'."
+                    )
+                domain_dict = getattr(spec_data, domain)
+                for instance_name, mod_names in instances.items():
+                    instance = domain_dict.get(instance_name)
+                    if instance is None:
+                        raise ValueError(
+                            f"Study '{study_name}' references "
+                            f"non-existing instance "
+                            f"'{domain}.{instance_name}'."
+                        )
+                    if mod_names == "all":
+                        continue
+                    existing_mod_names = {
+                        modifier.get("mod_name")
+                        for modifier in instance.get("modifiers", [])
+                    }
+                    unknown = [
+                        mod_name
+                        for mod_name in mod_names
+                        if mod_name not in existing_mod_names
+                    ]
+                    if unknown:
+                        raise ValueError(
+                            f"Study '{study_name}' references non-existing "
+                            f"modifier(s) {unknown} in "
+                            f"'{domain}.{instance_name}'."
+                        )
+
+    @staticmethod
     def _modifier_key(
         modifier: Dict[str, Any], ignore_keys: Sequence[str]
     ) -> str:
@@ -284,14 +349,10 @@ class SpecValidatorHelper:
                     }
                 continue
 
-            # The "pipeline" domain is a singleton instance, not a
-            # Dict[name, instance] - normalize it to the same shape.
-            if domain_name == "pipeline":
-                expected_instances = {"pipeline": expected_domain}
-                actual_instances = {"pipeline": actual_domain}
-            else:
-                expected_instances = expected_domain
-                actual_instances = actual_domain
+            # Every domain (including "pipeline", a normal instance dict
+            # like any other module) is compared the same way.
+            expected_instances = expected_domain
+            actual_instances = actual_domain
 
             if not by_instance:
                 expected_modifiers = [
