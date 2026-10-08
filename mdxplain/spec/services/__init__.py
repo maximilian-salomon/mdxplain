@@ -18,16 +18,14 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""Spec helper module."""
+"""Service-level facades over `SpecManager`."""
 
-from .spec_io_helper import SpecIOHelper
-from .spec_builder_helper import SpecBuilderHelper
-from .spec_validator_helper import SpecValidatorHelper
-from .graph_helper import GraphHelper
+from .spec_instances_service import SpecInstancesService
+from .spec_modifier_service import SpecModifierService
+from .spec_study_service import SpecStudyService
 
 __all__ = [
-    "SpecIOHelper",
-    "SpecBuilderHelper",
-    "SpecValidatorHelper",
-    "GraphHelper",
+    "SpecInstancesService",
+    "SpecModifierService",
+    "SpecStudyService",
 ]

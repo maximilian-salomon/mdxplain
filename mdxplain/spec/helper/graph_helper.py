@@ -25,10 +25,11 @@ Moved out of ``mdxplain`` into ``spec/`` (see repo memory
 spec_module_design.md): only ever needed for Graph->JSON translation, never
 at real pipeline runtime.
 
-Consumes only ``log["operations"]`` and each entry's ``depends_on`` (written by
-``mdxplain/pipeline/helper/log_helper/log_helper.py``). Deliberately independent of
-``global_seq``: that field only exists for logs recorded from sequential Python
-calls, while a log built from a GUI configuration has no execution order at all.
+Consumes only ``log["operations"]`` and each entry's ``depends_on``
+(written by ``mdxplain/pipeline/helper/log_helper/log_helper.py``).
+Deliberately independent of ``global_seq``: that field only exists for
+logs recorded from sequential Python calls, while a log built from a
+GUI configuration has no execution order at all.
 Everything here - including node layering - is therefore derived from the
 dependency edges alone.
 """
@@ -40,11 +41,13 @@ from typing import Any, Dict, List
 import networkx as nx
 
 
-class LogGraphHelper:
+class GraphHelper:
     """Stateless helper functions for building operation dependency graphs."""
 
     @staticmethod
-    def build_graph(log: Dict[str, Any], reduce: bool = False) -> nx.DiGraph:
+    def build_graph(
+        operations: Dict[str, Any], reduce: bool = False
+    ) -> nx.DiGraph:
         """
         Build the operation dependency graph from a pipeline operations log.
 
@@ -53,8 +56,8 @@ class LogGraphHelper:
 
         Parameters
         ----------
-        log : Dict[str, Any]
-            A ``pipeline_data.log`` dict (only ``"operations"`` is read).
+        operations : Dict[str, Any]
+            A dict of operations.
         reduce : bool, default=False
             Whether to return the transitive reduction, which drops edges that
             are already implied by a longer path. Reachability is unchanged, so
@@ -72,8 +75,6 @@ class LogGraphHelper:
         ValueError
             If ``reduce`` is requested but the graph contains a cycle.
         """
-        operations = log["operations"]
-
         graph = nx.DiGraph()
         for entry_id, entry in operations.items():
             graph.add_node(entry_id, **entry)
@@ -111,4 +112,34 @@ class LogGraphHelper:
             One list of operation ids per layer; operations in a layer depend
             only on operations in earlier layers.
         """
-        return [sorted(generation) for generation in nx.topological_generations(graph)]
+        return [
+            sorted(generation)
+            for generation in nx.topological_generations(graph)
+        ]
+
+    @staticmethod
+    def update_graph(
+        graph: nx.DiGraph, operations: Dict[str, Any]
+    ) -> nx.DiGraph:
+        """
+        Update an existing operation dependency graph with new operations.
+
+        Parameters
+        ----------
+        graph : nx.DiGraph
+            Existing operation dependency graph.
+        operations : Dict[str, Any]
+            A dict of new operations to add to the graph.
+
+        Returns
+        -------
+        nx.DiGraph
+            Updated graph including the new operations.
+        """
+        for entry_id, entry in operations.items():
+            if entry_id not in graph:
+                graph.add_node(entry_id, **entry)
+            for dependency_id in entry["depends_on"]:
+                if dependency_id in operations:
+                    graph.add_edge(dependency_id, entry_id)
+        return graph

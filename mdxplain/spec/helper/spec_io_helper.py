@@ -60,7 +60,8 @@ class SpecIOHelper:
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> SpecData:
         """
-        Build a `SpecData` instance from a plain dict (the inverse of ``to_dict``).
+        Build a `SpecData` instance from a plain dict (the inverse of
+        ``to_dict``).
 
         Parameters
         ----------
